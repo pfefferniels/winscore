@@ -1,0 +1,48 @@
+document: n:  <Legal>
+range-dialog: record [99, 1, 0, 0, 2, 200, 0, 1]
+text: Type Notes, Rest, Clefs, etc.  Semicolon = end. >
+text: C
+text: C4
+text: C4/
+text: C4/C
+text: C4/C/
+text: C4/C/C
+text: C4/C/C;
+text: Type    3  Rhythms >
+text: 
+text: T
+text: T
+text: T1
+text: T1
+text: TS
+text: TS
+text: TS/
+text: TS/
+text: TS/
+text: TS/T
+text: TS/T
+text: TS/T3
+text: TS/T3
+text: TS/TT
+text: TS/TT
+text: TS/TT/
+text: TS/TT/
+text: TS/TT/
+text: TS/TT/T
+text: TS/TT/T
+text: TS/TT/T;
+text: TS/TT/T;
+dialog: 0x595cd0 args=['0x20b8ea0', '0x524825', '0x20b90a0']
+text: Type Mark letter(s) and note numbers . . . >
+text: 
+text: Type pairs of numbers for Beams >
+text: ;
+text: Type pairs of numbers for Slurs >
+text: ;
+text: E = Edit these lines of input. 
+S = Save these lines of input to a file. 
+X = Exit from input mode.
+text: *** Leaving input ***
+dialog: 0x596010 args=['0x20b8ea0', '0x1', '0x204e49']
+document: n: SCORE.MUS * (not saved -    4 Items)   <Legal>
+document: n: C:\WORK\RESULT.MUS   (saved -    4 Items)   <Legal>
