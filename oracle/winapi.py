@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 HEAP_BASE, HEAP_SIZE = 0x60000000, 0x08000000
 INVALID_HANDLE = 0xFFFFFFFF
-ERROR_FILE_NOT_FOUND, ERROR_NO_MORE_FILES = 2, 18
+ERROR_FILE_NOT_FOUND, ERROR_INVALID_HANDLE, ERROR_NO_MORE_FILES = 2, 6, 18
 CWD = "C:\\WORK"
 FIXED_TIME = datetime.datetime(2013, 11, 1, 12, 0, 0)
 
@@ -319,6 +319,13 @@ class WinApi:
 
     def k_ReadFile(self):
         handle, buf, n, read_ptr = (self.e.arg(i) for i in range(4))
+        if handle not in self.files:
+            # A GUI process has no console: GetStdHandle gives 0 and reading it fails, as on Windows.
+            self.e.shell.record("console-read", f"{n} bytes from handle {handle:#x}, failed as invalid")
+            if read_ptr:
+                self.e.put32(read_ptr, 0)
+            self.last_error = ERROR_INVALID_HANDLE
+            return 0, 20
         data = self.files[handle].stream.read(n)
         self.e.uc.mem_write(buf, data)
         if read_ptr:
@@ -490,7 +497,12 @@ class WinApi:
     def k_GetFullPathNameA(self):
         name, size, buf, file_part = (self.e.arg(i) for i in range(4))
         path = self.e.cstr(name)
-        full = path if PureWindowsPath(path).drive else CWD + "\\" + path
+        if PureWindowsPath(path).drive:
+            full = path
+        elif path.startswith("\\"):           # root-relative: on the current drive
+            full = CWD[:2] + path
+        else:
+            full = CWD + "\\" + path
         data = full.encode("latin-1") + b"\0"
         if size < len(data):
             return len(data), 16
