@@ -278,9 +278,18 @@ impl Barline {
     }
 }
 
-/// One repeat dot, drawn by the code-12 box routine (draw_box 0x433530 with
-/// IP5 = 1, P6 = P7 = `size`, a 60° polygon on the screen). Not ported yet.
-fn repeat_dot(_canvas: &mut Canvas<'_>, _centre: Pos, _size: f64, _step: f64) {}
+/// One repeat dot. The engine calls the code-12 box routine (draw_box
+/// 0x433530 with IP5 = 1, P6 = P7 = `size`), which on the screen draws a
+/// filled hexagon of radius `size` half-spaces, clockwise from the top. This
+/// model is fitted to the fixtures until draw_box is ported.
+fn repeat_dot(canvas: &mut Canvas<'_>, centre: Pos, size: f64, step: f64) {
+    let radius = real(size * 3.5 * step);
+    (0..=6).for_each(|k| {
+        let angle = f64::from(k) * std::f64::consts::FRAC_PI_3;
+        let at = Pos::new(real(centre.x + radius * angle.sin()), real(centre.y + radius * angle.cos()));
+        canvas.point(at, if k == 0 { Pen::Fill } else { Pen::Continue });
+    });
+}
 
 /// The bracket end outline, in 0.15 spacing units (f32 tables at 0x78B264 and 0x78B234).
 const BRACKET_CURVE: [(f32, f32); 12] = [
