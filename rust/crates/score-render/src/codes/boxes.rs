@@ -10,6 +10,7 @@
 use crate::canvas::{Canvas, Pen};
 use crate::colour;
 use crate::document::{Document, ItemRef};
+use crate::codes::line;
 use crate::geometry::rotate_points;
 use crate::trig::CIRCLE;
 use crate::units::{real, trunc, Pos};
@@ -84,14 +85,178 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     };
     let (at, step) = (doc.position(item), doc.staff_of(item).step);
     match call.kind {
-        BOX | CIRCLE_SHAPE | DASHED_BOX => draw_box(canvas, at, step, &call),
-        GUITAR_GRID => {}
+        BOX | CIRCLE_SHAPE | DASHED_BOX => {
+            draw_box(canvas, at, step, &call);
+        }
+        REGISTER => draw_register(doc, item, canvas, at, &call),
         k if k < 0 => {}
         _ => draw_arrow(doc, item, canvas, at, &call, marked),
     }
 }
 
-const GUITAR_GRID: i32 = 10;
+const REGISTER: i32 = 10;
+const REGISTER_ROWS: i32 = 3;
+const REGISTER_RADIUS: f32 = 8.0;
+const REGISTER_DOT: f32 = 1.4;
+
+/// An accordion register symbol, draw_box_grid 0x433EEE: a circle of
+/// radius 8 × P6 half-steps (thickness P10 + 1 rings), P7 = 2, 3 (0) or 4
+/// rows divided by horizontal lines, and filled dots chosen by the digits of
+/// P8 (rows, top to bottom) and P9 (centre row: right, middle, left).
+fn draw_register(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at: Pos, call: &BoxCall) {
+    let staff = doc.staff_of(item);
+    let step = staff.step;
+    let rows = match trunc(f64::from(item.p(7))) {
+        0 => REGISTER_ROWS,
+        r => r,
+    };
+    let factor = if item.p(6) == 0.0 { 1.0 } else { f64::from(item.p(6)) };
+    let rings = f64::from(real(f64::from(item.p(10)) + 1.0) as f32);
+    let circle = BoxCall {
+        kind: CIRCLE_SHAPE,
+        width: real(factor * f64::from(REGISTER_RADIUS)),
+        height: 0.0,
+        p8: rings,
+        ip8: 1,
+        ip9: 0,
+        ip10: 0,
+        ip11: 0,
+        ..*call
+    };
+    let p4 = f64::from(item.p(4));
+    draw_box(canvas, Pos::new(at.x, staff.y(p4)), step, &circle);
+    let size = real(step * factor / 25.0);
+    register_lines(item, canvas, &staff, at.x, rows, size, factor);
+    let dot = BoxCall {
+        kind: CIRCLE_SHAPE,
+        width: real(factor * f64::from(REGISTER_DOT)),
+        height: 0.0,
+        p8: 0.0,
+        ip8: 1,
+        ip9: 0,
+        ip10: 0,
+        ip11: 0,
+        fill: true,
+        ..*call
+    };
+    let digits = (trunc(f64::from(item.p(8))), trunc(f64::from(item.p(9))));
+    register_dots(canvas, &staff, at.x, rows, size, factor, digits, p4, &dot);
+}
+
+/// The dividing lines through draw_line (0x4345EE): one through the centre
+/// (2 rows), two at ±1.35 × P6 steps (3 rows), or the centre line and two
+/// at ±1.95 × P6 (4 rows); half lengths 4.66, 4.4 and 4.08 × the size.
+fn register_lines(
+    item: ItemRef<'_>,
+    canvas: &mut Canvas<'_>,
+    staff: &crate::staff::Staff,
+    x: f64,
+    rows: i32,
+    size: f64,
+    factor: f64,
+) {
+    let left_p3 = real(f64::from(item.p(15)) + f64::from(item.p(3)));
+    let line = |canvas: &mut Canvas<'_>, half: f32, lift: f64| {
+        let half = real(size * f64::from(half));
+        let start = real(x - half * 150.0);
+        let level = real(lift + f64::from(item.p(4)));
+        let params = line::Params::of(item)
+            .with(5, level as f32)
+            .with(6, real(half + left_p3) as f32)
+            .with(7, 0.0)
+            .with(8, 0.0)
+            .with(9, 0.0)
+            .with(10, 0.0)
+            .with(11, 0.0)
+            .with(12, 0.0)
+            .with(13, 0.0)
+            .with(18, factor as f32);
+        line::draw(&params, Pos::new(start, staff.y(level)), staff, canvas);
+    };
+    let pair = |canvas: &mut Canvas<'_>, half: f32, lift: f32| {
+        let lift = real(factor * f64::from(lift));
+        // The engine negates the stored f32, so the lower line is the exact mirror.
+        line(canvas, half, lift);
+        line(canvas, half, -lift);
+    };
+    match rows {
+        3 => pair(canvas, 4.4, 1.35),
+        4 => {
+            line(canvas, 4.66, 0.0);
+            pair(canvas, 4.08, 1.95);
+        }
+        _ => line(canvas, 4.66, 0.0),
+    }
+}
+
+/// The filled dots: P8's digits pick rows (4 rows: thousands to units from
+/// the bottom row up; 2 rows: tens below, units above; otherwise hundreds
+/// below, units above, tens in the centre), P9's units and hundreds add
+/// dots right and left of the centre (P9's tens too for a centre dot).
+#[allow(clippy::too_many_arguments)]
+fn register_dots(
+    canvas: &mut Canvas<'_>,
+    staff: &crate::staff::Staff,
+    x: f64,
+    rows: i32,
+    size: f64,
+    factor: f64,
+    (p8, p9): (i32, i32),
+    p4: f64,
+    dot: &BoxCall,
+) {
+    let step = staff.step;
+    // Each circle leaves IP12 doubled and the dots do not reset it, so every
+    // further dot has twice the degrees per side; draw_line leaves 0.
+    let mut ip12 = 0;
+    let mut draw = |canvas: &mut Canvas<'_>, x: f64, level: f64, dot: &BoxCall| {
+        ip12 = draw_box(canvas, Pos::new(x, staff.y(level)), step, &BoxCall { ip12, ..*dot });
+    };
+    let times = |c: f32| real(factor * f64::from(c));
+    let tens = |n: i32| (n % 100) / 10 != 0;
+    match rows {
+        4 => {
+            let gap = times(1.98);
+            let levels = std::iter::successors(Some(real(p4 - times(2.95))), |l| Some(real(gap + l)));
+            let digits = [p8 / 1000, (p8 % 1000) / 100, (p8 % 100) / 10, p8 % 10];
+            digits.into_iter().zip(levels).filter(|&(d, _)| d != 0).for_each(|(_, level)| draw(canvas, x, level, dot));
+            if p9 == 0 {
+                return;
+            }
+        }
+        2 => {
+            let dot = BoxCall { width: times(1.8), ..*dot };
+            let offset = times(2.0);
+            if p8 / 10 != 0 {
+                draw(canvas, x, real(p4 - offset), &dot);
+            }
+            if p8 % 10 != 0 {
+                draw(canvas, x, real(offset + p4), &dot);
+            }
+            return;
+        }
+        _ => {
+            let offset = times(2.55);
+            if p8 / 100 != 0 {
+                draw(canvas, x, real(p4 - offset), dot);
+            }
+            if p8 % 10 != 0 {
+                draw(canvas, x, real(offset + p4), dot);
+            }
+            if tens(p8) || tens(p9) {
+                draw(canvas, x, p4, dot);
+            }
+        }
+    }
+    let reach: f32 = if rows == 4 || (!tens(p8) && rows == 3) { 2.45 } else { 2.875 };
+    let reach = real(size * f64::from(reach) * 150.0);
+    if p9 % 10 != 0 {
+        draw(canvas, real(reach + x), p4, dot);
+    }
+    if p9 / 100 != 0 {
+        draw(canvas, real(x - reach), p4, dot);
+    }
+}
 
 /// Arrows, draw_box_other 0x432E80: with P10 = 1 a straight arrow of P6
 /// times 5 scale steps with a head P13 (or P12) long and P12 wide; otherwise
@@ -255,7 +420,11 @@ const SLANT_UNIT: f32 = 7.0;
 const DASH: f32 = 175.0;
 
 /// draw_box 0x433530 at the centre `at` on a staff with step unit `step`.
-pub fn draw_box(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall) {
+///
+/// Returns the IP12 the routine leaves in the engine's globals: circles
+/// double it (see [`draw_circles`]), which changes the next circle of a
+/// caller that does not reset it.
+pub fn draw_box(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall) -> i32 {
     let start = canvas.buffer_mut().len();
     let height = if call.height == 0.0 { call.width } else { call.height };
     let (width, height) = if call.p16 == 1.0 && matches!(call.kind, BOX | CIRCLE_SHAPE | DASHED_BOX) {
@@ -265,18 +434,23 @@ pub fn draw_box(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall) {
         (call.width, height)
     };
     let pen = if call.fill { Pen::Fill } else { Pen::Stroke };
-    match call.kind {
-        BOX | DASHED_BOX => draw_rectangles(canvas, at, step, call, width, height, pen),
-        _ => {
-            draw_circles(canvas, at, step, call, width, height, pen);
-            if call.kind < 0 {
-                return;
-            }
+    let ip12 = match call.kind {
+        BOX | DASHED_BOX => {
+            draw_rectangles(canvas, at, step, call, width, height, pen);
+            call.ip12
         }
-    }
+        _ => {
+            let ip12 = draw_circles(canvas, at, step, call, width, height, pen);
+            if call.kind < 0 {
+                return ip12;
+            }
+            ip12
+        }
+    };
     if call.ip9 != 0 {
         rotate_points(&mut canvas.buffer_mut()[start..], at.to_point(), call.p9 as f32);
     }
+    ip12
 }
 
 /// The corners of one box outline: bottom left, bottom right, top right
@@ -396,8 +570,9 @@ const HALF_TURN: i32 = 180;
 
 /// Circles and arcs: points every IP12 degrees from IP10 to IP11 clockwise
 /// from the top, as dashes when IP12 is negative; then one further outline
-/// per thickness ring, each a new polyline.
-fn draw_circles(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall, width: f64, height: f64, pen: Pen) {
+/// per thickness ring, each a new polyline. Returns the IP12 the engine
+/// leaves behind: twice the degrees per side, or 2 after dashes.
+fn draw_circles(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall, width: f64, height: f64, pen: Pen) -> i32 {
     let rings = if call.ip8 >= 1 { trunc(step * call.p8 / BOX_RING) } else { 0 };
     let growth = real(f64::from(CIRCLE_RING) / step);
     let from = if call.ip10 < 0 { call.ip10 + FULL_TURN } else { call.ip10 };
@@ -420,6 +595,11 @@ fn draw_circles(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall, wid
         trace_arc(canvas, at, radius, from, to, sides, dashes, pen);
         pen = Pen::Stroke;
     });
+    if sides < 0 {
+        2
+    } else {
+        2 * sides
+    }
 }
 
 /// The engine's search for a divisor of 180 near a negative `n`:
