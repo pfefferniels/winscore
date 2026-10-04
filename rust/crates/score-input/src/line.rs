@@ -355,7 +355,7 @@ impl Line {
     pub fn new(timed: &[Timed], options: &Options) -> Self {
         let mut stems = StemMode::Ordinary;
         let mut shift = StaffShift::Main;
-        let mut clef = Clef::Treble;
+        let mut clef = options.clef;
         let elements: Vec<Element> = timed
             .iter()
             .filter_map(|t| match (t.event, t.rhythm) {

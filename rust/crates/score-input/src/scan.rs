@@ -72,6 +72,10 @@ pub(crate) fn entries(text: &str, pass: Pass, motives: &mut Motives) -> Result<V
         }
         at += piece_len + 1;
     }
+    // 0x524C4A: in passes 3-5 "=" is typed for "+" (same key without shift).
+    if pass > Pass::Rhythms {
+        out.iter_mut().for_each(|e| e.text = e.text.replace('=', "+"));
+    }
     Ok(out)
 }
 

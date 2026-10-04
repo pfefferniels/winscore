@@ -180,8 +180,9 @@ impl Resolver<'_> {
     }
 }
 
-pub fn resolve(entries: &[Spanned<NoteEntry>], motives: &mut Motives) -> Result<Vec<Event>, InputError> {
-    let mut resolver = Resolver { pitches: Pitches::default(), events: Vec::new(), motives, defining: None };
+pub fn resolve(entries: &[Spanned<NoteEntry>], clef: Clef, motives: &mut Motives) -> Result<Vec<Event>, InputError> {
+    let pitches = Pitches { clef, ..Pitches::default() };
+    let mut resolver = Resolver { pitches, events: Vec::new(), motives, defining: None };
     for spanned in entries {
         resolver.spanned(spanned)?;
     }
@@ -196,7 +197,7 @@ mod tests {
 
     fn levels(text: &str) -> Vec<Vec<i32>> {
         let mut motives = Motives::new();
-        resolve(&parse(text, &mut motives).unwrap(), &mut motives)
+        resolve(&parse(text, &mut motives).unwrap(), Clef::Treble, &mut motives)
             .unwrap()
             .into_iter()
             .filter_map(|e| match e {
@@ -221,7 +222,7 @@ mod tests {
     #[test]
     fn repeats_drop_accidentals_unless_z() {
         let mut motives = Motives::new();
-        let events = resolve(&parse("CS4/X1 2/Z1 2/;", &mut motives).unwrap(), &mut motives).unwrap();
+        let events = resolve(&parse("CS4/X1 2/Z1 2/;", &mut motives).unwrap(), Clef::Treble, &mut motives).unwrap();
         let accidentals: Vec<_> = events
             .iter()
             .map(|e| match e {

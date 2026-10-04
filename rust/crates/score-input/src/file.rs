@@ -13,12 +13,17 @@
 //!
 //! Line 1 is the `IN` command, line 2 the input range (`begin end`, or `;` for the default),
 //! then the five passes, each ending at its first `;` and possibly continued over lines.
+//! A file may hold several such blocks, entered one after the other into the same score, and
+//! between them lines starting with `!` that stand for other commands (used by the test
+//! corpus; `!SP n`, the spacing staff, is not supported yet).
 
+use std::collections::HashMap;
 use std::fmt;
 
 use score_format::{Item, Word};
 
-use crate::{run, InputError, Options, Passes};
+use crate::notes::Clef;
+use crate::{run_with_motives, ErrorKind, InputError, Motives, Options, Pass, Passes, Span};
 
 const PASS_COUNT: usize = 5;
 
@@ -46,11 +51,24 @@ impl StaffArgs {
     }
 }
 
+/// One `IN` block.
 #[derive(Debug, Clone, PartialEq)]
-pub struct InputFile {
+pub struct InputLine {
     pub staff: StaffArgs,
     pub range: Option<(f32, f32)>,
     pub passes: [String; PASS_COUNT],
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Step {
+    Line(InputLine),
+    /// A command between blocks, without its `!`.
+    Command(String),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct InputFile {
+    pub steps: Vec<Step>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -98,22 +116,21 @@ fn input_range(line: &str) -> Result<Option<(f32, f32)>, FileError> {
     })
 }
 
-impl InputFile {
-    pub fn parse(text: &str) -> Result<Self, FileError> {
-        let text = text.replace("\r\n", "\n");
+impl InputLine {
+    /// One block from the start of `text`; returns it and the text after its fifth pass.
+    fn parse(text: &str) -> Result<(Self, &str), FileError> {
         let mut lines = text.splitn(3, '\n');
         let staff = staff_args(lines.next().unwrap_or(""))?;
         let range = input_range(lines.next().unwrap_or(""))?;
-        let rest = lines.next().unwrap_or("");
-        let passes: Vec<String> = rest
-            .split_inclusive(';')
-            .take_while(|p| p.ends_with(';'))
-            .take(PASS_COUNT)
-            .map(|p| p.trim().to_string())
-            .collect();
-        let found = passes.len();
-        let passes = passes.try_into().map_err(|_| FileError::MissingPass(found + 1))?;
-        Ok(Self { staff, range, passes })
+        let mut rest = lines.next().unwrap_or("");
+        let mut passes = Vec::with_capacity(PASS_COUNT);
+        for n in 1..=PASS_COUNT {
+            let end = rest.find(';').ok_or(FileError::MissingPass(n))?;
+            passes.push(rest[..=end].trim().to_string());
+            rest = &rest[end + 1..];
+        }
+        let passes = passes.try_into().map_err(|_| FileError::MissingPass(PASS_COUNT))?;
+        Ok((Self { staff, range, passes }, rest))
     }
 
     pub fn passes(&self) -> Passes<'_> {
@@ -121,25 +138,77 @@ impl InputFile {
         Passes { notes, rhythms, marks, beams, slurs }
     }
 
-    /// Staff, size and range for [`run`]; the range ends at the staff's right end if that is
-    /// shorter.
+    /// Staff, size and range for [`crate::run`] on a staff created by these IN arguments; the
+    /// range ends at the staff's right end if that is shorter.
     pub fn options(&self) -> Options {
+        self.options_on(&self.staff, Clef::Treble)
+    }
+
+    fn options_on(&self, staff: &StaffArgs, clef: Clef) -> Options {
         let default = Options::default();
         let (begin, mut end) = self.range.unwrap_or((default.begin, default.end));
-        if self.staff.right > 0.0 {
-            end = end.min(self.staff.right);
+        if staff.right > 0.0 {
+            end = end.min(staff.right);
         }
-        let size = if self.staff.size == 0.0 { 1.0 } else { self.staff.size };
-        Options { staff: self.staff.number, size, begin, end }
+        let size = if staff.size == 0.0 { 1.0 } else { staff.size };
+        Options { staff: self.staff.number, size, begin, end, clef }
+    }
+}
+
+impl InputFile {
+    pub fn parse(text: &str) -> Result<Self, FileError> {
+        let text = text.replace("\r\n", "\n");
+        let mut rest = text.trim_start_matches('\n');
+        let mut steps = Vec::new();
+        while !rest.trim().is_empty() {
+            if let Some(command) = rest.strip_prefix('!') {
+                let (line, tail) = command.split_once('\n').unwrap_or((command, ""));
+                steps.push(Step::Command(line.trim().to_string()));
+                rest = tail;
+                continue;
+            }
+            let (line, tail) = InputLine::parse(rest)?;
+            steps.push(Step::Line(line));
+            rest = tail.trim_start_matches(['\n', ' ']);
+        }
+        if steps.is_empty() {
+            return Err(FileError::NoInCommand);
+        }
+        Ok(Self { steps })
     }
 
-    /// The staff item IN creates when the staff does not exist yet.
-    pub fn staff_item(&self) -> Item {
-        self.staff.staff_item()
-    }
-
-    /// The staff item followed by the items of the line.
+    /// The items of all blocks, as the engine leaves them: a staff item where IN creates a
+    /// staff, then the line's items. A later line on the same staff starts in the clef the
+    /// staff's last clef item set, and motives carry over.
     pub fn items(&self) -> Result<Vec<Item>, InputError> {
-        Ok(std::iter::once(self.staff_item()).chain(run(&self.passes(), &self.options())?).collect())
+        let mut items: Vec<Item> = Vec::new();
+        let mut staves: HashMap<u8, StaffArgs> = HashMap::new();
+        let mut motives = Motives::new();
+        for step in &self.steps {
+            let line = match step {
+                Step::Line(line) => line,
+                Step::Command(command) => {
+                    return Err(InputError::new(Pass::Notes, Span::default(), ErrorKind::Unsupported(command.clone())));
+                }
+            };
+            let number = line.staff.number;
+            if let std::collections::hash_map::Entry::Vacant(slot) = staves.entry(number) {
+                slot.insert(line.staff);
+                items.push(line.staff.staff_item());
+            }
+            let clef = current_clef(&items, number);
+            let options = line.options_on(&staves[&number], clef);
+            items.extend(run_with_motives(&line.passes(), &options, &mut motives)?);
+        }
+        Ok(items)
     }
+}
+
+/// The clef of the staff's last clef item (treble if it has none).
+fn current_clef(items: &[Item], staff: u8) -> Clef {
+    items
+        .iter()
+        .rev()
+        .find(|item| item.code() == 3 && item.param(2) as u8 == staff)
+        .map_or(Clef::Treble, |item| Clef::from_code(item.param(5) as i32))
 }

@@ -38,7 +38,7 @@ mod spacing;
 use score_format::Item;
 
 pub use error::{ErrorKind, InputError, Pass, Span};
-pub use file::{InputFile, StaffArgs};
+pub use file::{InputFile, InputLine, StaffArgs, Step};
 pub use motives::Motives;
 
 /// The texts of the five passes, each ending with `;`.
@@ -58,19 +58,22 @@ impl Default for Passes<'_> {
 }
 
 /// Where the line goes: the staff (P2 of every item), its size factor (P5 of the staff
-/// item, 1 for a normal staff) and the input range in P3 units.
+/// item, 1 for a normal staff), the input range in P3 units, and the clef in force on the
+/// staff when the line starts (the engine keeps the last clef of each staff).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Options {
     pub staff: u8,
     pub size: f32,
     pub begin: f32,
     pub end: f32,
+    pub clef: notes::Clef,
 }
 
 impl Default for Options {
-    /// Staff 1 of normal size and the range WinScore's input dialog proposes, 2 to 200.
+    /// Staff 1 of normal size in treble clef and the range WinScore's input dialog proposes,
+    /// 2 to 200.
     fn default() -> Self {
-        Self { staff: 1, size: 1.0, begin: 2.0, end: 200.0 }
+        Self { staff: 1, size: 1.0, begin: 2.0, end: 200.0, clef: notes::Clef::Treble }
     }
 }
 
@@ -81,7 +84,7 @@ pub fn run(passes: &Passes, options: &Options) -> Result<Vec<Item>, InputError> 
 
 /// As [`run`], with motives kept from earlier lines and stored for later ones.
 pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motives) -> Result<Vec<Item>, InputError> {
-    let events = events::resolve(&notes::parse(passes.notes, motives)?, motives)?;
+    let events = events::resolve(&notes::parse(passes.notes, motives)?, options.clef, motives)?;
     let rhythms = rhythm::parse(passes.rhythms, motives)?;
     let needed = events.iter().filter(|e| e.is_rhythmic()).count();
     if rhythms.len() != needed {

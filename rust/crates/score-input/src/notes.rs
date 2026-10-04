@@ -102,6 +102,17 @@ impl Clef {
         self as i32
     }
 
+    /// The clef of a clef item's P5 (treble for codes it does not know).
+    pub fn from_code(code: i32) -> Self {
+        match code {
+            1 => Clef::Bass,
+            2 => Clef::Alto,
+            3 => Clef::Tenor,
+            4 => Clef::Percussion,
+            _ => Clef::Treble,
+        }
+    }
+
     /// Scale steps from a pitch's treble-clef level to its level on this clef's staff.
     pub fn level_offset(self) -> i32 {
         match self {
