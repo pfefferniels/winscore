@@ -10,9 +10,11 @@ pub(crate) mod glyph;
 mod head;
 mod ledger;
 mod mark;
+mod tablature;
 
 use crate::canvas::{Canvas, Pen};
 use crate::document::{Document, ItemRef};
+use crate::text::Font;
 use crate::units::{constant, real, trunc, Pos};
 
 
@@ -115,7 +117,7 @@ pub(crate) struct Note {
 }
 
 impl Note {
-    /// None for tablature (P6 = -4 or below, outside -20 … -39), not drawn yet.
+    /// None for tablature (P6 = -4 or below, outside -20 … -39).
     fn new(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Self> {
         let head = match ip(item, 6) {
             -3 => BREVE,
@@ -196,7 +198,10 @@ impl Note {
 }
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-    let Some(note) = Note::new(doc, item) else { return };
+    let Some(note) = Note::new(doc, item) else {
+        tablature::draw(doc, item, canvas);
+        return;
+    };
     if ledger::wanted(&note, item) {
         ledger::draw(doc, item, &note, canvas);
     }
@@ -215,6 +220,16 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     }
     if ip(item, 11) != 0 {
         mark::draw(doc, item, &note, stem_length, canvas);
+    }
+}
+
+/// The font a note leaves loaded for the next item (draw_item 0x547358):
+/// that of its last text, a fingering mark, an AlphaNote letter or a
+/// tablature number.
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    match Note::new(doc, item) {
+        None => tablature::font_loaded(doc, item),
+        Some(note) => mark::font_loaded(doc, item, &note).or_else(|| head::font_loaded(doc, item, &note)),
     }
 }
 

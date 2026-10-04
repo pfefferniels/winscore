@@ -8,7 +8,10 @@
 use super::glyph;
 use super::Note;
 use crate::canvas::Canvas;
+use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
 use crate::display::Colour;
+use crate::text::{font_loaded as text_font_loaded, Font};
+use score_format::Item;
 use crate::page::P3_UNIT;
 use crate::document::{Document, ItemRef};
 use crate::units::{constant, real, trunc, Pos};
@@ -143,23 +146,93 @@ fn alpha_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
     if hollow && note.level % 2 != 0 {
         staff_line_mask(note, staff.step, canvas);
     }
-    let size = match item.p(15) {
-        0.0 => 1.0,
-        p15 => f64::from(p15),
-    };
+    let size = alpha_size(item);
     let p3 = real(note.unit * constant(1.45) / 25.0 + real(note.origin.x / P3_UNIT));
     let p4 = real(f64::from(item.p(4)) - constant(1.68));
     let at = Pos::new(real(p3 * P3_UNIT), staff.y(p4));
     let symbol = if hollow { HOLLOW_ALPHA_HEAD } else { ALPHA_HEAD };
     glyph::library(doc, item, canvas, symbol, at, (real(size * constant(0.58)), real(size * constant(0.475))), staff.step);
+    if doc.screen() {
+        alpha_letter(doc, item, note, size, canvas);
+    }
+}
+
+/// The letter name in an AlphaNote (0x4F1D5E, screen only, P6 ±20 … ±23
+/// for treble, bass, alto, tenor clef names): a code-10 number item with
+/// P5 = 1001 + the letter, at P22/P23 from its default place, size P24,
+/// font P21 (default 5, bold), white in a black head.
+fn alpha_letter(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, size: f64, canvas: &mut Canvas<'_>) {
+    let Some(changed) = letter_item(item, note, size) else { return };
+    let letter_item = item.changed(&changed);
+    // The letter's P26 is pushed and popped around it in the engine; the
+    // note's points are flushed in the note's own colour.
+    let own = canvas.colour;
+    draw_number(doc, letter_item, canvas, doc.position(letter_item), &NumberCall::of(letter_item));
+    canvas.colour = own;
+}
+
+/// The font an AlphaNote's letter leaves loaded.
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>, note: &Note) -> Option<Font> {
+    if !note.alpha || !doc.screen() {
+        return None;
+    }
+    let changed = letter_item(item, note, alpha_size(item))?;
+    let letter_item = item.changed(&changed);
+    let call = NumberCall::of(letter_item);
+    let text = number_text(call.value, call.p5, call.p17, call.p18);
+    text_font_loaded(doc, &number_text_call(&call, Pos::default(), &text, Font::TIMES))
+}
+
+/// P15 as the AlphaNote routines use it (0 read as 1).
+fn alpha_size(item: ItemRef<'_>) -> f64 {
+    match item.p(15) {
+        0.0 => 1.0,
+        p15 => f64::from(p15),
+    }
+}
+
+/// The code-10 item 0x4F1D5E draws as the letter; None from P6 ±24 on.
+fn letter_item(item: ItemRef<'_>, note: &Note, size: f64) -> Option<Item> {
+    let kind = unparenthesised(trunc(f64::from(item.p(6)))).abs();
+    let clef_shift = match kind {
+        21 => -5,
+        22 => 1,
+        23 => -1,
+        24.. => return None,
+        _ => 0,
+    };
+    let letter = (note.level + clef_shift + 71) % 7 + 1001;
+    let p = |n: usize| f64::from(item.p(n));
+    let p24 = if item.p(24) == 0.0 { 1.0 } else { p(24) };
+    let x150 = real(note.origin.x / P3_UNIT);
+    let mut changes = vec![
+        (1, 10.0),
+        (3, real(note.unit * constant(0.022) + x150 + p(22)) as f32),
+        (4, real(p(4) - size * constant(0.72) + p(23)) as f32),
+        (5, letter as f32),
+        (6, real(size * constant(0.45) * p24) as f32),
+        (7, if item.p(21) == 0.0 { 1005.0 } else { item.p(21) + 1000.0 }),
+        (8, 0.0),
+        (24, p24 as f32),
+    ];
+    if trunc(p(6)) > 0 {
+        changes.push((26, 0.99));
+    }
+    Some(item.with_params(&changes))
 }
 
 /// draw_box type 0, filled, 2.4 by 0.35 half-widths of 3.5 steps, centred
 /// 210 units (at size 1) right of the note, emitted at once in white.
 fn staff_line_mask(note: &Note, staff_step: f64, canvas: &mut Canvas<'_>) {
     let centre = Pos::new(real(staff_step / 25.0 * 210.0 + note.origin.x), note.origin.y);
-    let half_width = real(note.step * 3.5 * constant(2.4));
-    let half_height = real(note.step * 3.5 * constant(0.35));
+    white_box(canvas, centre, note.step, (constant(2.4), constant(0.35)));
+}
+
+/// draw_box type 0, filled, with half-widths of `size` × 3.5 steps,
+/// emitted at once in near-white (as 0x4F1F69 and 0x559733 do).
+pub(super) fn white_box(canvas: &mut Canvas<'_>, centre: Pos, step: f64, size: (f64, f64)) {
+    let half_width = real(step * 3.5 * size.0);
+    let half_height = real(step * 3.5 * size.1);
     let (left, right) = (real(centre.x - half_width), real(half_width + centre.x));
     let (bottom, top) = (real(centre.y - half_height), real(half_height + centre.y));
     let own = canvas.colour;

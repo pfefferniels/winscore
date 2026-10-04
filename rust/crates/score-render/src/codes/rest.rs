@@ -12,6 +12,9 @@
 
 use crate::canvas::Canvas;
 use crate::codes::note::glyph;
+use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
+use crate::text::{font_loaded as text_font_loaded, Font};
+use crate::symbols::text_symbol::{draw_text_symbol, TextSymbolCall};
 use crate::colour;
 use crate::document::{Document, ItemRef};
 use crate::page::{self, P3_UNIT};
@@ -53,7 +56,8 @@ const BAR_SYMBOL_SIZE: f32 = 0.83;
 const FIRST_REST_SYMBOL: i32 = 35;
 const DOT_SYMBOL: i32 = 24;
 const FERMATA_SYMBOL: i32 = 31;
-const FERMATA_M3_SYMBOL: i32 = 276;
+/// P8 = -3: "G.P.", a symbol draw_symbol writes as text.
+const GENERAL_PAUSE_SYMBOL: i32 = 276;
 const TWO_BAR_REPEAT_SYMBOL: i32 = 115;
 /// Symbol 118 - t for t = 1, 2: the four- and two-bar rests.
 const BAR_SYMBOLS: i32 = 118;
@@ -155,7 +159,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 /// from P3; CW centring and the parentheses work from P3 too.
 pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64, canvas: &mut Canvas<'_>) {
     let Some(rest) = Rest::new(doc, item, x_pos) else { return };
-    if ip(item, 6) == -1 && doc.screen() {
+    if invisible_on_screen(doc, item) {
         canvas.colour = colour::from_p26(INVISIBLE_GREY, doc.options.medium);
     }
     let t = rest.kind + 8;
@@ -270,6 +274,82 @@ impl Bars {
             end
         }
     }
+}
+
+/// P6 = -1 on the screen: draw_rest shows the rest in grey (P26 = 0.6).
+fn invisible_on_screen(doc: &Document<'_>, item: ItemRef<'_>) -> bool {
+    ip(item, 6) == -1 && doc.screen()
+}
+
+/// draw_number's font 6 (the meter font), which rest numbers default to.
+const DEFAULT_NUMBER_FONT: i32 = 6;
+
+/// The width draw_rest allows for a number, in units of 6 steps (0x51AEFA):
+/// narrower for the digit 1.
+fn digits_width(number: i32) -> f32 {
+    let (units, tens, hundreds) = (number % 10, number % 100 / 10, number / 100);
+    match number {
+        1 => 1.255,
+        n if n < 10 => 1.55,
+        11 => 2.65,
+        n if n < 100 => match (tens, units) {
+            (1, _) => 3.05,
+            (_, 1) => 2.95,
+            _ => 3.25,
+        },
+        _ => match (hundreds, tens, units) {
+            (1, 1, 1) => 4.3,
+            (1, 1, _) => 4.55,
+            (1, _, 1) | (_, 1, 1) => 4.45,
+            (1, _, _) => 4.55,
+            (_, 1, _) => 4.7,
+            (_, _, 1) => 4.6,
+            _ => 4.9,
+        },
+    }
+}
+
+/// P12, the size of a number or fermata above the rest (0 read as 1).
+fn number_scale(item: ItemRef<'_>) -> f64 {
+    match item.p(12) {
+        0.0 => 1.0,
+        p12 => f64::from(p12),
+    }
+}
+
+/// What draw_rest hands draw_number for the number above: size P12 × 1.2
+/// (× 0.7 grace), font IP7 = P14 with P14 cleared, or font 6 with P14 =
+/// 1.05; P8, P9, IP17 cleared.
+fn number_call(doc: &Document<'_>, item: ItemRef<'_>, rest: &Rest, number: i32, size: f64) -> NumberCall {
+    let (font, p14) = match item.p(14) {
+        0.0 => (DEFAULT_NUMBER_FONT, constant(1.05)),
+        p14 => (trunc(f64::from(p14)), 0.0),
+    };
+    NumberCall {
+        value: number,
+        p5: number as f32,
+        size: real(number_scale(item) * constant(1.2) * size) as f32,
+        font,
+        frame: 0,
+        frame_thickness: 0,
+        p14: p14 as f32,
+        p17: 0,
+        p26: if invisible_on_screen(doc, item) { INVISIBLE_GREY } else { item.p(26) },
+        step: Some(rest.step),
+        ..NumberCall::of(item)
+    }
+}
+
+/// The font a rest leaves loaded for the next item (draw_item 0x547358):
+/// that of its number. The number's position does not matter for it.
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    let rest = Rest::new(doc, item, page::x(item.p(3)))?;
+    if rest.number <= 0 {
+        return None;
+    }
+    let call = number_call(doc, item, &rest, rest.number, rest.size);
+    let text = number_text(call.value, call.p5, call.p17, call.p18);
+    text_font_loaded(doc, &number_text_call(&call, Pos::default(), &text, Font::TIMES))
 }
 
 /// The drawing state draw_rest carries between its stages.
@@ -397,17 +477,31 @@ impl Drawing<'_, '_, '_> {
     fn above(&mut self, t: i32, x: f64, number: i32, size: f64) {
         if number < 0 {
             self.fermata(x, number, size);
+        } else {
+            self.number(t, x, number, size);
         }
-        let _ = t;
+    }
+
+    /// The number above (0x51AEFA): centred by a width read off its digits,
+    /// at P12 × 1.2 (× 0.7 grace) size, 12 scale steps above P4 (+ P11),
+    /// in the P14 font (IP7) or font 6 at P14 = 1.05.
+    fn number(&mut self, t: i32, x: f64, number: i32, size: f64) {
+        let rest = *self.rest;
+        let item = self.item;
+        let width = real(number_scale(item) * constant(digits_width(number)));
+        let base = if t == T_REPEAT { constant(3.4) } else { constant(1.42) };
+        let dx = real((base - width) * rest.unit * 6.0 * size);
+        let y = rest.y(real(rest.level + 12.0 + f64::from(item.p(11))));
+        let at = Pos::new(real(rest.number_shift * P3_UNIT + (dx + x)), y);
+        let own = self.canvas.colour;
+        draw_number(self.doc, item, self.canvas, at, &number_call(self.doc, item, &rest, number, size));
+        self.canvas.colour = own;
     }
 
     fn fermata(&mut self, x: f64, number: i32, size: f64) {
         let rest = *self.rest;
         let item = self.item;
-        let scale = match item.p(12) {
-            0.0 => 1.0,
-            p12 => f64::from(p12),
-        };
+        let scale = number_scale(item);
         let offset = constant(match rest.kind {
             k if k < 0 => 1.42,
             0 => 0.95,
@@ -423,8 +517,18 @@ impl Drawing<'_, '_, '_> {
         let level = if item.p(4) > 0.0 { real(rest.level + level) } else { level };
         let y = rest.y(real(f64::from(item.p(11)) + level));
         if ip(item, 8) == -3 {
-            // Symbol 276 is drawn as text ("G.P."), which the shared symbol port does not do yet.
-            let _ = FERMATA_M3_SYMBOL;
+            let shift = match item.p(10) {
+                0.0 => 0.0,
+                p10 => real(rest.unit * f64::from(p10) / 25.0),
+            };
+            let call = TextSymbolCall {
+                size_x: sx,
+                size_y: sy,
+                p3: real(shift + f64::from(item.p(3))) as f32,
+                p16: rest.number_shift as f32,
+                ..TextSymbolCall::of(self.doc, item, GENERAL_PAUSE_SYMBOL)
+            };
+            draw_text_symbol(self.doc, item, self.canvas, &call);
             return;
         }
         glyph::clef(self.doc, self.item, self.canvas, FERMATA_SYMBOL, Pos::new(x, y), (sx, sy), rest.step);
