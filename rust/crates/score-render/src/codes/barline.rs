@@ -9,12 +9,13 @@
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
 use crate::codes::line::{self, Params};
+use crate::codes::rest;
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
 use crate::geometry::ellipse;
-use crate::symbols::draw_clef;
+use crate::symbols::{draw_clef, ItemContext};
 use crate::units::{constant, real, trunc, Pos};
 
 /// The highest staff number a barline may reach.
@@ -62,7 +63,8 @@ struct Barline {
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let mut kind = trunc(f64::from(item.p(5)));
-    if kind == TWO_BAR_REPEAT {
+    let two_bar_repeat = kind == TWO_BAR_REPEAT;
+    if two_bar_repeat {
         kind = 0;
     }
     let mut span = trunc(f64::from(item.p(4)));
@@ -116,6 +118,11 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         dash,
     };
     bar.draw(doc, item, canvas);
+    if two_bar_repeat && bar.kind == 0 && item.p(6) == 0.0 {
+        // The sign after a plain bar: draw_rest with P4 = 0 and IP5 = -44.
+        let sign = item.with_params(&[(4, 0.0), (5, TWO_BAR_REPEAT as f32)]);
+        rest::render(doc, item.changed(&sign), canvas);
+    }
     if item.p(18) != 0.0 && gap_p5 < 2.0 {
         gap(item, &bar, doc.screen(), canvas.buffer_mut());
     }
@@ -246,8 +253,8 @@ impl Barline {
         };
         let at = Pos::new(self.x_pos, real(self.bottom - step * 21.0));
         // draw_clef reads IP4 (mini clefs) and IP10 (pixels); the brace routine sets IP10 = 0.
-        let changed = item.with_params(&[(4, self.p4), (10, 0.0)]);
-        draw_clef(doc, item.changed(&changed), canvas, at, step, BRACE_SYMBOL, (width, height));
+        let context = ItemContext { ip4: trunc(f64::from(self.p4)), pixels: 0, ..ItemContext::of(item) };
+        draw_clef(doc, &context, canvas, at, step, BRACE_SYMBOL, (width, height));
     }
 
     /// Type 10: an open bracket left of the bar on the middle lines.
