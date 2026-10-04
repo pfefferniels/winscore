@@ -2,7 +2,7 @@
 // (editor-core's score-edit crate, wrapped by score-web); until that lands,
 // `interimEditor` provides the same operations with plain parameter edits so
 // the interaction layer can be built and tried.
-import type { Score } from './wasm/score_web.js';
+import type { InputLine, Score } from './wasm/score_web.js';
 
 /** One undoable step, as the UI names it. */
 export interface Change {
@@ -21,6 +21,8 @@ export interface Editor {
   deleteSelection(): Change | null;
   /** A SCORE edit-mode command line, e.g. "R 5" or "600 5". */
   execute(command: string): Change;
+  /** Adds one line of five-pass input; the new items become the selection. */
+  insertInput(line: InputLine): Change;
   dragBegin(): void;
   /** Total pointer travel since `dragBegin`, in page units; `constrain` keeps one axis. */
   dragTo(dx: number, dy: number, constrain: boolean): void;
@@ -49,8 +51,8 @@ const SCALE_STEP = 175;
 
 /**
  * Parameter-level stand-in for the Rust editor: moves change P3 and P4
- * only, drags assume staff size 1, and delete and commands are not
- * available.
+ * only, drags assume staff size 1, delete and commands are not available,
+ * and input is appended without an undo step.
  */
 export function interimEditor(score: Score): Editor {
   let selected: number[] = [];
@@ -95,6 +97,10 @@ export function interimEditor(score: Score): Editor {
     },
     execute() {
       throw new Error('Edit commands need the Rust editor, which is not wired yet.');
+    },
+    insertInput(line) {
+      selected = Array.from(score.insertInput(line));
+      return { label: `Input: ${selected.length} items (not undoable until the Rust editor is wired)` };
     },
     dragBegin() {
       drag = { origin: new Map(selected.map((item) => [item, [param(item, 3), param(item, 4)]])), current: [] };

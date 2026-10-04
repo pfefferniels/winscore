@@ -30,6 +30,6 @@ What the FORTRAN engine inside WScore.exe (WinScore 5.01) computes, with address
 
 - `names.tsv`: our routine names (address, name, confidence, role). Read by `oracle/trace.py` and applied to the Ghidra project by `ghidra/ApplyNames.java`.
 - `globals.tsv`: names and types of engine globals (COMMON-block variables). Applied the same way.
-- `decompiled/<addr>_<name>.c`: Ghidra decompilations of the routines the topic notes rely on. The whole engine (878 routines) is decompiled at `/Users/nielspfeffer/Projects/winscore/tools/decompiled/` (not in git; `ghidra/ghidra.sh all` regenerates it). Constants are labelled by value (`f_150` is the f32 constant 150.0, `i_3` the int 3, `d_...` a double). Ghidra prints `ROUND(x)` for every `fistp`; in this engine nearly all of them run with the rounding control set to truncate (see numerics.md).
+- `decompiled/<addr>_<name>.c`: Ghidra decompilations of the routines the topic notes rely on. The whole engine (878 routines) is decompiled at `analysis/engine/decompiled_all/` with `index.tsv` (callers, callees, item codes; `ghidra/ghidra.sh all` and `make_index.py` regenerate it). Constants are labelled by value (`f_150` is the f32 constant 150.0, `i_3` the int 3, `d_...` a double). Ghidra prints `ROUND(x)` for every `fistp`; in this engine nearly all of them run with the rounding control set to truncate (see numerics.md).
 - `experiments/`: scripts that reproduce the verified statements.
 - `ghidra/`: GhidraScripts and the runner `ghidra.sh`.

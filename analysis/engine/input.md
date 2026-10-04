@@ -1,6 +1,6 @@
 # Staged music input (IN)
 
-The IN command and its five passes, as far as needed by `input-lang`. Call chains come from `oracle/trace.py` on `oracle/input_driver.py` runs (`experiments/input_trace.py`). Decompilations: `/Users/nielspfeffer/Projects/winscore/tools/decompiled/`.
+The IN command and its five passes, as far as needed by `input-lang`. Call chains come from `oracle/trace.py` on `oracle/input_driver.py` runs (`experiments/input_trace.py`). Decompilations: `analysis/engine/decompiled_all/`.
 
 ## Routine map
 

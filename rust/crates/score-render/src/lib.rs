@@ -41,6 +41,8 @@ pub mod page;
 pub mod staff;
 pub mod svg;
 pub mod symbols;
+pub mod text;
+pub mod trig;
 pub mod units;
 
 pub use display::{Colour, DisplayList, ItemId, PlacedText, Point, Shape, ShapeKind, TextRun, UNITS_PER_INCH};

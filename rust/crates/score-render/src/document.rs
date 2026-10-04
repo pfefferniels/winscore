@@ -4,7 +4,7 @@
 //! modules read parameters by number. The document adds what every module
 //! needs besides its own item: the page, the staff table and the options.
 
-use score_format::{Item, MusFile};
+use score_format::{Item, MusFile, Word};
 
 use crate::colour;
 use crate::display::{Colour, ItemId};
@@ -66,6 +66,24 @@ impl ItemRef<'_> {
     /// The colour P26 asks for on `medium`.
     pub fn colour(&self, medium: Medium) -> Colour {
         colour::from_p26(self.p(26), medium)
+    }
+
+    /// A copy of the item with parameters `(n, value)` replaced, for a
+    /// routine that overwrites the engine's parameter globals before calling
+    /// a shared routine. Borrow it with [`ItemRef::changed`].
+    pub fn with_params(&self, changes: &[(usize, f32)]) -> Item {
+        let len = changes.iter().map(|&(n, _)| n).max().unwrap_or(0).max(self.item.params().len());
+        let mut params: Vec<Word> = self.item.params().to_vec();
+        params.resize(len, Word::from_f32(0.0));
+        changes.iter().filter(|&&(n, _)| n >= 1).for_each(|&(n, value)| params[n - 1] = Word::from_f32(value));
+        let mut text = self.item.text().to_vec();
+        text.resize(text.len().div_ceil(4) * 4, b' ');
+        Item::with_text(params, text)
+    }
+
+    /// The same item id with other parameters (see [`ItemRef::with_params`]).
+    pub fn changed<'b>(&self, item: &'b Item) -> ItemRef<'b> {
+        ItemRef { id: self.id, item }
     }
 }
 

@@ -1,6 +1,6 @@
 # Notes (code 1)
 
-Routine `draw_note` 0x4EFEC0 and its parts. The model in `experiments/notes.py` matched the engine on 1000 random cases (single notes and pairs of black notes): head types 0–2, stems up/down/none, P8, 1–4 tails, 1–2 dots with fractional offsets, accidentals 1–5 with fractional shifts, ledger lines above and below, P10 (10, 20, other), P15, P19, P20 (**verified** for these). Everything else below is **read**. Decompilations: `/Users/nielspfeffer/Projects/winscore/tools/decompiled/4efec0_draw_note.c` and the routines named there.
+Routine `draw_note` 0x4EFEC0 and its parts. The model in `experiments/notes.py` matched the engine on 1000 random cases (single notes and pairs of black notes): head types 0–2, stems up/down/none, P8, 1–4 tails, 1–2 dots with fractional offsets, accidentals 1–5 with fractional shifts, ledger lines above and below, P10 (10, 20, other), P15, P19, P20 (**verified** for these). Everything else below is **read**. Decompilations: `analysis/engine/decompiled_all/4efec0_draw_note.c` and the routines named there.
 
 Symbols are drawn through `draw_clef` → `draw_symbol` (symbols.md). With OUTPUT_MODE = 1, `draw_clef(&x, &y, &n, &xs, &ys)` for 6 <= n < 45 draws LB symbol n at library-unit size STEP*0.25*xs (x) and STEP*0.25*ys (y), where STEP is whatever the note routine has set it to (the head step `hs` below).
 
