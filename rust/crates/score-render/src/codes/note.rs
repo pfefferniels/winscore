@@ -10,6 +10,7 @@ pub(crate) mod glyph;
 mod head;
 mod ledger;
 mod mark;
+mod tablature;
 
 use crate::canvas::{Canvas, Pen};
 use crate::document::{Document, ItemRef};
@@ -115,7 +116,7 @@ pub(crate) struct Note {
 }
 
 impl Note {
-    /// None for tablature (P6 = -4 or below, outside -20 … -39), not drawn yet.
+    /// None for tablature (P6 = -4 or below, outside -20 … -39).
     fn new(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Self> {
         let head = match ip(item, 6) {
             -3 => BREVE,
@@ -196,7 +197,14 @@ impl Note {
 }
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-    let Some(note) = Note::new(doc, item) else { return };
+    let Some(note) = Note::new(doc, item) else {
+        let step = match item.p(15) {
+            0.0 => doc.staff_of(item).step,
+            p15 => real(f64::from(p15) * doc.staff_of(item).step),
+        };
+        tablature::draw(doc, item, step, canvas);
+        return;
+    };
     if ledger::wanted(&note, item) {
         ledger::draw(doc, item, &note, canvas);
     }

@@ -201,8 +201,14 @@ fn alpha_letter(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, size: f64, c
 /// 210 units (at size 1) right of the note, emitted at once in white.
 fn staff_line_mask(note: &Note, staff_step: f64, canvas: &mut Canvas<'_>) {
     let centre = Pos::new(real(staff_step / 25.0 * 210.0 + note.origin.x), note.origin.y);
-    let half_width = real(note.step * 3.5 * constant(2.4));
-    let half_height = real(note.step * 3.5 * constant(0.35));
+    white_box(canvas, centre, note.step, (constant(2.4), constant(0.35)));
+}
+
+/// draw_box type 0, filled, with half-widths of `size` × 3.5 steps,
+/// emitted at once in near-white (as 0x4F1F69 and 0x559733 do).
+pub(super) fn white_box(canvas: &mut Canvas<'_>, centre: Pos, step: f64, size: (f64, f64)) {
+    let half_width = real(step * 3.5 * size.0);
+    let half_height = real(step * 3.5 * size.1);
     let (left, right) = (real(centre.x - half_width), real(half_width + centre.x));
     let (bottom, top) = (real(centre.y - half_height), real(half_height + centre.y));
     let own = canvas.colour;
