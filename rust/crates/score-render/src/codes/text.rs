@@ -26,16 +26,38 @@ const COLOUR_PARAMETERS: usize = 16;
 
 /// The characters as the engine reads them (draw_text 0x569AF0): P12 of
 /// them from the word after P13, or after P16 when P14 = -1, whatever the
-/// item stores in between.
+/// item stores there. Past the item's blank-padded characters the engine
+/// finds zeros in the cases checked.
 fn characters(item: ItemRef<'_>) -> Cow<'_, [u8]> {
     let first = if item.p(14) == -1.0 { COLOUR_PARAMETERS } else { PARAMETERS };
     let params = item.item.params();
-    if params.len() <= first {
-        return Cow::Borrowed(item.item.text());
+    let text = item.item.text();
+    if params.len() == first {
+        return Cow::Borrowed(text);
     }
     let count = item.p(12).max(0.0) as usize;
-    let bytes: Vec<u8> = params[first..].iter().flat_map(|w| w.to_le_bytes()).chain(item.item.text().iter().copied()).collect();
-    Cow::Owned(bytes.into_iter().take(count).collect())
+    let padding = (4 - text.len() % 4) % 4;
+    let stored = params.get(first..).unwrap_or_default().iter().flat_map(|w| w.to_le_bytes());
+    let skipped = 4 * first.saturating_sub(params.len());
+    let bytes = stored
+        .chain(text.iter().copied())
+        .chain(std::iter::repeat_n(b' ', padding))
+        .chain(std::iter::repeat(0))
+        .skip(skipped)
+        .take(count);
+    Cow::Owned(bytes.collect())
+}
+
+/// Word `n` of the item as the engine loads it into P(n): past the stored
+/// parameters it reads the characters.
+fn stored_word(item: ItemRef<'_>, n: usize) -> f32 {
+    let params = item.item.params().len();
+    if n <= params {
+        return item.p(n);
+    }
+    let at = 4 * (n - params - 1);
+    let bytes: Vec<u8> = item.item.text().iter().copied().chain(std::iter::repeat(b' ')).skip(at).take(4).collect();
+    f32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]])
 }
 
 /// The draw_text call for a text item with its characters, given the font
@@ -54,7 +76,7 @@ pub fn text_call<'a>(doc: &Document<'_>, item: ItemRef<'_>, text: &'a [u8], curr
         rotation: item.p(9),
         space: item.p(10),
         shift: item.p(11),
-        colour: (item.p(14) == -1.0).then(|| item.p(16)),
+        colour: (item.p(14) == -1.0).then(|| stored_word(item, 16)),
         current_font,
     }
 }
