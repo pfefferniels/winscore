@@ -18,7 +18,7 @@ pub mod clef;
 pub mod library;
 
 pub use clef::draw_clef;
-pub use library::{draw_library_symbol, SymbolCall};
+pub use library::{draw_library_symbol, ItemContext, SymbolCall};
 
 include!(concat!(env!("OUT_DIR"), "/bundled_symbols.rs"));
 

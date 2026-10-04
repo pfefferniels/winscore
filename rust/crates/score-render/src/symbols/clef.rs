@@ -7,9 +7,9 @@
 //! loaded) and its P7 = 99 picture are not ported.
 
 use crate::canvas::Canvas;
-use crate::document::{Document, ItemRef};
-use crate::symbols::library::{draw_library_symbol, SymbolCall};
-use crate::units::{real, trunc, Pos};
+use crate::document::Document;
+use crate::symbols::library::{draw_library_symbol, ItemContext, SymbolCall};
+use crate::units::{real, Pos};
 
 /// Step units (7 per scale step) draw_clef adds to the P4 = 0 level of
 /// clef types 0-5: they hang on the bottom line.
@@ -43,13 +43,13 @@ pub struct ClefPlacement {
 /// default to 1 and to each other; types 0-5 hang on the bottom line, mini
 /// clefs (|IP4| >= 100) are smaller and lifted per type, the tenor clef is
 /// the alto clef two steps up.
-pub fn clef_placement(item: ItemRef<'_>, at: Pos, step: f64, number: i32, size_x: f64, size_y: f64) -> ClefPlacement {
+pub fn clef_placement(context: &ItemContext, at: Pos, step: f64, number: i32, size_x: f64, size_y: f64) -> ClefPlacement {
     let size_x = if size_x == 0.0 { 1.0 } else { size_x };
     let size_y = if size_y == 0.0 { size_x } else { size_y };
     if number > LAST_CLEF_TYPE {
         return ClefPlacement { number, at, size_x, size_y };
     }
-    let mini = trunc(f64::from(item.p(4))).abs() >= MINI_P4;
+    let mini = context.ip4.abs() >= MINI_P4;
     let (size_x, size_y, lift) = if mini {
         let size = real(size_x * f64::from(MINI_SIZE));
         let kind = number.max(0) as usize;
@@ -68,7 +68,7 @@ pub fn clef_placement(item: ItemRef<'_>, at: Pos, step: f64, number: i32, size_x
 /// 45 at a quarter of the size, from 45 on at the size given.
 pub fn draw_clef_symbol(
     doc: &Document<'_>,
-    item: ItemRef<'_>,
+    context: &ItemContext,
     canvas: &mut Canvas<'_>,
     placement: &ClefPlacement,
     step: f64,
@@ -83,23 +83,22 @@ pub fn draw_clef_symbol(
         };
         (size_x, real(placement.size_y * quarter))
     };
-    let call = SymbolCall::sized(placement.number, size_x, size_y, item);
-    draw_library_symbol(doc, item, canvas, placement.at, step, &call);
+    let call = SymbolCall::sized(placement.number, size_x, size_y);
+    draw_library_symbol(doc, context, canvas, placement.at, step, &call);
 }
 
 /// draw_clef for symbol `number` at `at` with size factors `size` (P6, P7
 /// style: 0 reads as 1, and the second 0 as the first), on a staff with step
-/// unit `step`. `item` is the item being drawn: draw_clef and draw_symbol
-/// read its P4 (mini clefs) and pixel thickness.
+/// unit `step`, for the item described by `context`.
 pub fn draw_clef(
     doc: &Document<'_>,
-    item: ItemRef<'_>,
+    context: &ItemContext,
     canvas: &mut Canvas<'_>,
     at: Pos,
     step: f64,
     number: i32,
     size: (f64, f64),
 ) {
-    let placement = clef_placement(item, at, step, number, size.0, size.1);
-    draw_clef_symbol(doc, item, canvas, &placement, step);
+    let placement = clef_placement(context, at, step, number, size.0, size.1);
+    draw_clef_symbol(doc, context, canvas, &placement, step);
 }
