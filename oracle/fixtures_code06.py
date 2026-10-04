@@ -68,6 +68,9 @@ def cases() -> list[Case]:
         ("p16-number-left", "tuplet number at P16 = 0.3", {"p8": 3, "p16": 0.3}),
         ("p19-number-up", "tuplet number raised P19 = 2", {"p8": 3, "p19": 2}),
         ("p8-number-cue", "tuplet number on a cue beam", {"p8": 3, "p4": 109}),
+        ("p8-number-p18", "tuplet number on a beam of size P18 = 1.3", {"p8": 3, "p18": 1.3, "p7": 12}),
+        ("p8-number-p20", "tuplet number 12 with note width P20 = 1.5", {"p8": 12, "p20": 1.5}),
+        ("p8-number-sloped", "tuplet number on a sloped stems-down beam at P16 = 0.7", {"p8": 5, "p7": 22, "p4": 5, "p5": 8, "p16": 0.7}),
     ]
     sweep = [built(f"code06-{name}", desc, [staff(), beam(**params)]) for name, desc, params in one]
     other = [

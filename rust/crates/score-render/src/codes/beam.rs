@@ -8,7 +8,11 @@
 //! P14/P15, P14/P15 note offsets when P13 = 0, P17 thickness, P18 size, P20
 //! note width, P21 spacing. A beam reads no other item.
 
+use score_format::{Item, Word};
+
 use crate::canvas::Canvas;
+use crate::codes;
+use crate::codes::slur::BracketNumber;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::units::{constant, real, trunc, Pos};
@@ -19,12 +23,74 @@ const NOTE_WIDTH: f32 = 17.0;
 
 const STEMS_UP: i32 = 1;
 
+/// P8 from 1000 on is font × 1000 + number.
+const FONT_IN_P8: i32 = 1000;
+/// draw_number's IP7 for Times-Italic.
+const ITALIC: i32 = 1;
+
+/// IP7 for P8 = F0NN: 1000 + F, and P8 = 34NNN for font 0.
+fn font_from_p8(p8: i32) -> i32 {
+    match p8 / FONT_IN_P8 + FONT_IN_P8 {
+        1034 => FONT_IN_P8,
+        font => font,
+    }
+}
+
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-    let beam = Beam::new(doc, item);
-    let plan = beam.plan(item);
-    let main = plan.main.map_or(beam.main.edge, |count| beam.group(canvas, beam.main.edge, count));
-    let partials = plan.first.iter().chain(plan.second.iter());
-    partials.fold(main, |last, partial| beam.partial(canvas, last, partial));
+    let origin = Origin { step: doc.staff_of(item).step, stem_on_left: true };
+    let beam = Beam::new(doc, item, origin);
+    beam.draw_groups(item, canvas);
+    if trunc(f64::from(item.p(8))) > 0 {
+        beam.number(doc, item, canvas);
+    }
+}
+
+/// A note's tremolo mark P11 = 41–44, which draw_note draws by setting up
+/// a beam item of its own (0x4F2B13) and calling draw_beam.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct NoteTremolo {
+    /// P3 and P4 of that beam.
+    pub p3: f32,
+    pub p4: f32,
+    pub stems_down: bool,
+    /// IP10: the number of beams, the mark less 30.
+    pub beams: i32,
+    /// STEP as draw_note leaves it.
+    pub step: f64,
+}
+
+impl NoteTremolo {
+    /// The beam item: every other parameter 0, P12 = 3 and P17 = 0.7. The
+    /// engine sets IP7 and IP10 and leaves the floats 0; draw_beam reads
+    /// only the integers.
+    fn item(&self, staff: i32) -> Item {
+        let p7 = if self.stems_down { -20.0 } else { -10.0 };
+        let mut params = [0.0_f32; 17];
+        params[..4].copy_from_slice(&[codes::BEAM as f32, staff as f32, self.p3, self.p4]);
+        params[6] = p7;
+        params[9] = self.beams as f32;
+        params[11] = 3.0;
+        params[16] = 0.7;
+        Item::new(params.iter().map(|&p| Word::from_f32(p)).collect())
+    }
+}
+
+/// draw_beam for a note's tremolo mark (IP1 = -999): the beam's left edge
+/// lies at the level of P4 itself, not a stem's length beyond it.
+pub fn draw_note_tremolo(doc: &Document<'_>, note: ItemRef<'_>, canvas: &mut Canvas<'_>, tremolo: &NoteTremolo) {
+    let item = tremolo.item(note.staff());
+    let item = note.changed(&item);
+    let beam = Beam::new(doc, item, Origin { step: tremolo.step, stem_on_left: false });
+    beam.draw_groups(item, canvas);
+}
+
+/// What draw_beam takes from its caller besides the parameters.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Origin {
+    /// STEP: the staff's step unit for beam items.
+    step: f64,
+    /// False for a note's tremolo, whose left edge is given at the note's level.
+    stem_on_left: bool,
 }
 
 /// The stem-side edge of one beam.
@@ -130,20 +196,25 @@ struct Beam {
     /// P9.
     flags: i32,
     main: Line,
+    /// The staff's step unit (× P18): STEP while draw_beam runs.
+    step: f64,
+    up: bool,
+    /// |P4| >= 100 (without P18): a cue-size beam.
+    cue: bool,
     /// Print output closes each beam with one more point (0x4A060D).
     print: bool,
 }
 
 impl Beam {
-    fn new(doc: &Document<'_>, item: ItemRef<'_>) -> Self {
+    fn new(doc: &Document<'_>, item: ItemRef<'_>, origin: Origin) -> Self {
         let staff = doc.staff_of(item);
         let width = match item.p(20) {
             0.0 => 1.0,
             p20 => f64::from(p20),
         };
         let (step, p4) = match item.p(18) {
-            0.0 => (staff.step, trunc(f64::from(item.p(4)))),
-            p18 => (real(f64::from(p18) * staff.step), 0),
+            0.0 => (origin.step, trunc(f64::from(item.p(4)))),
+            p18 => (real(f64::from(p18) * origin.step), 0),
         };
         let cue = p4.abs() >= 100;
         let unit = real(if cue { constant(0.6) } else { 1.0 } * step);
@@ -192,14 +263,60 @@ impl Beam {
         if shift_right {
             xr = real(flag_shift + xr);
         }
-        let yl = real(doc.position(item).y + stem);
+        let level = doc.position(item).y;
+        let yl = if origin.stem_on_left { real(level + stem) } else { level };
         let yr = real(staff.y(f64::from(item.p(5))) + stem);
         let edge = Edge { left: Pos::new(xl, yl), right: Pos::new(xr, yr) };
         let main = Line::through(match trunc(f64::from(item.p(7))) {
             p7 if p7 <= 0 => tremolo_edge(edge, item, unit, cue),
             _ => edge,
         });
-        Self { unit, stem_shift, flag_shift, spacing, thickness, left, right, flags, main, print: !doc.screen() }
+        Self {
+            unit,
+            stem_shift,
+            flag_shift,
+            spacing,
+            thickness,
+            left,
+            right,
+            flags,
+            main,
+            step,
+            up,
+            cue,
+            print: !doc.screen(),
+        }
+    }
+
+    /// The tuplet number P8 (draw_beam 0x416CD9): at P16 (0.5) along the
+    /// main beam, 6.5 steps above it for stems up, 24.5 below for stems
+    /// down, P19 scale steps higher; P8 = F0NN sets font F.
+    fn number(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+        let p8 = trunc(f64::from(item.p(8)));
+        let lift = if self.up { constant(6.5) } else { constant(-24.5) };
+        let lift = real(f64::from(item.p(19)) * constant(7.0) + lift);
+        let (lift, size) = if self.cue { (real(lift * constant(0.7)), 0.6) } else { (lift, 0.875) };
+        let along = match item.p(16) {
+            0.0 => constant(0.5),
+            p16 => f64::from(p16),
+        };
+        let (value, font) = match p8 {
+            p8 if p8 >= FONT_IN_P8 => (p8 % FONT_IN_P8, font_from_p8(p8)),
+            p8 => (p8, ITALIC),
+        };
+        let left = self.main.edge.left;
+        let y = real(along * self.main.dy + (self.step * lift + left.y));
+        // IP17 would add a letter: the beam's thickness P17, not meant for the number.
+        let number = BracketNumber { value, size, font, font_p14: 0, letter: 0, rotation: 0.0 };
+        number.draw(doc, item, canvas, Pos::new(left.x + real(self.main.dx * along), y), self.step);
+    }
+
+    /// The full beams, then the partial or tremolo groups.
+    fn draw_groups(&self, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+        let plan = self.plan(item);
+        let main = plan.main.map_or(self.main.edge, |count| self.group(canvas, self.main.edge, count));
+        let partials = plan.first.iter().chain(plan.second.iter());
+        partials.fold(main, |last, partial| self.partial(canvas, last, partial));
     }
 
     fn plan(&self, item: ItemRef<'_>) -> Plan {
