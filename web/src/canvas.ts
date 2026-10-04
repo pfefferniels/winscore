@@ -27,6 +27,8 @@ export interface PageView {
   fitWidth(): void;
   /** Scrolls so that page y `top` is at the top of the viewport. */
   scrollToTop(top: number): void;
+  /** Scrolls `box` (page coordinates) into the middle of the view unless it is fully visible. */
+  reveal(box: Box): void;
   /** Page coordinates under a client (mouse) position. */
   pageAt(clientX: number, clientY: number): Point;
   /** Engine units spanned by `px` CSS pixels at the current zoom. */
@@ -154,6 +156,20 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
     fitWidth,
     scrollToTop(top: number) {
       el.viewport.scrollTop = offsets().top + (scene.extent.y1 - top) * cssPerUnit(zoom);
+      repaint();
+    },
+    reveal(box: Box) {
+      const s = cssPerUnit(zoom);
+      const { left, top } = offsets();
+      const x0 = left + (box.x0 - scene.extent.x0) * s;
+      const x1 = left + (box.x1 - scene.extent.x0) * s;
+      const y0 = top + (scene.extent.y1 - box.y1) * s;
+      const y1 = top + (scene.extent.y1 - box.y0) * s;
+      const { scrollLeft, scrollTop, clientWidth, clientHeight } = el.viewport;
+      const visible = x0 >= scrollLeft && x1 <= scrollLeft + clientWidth && y0 >= scrollTop && y1 <= scrollTop + clientHeight;
+      if (visible) return;
+      el.viewport.scrollLeft = (x0 + x1) / 2 - clientWidth / 2;
+      el.viewport.scrollTop = (y0 + y1) / 2 - clientHeight / 2;
       repaint();
     },
     pageAt,

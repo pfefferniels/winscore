@@ -95,6 +95,14 @@ export function decode(encoded: Encoded): DisplayList {
   return { shapes, texts };
 }
 
+/** The elements of `list` drawn for one item. */
+export function elementsOf(list: DisplayList, item: number): DisplayList {
+  return {
+    shapes: list.shapes.filter((s) => s.source === item),
+    texts: list.texts.filter((r) => r.source === item),
+  };
+}
+
 export function union(a: Box | null, b: Box | null): Box | null {
   if (!a) return b;
   if (!b) return a;

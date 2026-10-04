@@ -1,8 +1,10 @@
 // Copies the bundled sample scores and their engine reference display lists
 // into public/, and writes public/samples/index.json describing them.
 //
-// References are read from REFERENCE_DIR (default rust/fixtures), one
-// directory per case as verifier writes them: <case>/engine.json, meta.json.
+// Samples are stored as base64 text (<file>.b64.txt) so that every file of
+// the built site has a type static hosts serve. References are read from
+// REFERENCE_DIR (default rust/fixtures), one directory per case as verifier
+// writes them: <case>/engine.json, meta.json.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,9 +44,10 @@ for (const dir of ['samples', 'reference']) {
 
 const index = sources.map((source) => {
   const file = path.basename(source);
-  fs.copyFileSync(path.join(repo, source), path.join(publicDir, 'samples', file));
+  const encoded = `${file}.b64.txt`;
+  fs.writeFileSync(path.join(publicDir, 'samples', encoded), fs.readFileSync(path.join(repo, source)).toString('base64'));
   const name = caseName(file);
-  return { title: file, url: `samples/${file}`, case: name, reference: copyReference(name) };
+  return { title: file, url: `samples/${encoded}`, case: name, reference: copyReference(name) };
 });
 
 fs.writeFileSync(path.join(publicDir, 'samples', 'index.json'), JSON.stringify(index, null, 2));

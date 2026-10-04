@@ -2,7 +2,7 @@
 //
 // usage: node scripts/screenshots.mjs OUT_DIR [name=query ...]
 // Each shot opens index.html?<query> and waits until the page sets
-// body[data-ready]. Without shots, a default set is taken.
+// #app[data-ready]. Without shots, a default set is taken.
 import { chromium } from 'playwright';
 import { preview } from 'vite';
 import fs from 'node:fs';
@@ -27,7 +27,7 @@ try {
   page.on('console', (msg) => msg.type() === 'error' && console.error('page:', msg.text()));
   for (const [name, query] of Object.entries(shots)) {
     await page.goto(`http://localhost:4179/?${query}`);
-    await page.waitForSelector('body[data-ready="true"]', { timeout: 30000 });
+    await page.waitForSelector('#app[data-ready="true"]', { timeout: 30000 });
     await page.waitForTimeout(300);
     const file = path.join(outDir, `${name}.png`);
     await page.screenshot({ path: file });
