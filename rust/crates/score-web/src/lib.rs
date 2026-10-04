@@ -43,12 +43,6 @@ impl EncodedList {
     pub fn texts(&self) -> String {
         self.0.texts.clone()
     }
-
-    /// Source item index + 1 of each text run, 0 = none (`Uint32Array`).
-    #[wasm_bindgen(getter, js_name = textSources)]
-    pub fn text_sources(&self) -> Vec<u32> {
-        self.0.text_sources.clone()
-    }
 }
 
 impl From<&DisplayList> for EncodedList {

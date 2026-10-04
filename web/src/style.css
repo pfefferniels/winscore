@@ -185,6 +185,25 @@ button:disabled {
   pointer-events: none;
 }
 
+.fatal {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  padding: 16px;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #b91c1c;
+}
+
+.fatal p {
+  margin: 8px 0 0;
+  color: var(--text);
+  font-family: ui-monospace, monospace;
+  white-space: pre-wrap;
+}
+
 .panel {
   width: 320px;
   border-left: 1px solid var(--border);

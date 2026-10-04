@@ -410,10 +410,35 @@ async function applyQuery(samples: Sample[]) {
   ui.app.dataset.ready = 'true';
 }
 
+/** A failure that leaves the app unusable, shown over the page area. */
+function fatal(title: string, err: unknown) {
+  const box = document.createElement('div');
+  box.className = 'fatal';
+  const heading = Object.assign(document.createElement('strong'), { textContent: title });
+  const detail = Object.assign(document.createElement('p'), { textContent: String(err) });
+  box.append(heading, detail);
+  ui.stage.append(box);
+  message(`${title}: ${String(err)}`, true);
+}
+
+async function loadSamples(): Promise<Sample[]> {
+  try {
+    return (await (await fetch('samples/index.json')).json()) as Sample[];
+  } catch (err) {
+    message(`Samples are not available: ${String(err)}`, true);
+    return [];
+  }
+}
+
 async function main() {
-  await init();
+  try {
+    await init();
+  } catch (err) {
+    fatal('The WebAssembly module could not be loaded, so scores cannot be opened. The browser or the hosting page may block WebAssembly.', err);
+    return;
+  }
   showZoom(view.zoom);
-  const samples = (await (await fetch('samples/index.json')).json()) as Sample[];
+  const samples = await loadSamples();
   ui.sample.replaceChildren(new Option('Samples…', ''), ...samples.map((s) => new Option(s.title, s.url)));
   bindControls(samples);
   refreshStatus();
@@ -421,4 +446,4 @@ async function main() {
   await applyQuery(samples);
 }
 
-main().catch((err) => message(String(err), true));
+main().catch((err) => fatal('The app failed to start.', err));
