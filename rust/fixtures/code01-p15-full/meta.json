@@ -1,0 +1,44 @@
+{
+ "case": "code01-p15-full",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 59,
+   "vector_words": 591
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
+ "description": "P15 = 0.75 with sharp, dot, two tails, ledger",
+ "events": [],
+ "invalid_reasons": [],
+ "items": 2,
+ "not_found": [],
+ "page_frames": [
+  [
+   401,
+   -7347,
+   34399,
+   48651
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -    2 Items)   <Legal>",
+ "valid": true,
+ "view_globals": [
+  2400,
+  -19600
+ ],
+ "view_offset": [
+  400,
+  -7348
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}
