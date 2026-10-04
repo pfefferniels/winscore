@@ -9,6 +9,7 @@
 //! note width, P21 spacing. A beam reads no other item.
 
 use crate::canvas::Canvas;
+use crate::codes::slur::BracketNumber;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::units::{constant, real, trunc, Pos};
@@ -19,12 +20,28 @@ const NOTE_WIDTH: f32 = 17.0;
 
 const STEMS_UP: i32 = 1;
 
+/// P8 from 1000 on is font × 1000 + number.
+const FONT_IN_P8: i32 = 1000;
+/// draw_number's IP7 for Times-Italic.
+const ITALIC: i32 = 1;
+
+/// IP7 for P8 = F0NN: 1000 + F, and P8 = 34NNN for font 0.
+fn font_from_p8(p8: i32) -> i32 {
+    match p8 / FONT_IN_P8 + FONT_IN_P8 {
+        1034 => FONT_IN_P8,
+        font => font,
+    }
+}
+
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let beam = Beam::new(doc, item);
     let plan = beam.plan(item);
     let main = plan.main.map_or(beam.main.edge, |count| beam.group(canvas, beam.main.edge, count));
     let partials = plan.first.iter().chain(plan.second.iter());
     partials.fold(main, |last, partial| beam.partial(canvas, last, partial));
+    if trunc(f64::from(item.p(8))) > 0 {
+        beam.number(doc, item, canvas);
+    }
 }
 
 /// The stem-side edge of one beam.
@@ -130,6 +147,11 @@ struct Beam {
     /// P9.
     flags: i32,
     main: Line,
+    /// The staff's step unit (× P18): STEP while draw_beam runs.
+    step: f64,
+    up: bool,
+    /// |P4| >= 100 (without P18): a cue-size beam.
+    cue: bool,
     /// Print output closes each beam with one more point (0x4A060D).
     print: bool,
 }
@@ -199,7 +221,44 @@ impl Beam {
             p7 if p7 <= 0 => tremolo_edge(edge, item, unit, cue),
             _ => edge,
         });
-        Self { unit, stem_shift, flag_shift, spacing, thickness, left, right, flags, main, print: !doc.screen() }
+        Self {
+            unit,
+            stem_shift,
+            flag_shift,
+            spacing,
+            thickness,
+            left,
+            right,
+            flags,
+            main,
+            step,
+            up,
+            cue,
+            print: !doc.screen(),
+        }
+    }
+
+    /// The tuplet number P8 (draw_beam 0x416CD9): at P16 (0.5) along the
+    /// main beam, 6.5 steps above it for stems up, 24.5 below for stems
+    /// down, P19 scale steps higher; P8 = F0NN sets font F.
+    fn number(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+        let p8 = trunc(f64::from(item.p(8)));
+        let lift = if self.up { constant(6.5) } else { constant(-24.5) };
+        let lift = real(f64::from(item.p(19)) * constant(7.0) + lift);
+        let (lift, size) = if self.cue { (real(lift * constant(0.7)), 0.6) } else { (lift, 0.875) };
+        let along = match item.p(16) {
+            0.0 => constant(0.5),
+            p16 => f64::from(p16),
+        };
+        let (value, font) = match p8 {
+            p8 if p8 >= FONT_IN_P8 => (p8 % FONT_IN_P8, font_from_p8(p8)),
+            p8 => (p8, ITALIC),
+        };
+        let left = self.main.edge.left;
+        let y = real(along * self.main.dy + (self.step * lift + left.y));
+        // IP17 would add a letter: the beam's thickness P17, not meant for the number.
+        let number = BracketNumber { value, size, font, font_p14: 0, letter: 0, rotation: 0.0 };
+        number.draw(doc, item, canvas, Pos::new(left.x + real(self.main.dx * along), y), self.step);
     }
 
     fn plan(&self, item: ItemRef<'_>) -> Plan {
