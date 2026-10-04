@@ -69,11 +69,10 @@ function paintShape(ctx: CanvasRenderingContext2D, t: Transform, shape: Shape, c
 }
 
 /**
- * Rotation of a run's glyphs. The engine sets escapement = 10 × P9, its
- * clockwise rotation, and places the characters along that clockwise line;
- * the glyphs are turned to follow them. Whether GDI under MM_HIENGLISH turns
- * them that way too is still open (analysis/engine/display.md §3.4 reads
- * counterclockwise).
+ * Rotation of a run's glyphs: clockwise by escapement/10 degrees, following
+ * the clockwise line on which the engine places the characters
+ * (escapement = 10 × P9, analysis/engine/display.md §3.4). How GDI turns
+ * glyphs in a y-up mapping is inferred, not observed on Windows.
  */
 function glyphAngle(run: TextRun): number {
   return (run.escapement / 10) * (Math.PI / 180);
