@@ -9,11 +9,12 @@
    "vector_words": 171
   }
  ],
- "coordinates": "page: origin at the bottom-left paper corner, y up; view = page + view_offset",
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
  "description": "bar between staves only: P10 = 8, P11 = -8",
  "events": [],
  "invalid_reasons": [],
  "items": 5,
+ "not_found": [],
  "page_frames": [
   [
    401,
@@ -30,6 +31,10 @@
  "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
  "title": "C:\\WORK\\CASE.MUS   (saved -    5 Items)   <Legal>",
  "valid": true,
+ "view_globals": [
+  2400,
+  -10150
+ ],
  "view_offset": [
   400,
   -16798

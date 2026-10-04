@@ -13,7 +13,9 @@ use std::process::{Command, ExitCode};
 
 use score_render::DisplayList;
 use score_testkit::svg::{triptych, Caption};
-use score_testkit::{compare, display_from_json, fixtures_dir, load_all, CompareOptions, Fixture, Report};
+use score_testkit::{
+    compare, display_from_json, fixtures_dir, load_all, CompareOptions, Fixture, Report,
+};
 
 const USAGE: &str = "\
 score-compare [OPTIONS] [PATTERN ...]
@@ -77,7 +79,11 @@ fn parse_args() -> Result<Args, String> {
             "--against" => args.source = Source::Fixture(value("--against")?),
             "--status" => status = Some(value("--status")?),
             "--images" => args.images = Some(value("--images")?.into()),
-            "--width" => args.width = value("--width")?.parse().map_err(|e| format!("--width: {e}"))?,
+            "--width" => {
+                args.width = value("--width")?
+                    .parse()
+                    .map_err(|e| format!("--width: {e}"))?
+            }
             "--ignore-staff-numbers" => args.options.ignore_staff_numbers = true,
             "--verbose" | "-v" => args.verbose = true,
             "--help" | "-h" => return Err(String::new()),
@@ -106,7 +112,11 @@ fn glob_match(pattern: &str, name: &str) -> bool {
     }
 }
 
-fn actual_for(source: &Source, fixture: &Fixture, fixtures: &[Fixture]) -> Result<Option<DisplayList>, String> {
+fn actual_for(
+    source: &Source,
+    fixture: &Fixture,
+    fixtures: &[Fixture],
+) -> Result<Option<DisplayList>, String> {
     match source {
         Source::SelfCheck => Ok(Some(fixture.display.clone())),
         Source::Fixture(name) => fixtures
@@ -166,7 +176,11 @@ fn cell(section: &score_testkit::Section) -> String {
 
 fn table_line(row: &Row) -> String {
     let (shapes, texts, deviation) = match &row.outcome {
-        Outcome::Compared(r) => (cell(&r.shapes), cell(&r.texts), r.max_deviation().to_string()),
+        Outcome::Compared(r) => (
+            cell(&r.shapes),
+            cell(&r.texts),
+            r.max_deviation().to_string(),
+        ),
         _ => ("".into(), "".into(), "".into()),
     };
     let note = match &row.outcome {
@@ -206,9 +220,14 @@ fn status_markdown(rows: &[Row], source: &Source, options: &CompareOptions) -> S
         out,
         "## Coverage\n\n| group | cases | valid | compared | matching |\n|---|---|---|---|---|"
     );
-    groups.iter().for_each(|(name, [cases, valid, compared, matching])| {
-        let _ = writeln!(out, "| {name} | {cases} | {valid} | {compared} | {matching} |");
-    });
+    groups
+        .iter()
+        .for_each(|(name, [cases, valid, compared, matching])| {
+            let _ = writeln!(
+                out,
+                "| {name} | {cases} | {valid} | {compared} | {matching} |"
+            );
+        });
     let _ = writeln!(
         out,
         "\n## Cases\n\nShapes and texts: matched/expected, `+n` = elements the actual list has in excess.\n"
@@ -223,7 +242,12 @@ fn status_markdown(rows: &[Row], source: &Source, options: &CompareOptions) -> S
     out
 }
 
-fn write_picture(dir: &Path, row: &Row, actual: Option<&DisplayList>, args: &Args) -> Result<PathBuf, String> {
+fn write_picture(
+    dir: &Path,
+    row: &Row,
+    actual: Option<&DisplayList>,
+    args: &Args,
+) -> Result<PathBuf, String> {
     let report = match &row.outcome {
         Outcome::Compared(r) => Some(r),
         _ => None,
@@ -261,7 +285,9 @@ fn run(args: &Args) -> Result<bool, String> {
     let fixtures = load_all(&args.fixtures).map_err(|e| e.to_string())?;
     let selected: Vec<&Fixture> = fixtures
         .iter()
-        .filter(|f| args.patterns.is_empty() || args.patterns.iter().any(|p| glob_match(p, &f.name)))
+        .filter(|f| {
+            args.patterns.is_empty() || args.patterns.iter().any(|p| glob_match(p, &f.name))
+        })
         .collect();
     if let Some(dir) = &args.images {
         fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
@@ -290,7 +316,9 @@ fn run(args: &Args) -> Result<bool, String> {
         fs::write(path, status_markdown(&rows, &args.source, &args.options))
             .map_err(|e| format!("{}: {e}", path.display()))?;
     }
-    Ok(rows.iter().all(|row| matches!(row.result(), "match" | "invalid")))
+    Ok(rows
+        .iter()
+        .all(|row| matches!(row.result(), "match" | "invalid")))
 }
 
 fn summary(row: &Row) -> String {
