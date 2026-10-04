@@ -33,8 +33,29 @@ try {
   }
   assert.ok(titles.includes('Item 2 · Staff'), `clicks selected ${[...new Set(titles)]}`);
   assert.ok(titles.includes('No item selected'));
+  const onStaff = { x: centre.x, y: centre.y + offsets[titles.indexOf('Item 2 · Staff')] };
   await page.click('#items li[data-index="2"]');
   assert.match(await page.textContent('#cursor'), /^x \d+ {2}y \d+/);
+
+  // Keyboard nudges, undo and redo.
+  await page.keyboard.press('ArrowUp');
+  assert.equal(await page.inputValue('#p4'), '25');
+  await page.click('#undo');
+  assert.equal(await page.inputValue('#p4'), '24');
+  await page.keyboard.press('Control+y');
+  assert.equal(await page.inputValue('#p4'), '25');
+  await page.keyboard.press('Control+z');
+  assert.equal(await page.inputValue('#p4'), '24');
+
+  // Dragging the selected staff to the right changes P3; undo restores it.
+  await page.mouse.move(onStaff.x, onStaff.y);
+  await page.mouse.down();
+  await page.mouse.move(onStaff.x + 60, onStaff.y, { steps: 6 });
+  await page.mouse.up();
+  const draggedP3 = Number(await page.inputValue('#p3'));
+  assert.ok(draggedP3 > 3 && draggedP3 < 5, `P3 after drag: ${draggedP3}`);
+  await page.keyboard.press('Control+z');
+  assert.equal(await page.inputValue('#p3'), '0');
   await page.fill('#p5', '1.2');
   await page.press('#p5', 'Enter');
   assert.match(await page.textContent('#status'), /modified/);
