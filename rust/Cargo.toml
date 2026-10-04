@@ -5,3 +5,8 @@ members = ["crates/*"]
 [workspace.package]
 edition = "2021"
 license = "MIT OR Apache-2.0"
+
+# Keep per-agent target directories small; the disk is nearly full.
+[profile.dev]
+debug = "line-tables-only"
+incremental = false
