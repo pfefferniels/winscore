@@ -15,11 +15,12 @@
 use crate::canvas::{Canvas, Pen};
 use crate::codes::boxes::{draw_box, BoxCall};
 use crate::codes::line::{self, end_mark, End, Params};
-use crate::codes::number::{draw_number, NumberCall};
+use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
 use crate::symbols::{self, draw_library_symbol, draw_text_symbol, ItemContext, SymbolCall, TextSymbolCall};
+use crate::text::{self, Font};
 use crate::units::{constant, real, trunc, Pos};
 
 const TRILL: i32 = 0;
@@ -43,8 +44,7 @@ const PIANO_PEDAL_FILLER: i32 = 49;
 const OTTAVA_NUMBER_FONT: i32 = 1;
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-    let globals = Globals { context: ItemContext::of(item), at: doc.position(item), step: doc.staff_of(item).step };
-    draw(doc, item, canvas, &globals, &Params::of(item));
+    draw(doc, item, canvas, &Globals::of(doc, item), &Params::of(item));
 }
 
 /// The globals draw_code7 reads besides the P-array.
@@ -57,6 +57,13 @@ pub struct Globals {
     pub at: Pos,
     /// STEP.
     pub step: f64,
+}
+
+impl Globals {
+    /// The globals for a code-7 item of its own.
+    pub fn of(doc: &Document<'_>, item: ItemRef<'_>) -> Self {
+        Self { context: ItemContext::of(item), at: doc.position(item), step: doc.staff_of(item).step }
+    }
 }
 
 /// draw_code7 for `item` (whose text and current font the text paths use)
@@ -241,13 +248,21 @@ fn trill_accidental(mark: &Mark<'_, '_>, context: &ItemContext, kind: i32, y: f6
 /// P7 = 8, -8, 15: the 8va, 8ba or 15ma symbol and dashes to P6.
 fn ottava_symbol(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
     let dashes = mark.dash_lengths();
-    let (number, width) = match mark.kind {
-        OTTAVA => (45, 43.0),
-        OTTAVA_BASSA => (46, 43.0),
-        _ => (47, 62.0),
+    let width = if mark.kind == QUINDICESIMA { 62.0 } else { 43.0 };
+    draw_text_symbol(mark.doc, mark.item, canvas, &ottava_text(mark));
+    extend(mark, Extension::Dashes, f64::from(mark.p(4)), mark.after(width), dashes, canvas);
+}
+
+/// The text symbol 45, 46 or 47 as draw_code7 sets up draw_symbol: P6 and
+/// P7 the ottava size, P9 = 0.
+fn ottava_text(mark: &Mark<'_, '_>) -> TextSymbolCall {
+    let number = match mark.kind {
+        OTTAVA => 45,
+        OTTAVA_BASSA => 46,
+        _ => 47,
     };
     let size = mark.ottava_size();
-    let call = TextSymbolCall {
+    TextSymbolCall {
         number,
         size_x: size,
         size_y: size,
@@ -263,17 +278,27 @@ fn ottava_symbol(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
         p14: mark.p(14),
         p16: mark.p(16),
         p26: mark.p(26),
-    };
-    draw_text_symbol(mark.doc, mark.item, canvas, &call);
-    extend(mark, Extension::Dashes, f64::from(mark.p(4)), mark.after(width), dashes, canvas);
+    }
 }
 
 /// P7 = 88, -88, 155: the number 8 or 15 and dashes to P6, raised by 1.5
 /// symbol sizes except for -88.
 fn ottava_number(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
     let dashes = mark.dash_lengths();
-    let (value, width) = if mark.kind.abs() == OTTAVA_UP { (8, 18.0) } else { (15, 29.0) };
-    let call = NumberCall {
+    let width = if mark.kind.abs() == OTTAVA_UP { 18.0 } else { 29.0 };
+    draw_number(mark.doc, mark.item, canvas, mark.at, &ottava_number_call(mark));
+    let level = f64::from(mark.p(4));
+    let level = match mark.kind {
+        OTTAVA_DOWN => level,
+        _ => real(mark.symbol_size() * 1.5 + level),
+    };
+    extend(mark, Extension::Dashes, level, mark.after(width), dashes, canvas);
+}
+
+/// draw_number for 8 (P7 = ±88) or 15 (P7 = 155), unframed, in font 1.
+fn ottava_number_call(mark: &Mark<'_, '_>) -> NumberCall {
+    let value = if mark.kind.abs() == OTTAVA_UP { 8 } else { 15 };
+    NumberCall {
         value,
         p5: value as f32,
         size: mark.ottava_size() as f32,
@@ -281,14 +306,22 @@ fn ottava_number(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
         frame: 0,
         frame_thickness: 0,
         ..NumberCall::of(mark.item)
-    };
-    draw_number(mark.doc, mark.item, canvas, mark.at, &call);
-    let level = f64::from(mark.p(4));
-    let level = match mark.kind {
-        OTTAVA_DOWN => level,
-        _ => real(mark.symbol_size() * 1.5 + level),
-    };
-    extend(mark, Extension::Dashes, level, mark.after(width), dashes, canvas);
+    }
+}
+
+/// The font a code-7 item leaves loaded (draw_item 0x547358 makes it the
+/// current font): only the ottava texts and numbers draw text.
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    let mark = Mark::new(doc, item, &Globals::of(doc, item), &Params::of(item));
+    match mark.kind {
+        OTTAVA | OTTAVA_BASSA | QUINDICESIMA => symbols::text_symbol_font_loaded(doc, &ottava_text(&mark)),
+        OTTAVA_UP | OTTAVA_DOWN | QUINDICESIMA_UP => {
+            let call = ottava_number_call(&mark);
+            let text = number_text(call.value, call.p5, call.p17, call.p18);
+            text::font_loaded(doc, &number_text_call(&call, mark.at, &text, Font::TIMES))
+        }
+        _ => None,
+    }
 }
 
 /// The graphic piano pedal symbol (P7 = 20): P5 XYZ fills the left, middle
@@ -439,5 +472,19 @@ mod tests {
         assert_eq!(digits(12, 3).collect::<Vec<_>>(), vec![0, 1, 2]);
         assert_eq!(digits(1201, 4).collect::<Vec<_>>(), vec![1, 2, 0, 1]);
         assert_eq!(digits(2222, 3).collect::<Vec<_>>(), vec![22, 2, 2]);
+    }
+
+    fn loaded(fixture: &[u8]) -> Option<Font> {
+        let file = score_format::MusFile::parse(fixture).expect("fixture parses");
+        let doc = Document::new(&file);
+        let item = doc.items().find(|i| i.code() == crate::codes::TRILL).expect("a code-7 item");
+        font_loaded(&doc, item)
+    }
+
+    #[test]
+    fn ottavas_load_italic_times() {
+        assert_eq!(loaded(include_bytes!("../../../../fixtures/code07-p7-ottava/input.mus")), Some(Font(2)));
+        assert_eq!(loaded(include_bytes!("../../../../fixtures/code07-p7-ottava-88/input.mus")), Some(Font(2)));
+        assert_eq!(loaded(include_bytes!("../../../../fixtures/code07-p7-trill/input.mus")), None);
     }
 }
