@@ -18,7 +18,7 @@ use crate::codes::text::font_before;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::Staff;
-use crate::text::{draw_text, TextCall};
+use crate::text::{draw_text, font_loaded as text_font_loaded, Font, TextCall};
 use crate::units::{amod, constant, real, trunc, Pos};
 
 /// String pitches by tuning (table 0x79EE20, from index `first + 1`).
@@ -171,15 +171,61 @@ fn label(fret: i32, parenthesised: bool) -> (Vec<u8>, bool) {
     (text, lettered)
 }
 
-pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, step: f64, canvas: &mut Canvas<'_>) {
-    let Some(Fingering { string, fret, count }) = fingering(item) else { return };
+/// STEP while a note is drawn: the staff's step times P15.
+fn step(doc: &Document<'_>, item: ItemRef<'_>) -> f64 {
+    let staff_step = doc.staff_of(item).step;
+    match item.p(15) {
+        0.0 => staff_step,
+        p15 => real(f64::from(p15) * staff_step),
+    }
+}
+
+/// The line the number sits on: two levels per string from the bottom.
+fn level(item: ItemRef<'_>, fingering: &Fingering, lettered: bool) -> f64 {
+    let level = real(f64::from((fingering.count - fingering.string) * 2) + constant(2.2) + f64::from(item.p(14)));
+    if lettered {
+        real(level + constant(0.2))
+    } else {
+        level
+    }
+}
+
+pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+    let Some(fingering) = fingering(item) else { return };
+    let (text, lettered) = label(fingering.fret, ip(item, 12) >= 100);
+    let level = level(item, &fingering, lettered);
+    let step = step(doc, item);
+    if item.p(20) == 1.0 {
+        clear_behind(item, &doc.staff_of(item), step, level, fingering.fret, canvas);
+    }
+    let call = text_call(doc, item, step, &text, &fingering, level, lettered, font_before(doc, item));
+    draw_text(doc, item, canvas, &call);
+}
+
+/// The font the fret number leaves loaded.
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    let fingering = fingering(item)?;
+    let (text, lettered) = label(fingering.fret, ip(item, 12) >= 100);
+    let level = level(item, &fingering, lettered);
+    text_font_loaded(doc, &text_call(doc, item, step(doc, item), &text, &fingering, level, lettered, Font::TIMES))
+}
+
+/// What 0x558A40 hands draw_text: X_POS moved left for two digits and a
+/// parenthesis, Y_POS on the string's line, P5 = 0.95, P6 = 0.55 × P15
+/// (× 0.818 grace), P9 = P13, P11 = P10, the colour as P14 = -1, P16 = P26.
+#[allow(clippy::too_many_arguments)]
+fn text_call<'t>(
+    doc: &Document<'_>,
+    item: ItemRef<'_>,
+    step: f64,
+    text: &'t [u8],
+    fingering: &Fingering,
+    level: f64,
+    lettered: bool,
+    current_font: Font,
+) -> TextCall<'t> {
     let parenthesised = ip(item, 12) >= 100;
-    let (text, lettered) = label(fret, parenthesised);
-    let level = real(f64::from((count - string) * 2) + constant(2.2) + f64::from(item.p(14)));
-    let level = if lettered { real(level + constant(0.2)) } else { level };
-    let staff = doc.staff_of(item);
-    let y = staff.y(level);
-    let indent = match (fret > 9 && !lettered, parenthesised) {
+    let indent = match (fingering.fret > 9 && !lettered, parenthesised) {
         (true, true) => -8.0,
         (true, false) | (false, true) => -4.0,
         (false, false) => 0.0,
@@ -194,17 +240,14 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, step: f64, canvas: &mut Canva
         p15 => real(f64::from(p15) * constant(SIZE)),
     };
     let size = if ip(item, 4).abs() > 99 { real(size * constant(GRACE_SIZE)) } else { size };
-    if item.p(20) == 1.0 {
-        clear_behind(item, &staff, step, level, fret, canvas);
-    }
     let colour = if item.p(26) != 0.0 || item.p(25) != 0.0 {
         Some(item.p(26))
     } else {
         (item.p(14) == -1.0).then(|| item.p(16))
     };
-    let call = TextCall {
-        text: &text,
-        origin: Pos::new(x, y),
+    TextCall {
+        text,
+        origin: Pos::new(x, doc.staff_of(item).y(level)),
         p3: item.p(3),
         item_code: item.code(),
         step: Some(step),
@@ -217,9 +260,8 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, step: f64, canvas: &mut Canva
         space: item.p(10),
         shift: item.p(10),
         colour,
-        current_font: font_before(doc, item),
-    };
-    draw_text(doc, item, canvas, &call);
+        current_font,
+    }
 }
 
 /// P20 = 1 (0x559733): a white box over the string line behind the number.

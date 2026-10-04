@@ -73,6 +73,13 @@ code01-p11-mark-m32-down
 code01-p11-mark-m34.2-down
 code01-p11-mark-m5
 code01-p11-mark-m7
+code01-p11-tremolo-41
+code01-p11-tremolo-42
+code01-p11-tremolo-42-down
+code01-p11-tremolo-42-half
+code01-p11-tremolo-42-p13-p14
+code01-p11-tremolo-43
+code01-p11-tremolo-44
 code01-p12-1
 code01-p12-1-ledger
 code01-p12-1-slash
@@ -230,6 +237,7 @@ code01-p6-tab-p12-2
 code01-p6-tab-p12-tie
 code01-p6-tab-p13
 code01-p6-tab-p14
+code01-p6-tab-p15
 code01-p6-tab-p16-201
 code01-p6-tab-p17-2
 code01-p6-tab-p18-99

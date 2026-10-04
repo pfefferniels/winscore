@@ -8,8 +8,10 @@
 use super::glyph;
 use super::Note;
 use crate::canvas::Canvas;
-use crate::codes::number::{draw_number, NumberCall};
+use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
 use crate::display::Colour;
+use crate::text::{font_loaded as text_font_loaded, Font};
+use score_format::Item;
 use crate::page::P3_UNIT;
 use crate::document::{Document, ItemRef};
 use crate::units::{constant, real, trunc, Pos};
@@ -144,10 +146,7 @@ fn alpha_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
     if hollow && note.level % 2 != 0 {
         staff_line_mask(note, staff.step, canvas);
     }
-    let size = match item.p(15) {
-        0.0 => 1.0,
-        p15 => f64::from(p15),
-    };
+    let size = alpha_size(item);
     let p3 = real(note.unit * constant(1.45) / 25.0 + real(note.origin.x / P3_UNIT));
     let p4 = real(f64::from(item.p(4)) - constant(1.68));
     let at = Pos::new(real(p3 * P3_UNIT), staff.y(p4));
@@ -163,12 +162,43 @@ fn alpha_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
 /// P5 = 1001 + the letter, at P22/P23 from its default place, size P24,
 /// font P21 (default 5, bold), white in a black head.
 fn alpha_letter(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, size: f64, canvas: &mut Canvas<'_>) {
+    let Some(changed) = letter_item(item, note, size) else { return };
+    let letter_item = item.changed(&changed);
+    // The letter's P26 is pushed and popped around it in the engine; the
+    // note's points are flushed in the note's own colour.
+    let own = canvas.colour;
+    draw_number(doc, letter_item, canvas, doc.position(letter_item), &NumberCall::of(letter_item));
+    canvas.colour = own;
+}
+
+/// The font an AlphaNote's letter leaves loaded.
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>, note: &Note) -> Option<Font> {
+    if !note.alpha || !doc.screen() {
+        return None;
+    }
+    let changed = letter_item(item, note, alpha_size(item))?;
+    let letter_item = item.changed(&changed);
+    let call = NumberCall::of(letter_item);
+    let text = number_text(call.value, call.p5, call.p17, call.p18);
+    text_font_loaded(doc, &number_text_call(&call, Pos::default(), &text, Font::TIMES))
+}
+
+/// P15 as the AlphaNote routines use it (0 read as 1).
+fn alpha_size(item: ItemRef<'_>) -> f64 {
+    match item.p(15) {
+        0.0 => 1.0,
+        p15 => f64::from(p15),
+    }
+}
+
+/// The code-10 item 0x4F1D5E draws as the letter; None from P6 ±24 on.
+fn letter_item(item: ItemRef<'_>, note: &Note, size: f64) -> Option<Item> {
     let kind = unparenthesised(trunc(f64::from(item.p(6)))).abs();
     let clef_shift = match kind {
         21 => -5,
         22 => 1,
         23 => -1,
-        24.. => return,
+        24.. => return None,
         _ => 0,
     };
     let letter = (note.level + clef_shift + 71) % 7 + 1001;
@@ -188,13 +218,7 @@ fn alpha_letter(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, size: f64, c
     if trunc(p(6)) > 0 {
         changes.push((26, 0.99));
     }
-    let changed = item.with_params(&changes);
-    let letter_item = item.changed(&changed);
-    // The letter's P26 is pushed and popped around it in the engine; the
-    // note's points are flushed in the note's own colour.
-    let own = canvas.colour;
-    draw_number(doc, letter_item, canvas, doc.position(letter_item), &NumberCall::of(letter_item));
-    canvas.colour = own;
+    Some(item.with_params(&changes))
 }
 
 /// draw_box type 0, filled, 2.4 by 0.35 half-widths of 3.5 steps, centred

@@ -14,6 +14,7 @@ mod tablature;
 
 use crate::canvas::{Canvas, Pen};
 use crate::document::{Document, ItemRef};
+use crate::text::Font;
 use crate::units::{constant, real, trunc, Pos};
 
 
@@ -198,11 +199,7 @@ impl Note {
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let Some(note) = Note::new(doc, item) else {
-        let step = match item.p(15) {
-            0.0 => doc.staff_of(item).step,
-            p15 => real(f64::from(p15) * doc.staff_of(item).step),
-        };
-        tablature::draw(doc, item, step, canvas);
+        tablature::draw(doc, item, canvas);
         return;
     };
     if ledger::wanted(&note, item) {
@@ -223,6 +220,16 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     }
     if ip(item, 11) != 0 {
         mark::draw(doc, item, &note, stem_length, canvas);
+    }
+}
+
+/// The font a note leaves loaded for the next item (draw_item 0x547358):
+/// that of its last text, a fingering mark, an AlphaNote letter or a
+/// tablature number.
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    match Note::new(doc, item) {
+        None => tablature::font_loaded(doc, item),
+        Some(note) => mark::font_loaded(doc, item, &note).or_else(|| head::font_loaded(doc, item, &note)),
     }
 }
 

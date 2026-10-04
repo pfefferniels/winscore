@@ -12,7 +12,8 @@
 
 use crate::canvas::Canvas;
 use crate::codes::note::glyph;
-use crate::codes::number::{draw_number, NumberCall};
+use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
+use crate::text::{font_loaded as text_font_loaded, Font};
 use crate::symbols::text_symbol::{draw_text_symbol, TextSymbolCall};
 use crate::colour;
 use crate::document::{Document, ItemRef};
@@ -308,6 +309,49 @@ fn digits_width(number: i32) -> f32 {
     }
 }
 
+/// P12, the size of a number or fermata above the rest (0 read as 1).
+fn number_scale(item: ItemRef<'_>) -> f64 {
+    match item.p(12) {
+        0.0 => 1.0,
+        p12 => f64::from(p12),
+    }
+}
+
+/// What draw_rest hands draw_number for the number above: size P12 × 1.2
+/// (× 0.7 grace), font IP7 = P14 with P14 cleared, or font 6 with P14 =
+/// 1.05; P8, P9, IP17 cleared.
+fn number_call(doc: &Document<'_>, item: ItemRef<'_>, rest: &Rest, number: i32, size: f64) -> NumberCall {
+    let (font, p14) = match item.p(14) {
+        0.0 => (DEFAULT_NUMBER_FONT, constant(1.05)),
+        p14 => (trunc(f64::from(p14)), 0.0),
+    };
+    NumberCall {
+        value: number,
+        p5: number as f32,
+        size: real(number_scale(item) * constant(1.2) * size) as f32,
+        font,
+        frame: 0,
+        frame_thickness: 0,
+        p14: p14 as f32,
+        p17: 0,
+        p26: if invisible_on_screen(doc, item) { INVISIBLE_GREY } else { item.p(26) },
+        step: Some(rest.step),
+        ..NumberCall::of(item)
+    }
+}
+
+/// The font a rest leaves loaded for the next item (draw_item 0x547358):
+/// that of its number. The number's position does not matter for it.
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    let rest = Rest::new(doc, item, page::x(item.p(3)))?;
+    if rest.number <= 0 {
+        return None;
+    }
+    let call = number_call(doc, item, &rest, rest.number, rest.size);
+    let text = number_text(call.value, call.p5, call.p17, call.p18);
+    text_font_loaded(doc, &number_text_call(&call, Pos::default(), &text, Font::TIMES))
+}
+
 /// The drawing state draw_rest carries between its stages.
 struct Drawing<'d, 'a, 'c> {
     doc: &'d Document<'a>,
@@ -444,44 +488,20 @@ impl Drawing<'_, '_, '_> {
     fn number(&mut self, t: i32, x: f64, number: i32, size: f64) {
         let rest = *self.rest;
         let item = self.item;
-        let scale = match item.p(12) {
-            0.0 => 1.0,
-            p12 => f64::from(p12),
-        };
-        let width = real(scale * constant(digits_width(number)));
+        let width = real(number_scale(item) * constant(digits_width(number)));
         let base = if t == T_REPEAT { constant(3.4) } else { constant(1.42) };
         let dx = real((base - width) * rest.unit * 6.0 * size);
-        let (font, p14) = match item.p(14) {
-            0.0 => (DEFAULT_NUMBER_FONT, constant(1.05)),
-            p14 => (trunc(f64::from(p14)), 0.0),
-        };
         let y = rest.y(real(rest.level + 12.0 + f64::from(item.p(11))));
         let at = Pos::new(real(rest.number_shift * P3_UNIT + (dx + x)), y);
-        let call = NumberCall {
-            value: number,
-            p5: number as f32,
-            size: real(scale * constant(1.2) * size) as f32,
-            font,
-            frame: 0,
-            frame_thickness: 0,
-            p14: p14 as f32,
-            p17: 0,
-            p26: if invisible_on_screen(self.doc, item) { INVISIBLE_GREY } else { item.p(26) },
-            step: Some(rest.step),
-            ..NumberCall::of(item)
-        };
         let own = self.canvas.colour;
-        draw_number(self.doc, item, self.canvas, at, &call);
+        draw_number(self.doc, item, self.canvas, at, &number_call(self.doc, item, &rest, number, size));
         self.canvas.colour = own;
     }
 
     fn fermata(&mut self, x: f64, number: i32, size: f64) {
         let rest = *self.rest;
         let item = self.item;
-        let scale = match item.p(12) {
-            0.0 => 1.0,
-            p12 => f64::from(p12),
-        };
+        let scale = number_scale(item);
         let offset = constant(match rest.kind {
             k if k < 0 => 1.42,
             0 => 0.95,
