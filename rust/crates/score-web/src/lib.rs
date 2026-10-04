@@ -15,7 +15,7 @@ use score_render::{DisplayList, ItemId};
 use wasm_bindgen::prelude::*;
 
 pub use codes::code_name;
-pub use document::{decode_text, Document, EditError, Paper, TEXT_CODE};
+pub use document::{decode_text, Document, EditError, TEXT_CODE};
 pub use encode::{encode, Encoded};
 pub use hit::At;
 

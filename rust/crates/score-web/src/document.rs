@@ -1,24 +1,13 @@
 //! An open score: the `.mus` file, its last rendering, and parameter edits.
 
 use score_format::{Item, MusError, MusFile, Word};
-use score_render::{DisplayList, ItemId};
+use score_render::page::Paper;
+use score_render::{render, DisplayList, ItemId};
 
 use crate::hit::{hit_test, At};
 
 /// P1 of text items, whose characters follow the parameters.
 pub const TEXT_CODE: i32 = 16;
-
-/// Paper size in engine units.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Paper {
-    pub width: f64,
-    pub height: f64,
-}
-
-impl Paper {
-    /// `PAPER 2` in the bundled `PREF.DAT`, WinScore's default.
-    pub const LEGAL: Paper = Paper { width: 34000.0, height: 56000.0 };
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditError {
@@ -38,10 +27,8 @@ impl std::fmt::Display for EditError {
 
 impl std::error::Error for EditError {}
 
-/// The renderer the editor shows. `score_render` has no entry point yet, so
-/// the page stays empty until it lands.
-fn render_page(_file: &MusFile) -> DisplayList {
-    DisplayList::default()
+fn render_page(file: &MusFile) -> DisplayList {
+    render(&score_render::Document::new(file))
 }
 
 /// Blank padding to whole words, as text items store their characters.
@@ -104,7 +91,7 @@ impl Document {
     }
 
     pub fn paper(&self) -> Paper {
-        Paper::LEGAL
+        score_render::Document::new(&self.file).page.paper
     }
 
     /// The last rendering.
@@ -202,6 +189,14 @@ mod tests {
         assert_eq!(doc.set_param(ItemId(0), 0, 1.0), Err(EditError::NoSuchParam(0)));
         let missing = ItemId(doc.items().len() as u32);
         assert_eq!(doc.set_param(missing, 1, 1.0), Err(EditError::NoSuchItem(missing)));
+    }
+
+    #[test]
+    fn clicks_find_rendered_staves() {
+        let doc = Document::open(&sample("carmen.mus")).unwrap();
+        let staff = doc.page().shapes.iter().find(|s| s.source.is_some()).expect("carmen renders staves");
+        let id = doc.hit(At::from(staff.paths[0][0]), 2.0).unwrap();
+        assert_eq!(doc.item(id).unwrap().code(), 8);
     }
 
     #[test]

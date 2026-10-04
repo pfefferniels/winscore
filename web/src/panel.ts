@@ -25,8 +25,13 @@ export function formatParam(value: number): string {
   return String(Number.parseFloat(value.toPrecision(7)));
 }
 
-function element<K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLElementTagNameMap[K]> = {}, children: (Node | string)[] = []) {
-  const node = Object.assign(document.createElement(tag), props);
+function element<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  props: Record<string, string | number | boolean> = {},
+  children: (Node | string)[] = [],
+): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  Object.assign(node, props);
   node.append(...children);
   return node;
 }
@@ -103,10 +108,10 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
     { className: 'params' },
     Array.from(item.params, (value, i) => [element('label', { htmlFor: `p${i + 1}` }, [`P${i + 1}`]), paramInput(item, i + 1, value, handlers)]).flat(),
   );
-  const notes = [
-    item.text !== null ? element('div', { className: 'text-value', title: 'Text (P12 characters)' }, [item.text]) : null,
-    item.drawn ? null : element('p', { className: 'muted' }, ['The Rust renderer does not draw this item yet.']),
-  ].filter((node): node is HTMLElement => node !== null);
+  const notes: HTMLElement[] = [
+    ...(item.text !== null ? [element('div', { className: 'text-value', title: 'Text (P12 characters)' }, [item.text])] : []),
+    ...(item.drawn ? [] : [element('p', { className: 'muted' }, ['The Rust renderer does not draw this item yet.'])]),
+  ];
   section.replaceChildren(
     element('h2', {}, [`Item ${item.index} · ${item.name}`]),
     grid,

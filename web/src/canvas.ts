@@ -25,6 +25,8 @@ export interface PageView {
   /** Zooms keeping the page point under (`clientX`, `clientY`) in place; default the viewport centre. */
   setZoom(zoom: number, anchor?: { clientX: number; clientY: number }): void;
   fitWidth(): void;
+  /** Scrolls so that page y `top` is at the top of the viewport. */
+  scrollToTop(top: number): void;
   /** Page coordinates under a client (mouse) position. */
   pageAt(clientX: number, clientY: number): Point;
   /** Engine units spanned by `px` CSS pixels at the current zoom. */
@@ -150,6 +152,10 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
     },
     setZoom,
     fitWidth,
+    scrollToTop(top: number) {
+      el.viewport.scrollTop = offsets().top + (scene.extent.y1 - top) * cssPerUnit(zoom);
+      repaint();
+    },
     pageAt,
     unitsPerCss: (px: number) => px / cssPerUnit(zoom),
     repaint,
