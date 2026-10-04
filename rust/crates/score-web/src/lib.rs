@@ -10,7 +10,6 @@ pub mod codes;
 pub mod document;
 pub mod encode;
 pub mod hit;
-pub mod json;
 
 use score_render::{DisplayList, ItemId};
 use wasm_bindgen::prelude::*;
@@ -38,10 +37,16 @@ impl EncodedList {
         self.0.coords.clone()
     }
 
-    /// Text runs as a JSON array.
+    /// Text runs as an `engine.json` document without shapes.
     #[wasm_bindgen(getter)]
     pub fn texts(&self) -> String {
         self.0.texts.clone()
+    }
+
+    /// Source item index + 1 of each text run, 0 = none (`Uint32Array`).
+    #[wasm_bindgen(getter, js_name = textSources)]
+    pub fn text_sources(&self) -> Vec<u32> {
+        self.0.text_sources.clone()
     }
 }
 
@@ -144,8 +149,8 @@ impl Score {
     }
 }
 
-/// Reads an `engine.json` reference display list (see [`json`]).
+/// Reads an `engine.json` reference display list (`rust/fixtures/README.md`).
 #[wasm_bindgen(js_name = parseReference)]
 pub fn parse_reference(json: &str) -> Result<EncodedList, JsError> {
-    Ok(EncodedList::from(&json::parse_display_list(json)?))
+    Ok(EncodedList::from(&score_testkit::display_from_json(json)?))
 }

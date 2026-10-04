@@ -26,7 +26,13 @@ function copyReference(name) {
   if (!fs.existsSync(engine)) return null;
   fs.copyFileSync(engine, path.join(publicDir, 'reference', `${name}.json`));
   const meta = readJson(path.join(referenceDir, name, 'meta.json')) ?? {};
-  return { url: `reference/${name}.json`, paper: meta.paper ?? null };
+  return {
+    url: `reference/${name}.json`,
+    paper: meta.paper ?? null,
+    pageSize: meta.page_size ?? null,
+    valid: meta.valid ?? true,
+    invalidReasons: meta.invalid_reasons ?? [],
+  };
 }
 
 for (const dir of ['samples', 'reference']) {

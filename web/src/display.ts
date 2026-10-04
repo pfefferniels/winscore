@@ -31,7 +31,7 @@ export interface TextRun {
   weight: number;
   /** Average character width in engine units, 0 = font default. */
   width: number;
-  source?: number;
+  source: number | null;
 }
 
 export interface DisplayList {
@@ -50,6 +50,7 @@ export interface Encoded {
   readonly shapes: Uint32Array;
   readonly coords: Int32Array;
   readonly texts: string;
+  readonly textSources: Uint32Array;
 }
 
 const FLAG_FILL = 1;
@@ -81,13 +82,17 @@ export function decode(encoded: Encoded): DisplayList {
     point += length;
     return path;
   };
+  const source = (word: number) => (word === 0 ? null : word - 1);
   const shapes = Array.from(records(encoded.shapes), (r) => ({
     fill: (r.flags & FLAG_FILL) !== 0,
     colour: r.colour,
-    source: r.source === 0 ? null : r.source - 1,
+    source: source(r.source),
     paths: Array.from(r.lengths, take),
   }));
-  return { shapes, texts: JSON.parse(encoded.texts) as TextRun[] };
+  const runs = (JSON.parse(encoded.texts) as { texts: TextRun[] }).texts;
+  const sources = encoded.textSources;
+  const texts = runs.map((run, i) => ({ ...run, source: source(sources[i] ?? 0) }));
+  return { shapes, texts };
 }
 
 export function union(a: Box | null, b: Box | null): Box | null {

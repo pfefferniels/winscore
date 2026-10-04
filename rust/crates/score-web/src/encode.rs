@@ -1,5 +1,5 @@
-//! A flat encoding of a display list that crosses into JavaScript as two
-//! typed arrays and one small JSON string.
+//! A flat encoding of a display list that crosses into JavaScript as typed
+//! arrays and one small JSON string.
 //!
 //! `shapes` (`Uint32Array`) holds one record per shape, in drawing order:
 //!
@@ -14,12 +14,12 @@
 //! `coords` (`Int32Array`) holds `x, y` of every point of every path, in the
 //! same order, in page coordinates (engine units, y up).
 //!
-//! `texts` is a JSON array of text runs in the `engine.json` form, with an
-//! optional `source` item index.
+//! `texts` is the `engine.json` document of the text runs alone
+//! (`{"shapes":[],"texts":[…]}`, see `rust/fixtures/README.md`), and
+//! `text_sources` (`Uint32Array`) gives each run's source item index + 1.
 
-use score_render::{Colour, DisplayList, Shape, ShapeKind};
-
-use crate::json::texts_to_json;
+use score_render::{Colour, DisplayList, ItemId, Shape, ShapeKind};
+use score_testkit::display_to_json;
 
 pub const FLAG_FILL: u32 = 1;
 
@@ -28,10 +28,15 @@ pub struct Encoded {
     pub shapes: Vec<u32>,
     pub coords: Vec<i32>,
     pub texts: String,
+    pub text_sources: Vec<u32>,
 }
 
 fn rgb(colour: Colour) -> u32 {
     u32::from(colour.r) << 16 | u32::from(colour.g) << 8 | u32::from(colour.b)
+}
+
+fn source_word(source: Option<ItemId>) -> u32 {
+    source.map_or(0, |id| id.0 + 1)
 }
 
 fn header(shape: &Shape) -> impl Iterator<Item = u32> + '_ {
@@ -39,8 +44,7 @@ fn header(shape: &Shape) -> impl Iterator<Item = u32> + '_ {
         ShapeKind::Fill => FLAG_FILL,
         ShapeKind::Stroke => 0,
     };
-    let source = shape.source.map_or(0, |id| id.0 + 1);
-    [flags, rgb(shape.colour), source, shape.paths.len() as u32]
+    [flags, rgb(shape.colour), source_word(shape.source), shape.paths.len() as u32]
         .into_iter()
         .chain(shape.paths.iter().map(|path| path.len() as u32))
 }
@@ -50,17 +54,19 @@ fn coords(shape: &Shape) -> impl Iterator<Item = i32> + '_ {
 }
 
 pub fn encode(list: &DisplayList) -> Encoded {
+    let texts_only = DisplayList { shapes: Vec::new(), texts: list.texts.clone() };
     Encoded {
         shapes: list.shapes.iter().flat_map(header).collect(),
         coords: list.shapes.iter().flat_map(coords).collect(),
-        texts: texts_to_json(&list.texts),
+        texts: display_to_json(&texts_only),
+        text_sources: list.texts.iter().map(|run| source_word(run.source)).collect(),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use score_render::{ItemId, Point};
+    use score_render::{PlacedText, Point, TextRun};
 
     #[test]
     fn encodes_records_in_order() {
@@ -84,6 +90,28 @@ mod tests {
         let encoded = encode(&list);
         assert_eq!(encoded.shapes, vec![1, 0x123456, 5, 2, 3, 1, 0, 0, 0, 1, 2]);
         assert_eq!(encoded.coords, vec![1, 2, 3, 4, 5, 6, 7, 8, -1, -2, 9, 9]);
-        assert_eq!(encoded.texts, "[]");
+        assert!(encoded.text_sources.is_empty());
+    }
+
+    #[test]
+    fn text_sources_parallel_the_runs() {
+        let run = |source| TextRun {
+            font: "Times".into(),
+            height: 487.2,
+            width: 201.0,
+            escapement: 0,
+            colour: Colour::BLACK,
+            weight: 400,
+            italic: false,
+            underline: false,
+            strings: vec![PlacedText { origin: Point::new(10, 20), text: "A".into() }],
+            source,
+        };
+        let list = DisplayList { shapes: vec![], texts: vec![run(Some(ItemId(2))), run(None)] };
+        let encoded = encode(&list);
+        assert_eq!(encoded.text_sources, vec![3, 0]);
+        let back = score_testkit::display_from_json(&encoded.texts).unwrap();
+        assert_eq!(back.texts.len(), 2);
+        assert_eq!(back.texts[0].strings[0].origin, Point::new(10, 20));
     }
 }
