@@ -1,7 +1,7 @@
 //! Code 1: notes (draw_note 0x4EFEC0).
 //!
 //! A note is drawn in the engine's order: ledger lines (flushed on their own,
-//! in the staff's colour), head, tails, accidental, stem, dots. The parts
+//! in the staff's colour), head, tails, accidental, stem, dots, mark. The parts
 //! share what draw_note derives from the parameters first ([`Note`]): the
 //! step unit (the staff's, times P15, or 0.6 for a grace note), the head
 //! width, and the position after the P10 offset and the P12 staff change.
@@ -9,6 +9,7 @@
 pub(crate) mod glyph;
 mod head;
 mod ledger;
+mod mark;
 
 use crate::canvas::{Canvas, Pen};
 use crate::document::{Document, ItemRef};
@@ -201,11 +202,12 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     if note.accidental != 0 {
         accidental(doc, item, &note, canvas);
     }
-    if note.stem != Stem::None {
-        stem(doc, item, &note, canvas);
-    }
+    let stem_length = if note.stem == Stem::None { 0.0 } else { stem(doc, item, &note, canvas) };
     if ip(item, 9) >= 10 {
         dots(doc, item, &note, canvas);
+    }
+    if ip(item, 11) != 0 {
+        mark::draw(doc, item, &note, stem_length, canvas);
     }
 }
 
@@ -274,8 +276,9 @@ fn accidental(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
 
 /// The stem (0x4F0EB9): from 0.3 scale steps beyond the head's centre (P17
 /// moves it) to an octave (+ P8) beyond, at the head's right edge when up.
-/// A grace note with P8 ± 100 and a tail gets a slash first.
-fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
+/// A grace note with P8 ± 100 and a tail gets a slash first. Returns the
+/// signed length (0 for heads without a stem), which marks build on.
+fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) -> f64 {
     let extension = stem_extension(item);
     if ip(item, 8).abs() >= HUNDREDS && note.tails != 0 {
         slash(doc, item, note, extension, canvas);
@@ -283,7 +286,7 @@ fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
     let length = real((tail_room(note) + c(STEPS) + extension) * note.unit * c(STEPS));
     let head_type = head::unparenthesised(ip(item, 6));
     if !has_stem(head_type) {
-        return;
+        return 0.0;
     }
     let down = note.stem.is_down();
     let (x, length) = if down { (note.origin.x, -length) } else { (real(note.origin.x + note.head_width), length) };
@@ -293,6 +296,7 @@ fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
     let start = real(note.unit * source + note.origin.y);
     canvas.point(Pos::new(x, start), Pen::Stroke);
     canvas.point(Pos::new(x, end), Pen::Continue);
+    length
 }
 
 /// Whole notes, breves and library heads 100–198 (but 139) have no stem.

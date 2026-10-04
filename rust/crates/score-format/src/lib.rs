@@ -5,9 +5,11 @@
 //! the original engine running under emulation.
 
 pub mod drw;
+pub mod fmt;
 pub mod mus;
 pub mod word;
 
 pub use drw::{DrwError, DrwLibrary, DrwRecord, PathKind, Symbol, SymbolPath};
+pub use fmt::{FmtError, FontMetrics};
 pub use mus::{CountWidth, Item, MusError, MusFile, Trailer};
 pub use word::Word;

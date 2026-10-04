@@ -34,11 +34,11 @@ SANDBOXES = Path(__file__).resolve().parent / "sandbox" / "fixtures"
 INPUT = "input.mus"
 SANDBOX_NAME = "case.mus"   # "G I..." drops the I: the engine reads "G input.mus" as NPUT.MUS
 
-TEXT_TOP_OFFSET = 96            # OnDraw (0x5E5910) draws strings at (x, y + 0x60)
-TEXT_RUN_Y_OFFSETS = 0x1576570  # per-run y offset OnDraw adds after scaling
+TEXT_BASELINE_OFFSET = 96       # OnDraw (0x5E5910): the baseline of a string is at y + 0x60 (analysis/engine/display.md)
 VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4   # emit_points: x_out = x + VIEW_DX, y_out = y - VIEW_DY
 PAGE_FROM_INTERNAL = (2000, 26948)        # paper bottom-left at internal (-2000, -26947.7); analysis/engine/coordinates.md
 ITEM_COUNT = 0x20B8E24          # number of items, and the 1-based loop index while drawing
+PEN_RESET = -99                 # 0x4D4F3F: (0, 0, -99) "reset pen width", print metadata that also reaches the screen
 NOT_FOUND_DIALOG = 0x59B090     # "Not found": missing symbol library or instrument; changes no geometry
 # The engine never checks its output buffers; these are the shell's room (disasm-expert).
 SHELL_VECTOR_WORDS, SHELL_OBJECTS, SHELL_TEXT_BYTES = 1_000_000, 10_000, 440_000
@@ -75,7 +75,6 @@ class Run:
     outcomes: list[CommandOutcome] = field(default_factory=list)
     events: list[Event] = field(default_factory=list)
     final: EngineResult | None = None
-    text_run_y_offsets: list[int] = field(default_factory=list)
     vector_writers: dict[int, int] = field(default_factory=dict)
     text_writers: dict[int, int] = field(default_factory=dict)
     view_dx: int = 0
@@ -151,8 +150,11 @@ def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     run.vector_writers = dict(engine.vector_writers)
     run.text_writers = dict(engine.text_writers)
     if run.final is not None:
-        runs = len(text_runs(run.final.text))
-        run.text_run_y_offsets = [engine.i32(TEXT_RUN_Y_OFFSETS + 4 * i) for i in range(runs)]
+        try:
+            text_runs(run.final.text)
+        except (struct.error, ValueError) as err:
+            run.error = f"text stream does not decode: {err}"
+            run.final = None
     return run
 
 
@@ -220,10 +222,15 @@ class PageView:
 
     @classmethod
     def of(cls, run: Run) -> "PageView":
-        all_shapes = shapes(run.final.vector)
+        kept = [k for k, (_, _, tag) in enumerate(run.final.vector) if tag != PEN_RESET]
+        all_shapes = shapes([run.final.vector[k] for k in kept])
         frames = [PageFrame.of(s) for s in all_shapes if is_page_frame(s)]
-        content = [(s, shape_writer(s, run.vector_writers)) for s in all_shapes if not is_page_frame(s)]
-        notes = ["shapes without a single writing item; not attributed"] if any(i is None for _, i in content) else []
+        content = [(s, shape_writer(s, kept, run.vector_writers)) for s in all_shapes if not is_page_frame(s)]
+        resets = len(run.final.vector) - len(kept)
+        # The shell would start an object at the record and give the next shape its tag (kind 0xFF, colour 0xFFFF9D).
+        notes = [f"{resets} pen-width reset record(s) left out"] if resets else []
+        if any(i is None for _, i in content):
+            notes.append("shapes without a single writing item; not attributed")
         runs = text_runs(run.final.text)
         text_items = [run_writer(r, run.text_writers) for r in runs]
         if None in text_items:
@@ -237,16 +244,17 @@ class PageView:
         return not self.frames or min(f.origin for f in self.frames) == self.offset
 
 
-def single_writer(span: range, writers: dict[int, int]) -> int | None:
+def single_writer(span, writers: dict[int, int]) -> int | None:
     """0-based index of the one item that wrote every word (or byte) of the span, else None."""
     items = {writers.get(i) for i in span}
     (item,) = items if len(items) == 1 else (None,)
     return item - 1 if item else None
 
 
-def shape_writer(shape: Shape, writers: dict[int, int]) -> int | None:
+def shape_writer(shape: Shape, kept: list[int], writers: dict[int, int]) -> int | None:
+    """`kept` maps the decoded triples back to their positions in the engine's stream."""
     start, end = shape.span
-    return single_writer(range(3 * start, 3 * end), writers)
+    return single_writer([3 * kept[k] + w for k in range(start, end) for w in range(3)], writers)
 
 
 def run_writer(run: TextRun, writers: dict[int, int]) -> int | None:
@@ -281,7 +289,7 @@ def as_f32(value: float) -> float:
 
 
 def text_json(run: TextRun, dx: int, dy: int) -> dict:
-    """Height and width in engine units; string origins are TextOut's top-left, y + 96."""
+    """Height and width in engine units; string origins are the baseline start, y + 96."""
     return {
         "font": run.font,
         "height": as_f32(64 * run.height),
@@ -291,7 +299,7 @@ def text_json(run: TextRun, dx: int, dy: int) -> dict:
         "weight": run.weight,
         "italic": run.italic,
         "underline": run.underline,
-        "strings": [{"x": s.x - dx, "y": s.y + TEXT_TOP_OFFSET - dy, "text": s.text} for s in run.strings],
+        "strings": [{"x": s.x - dx, "y": s.y + TEXT_BASELINE_OFFSET - dy, "text": s.text} for s in run.strings],
     }
 
 
@@ -358,8 +366,6 @@ def warnings(run: Run, view: PageView | None) -> list[str]:
         notes.append("more vector output than the shell's display list holds")
     if len(run.final.text) > SHELL_TEXT_BYTES:
         notes.append("more text than the engine's text buffer holds")
-    if any(run.text_run_y_offsets):
-        notes.append(f"OnDraw per-run y offsets are nonzero: {run.text_run_y_offsets}")
     return notes
 
 
@@ -390,7 +396,7 @@ def meta_json(case: Case, run: Run, zoom_run: Run | None, view: PageView | None)
         "invalid_reasons": reasons,
         "warnings": warnings(run, view),
         "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
-        "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
+        "text_origin": "start of the baseline: engine (x, y + 96), then translated",
     }
 
 
@@ -446,8 +452,11 @@ def main(argv: list[str]) -> int:
     if args.list:
         print("\n".join(f"{c.name}\t{c.description}" for c in cases))
         return 0
-    with ProcessPoolExecutor(max_workers=args.jobs) as pool:
-        written = list(pool.map(write_fixture, cases, [args.out] * len(cases), [not args.no_zoom_check] * len(cases)))
+    try:
+        with ProcessPoolExecutor(max_workers=args.jobs) as pool:
+            written = list(pool.map(write_fixture, cases, [args.out] * len(cases), [not args.no_zoom_check] * len(cases)))
+    finally:
+        shutil.rmtree(SANDBOXES, ignore_errors=True)   # one copy of the install per worker process
     for w in written:
         state = "ok" if w.valid else "INVALID " + "; ".join(w.reasons)
         print(f"{w.name:40} shapes={w.shapes:5} strings={w.texts:4} {state}")

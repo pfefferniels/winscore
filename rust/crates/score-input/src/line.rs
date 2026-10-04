@@ -6,7 +6,7 @@ use score_format::{Item, Word};
 use crate::events::{Event, Head};
 use crate::notes::{Clef, KeySignature, Meter, RestKind, StaffShift, StemMode};
 use crate::rhythm::Rhythm;
-use crate::spacing::{positions, Slot};
+use crate::spacing::{positions, Entry, GRACE_DURATION};
 
 /// Middle staff line: notes from here up take a down stem, and a stem reaches at least here.
 pub(crate) const MIDDLE_LINE: i32 = 7;
@@ -19,6 +19,8 @@ const SHIFT_RIGHT: f32 = 10.0;
 const SHIFT_LEFT: f32 = 20.0;
 const GRACE_LEVEL: i32 = 100;
 const GRACE_SLASH: f32 = 101.0;
+/// Staff size factor of the input staff (STAFF_STEP / 25); staves of other sizes are not handled yet.
+const STAFF_SIZE: f32 = 1.0;
 
 /// Builds an item; trailing zero parameters are dropped as the engine does (0x5253FD).
 pub(crate) fn item(params: &[f32]) -> Item {
@@ -41,11 +43,15 @@ pub(crate) struct Note {
     /// P11 of the head that carries the stem (marks from pass 3).
     pub mark: f32,
     pub shift: StaffShift,
+    /// A head left at another x than the chord (level, x): the minimum-gap pass never moves
+    /// the last entry of the line, which can be the last member of a chord.
+    pub stray_head: Option<(i32, f32)>,
 }
 
 impl Note {
     fn new(x: f32, heads: Vec<Head>, rhythm: Rhythm, stems: StemMode, shift: StaffShift) -> Self {
-        let mut note = Note { x, heads, rhythm, down: false, extension: 0.0, tails: rhythm.tails(), mark: 0.0, shift };
+        let mut note =
+            Note { x, heads, rhythm, down: false, extension: 0.0, tails: rhythm.tails(), mark: 0.0, shift, stray_head: None };
         let down = match stems {
             StemMode::Up => false,
             StemMode::Down => true,
@@ -84,8 +90,26 @@ impl Note {
         self.extension = if self.is_grace() { GRACE_SLASH } else { (high - low).max(to_middle).max(0) as f32 };
     }
 
+    /// The heads in item order: the head carrying the stem first.
+    pub fn ordered_heads(&self) -> Vec<&Head> {
+        if self.down {
+            self.heads.iter().rev().collect()
+        } else {
+            self.heads.iter().collect()
+        }
+    }
+
+    fn spacing_entries(&self) -> Vec<Entry> {
+        let quarters = if self.is_grace() { GRACE_DURATION } else { self.rhythm.quarters() };
+        self.ordered_heads()
+            .iter()
+            .enumerate()
+            .map(|(i, head)| Entry::Note { quarters, accidental: head.accidental.is_some(), first: i == 0 })
+            .collect()
+    }
+
     fn items(&self, staff: f32) -> Vec<Item> {
-        let ordered: Vec<&Head> = if self.down { self.heads.iter().rev().collect() } else { self.heads.iter().collect() };
+        let ordered = self.ordered_heads();
         let levels: Vec<i32> = ordered.iter().map(|h| h.level).collect();
         let shifts = second_shifts(&levels, self.down);
         let dots = 10 * i32::from(self.rhythm.dots());
@@ -113,10 +137,14 @@ impl Note {
                 };
                 let (extension, tails, mark) =
                     if stem_head { (self.extension, self.tails, self.mark) } else { (0.0, 0, 0.0) };
+                let x = match self.stray_head {
+                    Some((stray, x)) if stray == head.level => x,
+                    _ => self.x,
+                };
                 item(&[
                     1.0,
                     staff,
-                    self.x,
+                    x,
                     level as f32,
                     (stem + accidental) as f32,
                     self.rhythm.head() as f32,
@@ -152,11 +180,37 @@ pub(crate) enum Element {
     Rest { x: f32, kind: RestKind, rhythm: Rhythm },
     Bar { x: f32, staves: u8 },
     Clef { x: f32, clef: Clef, first: bool },
-    Key { x: f32, key: KeySignature },
+    Key { x: f32, key: KeySignature, clef: Clef },
     Meter { x: f32, meter: Meter },
 }
 
 impl Element {
+    fn spacing_entries(&self) -> Vec<Entry> {
+        match self {
+            Element::Note(note) => note.spacing_entries(),
+            Element::Rest { rhythm, .. } => vec![Entry::Rest { quarters: rhythm.quarters() }],
+            Element::Bar { .. } => vec![Entry::Bar],
+            Element::Clef { .. } => vec![Entry::Clef],
+            Element::Key { key, .. } => vec![Entry::Key(*key)],
+            Element::Meter { meter, .. } => vec![Entry::Meter(*meter)],
+        }
+    }
+
+    /// Takes the positions of this element's entries (one per chord member).
+    fn place(&mut self, member_xs: &[f32]) {
+        let first = member_xs.first().copied().unwrap_or(0.0);
+        match self {
+            Element::Note(note) => {
+                note.x = first;
+                let ordered_levels: Vec<i32> = note.ordered_heads().iter().map(|h| h.level).collect();
+                note.stray_head = ordered_levels.iter().zip(member_xs).find(|(_, x)| **x != first).map(|(l, x)| (*l, *x));
+            }
+            Element::Rest { x, .. } | Element::Bar { x, .. } | Element::Clef { x, .. } | Element::Key { x, .. } | Element::Meter { x, .. } => {
+                *x = first;
+            }
+        }
+    }
+
     fn items(&self, staff: f32) -> Vec<Item> {
         match self {
             Element::Note(note) => note.items(staff),
@@ -166,10 +220,10 @@ impl Element {
                 let small = if *first { 0.0 } else { 100.0 };
                 vec![item(&[3.0, staff, *x, small, clef.code() as f32])]
             }
-            Element::Key { x, key } => {
+            Element::Key { x, key, clef } => {
                 let count = f32::from(key.count) * if key.sharps { 1.0 } else { -1.0 };
                 let naturals = if key.naturals { 100.0 * count.signum() } else { 0.0 };
-                vec![item(&[17.0, staff, *x, 0.0, count + naturals])]
+                vec![item(&[17.0, staff, *x, 0.0, count + naturals, clef.code() as f32])]
             }
             Element::Meter { x, meter } => {
                 let (top, bottom) = match meter {
@@ -207,20 +261,6 @@ pub(crate) struct Timed<'a> {
     pub rhythm: Option<Rhythm>,
 }
 
-impl Timed<'_> {
-    fn slot(&self, first_clef: bool) -> Slot {
-        match (self.event, self.rhythm) {
-            (_, Some(Rhythm::Grace)) => Slot::Grace,
-            (_, Some(rhythm)) => Slot::Timed(rhythm.quarters()),
-            (Event::Bar { .. }, _) => Slot::Bar,
-            (Event::Clef(_), _) => Slot::Clef { first: first_clef },
-            (Event::Key(key), _) => Slot::Key(*key),
-            (Event::Meter(meter), _) => Slot::Meter(*meter),
-            _ => Slot::None,
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Line {
     pub staff: f32,
@@ -232,21 +272,22 @@ pub(crate) struct Line {
 impl Line {
     pub fn new(timed: &[Timed], staff: u8, begin: f32, end: f32) -> Self {
         let leading_clefs = timed.iter().take_while(|t| matches!(t.event, Event::Clef(_))).count();
-        let slots: Vec<Slot> = timed.iter().enumerate().map(|(i, t)| t.slot(i < leading_clefs)).collect();
-        let xs = positions(&slots, begin, end);
         let mut stems = StemMode::Ordinary;
         let mut shift = StaffShift::Main;
+        let mut clef = Clef::Treble;
         let elements = timed
             .iter()
-            .zip(xs)
             .enumerate()
-            .filter_map(|(i, (t, x))| match (t.event, t.rhythm) {
-                (Event::Chord(heads), Some(rhythm)) => Some(Element::Note(Note::new(x, heads.clone(), rhythm, stems, shift))),
-                (Event::Rest(kind), Some(rhythm)) => Some(Element::Rest { x, kind: *kind, rhythm }),
-                (Event::Bar { staves }, _) => Some(Element::Bar { x, staves: *staves }),
-                (Event::Clef(clef), _) => Some(Element::Clef { x, clef: *clef, first: i < leading_clefs }),
-                (Event::Key(key), _) => Some(Element::Key { x, key: *key }),
-                (Event::Meter(meter), _) => Some(Element::Meter { x, meter: *meter }),
+            .filter_map(|(i, t)| match (t.event, t.rhythm) {
+                (Event::Chord(heads), Some(rhythm)) => Some(Element::Note(Note::new(0.0, heads.clone(), rhythm, stems, shift))),
+                (Event::Rest(kind), Some(rhythm)) => Some(Element::Rest { x: 0.0, kind: *kind, rhythm }),
+                (Event::Bar { staves }, _) => Some(Element::Bar { x: 0.0, staves: *staves }),
+                (Event::Clef(c), _) => {
+                    clef = *c;
+                    Some(Element::Clef { x: 0.0, clef, first: i < leading_clefs })
+                }
+                (Event::Key(key), _) => Some(Element::Key { x: 0.0, key: *key, clef }),
+                (Event::Meter(meter), _) => Some(Element::Meter { x: 0.0, meter: *meter }),
                 (Event::Stems(mode), _) => {
                     stems = *mode;
                     None
@@ -258,7 +299,21 @@ impl Line {
                 (Event::Chord(_) | Event::Rest(_), None) => None,
             })
             .collect();
-        Line { staff: f32::from(staff), elements, attachments: Vec::new() }
+        let mut line = Line { staff: f32::from(staff), elements, attachments: Vec::new() };
+        line.space(begin, end);
+        line
+    }
+
+    /// Sets every element's P3 from the engine's spacing of the work-table entries.
+    fn space(&mut self, begin: f32, end: f32) {
+        let entries: Vec<Vec<Entry>> = self.elements.iter().map(Element::spacing_entries).collect();
+        let flat: Vec<Entry> = entries.iter().flatten().copied().collect();
+        let xs = positions(&flat, begin, end, STAFF_SIZE);
+        let mut next = xs.into_iter();
+        for (element, count) in self.elements.iter_mut().zip(entries.iter().map(Vec::len)) {
+            let member_xs: Vec<f32> = next.by_ref().take(count).collect();
+            element.place(&member_xs);
+        }
     }
 
     /// The notes and chords, numbered from 1 in passes 3-5 (rests are not counted).
