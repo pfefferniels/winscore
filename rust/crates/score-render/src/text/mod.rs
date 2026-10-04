@@ -29,8 +29,10 @@ use glyphs::SPACE;
 use scan::{scan, Code, Entry, ScanSettings};
 
 /// What draw_text reads from the item parameters and globals the caller
-/// sets up. Sizes and angles are REAL*4 values as stored.
-#[derive(Debug, Clone, PartialEq)]
+/// sets up. Sizes and angles are REAL*4 values as stored. End struct
+/// literals with `..TextCall::default()` so that fields added later keep
+/// their neutral values.
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct TextCall<'t> {
     pub text: &'t [u8],
     /// X_POS, Y_POS.
