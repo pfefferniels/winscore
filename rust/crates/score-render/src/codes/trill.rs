@@ -40,7 +40,16 @@ const PIANO_PEDAL_SYMBOL: i32 = 48;
 const PIANO_PEDAL_FILLER: i32 = 49;
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-    let mark = Mark::new(doc, item);
+    let step = doc.staff_of(item).step;
+    draw(doc, canvas, ItemContext::of(item), doc.position(item), step, &Params::of(item));
+}
+
+/// draw_code7 with its globals given: the symbol context of the calling
+/// item (IP2 names the staff whose levels apply; IP1 becomes 9), X_POS and
+/// Y_POS `at`, STEP `step` and the P-array `params`. Notes draw their trill
+/// marks through this.
+pub fn draw(doc: &Document<'_>, canvas: &mut Canvas<'_>, context: ItemContext, at: Pos, step: f64, params: &Params) {
+    let mark = Mark::new(doc, context, at, step, params);
     match mark.kind {
         TRILL => trill(&mark, canvas),
         HARP => harp(&mark, canvas),
@@ -66,6 +75,8 @@ struct Mark<'a, 'd> {
     /// The globals draw_clef and draw_symbol read, with the item's IP10 as pixel thickness.
     context: ItemContext,
     staff: Staff,
+    /// STEP.
+    step: f64,
     /// X_POS (with P15) and Y_POS.
     at: Pos,
     /// P1…P50, with P16 = 1 when P18 is set.
@@ -76,18 +87,19 @@ struct Mark<'a, 'd> {
 }
 
 impl<'a, 'd> Mark<'a, 'd> {
-    fn new(doc: &'a Document<'d>, item: ItemRef<'_>) -> Self {
-        let mut params = Params::of(item);
+    fn new(doc: &'a Document<'d>, context: ItemContext, at: Pos, step: f64, params: &Params) -> Self {
+        let mut params = params.clone();
         if params.p(18) != 0.0 {
             params.set(16, 1.0);
         }
         Self {
             doc,
-            context: ItemContext { code: SYMBOL_CODE, ..ItemContext::of(item) },
-            staff: doc.staff_of(item),
-            at: doc.position(item),
-            kind: trunc(f64::from(item.p(7))),
-            size: match item.p(5) {
+            context: ItemContext { code: SYMBOL_CODE, ..context },
+            staff: doc.staves.get(context.staff),
+            step,
+            at,
+            kind: trunc(f64::from(params.p(7))),
+            size: match params.p(5) {
                 0.0 => 1.0,
                 p5 => f64::from(p5),
             },
@@ -104,7 +116,7 @@ impl<'a, 'd> Mark<'a, 'd> {
     }
 
     fn step(&self) -> f64 {
-        self.staff.step
+        self.step
     }
 
     fn scale_step(&self) -> f64 {
@@ -165,7 +177,7 @@ fn extend(mark: &Mark<'_, '_>, style: Extension, level: f64, x: f64, (p8, p9): (
         _ => real(level + f64::from(0.4_f32)),
     };
     let params = mark.params.clone().with(5, level as f32).with(7, style as i32 as f32).with(8, p8).with(9, p9);
-    line::draw(&params, Pos::new(x, mark.staff.y(level)), &mark.staff, canvas);
+    line::draw_with_step(&params, Pos::new(x, mark.staff.y(level)), &mark.staff, mark.step, canvas);
 }
 
 /// P7 = 0: the trill symbol a scale step above P4, an accidental for P8 1-5,
@@ -316,10 +328,10 @@ fn harp(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
     let p4 = f64::from(mark.p(4));
     let bars = mark.params.clone().with(7, 0.0).with(8, 0.0).with(9, 0.0).with(10, 1.0).with(17, 0.0).with(18, 0.0);
     let upright = bars.clone().with(6, centre as f32).with(5, real(half_bar + p4) as f32);
-    line::draw(&upright, Pos::new(mark.at.x, mark.staff.y(real(p4 - half_bar))), &mark.staff, canvas);
+    line::draw_with_step(&upright, Pos::new(mark.at.x, mark.staff.y(real(p4 - half_bar))), &mark.staff, mark.step, canvas);
     let across = bars.with(5, p4 as f32).with(6, real(unit * 12.0 + centre) as f32).with(3, centre as f32);
     let left = real((centre - unit * 9.5) * P3_UNIT);
-    line::draw(&across, Pos::new(left, mark.at.y), &mark.staff, canvas);
+    line::draw_with_step(&across, Pos::new(left, mark.at.y), &mark.staff, mark.step, canvas);
 
     let rise = real(mark.staff.y(real(mark.size * 2.5 + p4)) - mark.at.y);
     let top = real(mark.at.y - rise * 2.0);

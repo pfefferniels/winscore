@@ -76,7 +76,13 @@ const MULTIPOINT: i32 = 100;
 /// Draws a code-4 item with parameters `params` whose P3/P4 point is
 /// `origin` (X_POS, Y_POS) on `staff`.
 pub fn draw(params: &Params, origin: Pos, staff: &Staff, canvas: &mut Canvas<'_>) {
-    let mut line = Line::new(params, origin, staff, canvas.buffer_mut().len());
+    draw_with_step(params, origin, staff, staff.step, canvas);
+}
+
+/// [`draw`] with the engine's STEP set to `step` (callers that scale it,
+/// e.g. for small notes); levels still come from the staff table.
+pub fn draw_with_step(params: &Params, origin: Pos, staff: &Staff, step: f64, canvas: &mut Canvas<'_>) {
+    let mut line = Line::new(params, origin, staff, step, canvas.buffer_mut().len());
     if line.ip5 >= HAIRPIN {
         hairpin(&mut line, canvas);
         return;
@@ -104,6 +110,8 @@ struct Line<'a> {
     ip5: i32,
     ip7: i32,
     staff: &'a Staff,
+    /// STEP: 25 × size, one scale step is 7 of them.
+    step: f64,
     left: Pos,
     right_x: f64,
     thickness: i32,
@@ -112,7 +120,7 @@ struct Line<'a> {
 }
 
 impl<'a> Line<'a> {
-    fn new(params: &Params, origin: Pos, staff: &'a Staff, start: usize) -> Self {
+    fn new(params: &Params, origin: Pos, staff: &'a Staff, step: f64, start: usize) -> Self {
         let mut p = params.clone();
         let mut thickness = params.ip(10);
         if p.p(5) == 0.0 && p.p(6) == 0.0 {
@@ -140,6 +148,7 @@ impl<'a> Line<'a> {
             ip5,
             ip7,
             staff,
+            step,
             left: Pos::new(x, origin.y),
             thickness,
             start,
@@ -147,7 +156,7 @@ impl<'a> Line<'a> {
     }
 
     fn step(&self) -> f64 {
-        self.staff.step
+        self.step
     }
 
     fn scale_step(&self) -> f64 {
