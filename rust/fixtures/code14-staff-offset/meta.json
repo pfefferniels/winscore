@@ -1,0 +1,39 @@
+{
+ "case": "code14-staff-offset",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 118,
+   "vector_words": 111
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; view = page + view_offset",
+ "description": "barline spanning staves moved by P4",
+ "events": [],
+ "invalid_reasons": [],
+ "items": 3,
+ "page_frames": [
+  [
+   401,
+   -11197,
+   34399,
+   44801
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -    3 Items)   <Legal>",
+ "valid": true,
+ "view_offset": [
+  400,
+  -11198
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}
