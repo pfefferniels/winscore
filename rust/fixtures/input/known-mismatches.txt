@@ -1,32 +1,21 @@
 # Cases score-input does not reproduce yet (one name per line).
 
-# Spacing with mid-line clefs, keys, meters and minimum widths (0x51CF40, being decompiled)
-e-meter-big
-p1-clefs
-p1-keys
-p1-meters
-p2-numbers
-sp-clef-end
-sp-clef-mid-1
-sp-clef-mid-2
-sp-clef-mid-3
-sp-clef-mid-8
-sp-clef-mid-half
-sp-clef-mid-range
-sp-clef-two
-sp-key-mid
-sp-meter-mid
-
-# Chords: accidental stacking (P5 decimals), dot placement (P9 100/1000)
+# Chords: accidental stacking (0x4EE442), dot placement (0x51C824)
 ch-accid
 ch-dots
+r-chords
 
-# Beams: slope limit and inner extreme notes (0x413CA8)
+# Beams (0x413CA8, 0x40CDE4)
 bd-extreme-mid
 bd-slope-big
 bd-slope-down
+r-adda
+r-melody
 
-# Slurs: ends on the stem side of a note (0x53D1E0)
+# Whole rest centring (P9) and dots
+r-rests
+
+# Slurs ending on the stem side (0x53D1E0)
 p5-basic
 p5-signs
 sl-forced-above
