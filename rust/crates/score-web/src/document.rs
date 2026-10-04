@@ -1,6 +1,10 @@
-//! An open score: the `.mus` file, its last rendering, and parameter edits.
+//! An open score: the editor that owns it (`score-edit`) and its last
+//! rendering. The browser names items by their index in file order, which
+//! is also what the display list's sources hold; the editor's stable ids
+//! stay on this side.
 
-use score_format::{Item, MusError, MusFile, Word};
+use score_edit::{Change, EditError, Editor};
+use score_format::{Item, MusError, MusFile};
 use score_render::page::Paper;
 use score_render::{render, DisplayList, ItemId};
 
@@ -9,73 +13,8 @@ use crate::hit::{hit_test, At};
 /// P1 of text items, whose characters follow the parameters.
 pub const TEXT_CODE: i32 = 16;
 
-/// The engine loads at most P1…P50 of an item (draw_items 0x547FC8).
-const MAX_PARAMS: usize = 50;
-
-/// Text items load P1…P12, or P1…P18 when P14 = -1 (colour/gray settings
-/// in P15, P16); their characters follow (analysis/engine/display.md).
-fn text_params(p14: f32) -> usize {
-    if p14 == -1.0 {
-        18
-    } else {
-        12
-    }
-}
-
-/// The highest parameter `item` can hold once parameter `n` is `value`.
-fn param_limit(item: &Item, n: usize, value: f32) -> usize {
-    let code = if n == 1 { value as i32 } else { item.code() };
-    let p14 = if n == 14 { value } else { item.param(14) };
-    if code == TEXT_CODE {
-        text_params(p14)
-    } else {
-        MAX_PARAMS
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EditError {
-    NoSuchItem(ItemId),
-    /// Parameters are numbered from 1.
-    NoSuchParam(usize),
-}
-
-impl std::fmt::Display for EditError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            EditError::NoSuchItem(id) => write!(f, "no item {}", id.0),
-            EditError::NoSuchParam(n) => write!(f, "no parameter P{n}"),
-        }
-    }
-}
-
-impl std::error::Error for EditError {}
-
 fn render_page(file: &MusFile) -> DisplayList {
     render(&score_render::Document::new(file))
-}
-
-/// Blank padding to whole words, as text items store their characters.
-fn padded(text: &[u8]) -> Vec<u8> {
-    let mut bytes = text.to_vec();
-    bytes.resize(text.len().div_ceil(4) * 4, b' ');
-    bytes
-}
-
-/// `item` with parameter `n` (1-based) set to `value`; missing parameters
-/// below `n` become zero.
-fn with_param(item: &Item, n: usize, value: f32) -> Item {
-    let mut params = item.params().to_vec();
-    if params.len() < n {
-        params.resize(n, Word::from_f32(0.0));
-    }
-    params[n - 1] = Word::from_f32(value);
-    let still_text = params[0].as_f32() as i32 == TEXT_CODE;
-    if still_text {
-        Item::with_text(params, padded(item.text()))
-    } else {
-        Item::new(params)
-    }
 }
 
 /// Characters of a text item as WinScore shows them (Windows-1252).
@@ -95,27 +34,31 @@ pub fn decode_text(bytes: &[u8]) -> String {
 
 #[derive(Debug, Clone)]
 pub struct Document {
-    file: MusFile,
+    editor: Editor,
     page: DisplayList,
 }
 
 impl Document {
     pub fn open(bytes: &[u8]) -> Result<Self, MusError> {
-        let file = MusFile::parse(bytes)?;
-        let page = render_page(&file);
-        Ok(Self { file, page })
+        let editor = Editor::open(bytes)?;
+        let page = render_page(editor.file());
+        Ok(Self { editor, page })
+    }
+
+    pub fn file(&self) -> &MusFile {
+        self.editor.file()
     }
 
     pub fn items(&self) -> &[Item] {
-        &self.file.items
+        &self.file().items
     }
 
-    pub fn item(&self, id: ItemId) -> Option<&Item> {
-        self.file.items.get(id.0 as usize)
+    pub fn item(&self, index: ItemId) -> Option<&Item> {
+        self.items().get(index.0 as usize)
     }
 
     pub fn paper(&self) -> Paper {
-        score_render::Document::new(&self.file).page.paper
+        score_render::Document::new(self.file()).page.paper
     }
 
     /// The last rendering.
@@ -124,30 +67,8 @@ impl Document {
     }
 
     pub fn render(&mut self) -> &DisplayList {
-        self.page = render_page(&self.file);
+        self.page = render_page(self.editor.file());
         &self.page
-    }
-
-    /// Sets parameter `n` (1-based) of an item. The page is re-rendered on
-    /// the next call to [`Document::render`].
-    pub fn set_param(&mut self, id: ItemId, n: usize, value: f32) -> Result<(), EditError> {
-        let item = self.file.items.get_mut(id.0 as usize).ok_or(EditError::NoSuchItem(id))?;
-        if n == 0 || n > param_limit(item, n, value) {
-            return Err(EditError::NoSuchParam(n));
-        }
-        *item = with_param(item, n, value);
-        Ok(())
-    }
-
-    pub fn file(&self) -> &MusFile {
-        &self.file
-    }
-
-    /// Appends items to the file; returns their ids.
-    pub fn append(&mut self, items: Vec<Item>) -> Vec<ItemId> {
-        let first = self.file.items.len();
-        self.file.items.extend(items);
-        (first..self.file.items.len()).map(|i| ItemId(i as u32)).collect()
     }
 
     pub fn hit(&self, at: At, tolerance: f64) -> Option<ItemId> {
@@ -155,7 +76,41 @@ impl Document {
     }
 
     pub fn save(&self) -> Vec<u8> {
-        self.file.to_bytes()
+        self.editor.save()
+    }
+
+    pub fn editor(&self) -> &Editor {
+        &self.editor
+    }
+
+    pub fn editor_mut(&mut self) -> &mut Editor {
+        &mut self.editor
+    }
+
+    /// The editor's id of the item at file position `index`.
+    pub fn id(&self, index: ItemId) -> Result<score_edit::ItemId, EditError> {
+        self.editor.id_at(index.0 as usize).ok_or(EditError::NoSuchItem(index.0 as f32))
+    }
+
+    pub fn select(&mut self, indices: &[ItemId]) {
+        let ids: Vec<score_edit::ItemId> = indices.iter().filter_map(|&i| self.editor.id_at(i.0 as usize)).collect();
+        self.editor.select(&ids);
+    }
+
+    /// The selection as file positions, in selection order.
+    pub fn selection(&self) -> Vec<ItemId> {
+        self.editor
+            .selection()
+            .iter()
+            .filter_map(|&id| self.editor.index_of(id))
+            .map(|i| ItemId(i as u32))
+            .collect()
+    }
+
+    /// What a finished action is called in the undo history, or `None` if it
+    /// changed nothing.
+    pub fn label(&self, change: &Change) -> Option<String> {
+        (!change.is_empty()).then(|| self.editor.undo_label().unwrap_or_default().to_owned())
     }
 }
 
@@ -176,76 +131,23 @@ mod tests {
     }
 
     #[test]
-    fn set_param_changes_one_word() {
-        let mut doc = Document::open(&sample("mozart.mus")).unwrap();
-        let id = ItemId(3);
-        let before = doc.item(id).unwrap().clone();
-        doc.set_param(id, 3, 42.5).unwrap();
-        let after = doc.item(id).unwrap();
-        assert_eq!(after.param(3), 42.5);
-        assert_eq!(after.params().len(), before.params().len());
-        assert_eq!(after.code(), before.code());
-        let reopened = Document::open(&doc.save()).unwrap();
-        assert_eq!(reopened.item(id).unwrap().param(3), 42.5);
-    }
-
-    #[test]
-    fn set_param_extends_short_items() {
-        let mut doc = Document::open(&sample("mozart.mus")).unwrap();
-        let id = ItemId(0);
-        let len = doc.item(id).unwrap().params().len();
-        doc.set_param(id, len + 3, 7.0).unwrap();
-        let item = doc.item(id).unwrap();
-        assert_eq!(item.params().len(), len + 3);
-        assert_eq!(item.param(len + 1), 0.0);
-        assert_eq!(item.param(len + 3), 7.0);
-    }
-
-    #[test]
-    fn text_items_keep_their_text() {
-        let mut doc = Document::open(&sample("carmen.mus")).unwrap();
-        let (index, text) = doc
-            .items()
-            .iter()
-            .enumerate()
-            .find(|(_, item)| item.code() == TEXT_CODE && !item.text().is_empty())
-            .map(|(i, item)| (i, item.text().to_vec()))
-            .unwrap();
-        let id = ItemId(index as u32);
-        doc.set_param(id, 4, 3.0).unwrap();
-        assert_eq!(doc.item(id).unwrap().text(), text.as_slice());
-        let reopened = Document::open(&doc.save()).unwrap();
-        assert_eq!(reopened.item(id).unwrap().text(), text.as_slice());
-    }
-
-    #[test]
-    fn rejects_bad_targets() {
-        let mut doc = Document::open(&sample("mozart.mus")).unwrap();
-        assert_eq!(doc.set_param(ItemId(0), 0, 1.0), Err(EditError::NoSuchParam(0)));
-        assert_eq!(doc.set_param(ItemId(0), 51, 1.0), Err(EditError::NoSuchParam(51)));
-        let missing = ItemId(doc.items().len() as u32);
-        assert_eq!(doc.set_param(missing, 1, 1.0), Err(EditError::NoSuchItem(missing)));
-    }
-
-    #[test]
-    fn text_items_take_colour_params_only_after_p14() {
-        let mut doc = Document::open(&sample("carmen.mus")).unwrap();
-        let index = doc.items().iter().position(|item| item.code() == TEXT_CODE).unwrap();
-        let id = ItemId(index as u32);
-        assert_eq!(doc.set_param(id, 15, 1.0), Err(EditError::NoSuchParam(15)));
-        doc.set_param(id, 14, -1.0).unwrap();
-        doc.set_param(id, 16, 0.5).unwrap();
-        let reopened = Document::open(&doc.save()).unwrap();
-        assert_eq!(reopened.item(id).unwrap().param(16), 0.5);
-        assert_eq!(reopened.item(id).unwrap().text(), doc.item(id).unwrap().text());
-    }
-
-    #[test]
     fn clicks_find_rendered_staves() {
         let doc = Document::open(&sample("carmen.mus")).unwrap();
         let staff = doc.page().shapes.iter().find(|s| s.source.is_some()).expect("carmen renders staves");
-        let id = doc.hit(At::from(staff.paths[0][0]), 2.0).unwrap();
-        assert_eq!(doc.item(id).unwrap().code(), 8);
+        let index = doc.hit(At::from(staff.paths[0][0]), 2.0).unwrap();
+        assert_eq!(doc.item(index).unwrap().code(), 8);
+    }
+
+    #[test]
+    fn selection_round_trips_through_file_positions() {
+        let mut doc = Document::open(&sample("mozart.mus")).unwrap();
+        doc.select(&[ItemId(7), ItemId(2)]);
+        assert_eq!(doc.selection(), vec![ItemId(7), ItemId(2)]);
+        let change = doc.editor_mut().move_selection(1.0, 0.0).unwrap();
+        assert_eq!(doc.label(&change).as_deref(), Some("Move"));
+        assert_eq!(doc.item(ItemId(2)).unwrap().param(3), 1.0);
+        doc.editor_mut().undo().unwrap();
+        assert_eq!(doc.item(ItemId(2)).unwrap().param(3), 0.0);
     }
 
     #[test]
