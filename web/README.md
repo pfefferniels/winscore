@@ -29,6 +29,7 @@ Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT
 - **Zoom**: −/+, the percent list, Fit, or ctrl/⌘ + wheel (pinch) around the pointer.
 - **Selection**: click an element or a row of the item list; Shift-click adds or removes; Escape clears. The Engine view selects through the fixture's item attribution. The panel shows P1…Pn of the last selected item with the help's label for each; edit a value and press Enter to set it and re-render.
 - **Editing**: drag selected items (Shift keeps one axis, Escape cancels), arrows move by one P3 space or scale step, Page Up/Down by 4 steps, Home/End by 10 spaces (WinScore's edit-mode keys), `[`/`]` one staff up/down, Delete, ⌘Z/Ctrl+Z undo, ⇧⌘Z/Ctrl+Y redo, and the command bar takes SCORE edit commands. Dragging empty paper pans. **Save** downloads the edited `.mus`. Until editor-core's `score-edit` crate is wired in, `src/editor.ts` stands in: moves change only P3/P4, drags assume staff size 1, and Delete and commands report that they are not available yet.
+- **Input…** opens WinScore's five-pass input dialog (Smith's "Computer Keyboard Input", `IN`): staff (proposed one above the highest), input range, and the notes, rhythms, marks, beams and slurs passes. `score-input` checks the passes as you type and marks the failing one; Enter moves to the next pass and inserts after the fifth. A missing staff is created as `8 n 0 0 0 0`, as the engine stores it.
 - URL parameters for direct links: `?sample=mozart.mus&mode=overlay&zoom=200&select=12`.
 
 ## Conventions
