@@ -1162,3 +1162,860 @@ ff
 sf
 == new_sforzato
 sfz
+
+# -- notes: parentheses, accidental and dot spacing, tremolo, width ------------------
+
+== b2_note_parentheses
+I 2
+ACP
+== b2_note_parentheses_off
+base: 8 1; 1 1 100 6 112.5 0 1
+I 2
+ACP
+== b2_note_parentheses_twice
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+ACP
+ACP
+== b2_acc_space_left
+base: 8 1; 1 1 100 6 112.5 0 1
+I 2
+SPA
+== b2_acc_space_right
+base: 8 1; 1 1 100 6 112.5 0 1
+I 2
+SPA-
+== b2_acc_space_right_at_zero
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+SPA-
+== b2_acc_space_left_sharp
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+SPA
+== b2_acc_no_space
+base: 8 1; 1 1 100 6 112.5 0 1
+I 2
+NOS
+== b2_dot_up_down
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+DUD
+== b2_dot_up_down_twice
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+DUD
+DUD
+== b2_dot_space_right
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+SPD
+SPD
+== b2_dot_space_left
+base: 8 1; 1 1 100 6 10 0 1.5 0 10.15
+I 2
+SPD-
+== b2_dot_space_left_at_zero
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+SPD-
+== b2_dot_note_width
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+SPDN
+== b2_dot_note_width_twice
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+SPDN
+SPDN
+== b2_no_dot
+base: 8 1; 1 1 100 6 10 0 0.75 0 11 0 0 0 0 0 0 0 0 0 1
+I 2
+NOD
+== b2_tremolo_one
+I 2
+TM1
+== b2_tremolo_add
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 41
+I 2
+TM+
+== b2_tremolo_add_from_mark
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7
+I 2
+TM+
+== b2_tremolo_three
+I 2
+TRM3
+== b2_width_plus
+I 2
+WID+
+WID+
+== b2_width_minus
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1.2
+I 2
+WID-
+== b2_width_default
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1.2
+I 2
+WID0
+== b2_no_offset
+base: 8 1; 1 1 100 6 10 0 1 0 0 5
+I 2
+NOFST
+== b2_head_parentheses
+I 2
+PRN
+== b2_head_parentheses_twice
+I 2
+PRN
+PRN
+== b2_rh8
+I 2
+RH8
+== b2_rh16
+I 2
+RH16
+== b2_rh2
+I 2
+RH2
+== b2_rh1
+I 2
+RH1
+== b2_rh_half_whole
+I 2
+RH.5
+== b2_rh4
+base: 8 1; 1 1 100 6 10 1 2
+I 2
+RH4
+== b2_rh3
+I 2
+RH3
+== b2_rh6
+I 2
+RH6
+== b2_rh12
+I 2
+RH12
+== b2_rh24
+I 2
+RH24
+== b2_rh5
+I 2
+RH5
+== b2_rh5_from_eighth
+base: 8 1; 1 1 100 6 10 0 0.5 0 1
+I 2
+RH5
+== b2_rh10
+I 2
+RH10
+== b2_rh20
+I 2
+RH20
+
+# -- rests ----------------------------------------------------------------------------
+
+== b2_rest_invisible
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RINV
+== b2_rest_invisible_twice
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RINV
+RINV
+== b2_rest_fermata
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RF
+== b2_rest_fermata_twice
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RF
+RF
+== b2_rest_parentheses
+base: 8 1; 2 1 100 0 1 0 0.5
+I 2
+RPR
+== b2_rest_parentheses_twice
+base: 8 1; 2 1 100 0 1 0 0.5
+I 2
+RPR
+RPR
+== b2_rest_center_whole
+base: 8 1; 2 1 100 0 -2 0 4
+I 2
+CW
+== b2_rest_dot
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+DOT
+== b2_rest_dot_twice
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+DOT
+DOT
+== b2_rest_double_dot
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+DDT
+== b2_rest_offsets
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+OFL
+OFM
+== b2_rest_cue
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+CUE
+
+# -- clefs ----------------------------------------------------------------------------
+
+== b2_clef_tab
+base: 8 1; 3 1 2
+I 2
+TAB
+== b2_clef_tab4
+base: 8 1; 3 1 2
+I 2
+TB4
+== b2_clef_tab5
+base: 8 1; 3 1 2
+I 2
+TB5
+== b2_clef_tenor
+base: 8 1; 3 1 2
+I 2
+TENOR
+== b2_clef_percussion
+base: 8 1; 3 1 2
+I 2
+PERC
+
+# -- lines (code 4) -------------------------------------------------------------------
+
+== b2_line_arrow_left
+base: 8 1; 4 1 50 5 10 120
+I 2
+LAR
+== b2_line_arrow_left_twice
+base: 8 1; 4 1 50 5 10 120
+I 2
+LAR
+LAR
+== b2_line_arrow_left_over_bracket
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 2
+I 2
+LAR
+== b2_line_arrow_right
+base: 8 1; 4 1 50 5 10 120
+I 2
+RAR
+== b2_line_bracket_left
+base: 8 1; 4 1 50 5 10 120
+I 2
+LBR
+== b2_line_bracket_left_off
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 1
+I 2
+LBR
+== b2_line_bracket_left_arrow
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 102
+I 2
+LBR
+== b2_line_bracket_right
+base: 8 1; 4 1 50 5 10 120
+I 2
+RBR
+== b2_line_bracket_lengths
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 2 2
+I 2
+LBR+
+RBR-
+RBR-
+== b2_line_bracket_down
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 2 2
+I 2
+LBRD
+RBRD
+== b2_line_dash_length
+base: 8 1; 4 1 50 5 10 120 1
+I 2
+DSHL+
+DSHL+
+== b2_line_dash_length_minus
+base: 8 1; 4 1 50 5 10 120 1 1.5
+I 2
+DSHL-
+== b2_line_dash_length_default
+base: 8 1; 4 1 50 5 10 120 1 1.5
+I 2
+DSHL0
+== b2_line_dash_space
+base: 8 1; 4 1 50 5 10 120 1
+I 2
+DSHS+
+DSHS-
+DSHS-
+== b2_line_dash_space_default
+base: 8 1; 4 1 50 5 10 120 1 0 3
+I 2
+DSHS0
+== b2_line_thicker
+base: 8 1; 4 1 50 5 10 120
+I 2
+THK
+THK
+== b2_line_thickness_default
+base: 8 1; 4 1 50 5 10 120 0 0 0 3
+I 2
+THK0
+== b2_line_horizontal
+base: 8 1; 4 1 50 5 10 120
+I 2
+HORZ
+== b2_line_vertical
+base: 8 1; 4 1 50 5 10 120
+I 2
+VERT
+== b2_line_vertical_2
+base: 8 1; 4 1 50 3 20 90
+I 2
+VERT
+== b2_line_wiggle
+base: 8 1; 4 1 50 5 10 120 1 1 1 1 1 1
+I 2
+WIG
+== b2_line_saw
+base: 8 1; 4 1 50 5 10 120 1 1 1 1 1 1
+I 2
+SAW
+== b2_line_saw_heavy
+base: 8 1; 4 1 50 5 10 120
+I 2
+SAWX
+== b2_line_vibrato
+base: 8 1; 4 1 50 5 10 120 1 1 1 1 1 1
+I 2
+VIB
+== b2_line_dotted
+base: 8 1; 4 1 50 5 10 120
+I 2
+DTS4
+== b2_line_offsets
+base: 8 1; 4 1 50 5 10 120
+I 2
+LOFFP
+LOFFP
+ROFFM
+== b2_line_offsets_zero
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 0 0 0 0 0 1 0.5 -0.5
+I 2
+LOFF0
+== b2_line_offsets_zero_both
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 0 0 0 0 0 1 0.5 -0.5
+I 2
+LOFF0
+ROFF0
+== b2_line_end_offsets
+base: 8 1; 4 1 50 5 10 120
+I 2
+LROFP
+LROFM
+LROFM
+== b2_hairpin_spread
+base: 8 1; 4 1 50 -1 999 120
+I 2
+SPD+1
+== b2_hairpin_spread_minus
+base: 8 1; 4 1 50 -1 999 120
+I 2
+SPD-
+== b2_hairpin_spread_from_3
+base: 8 1; 4 1 50 -1 999 120 3
+I 2
+SPD+1
+== b2_hairpin_spread_minus_from_3
+base: 8 1; 4 1 50 -1 999 120 3
+I 2
+SPD-
+== b2_hairpin_spread_default
+base: 8 1; 4 1 50 -1 999 120 3
+I 2
+SPD0
+== b2_hairpin_dashes
+base: 8 1; 4 1 50 -1 999 120
+I 2
+CR-
+== b2_hairpin_dashes_decresc
+base: 8 1; 4 1 50 -1 999 120
+I 2
+DC-
+== b2_decresc_to_cresc_dashes
+base: 8 1; 4 1 50 -1 999 120 -1
+I 2
+CR-
+
+# -- slurs (code 5) -------------------------------------------------------------------
+
+== b2_slur_dashes
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLDSH
+== b2_slur_dots
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLDTS
+== b2_slur_dashes_to_dots
+base: 8 1; 5 1 50 5 10 120 3 0 0 0 1
+I 2
+SLDTS
+SLDSH
+== b2_slur_half_left
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLHL
+== b2_slur_half_left_twice
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLHL
+SLHL
+== b2_slur_half_right
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLHR
+== b2_slur_half_right_over_left
+base: 8 1; 5 1 50 5 10 120 3 0 0 0 0 1
+I 2
+SLHR
+== b2_slur_up_down
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SUPDN
+== b2_slur_triplet
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLTRIP
+== b2_slur_triplet_off
+base: 8 1; 5 1 50 5 10 120 3 0 0 0 0 0 0 0 0 3
+I 2
+SLTRIP
+== b2_slur_triplet_off_numbered
+base: 8 1; 5 1 50 5 10 120 2 3 0.5 0 0 0 0 4 0 3
+I 2
+SLTRIP
+== b2_slur_thinner
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+THM
+THM
+== b2_slur_thickness_default
+base: 8 1; 5 1 50 5 10 120 3 0 0 0 0 0 1.2
+I 2
+THK
+== b2_slur_curve
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+CRVP
+CRVP
+CRVM
+== b2_slur_curve_down
+base: 8 1; 5 1 50 5 10 120 -3
+I 2
+CRVP
+== b2_slur_midpoint
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+MIDL
+MIDL
+== b2_slur_midpoint_right
+base: 8 1; 5 1 50 5 10 120 3 0 0 0.6
+I 2
+MIDR
+== b2_slur_midpoint_default
+base: 8 1; 5 1 50 5 10 120 3 0 0 0.6
+I 2
+MID
+== b2_slur_midpoint_default_0
+base: 8 1; 5 1 50 5 10 120 3 0 0 0.6
+I 2
+MID0
+== b2_slur_number_moves
+base: 8 1; 5 1 50 5 10 120 2 3
+I 2
+NUML
+NUMU
+NUMU
+== b2_slur_number_moves_from_set
+base: 8 1; 5 1 50 5 10 120 2 3 0 0 0 0 0 0 0 0 0.3 0.4
+I 2
+NUMR
+NUMD
+== b2_slur_number_home
+base: 8 1; 5 1 50 5 10 120 2 3 0 0 0 0 0 0 0 0 0.3 0.4
+I 2
+NUMH0
+NUMV0
+== b2_slur_number_moves_unnumbered
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+NUML
+== b2_slur_to_triplet_bracket
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLUR3
+== b2_slur_triplet_word
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+TRP
+== b2_slur_offsets
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+LOFFM
+ROFFP
+
+# -- beams (code 6) -------------------------------------------------------------------
+
+== b2_beam_add
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+BEAM+
+BEAM+
+== b2_beam_add_down
+base: 8 1; 6 1 50 5 10 120 21
+I 2
+BEAM+
+== b2_beam_number
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+BNUM3
+== b2_beam_number_5
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+BNUM5
+== b2_beam_number_plus
+base: 8 1; 6 1 50 5 10 120 11 3
+I 2
+BNUMP
+== b2_beam_number_none
+base: 8 1; 6 1 50 5 10 120 11 3
+I 2
+BNUM0
+== b2_beam_tremolo
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+TRM2
+== b2_beam_tremolo_down
+base: 8 1; 6 1 50 5 10 120 22
+I 2
+TRM3
+== b2_beam_thickness
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+THK 2
+== b2_beam_thickness_default
+base: 8 1; 6 1 50 5 10 120 11 0 0 0 0 0 0 0 0 0 2
+I 2
+THK0
+== b2_beam_offsets
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+LOFFP
+ROFF0
+== b2_trill_offsets
+base: 8 1; 7 1 50 15 0 120
+I 2
+LOFFP
+ROFFM
+
+# -- end offsets of beams and code 7 items ----------------------------------------------
+
+== b3_beam_left_offset_twice
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+LOFFP
+LOFFP
+== b3_beam_left_offset_minus
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+LOFFM
+== b3_beam_right_offsets
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+ROFFP
+ROFFP
+ROFFM
+== b3_beam_zero_left
+base: 8 1; 6 1 50 5 10 120 11 0 0 0 0 0 0 10 -10
+I 2
+LOFF0
+== b3_beam_zero_right
+base: 8 1; 6 1 50 5 10 120 11 0 0 0 0 0 0 10 -10
+I 2
+ROFF0
+== b3_beam_zero_offsets
+base: 8 1; 6 1 50 5 10 120 11 0 0 0 0 0 0 10 -10
+I 2
+XOF
+== b3_trill_left_offset
+base: 8 1; 7 1 50 15 0 120
+I 2
+LOFFP
+LOFFP
+LOFFM
+== b3_trill_right_offset
+base: 8 1; 7 1 50 15 0 120
+I 2
+ROFFP
+== b3_trill_zero_left
+base: 8 1; 7 1 50 15 0 120 0 0 0 0 0 0 0 0 0.5 1 0 -0.5
+I 2
+LOFF0
+== b3_trill_zero_right
+base: 8 1; 7 1 50 15 0 120 0 0 0 0 0 0 0 0 0.5 1 0 -0.5
+I 2
+ROFF0
+== b3_trill_zero_offsets
+base: 8 1; 7 1 50 15 0 120 0 0 0 0 0 0 0 0 0.5 1 0 -0.5
+I 2
+XOFF
+== b3_trill_left_offset_value
+base: 8 1; 7 1 50 15 0 120
+I 2
+LOFF 3
+== b3_trill_right_offset_value
+base: 8 1; 7 1 50 15 0 120
+I 2
+ROFF 2
+== b3_line_zero_offsets
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 0 0 0 0 0 1 0.5 -0.5
+I 2
+XOFF
+== b3_decresc_spread
+base: 8 1; 4 1 50 -1 999 120 -1
+I 2
+SPD+1
+== b3_decresc_spread_minus
+base: 8 1; 4 1 50 -1 999 120 -1
+I 2
+SPD-
+
+# -- mouse drags and clicks ------------------------------------------------------------
+# Points are page coordinates. The engine puts the item at the cursor; here a drag keeps
+# the grab offset, so every drag starts at the item's own anchor, where both agree:
+# x = 150 P3 + 2000, y = 2423 + (P4 - c) 175 on staff 1, c = -2 for codes 2, 3, 17, 18,
+# else 2.
+
+== b4_drag_note
+I 2
+~v 17000 3123
+~v 17150 3298
+~x 17150 3298
+== b4_drag_note_fraction_down
+I 2
+~v 17000 3123
+~v 17037 3200
+~x 17037 3200
+== b4_drag_note_fraction_up
+I 2
+~v 17000 3123
+~v 16900 3223
+~x 16900 3223
+== b4_drag_note_twice
+I 2
+~v 17000 3123
+~v 17300 3473
+~v 17450 2950
+~x 17450 2950
+== b4_drag_line
+base: 8 1; 4 1 50 5 10 120
+I 2
+~v 9500 2948
+~v 9637 3035
+~x 9637 3035
+== b4_drag_hairpin
+base: 8 1; 4 1 50 -1 999 120
+I 2
+~v 9500 1898
+~v 9650 2073
+~x 9650 2073
+== b4_drag_slur
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+~v 9500 2948
+~v 9650 3123
+~x 9650 3123
+== b4_drag_beam
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+~v 9500 2948
+~v 9575 3000
+~x 9575 3000
+== b4_drag_trill
+base: 8 1; 7 1 50 15 0 120
+I 2
+~v 9500 4698
+~v 9650 4873
+~x 9650 4873
+== b4_drag_rest
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+~v 17000 2773
+~v 17150 2948
+~x 17150 2948
+== b4_drag_clef
+base: 8 1; 3 1 2 0 1
+I 2
+~v 2300 2773
+~v 2450 3123
+~x 2450 3123
+== b4_drag_barline
+base: 8 1; 14 1 100 1
+I 2
+~v 17000 2948
+~v 17300 3448
+~x 17300 3448
+== b4_drag_staff
+base: 8 1 0 0 1 200
+I 1
+~v 2000 2948
+~v 2150 3448
+~x 2150 3448
+== b4_drag_meter
+base: 8 1; 18 1 100 0 4 4
+I 2
+~v 17000 2773
+~v 17150 3123
+~x 17150 3123
+== b4_drag_key
+base: 8 1; 17 1 100 0 2
+I 2
+~v 17000 2773
+~v 16850 2600
+~x 16850 2600
+== b4_drag_shift_second_move
+base: 8 1; 4 1 50 5 10 120
+I 2
+~s 9500 2948
+~s 9505 3123
+~x 9505 3123
+== b4_drag_shift_threshold
+base: 8 1; 4 1 50 5 10 120
+I 2
+~s 9500 2948
+~s 9505 3123
+~s 9505 3163
+~s 9505 3193
+~x 9505 3193
+== b4_drag_shift_vertical
+base: 8 1; 4 1 50 5 10 120
+I 2
+~s 9500 2948
+~s 9510 3123
+~s 9800 3148
+~s 9800 3298
+~x 9800 3298
+== b4_drag_shift_horizontal
+base: 8 1; 4 1 50 5 10 120
+I 2
+~s 9500 2948
+~s 9650 2958
+~s 9680 2958
+~s 9800 3075
+~x 9800 3075
+== b4_drag_left_end
+base: 8 1; 4 1 50 5 10 120
+I 2
+LFT
+~v 9500 2948
+~v 9650 3123
+~x 9650 3123
+== b4_drag_right_end
+base: 8 1; 4 1 50 5 10 120
+I 2
+RGT
+~v 20000 3823
+~v 20150 3998
+~x 20150 3998
+== b4_drag_right_end_slur
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+RGT
+~v 20000 3823
+~v 20150 3998
+~x 20150 3998
+== b4_drag_right_end_trill
+base: 8 1; 7 1 50 15 0 120
+I 2
+RGT
+~v 20000 4698
+~v 20150 4873
+~x 20150 4873
+== b4_drag_left_end_twice
+base: 8 1; 4 1 50 5 10 120
+I 2
+LFT
+LFT
+~v 9500 2948
+~v 9650 3123
+~x 9650 3123
+== b4_drag_left_end_then_next_item
+base: 8 1; 4 1 50 5 10 120
+I 2
+LFT
+X
+I 2
+~v 9500 2948
+~v 9650 3123
+~x 9650 3123
+== b4_click_note
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 8 10 0 1; 2 1 140 0 0 0 1
+~ 19900 3600
+R 1
+== b4_click_rest
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 8 10 0 1; 2 1 140 0 0 0 1
+~ 23000 2800
+R 1
+== b4_click_staff
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 8 10 0 1; 2 1 140 0 0 0 1
+~ 2100 2950
+R 1
+== b4_click_far_away
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 8 10 0 1; 2 1 140 0 0 0 1
+~ 30000 9000
+R 1
+== b4_click_after_exit
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 8 10 0 1; 2 1 140 0 0 0 1
+I 3
+X
+~ 19900 3600
+R 1
+== b4_click_whole_rest
+base: 8 1; 2 1 100 0 -2 0 4; 1 1 100 2 10 0 1
+~ 17000 3473
+R 1
+== b4_click_beam_above_note
+base: 8 1; 6 1 50 5 10 120 11; 1 1 52 6 10 0 1
+~ 9800 4300
+R 1
+== b4_click_beam_down
+base: 8 1; 6 1 50 5 10 120 21; 1 1 52 6 10 0 1
+~ 9500 1000
+R 1
+== b4_click_symbol
+base: 8 1; 9 1 100 13 22 0.25; 1 1 100 12 10 0 1
+~ 17000 4148
+R 1
+== b4_click_key_meter
+base: 8 1; 17 1 100 0 2; 18 1 110 0 4 4
+~ 18500 3100
+R 1
+== b4_click_eighth_rest
+base: 8 1; 2 1 100 0 1 0 0.5; 1 1 100 3 10 0 1
+~ 17000 2800
+R 1
+== b4_click_tie_breaks_by_order
+base: 8 1; 1 1 100 6 10 0 1; 1 1 100 6 20 0 1
+~ 17000 3298
+R 1

@@ -9,14 +9,52 @@ fn sample(name: &str) -> Vec<u8> {
     std::fs::read(root.join("WINSCORE 5.01/winscore").join(name)).expect("sample score")
 }
 
-/// A staff and two quarter notes, as a .mus file.
-fn small() -> Editor {
-    let items: [&[f32]; 3] = [&[8.0, 1.0, 0.0], &[1.0, 1.0, 100.0, 6.0, 10.0, 0.0, 1.0], &[1.0, 1.0, 120.0, 7.0, 10.0, 0.0, 1.0]];
+fn editor_with(items: &[&[f32]]) -> Editor {
     let mut words: Vec<f32> = items.iter().flat_map(|i| std::iter::once(i.len() as f32).chain(i.iter().copied())).collect();
     words.extend([0.0, 0.0, 6.0, 0.0, 5.0, -9999.0]);
     let mut bytes = (words.len() as u16).to_le_bytes().to_vec();
     bytes.extend(words.iter().flat_map(|w| w.to_le_bytes()));
     Editor::open(&bytes).unwrap()
+}
+
+/// A staff and two quarter notes.
+fn small() -> Editor {
+    editor_with(&[&[8.0, 1.0, 0.0], &[1.0, 1.0, 100.0, 6.0, 10.0, 0.0, 1.0], &[1.0, 1.0, 120.0, 7.0, 10.0, 0.0, 1.0]])
+}
+
+#[test]
+fn clicks_prefer_the_outline_hit_and_fall_back_to_the_nearest_reference_point() {
+    let mut e = small();
+    let (first, second) = (e.id_at(1).unwrap(), e.id_at(2).unwrap());
+    assert_eq!(e.select_at(0.0, 0.0, Some(first), 300.0), Some(first));
+    assert_eq!(e.selection(), [first]);
+    assert_eq!(e.select_at(20000.0, 3473.0, None, 300.0), Some(second));
+    assert_eq!(e.select_at(40000.0, 50000.0, None, 300.0), None);
+    assert!(e.selection().is_empty());
+}
+
+#[test]
+fn a_drag_keeps_its_grab_offset_and_snaps_notes() {
+    let mut e = small();
+    let note = e.id_at(1).unwrap();
+    e.select(&[note]);
+    e.drag_begin_at(5000.0, 5000.0);
+    e.drag_to_point(5150.0, 5100.0, false);
+    assert_eq!((p(&e, note, 3), p(&e, note, 4)), (101.0, 7.0));
+    e.drag_end(true);
+    assert_eq!(e.undo_label(), Some("Drag"));
+}
+
+#[test]
+fn lft_drags_only_the_left_end() {
+    let mut e = editor_with(&[&[8.0, 1.0, 0.0], &[4.0, 1.0, 50.0, 5.0, 10.0, 120.0]]);
+    let line = e.id_at(1).unwrap();
+    e.select(&[line]);
+    e.execute("LFT").unwrap();
+    e.drag_begin_at(0.0, 0.0);
+    e.drag_to_point(150.0, 175.0, false);
+    e.drag_end(true);
+    assert_eq!((p(&e, line, 3), p(&e, line, 4), p(&e, line, 5), p(&e, line, 6)), (51.0, 6.0, 10.0, 120.0));
 }
 
 fn p(editor: &Editor, id: ItemId, n: usize) -> f32 {

@@ -8,6 +8,7 @@
 
 pub mod create;
 pub mod item;
+pub mod line;
 pub mod moves;
 pub mod note;
 pub mod numeric;
@@ -16,6 +17,7 @@ pub mod parse;
 use score_render::Document as RenderDocument;
 
 use crate::document::{ItemId, Transaction};
+use crate::drag::Ends;
 use crate::error::EditError;
 use crate::params::Draft;
 use crate::session::{Deleted, Session};
@@ -66,6 +68,8 @@ enum SessionWord {
     /// II.
     EditLast,
     Undelete,
+    /// LFT, RGT: drags move only that end of a line, slur, beam or trill.
+    DragEnd(Ends),
 }
 
 impl SessionWord {
@@ -87,6 +91,8 @@ impl SessionWord {
             "I" => Self::Edit,
             "II" => Self::EditLast,
             "UND" => Self::Undelete,
+            "LFT" => Self::DragEnd(Ends::Left),
+            "RGT" => Self::DragEnd(Ends::Right),
             _ => return None,
         };
         Some(parsed)
@@ -171,6 +177,10 @@ impl Run<'_, '_> {
             Some(SessionWord::Edit) => self.edit_item(number),
             Some(SessionWord::EditLast) => self.edit_last(),
             Some(SessionWord::Undelete) => Err(EditError::InEditMode(word)),
+            Some(SessionWord::DragEnd(end)) => {
+                self.session.toggle_drag_end(end);
+                Ok(())
+            }
             None => self.edit_word(&word, args),
         }
     }
@@ -207,7 +217,7 @@ impl Run<'_, '_> {
                 self.session.clear();
                 self.create(&template, args)
             }
-            _ if item::is_edit_word(word) => self.rewrite(word),
+            _ if item::is_edit_word(word) => self.rewrite(word, first_number(args)),
             _ => Err(EditError::UnknownCommand(word.to_owned())),
         }
     }
@@ -251,7 +261,7 @@ impl Run<'_, '_> {
         Ok(())
     }
 
-    fn rewrite(&mut self, word: &str) -> Result<(), EditError> {
+    fn rewrite(&mut self, word: &str, arg: Option<f32>) -> Result<(), EditError> {
         let codes = self.selected_codes();
         if !codes.iter().any(|&code| item::lookup(word, code).is_some()) {
             let code = codes.first().copied().unwrap_or(0);
@@ -259,7 +269,7 @@ impl Run<'_, '_> {
         }
         self.rewrite_selected(|draft| {
             if let Some(entry) = item::lookup(word, draft.code()) {
-                entry.op.apply(draft);
+                entry.op.apply(draft, arg);
             }
         });
         Ok(())
