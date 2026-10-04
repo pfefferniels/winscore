@@ -1,0 +1,1164 @@
+# Edit command cases, run through WinScore's engine by oracle/edit_driver.py
+# (results in engine_expected.txt) and replayed by tests/engine.rs.
+# Each case: "== name", an optional "base:" line with the starting items
+# (default "8 1; 1 1 100 6 10 0 1": a staff and a quarter note), then command
+# lines as typed. The engine leaves edit mode (X) before saving.
+
+# -- parameters by number ------------------------------------------------------
+
+== param_pairs
+I 2
+5 20 7 2
+X
+== param_lone_number_sets_zero
+I 2
+3 50 4
+== param_commas
+I 2
+3,50,4,8
+== param_negate
+I 2
+-5
+== param_negate_unset
+I 2
+-9
+== param_relative
+I 2
+600 5
+== param_relative_slash
+I 2
+/3 -10.5
+== param_relative_p2
+I 2
+200 1
+== param_relative_two
+I 2
+300 -0.25 400 2
+== param_transfer
+I 2
+50000 4
+== param_transfer_slash
+I 2
+//8 4
+== param_zero_range
+base: 8 1; 1 1 100 6 10 1 0 3 12 4 5 6 7
+I 2
+7 -9999 10
+== param_zero_from
+base: 8 1; 1 1 100 6 10 1 0 3 12 4 5 6 7
+I 2
+9 -9999
+== param_code_change
+I 2
+1 2
+== param_p30
+I 2
+30 5
+== param_p45
+I 2
+45 5
+== param_p46_ignored
+I 2
+46 5
+== param_staff_up
+base: 8 1; 8 2 0 0; 1 1 100 6 10 0 1
+I 3
+/2 1
+
+# -- moves -----------------------------------------------------------------------
+
+== move_right_up
+I 2
+R1
+U1
+== move_counts
+I 2
+R 5
+D 3
+== move_attached_counts
+I 2
+L1
+L10
+D1
+D10
+== move_negative
+I 2
+R -2
+== move_fraction
+I 2
+R 2.5
+== move_double_letter
+I 2
+RR
+UU
+== move_triple_letter
+I 2
+RRR
+LL
+DDD
+== move_repeat_count
+I 2
+R 3
+R
+== move_repeat_shared_by_axis
+I 2
+U 3
+U
+D
+== move_repeat_per_axis
+I 2
+R 3
+U
+== move_double_sets_increment
+I 2
+RR
+R
+== move_double_then_left
+I 2
+RR
+L
+== move_count_then_double
+I 2
+R 3
+RR
+R
+== move_inch_alone
+I 2
+RI
+== move_inch_right
+I 2
+RI 1
+== move_inch_up
+I 2
+UI 1
+== move_inch_up_small_staff
+base: 8 1 0 0 0.5; 1 1 100 6 10 0 1
+I 2
+UI 1
+== move_cm_right
+I 2
+RC 1
+== move_cm_down
+I 2
+DC 1
+== move_rest
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+R 1
+U 2
+== move_clef
+base: 8 1; 3 1 2 0 1
+I 2
+R 1
+U 2
+== move_line
+base: 8 1; 4 1 50 5 10 120
+I 2
+R 1
+U 2
+== move_line_without_right_end
+base: 8 1; 4 1 100 3 0 0
+I 2
+R 1
+U 2
+== move_hairpin
+base: 8 1; 4 1 100 -1 999 120
+I 2
+R 1
+U 2
+== move_slur
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+R 1
+U 2
+== move_beam
+base: 8 1; 6 1 50 5 10 120 1
+I 2
+R 1
+U 2
+== move_trill
+base: 8 1; 7 1 50 12 1 120
+I 2
+R 1
+U 2
+== move_staff
+base: 8 1 0 0 1 200
+I 1
+R 1
+U 2
+== move_symbol
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+R 1
+U 2
+== move_number
+base: 8 1; 10 1 100 13 1
+I 2
+R 1
+U 2
+== move_box
+base: 8 1; 12 1 50 12 0 10
+I 2
+R 1
+U 2
+== move_barline
+base: 8 1; 14 1 100 1
+I 2
+R 1
+U 2
+== move_eps
+base: 8 1; 15 1 100 13 1 5 6
+I 2
+R 1
+U 2
+== move_key_signature
+base: 8 1; 17 1 100 0 2
+I 2
+R 1
+U 2
+== move_meter
+base: 8 1; 18 1 100 0 4 4
+I 2
+R 1
+U 2
+
+# -- stems -------------------------------------------------------------------------
+
+== flip_up_to_down
+I 2
+FLI
+== flip_down_to_up
+base: 8 1; 1 1 100 6 21 0 1
+I 2
+FLI
+== flip_keeps_offset
+base: 8 1; 1 1 100 6 12.25 0 1
+I 2
+FLI
+== flip_stemless
+base: 8 1; 1 1 100 6 2 0 1
+I 2
+FLI
+== flip_lowercase
+I 2
+fli
+== flip_slur
+base: 8 1; 5 1 50 5 10 120 3 -1
+I 2
+FLI
+== no_stem
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+NST
+== no_stem_down_offset
+base: 8 1; 1 1 100 6 21.5 0 1
+I 2
+NST
+== stem_shorter_longer
+I 2
+STM
+STM
+STP
+== stem_normal
+base: 8 1; 1 1 100 6 10 0 1 3
+I 2
+STN
+
+# -- accidentals and enharmonics ---------------------------------------------------
+
+== flat
+I 2
+FLT
+== flat_two_letters
+I 2
+FL
+== sharp
+I 2
+SHP
+== natural
+I 2
+NAT
+== double_flat
+I 2
+DBF
+== double_sharp
+I 2
+DBS
+== no_accidental_keeps_offset
+base: 8 1; 1 1 100 6 112.25 0 1
+I 2
+NAC
+== no_accidental_stemless
+base: 8 1; 1 1 100 6 1 0 1
+I 2
+NAC
+== sharp_drops_parentheses
+base: 8 1; 1 1 100 6 111.3 0 1
+I 2
+SHP
+== sharp_stemless
+base: 8 1; 1 1 100 6 1 0 1
+I 2
+SHP
+== enh_a_sharp
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+ENH
+== enh_a_flat
+base: 8 1; 1 1 100 6 11 0 1
+I 2
+ENH
+== enh_a_natural
+base: 8 1; 1 1 100 6 13 0 1
+I 2
+ENH
+== enh_a_plain
+I 2
+ENH
+== enh_a_double_sharp
+base: 8 1; 1 1 100 6 15 0 1
+I 2
+ENH
+== enh_a_double_flat
+base: 8 1; 1 1 100 6 24 0 1
+I 2
+ENH
+== enh_f_sharp
+base: 8 1; 1 1 100 4 12 0 1
+I 2
+ENH
+== enh_g_flat
+base: 8 1; 1 1 100 5 11 0 1
+I 2
+ENH
+== enh_c_sharp
+base: 8 1; 1 1 100 8 12 0 1
+I 2
+ENH
+== enh_e_sharp
+base: 8 1; 1 1 100 3 12 0 1
+I 2
+ENH
+== enh_b_sharp
+base: 8 1; 1 1 100 7 12 0 1
+I 2
+ENH
+== enh_f_flat
+base: 8 1; 1 1 100 4 11 0 1
+I 2
+ENH
+== enh_c_flat
+base: 8 1; 1 1 100 8 11 0 1
+I 2
+ENH
+== enh_e_plain
+base: 8 1; 1 1 100 3 10 0 1
+I 2
+ENH
+== enh_f_plain
+base: 8 1; 1 1 100 4 10 0 1
+I 2
+ENH
+== enh_c_plain
+base: 8 1; 1 1 100 1 10 0 1
+I 2
+ENH
+== enh_below_staff
+base: 8 1; 1 1 100 -3 12 0 1
+I 2
+ENH
+== enh_cue
+base: 8 1; 1 1 100 104 12 0 1
+I 2
+ENH
+== enh_stemless
+base: 8 1; 1 1 100 6 2 0 1
+I 2
+ENH
+== enh_keeps_parentheses
+base: 8 1; 1 1 100 6 112.3 0 1
+I 2
+ENH
+== enh_plus_one
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+ENH+1
+== enh_minus_one
+base: 8 1; 1 1 100 6 11 0 1
+I 2
+ENH-1
+== enh_up
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+ENHU
+== enh_up_impossible
+base: 8 1; 1 1 100 6 11 0 1
+I 2
+ENHU
+== enh_up_plain
+I 2
+ENHU
+== enh_up_e_sharp
+base: 8 1; 1 1 100 3 12 0 1
+I 2
+ENHU
+== enh_down
+base: 8 1; 1 1 100 6 11 0 1
+I 2
+ENHD
+== enh_down_plain
+I 2
+ENHD
+== enh_down_f_natural
+base: 8 1; 1 1 100 4 13 0 1
+I 2
+ENHD
+
+# -- marks -------------------------------------------------------------------------
+
+== mark_ficta_flat
+I 2
+FCF
+== mark_wedge
+I 2
+W
+== mark_accent
+I 2
+AC
+== mark_accent_replaces
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 -7.2
+I 2
+AC
+== mark_tenuto
+I 2
+TN
+== mark_staccato
+I 2
+STA
+== mark_wedge_staccato
+I 2
+WST
+== mark_accent_staccato
+I 2
+AST
+== mark_tenuto_staccato
+I 2
+TNS
+== mark_down_bow
+I 2
+DNB
+== mark_up_bow
+I 2
+UPB
+== mark_harmonic
+I 2
+HAR
+== mark_fermata
+I 2
+FE
+== mark_arsis
+I 2
+ARS
+== mark_thesis
+I 2
+THE
+== mark_mordent
+I 2
+MO
+== mark_inverted_mordent
+I 2
+IMO
+== mark_heavy_wedge
+I 2
+HW
+== mark_trill
+I 2
+TR
+== mark_trill_flat
+I 2
+TRF
+== mark_trill_sharp
+I 2
+TRS
+== mark_trill_natural
+I 2
+TRN
+== mark_plus
+I 2
+PLU
+== mark_accent_tenuto
+I 2
+ACT
+== mark_none
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7
+I 2
+NOM
+== mark_flip
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7
+I 2
+FLM
+== mark_flip_back
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 -7.2
+I 2
+FLM
+== mark_flip_twice
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 5
+I 2
+FLM
+FLM
+== mark_left_up
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7
+I 2
+MKL
+MKU
+MKU
+== mark_right_down
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7
+I 2
+MKR
+MKD
+== mark_home
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7 0 2 3
+I 2
+MKH
+MKV
+
+# -- rhythm --------------------------------------------------------------------------
+
+== rhythm_eighth
+I 2
+RHE
+== rhythm_eighth_from_dotted
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+RHE
+== rhythm_half
+I 2
+RHH
+== rhythm_whole
+I 2
+RHW
+== rhythm_double_whole
+I 2
+RHD
+== rhythm_sixteenth_from_dotted
+base: 8 1; 1 1 100 6 10 0 1 0 10
+I 2
+RHS
+== rhythm_32nd
+I 2
+RH32
+== rhythm_64th
+I 2
+RH64
+== rhythm_quarter_keeps_colour
+base: 8 1; 1 1 100 6 10 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+I 2
+RHQ
+== rhythm_grace
+I 2
+RHG
+== rest_eighth
+base: 8 1; 2 1 100 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+I 2
+RHE
+== rest_32nd
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RH32
+== rest_64th
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RH64
+== rest_double_whole
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RHD
+== rest_quarter
+base: 8 1; 2 1 100 0 2 0 0.25
+I 2
+RHQ
+== dot
+I 2
+DOT
+== dot_eighth
+base: 8 1; 1 1 100 6 10 0 0.5 0 1
+I 2
+DOT
+== dot_twice
+I 2
+DOT
+DOT
+== dot_from_double
+base: 8 1; 1 1 100 6 10 0 1.75 0 20
+I 2
+DOT
+== double_dot
+I 2
+DDT
+== double_dot_from_dotted
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+DDT
+== triplet_eighth
+base: 8 1; 1 1 100 6 10 0 0.5 0 1
+I 2
+TRP
+== triplet_quarter
+I 2
+TRP
+== triplet_half
+base: 8 1; 1 1 100 6 10 1 2
+I 2
+TRP
+== triplet_sixteenth
+base: 8 1; 1 1 100 6 10 0 0.25 0 2
+I 2
+TRP
+== triplet_not_from_dotted
+base: 8 1; 1 1 100 6 10 0 0.75 0 11
+I 2
+TRP
+== quintuplet_eighth
+base: 8 1; 1 1 100 6 10 0 0.5 0 1
+I 2
+RHU
+== quintuplet_quarter
+I 2
+RHU
+== quintuplet_not_from_dotted
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+RHU
+== add_tail
+base: 8 1; 1 1 100 6 10 0 0.5
+I 2
+ADT
+== no_tail
+base: 8 1; 1 1 100 6 10 0 0.5 0 11
+I 2
+NTA
+
+# -- size and offsets ---------------------------------------------------------------
+
+== cue
+I 2
+CUE
+== cue_off
+base: 8 1; 1 1 100 106 10 0.65
+I 2
+CUX
+== offset_left
+I 2
+OFL
+== offset_right
+I 2
+OFR
+== offset_minus_twice
+I 2
+OFM
+OFM
+== offset_plus
+I 2
+OFP
+== offset_none
+base: 8 1; 1 1 100 6 10 0 1 0 0 20
+I 2
+NOF
+
+# -- clefs in edit mode ----------------------------------------------------------------
+
+== clef_to_treble
+base: 8 1; 3 1 2 0 1
+I 2
+TREB
+== clef_to_bass
+base: 8 1; 3 1 2
+I 2
+BASS
+== clef_to_alto
+base: 8 1; 3 1 2
+I 2
+ALTO
+== clef_to_baritone
+base: 8 1; 3 1 2
+I 2
+BAR
+== clef_to_soprano
+base: 8 1; 3 1 2
+I 2
+SOP
+== clef_to_mezzo
+base: 8 1; 3 1 2
+I 2
+MEZ
+== clef_to_mini
+base: 8 1; 3 1 2
+I 2
+MINI
+== clef_octave_below
+base: 8 1; 3 1 2
+I 2
+5 .8
+
+# -- edit mode: abort, copy, delete, navigation ------------------------------------------
+
+== abort
+I 2
+5 20
+AB
+== abort_exit
+I 2
+5 20
+ABX
+== abort_then_go_on
+I 2
+R 4
+U 2
+AB
+R 1
+== copy_exit
+I 2
+R 10
+C
+== copy_keeps_original
+I 2
+R 4
+C
+I 2
+U 1
+== copy_continue
+I 2
+R 10
+CC
+U 2
+== copy_next
+I 2
+R 10
+CX
+== copy_next_item
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 1 1 140 8 10 0 1
+I 2
+R 1
+CX
+R 2
+== copy_next_from_last
+I 2
+R 2
+CX
+U 1
+== delete
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 20 0 1
+I 2
+DE
+== delete_moves_on
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 1 1 140 8 10 0 1
+I 2
+DE
+R 1
+== delete_last_leaves_edit_mode
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 1 1 140 8 10 0 1
+I 4
+DE
+R 1
+== undelete
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 20 0 1
+I 2
+DE
+X
+UND
+== delete_next_same_code
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 2
+DEN
+R 1
+== delete_back_same_code
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 4
+DEB
+R 1
+== next_item
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 2
+NEX
+R 1
+== previous_item
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 3
+B
+R 1
+== next_same_code
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 2
+NZ
+R 1
+== previous_same_code
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 4
+BZ
+R 1
+== exit_to_item
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 1 1 140 8 10 0 1
+I 2
+R 1
+X 4
+R 2
+== edit_last_item
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+II
+R 1
+== edit_current_item
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+I
+R 1
+== edit_beyond_last
+I 99
+R 1
+== edit_item_zero
+I 0
+R 1
+
+# -- new items -------------------------------------------------------------------------
+
+== new_raw_note
+1 1 50 3 20
+== new_raw_staff
+8 2
+== new_raw_code_only
+base: 8 1; 8 2
+1
+== new_note
+NOTE
+== new_note_lowercase
+base: 8 1
+note
+== new_note_three_letters
+NOT
+== new_note_args
+NOTE 1 50
+== new_note_zero_args_keep_defaults
+base: 8 1; 8 2
+NOTE 0 0 5
+== new_note_zero_p4
+base: 8 1
+NOTE 1 50 0
+== new_note_on_given_staff
+base: 8 1; 8 2
+NOTE 2 30
+== new_note_flat
+NOTEF
+== new_note_sharp
+NOTES
+== new_note_natural
+NOTEN
+== new_note_down
+NOTED
+== new_note_down_flat
+NOTEDF
+== new_note_down_sharp
+NOTEDS
+== new_note_down_natural
+NOTEDN
+== new_note_eighth
+NOTE RHE
+== new_note_half
+NOTE RHH
+== new_note_whole
+NOTE RHW
+== new_note_sixteenth
+NOTE RHS
+== new_note_then_move
+NOTE
+R 3
+X
+== new_on_last_items_staff
+base: 8 1; 8 2; 1 2 100 6 10 0 1
+NOTE
+== new_on_last_items_staff_1
+base: 8 2; 1 2 100 6 10 0 1; 8 1
+NOTE
+== new_on_last_staff_item
+base: 8 1; 8 3; 8 2
+NOTE
+== new_after_editing_staff_2
+base: 8 1; 8 2; 1 2 100 6 10 0 1; 1 1 100 6 10 0 1
+I 3
+X
+NOTE
+== new_after_editing_staff_1
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 2 100 6 10 0 1
+I 3
+X
+NOTE
+== new_into_empty_score
+base: 1 3 100 6 10 0 1
+I 1
+DE
+NOTE
+== new_rest
+REST
+== new_rest_args
+base: 8 1
+REST 1 40 4
+== new_rest_eighth
+REST RHE
+== new_rest_half
+REST RHH
+== new_rest_whole
+REST RHW
+== new_rest_sixteenth
+REST RHS
+== new_treble
+TREB
+== new_treble_short
+TRE
+== new_treble_mini
+TREBM
+== new_treble_ignores_position
+base: 8 1
+TREB 1 50
+== new_clef
+CLEF
+== new_clef_short
+CLE
+== new_clef_mini
+CLEFM
+== new_bass
+BASS
+== new_bass_short
+BAS
+== new_bass_mini
+BASSM
+== new_bass_args
+base: 8 1; 8 2
+BASS 2 30
+== new_alto
+ALTO
+== new_alto_short
+ALT
+== new_alto_mini
+ALTOM
+== new_tenor
+TENOR
+== new_tenor_short
+TEN
+== new_percussion
+PERC
+== new_percussion_short
+PER
+== new_tab_clef
+CLEFTA
+== new_barline
+BAR
+== new_barline_args
+base: 8 1
+BAR 1 50 2
+== new_barline_two_staves
+BAR2
+== new_double_bar
+BARD
+== new_heavy_double_bar
+BARH
+== new_repeat_left
+BARL
+== new_repeat_right
+BARR
+== new_double_repeat
+BARRD
+== new_brace
+BARBC
+== new_bracket
+BARBK
+== new_line
+LINE
+== new_line_short
+LIN
+== new_crescendo
+CRH
+== new_decrescendo
+DCH
+== new_crescendo_dashes
+CR-
+== new_decrescendo_dashes
+DC-
+== new_dashes
+DASH
+== new_arpeggio
+ARP
+== new_slur
+SLUR
+== new_slur_down
+SLURD
+== new_tuplet_bracket
+SLUR3
+== new_tuplet_bracket_down
+SLURD3
+== new_tie
+TIE
+== new_tie_down
+TIED
+== new_first_ending
+END1
+== new_second_ending
+END2
+== new_ending
+END
+== new_beam
+BEAM
+== new_beam_two
+BEAM2
+== new_beam_down
+BEAMD
+== new_tremolo
+TREM
+== new_tremolo_down
+TREMD
+== new_tremolo_two
+TREM2
+== new_trill
+TRILL
+== new_trill_short
+TRI
+== new_ottava
+OVA
+== new_ottava_bassa
+OBA
+== new_quindicesima
+OMA
+== new_piano_pedal
+PEDA
+== new_pedal_line
+PEDB
+== new_pedal_line_2
+PEDC
+== new_harp_pedals
+HARP
+== new_staff
+STAFF
+== new_staff_short
+STA
+== new_staff_above_highest
+base: 8 1; 8 3
+STAFF
+== new_staff_without_staves
+base: 1 1 100 6 10 0 1
+STAFF
+== new_number
+NUMB
+== new_number_short
+NUM
+== new_box
+BOX
+== new_circle
+CIRCLE
+== new_circle_short
+CIR
+== new_guitar_grid
+GUIT
+== new_key_signature
+KSIG
+== new_key_two_sharps
+KSIG+2
+== new_key_three_flats
+KSIG-3
+== new_key_three_flats_bass
+KSIG-3B
+== new_key_one_sharp_alto
+KSIG+1A
+== new_meter
+METER
+== new_meter_34
+METER34
+== new_meter_68
+METER68
+== new_meter_24
+METER24
+== new_meter_1216
+METER1216
+== new_meter_128
+base: 8 1
+METER128
+== new_meter_316
+base: 8 1
+METER316
+== new_meter_98
+base: 8 1
+METER98
+== new_common_time
+COMM
+== new_cut_time
+CUT
+== new_accel
+ACL
+== new_accent_symbol
+ACN
+== new_accent_tenuto_symbol
+ACT
+== new_arco
+ARC
+== new_a_tempo
+ATM
+== new_cresc
+CRS
+== new_dim
+DIM
+== new_down_bow_symbol
+DNB
+== new_espr
+ESP
+== new_fermata_symbol
+FER
+== new_gliss
+GLI
+== new_harmonic_symbol
+HAR
+== new_heavy_wedge_symbol
+HVW
+== new_inverted_mordent_symbol
+INV
+== new_meno
+MEN
+== new_molto
+MOL
+== new_mordent_symbol
+MOR
+== new_ped
+PED
+== new_pizz
+piz
+== new_staccato_symbol
+STAC
+== new_subito
+SUB
+== new_tenuto_symbol
+TENU
+== new_turn
+TUR
+== new_up_bow_symbol
+UPB
+== new_wedge_symbol
+WED
+== new_wedge_staccato_symbol
+WEDS
+== new_piano
+p
+== new_pianissimo
+pp
+== new_mezzo_piano
+mp
+== new_mezzo_forte
+mf
+== new_forte
+f
+== new_forte_upper
+base: 8 1
+F
+== new_mezzo_forte_upper
+base: 8 1
+MF
+== new_fortissimo
+ff
+== new_sforzando
+sf
+== new_sforzato
+sfz
