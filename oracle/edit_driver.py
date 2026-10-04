@@ -44,6 +44,7 @@ from sandbox import INSTALL
 
 DEFAULT_BASE = "8 1; 1 1 100 6 10 0 1"
 MOUSE_X, MOUSE_Y = 0x1A14950, 0x1A1494C
+MOUSE_UP_X, MOUSE_UP_Y = 0x1A14948, 0x1A14944
 VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4
 # score-render's page frame: internal coordinates plus the paper origin's offset.
 PAGE_FROM_INTERNAL = (2000, 26948)
@@ -140,16 +141,26 @@ def format_item(words: tuple[int, ...]) -> str:
     return " ".join(f"{v:.9g}" for v in floats) + text
 
 
+def engine_point(engine: Engine, page_x: float, page_y: float) -> tuple[int, int]:
+    """A page point in the engine's output coordinates, as the view hands mouse points over."""
+    return (round(page_x - PAGE_FROM_INTERNAL[0] + engine.i32(VIEW_DX)),
+            round(page_y - PAGE_FROM_INTERNAL[1] - engine.i32(VIEW_DY)))
+
+
 def mouse(engine: Engine, line: str) -> EngineResult | None:
-    """A mouse line ("~v 17000 2773"), sent like the view's mouse handlers; None for other lines."""
+    """A mouse line ("~v 17000 2773"; "~x X0 Y0 X1 Y1" for a box from mouse-down to mouse-up),
+    sent like the view's mouse handlers; None for other lines."""
     action, *point = line.split()
-    if action not in MOUSE_ACTIONS or len(point) != 2:
+    if action not in MOUSE_ACTIONS or len(point) not in (2, 4):
         return None
-    page_x, page_y = (float(v) for v in point)
-    x = round(page_x - PAGE_FROM_INTERNAL[0] + engine.i32(VIEW_DX))
-    y = round(page_y - PAGE_FROM_INTERNAL[1] - engine.i32(VIEW_DY))
+    numbers = [float(v) for v in point]
+    x, y = engine_point(engine, *numbers[:2])
     engine.put32(MOUSE_X, x)
     engine.put32(MOUSE_Y, y)
+    if len(numbers) == 4:
+        up_x, up_y = engine_point(engine, *numbers[2:])
+        engine.put32(MOUSE_UP_X, up_x)
+        engine.put32(MOUSE_UP_Y, up_y)
     command, line_buffer = MOUSE_ACTIONS[action]
     engine.uc.mem_write(COMMAND, command.encode() + b"\0")
     engine.uc.mem_write(LINE_BUF, line_buffer.encode() + b"\0")

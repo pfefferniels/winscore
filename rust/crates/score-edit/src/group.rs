@@ -3,10 +3,26 @@
 //! [top] [codes…]` (or drawn as a box in WinScore); the command then asks
 //! for what it needs, one line at a time.
 
+use score_format::MusFile;
+use score_render::page::{page_offset, P3_UNIT};
+
 use crate::params::Draft;
 
 /// P3 of the right edge when none is typed.
 const FULL_WIDTH: f32 = 200.0;
+/// A drawn box narrower than this (engine units) selects whole staves.
+pub const NARROW_BOX: f64 = 200.0;
+/// A box narrower than this in P3 units also selects whole staves.
+const MIN_WIDTH: f32 = 2.0;
+/// Boxes reaching this far right of P3 = 0 look for recto staves (201–256).
+const RECTO_SEARCH: f64 = 32000.0;
+/// The recto page lies this many P3 units to the right; a box beyond 220 is on it.
+const RECTO_P3: f32 = 227.0;
+const RECTO_P3_FROM: f32 = 220.0;
+const VERSO_STAFF: i32 = 1;
+const LAST_VERSO: i32 = 200;
+const FIRST_RECTO: i32 = 201;
+const LAST_STAFF: i32 = 256;
 
 /// An area of the page: staves `bottom..=top`, P3 from `left` to `right`,
 /// optionally only some codes.
@@ -29,6 +45,50 @@ impl Region {
         let top = if get(3) == 0.0 { bottom } else { get(3) };
         let codes = numbers.iter().skip(4).map(|&c| c as i32).collect();
         Some(Self { bottom, top, left: get(1), right, codes })
+    }
+
+    /// The area a box drawn with the mouse selects (region_select 0x41B011):
+    /// corners in page coordinates (engine units from the paper's bottom-left
+    /// corner, y up). The bottom and top staves are those whose middle lines
+    /// lie nearest the box's lower and upper edges, among the staff numbers
+    /// any item uses; a box narrower than 200 units (a click, or a line drawn
+    /// up through staves) takes the whole width.
+    pub fn from_page_box(file: &MusFile, corner: (f64, f64), other: (f64, f64)) -> Self {
+        let doc = score_render::Document::new(file);
+        let used: Vec<i32> = file.items.iter().map(|item| item.param(2) as i32).collect();
+        let origin = page_offset(VERSO_STAFF);
+        let (x0, x1) = (corner.0.min(other.0) - f64::from(origin.x), corner.0.max(other.0) - f64::from(origin.x));
+        let recto = x0 > RECTO_SEARCH || x1 > RECTO_SEARCH;
+        let staff_at = |page_y: f64| {
+            let y = page_y - f64::from(origin.y);
+            let range = if recto { FIRST_RECTO..=LAST_STAFF } else { 1..=LAST_VERSO };
+            let nearest = |range: std::ops::RangeInclusive<i32>| {
+                range
+                    .filter(|n| used.contains(n))
+                    .map(|n| (n, (y - f64::from(doc.staves.get(n).mid)).abs()))
+                    .fold(None, |best: Option<(i32, f64)>, (n, d)| match best {
+                        Some((_, bd)) if bd <= d => best,
+                        _ => Some((n, d)),
+                    })
+                    .map(|(n, _)| n)
+            };
+            nearest(range).or_else(|| nearest(1..=LAST_STAFF)).unwrap_or(0) as f32
+        };
+        let bottom = staff_at(corner.1.min(other.1));
+        let top = staff_at(corner.1.max(other.1));
+        let (mut left, mut right) = if x1 - x0 < NARROW_BOX {
+            (0.0, FULL_WIDTH)
+        } else {
+            ((x0 / P3_UNIT) as f32, (x1 / P3_UNIT) as f32)
+        };
+        if left > FULL_WIDTH && right > RECTO_P3_FROM {
+            left -= RECTO_P3;
+            right -= RECTO_P3;
+        }
+        if right - left < MIN_WIDTH {
+            (left, right) = (0.0, FULL_WIDTH);
+        }
+        Self { bottom, top, left, right, codes: Vec::new() }
     }
 
     pub fn contains_x(&self, x: f32) -> bool {

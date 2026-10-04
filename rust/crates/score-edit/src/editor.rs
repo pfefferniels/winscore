@@ -152,6 +152,14 @@ impl Editor {
         Run { session: &mut self.session, tx: &mut tx }.select_region(region);
     }
 
+    /// A box drawn on the page (corners in page coordinates), read as WinScore
+    /// reads a mouse-drawn area ([`Region::from_page_box`]): it answers a group
+    /// command waiting for its area or destination, and otherwise selects the
+    /// items inside.
+    pub fn draw_box(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> Result<Change, EditError> {
+        self.act("Box", |run| run.draw_box((x0, y0), (x1, y1)))
+    }
+
     /// The question a group command is waiting to have answered by the next
     /// line given to [`Editor::execute`], if any.
     pub fn prompt(&self) -> Option<&'static str> {

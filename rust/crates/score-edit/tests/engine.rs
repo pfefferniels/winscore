@@ -126,18 +126,23 @@ fn stored(editor: &Editor) -> Vec<Stored> {
 
 /// A mouse line of the cases: `~v x y` (move with the button held), `~s x y`
 /// (with Shift), `~x x y` (button up), `~ x y` (click), in page coordinates.
-fn mouse(line: &str) -> Option<(&str, f64, f64)> {
+/// `~x x0 y0 x1 y1`: a box drawn from mouse-down to mouse-up.
+fn mouse(line: &str) -> Option<(&str, Vec<f64>)> {
     let mut parts = line.split_whitespace();
     let action = parts.next().filter(|a| matches!(*a, "~v" | "~s" | "~x" | "~"))?;
-    let x = parts.next()?.parse().ok()?;
-    let y = parts.next()?.parse().ok()?;
-    Some((action, x, y))
+    let numbers: Vec<f64> = parts.map(str::parse).collect::<Result<_, _>>().ok()?;
+    matches!(numbers.len(), 2 | 4).then_some((action, numbers))
 }
 
 /// Plays a mouse line the way the browser shell drives the editor. The engine
 /// drags an item to the cursor; the cases start each drag at the item's own
 /// reference point, where that and keeping the grab offset agree.
-fn play_mouse(editor: &mut Editor, dragging: &mut bool, (action, x, y): (&str, f64, f64)) {
+fn play_mouse(editor: &mut Editor, dragging: &mut bool, (action, numbers): (&str, Vec<f64>)) {
+    if let [x0, y0, x1, y1] = numbers[..] {
+        let _ = editor.draw_box(x0, y0, x1, y1);
+        return;
+    }
+    let (x, y) = (numbers[0], numbers[1]);
     match action {
         "~v" | "~s" => {
             if !*dragging {

@@ -2667,3 +2667,64 @@
 == g3_symbol_then_edit
 8 1 0
 9 1 82 12 31
+== g4_box_delete_one_staff
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 1 0
+8 2 0
+1 1 150 7 10 0 1
+1 2 120 7 10 0 1
+== g4_box_delete_two_staves
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 1 0
+8 2 0
+1 1 150 7 10 0 1
+== g4_box_click_takes_the_staff
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 1 0
+1 1 100 6 10 0 1
+1 1 150 7 10 0 1
+== g4_box_line_through_staves
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 3 0
+1 3 120 7 10 0 1
+== g4_box_move_to_typed_staff
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42ad5555']
+8 1 0
+8 2 0
+1 2 100 6 10 0 1
+1 1 150 7 10 0 1
+== g4_box_move_click_destination
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x20b8eb5', '0x42ad5555']
+8 1 0
+8 2 0
+1 2 100 6 10 0 1
+1 1 150 7 10 0 1
+== g4_box_move_box_destination
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x20b8eb5', '0x41a00000']
+8 1 0
+8 2 0
+1 2 40.0000038 6 10 0 1
+1 1 150 7 10 0 1
+== g4_box_move_line_destination
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x20b8eb5', '0x42480000']
+8 1 0
+8 2 0
+1 2 63.3333359 6 10 0 1
+1 1 150 7 10 0 1
+== g4_box_unused_staff_skipped
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 1 0
+8 3 0

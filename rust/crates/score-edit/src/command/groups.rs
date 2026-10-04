@@ -1,6 +1,8 @@
 //! Running group edits: the dialogue of area, destination or changes, then
 //! the change to every item of the area as one undo step.
 
+use score_render::page::{page_offset, P3_UNIT};
+
 use crate::command::moves::{shift, Axis};
 use crate::command::numeric;
 use crate::command::parse::{self, Token};
@@ -8,7 +10,7 @@ use crate::command::Run;
 use crate::conditional::Statement;
 use crate::document::ItemId;
 use crate::error::EditError;
-use crate::group::{Destination, GroupCommand, Order, Pending, Region, FIXED_BY_MUD};
+use crate::group::{Destination, GroupCommand, Order, Pending, Region, FIXED_BY_MUD, NARROW_BOX};
 use crate::params::Draft;
 use crate::session::Deleted;
 
@@ -56,6 +58,33 @@ impl Run<'_, '_> {
             Pending::AlterPairs { .. } => Ok(()),
             Pending::Steps(region) => self.move_region_up(&region, numbers[0]),
             Pending::Staves(region) => self.copy_to_staves(&region, numbers),
+        }
+    }
+
+    /// A box drawn on the page: it answers a group command waiting for its
+    /// area or destination, and otherwise selects what it holds. As a
+    /// destination, a click keeps the area's place on the clicked staff, a
+    /// thin line moves the area's left edge to the line, a box rescales it.
+    pub fn draw_box(&mut self, corner: (f64, f64), other: (f64, f64)) -> Result<(), EditError> {
+        let drawn = Region::from_page_box(self.tx.doc().file(), corner, other);
+        match self.session.pending.clone() {
+            Some(Pending::Area(_)) => self.answer_numbers(&[drawn.bottom, drawn.left, drawn.right, drawn.top]),
+            Some(Pending::Destination { region, .. }) => {
+                let narrow = (corner.0 - other.0).abs() < NARROW_BOX;
+                let answer = if narrow && corner.1 == other.1 {
+                    vec![drawn.bottom]
+                } else if narrow {
+                    let line = ((corner.0.min(other.0) - f64::from(page_offset(1).x)) / P3_UNIT) as f32;
+                    vec![drawn.bottom, line - region.left]
+                } else {
+                    vec![drawn.bottom, drawn.left, drawn.right]
+                };
+                self.answer_numbers(&answer)
+            }
+            _ => {
+                self.select_region(&drawn);
+                Ok(())
+            }
         }
     }
 
