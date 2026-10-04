@@ -33,7 +33,19 @@ The dispatch table in `codes/mod.rs` already lists every module, so a new code t
 - `Canvas` is the engine's point buffer for this item: `point(pos, Pen)` (add_point), `segment(a, b)` (add_segment), `stroke(points)`, `fill(paths)`, `text(style, strings)`, and `buffer_mut()` for routines that rewrite buffered points. The buffer is flushed after `render` returns and decoded the way the C++ shell does, including the rule that a start point right after another start replaces it. `canvas.colour` starts as the item's P26 colour (`colour::from_p26`).
 - Cite the engine routine a formula comes from in a short comment (`// barline_dots 0x412749`).
 
-Shared primitives (library symbols, thick lines, curves, polygons) belong in modules outside `codes/`; ask render-core for them rather than copying code between item modules.
+### Shared primitives
+
+Use these instead of writing local copies; ask render-core for anything else that more than one code needs.
+
+| Where | What |
+|---|---|
+| `units` | `real` (REAL*4 store), `constant` (REAL*4 constant), `trunc`, `nint`, `amod` (0x54AABA), `Pos` |
+| `geometry` | `rotate_points` (0x42A5F4), `thicken` (0x42A8AE), `ellipse` (draw_box's circle points) |
+| `trig` | `CIRCLE`: the engine's table of 100·sin/100·cos per degree |
+| `symbols` | `SymbolLibrary` (`doc.symbols()`), `draw_symbol` (core), `draw_library_symbol` (draw_symbol 0x4293F0), `draw_clef` (0x431AE0) |
+| `codes::line` | `draw` (draw_line 0x439963) with a `Params` array, e.g. for dashed barlines |
+| `document` | `ItemRef::with_params` / `changed`: call a shared routine with parameters overwritten, as the engine's routines overwrite the parameter globals |
+| `colour` | `from_p26` |
 
 ## Tests
 
