@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use score_edit::{Draft, Editor};
-use score_format::MusFile;
+use score_format::{CountWidth, Item, MusFile, Word};
 
 const CASES: &str = include_str!("engine_cases.txt");
 const EXPECTED: &str = include_str!("engine_expected.txt");
@@ -14,7 +14,7 @@ const DEFAULT_BASE: &str = "8 1; 1 1 100 6 10 0 1";
 #[derive(Debug)]
 struct Case {
     name: String,
-    base: Vec<Vec<f32>>,
+    base: Vec<Item>,
     commands: Vec<String>,
 }
 
@@ -71,7 +71,7 @@ fn cases() -> Vec<Case> {
             let base = lines.iter().find_map(|l| l.strip_prefix("base:")).unwrap_or(DEFAULT_BASE);
             Case {
                 name: name.to_owned(),
-                base: base.split(';').filter(|i| !i.trim().is_empty()).map(parse_numbers).collect(),
+                base: base.split(';').filter(|i| !i.trim().is_empty()).map(base_item).collect(),
                 commands: lines.iter().filter(|l| !l.starts_with("base:")).cloned().collect(),
             }
         })
@@ -86,12 +86,29 @@ fn stored_line(line: &str) -> Stored {
     Stored { params: trimmed(parse_numbers(numbers)), text }
 }
 
-fn mus_file(items: &[Vec<f32>]) -> MusFile {
-    let mut words: Vec<f32> = items.iter().flat_map(|item| std::iter::once(item.len() as f32).chain(item.iter().copied())).collect();
-    words.extend([0.0, 0.0, 6.0, 0.0, 5.0, -9999.0]);
+/// A base item: numbers, a text item's followed by its characters in double quotes.
+fn base_item(text: &str) -> Item {
+    let (numbers, characters) = match text.split_once('"') {
+        Some((numbers, rest)) => (numbers, Some(rest.trim_end().trim_end_matches('"'))),
+        None => (text, None),
+    };
+    let params = parse_numbers(numbers).into_iter().map(Word::from_f32).collect();
+    match characters {
+        Some(chars) => {
+            let mut bytes: Vec<u8> = chars.chars().map(|c| c as u8).collect();
+            bytes.resize(bytes.len().div_ceil(4) * 4, b' ');
+            Item::with_text(params, bytes)
+        }
+        None => Item::new(params),
+    }
+}
+
+fn mus_file(items: &[Item]) -> MusFile {
+    let words: [f32; 6] = [0.0, 0.0, 6.0, 0.0, 5.0, -9999.0];
     let mut bytes = (words.len() as u16).to_le_bytes().to_vec();
     bytes.extend(words.iter().flat_map(|w| w.to_le_bytes()));
-    MusFile::parse(&bytes).expect("case base is a valid .mus file")
+    let trailer = MusFile::parse(&bytes).expect("an empty .mus file").trailer;
+    MusFile { width: CountWidth::Short, items: items.to_vec(), trailer }
 }
 
 fn stored(editor: &Editor) -> Vec<Stored> {
@@ -102,7 +119,7 @@ fn stored(editor: &Editor) -> Vec<Stored> {
         .map(|item| {
             let draft = Draft::of(item);
             let params = trimmed((1..=draft.len()).map(|n| draft.get(n)).collect());
-            Stored { params, text: String::from_utf8_lossy(item.text()).into_owned() }
+            Stored { params, text: item.text().iter().map(|&b| char::from(b)).collect() }
         })
         .collect()
 }

@@ -20,6 +20,7 @@ pub mod history;
 pub mod params;
 pub mod pick;
 mod session;
+pub mod text;
 
 pub use document::{Document, Edit, ItemId};
 pub use editor::{Change, Editor};

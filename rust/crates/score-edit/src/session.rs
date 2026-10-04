@@ -38,6 +38,10 @@ pub struct Session {
     drag_ends: Ends,
     /// Parameters remembered by PS, latest last.
     saved: Vec<(usize, f32)>,
+    /// The font in effect at the end of the text entered last.
+    pub text_font: u8,
+    /// The position CT centred on last (CT alone reuses it).
+    pub centre_at: Option<f32>,
 }
 
 impl Session {

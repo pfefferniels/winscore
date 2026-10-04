@@ -46,6 +46,32 @@ fn a_drag_keeps_its_grab_offset_and_snaps_notes() {
 }
 
 #[test]
+fn text_entry_and_new_characters_keep_count_and_length() {
+    let mut e = small();
+    let change = e.insert_text("_00Hello", &[1.0, 50.0, 10.0]).unwrap();
+    let text = change.inserted[0];
+    let item = e.item(text).unwrap();
+    assert_eq!((item.text(), item.param(12), item.param(13)), (&b"_00Hello"[..], 8.0, 11.434_941));
+    e.set_text(text, "Hello, world").unwrap();
+    let item = e.item(text).unwrap();
+    assert_eq!((item.text(), item.param(12)), (&b"_00Hello, world"[..], 15.0));
+    assert!(item.param(13) > 11.434_941);
+    assert_eq!(e.undo_label(), Some("Edit text"));
+    e.undo();
+    assert_eq!(e.item(text).unwrap().text(), b"_00Hello");
+    assert!(matches!(e.set_text(e.id_at(1).unwrap(), "x"), Err(EditError::NotForCode { code: 1, .. })));
+}
+
+#[test]
+fn divided_text_makes_one_item_per_part() {
+    let mut e = small();
+    let change = e.execute("\"_04This/is/how\"").unwrap();
+    assert_eq!(change.inserted.len(), 3);
+    assert_eq!(change.selection, [change.inserted[2]]);
+    assert_eq!(e.execute("\"unclosed 1 2"), Err(EditError::UnknownCommand("\"".into())));
+}
+
+#[test]
 fn lft_drags_only_the_left_end() {
     let mut e = editor_with(&[&[8.0, 1.0, 0.0], &[4.0, 1.0, 50.0, 5.0, 10.0, 120.0]]);
     let line = e.id_at(1).unwrap();

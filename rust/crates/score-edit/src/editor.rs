@@ -77,8 +77,15 @@ pub struct Editor {
 }
 
 impl Editor {
+    /// Opens `file`. Text items get the lengths (P13) the engine measures when
+    /// it first draws the page; scores saved by WinScore already have them.
     pub fn new(file: MusFile) -> Self {
-        Self { doc: Document::new(file), session: Session::default(), history: History::default(), drag: None }
+        let mut doc = Document::new(file);
+        let mut session = Session::default();
+        let mut tx = Transaction::new(&mut doc);
+        Run { session: &mut session, tx: &mut tx }.refresh_text_lengths();
+        tx.commit();
+        Self { doc, session, history: History::default(), drag: None }
     }
 
     pub fn open(bytes: &[u8]) -> Result<Self, MusError> {
@@ -162,7 +169,9 @@ impl Editor {
         self.cancel_drag();
         let mut session = self.session.clone();
         let mut tx = Transaction::new(&mut self.doc);
-        action(&mut Run { session: &mut session, tx: &mut tx })?;
+        let mut run = Run { session: &mut session, tx: &mut tx };
+        action(&mut run)?;
+        run.refresh_text_lengths();
         let edits = tx.commit();
         let before = std::mem::replace(&mut self.session, session);
         let change = Change::new(&edits, self.session.selection());
@@ -221,6 +230,22 @@ impl Editor {
     /// Deletes the selection and leaves edit mode (UND brings it back).
     pub fn delete_selection(&mut self) -> Result<Change, EditError> {
         self.act("Delete", |run| run.delete_selected(None))
+    }
+
+    /// New characters for text item `id` (WinScore's Edit Text). Without a
+    /// font code of their own they keep the item's font; P12 and P13 follow.
+    pub fn set_text(&mut self, id: ItemId, text: &str) -> Result<Change, EditError> {
+        self.act("Edit text", |run| run.set_text(id, &crate::text::encode(text)))
+    }
+
+    /// New text items as quick entry `"text" p2 p3 …` makes them: `params`
+    /// are P2, P3, … (0 keeps the default), `/` divides the text into items.
+    pub fn insert_text(&mut self, text: &str, params: &[f32]) -> Result<Change, EditError> {
+        let rest: Vec<String> = params.iter().map(f32::to_string).collect();
+        self.act("Text", |run| {
+            run.session.clear();
+            run.enter_text(&crate::text::encode(text), &rest.join(" "))
+        })
     }
 
     /// Appends items (from the music input passes, say) and selects them.

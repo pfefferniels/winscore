@@ -2426,3 +2426,234 @@ PS4
 X
 I 3
 PG3
+
+# -- text items (code 16): quick entry, measured length P13, text words -------------------
+
+== c1_text_plain
+base: 8 1
+"Hello"
+== c1_text_font_and_params
+base: 8 1
+"_15A stitch in time saves nine." 1 20 14 0 2
+== c1_text_on_staff_3
+base: 8 1; 8 3
+"A stitch" 3 20 14 0 2
+== c1_text_centred
+base: 8 1
+"_00Centre" 1 1080 13 0 1.5
+== c1_text_centred_size2
+base: 8 1
+"_00Centre" 1 1080 13 0 2
+== c1_text_divided
+base: 8 1
+"_04This/is/how"
+== c1_text_divided_size2
+base: 8 1
+"_04This/is/how" 1 20 10 0 2
+== c1_text_divided_spread
+base: 8 1
+"_04This/is" 1 20 10 1.5
+== c1_text_divided_centred
+base: 8 1
+"_00a/b" 1 1080 10
+== c1_text_divided_font_carried
+base: 8 1
+"_00a _02b/c"
+== c1_text_divided_font_changes
+base: 8 1
+"_00a/_02b/c"
+== c1_text_backslash
+base: 8 1
+"a\b"
+== c1_text_last_font
+base: 8 1
+"_02First"
+X
+"Second"
+== c1_text_last_font_mixed
+base: 8 1
+"_00a _16b"
+X
+"c"
+== c1_text_staff_1_by_default
+base: 8 1; 8 2; 1 2 100 6 10 0 1
+"Hello"
+== c1_text_mixed_fonts
+base: 8 1
+"_00A stitch _02in time _16saves _23nine." 1 20 14 0 2
+== c1_text_spaces
+base: 8 1
+"_00a b  c"
+== c1_text_alphabet
+base: 8 1
+"_00abcdefghijklmnopqrstuvwxyz"
+== c1_text_empty
+base: 8 1
+""
+== c1_text_negative_p3
+base: 8 1
+"_00Hi" 1 -10
+== c1_text_spread_zero_is_one
+base: 8 1
+"_00Hello" 1 50 10 0
+== c1_text_spread_two
+base: 8 1
+"_00Hello" 1 50 10 2
+== c1_text_rotated
+base: 8 1
+"_00Hello" 1 50 10 0 1.5 0 0 30
+== c1_text_move
+base: 8 1
+"_00Hello" 1 50 10
+R 5
+U 2
+== c1_text_size_param
+base: 8 1
+"_00Hello" 1 50 10
+6 2
+== c1_text_spread_param
+base: 8 1
+"_00Hello" 1 50 10
+5 1.5
+== c1_text_font_override
+base: 8 1
+"_00Hello" 1 50 10
+8 1004
+== c1_text_vertical_size
+base: 8 1
+"_00Hello" 1 50 10
+7 2
+== c1_text_rotation_param
+base: 8 1
+"_00Hello" 1 50 10
+9 30
+== c1_text_character_space_plus
+base: 8 1
+"_00Hello" 1 50 10
+CHSP
+CHSP
+== c1_text_character_space_minus
+base: 8 1
+"_00Hello" 1 50 10
+CHSM
+== c1_text_character_space_normal
+base: 8 1
+"_00Hello" 1 50 10
+CHSD
+== c1_text_larger
+base: 8 1
+"_00Hello" 1 50 10
+SZ+
+== c1_text_smaller
+base: 8 1
+"_00Hello" 1 50 10
+SZ-
+== c1_text_rotate
+base: 8 1
+"_00Hello" 1 50 10
+ROT+
+== c1_text_rotate_back
+base: 8 1
+"_00Hello" 1 50 10
+ROT-
+ROT0
+== c1_text_font_word_italic
+base: 8 1
+"_00Hello" 1 50 10
+FNT02
+== c1_text_font_word_palatino
+base: 8 1
+"_00Hello" 1 50 10
+FNT15
+== c1_text_font_word_music
+base: 8 1
+"_00Hello" 1 50 10
+FNT94
+== c1_text_font_word_then_size
+base: 8 1
+"_00Hello" 1 50 10
+FNT02
+6 2
+== c1_text_points
+base: 8 1
+"_00Hello" 1 50 10
+PT 12
+== c1_text_points_24
+base: 8 1
+"_00Hello" 1 50 10
+PT 24
+== c1_text_points_small_staff
+base: 8 1 0 0 0.5
+"_00Hello" 1 50 10
+PT 12
+== c1_text_points_large_staff
+base: 8 1 0 0 2
+"_00Hello" 1 50 10
+PT 12
+== c1_text_centre_at
+base: 8 1
+"_00Hello" 1 50 10
+CT 80
+== c1_text_centre_default
+base: 8 1
+"_00Hello" 1 50 10
+CT
+== c1_text_centre_remembered
+base: 8 1
+"_00Hello" 1 50 10
+CT 60
+X
+"_00Hi" 1 30 10
+CT
+== c1_text_centre_on_note
+base: 8 1; 1 1 80 6 10 0 1; 1 1 120 6 10 0 1
+"_00Hello" 1 50 10
+CTN
+== c1_text_centre_on_note_wide
+base: 8 1; 1 1 80 6 10 0 1
+"_00Hello world" 1 50 10
+CTN
+== c1_text_centre_on_note_size2
+base: 8 1; 1 1 80 6 10 0 1
+"_00Hello" 1 50 10 0 2
+CTN
+== c1_text_centre_on_rest
+base: 8 1; 2 1 80 0 0 0 1
+"_00Hello" 1 50 10
+CTN
+== c1_text_centre_on_note_comma
+base: 8 1; 1 1 80 6 10 0 1
+"_00Hello," 1 50 10
+CTN
+== c1_text_centre_without_comma
+base: 8 1; 1 1 80 6 10 0 1
+"_00Hello," 1 50 10
+CTX
+== c1_text_centre_keeps_parentheses
+base: 8 1; 1 1 80 6 10 0 1
+"_00(Hello)" 1 50 10
+CTX
+== c1_text_leading_edge_on_note
+base: 8 1; 1 1 80 6 10 0 1; 1 1 120 6 10 0 1
+"_00Hello" 1 50 10
+CN
+== c1_text_copy
+base: 8 1
+"_00Hello" 1 50 10
+R 10
+CC
+== c1_text_from_file_moved
+base: 8 1; 16 1 50 10 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"
+I 2
+R 3
+== c1_text_from_file_resized
+base: 8 1; 16 1 50 10 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"
+I 2
+6 3
+== c1_text_from_file_font_carried
+base: 8 1; 16 1 50 10 1 1 0 0 0 0 0 6 0 "_16Old"
+"New"
+== c1_text_without_font_code_in_file
+base: 8 1; 16 1 50 10 1 1 0 0 0 0 0 2 0 "Hi"
+I 2
+6 2
