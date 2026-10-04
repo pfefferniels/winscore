@@ -78,27 +78,25 @@ class CommandLab:
         self.root = make_sandbox(Path(self._tmp.name))
         (self.root / "cwd" / "base.mus").write_bytes(mus_bytes(base))
 
-    def run(self, commands: list[str], trace: bool = False) -> Run:
+    def run(self, commands: list[str], traced: int | None = None) -> Run:
+        """Run commands after loading the base score; trace the command at index `traced`, if given."""
         engine = TimedEngine(self.root)
         engine.initialize()
         engine.command("G base.mus")
         steps, handlers = [], []
-        tracer = None
-        if trace:
-            from trace import Tracer
-            tracer = Tracer(engine)
-            tracer.__enter__()
-        try:
-            for command in commands:
-                try:
-                    r = engine.command(command)
-                    steps.append(Step(command, r.status, engine.i32(EDIT_ITEM), r.message.strip()[:70]))
-                except RuntimeError as err:
-                    steps.append(Step(command, "stopped", engine.i32(EDIT_ITEM), str(err)[-70:]))
-                    break
-            if tracer:
-                handlers = sorted({tracer.name(callee) for (caller, callee) in tracer.edges if caller == INTERPRETER})
-        finally:
-            if tracer:
-                tracer.__exit__(None, None, None)
+        for index, command in enumerate(commands):
+            tracer = None
+            if index == traced:
+                from trace import Tracer
+                tracer = Tracer(engine).__enter__()
+            try:
+                r = engine.command(command)
+                steps.append(Step(command, r.status, engine.i32(EDIT_ITEM), r.message.strip()[:70]))
+            except RuntimeError as err:
+                steps.append(Step(command, "stopped", engine.i32(EDIT_ITEM), str(err)[-70:]))
+                break
+            finally:
+                if tracer:
+                    handlers = sorted({tracer.name(callee) for (caller, callee) in tracer.edges if caller == INTERPRETER})
+                    tracer.__exit__(None, None, None)
         return Run(steps, item_list(engine), handlers)
