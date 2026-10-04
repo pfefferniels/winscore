@@ -44,19 +44,26 @@ pub mod units;
 pub use display::{Colour, DisplayList, ItemId, PlacedText, Point, Shape, ShapeKind, TextRun, UNITS_PER_INCH};
 pub use document::{Document, ItemRef, Medium, Options};
 
-use canvas::Canvas;
+use canvas::{Canvas, Stream};
 
 /// Draws every item of the document, in file order.
 pub fn render(doc: &Document<'_>) -> DisplayList {
-    let mut list = DisplayList::default();
-    doc.items().for_each(|item| render_item(doc, item, &mut list));
-    list
+    let mut stream = Stream::default();
+    doc.items().for_each(|item| draw(doc, item, &mut stream));
+    stream.list
 }
 
-/// Draws one item into `list`.
+/// Draws one item and appends it to `list`.
 pub fn render_item(doc: &Document<'_>, item: ItemRef<'_>, list: &mut DisplayList) {
+    let mut stream = Stream::new(std::mem::take(list));
+    draw(doc, item, &mut stream);
+    *list = stream.list;
+}
+
+fn draw(doc: &Document<'_>, item: ItemRef<'_>, stream: &mut Stream) {
     if let Some(render) = codes::renderer(item.code()) {
-        let mut canvas = Canvas::new(list, item.id, item.staff(), item.colour(doc.options.medium));
+        let mut canvas = Canvas::new(stream, item.id, item.staff(), item.colour(doc.options.medium));
         render(doc, item, &mut canvas);
+        canvas.flush();
     }
 }
