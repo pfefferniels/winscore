@@ -149,7 +149,9 @@ pub fn number_font_loaded(doc: &Document<'_>, at: Pos, call: &NumberCall) -> Opt
     text::font_loaded(doc, &number_text_call(call, at, &text, Font::TIMES))
 }
 
-fn number_text_call<'t>(call: &NumberCall, at: Pos, text: &'t [u8], current_font: Font) -> TextCall<'t> {
+/// The draw_text call draw_number makes for `call` with its string `text`
+/// at X_POS, Y_POS = `at`.
+pub fn number_text_call<'t>(call: &NumberCall, at: Pos, text: &'t [u8], current_font: Font) -> TextCall<'t> {
     let font_override = call.font_override();
     TextCall {
         text,
