@@ -1,0 +1,44 @@
+{
+ "case": "sample-sonlcs",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 5863,
+   "vector_words": 142092
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
+ "description": "WinScore sample sonlcs.mus",
+ "events": [],
+ "invalid_reasons": [],
+ "items": 846,
+ "not_found": [],
+ "page_frames": [
+  [
+   401,
+   -44181,
+   34399,
+   11817
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -  846 Items)   <Legal>",
+ "valid": true,
+ "view_globals": [
+  2400,
+  17234
+ ],
+ "view_offset": [
+  400,
+  -44182
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}

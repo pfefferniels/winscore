@@ -1,0 +1,44 @@
+{
+ "case": "code08-staves-sizes",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 236,
+   "vector_words": 165
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
+ "description": "staves 1-4 with sizes 1, 0.75, 1.2, 0.6",
+ "events": [],
+ "invalid_reasons": [],
+ "items": 4,
+ "not_found": [],
+ "page_frames": [
+  [
+   401,
+   -16237,
+   34399,
+   39761
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -    4 Items)   <Legal>",
+ "valid": true,
+ "view_globals": [
+  2400,
+  -10710
+ ],
+ "view_offset": [
+  400,
+  -16238
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}

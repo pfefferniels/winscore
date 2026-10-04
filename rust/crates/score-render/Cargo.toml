@@ -5,5 +5,14 @@ edition.workspace = true
 license.workspace = true
 description = "Renders SCORE items to display lists matching WinScore's engine"
 
+[features]
+default = ["bundled-symbols"]
+# Embed scorlib/LB*.DRW (844 KB, about 100 KB gzipped); without it, pass a
+# library to Document::with_symbols.
+bundled-symbols = []
+
 [dependencies]
 score-format = { path = "../score-format" }
+
+[dev-dependencies]
+score-testkit = { path = "../score-testkit" }

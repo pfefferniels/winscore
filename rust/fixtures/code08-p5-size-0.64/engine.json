@@ -1,0 +1,10 @@
+{"shapes":[
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[2000,2948],[32000,2948]]]},
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[2000,3172],[32000,3172]]]},
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[2000,3396],[32000,3396]]]},
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[2000,3620],[32000,3620]]]},
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[2000,3844],[32000,3844]]]}
+],
+"texts":[
+{"colour":[0,115,51],"escapement":0,"font":"Helvetica-Narrow","height":774.8,"italic":false,"item":0,"strings":[{"text":"1","x":800,"y":3280}],"underline":false,"weight":400,"width":319.605}
+]}

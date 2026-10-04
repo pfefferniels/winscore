@@ -1,0 +1,22 @@
+{
+  "name": "winscore-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "wasm": "node scripts/build-wasm.mjs",
+    "assets": "node scripts/assets.mjs",
+    "prepare-app": "npm run wasm && npm run assets",
+    "dev": "npm run prepare-app && vite",
+    "build": "npm run prepare-app && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "screenshots": "node scripts/screenshots.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2"
+  }
+}
