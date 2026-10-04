@@ -1,98 +1,378 @@
-//! Pass 5: slurs and ties as code-5 items.
-//!
-//! Slur routine of the engine: 0x53D1E0. A connection between two neighbouring notes on the
-//! same level, or two neighbouring chords with the same levels, is a tie (one per head);
-//! anything else a slur.
+//! Pass 5: slurs, ties and tuplet brackets as code-5 items, ported from the engine's slur
+//! routine 0x53D1E0 and its helpers 0x53DE20 (end levels), 0x53DF2A (tie levels),
+//! 0x42C60E (off the staff lines), 0x53E094 (marks) and 0x53E32F (inner notes).
 
 use crate::connect::{ConnectEntry, Connection, Side};
 use crate::error::InputError;
-use crate::line::{item, Line, Note};
+use crate::line::{item, Line};
 
-/// P8 of the slur item.
-const AUTOMATIC_SLUR: f32 = -1.0;
-const TIE: f32 = -2.0;
-const FORCED_ABOVE: f32 = -4.0;
-const FORCED_BELOW: f32 = 0.0;
+/// Directions as the engine codes them (also a note's stem direction).
+const ABOVE: i32 = 10;
+const BELOW: i32 = 20;
+/// Note numbers with a meaning of their own: from before the first note, to after the last.
+const BEFORE_FIRST: usize = 0;
+const PAST_LAST: usize = 99;
+/// Marks a slur end has to clear (0x797454): wedge, accent, tenuto, staccato, their
+/// combinations, heavy wedge, fingerings 0-5.
+const MARKS_TO_CLEAR: [i32; 14] = [4, 5, 6, 7, 8, 9, 10, 19, 30, 31, 32, 33, 34, 35];
+/// Right end of the staff, where a slur "to after the last note" ends (0x1FBB8B8).
+const STAFF_END: f32 = 200.0;
 
-/// Lines of the five-line staff, as levels.
-fn on_staff_line(level: f32) -> bool {
-    level.fract() == 0.0 && (3.0..=11.0).contains(&level) && (level as i32) % 2 == 1
+/// One entry of the engine's work table as the slur routine reads it.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct WorkEntry {
+    pub code: i32,
+    pub x: f32,
+    /// P4 without the grace-note hundreds.
+    pub level: i32,
+    /// Tens of P5: 10 stem up, 20 stem down, 0 no stem (chord members).
+    pub stem: i32,
+    pub accidental: i32,
+    /// P8 without the grace-note hundreds.
+    pub extension: f32,
+    pub dotted: bool,
+    pub mark: f32,
+    pub grace: bool,
+    /// 1-based note number, for the entry carrying a note's stem.
+    pub note: Option<usize>,
 }
 
-/// A slur end next to a note head: two steps away, one more if that is a staff line.
-fn head_side(level: i32, above: bool) -> f32 {
-    let step = if above { 1.0 } else { -1.0 };
-    let end = level as f32 + 2.0 * step;
-    if on_staff_line(end) {
-        end + step
-    } else {
-        end
+impl WorkEntry {
+    /// An entry that is not a note (rest, barline, clef, key, meter).
+    pub fn other(code: i32, x: f32, level: i32) -> Self {
+        WorkEntry { code, x, level, stem: 0, accidental: 0, extension: 0.0, dotted: false, mark: 0.0, grace: false, note: None }
+    }
+
+    /// 0x53DFD6: the stem direction, or for a stemless head the side it would have.
+    fn stem_direction(&self) -> i32 {
+        match self.stem {
+            0 if self.level > 6 => BELOW,
+            0 => ABOVE,
+            s => s,
+        }
     }
 }
 
-/// Curvature (P7) in steps: grows with length and with the difference of the end levels.
-fn curvature(length: f32, rise: f32, tie: bool) -> f32 {
-    let base = if tie { 0.7 } else { 0.9 + 0.1 * rise.abs() };
-    0.05 * length + base
+/// 0x53DE20: level of a slur end at this note.
+fn end_level(entry: &WorkEntry, direction: i32, level: f32, stem: i32) -> f32 {
+    let stem_side = if entry.stem == 0 { 2.0 } else { entry.extension + 8.0 };
+    match (stem < BELOW, direction == BELOW) {
+        (true, true) => level - 2.0,
+        (true, false) => stem_side + level,
+        (false, true) => level - stem_side,
+        (false, false) => level + 2.0,
+    }
 }
 
-fn is_tie(a: &Note, b: &Note) -> bool {
-    a.heads.len() == b.heads.len() && a.heads.iter().zip(&b.heads).all(|(p, q)| p.level == q.level)
+/// 0x42C60E: an end on a staff line moves into the space outside it.
+fn off_line(level: f32, direction: i32) -> f32 {
+    let on_line = (level % 2.0) == 1.0;
+    match (on_line, direction) {
+        (true, ABOVE) if (level as i32) < 12 => level + 1.0,
+        (true, BELOW) if (level as i32) > 2 => level - 1.0,
+        _ => level,
+    }
 }
 
-fn ties(a: &Note, b: &Note, staff: f32) -> Vec<score_format::Item> {
-    let length = b.x - a.x;
-    let count = a.heads.len();
-    a.heads
-        .iter()
-        .enumerate()
-        .map(|(i, head)| {
-            let above = if count == 1 { a.down } else { 2 * i >= count };
-            let offset = match (count, above) {
-                (1, true) => 0.5,
-                (_, true) => 1.2,
-                (_, false) => -1.2,
-            };
-            let level = head.level as f32 + offset;
-            let bend = curvature(length, 0.0, true);
-            item(&[5.0, staff, a.x, level, level, b.x, if above { bend } else { -bend }, TIE])
-        })
-        .collect()
+/// 0x53DF2A: a tie end half a step from a head in a space, 1.2 steps from one on a line.
+fn tie_level(level: f32, direction: i32) -> f32 {
+    let offset = if (level as i32) % 2 != 0 { 1.2 } else { 0.5 };
+    level + if direction == BELOW { -offset } else { offset }
 }
 
-fn slur(a: &Note, b: &Note, side: Option<Side>, staff: f32) -> score_format::Item {
-    let above = match side {
-        Some(Side::Above) => true,
-        Some(Side::Below) => false,
-        None => a.down || b.down,
-    };
-    let end = |note: &Note| {
-        let head = if above { note.highest() } else { note.lowest() };
-        head_side(head, above)
-    };
-    let (y1, y2) = (end(a), end(b));
-    let bend = curvature(b.x - a.x, y2 - y1, false);
-    let kind = match side {
-        Some(Side::Above) => FORCED_ABOVE,
-        Some(Side::Below) => FORCED_BELOW,
-        None => AUTOMATIC_SLUR,
-    };
-    item(&[5.0, staff, a.x, y1, y2, b.x, if above { bend } else { -bend }, kind])
+/// What decides where the two ends of a slur (not a tie) go.
+struct SlurEnds {
+    direction: i32,
+    levels: (f32, f32),
+    stems: (i32, i32),
+}
+
+impl SlurEnds {
+    /// End levels and P8 (0x53D1E0): with equal stems each end is placed at its own note;
+    /// otherwise the end on the stem side follows the other end. Both move off staff lines.
+    fn levels_at(&self, a: &WorkEntry, b: &WorkEntry) -> (f32, f32, f32) {
+        let d = self.direction;
+        let (level1, level2) = self.levels;
+        let (stem1, stem2) = self.stems;
+        let mut kind = -1.0;
+        let (y1, y2) = if stem1 == stem2 {
+            if d == stem1 {
+                kind = if d == ABOVE { -4.0 } else { 0.0 };
+            }
+            (end_level(a, d, level1, stem1), end_level(b, d, level2, stem2))
+        } else {
+            let rise = level1 - level2;
+            if stem1 == d {
+                let y2 = end_level(b, d, level2, stem2);
+                let y1 = match d {
+                    ABOVE if rise > 0.0 => level1 + 2.0,
+                    BELOW if rise < 0.0 => level1 - 2.0,
+                    _ => y2,
+                };
+                (y1, y2)
+            } else {
+                let y1 = end_level(a, d, level1, stem1);
+                let y2 = match d {
+                    BELOW if rise > 0.0 => level2 - 2.0,
+                    ABOVE if rise < 0.0 => level2 + 2.0,
+                    _ => y1,
+                };
+                (y1, y2)
+            }
+        };
+        (off_line(y1, d), off_line(y2, d), kind)
+    }
+}
+
+/// The slur being built (P3..P9 of the item).
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Shape {
+    x1: f32,
+    y1: f32,
+    y2: f32,
+    x2: f32,
+    bend: f32,
+    kind: f32,
+    tuplet: f32,
+}
+
+/// 0x53E094: an end at a note with a mark on the slur's side moves past the mark; for
+/// other marks on the note-head side it is the mark that moves (its P11 grows by 0.18).
+fn clear_mark(end: &mut f32, entry: &mut WorkEntry, stem: i32, direction: i32, tuplet: bool) {
+    let mark = entry.mark;
+    let whole = mark as i32;
+    if whole == 0 || (mark - whole as f32).abs() > 0.1 || !MARKS_TO_CLEAR.contains(&whole.abs()) {
+        return;
+    }
+    let mut amount = 1.5f32;
+    if whole < 1 {
+        if stem != direction {
+            return;
+        }
+    } else {
+        if stem == direction {
+            return;
+        }
+        if !tuplet {
+            let code = whole.abs();
+            if code != 6 && code != 7 {
+                if mark % 1.0 <= 0.2 {
+                    entry.mark = mark + 0.18;
+                }
+                return;
+            }
+            let level = entry.level;
+            if level % 2 == 1 && ((level < 9 && stem == BELOW) || (level > 5 && stem == ABOVE)) {
+                amount = 2.5;
+            }
+        }
+    }
+    *end += if direction == BELOW { -amount } else { amount };
+}
+
+/// 0x53E32F: inner notes reaching the slur deepen its curve (or, for a tuplet bracket,
+/// move both ends).
+fn clear_inner_notes(shape: &mut Shape, entries: &[WorkEntry], first: usize, last: usize, direction: i32) {
+    let margin = if direction == BELOW { -2.5f32 } else { 2.5 };
+    let mut start = first;
+    'restart: loop {
+        let slope = (shape.y2 - shape.y1) / (shape.x2 - shape.x1);
+        let base = shape.y1 - margin;
+        for (k, e) in entries.iter().enumerate().take(last).skip(start + 1) {
+            if e.code != 1 || e.stem == direction {
+                continue;
+            }
+            let curve = ((e.x - shape.x1) as f64 * slope as f64 + (shape.bend as f64 + base as f64)) as f32;
+            let mut reach = 0.0f32;
+            if e.mark > 0.0 {
+                reach = (e.mark % 1.0) * 10.0;
+                reach = if e.stem == ABOVE { -reach - 2.0 } else { reach + 2.0 };
+            }
+            let reach = reach + e.level as f32;
+            let collides = if direction == BELOW { reach < curve } else { curve < reach };
+            if !collides {
+                continue;
+            }
+            let depth = reach - curve;
+            if shape.tuplet == 0.0 {
+                shape.bend += depth;
+                continue;
+            }
+            let lift = depth + 0.5 - if direction == BELOW { 1.0 } else { 0.0 };
+            shape.y1 += lift;
+            shape.y2 += lift;
+            start = k;
+            continue 'restart;
+        }
+        return;
+    }
+}
+
+struct SlurInput<'a> {
+    entries: &'a mut [WorkEntry],
+    /// Work-table index of each note's stem entry, by note number.
+    note_entry: Vec<usize>,
+    staff: f32,
+}
+
+impl SlurInput<'_> {
+    fn note_count(&self) -> usize {
+        self.note_entry.len()
+    }
+
+    fn items(&mut self, connection: &Connection) -> Vec<score_format::Item> {
+        let count = self.note_count() + 1;
+        // 0x41A14C: note numbers as the engine adjusts them.
+        let typed_first = connection.first;
+        let mut first = typed_first;
+        let mut second = connection.last.max(1);
+        let mut typed_second = connection.last;
+        if first == BEFORE_FIRST || first == PAST_LAST {
+            first = 1;
+        } else if second <= first {
+            second = first + 1;
+            typed_second = second;
+        }
+        let second_entry_number = second.min(count - 1);
+        if first > self.note_count() || second_entry_number == 0 {
+            return Vec::new();
+        }
+        let a = self.note_entry[first - 1];
+        let b = self.note_entry[second_entry_number - 1];
+        let tuplet = connection.tuplet as i32;
+        let mut direction = match connection.side {
+            Some(Side::Above) => ABOVE,
+            Some(Side::Below) => BELOW,
+            None => 0,
+        };
+        let typed_direction = direction;
+        let mut x1 = self.entries[a].x;
+        let mut x2 = self.entries[b].x;
+        let mut level1 = self.entries[a].level as f32;
+        let mut level2 = self.entries[b].level as f32;
+        let chord_start = self.entries.get(a + 1).is_some_and(|n| n.x == self.entries[a].x);
+        let tie_mode = if chord_start { -1 } else { 0 };
+
+        let stem1 = if typed_first == PAST_LAST {
+            level1 = level2;
+            self.entries[b].stem_direction()
+        } else {
+            self.entries[a].stem_direction()
+        };
+        let stem2 = if typed_second == PAST_LAST {
+            level2 = level1;
+            self.entries[a].stem_direction()
+        } else {
+            self.entries[b].stem_direction()
+        };
+
+        if !self.entries[a].grace {
+            if direction == 0 {
+                direction = BELOW;
+                for e in self.entries[a..=b].iter().filter(|e| e.code == 1) {
+                    let stemless = e.stem < 10;
+                    if e.level > 6 && stemless {
+                        break;
+                    }
+                    if e.stem > 19 {
+                        direction = ABOVE;
+                        break;
+                    }
+                }
+            }
+        } else if direction == 0 {
+            direction = 30 - stem1;
+        }
+
+        if count <= typed_second {
+            x2 = STAFF_END;
+        }
+        let try_tie = if typed_first == BEFORE_FIRST {
+            x1 = self.entries[a].x - 8.0;
+            true
+        } else if typed_first == PAST_LAST {
+            x1 = self.entries[a].x - 5.0;
+            false
+        } else {
+            typed_second != PAST_LAST
+                && (count <= typed_second || (tuplet == 0 && level2 == level1 && typed_second == typed_first + 1))
+        };
+        let short = tie_mode == 0 && typed_first != BEFORE_FIRST && x2 - x1 < 10.0;
+        let tie = try_tie && !short && self.entries[b].accidental == 0;
+        let (y1, y2, kind) = if tie {
+            let level = tie_level(level1, direction);
+            (level, level, if self.entries[a].dotted { -3.0 } else { -2.0 })
+        } else {
+            if count <= typed_second {
+                x2 -= 1.5;
+            }
+            let ends = SlurEnds { direction, levels: (level1, level2), stems: (stem1, stem2) };
+            ends.levels_at(&self.entries[a], &self.entries[b])
+        };
+
+        let mut shape = Shape { x1, y1, y2, x2, bend: 0.0, kind, tuplet: tuplet as f32 };
+        if tuplet != 0 && !tie {
+            shape.kind = 3.0;
+            shape.bend = 2.0;
+        } else {
+            let mut length = shape.x2 - shape.x1;
+            if shape.kind < -1.0 && shape.kind > -4.0 {
+                length += shape.kind * 2.0;
+            }
+            let base = (length as f64 / 20.0 + 0.9) as f32;
+            shape.bend = (((shape.y2 - shape.y1).abs() as f64) * 0.1 + base as f64) as f32;
+        }
+        if direction == BELOW {
+            shape.bend = -shape.bend;
+        }
+        if !tie {
+            clear_mark(&mut shape.y1, &mut self.entries[a], stem1, direction, tuplet != 0);
+            clear_mark(&mut shape.y2, &mut self.entries[b], stem2, direction, tuplet != 0);
+            if typed_second as i64 - typed_first as i64 > 1 {
+                clear_inner_notes(&mut shape, self.entries, a, b, direction);
+            }
+        }
+
+        let make = |s: &Shape| item(&[5.0, self.staff, s.x1, s.y1, s.y2, s.x2, s.bend, s.kind, s.tuplet]);
+        let mut made = vec![make(&shape)];
+        if tie {
+            // Further heads of a chord get ties of their own; from the middle up they curve
+            // the other way unless the direction was typed.
+            let members = self.entries[a..].iter().take_while(|e| e.code == 1 && e.x == self.entries[a].x).count();
+            if members > 1 {
+                let flip_at = members / 2 + 1;
+                let mut remaining = members;
+                for member in self.entries[a + 1..a + members].iter() {
+                    if typed_direction < 10 && flip_at == remaining {
+                        shape.bend = -shape.bend;
+                        direction = 30 - direction;
+                    }
+                    remaining -= 1;
+                    let level = tie_level(member.level as f32, direction);
+                    shape.y1 = level;
+                    shape.y2 = level;
+                    made.push(make(&shape));
+                }
+            }
+        }
+        made
+    }
 }
 
 pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry]) -> Result<(), InputError> {
+    let mut work = line.work_entries();
+    let note_entry: Vec<usize> = work.iter().enumerate().filter(|(_, e)| e.note.is_some()).map(|(i, _)| i).collect();
+    let staff = line.staff;
+    let mut input = SlurInput { entries: &mut work, note_entry, staff };
     let made: Vec<score_format::Item> = entries
         .iter()
-        .filter_map(|entry| match *entry {
-            ConnectEntry::Pair(c) => Some(c),
+        .filter_map(|entry| match entry {
+            ConnectEntry::Pair(c) => Some(*c),
             ConnectEntry::EveryEighths { .. } => None,
         })
-        .flat_map(|Connection { first, last, side, .. }| match (line.note(first), line.note(last)) {
-            (Some(a), Some(b)) if last == first + 1 && side.is_none() && is_tie(a, b) => ties(a, b, line.staff),
-            (Some(a), Some(b)) if first < last => vec![slur(a, b, side, line.staff)],
-            _ => Vec::new(),
-        })
+        .flat_map(|c| input.items(&c))
         .collect();
+    line.take_marks(&work);
     line.attachments.extend(made);
     Ok(())
 }

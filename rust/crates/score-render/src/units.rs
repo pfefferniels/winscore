@@ -15,6 +15,16 @@ pub fn real(value: f64) -> f64 {
     f64::from(value as f32)
 }
 
+/// A REAL*4 constant of the engine, e.g. `constant(13.8)` is 13.8000002.
+pub fn constant(value: f32) -> f64 {
+    f64::from(value)
+}
+
+/// Fortran AMOD (amod 0x54AABA): x - trunc(x / y)·y, with the quotient truncated.
+pub fn amod(x: f64, y: f64) -> f64 {
+    x - f64::from(trunc(x / y)) * y
+}
+
 /// The engine's float-to-integer conversion for points: truncation toward zero.
 pub fn trunc(value: f64) -> i32 {
     value as i32
@@ -58,6 +68,12 @@ mod tests {
         assert_eq!(trunc(37.5), 37);
         assert_eq!(trunc(-37.5), -37);
         assert_eq!(trunc(-23692.91), -23692);
+    }
+
+    #[test]
+    fn amod_keeps_the_sign() {
+        assert_eq!(amod(101.5, 100.0), 1.5);
+        assert_eq!(amod(-250.0, 100.0), -50.0);
     }
 
     #[test]

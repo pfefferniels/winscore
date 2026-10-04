@@ -21,6 +21,7 @@
 //! ```
 
 mod beams;
+mod chords;
 pub mod connect;
 mod error;
 mod events;
@@ -36,7 +37,7 @@ mod spacing;
 use score_format::Item;
 
 pub use error::{ErrorKind, InputError, Pass, Span};
-pub use file::InputFile;
+pub use file::{InputFile, StaffArgs};
 
 /// The texts of the five passes, each ending with `;`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
