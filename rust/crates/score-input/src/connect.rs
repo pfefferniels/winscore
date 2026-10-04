@@ -17,16 +17,30 @@ pub enum Side {
     Below,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Connection {
     pub first: usize,
     pub last: usize,
-    pub side: Option<Side>,
+    /// Signs typed with the first and with the second number.
+    pub sides: [Option<Side>; 2],
     /// Tuplet number written over a beam (100s of a note number).
     pub tuplet: u32,
+    /// Fractions of the way to the next note (slurs only: `1.5 3`).
+    pub fractions: [f32; 2],
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+impl Connection {
+    pub fn new(first: usize, last: usize) -> Self {
+        Connection { first, last, sides: [None, None], tuplet: 0, fractions: [0.0, 0.0] }
+    }
+
+    /// The typed side: the first number's sign, else the second's.
+    pub fn side(&self) -> Option<Side> {
+        self.sides[0].or(self.sides[1])
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ConnectEntry {
     Pair(Connection),
     /// `xB` / `xBy`: beam every `eighths` eighth notes, starting after `pickup` notes.
@@ -34,14 +48,15 @@ pub enum ConnectEntry {
 }
 
 /// A note number as typed: sign, tuplet hundreds and the number itself.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct Endpoint {
     side: Option<Side>,
     note: usize,
     tuplet: u32,
+    fraction: f32,
 }
 
-fn endpoint(c: &mut Cursor) -> Result<Endpoint, InputError> {
+fn endpoint(c: &mut Cursor, pass: Pass) -> Result<Endpoint, InputError> {
     c.skip_spaces();
     let side = if c.eat(b'+') {
         Some(Side::Above)
@@ -50,34 +65,37 @@ fn endpoint(c: &mut Cursor) -> Result<Endpoint, InputError> {
     } else {
         None
     };
-    let n = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
-    Ok(Endpoint { side, note: (n % 100) as usize, tuplet: n / 100 })
+    let value = if pass == Pass::Slurs { c.number() } else { c.integer().map(|n| n as f32) };
+    let value = value.ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
+    let whole = value.trunc() as u32;
+    Ok(Endpoint { side, note: (whole % 100) as usize, tuplet: whole / 100, fraction: value.fract() })
 }
 
-fn pair(c: &mut Cursor) -> Result<Connection, InputError> {
-    let a = endpoint(c)?;
+fn pair(c: &mut Cursor, pass: Pass) -> Result<Connection, InputError> {
+    let a = endpoint(c, pass)?;
     let tight_plus = c.peek() == Some(b'+');
     if c.peek() == Some(b'-') {
         return Err(c.unexpected());
     }
-    let mut b = endpoint(c)?;
+    let mut b = endpoint(c, pass)?;
     if tight_plus {
         b.side = None;
     }
-    Ok(Connection { first: a.note, last: b.note, side: a.side.or(b.side), tuplet: a.tuplet.max(b.tuplet) })
+    let tuplet = if b.tuplet != 0 { b.tuplet } else { a.tuplet };
+    Ok(Connection { first: a.note, last: b.note, sides: [a.side, b.side], tuplet, fractions: [a.fraction, b.fraction] })
 }
 
-fn groups(c: &mut Cursor) -> Result<Vec<Connection>, InputError> {
+fn groups(c: &mut Cursor, pass: Pass) -> Result<Vec<Connection>, InputError> {
     c.bump();
     let size = c.digit().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))? as usize;
     let starts: Vec<Endpoint> = std::iter::from_fn(|| {
         c.skip_spaces();
-        (!c.at_end()).then(|| endpoint(c))
+        (!c.at_end()).then(|| endpoint(c, pass))
     })
     .collect::<Result<_, _>>()?;
     Ok(starts
         .into_iter()
-        .map(|s| Connection { first: s.note, last: s.note + size - 1, side: s.side, tuplet: s.tuplet })
+        .map(|s| Connection { sides: [s.side, None], tuplet: s.tuplet, ..Connection::new(s.note, s.note + size - 1) })
         .collect())
 }
 
@@ -85,7 +103,7 @@ fn parse_entry(entry: &Entry, pass: Pass) -> Result<Vec<ConnectEntry>, InputErro
     let mut c = entry.cursor(pass);
     c.skip_spaces();
     if c.peek() == Some(b'X') {
-        return Ok(groups(&mut c)?.into_iter().map(ConnectEntry::Pair).collect());
+        return Ok(groups(&mut c, pass)?.into_iter().map(ConnectEntry::Pair).collect());
     }
     if pass == Pass::Beams && c.rest().contains('B') {
         let eighths = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
@@ -96,7 +114,7 @@ fn parse_entry(entry: &Entry, pass: Pass) -> Result<Vec<ConnectEntry>, InputErro
         c.finish()?;
         return Ok(vec![ConnectEntry::EveryEighths { eighths, pickup }]);
     }
-    let made = pair(&mut c)?;
+    let made = pair(&mut c, pass)?;
     c.skip_spaces();
     c.finish()?;
     Ok(vec![ConnectEntry::Pair(made)])
@@ -120,7 +138,7 @@ mod tests {
             .unwrap()
             .into_iter()
             .filter_map(|e| match e {
-                ConnectEntry::Pair(c) => Some((c.first, c.last, c.side, c.tuplet)),
+                ConnectEntry::Pair(c) => Some((c.first, c.last, c.side(), c.tuplet)),
                 _ => None,
             })
             .collect()

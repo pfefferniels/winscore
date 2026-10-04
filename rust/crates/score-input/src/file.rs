@@ -121,10 +121,16 @@ impl InputFile {
         Passes { notes, rhythms, marks, beams, slurs }
     }
 
+    /// Staff, size and range for [`run`]; the range ends at the staff's right end if that is
+    /// shorter.
     pub fn options(&self) -> Options {
         let default = Options::default();
-        let (begin, end) = self.range.unwrap_or((default.begin, default.end));
-        Options { staff: self.staff.number, begin, end }
+        let (begin, mut end) = self.range.unwrap_or((default.begin, default.end));
+        if self.staff.right > 0.0 {
+            end = end.min(self.staff.right);
+        }
+        let size = if self.staff.size == 0.0 { 1.0 } else { self.staff.size };
+        Options { staff: self.staff.number, size, begin, end }
     }
 
     /// The staff item IN creates when the staff does not exist yet.

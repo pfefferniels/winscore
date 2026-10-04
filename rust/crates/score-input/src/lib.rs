@@ -55,18 +55,20 @@ impl Default for Passes<'_> {
     }
 }
 
-/// Where the line goes: the staff (P2 of every item) and the input range in P3 units.
+/// Where the line goes: the staff (P2 of every item), its size factor (P5 of the staff
+/// item, 1 for a normal staff) and the input range in P3 units.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Options {
     pub staff: u8,
+    pub size: f32,
     pub begin: f32,
     pub end: f32,
 }
 
 impl Default for Options {
-    /// Staff 1 and the range WinScore's input dialog proposes, 2 to 200.
+    /// Staff 1 of normal size and the range WinScore's input dialog proposes, 2 to 200.
     fn default() -> Self {
-        Self { staff: 1, begin: 2.0, end: 200.0 }
+        Self { staff: 1, size: 1.0, begin: 2.0, end: 200.0 }
     }
 }
 
@@ -88,9 +90,9 @@ pub fn run(passes: &Passes, options: &Options) -> Result<Vec<Item>, InputError> 
         .iter()
         .map(|event| line::Timed { event, rhythm: if event.is_rhythmic() { rhythm_iter.next() } else { None } })
         .collect();
-    let mut line = line::Line::new(&timed, options.staff, options.begin, options.end);
+    let mut line = line::Line::new(&timed, options);
     marks::apply(&mut line, &marks)?;
     beams::apply(&mut line, &beams)?;
-    slurs::apply(&mut line, &slurs)?;
+    slurs::apply(&mut line, &slurs, (options.begin, options.end))?;
     Ok(line.items())
 }

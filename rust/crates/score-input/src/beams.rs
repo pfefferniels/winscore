@@ -36,7 +36,7 @@ fn every_eighths(line: &Line, eighths: u32, pickup: u32) -> Vec<Connection> {
     slots
         .chunk_by(|a, b| a.window == b.window && a.beamable && b.beamable)
         .filter(|run| run.len() >= 2)
-        .map(|run| Connection { first: run[0].number, last: run[run.len() - 1].number, side: None, tuplet: 0 })
+        .map(|run| Connection::new(run[0].number, run[run.len() - 1].number))
         .collect()
 }
 
@@ -329,10 +329,16 @@ impl Beamer<'_> {
             return Vec::new();
         }
         let first_grace = grace(first);
-        let mut direction = match group.side {
+        // 0x41A4F9: a note that already has a beam direction keeps it, whatever the sign says.
+        let typed = |side: Option<Side>| match side {
             Some(Side::Above) => UP,
             Some(Side::Below) => DOWN,
             None => 0,
+        };
+        let known = |n: usize, side: Option<Side>| if self.beamed[n] != 0 { self.beamed[n] } else { typed(side) };
+        let mut direction = match known(first, group.sides[0]) {
+            0 => known(last, group.sides[1]),
+            d => d,
         };
 
         if self.beamed[first] == 0 {
@@ -386,7 +392,7 @@ impl Beamer<'_> {
         let (start, end, direction) = beam_line(&levels, &xs, (note_xs[0], note_xs[note_xs.len() - 1]), direction);
 
         let (y1, y2, fewest) = if first_grace {
-            let size = if start < 0.0 { -100.0 } else { 100.0 };
+            let size = if (start as i32) < 0 { -100.0 } else { 100.0 };
             let offset = if direction >= DOWN { -0.8 } else { 0.8 };
             let mut y1 = offset + start + size;
             if y1 > 90.0 && y1 < 100.0 {
@@ -406,6 +412,7 @@ impl Beamer<'_> {
 
         let head = [6.0, self.line.staff, note_xs[0], y1, y2, note_xs[note_xs.len() - 1], (fewest + direction) as f32, group.tuplet as f32, 0.0];
         let segments = if tails.iter().any(|t| *t != 0 && *t != tails[0]) { secondary_beams(&tails, &note_xs, fewest) } else { Vec::new() };
+        self.attach_tremolos(first..=last, &head, direction);
         if segments.is_empty() {
             return vec![item(&head)];
         }
@@ -418,6 +425,25 @@ impl Beamer<'_> {
             })
             .collect()
     }
+
+    /// 0x4156EC: a tremolo of pass 3 on a beamed note takes the beam's ends and direction.
+    fn attach_tremolos(&mut self, numbers: std::ops::RangeInclusive<usize>, beam: &[f32; 9], direction: i32) {
+        let notes: Vec<(f32, i32)> = numbers.filter_map(|n| self.line.note(n)).map(|n| (n.x, n.rhythm.tails())).collect();
+        for tremolo in self.line.attachments.iter_mut() {
+            let p: Vec<f32> = tremolo.params().iter().map(|w| w.as_f32()).collect();
+            let is_tremolo = p.first() == Some(&6.0) && p.get(6).is_some_and(|v| *v < 0.0);
+            let Some(&(x, tails)) = notes.iter().find(|(x, _)| is_tremolo && p.get(2) == Some(x)) else {
+                continue;
+            };
+            let mut q = p.clone();
+            q.resize(11, 0.0);
+            q[2..6].copy_from_slice(&beam[2..6]);
+            q[6] = -(direction as f32);
+            q[9] = (tails * 10) as f32 + q[9] - 10.0;
+            q[10] = x;
+            *tremolo = item(&q);
+        }
+    }
 }
 
 /// 0x40CDE4 with 0x40C1C0: every note under a beam whose stem goes the beam's way gets
@@ -427,6 +453,8 @@ fn fit_stems(line: &mut Line, beams: &[score_format::Item]) {
         let (x1, y1, y2, x2) = (beam.param(3), beam.param(4), beam.param(5), beam.param(6));
         let down = beam.param(7) as i32 / 10 == 2;
         let grace_beam = (y1 / 100.0) as i32 != 0;
+        // Grace-note stems are drawn at 0.6 of the normal length.
+        let scale = if grace_beam { 0.6f32 } else { 1.0 };
         let span = x2 - x1;
         let start = y1 % 100.0;
         for note in line.notes_mut() {
@@ -441,7 +469,8 @@ fn fit_stems(line: &mut Line, beams: &[score_format::Item]) {
                 b = -b;
             }
             let fraction = (note.x - x1) as f64 / span as f64;
-            note.extension = (fraction * (b as f64 - a as f64) + a as f64) as f32;
+            let reach = (fraction * (b as f64 - a as f64) + a as f64) as f32;
+            note.extension = reach / scale;
             note.tails = 0;
         }
     }
@@ -455,7 +484,11 @@ pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry]) -> Result<(), Inp
             ConnectEntry::EveryEighths { eighths, pickup } => every_eighths(line, eighths, pickup),
         })
         .collect();
-    let beamed = vec![0; line.note_count() + 2];
+    // Grace notes come out of pass 2 with their stems fixed upward (0x51CF40).
+    let beamed: Vec<i32> = std::iter::once(0)
+        .chain(line.notes().map(|n| if n.is_grace() { UP } else { 0 }))
+        .chain(std::iter::once(0))
+        .collect();
     let mut beamer = Beamer { line, beamed };
     let made: Vec<score_format::Item> = groups.into_iter().flat_map(|g| beamer.beam(g)).collect();
     fit_stems(line, &made);
