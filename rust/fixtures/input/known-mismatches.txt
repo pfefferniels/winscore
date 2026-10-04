@@ -1,10 +1,5 @@
 # Cases score-input does not reproduce yet (one name per line).
 
-# Chords: accidental stacking (0x4EE442), dot placement (0x51C824)
-ch-accid
-ch-dots
-r-chords
-
 # Beams (0x413CA8, 0x40CDE4)
 bd-extreme-mid
 bd-slope-big

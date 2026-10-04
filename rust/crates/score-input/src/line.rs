@@ -3,6 +3,7 @@
 
 use score_format::{Item, Word};
 
+use crate::chords::{accidental_offsets, dot_offsets, ChordHead};
 use crate::events::{Event, Head};
 use crate::notes::{Clef, KeySignature, Meter, RestKind, StaffShift, StemMode};
 use crate::rhythm::Rhythm;
@@ -111,18 +112,20 @@ impl Note {
     fn items(&self, staff: f32) -> Vec<Item> {
         let ordered = self.ordered_heads();
         let levels: Vec<i32> = ordered.iter().map(|h| h.level).collect();
-        let shifts = second_shifts(&levels, self.down);
+        let shifted = second_shifts(&levels);
+        let accidental_offsets = self.accidental_offsets(&ordered, &shifted);
+        let dot_offsets = if self.rhythm.dots() > 0 { dot_offsets(&levels, &shifted, self.down) } else { vec![0; levels.len()] };
         let dots = 10 * i32::from(self.rhythm.dots());
-        let shift = match self.shift {
+        let side = if self.down { SHIFT_LEFT } else { SHIFT_RIGHT };
+        let staff_shift = match self.shift {
             StaffShift::Main => 0.0,
             StaffShift::Above => 1.0,
             StaffShift::Below => 2.0,
         };
         ordered
             .iter()
-            .zip(shifts)
             .enumerate()
-            .map(|(i, (head, offset))| {
+            .map(|(i, head)| {
                 let stem_head = i == 0;
                 let accidental = head.accidental.map_or(0, |a| a.code());
                 let stem = match (stem_head, self.down) {
@@ -141,35 +144,56 @@ impl Note {
                     Some((stray, x)) if stray == head.level => x,
                     _ => self.x,
                 };
+                let p5 = accidental_offsets[i] as f32 / 1000.0 + (stem + accidental) as f32;
                 item(&[
                     1.0,
                     staff,
                     x,
                     level as f32,
-                    (stem + accidental) as f32,
+                    p5,
                     self.rhythm.head() as f32,
                     self.rhythm.quarters(),
                     extension,
-                    (dots + tails) as f32,
-                    offset,
+                    (dots + tails + dot_offsets[i]) as f32,
+                    if shifted[i] { side } else { 0.0 },
                     mark,
-                    shift,
+                    staff_shift,
                 ])
             })
             .collect()
     }
+
+    /// Accidental offsets (thousandths of P5) in item order; the layout works from the top.
+    fn accidental_offsets(&self, ordered: &[&Head], shifted: &[bool]) -> Vec<i32> {
+        let mut top_down: Vec<ChordHead> = ordered
+            .iter()
+            .zip(shifted)
+            .map(|(h, s)| ChordHead {
+                level: h.level,
+                accidental: h.accidental.map_or(0, |a| a.code()),
+                left_of_stem: *s && self.down,
+            })
+            .collect();
+        if !self.down {
+            top_down.reverse();
+        }
+        let mut offsets = accidental_offsets(&top_down);
+        if !self.down {
+            offsets.reverse();
+        }
+        offsets
+    }
 }
 
-/// P10 of each head (in the order given, stem end first): a head a second away from the
-/// previous unshifted head moves to the other side of the stem.
-fn second_shifts(levels: &[i32], down: bool) -> Vec<f32> {
-    let shift = if down { SHIFT_LEFT } else { SHIFT_RIGHT };
+/// Which heads (in item order, stem head first) sit on the other side of the stem: a head
+/// within a step of the previous head moves over unless that one moved (0x4EE442).
+fn second_shifts(levels: &[i32]) -> Vec<bool> {
     levels
         .iter()
         .scan(None::<(i32, bool)>, |previous, &level| {
-            let shifted = matches!(*previous, Some((p, false)) if (level - p).abs() == 1);
+            let shifted = matches!(*previous, Some((p, false)) if (level - p).abs() < 2);
             *previous = Some((level, shifted));
-            Some(if shifted { shift } else { 0.0 })
+            Some(shifted)
         })
         .collect()
 }

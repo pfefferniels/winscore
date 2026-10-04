@@ -2350,3 +2350,123 @@ BA/K2F/C3:E:G/F:A:C4/BF2:D3:F/M/EF3:G:BF/R/M;
 ;
 ;
 ;
+== ac-three-sharps
+IN 1
+;
+CS4:ES:GS/DS4:FS:AS/CS5:ES5:GS5/FS4:AS:CS5:ES5;
+4/4/4/4;
+;
+;
+;
+== ac-flats
+IN 1
+;
+DF4:FF:AF/EF4:GF:BF/BF4:DF5:FF5/EF4:AF:CF5:EF5;
+4/4/4/4;
+;
+;
+;
+== ac-mixed
+IN 1
+;
+CS4:EF:GN/DN4:FS:AF/EFF4:GSS:BN/CN5:EF5:GS5;
+4/4/4/4;
+;
+;
+;
+== ac-seconds
+IN 1
+;
+CS4:DF/ES4:FS:GS/BF4:CS5/F5:GS5:AF5;
+4/4/4/4;
+;
+;
+;
+== ac-wide
+IN 1
+;
+CS4:AF4/DS4:BF4/EF4:CS5/CS4:CS5;
+4/4/4/4;
+;
+;
+;
+== ac-cluster-down
+IN 1
+;
+AF4:BF4:CS5:DS5/BF4:CN5:DF5:EF5/FS5:GS5:AS5:BS5;
+4/4/4;
+;
+;
+;
+== ac-doubles
+IN 1
+;
+CSS4:EFF:GSS/DFF4:FSS:AFF/BFF4:DFF5;
+4/4/4;
+;
+;
+;
+== dt-seconds-up
+IN 1
+;
+C4:D/D4:E/E4:F/F4:G/G4:A/A4:B4;
+4./4./4./4./4./4.;
+;
+;
+;
+== dt-seconds-down
+IN 1
+;
+B4:C5/C5:D5/D5:E5/E5:F5/F5:G5/G5:A5;
+4./4./4./4./4./4.;
+;
+;
+;
+== dt-thirds
+IN 1
+;
+C4:E/D4:F/E4:G/F4:A/B4:D5/C5:E5;
+4./4./4./4./4./4.;
+;
+;
+;
+== dt-clusters
+IN 1
+;
+C4:D:E/D4:E:F/E4:F:G/C5:D5:E5/D5:E5:F5;
+4./4./4./4./4.;
+;
+;
+;
+== dt-double
+IN 1
+;
+C4:D/E4:F/C5:D5;
+4../4../4..;
+;
+;
+;
+== dt-single
+IN 1
+;
+C4/D/E/F/G/A/B/C5/D;
+4./4./4./4./4./4./4./4./4.;
+;
+;
+;
+== dt-wide
+IN 1
+;
+C4:G/E4:C5/D4:A4/F4:F5;
+4./4./4./4.;
+;
+;
+;
+== dt-forced
+IN 1
+;
+SU/C5:D5/E5:F5/SD/C4:D/E4:F;
+4./4./4./4.;
+;
+;
+;
