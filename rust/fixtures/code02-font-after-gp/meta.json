@@ -1,0 +1,45 @@
+{
+ "case": "code02-font-after-gp",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 323,
+   "vector_words": 189
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
+ "description": "plain text after _02 text and a G.P. rest (font 1000)",
+ "events": [],
+ "excluded_items": [],
+ "invalid_reasons": [],
+ "items": 4,
+ "not_found": [],
+ "page_frames": [
+  [
+   401,
+   -8497,
+   34399,
+   47501
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "start of the baseline: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -    4 Items)   <Legal>",
+ "valid": true,
+ "view_globals": [
+  2400,
+  -18450
+ ],
+ "view_offset": [
+  400,
+  -8498
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}
