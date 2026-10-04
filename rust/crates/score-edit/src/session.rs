@@ -42,6 +42,10 @@ pub struct Session {
     pub text_font: u8,
     /// The position CT centred on last (CT alone reuses it).
     pub centre_at: Option<f32>,
+    /// The position JR justified to last.
+    pub right_at: Option<f32>,
+    /// The positions J justified between last.
+    pub justify_between: Option<(f32, f32)>,
 }
 
 impl Session {

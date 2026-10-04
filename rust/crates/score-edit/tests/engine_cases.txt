@@ -2704,3 +2704,60 @@ CH
 base: 8 1; 1 1 100 3 10 0 0.5 0 1; 1 1 100 5 0 0 1; 1 1 110 7 10 0 2
 I 2
 CH
+
+# -- text justification (JR, J) ----------------------------------------------------------
+
+== c3_text_right_hello
+base: 8 1
+"_00Hello" 1 50 10
+JR 150
+== c3_text_right_wide
+base: 8 1
+"_00Hello world" 1 50 10
+JR 150
+== c3_text_right_size2
+base: 8 1
+"_00Hello" 1 50 10 0 2
+JR 150
+== c3_text_right_capital
+base: 8 1
+"_00A" 1 50 10
+JR 150
+== c3_text_right_default
+base: 8 1
+"_00Hello" 1 50 10
+JR
+== c3_text_right_remembered
+base: 8 1
+"_00Hello" 1 50 10
+JR 120
+X
+"_00Hi" 1 30 10
+JR
+== c3_text_right_helvetica
+base: 8 1
+"_04Hello" 1 50 10
+JR 150
+== c3_text_justify
+base: 8 1
+"_00a b c" 1 50 10
+J 20 180
+== c3_text_justify_size2
+base: 8 1
+"_00Hello big world" 1 50 10 0 2
+J 10 190
+== c3_text_justify_spread
+base: 8 1
+"_00Hello big world" 1 50 10 1.5
+J 10 190
+== c3_text_justify_without_spaces
+base: 8 1
+"_00Hello" 1 50 10
+J 20 180
+== c3_text_justify_again
+base: 8 1
+"_00a b" 1 50 10
+J 20 180
+X
+"_00c d" 1 30 12
+J

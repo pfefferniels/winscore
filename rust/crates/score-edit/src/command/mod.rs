@@ -85,6 +85,10 @@ enum SessionWord {
     CentreText,
     /// CTN, CTX [staff]: centre text on the nearest note, CTX without punctuation.
     CentreTextOnNote { skip_punctuation: bool },
+    /// JR [x]: text right-justified to x.
+    JustifyRight,
+    /// J [left right]: text justified between two positions.
+    Justify,
     /// ADJ: stems reach their beam.
     AdjustStems,
     /// CH [value]: one duration for the whole chord.
@@ -122,6 +126,8 @@ impl SessionWord {
             "CT" => Self::CentreText,
             "CTN" => Self::CentreTextOnNote { skip_punctuation: false },
             "CTX" => Self::CentreTextOnNote { skip_punctuation: true },
+            "JR" => Self::JustifyRight,
+            "J" => Self::Justify,
             "ADJ" => Self::AdjustStems,
             "CH" => Self::ChordRhythm,
             _ => return None,
@@ -234,6 +240,8 @@ impl Run<'_, '_> {
             Some(SessionWord::CentreTextOnNote { skip_punctuation }) => {
                 self.centre_text_on_note(&word, number, skip_punctuation)
             }
+            Some(SessionWord::JustifyRight) => self.justify_right(number),
+            Some(SessionWord::Justify) => self.justify(number, args.get(1).and_then(Token::number)),
             Some(SessionWord::AdjustStems) => self.adjust_stems(),
             Some(SessionWord::ChordRhythm) => self.chord_rhythm(number),
             None => self.edit_word(&word, args),

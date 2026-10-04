@@ -15,9 +15,12 @@ use crate::text::{self, CENTRED, DIVIDED_GAP, LENGTH};
 const POINTS_PER_SIZE: f32 = 13.56;
 /// CT alone centres on this position until CT is given one.
 const DEFAULT_CENTRE: f32 = 100.0;
+/// JR alone justifies to this position until JR is given one.
+const DEFAULT_RIGHT: f32 = 200.0;
 /// CTN and CTX centre text this far right of the note's P3 (half a note head).
 const NOTE_CENTRE: f32 = 1.6;
 const SHIFT: usize = 11;
+const SPACE: usize = 10;
 /// Quick entry fills P2–P11 from the numbers after the text.
 const LAST_ENTERED_PARAM: usize = 11;
 
@@ -126,6 +129,36 @@ impl Run<'_, '_> {
         let at = at.or(self.session.centre_at).unwrap_or(DEFAULT_CENTRE);
         self.session.centre_at = Some(at);
         self.rewrite_texts("CT", |_, _, draft| draft.set(3, at - draft.get(LENGTH) / 2.0))
+    }
+
+    /// JR x: the text's right end at x, its last glyph's bearing left out (JR
+    /// alone: the position given last, 200 at first).
+    pub fn justify_right(&mut self, at: Option<f32>) -> Result<(), EditError> {
+        let at = at.or(self.session.right_at).unwrap_or(DEFAULT_RIGHT);
+        self.session.right_at = Some(at);
+        self.rewrite_texts("JR", |run, index, draft| {
+            if let Some(bearing) = text::right_bearing(run.tx.doc().file(), index) {
+                draft.set(3, at - (draft.get(LENGTH) - bearing));
+            }
+        })
+    }
+
+    /// J left right: the text from `left` to `right`, its spaces widened (P10)
+    /// to fill the line; J alone reuses the positions given last.
+    pub fn justify(&mut self, left: Option<f32>, right: Option<f32>) -> Result<(), EditError> {
+        let Some((left, right)) = left.zip(right).or(self.session.justify_between) else {
+            return Err(EditError::BadArgument("J".into()));
+        };
+        self.session.justify_between = Some((left, right));
+        self.rewrite_texts("J", |run, index, draft| {
+            let spaces = draft.text().iter().filter(|&&b| b == b' ').count();
+            let Some(bearing) = text::right_bearing(run.tx.doc().file(), index).filter(|_| spaces > 0) else { return };
+            let factor = |n: usize| f64::from(if draft.get(n) == 0.0 { 1.0 } else { draft.get(n) });
+            let missing = f64::from(right) + f64::from(bearing) - f64::from(left) - f64::from(draft.get(LENGTH));
+            let widened = f64::from(draft.get(SPACE)) + missing / spaces as f64 / (factor(5) * factor(6));
+            draft.set(SPACE, widened as f32);
+            draft.set(3, left);
+        })
     }
 
     /// CTN, CTX [staff]: the text centred on the nearest note or rest, through

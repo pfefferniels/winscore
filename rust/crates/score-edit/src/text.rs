@@ -113,6 +113,14 @@ pub fn measured_lengths(file: &MusFile) -> Vec<(usize, f32)> {
         .collect()
 }
 
+/// What JR leaves out of the text item's length at its right end (the last
+/// glyph's bearing), or `None` when the engine does not right-justify it.
+pub fn right_bearing(file: &MusFile, index: usize) -> Option<f32> {
+    let doc = RenderDocument::new(file);
+    let item = doc.item(RenderId(index as u32))?;
+    score_render::text::right_bearing(&doc, &text_call(&doc, item, item.item.text(), font_before(&doc, item)))
+}
+
 /// The length the text item at `index` would have with `text` as its characters.
 pub fn length_with(file: &MusFile, index: usize, text: &[u8]) -> f32 {
     let Some(item) = file.items.get(index) else { return 0.0 };
