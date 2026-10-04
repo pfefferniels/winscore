@@ -7,3 +7,6 @@ description = "Renders SCORE items to display lists matching WinScore's engine"
 
 [dependencies]
 score-format = { path = "../score-format" }
+
+[dev-dependencies]
+score-testkit = { path = "../score-testkit" }

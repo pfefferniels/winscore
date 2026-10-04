@@ -1,0 +1,47 @@
+address	name	confidence	role
+0047ec50	interpret	verified	command interpreter; stdcall (vector*, &nwords, text*, &nbytes, &status)
+004a6730	engine_init	verified	start-up: PREF.DAT, WSCORE.DAT, symbol library
+00547fc8	draw_items	verified	draws every item: page frame, then for each item copies its words into P(), calls draw_item, flushes points
+00548981	index_items	read	rebuilds ITEM_PTR0 and the item count from the length words
+00547c32	load_item_header	verified	LOAD_I -> LOAD_W, LOAD_LEN, LOAD_CODE, LOAD_STAFF, LOAD_P3
+00547210	draw_item	verified	IP(k) = INT(P(k)); item_position; switch on code 1..18
+005479ab	item_position	verified	X_POS = 150 * P3, Y_POS = STAFF_Y(staff) + P4 * 7 * STEP
+00545140	draw_staff	verified	code 8
+00545de0	draw_staff_number	read	screen-only staff number text left of the staff
+00546910	staff_p4_error	read	draw_staff when P4 >= 1000: formats an error message, draws nothing
+0054ce39	draw_page_frame	read	green page outline per PAPER, drawn as a code-12 box
+0054ed0e	fit_view	read	draws everything, takes the bounding box of the output, sets VIEW_DY = max y + 3000
+0054a497	flush_points	verified	COLOR from P26, then emit_points
+0054a69c	emit_points	verified	point buffer -> vector output (x + VIEW_DX, y - VIEW_DY, colour | pen << 24)
+0044b820	add_point	verified	add_point(&x, &y, &pen): appends INT(x), INT(y), pen to the point buffer
+0044b8b1	add_segment	verified	add_segment(&x0, &y0, &x1, &y1): two points, pens 1 and 0
+0054aaba	amod	verified	amod(&x, &y) = x - INT(x / y) * y (Fortran AMOD)
+0054daf6	push_words	read	push_words(&n, a): saves n words on an internal stack
+0054db88	pop_words	read	pop_words(&n, a): restores them
+004117b0	draw_barline	verified	code 14 (types 0-2 verified, others read)
+00547aa3	staff_level_y	verified	staff_level_y(&v) = f32(STAFF_Y(CUR_STAFF) + v*7*STAFF_STEP(CUR_STAFF))
+00412699	barline_stroke	verified	vertical stroke at the bar x from y_bot to y_top
+00412749	barline_dots	read	repeat dots (code-12 boxes) on every spanned staff
+00412a20	barline_bracket	read	curved bracket ends (type 9)
+00412b93	barline_brace	read	brace (type 8) via the clef routine, symbol 5
+00412353	barline_gap	read	P18/P19 gap in the bar
+004efec0	draw_note	read	code 1
+00519c38	draw_rest	read	code 2
+00431ae0	draw_clef	read	code 3
+00439963	draw_line	read	code 4; also dashed barlines
+00538550	draw_slur	read	code 5
+00416168	draw_beam	read	code 6
+0055f340	draw_code7	read	code 7: trills, ottava, pedal
+004293f0	draw_symbol	read	codes 9, 11, 13
+004f65a8	draw_number	read	code 10; also staff numbers
+00433eee	draw_box_grid	read	code 12 with P5 = 10
+0049eae0	draw_box_negative	read	code 12 with P5 < 0
+00433530	draw_box	read	code 12 with P5 in {0, 1, 3}
+00432e80	draw_box_other	read	code 12, other P5
+0050a650	draw_eps	read	code 15
+00569af0	draw_text	read	code 16
+004bf4f8	draw_keysig	read	code 17
+004bfa59	draw_meter	read	code 18
+00494026	redraw	read	fit_view then draw_items
+004a3f10	cmd_get	inferred	G command (load and display)
+00494c38	load_score	inferred	
