@@ -38,7 +38,16 @@ TEXT_BASELINE_OFFSET = 96       # OnDraw (0x5E5910): the baseline of a string is
 VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4   # emit_points: x_out = x + VIEW_DX, y_out = y - VIEW_DY
 PAGE_FROM_INTERNAL = (2000, 26948)        # paper bottom-left at internal (-2000, -26947.7); analysis/engine/coordinates.md
 ITEM_COUNT = 0x20B8E24          # number of items, and the 1-based loop index while drawing
-PEN_RESET = -99                 # 0x4D4F3F: (0, 0, -99) "reset pen width", print metadata that also reaches the screen
+# Pen-width records (tag = colour + pen << 24), print metadata that also reaches the screen (impl-notes):
+# 0x4D4F3F writes (0, 0, pen -99) "reset width", 0x4D4ED2 writes (999, w, pen 99) "set width".
+PEN_RESET_KIND, PEN_SET_KIND, PEN_SET_X = 0x9D, 0x63, 999
+
+
+def is_pen_record(triple: tuple[int, int, int], view_dx: int, view_dy: int) -> bool:
+    """The record's point passes through emit_points like any other, so it is checked in internal coordinates."""
+    x, y, tag = triple[0] - view_dx, triple[1] + view_dy, triple[2]
+    kind = (tag & 0xFFFFFFFF) >> 24
+    return (kind == PEN_RESET_KIND and x == y == 0) or (kind == PEN_SET_KIND and x == PEN_SET_X)
 NOT_FOUND_DIALOG = 0x59B090     # "Not found": missing symbol library or instrument; changes no geometry
 # The engine never checks its output buffers; these are the shell's room (disasm-expert).
 SHELL_VECTOR_WORDS, SHELL_OBJECTS, SHELL_TEXT_BYTES = 1_000_000, 10_000, 440_000
@@ -222,13 +231,13 @@ class PageView:
 
     @classmethod
     def of(cls, run: Run) -> "PageView":
-        kept = [k for k, (_, _, tag) in enumerate(run.final.vector) if tag != PEN_RESET]
+        kept = [k for k, t in enumerate(run.final.vector) if not is_pen_record(t, run.view_dx, run.view_dy)]
         all_shapes = shapes([run.final.vector[k] for k in kept])
         frames = [PageFrame.of(s) for s in all_shapes if is_page_frame(s)]
         content = [(s, shape_writer(s, kept, run.vector_writers)) for s in all_shapes if not is_page_frame(s)]
-        resets = len(run.final.vector) - len(kept)
-        # The shell would start an object at the record and give the next shape its tag (kind 0xFF, colour 0xFFFF9D).
-        notes = [f"{resets} pen-width reset record(s) left out"] if resets else []
+        records = len(run.final.vector) - len(kept)
+        # The shell would draw each record as a one-point object of its own kind.
+        notes = [f"{records} pen-width record(s) left out"] if records else []
         if any(i is None for _, i in content):
             notes.append("shapes without a single writing item; not attributed")
         runs = text_runs(run.final.text)

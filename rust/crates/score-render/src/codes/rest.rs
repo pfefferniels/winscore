@@ -100,7 +100,7 @@ struct Rest {
 
 impl Rest {
     /// None for the types the engine does not draw.
-    fn new(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Self> {
+    fn new(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64) -> Option<Self> {
         let p5 = ip(item, 5);
         let parenthesised = p5.abs() >= 100;
         let kind = if parenthesised { p5 % 100 } else { p5 };
@@ -136,7 +136,7 @@ impl Rest {
             if grace { (real(step * c(GRACE_SIZE)), c(GRACE_SIZE), real(amod(level, 100.0))) } else { (step, 1.0, level) };
         Some(Self {
             staff,
-            x: page::x(item.p(3)),
+            x: if ip(item, 17) == 0 { x_pos } else { page::x(item.p(3)) },
             kind,
             parenthesised,
             two_bar_repeat,
@@ -157,7 +157,14 @@ impl Rest {
 }
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-    let Some(rest) = Rest::new(doc, item) else { return };
+    draw(doc, item, page::x(item.p(3)), canvas);
+}
+
+/// draw_rest with the X_POS global given: a barline's two-bar repeat sign
+/// starts from the barline's X_POS (with its P7 or P15). P17 recomputes it
+/// from P3; CW centring and the parentheses work from P3 too.
+pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64, canvas: &mut Canvas<'_>) {
+    let Some(rest) = Rest::new(doc, item, x_pos) else { return };
     if ip(item, 6) == -1 && doc.screen() {
         canvas.colour = colour::from_p26(INVISIBLE_GREY, doc.options.medium);
     }

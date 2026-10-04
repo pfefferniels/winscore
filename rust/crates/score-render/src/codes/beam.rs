@@ -11,12 +11,7 @@
 use crate::canvas::Canvas;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
-use crate::units::{real, trunc, Pos};
-
-/// A REAL*4 constant of the engine.
-fn c(value: f32) -> f64 {
-    f64::from(value)
-}
+use crate::units::{constant, real, trunc, Pos};
 
 /// Note-head width in step units: the stem of an up-stem note stands this
 /// far right of its P3 (global 0x78B34C, 17 after start-up).
@@ -60,7 +55,7 @@ struct Line {
 impl Line {
     fn through(edge: Edge) -> Self {
         let dx = match real(edge.right.x - edge.left.x) {
-            0.0 => c(100.0),
+            0.0 => constant(100.0),
             dx => dx,
         };
         let dy = real(edge.right.y - edge.left.y);
@@ -151,9 +146,9 @@ impl Beam {
             p18 => (real(f64::from(p18) * staff.step), 0),
         };
         let cue = p4.abs() >= 100;
-        let unit = real(if cue { c(0.6) } else { 1.0 } * step);
+        let unit = real(if cue { constant(0.6) } else { 1.0 } * step);
         let p17 = match item.p(17) {
-            0.0 if cue => c(0.8),
+            0.0 if cue => constant(0.8),
             p17 => f64::from(p17),
         };
 
@@ -167,15 +162,15 @@ impl Beam {
 
         let p7 = trunc(f64::from(item.p(7))).abs();
         let up = p7 / 10 == STEMS_UP;
-        let stem = real(unit * c(49.0));
+        let stem = real(unit * constant(49.0));
         let spacing = match item.p(21) {
-            0.0 => real(unit * c(10.5)),
-            p21 => real(f64::from(p21) * real(unit * c(10.5))),
+            0.0 => real(unit * constant(10.5)),
+            p21 => real(f64::from(p21) * real(unit * constant(10.5))),
         };
-        let note_width = real(unit * c(NOTE_WIDTH) * width);
+        let note_width = real(unit * constant(NOTE_WIDTH) * width);
         let thickness = match p17 {
-            0.0 => real(unit * c(7.0)),
-            p17 => real(p17 * real(unit * c(7.0))),
+            0.0 => real(unit * constant(7.0)),
+            p17 => real(p17 * real(unit * constant(7.0))),
         };
         let (stem_shift, flag_shift, stem, spacing, thickness) = if up {
             (note_width, -note_width, stem, spacing, -thickness)
@@ -241,7 +236,7 @@ impl Beam {
     /// Tremolo beams (P7 < 0): P10 beams of width P12 (default 4) around
     /// P11, or across the stem at P3 when P11 = 0.
     fn tremolo(&self, item: ItemRef<'_>, code: i32) -> Partial {
-        let half = real(self.unit * tremolo_half_width(item) / c(25.0));
+        let half = real(self.unit * tremolo_half_width(item) / constant(25.0));
         let across_stem = trunc(f64::from(item.p(11))) == 0;
         let centre = if across_stem { self.left } else { f64::from(item.p(11)) };
         let left = match trunc(f64::from(item.p(11))) {
@@ -259,7 +254,7 @@ impl Beam {
         let note = real(self.stem_shift / P3_UNIT);
         let left = match item.p(11) {
             0.0 => default.left,
-            p11 => End::At(real(self.unit * c(0.11333) + (f64::from(p11) + self.left - note))),
+            p11 => End::At(real(self.unit * constant(0.11333) + (f64::from(p11) + self.left - note))),
         };
         let right = match item.p(12) {
             0.0 => default.right,
@@ -269,7 +264,7 @@ impl Beam {
     }
 
     fn floating_default(&self, code: i32) -> Partial {
-        let inset = real(self.unit * c(0.14));
+        let inset = real(self.unit * constant(0.14));
         Partial {
             code,
             left: End::At(real(inset + self.left)),
@@ -302,7 +297,7 @@ impl Beam {
         if shift_right {
             xr = real(self.flag_shift + xr);
         }
-        let free_length = real(self.unit * c(16.2));
+        let free_length = real(self.unit * constant(16.2));
         if partial.right == End::Free {
             xr = real(free_length + xl);
         }
@@ -343,18 +338,18 @@ fn flagged(digit: i32) -> (bool, bool) {
 /// 0x417221: the shift in P3 units for a note offset (the note's P10) in
 /// P14/P15; 10 and 20 stand for a head moved right or left of its stem.
 fn note_offset(p: f32, unit: f64, width: f64) -> f64 {
-    let head = || real(unit * width * c(2.833_333_3) / c(25.0));
+    let head = || real(unit * width * constant(2.833_333_3) / constant(25.0));
     match p {
         10.0 => head(),
         20.0 => -head(),
-        p => real(unit * f64::from(p) * c(0.04)),
+        p => real(unit * f64::from(p) * constant(0.04)),
     }
 }
 
 /// Half the width of tremolo beams in P3 units at size 1: P12/2, default 2.
 fn tremolo_half_width(item: ItemRef<'_>) -> f64 {
-    match real(f64::from(item.p(12)) * c(0.5)) {
-        0.0 => c(2.0),
+    match real(f64::from(item.p(12)) * constant(0.5)) {
+        0.0 => constant(2.0),
         half => half,
     }
 }
@@ -363,10 +358,10 @@ fn tremolo_half_width(item: ItemRef<'_>) -> f64 {
 /// short stroke rising through the stem end; otherwise the edge only gets
 /// a length when its ends coincide.
 fn tremolo_edge(edge: Edge, item: ItemRef<'_>, unit: f64, cue: bool) -> Edge {
-    let scale = if cue { c(0.6) } else { 1.0 };
-    let length = real(scale * c(1000.0) + edge.left.x);
+    let scale = if cue { constant(0.6) } else { 1.0 };
+    let length = real(scale * constant(1000.0) + edge.left.x);
     if trunc(f64::from(item.p(11))) == 0 {
-        let rise = real(unit * c(2.9166) * tremolo_half_width(item));
+        let rise = real(unit * constant(2.9166) * tremolo_half_width(item));
         let y = edge.left.y;
         Edge { left: Pos::new(edge.left.x, real(y - rise)), right: Pos::new(length, real(rise + y)) }
     } else if edge.left.x == edge.right.x {

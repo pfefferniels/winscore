@@ -29,6 +29,7 @@ const LAST_FICTA: i32 = 3;
 /// 26–28: two, three, four staccato dots side by side.
 const MULTIPLE_STACCATO: std::ops::RangeInclusive<i32> = 26..=28;
 const FIRST_TRILL: i32 = 20;
+const TRILL_SYMBOL: i32 = 37;
 const FIRST_FINGERING: i32 = 30;
 
 /// Symbol numbers: marks 4–19 are symbols 21–36, ficta the accidentals 6–8.
@@ -80,6 +81,10 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, stem_length: f64
         return;
     }
     let Some(placed) = place(doc, item, note, p11, stem_length) else { return };
+    if (FIRST_TRILL..FIRST_TRILL + 4).contains(&mark) {
+        trill(doc, note, &placed, mark - FIRST_TRILL, canvas);
+        return;
+    }
     let x = real((note.width * c(8.5) - c(8.5)) * note.unit + placed.at.x);
     (0..=placed.repeats.max(0)).fold(x, |x, _| {
         let at = Pos::new(x, placed.at.y);
@@ -195,6 +200,7 @@ fn place(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, p11: i32, stem_leng
         m if m < FIRST_TRILL => m,
         ACCENT_TENUTO => ACCENT_TENUTO_SYMBOL - MARK_SYMBOLS,
         PLUS => PLUS_AS_MARK,
+        m if m < FIRST_TRILL + 4 => return Some(Placed { symbol: m, at: Pos::new(x, y), size, size_y, repeats }),
         _ => return None,
     };
     let (symbol, x, size, size_y) = if symbol <= LAST_FICTA {
@@ -204,6 +210,29 @@ fn place(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, p11: i32, stem_leng
         (symbol + MARK_SYMBOLS, x, size, size_y)
     };
     Some(Placed { symbol, at: Pos::new(x, y), size, size_y, repeats })
+}
+
+/// Marks 20–23: draw_code7's trill (P7 = 0) with the accidental 0–3, its
+/// symbol a scale step above Y_POS = the mark's level less a staff scale
+/// step, at size P5 = the mark size, with STEP the note's unit. IP6 is 0,
+/// so there is no wave. A stand-in for calling codes::trill with these
+/// globals once that takes them explicitly.
+fn trill(doc: &Document<'_>, note: &Note, placed: &Placed, accidental: i32, canvas: &mut Canvas<'_>) {
+    let unit = note.unit;
+    let scale_step = real(c(7.0) * unit);
+    let y = real(scale_step + real(placed.at.y - note.scale_step));
+    let size = placed.size;
+    let trill_size = real(size * c(1.1));
+    clef_symbol(canvas, doc.symbols(), TRILL_SYMBOL, Pos::new(placed.at.x, y), trill_size, trill_size, unit);
+    if accidental == 0 {
+        return;
+    }
+    let small = real(size * c(0.65));
+    let dx = real(size * 23.0 * unit);
+    let lift = if accidental == 1 { 3.0 } else { c(3.6) };
+    let lift = real(scale_step * size * lift);
+    let at = Pos::new(real(dx + placed.at.x), real(lift + y));
+    clef_symbol(canvas, doc.symbols(), FICTA_SYMBOLS + accidental, at, small, small, unit);
 }
 
 /// The documented meaning of P13 = 99 (the engine moves the mark 99 P3

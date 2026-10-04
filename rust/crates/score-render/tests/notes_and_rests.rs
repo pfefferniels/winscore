@@ -29,9 +29,11 @@ fn is_ours(file: &MusFile, ItemId(i): ItemId) -> bool {
 #[test]
 fn notes_and_rests_report() {
     let fixtures = load_all(&fixtures_dir()).expect("fixtures load");
+    let samples = std::env::var("NOTES_SAMPLES").is_ok();
     let ours: Vec<&Fixture> = fixtures
         .iter()
-        .filter(|f| f.meta.valid && (f.name.starts_with("code01-") || f.name.starts_with("code02-")))
+        .filter(|f| f.meta.valid)
+        .filter(|f| f.name.starts_with("code01-") || f.name.starts_with("code02-") || (samples && f.name.starts_with("sample-")))
         .collect();
     let detail = std::env::var("NOTES_DETAIL").ok();
     let results: Vec<(&Fixture, Report)> = ours.iter().map(|f| (*f, report(f))).collect();
