@@ -5,13 +5,13 @@
 //! any other P6 is a library symbol drawn by draw_symbol at 0.833. P6 + 10
 //! adds parentheses (symbol 208), moved out for an accidental and for dots.
 
-use super::glyph::{clef_symbol, library_symbol};
-use super::{c, Note};
+use super::glyph;
+use super::Note;
 use crate::canvas::Canvas;
 use crate::display::Colour;
 use crate::page::P3_UNIT;
 use crate::document::{Document, ItemRef};
-use crate::units::{real, trunc, Pos};
+use crate::units::{constant, real, trunc, Pos};
 
 const FIRST_HEAD_SYMBOL: i32 = 11;
 const BLACK: i32 = 0;
@@ -65,18 +65,17 @@ pub fn drawn(note: &Note) -> bool {
 }
 
 pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
-    let library = doc.symbols();
     let p6 = trunc(f64::from(item.p(6)));
     if note.alpha {
         alpha_head(doc, item, note, canvas);
         return;
     }
     let clef_head = |canvas: &mut Canvas<'_>, h: i32| {
-        clef_symbol(canvas, library, h + FIRST_HEAD_SYMBOL, note.origin, note.width, 1.0, note.unit);
+        glyph::clef(doc, item, canvas, h + FIRST_HEAD_SYMBOL, note.origin, (note.width, 1.0), note.unit);
     };
     let library_head = |canvas: &mut Canvas<'_>, n: i32| {
-        let size = c(LIBRARY_HEAD_SIZE);
-        library_symbol(canvas, library, n, note.origin, size, size, note.unit);
+        let size = constant(LIBRARY_HEAD_SIZE);
+        glyph::library(doc, item, canvas, n, note.origin, (size, size), note.unit);
     };
     match unparenthesised(p6) {
         HEADLESS => {}
@@ -113,7 +112,7 @@ fn cached_black_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas:
         .map(|at| cache_source(&heads, at))
         .map_or(*note, |at| heads[at].1);
     let start = canvas.buffer_mut().len();
-    clef_symbol(canvas, doc.symbols(), FIRST_HEAD_SYMBOL, source.origin, source.width, 1.0, source.unit);
+    glyph::clef(doc, item, canvas, FIRST_HEAD_SYMBOL, source.origin, (source.width, 1.0), source.unit);
     let shift = |own: f64, theirs: f64| trunc(own) - trunc(theirs);
     let (dx, dy) = (shift(note.origin.x, source.origin.x), shift(note.origin.y, source.origin.y));
     canvas.buffer_mut()[start..].iter_mut().for_each(|p| {
@@ -148,19 +147,19 @@ fn alpha_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
         0.0 => 1.0,
         p15 => f64::from(p15),
     };
-    let p3 = real(note.unit * c(1.45) / 25.0 + real(note.origin.x / P3_UNIT));
-    let p4 = real(f64::from(item.p(4)) - c(1.68));
+    let p3 = real(note.unit * constant(1.45) / 25.0 + real(note.origin.x / P3_UNIT));
+    let p4 = real(f64::from(item.p(4)) - constant(1.68));
     let at = Pos::new(real(p3 * P3_UNIT), staff.y(p4));
     let symbol = if hollow { HOLLOW_ALPHA_HEAD } else { ALPHA_HEAD };
-    library_symbol(canvas, doc.symbols(), symbol, at, real(size * c(0.58)), real(size * c(0.475)), staff.step);
+    glyph::library(doc, item, canvas, symbol, at, (real(size * constant(0.58)), real(size * constant(0.475))), staff.step);
 }
 
 /// draw_box type 0, filled, 2.4 by 0.35 half-widths of 3.5 steps, centred
 /// 210 units (at size 1) right of the note, emitted at once in white.
 fn staff_line_mask(note: &Note, staff_step: f64, canvas: &mut Canvas<'_>) {
     let centre = Pos::new(real(staff_step / 25.0 * 210.0 + note.origin.x), note.origin.y);
-    let half_width = real(note.step * 3.5 * c(2.4));
-    let half_height = real(note.step * 3.5 * c(0.35));
+    let half_width = real(note.step * 3.5 * constant(2.4));
+    let half_height = real(note.step * 3.5 * constant(0.35));
     let (left, right) = (real(centre.x - half_width), real(half_width + centre.x));
     let (bottom, top) = (real(centre.y - half_height), real(half_height + centre.y));
     let own = canvas.colour;
@@ -182,20 +181,20 @@ const MASK_COLOUR: Colour = Colour { r: 253, g: 253, b: 253 };
 
 fn parentheses(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
     let left = match trunc(f64::from(item.p(5))) % 10 {
-        0 => c(LEFT_PARENTHESIS),
-        DOUBLE_FLAT => real(real(c(LEFT_PARENTHESIS) - c(ACCIDENTAL_ROOM)) - c(DOUBLE_FLAT_ROOM)),
-        _ => real(c(LEFT_PARENTHESIS) - c(ACCIDENTAL_ROOM)),
+        0 => constant(LEFT_PARENTHESIS),
+        DOUBLE_FLAT => real(real(constant(LEFT_PARENTHESIS) - constant(ACCIDENTAL_ROOM)) - constant(DOUBLE_FLAT_ROOM)),
+        _ => real(constant(LEFT_PARENTHESIS) - constant(ACCIDENTAL_ROOM)),
     };
     let p9 = trunc(f64::from(item.p(9)));
     let right = match (p9 >= 10, p9 % 100 >= 20) {
-        (_, true) => c(RIGHT_PARENTHESIS_DOTS),
-        (true, false) => c(RIGHT_PARENTHESIS_DOT),
-        (false, false) => c(RIGHT_PARENTHESIS),
+        (_, true) => constant(RIGHT_PARENTHESIS_DOTS),
+        (true, false) => constant(RIGHT_PARENTHESIS_DOT),
+        (false, false) => constant(RIGHT_PARENTHESIS),
     };
-    let right = if note.width == 1.0 { right } else { real(note.width * c(NORMAL_WIDTH) + (right - c(NORMAL_WIDTH))) };
-    let size = c(PARENTHESIS_SIZE);
+    let right = if note.width == 1.0 { right } else { real(note.width * constant(NORMAL_WIDTH) + (right - constant(NORMAL_WIDTH))) };
+    let size = constant(PARENTHESIS_SIZE);
     [(left, size), (right, -size)].into_iter().for_each(|(offset, sx)| {
         let at = Pos::new(real(note.unit * offset + note.origin.x), note.origin.y);
-        library_symbol(canvas, doc.symbols(), PARENTHESIS_SYMBOL, at, sx, size, note.unit);
+        glyph::library(doc, item, canvas, PARENTHESIS_SYMBOL, at, (sx, size), note.unit);
     });
 }
