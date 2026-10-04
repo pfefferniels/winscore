@@ -55,8 +55,8 @@ pub(crate) struct Note {
     pub stem_mode: StemMode,
     /// Heads whose dots were laid out again after a beam turned the chord.
     pub redotted: Option<usize>,
-    /// Heads, from the stem head on, that the accidental layout (0x4EE442) covers.
-    pub accidental_heads: usize,
+    /// Heads, from the stem head on, that 0x4EE442 lays out (seconds and accidentals).
+    pub laid_out_heads: usize,
     /// An entry left at another x than the chord (position in item order, x): the
     /// minimum-gap pass never moves the last entry of the line, which can be the last
     /// member of a chord. Positions stay when a beam reverses the heads.
@@ -78,10 +78,10 @@ impl Note {
             shift,
             stem_mode: stems,
             redotted: None,
-            accidental_heads: 0,
+            laid_out_heads: 0,
             stray_head: None,
         };
-        note.accidental_heads = note.heads.len();
+        note.laid_out_heads = note.heads.len();
         let down = match stems {
             StemMode::Up => false,
             StemMode::Down => true,
@@ -102,7 +102,7 @@ impl Note {
         if note.heads.len() >= 3 && note.lowest() == note.highest() {
             note.down = false;
             note.heads_down = false;
-            note.accidental_heads = 2;
+            note.laid_out_heads = 2;
         }
         if note.is_grace() {
             note.extension = note.grace_extension(down);
@@ -133,13 +133,9 @@ impl Note {
         self.heads.iter().map(|h| h.level).max().unwrap_or(0)
     }
 
-    /// The level of the head the stem starts from.
+    /// The level of the head the stem starts from, the first in item order.
     pub fn stem_level(&self) -> i32 {
-        if self.down {
-            self.highest()
-        } else {
-            self.lowest()
-        }
+        self.heads.first().map_or(0, |h| h.level)
     }
 
     pub fn is_grace(&self) -> bool {
@@ -153,7 +149,7 @@ impl Note {
             self.heads.reverse();
             self.down = down;
             self.heads_down = down;
-            self.accidental_heads = self.heads.len();
+            self.laid_out_heads = self.heads.len();
         }
         self.fit_stem();
     }
@@ -166,7 +162,7 @@ impl Note {
         if self.heads.len() > 1 && !self.is_grace() && self.heads_down != down {
             self.heads.reverse();
             self.heads_down = down;
-            self.accidental_heads = self.heads.len();
+            self.laid_out_heads = self.heads.len();
             self.extension = 0.0;
             self.table_extension = 0.0;
             self.redot_after_turn(first_entry);
@@ -224,9 +220,8 @@ impl Note {
     /// accidental's offset to the left in thousandths.
     pub fn p5s(&self) -> Vec<f32> {
         let ordered = self.ordered_heads();
-        let levels: Vec<i32> = ordered.iter().map(|h| h.level).collect();
-        let covered = self.accidental_heads.min(ordered.len());
-        let mut offsets = self.accidental_offsets(&ordered[..covered], &second_shifts(&levels[..covered]));
+        let covered = self.laid_out_heads.min(ordered.len());
+        let mut offsets = self.accidental_offsets(&ordered[..covered], &self.shifted()[..covered]);
         offsets.resize(ordered.len(), 0);
         ordered
             .iter()
@@ -243,10 +238,19 @@ impl Note {
             .collect()
     }
 
+    /// Which heads, in item order, sit on the other side of the stem.
+    fn shifted(&self) -> Vec<bool> {
+        let covered = self.laid_out_heads.min(self.heads.len());
+        let levels: Vec<i32> = self.heads[..covered].iter().map(|h| h.level).collect();
+        let mut shifted = second_shifts(&levels);
+        shifted.resize(self.heads.len(), false);
+        shifted
+    }
+
     fn items(&self, staff: f32) -> Vec<Item> {
         let ordered = self.ordered_heads();
         let levels: Vec<i32> = ordered.iter().map(|h| h.level).collect();
-        let shifted = second_shifts(&levels);
+        let shifted = self.shifted();
         let p5s = self.p5s();
         let dot_offsets = self.dot_offsets(&levels, &shifted);
         let dots = 10 * i32::from(self.rhythm.dots());

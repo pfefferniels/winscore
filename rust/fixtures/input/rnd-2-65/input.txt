@@ -1,0 +1,7 @@
+IN 1
+10 190
+AL/B4/M/R/B4/CN/EN/F/M2/G/F:EN:E:A/M/E5/AF/SD/EN/M/RD/TR/SU;
+4./4./G/8../8/E/4/8./2/H/8/4;
+WS 2:4/TM 8/CR 3/M 6:7;
+4B;
+6 10/+8 9;

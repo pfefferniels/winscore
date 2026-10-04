@@ -1,0 +1,7 @@
+IN 1 0 0 .8
+;
+TR/K1F/CF4/C:CF:A:FF/AS/R/SD/CS:ES/E/M/RD/CN3:CS:CF:E/RD/SO/D/C:E:GN/GN/C;
+8./8./4./4/T/8/16/T/4./8../Q/8../2;
+ACT 6;
+1 2/4 7;
+;

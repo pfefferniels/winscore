@@ -89,8 +89,9 @@ struct SlurEnds {
 
 impl SlurEnds {
     /// End levels and P8 (0x53D1E0): with equal stems each end is placed at its own note;
-    /// otherwise the end on the stem side follows the other end. Both move off staff lines.
-    fn levels_at(&self, a: &WorkEntry, b: &WorkEntry) -> (f32, f32, f32) {
+    /// otherwise the end on the stem side follows the other end. Both move off staff lines
+    /// unless the slur began as a tie.
+    fn levels_at(&self, a: &WorkEntry, b: &WorkEntry, off_lines: bool) -> (f32, f32, f32) {
         let d = self.direction;
         let (level1, level2) = self.levels;
         let (stem1, stem2) = self.stems;
@@ -120,7 +121,11 @@ impl SlurEnds {
                 (y1, y2)
             }
         };
-        (off_line(y1, d), off_line(y2, d), kind)
+        if off_lines {
+            (off_line(y1, d), off_line(y2, d), kind)
+        } else {
+            (y1, y2, kind)
+        }
     }
 }
 
@@ -336,7 +341,7 @@ impl SlurInput<'_> {
                 x2 -= 1.5;
             }
             let ends = SlurEnds { direction, levels: (level1, level2), stems: (stem1, stem2) };
-            ends.levels_at(&self.entries[a], &self.entries[b])
+            ends.levels_at(&self.entries[a], &self.entries[b], !try_tie)
         };
 
         let mut shape = Shape { x1, y1, y2, x2, bend: 0.0, kind, tuplet: tuplet as f32 };
@@ -354,7 +359,9 @@ impl SlurInput<'_> {
         if direction == BELOW {
             shape.bend = -shape.bend;
         }
-        if !tie {
+        // A tie the engine had to give up (too short, or an accidental at its end) stays a
+        // slur that neither clears marks nor counts as a tie for the rest.
+        if !try_tie {
             clear_mark(&mut shape.y1, &mut self.entries[a], stem1, direction, tuplet != 0);
             clear_mark(&mut shape.y2, &mut self.entries[b], stem2, direction, tuplet != 0);
             if typed_second as i64 - typed_first as i64 > 1 {
@@ -364,7 +371,7 @@ impl SlurInput<'_> {
 
         let make = |s: &Shape| item(&[5.0, self.staff, s.x1, s.y1, s.y2, s.x2, s.bend, s.kind, s.tuplet]);
         let mut made = vec![make(&shape)];
-        if tie {
+        if try_tie {
             // Further heads of a chord get ties of their own; from the middle up they curve
             // the other way unless the direction was typed.
             let members = self.entries[a..].iter().take_while(|e| e.code == 1 && e.x == self.entries[a].x).count();

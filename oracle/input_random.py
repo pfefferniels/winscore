@@ -77,9 +77,12 @@ def make_line(rng: random.Random) -> Line:
             if rng.random() < 0.25:
                 heads += [pitch(rng, False) for _ in range(rng.randint(1, 3))]
         first = False
+        rhythm = rng.choice(RHYTHMS)
+        if rhythm == "G":
+            # The engine never returns from a grace chord with two heads on one letter.
+            heads = list({h[0]: h for h in heads}.values())
         previous = heads
         line.notes.append(":".join(heads))
-        rhythm = rng.choice(RHYTHMS)
         line.rhythms.append(rhythm)
         line.tails.append(tails_of(rhythm))
         if rng.random() < 0.12:

@@ -1,0 +1,7 @@
+IN 1
+;
+TE/E3/C5:E:D/F/C/F4/A:ES:CS/SU/G/FN:DF:FS/GS3;
+4/G/8/8./2/S/1/4./T;
+OB 1.25 2;
+3B;
+3 5/1 5;

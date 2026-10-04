@@ -1,0 +1,7 @@
+IN 1 0 0 0 180
+;
+BA/2 2/BN4:A:DN:B/CN:E:BF:A/A/E3/F4:A/R/E4/D:C:D:G/AN5/AN5/D3/M/F/RI;
+S/T/G/H/S/16/4./8/G/8/1/4./4;
+TM 8/A 8:10;
+;
+;
