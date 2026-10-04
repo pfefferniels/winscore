@@ -19,7 +19,7 @@ pub mod library;
 pub mod text_symbol;
 
 pub use clef::draw_clef;
-pub use library::{draw_library_symbol, ItemContext, SymbolCall};
+pub use library::{draw_library_symbol, draw_scaled_symbol, ItemContext, SymbolCall};
 pub use text_symbol::{draw_text_symbol, text_symbol_call, text_symbol_font_loaded, TextSymbolCall};
 
 include!(concat!(env!("OUT_DIR"), "/bundled_symbols.rs"));
