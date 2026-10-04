@@ -15,6 +15,12 @@ CASES (rust/crates/score-edit/tests/engine_cases.txt) holds blocks like
 Without a base line the score is a staff and a quarter note: "8 1; 1 1 100 6 10 0 1".
 If the engine is still in edit mode after the last command, X is sent before saving.
 
+Mouse actions are lines "~v X Y" (move with the button held), "~s X Y" (the same with
+Shift), "~x X Y" (button up after a drag) and "~ X Y" (click), with X, Y in page
+coordinates: engine units from the paper's bottom-left corner, y up, as score-render draws.
+They are sent as the view does (analysis/engine/editing.md): the point goes to the engine's
+mouse globals, converted with the engine's current VIEW_DX/VIEW_DY.
+
 EXPECTED gets one block per case: the items of the saved score, one per line. Values are
 printed with 9 significant digits, so every f32 reads back exactly; text items end with
 their characters in quotes. Lines starting with '#' carry the engine's messages and are
@@ -31,11 +37,17 @@ from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from emu import Engine
+from emu import COMMAND, ENGINE_ZOOM, FLAG_9A9498, LINE_BUF, MESSAGE_BUF, TEXT_OUT, ZOOM, Engine, EngineResult
 from musbuild import mus_bytes
 from sandbox import INSTALL
 
 DEFAULT_BASE = "8 1; 1 1 100 6 10 0 1"
+MOUSE_X, MOUSE_Y = 0x1A14950, 0x1A1494C
+VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4
+# score-render's page frame: internal coordinates plus the paper origin's offset.
+PAGE_FROM_INTERNAL = (2000, 26948)
+# Command and line buffer the view sends for each mouse action.
+MOUSE_ACTIONS = {"~v": ("~v", "~v"), "~s": ("~s", "~s"), "~x": ("~x", "|"), "~": ("~", "~")}
 ENGINE_DATA = ("scorlib", "fontlib")
 EDIT_MODE = -1
 TEXT_CODE, TEXT_LENGTH_PARAM = 16, 12
@@ -107,6 +119,25 @@ def format_item(words: tuple[int, ...]) -> str:
     return " ".join(f"{v:.9g}" for v in floats) + text
 
 
+def mouse(engine: Engine, line: str) -> EngineResult | None:
+    """A mouse line ("~v 17000 2773"), sent like the view's mouse handlers; None for other lines."""
+    action, *point = line.split()
+    if action not in MOUSE_ACTIONS or len(point) != 2:
+        return None
+    page_x, page_y = (float(v) for v in point)
+    x = round(page_x - PAGE_FROM_INTERNAL[0] + engine.i32(VIEW_DX))
+    y = round(page_y - PAGE_FROM_INTERNAL[1] - engine.i32(VIEW_DY))
+    engine.put32(MOUSE_X, x)
+    engine.put32(MOUSE_Y, y)
+    command, line_buffer = MOUSE_ACTIONS[action]
+    engine.uc.mem_write(COMMAND, command.encode() + b"\0")
+    engine.uc.mem_write(LINE_BUF, line_buffer.encode() + b"\0")
+    engine.uc.mem_write(MESSAGE_BUF, b" " * 0x200)
+    engine.put32(FLAG_9A9498, 0)
+    engine.put32(ENGINE_ZOOM, engine.u32(ZOOM))
+    return engine._interpret(TEXT_OUT)
+
+
 def run_case(case: Case) -> Outcome:
     with tempfile.TemporaryDirectory(prefix="wscore-edit-") as tmp:
         root = lean_sandbox(Path(tmp))
@@ -116,7 +147,7 @@ def run_case(case: Case) -> Outcome:
         engine.command("G base.mus")
         transcript, status = [], 0
         for command in case.commands:
-            result = engine.command(command)
+            result = mouse(engine, command) or engine.command(command)
             status = result.status
             transcript.append(f"[{command}] status {status}: {result.message[:100]}")
         if status == EDIT_MODE:

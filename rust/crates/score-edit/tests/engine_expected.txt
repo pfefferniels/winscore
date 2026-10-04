@@ -1251,3 +1251,574 @@
 8 1 0
 1 1 100 6 10 0 1
 9 1 100 -2 62
+== b2_note_parentheses
+8 1 0
+1 1 100 6 110 0 1
+== b2_note_parentheses_off
+8 1 0
+1 1 100 6 12.5 0 1
+== b2_note_parentheses_twice
+8 1 0
+1 1 100 6 12 0 1
+== b2_acc_space_left
+8 1 0
+1 1 100 6 112.519997 0 1
+== b2_acc_space_right
+8 1 0
+1 1 100 6 112.480003 0 1
+== b2_acc_space_right_at_zero
+8 1 0
+1 1 100 6 12 0 1
+== b2_acc_space_left_sharp
+8 1 0
+1 1 100 6 12.0200005 0 1
+== b2_acc_no_space
+8 1 0
+1 1 100 6 112 0 1
+== b2_dot_up_down
+8 1 0
+1 1 100 6 10 0 1.5 0 110
+== b2_dot_up_down_twice
+8 1 0
+1 1 100 6 10 0 1.5 0 10
+== b2_dot_space_right
+8 1 0
+1 1 100 6 10 0 1.5 0 10.1000004
+== b2_dot_space_left
+8 1 0
+1 1 100 6 10 0 1.5 0 10.0999994
+== b2_dot_space_left_at_zero
+8 1 0
+1 1 100 6 10 0 1.5 0 10
+== b2_dot_note_width
+8 1 0
+1 1 100 6 10 0 1.5 0 1010
+== b2_dot_note_width_twice
+8 1 0
+1 1 100 6 10 0 1.5 0 10
+== b2_no_dot
+8 1 0
+1 1 100 6 10 0 0.75 0 1
+== b2_tremolo_one
+8 1 0
+1 1 100 6 10 0 1 0 0 0 41
+== b2_tremolo_add
+8 1 0
+1 1 100 6 10 0 1 0 0 0 42
+== b2_tremolo_add_from_mark
+8 1 0
+1 1 100 6 10 0 1 0 0 0 41
+== b2_tremolo_three
+8 1 0
+1 1 100 6 10 0 1 0 0 0 43
+== b2_width_plus
+8 1 0
+1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1.0999999
+== b2_width_minus
+8 1 0
+1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1.1500001
+== b2_width_default
+8 1 0
+1 1 100 6 10 0 1
+== b2_no_offset
+8 1 0
+1 1 100 6 10 0 1
+== b2_head_parentheses
+8 1 0
+1 1 100 6 10 10 1
+== b2_head_parentheses_twice
+8 1 0
+1 1 100 6 10 0 1
+== b2_rh8
+8 1 0
+1 1 100 6 10 0 0.5 0 1
+== b2_rh16
+8 1 0
+1 1 100 6 10 0 0.25 0 2
+== b2_rh2
+8 1 0
+1 1 100 6 10 1 2
+== b2_rh1
+8 1 0
+1 1 100 6 10 2 4
+== b2_rh_half_whole
+8 1 0
+1 1 100 6 10 3 8
+== b2_rh4
+8 1 0
+1 1 100 6 10 0 1
+== b2_rh3
+8 1 0
+1 1 100 6 10 1 1.33333337
+== b2_rh6
+8 1 0
+1 1 100 6 10 0 0.666666687
+== b2_rh12
+8 1 0
+1 1 100 6 10 0 0.333333343 0 1
+== b2_rh24
+8 1 0
+1 1 100 6 10 0 0.166666672 0 2
+== b2_rh5
+8 1 0
+1 1 100 6 10 0 0.800000012
+== b2_rh5_from_eighth
+8 1 0
+1 1 100 6 10 0 0.800000012
+== b2_rh10
+8 1 0
+1 1 100 6 10 0 0.400000006 0 1
+== b2_rh20
+8 1 0
+1 1 100 6 10 0 0.200000003 0 2
+== b2_rest_invisible
+8 1 0
+2 1 100 0 0 -1 1
+== b2_rest_invisible_twice
+8 1 0
+2 1 100 0 0 0 1
+== b2_rest_fermata
+8 1 0
+2 1 100 0 0 0 1 -1
+== b2_rest_fermata_twice
+8 1 0
+2 1 100 0 0 0 1
+== b2_rest_parentheses
+8 1 0
+2 1 100 0 101 0 0.5
+== b2_rest_parentheses_twice
+8 1 0
+2 1 100 0 1 0 0.5
+== b2_rest_center_whole
+8 1 0
+2 1 100 0 -2 0 4 0 -1
+== b2_rest_dot
+8 1 0
+2 1 100 0 0 1 1.5
+== b2_rest_dot_twice
+8 1 0
+2 1 100 0 0 1 2.25
+== b2_rest_double_dot
+8 1 0
+2 1 100 0 0 2 1.75
+== b2_rest_offsets
+8 1 0
+2 1 100 0 0 0 1 0 0 19.5
+== b2_rest_cue
+8 1 0
+2 1 100 100 0 0 1
+== b2_clef_tab
+8 1 0
+3 1 2 0 66
+== b2_clef_tab4
+8 1 0
+3 1 2 0 44
+== b2_clef_tab5
+8 1 0
+3 1 2 0 55
+== b2_clef_tenor
+8 1 0
+3 1 2 0 3
+== b2_clef_percussion
+8 1 0
+3 1 2 0 4
+== b2_line_arrow_left
+8 1 0
+4 1 50 5 10 120 0 0 0 0 102
+== b2_line_arrow_left_twice
+8 1 0
+4 1 50 5 10 120
+== b2_line_arrow_left_over_bracket
+8 1 0
+4 1 50 5 10 120 0 0 0 0 102
+== b2_line_arrow_right
+8 1 0
+4 1 50 5 10 120 0 0 0 0 0 102
+== b2_line_bracket_left
+8 1 0
+4 1 50 5 10 120 0 0 0 0 2
+== b2_line_bracket_left_off
+8 1 0
+4 1 50 5 10 120
+== b2_line_bracket_left_arrow
+8 1 0
+4 1 50 5 10 120
+== b2_line_bracket_right
+8 1 0
+4 1 50 5 10 120 0 0 0 0 0 2
+== b2_line_bracket_lengths
+8 1 0
+4 1 50 5 10 120 0 0 0 0 2.5 1
+== b2_line_bracket_down
+8 1 0
+4 1 50 5 10 120 0 0 0 0 -2 -2
+== b2_line_dash_length
+8 1 0
+4 1 50 5 10 120 1 2.19999981
+== b2_line_dash_length_minus
+8 1 0
+4 1 50 5 10 120 1 1.39999998
+== b2_line_dash_length_default
+8 1 0
+4 1 50 5 10 120 1
+== b2_line_dash_space
+8 1 0
+4 1 50 5 10 120 1 0 1.89999986
+== b2_line_dash_space_default
+8 1 0
+4 1 50 5 10 120 1
+== b2_line_thicker
+8 1 0
+4 1 50 5 10 120 0 0 0 2
+== b2_line_thickness_default
+8 1 0
+4 1 50 5 10 120
+== b2_line_horizontal
+8 1 0
+4 1 50 5 5 120
+== b2_line_vertical
+8 1 0
+4 1 50 5 15 50
+== b2_line_vertical_2
+8 1 0
+4 1 50 3 13 50
+== b2_line_wiggle
+8 1 0
+4 1 50 5 10 120 -1 1 1 1 1
+== b2_line_saw
+8 1 0
+4 1 50 5 10 120 -3 1 1 1 0 1
+== b2_line_saw_heavy
+8 1 0
+4 1 50 5 10 120 -3 2 0 0 0.800000012
+== b2_line_vibrato
+8 1 0
+4 1 50 5 10 120 -2 1 1 0 0 1
+== b2_line_dotted
+8 1 0
+4 1 50 5 10 120 -4
+== b2_line_offsets
+8 1 0
+4 1 50 5 10 120 0 0 0 0 0 0 0 0 0 1 1 -0.5
+== b2_line_offsets_zero
+8 1 0
+4 1 50 5 10 120 0 0 0 0 0 0 0 0 0 1 0 -0.5
+== b2_line_offsets_zero_both
+8 1 0
+4 1 50 5 10 120
+== b2_line_end_offsets
+8 1 0
+4 1 50 5 10 120 0 0 0 0 0 0 0 0 0 1 0 -0.5
+== b2_hairpin_spread
+8 1 0
+4 1 50 -1 999 120 2.70000005
+== b2_hairpin_spread_minus
+8 1 0
+4 1 50 -1 999 120 1.89999998
+== b2_hairpin_spread_from_3
+8 1 0
+4 1 50 -1 999 120 3.4000001
+== b2_hairpin_spread_minus_from_3
+8 1 0
+4 1 50 -1 999 120 2.5999999
+== b2_hairpin_spread_default
+8 1 0
+4 1 50 -1 999 120
+== b2_hairpin_dashes
+8 1 0
+4 1 50 -1 999 120 0 0 0 0 1
+== b2_hairpin_dashes_decresc
+8 1 0
+4 1 50 -1 999 120 -1 0 0 0 1
+== b2_decresc_to_cresc_dashes
+8 1 0
+4 1 50 -1 999 120 0 0 0 0 1
+== b2_slur_dashes
+8 1 0
+5 1 50 5 10 120 3 0 0 0 1
+== b2_slur_dots
+8 1 0
+5 1 50 5 10 120 3 0 0 0 -1
+== b2_slur_dashes_to_dots
+8 1 0
+5 1 50 5 10 120 3 0 0 0 1
+== b2_slur_half_left
+8 1 0
+5 1 50 5 10 120 3 0 0 0 0 1
+== b2_slur_half_left_twice
+8 1 0
+5 1 50 5 10 120 3
+== b2_slur_half_right
+8 1 0
+5 1 50 5 10 120 3 0 0 0 0 2
+== b2_slur_half_right_over_left
+8 1 0
+5 1 50 5 10 120 3
+== b2_slur_up_down
+8 1 0
+5 1 50 5 10 120 3 0 0 0 0 -1
+== b2_slur_triplet
+8 1 0
+5 1 50 5 10 120 3 0 0 0 0 0 0 0 0 3
+== b2_slur_triplet_off
+8 1 0
+5 1 50 5 10 120 3
+== b2_slur_triplet_off_numbered
+8 1 0
+5 1 50 5 10 120 2
+== b2_slur_thinner
+8 1 0
+5 1 50 5 10 120 3 0 0 0 0 0 0.899999976
+== b2_slur_thickness_default
+8 1 0
+5 1 50 5 10 120 3
+== b2_slur_curve
+8 1 0
+5 1 50 5 10 120 3.20000005
+== b2_slur_curve_down
+8 1 0
+5 1 50 5 10 120 -2.79999995
+== b2_slur_midpoint
+8 1 0
+5 1 50 5 10 120 3 0 0 0.459999979
+== b2_slur_midpoint_right
+8 1 0
+5 1 50 5 10 120 3 0 0 0.620000005
+== b2_slur_midpoint_default
+8 1 0
+5 1 50 5 10 120 3
+== b2_slur_midpoint_default_0
+8 1 0
+5 1 50 5 10 120 3
+== b2_slur_number_moves
+8 1 0
+5 1 50 5 10 120 2 3 0 0 0 0 0 0 0 0 -0.100000001 0.200000003
+== b2_slur_number_moves_from_set
+8 1 0
+5 1 50 5 10 120 2 3 0 0 0 0 0 0 0 0 0.400000006 0.300000012
+== b2_slur_number_home
+8 1 0
+5 1 50 5 10 120 2 3
+== b2_slur_number_moves_unnumbered
+8 1 0
+5 1 50 5 10 120 3
+== b2_slur_to_triplet_bracket
+8 1 0
+5 1 50 5 10 120 2 3
+== b2_slur_triplet_word
+8 1 0
+5 1 50 5 10 120 2 3
+== b2_slur_offsets
+8 1 0
+5 1 50 5 10 120 3 0 0 0 0 0 0 0 0 1 -0.5 0.5
+== b2_beam_add
+8 1 0
+6 1 50 5 10 120 13
+== b2_beam_add_down
+8 1 0
+6 1 50 5 10 120 22
+== b2_beam_number
+8 1 0
+6 1 50 5 10 120 11 3
+== b2_beam_number_5
+8 1 0
+6 1 50 5 10 120 11 5
+== b2_beam_number_plus
+8 1 0
+6 1 50 5 10 120 11 4
+== b2_beam_number_none
+8 1 0
+6 1 50 5 10 120 11
+== b2_beam_tremolo
+8 1 0
+6 1 50 5 10 120 -10 0 0 12
+== b2_beam_tremolo_down
+8 1 0
+6 1 50 5 10 120 -10 0 0 13
+== b2_beam_thickness
+8 1 0
+6 1 50 5 10 120 11 0 0 0 0 0 0 0 0 0 2
+== b2_beam_thickness_default
+8 1 0
+6 1 50 5 10 120 11
+== b2_beam_offsets
+8 1 0
+6 1 50 5 10 120 11 0 0 0 0 0 0 10
+== b2_trill_offsets
+8 1 0
+7 1 50 15 0 120 0 0 0 0 0 0 0 0 0.5 1 0 -0.5
+== b3_beam_left_offset_twice
+8 1 0
+6 1 50 5 10 120 11 0 0 0 0 0 0 10
+== b3_beam_left_offset_minus
+8 1 0
+6 1 50 5 10 120 11 0 0 0 0 0 0 20
+== b3_beam_right_offsets
+8 1 0
+6 1 50 5 10 120 11 0 0 0 0 0 0 0 20
+== b3_beam_zero_left
+8 1 0
+6 1 50 5 10 120 11 0 0 0 0 0 0 0 -10
+== b3_beam_zero_right
+8 1 0
+6 1 50 5 10 120 11 0 0 0 0 0 0 10
+== b3_beam_zero_offsets
+8 1 0
+6 1 50 5 10 120 11
+== b3_trill_left_offset
+8 1 0
+7 1 50 15 0 120 0 0 0 0 0 0 0 0 0.5
+== b3_trill_right_offset
+8 1 0
+7 1 50 15 0 120 0 0 0 0 0 0 0 0 0 1 0 0.5
+== b3_trill_zero_left
+8 1 0
+7 1 50 15 0 120 0 0 0 0 0 0 0 0 0 1 0 -0.5
+== b3_trill_zero_right
+8 1 0
+7 1 50 15 0 120 0 0 0 0 0 0 0 0 0.5
+== b3_trill_zero_offsets
+8 1 0
+7 1 50 15 0 120
+== b3_trill_left_offset_value
+8 1 0
+7 1 50 15 0 120 0 0 0 0 0 0 0 0 3
+== b3_trill_right_offset_value
+8 1 0
+7 1 50 15 0 120 0 0 0 0 0 0 0 0 0 1 0 2
+== b3_line_zero_offsets
+8 1 0
+4 1 50 5 10 120
+== b3_decresc_spread
+8 1 0
+4 1 50 -1 999 120 -2.70000005
+== b3_decresc_spread_minus
+8 1 0
+4 1 50 -1 999 120 -1.89999998
+== b4_drag_note
+8 1 0
+1 1 101 7 10 0 1
+== b4_drag_note_fraction_down
+8 1 0
+1 1 100.246666 6 10 0 1
+== b4_drag_note_fraction_up
+8 1 0
+1 1 99.3333359 7 10 0 1
+== b4_drag_note_twice
+8 1 0
+1 1 103 5 10 0 1
+== b4_drag_line
+8 1 0
+4 1 50.9133339 5.49714279 10.4971428 120.91333
+== b4_drag_hairpin
+8 1 0
+4 1 51 0 999 121
+== b4_drag_slur
+8 1 0
+5 1 51 6 11 121 3
+== b4_drag_beam
+8 1 0
+6 1 50.5 5.29714298 10.297143 120.5 11
+== b4_drag_trill
+8 1 0
+7 1 51 16 0 121
+== b4_drag_rest
+8 1 0
+2 1 101 1 0 0 1
+== b4_drag_clef
+8 1 0
+3 1 3 2 1
+== b4_drag_barline
+8 1 0
+14 1 102 1
+== b4_drag_staff
+8 1 1 0 1 200
+== b4_drag_meter
+8 1 0
+18 1 101 2 4 4
+== b4_drag_key
+8 1 0
+17 1 99 -1 2
+== b4_drag_shift_second_move
+8 1 0
+4 1 50 6 11 120
+== b4_drag_shift_threshold
+8 1 0
+4 1 50 6.4000001 11.3999996 120
+== b4_drag_shift_vertical
+8 1 0
+4 1 50 7 12 120
+== b4_drag_shift_horizontal
+8 1 0
+4 1 52 5 10 122
+== b4_drag_left_end
+8 1 0
+4 1 51 6 10 120
+== b4_drag_right_end
+8 1 0
+4 1 50 5 11 121
+== b4_drag_right_end_slur
+8 1 0
+5 1 50 5 11 121 3
+== b4_drag_right_end_trill
+8 1 0
+7 1 50 15 0 121
+== b4_drag_left_end_twice
+8 1 0
+4 1 51 6 11 121
+== b4_drag_left_end_then_next_item
+8 1 0
+4 1 51 6 11 121
+== b4_click_note
+8 1 0
+1 1 100 6 10 0 1
+1 1 121 8 10 0 1
+2 1 140 0 0 0 1
+== b4_click_rest
+8 1 0
+1 1 100 6 10 0 1
+1 1 120 8 10 0 1
+2 1 141 0 0 0 1
+== b4_click_staff
+8 1 1
+1 1 100 6 10 0 1
+1 1 120 8 10 0 1
+2 1 140 0 0 0 1
+== b4_click_far_away
+8 1 0
+1 1 100 6 10 0 1
+1 1 120 8 10 0 1
+2 1 141 0 0 0 1
+== b4_click_after_exit
+8 1 0
+1 1 100 6 10 0 1
+1 1 121 8 10 0 1
+2 1 140 0 0 0 1
+== b4_click_whole_rest
+8 1 0
+2 1 101 0 -2 0 4
+1 1 100 2 10 0 1
+== b4_click_beam_above_note
+8 1 0
+6 1 51 5 10 121 11
+1 1 52 6 10 0 1
+== b4_click_beam_down
+8 1 0
+6 1 51 5 10 121 21
+1 1 52 6 10 0 1
+== b4_click_symbol
+8 1 0
+9 1 100 13 22 0.25
+1 1 101 12 10 0 1
+== b4_click_key_meter
+8 1 0
+17 1 100 0 2
+18 1 111 0 4 4
+== b4_click_eighth_rest
+8 1 0
+2 1 100 0 1 0 0.5
+1 1 101 3 10 0 1
+== b4_click_tie_breaks_by_order
+8 1 0
+1 1 101 6 10 0 1
+1 1 100 6 20 0 1
