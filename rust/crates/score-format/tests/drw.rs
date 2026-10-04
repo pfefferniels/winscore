@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use score_format::drw::ENGINE_UNITS_PER_DRW_UNIT;
-use score_format::{DrwError, DrwLibrary, PathKind};
+use score_format::{DrwLibrary, PathKind};
 
 fn scorlib() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore/scorlib")
@@ -39,14 +39,32 @@ fn wedge_matches_engine_output_up_to_translation() {
 }
 
 #[test]
-fn float_variant_libraries_parse() {
+fn every_winscore_library_parses() {
     let parsed = std::fs::read_dir(scorlib())
         .unwrap()
         .map(|e| e.unwrap().path())
         .filter(|p| p.extension().is_some_and(|x| x.eq_ignore_ascii_case("drw")))
         .map(|p| DrwLibrary::parse(&std::fs::read(&p).unwrap()))
-        .filter(|r| r != &Err(DrwError::CompactVariantUnsupported))
         .collect::<Vec<_>>();
-    assert_eq!(parsed.len(), 116);
+    assert_eq!(parsed.len(), 118);
     assert!(parsed.iter().all(Result::is_ok));
+}
+
+/// SCORE 4's compact LIBRB.DRW holds the same points as WinScore's float LB0010.DRW.
+#[test]
+fn compact_variant_matches_the_float_library() {
+    let score4 = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../SCORE 4/SCORE/LIB/LIBRB.DRW");
+    let compact = DrwLibrary::parse(&std::fs::read(score4).unwrap()).unwrap();
+    let float = library("LB0010.DRW");
+    assert_eq!(compact.symbols[1].name, "noir");
+    compact.symbols.iter().zip(&float.symbols).for_each(|(c, f)| assert_eq!(c.records, f.records, "{}", c.name));
+}
+
+#[test]
+fn winscore_compact_libraries() {
+    let kbrhy = library("KBRHY.DRW");
+    let names: Vec<&str> = kbrhy.symbols.iter().map(|s| s.name.as_str()).take(2).collect();
+    assert_eq!(names, ["kbrhy", "kbrh1"]);
+    assert_eq!(kbrhy.symbols[0].records.len(), 103);
+    assert_eq!(kbrhy.symbols[1].records.len(), 177);
 }
