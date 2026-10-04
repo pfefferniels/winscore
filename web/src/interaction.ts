@@ -15,6 +15,8 @@ export interface Hooks {
   /** After an edit; `live` while a drag is still in progress. */
   edited(change: Change | null, live: boolean): void;
   failed(err: unknown): void;
+  /** Runs a SCORE command line on the selection. */
+  command(line: string): void;
 }
 
 const DRAG_THRESHOLD_PX = 4;
@@ -33,7 +35,7 @@ const MOVES: Record<string, [number, number]> = {
 
 type Gesture =
   | { kind: 'press'; x: number; y: number; onItem: boolean }
-  | { kind: 'drag'; start: Point }
+  | { kind: 'drag' }
   | { kind: 'pan'; x: number; y: number; left: number; top: number };
 
 function isTyping(target: EventTarget | null): boolean {
@@ -42,7 +44,7 @@ function isTyping(target: EventTarget | null): boolean {
 
 export function bindInteraction(viewport: HTMLElement, hooks: Hooks) {
   let gesture: Gesture | null = null;
-  let pending: { dx: number; dy: number; constrain: boolean } | null = null;
+  let pending: { at: Point; constrain: boolean } | null = null;
 
   const run = (action: (editor: Editor) => Change | null) => {
     const editor = hooks.editor();
@@ -57,7 +59,7 @@ export function bindInteraction(viewport: HTMLElement, hooks: Hooks) {
   const flushDrag = () => {
     const editor = hooks.editor();
     if (!pending || !editor) return;
-    editor.dragTo(pending.dx, pending.dy, pending.constrain);
+    editor.dragTo(pending.at, pending.constrain);
     pending = null;
     hooks.edited(null, true);
   };
@@ -99,12 +101,11 @@ export function bindInteraction(viewport: HTMLElement, hooks: Hooks) {
     }
     if (gesture.kind === 'press') {
       if (!gesture.onItem || Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) < DRAG_THRESHOLD_PX) return;
-      hooks.editor()?.dragBegin();
-      gesture = { kind: 'drag', start: hooks.pageAt(gesture.x, gesture.y) };
+      hooks.editor()?.dragBegin(hooks.pageAt(gesture.x, gesture.y));
+      gesture = { kind: 'drag' };
     }
-    const p = hooks.pageAt(e.clientX, e.clientY);
     const scheduled = pending !== null;
-    pending = { dx: p.x - gesture.start.x, dy: p.y - gesture.start.y, constrain: e.shiftKey };
+    pending = { at: hooks.pageAt(e.clientX, e.clientY), constrain: e.shiftKey };
     if (!scheduled) requestAnimationFrame(flushDrag);
   });
 
@@ -143,6 +144,10 @@ export function bindInteraction(viewport: HTMLElement, hooks: Hooks) {
       run((ed) => ed.deleteSelection());
     } else if (e.key === '[' || e.key === ']') {
       run((ed) => ed.moveStaff(e.key === '[' ? 1 : -1));
+    } else if (e.key === 'Enter') {
+      // WinScore: Enter ends the edit and moves on to the next item.
+      e.preventDefault();
+      hooks.command(e.shiftKey ? 'B' : 'NEX');
     } else if (e.key === 'Escape') {
       editor.select([]);
       hooks.selected();
