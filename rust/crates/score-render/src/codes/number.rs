@@ -58,7 +58,7 @@ pub struct NumberCall {
     pub p3: f32,
     pub p4: f32,
     /// STEP when the caller scales it (rests: staff step × P15); `None` is
-    /// the staff's. Applies to the frame; draw_text takes the staff's for now.
+    /// the staff's. Applies to the frame and to draw_text.
     pub step: Option<f64>,
 }
 
@@ -153,6 +153,7 @@ fn number_text_call<'t>(call: &NumberCall, at: Pos, text: &'t [u8], current_font
         space: 0.0,
         shift: 0.0,
         colour: (call.p26 != 0.0 && font_override != METER_FONT).then_some(call.p26),
+        step: call.step,
         current_font,
     }
 }

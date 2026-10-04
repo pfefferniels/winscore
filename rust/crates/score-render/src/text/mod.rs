@@ -29,8 +29,10 @@ use glyphs::SPACE;
 use scan::{scan, Code, Entry, ScanSettings};
 
 /// What draw_text reads from the item parameters and globals the caller
-/// sets up. Sizes and angles are REAL*4 values as stored.
-#[derive(Debug, Clone, PartialEq)]
+/// sets up. Sizes and angles are REAL*4 values as stored. End struct
+/// literals with `..TextCall::default()` so that fields added later keep
+/// their neutral values.
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct TextCall<'t> {
     pub text: &'t [u8],
     /// X_POS, Y_POS.
@@ -40,6 +42,9 @@ pub struct TextCall<'t> {
     /// P1 of the item being drawn: 16 for text items. Code-10 numbers draw
     /// the glyphs from 80 up as characters.
     pub item_code: i32,
+    /// The engine's STEP if the caller changed it (rests, fingering);
+    /// `None` is the step unit of the item's staff.
+    pub step: Option<f64>,
     /// P2: above 200 the string moves to the recto page.
     pub staff: i32,
     /// P5, the spread factor (0 = 1).
@@ -178,7 +183,7 @@ impl<'c> Text<'c> {
     fn new(doc: &Document<'_>, call: &'c TextCall<'c>) -> Self {
         let fonts = FontLibrary::bundled();
         let font_override = effective_override(call.font_override);
-        let step = doc.staves.get(call.staff).step;
+        let step = call.step.unwrap_or_else(|| doc.staves.get(call.staff).step);
         let spread = if call.spread == 0.0 { 1.0 } else { call.spread };
         let width = match real(amod(f64::from(call.width), 100.0)) as f32 {
             0.0 => 1.0,
