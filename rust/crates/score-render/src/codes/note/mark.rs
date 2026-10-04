@@ -9,6 +9,9 @@
 
 use super::glyph;
 use crate::codes::line::Params;
+use crate::codes::beam::{draw_note_tremolo, NoteTremolo};
+use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
+use crate::text::{font_loaded as text_font_loaded, Font};
 use crate::codes::trill;
 use crate::symbols::ItemContext;
 use super::{Note, Stem};
@@ -33,6 +36,8 @@ const LAST_FICTA: i32 = 3;
 const MULTIPLE_STACCATO: std::ops::RangeInclusive<i32> = 26..=28;
 const FIRST_TRILL: i32 = 20;
 const FIRST_FINGERING: i32 = 30;
+/// 41–44: tremolo beams across the stem, drawn by draw_beam.
+const TREMOLO: std::ops::RangeInclusive<i32> = 41..=44;
 
 /// Symbol numbers: marks 4–19 are symbols 21–36, ficta the accidentals 6–8.
 const MARK_SYMBOLS: i32 = 17;
@@ -82,9 +87,17 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, stem_length: f64
         heavy_line(item, note, canvas);
         return;
     }
+    if TREMOLO.contains(&mark) {
+        tremolo(doc, item, note, mark, canvas);
+        return;
+    }
     let Some(placed) = place(doc, item, note, p11, stem_length) else { return };
     if (FIRST_TRILL..FIRST_TRILL + 4).contains(&mark) {
         trill(doc, item, note, &placed, mark - FIRST_TRILL, canvas);
+        return;
+    }
+    if mark >= FIRST_FINGERING {
+        fingering(doc, item, note, &placed, mark - FIRST_FINGERING, canvas);
         return;
     }
     let x = real((note.width * constant(8.5) - constant(8.5)) * note.unit + placed.at.x);
@@ -202,7 +215,9 @@ fn place(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, p11: i32, stem_leng
         m if m < FIRST_TRILL => m,
         ACCENT_TENUTO => ACCENT_TENUTO_SYMBOL - MARK_SYMBOLS,
         PLUS => PLUS_AS_MARK,
-        m if m < FIRST_TRILL + 4 => return Some(Placed { symbol: m, at: Pos::new(x, y), size, size_y, repeats }),
+        m if m < FIRST_TRILL + 4 || (m >= FIRST_FINGERING && !TREMOLO.contains(&m)) => {
+            return Some(Placed { symbol: m, at: Pos::new(x, y), size, size_y, repeats })
+        }
         _ => return None,
     };
     let (symbol, x, size, size_y) = if symbol <= LAST_FICTA {
@@ -223,6 +238,64 @@ fn trill(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, placed: &Placed, ac
     let at = Pos::new(placed.at.x, real(placed.at.y - note.scale_step));
     let globals = trill::Globals { context: ItemContext::of(item), at, step: note.unit };
     trill::draw(doc, item, canvas, &globals, &params);
+}
+
+/// Marks 30 and up (but the tremolos): the number mark - 30 by draw_number
+/// at P6 = 0.7 (× P18), font 0, 4 units right of the mark position and
+/// half a scale step lower (1.5 below a stem-up note). The note's other
+/// parameters reach draw_number as they are (0x4F2DD4).
+fn fingering(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, placed: &Placed, value: i32, canvas: &mut Canvas<'_>) {
+    let s7 = note.scale_step;
+    let drop = real(s7 * 0.5);
+    let drop = if note.implied_stem() == Stem::Up { real(s7 + drop) } else { drop };
+    let at = Pos::new(real(note.unit * 4.0 + placed.at.x), real(placed.at.y - drop));
+    draw_number(doc, item, canvas, at, &fingering_call(item, note, value));
+}
+
+fn fingering_call(item: ItemRef<'_>, note: &Note, value: i32) -> NumberCall {
+    let size = match item.p(18) {
+        0.0 => constant(0.7),
+        p18 => real(f64::from(p18) * constant(0.7)),
+    };
+    NumberCall {
+        value,
+        p5: value as f32,
+        size: size as f32,
+        font: 0,
+        frame: 0,
+        frame_thickness: 0,
+        step: Some(note.step),
+        ..NumberCall::of(item)
+    }
+}
+
+/// The font a fingering mark leaves loaded; its position does not matter.
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>, note: &Note) -> Option<Font> {
+    let mark = trunc(f64::from(item.p(11))).abs();
+    if mark < FIRST_FINGERING || TREMOLO.contains(&mark) || mark == HEAVY_LINE {
+        return None;
+    }
+    let call = fingering_call(item, note, mark - FIRST_FINGERING);
+    let text = number_text(call.value, call.p5, call.p17, call.p18);
+    text_font_loaded(doc, &number_text_call(&call, Pos::default(), &text, Font::TIMES))
+}
+
+/// Marks 41–44: mark - 40 tremolo beams across the stem, drawn by
+/// draw_beam as a beam item at the note (P3 + P13), five scale steps
+/// (six for two or more beams) beyond its level (+ P14) (0x4F2B13).
+fn tremolo(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, mark: i32, canvas: &mut Canvas<'_>) {
+    let stems_down = item.p(5) > 19.0;
+    let reach = if mark > *TREMOLO.start() { 6.0 } else { 5.0 };
+    let reach = if stems_down { -reach } else { reach };
+    let level = real(f64::from(item.p(14)) + f64::from(item.p(4)));
+    let tremolo = NoteTremolo {
+        p3: real(note.origin.x / P3_UNIT + f64::from(item.p(13))) as f32,
+        p4: real(reach + level) as f32,
+        stems_down,
+        beams: mark - FIRST_FINGERING,
+        step: note.step,
+    };
+    draw_note_tremolo(doc, item, canvas, &tremolo);
 }
 
 /// The documented meaning of P13 = 99 (the engine moves the mark 99 P3
