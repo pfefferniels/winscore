@@ -15,6 +15,7 @@ use crate::canvas::{BufferPoint, Canvas, Pen};
 use crate::codes;
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
+use crate::geometry::rotate_points;
 use crate::staff::STEP_UNIT;
 use crate::units::{real, trunc, Pos};
 
@@ -180,7 +181,7 @@ pub fn draw_library_symbol(
     let start = canvas.buffer_mut().len();
     draw_symbol(canvas, symbol, at, Scale { x: real(step * size_x), y: real(step * size_y) });
     if trunc(call.rotation) != 0 {
-        rotate(&mut canvas.buffer_mut()[start..], at, call.rotation);
+        rotate_points(&mut canvas.buffer_mut()[start..], at.to_point(), call.rotation as f32);
     }
     let thickness = match call.thickness {
         0 if doc.screen() && pixels > 0 => pixels * 101,
@@ -192,24 +193,6 @@ pub fn draw_library_symbol(
 /// Fortran AMOD (amod 0x54AABA): x - trunc(x / y) * y.
 fn amod(x: f64, y: f64) -> f64 {
     x - f64::from(trunc(x / y)) * y
-}
-
-const DEGREES_PER_RADIAN: f32 = 57.295_776;
-
-/// Turns buffered points clockwise by `degrees` about the truncated centre
-/// (0x42A5F4). Works on the integer points already in the buffer.
-fn rotate(points: &mut [BufferPoint], centre: Pos, degrees: f64) {
-    let angle = real(degrees / f64::from(DEGREES_PER_RADIAN));
-    let (sin, cos) = (real(angle.sin()), real(angle.cos()));
-    let centre = centre.to_point();
-    points.iter_mut().for_each(|p| {
-        let dx = f64::from(p.at.x - centre.x);
-        let dy = f64::from(p.at.y - centre.y);
-        p.at = Point::new(
-            trunc(f64::from(centre.x) + (sin * dy + cos * dx)),
-            trunc(f64::from(centre.y) + (cos * dy - sin * dx)),
-        );
-    });
 }
 
 /// Distance between thickening copies (0x42A8AE).
