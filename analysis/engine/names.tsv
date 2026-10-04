@@ -34,8 +34,8 @@ address	name	confidence	role
 0055f340	draw_code7	read	code 7: trills, ottava, pedal
 004293f0	draw_symbol	read	codes 9, 11, 13
 004f65a8	draw_number	read	code 10; also staff numbers
-00433eee	draw_box_grid	read	code 12 with P5 = 10
-0049eae0	draw_box_negative	read	code 12 with P5 < 0
+00433eee	draw_box_accordion	read	code 12 with P5 = 10: accordion register symbol (impl-symbols)
+0049eae0	draw_box_guitar	read	code 12 with P5 < 0: guitar chord grid from GUITAR.DAT (loader 0x430EC0, lookup 0x4A07B1; impl-symbols)
 00433530	draw_box	read	code 12 with P5 in {0, 1, 3}
 00432e80	draw_box_other	read	code 12, other P5
 0050a650	draw_eps	read	code 15
@@ -80,3 +80,5 @@ address	name	confidence	role
 0056f920	text_rotate	read	rotates text positions by P9 (display.md, text.md)
 004a830b	read_prefs	verified	parses scorlib/PREF.DAT (prefs.md)
 005ff381	anint	read	Fortran ANINT: x +/- 0.5 in f64, chopped (numerics.md)
+00432998	read_user_symbols	read	code 11: reads KH (Fortran unformatted) symbol files (impl-symbols)
+00430ec0	load_guitar_dat	read	reads scorlib/GUITAR.DAT chord dictionary (impl-symbols)
