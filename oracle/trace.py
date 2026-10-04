@@ -16,8 +16,11 @@ A shadow call stack is kept from a basic-block hook: a block entered right after
 block ending in CALL, with the fall-through address on top of the stack, is a call
 entry; frames are dropped once ESP rises above their entry ESP or control reaches
 their return address. Every write into the vector and text buffers is stamped with
-the stack at that moment, the writing instruction, and the item last loaded by the
-item loader 0x547C32.
+the stack at that moment, the writing instruction, and the item being drawn
+(ITEM_I and P1/P2 of draw_items). Points go through the point buffer (add_point
+0x44B820) before emit_points copies them to the vector stream, so each vector
+triple also carries the write that put its point into the buffer: that chain
+names the drawing routine.
 """
 from __future__ import annotations
 
@@ -48,8 +51,9 @@ ENGINE_CODE = range(0x40BC18, 0x58C7E3)
 VECTOR_BYTES = 4 * 100_000
 TEXT_BYTES = 20_000
 
-ITEM_LOADER = 0x547C32
-ITEM_INDEX, ITEM_CODE, ITEM_STAFF = 0x2052780, 0x205278C, 0x2052790
+ITEM_I, P1, P2 = 0x20B8E24, 0x20B9360, 0x20B9364     # draw_items' loop index, current P1, P2
+PT_X0, PT_Y0 = 0x1FD3F7C, 0x2004CBC                     # point buffer: PT_X(k) = PT_X0 + 4k
+EMIT_INDEX = 0x9A20BC                                    # emit_points' k
 
 
 @dataclass(frozen=True)
@@ -64,9 +68,9 @@ Chain = tuple[Frame, ...]          # outermost call first
 
 @dataclass(frozen=True)
 class Item:
-    index: int                     # 1-based position in the item list
-    code: int
-    staff: int
+    index: int                     # ITEM_I: 1-based position in the item list while drawing
+    code: int                      # trunc(P1)
+    staff: int                     # trunc(P2)
 
 
 @dataclass(frozen=True)
@@ -74,6 +78,7 @@ class Write:
     chain: Chain
     pc: int                        # the writing instruction
     item: Item | None
+    origin: "Write | None" = None  # for vector words: the add_point write of the same point
 
 
 @dataclass(frozen=True)
@@ -94,10 +99,14 @@ class WatchHit:
 
 @dataclass(frozen=True)
 class VectorRun:
-    """Consecutive triples written by the same instruction under the same chain."""
+    """Consecutive triples whose points were buffered by the same chain of routines for the same item."""
     first: int                     # triple index
     triples: tuple[tuple[int, int, int], ...]
-    write: Write
+    write: Write                   # the vector write of the first triple; write.origin is the buffering
+
+    @property
+    def source(self) -> Write:
+        return self.write.origin or self.write
 
     @property
     def count(self) -> int:
@@ -138,6 +147,7 @@ class Tracer:
     sites: Counter = field(default_factory=Counter)          # (return address, callee entry) -> count
     blocks: Counter = field(default_factory=Counter)         # block address -> executions
     vector_writes: dict[int, Write] = field(default_factory=dict)   # byte offset -> last write
+    point_writes: dict[int, Write] = field(default_factory=dict)    # point-buffer index k -> last write
     text_writes: dict[int, Write] = field(default_factory=dict)
     watches: list[range] = field(default_factory=list)       # address ranges to log
     hits: list[WatchHit] = field(default_factory=list)
@@ -147,7 +157,6 @@ class Tracer:
         self._previous_call_end = None
         self._ends_with_call: dict[tuple[int, int], bool] = {}
         self._thunk_targets: dict[int, int] = {}
-        self._item: Item | None = None
         self._hooks: list[int] = []
         self._disasm = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
 
@@ -156,8 +165,8 @@ class Tracer:
         uc = self.engine.uc
         self._hooks = [
             uc.hook_add(UC_HOOK_BLOCK, self._on_block, begin=self.code.start, end=self.code.stop - 1),
-            uc.hook_add(UC_HOOK_MEM_WRITE, self._on_write(self.vector_writes, VECTOR_BUF),
-                        begin=VECTOR_BUF, end=VECTOR_BUF + VECTOR_BYTES - 1),
+            uc.hook_add(UC_HOOK_MEM_WRITE, self._on_vector_write, begin=VECTOR_BUF, end=VECTOR_BUF + VECTOR_BYTES - 1),
+            uc.hook_add(UC_HOOK_MEM_WRITE, self._on_point_write, begin=PT_X0 + 4, end=PT_Y0 - 1),
             uc.hook_add(UC_HOOK_MEM_WRITE, self._on_write(self.text_writes, TEXT_OUT),
                         begin=TEXT_OUT, end=TEXT_OUT + TEXT_BYTES - 1),
             uc.hook_add(UC_HOOK_MEM_WRITE, self._on_write(self.text_writes, TEXT_BUF_DIRECT),
@@ -177,9 +186,9 @@ class Tracer:
         for counter in (self.calls, self.edges, self.sites, self.blocks):
             counter.clear()
         self.vector_writes.clear()
+        self.point_writes.clear()
         self.text_writes.clear()
         self.hits.clear()
-        self._item = None
 
     def _block_ends_with_call(self, address: int, size: int) -> bool:
         key = (address, size)
@@ -226,21 +235,29 @@ class Tracer:
             self.calls[entry] += 1
             self.edges[caller, entry] += 1
             self.sites[expected_return, entry] += 1
-            if entry == ITEM_LOADER:
-                self._item = Item(self.engine.i32(ITEM_INDEX), *self._peek_item_after_load())
         else:
             self._unwind(esp, entering=False)
 
-    def _peek_item_after_load(self) -> tuple[int, int]:
-        """0x547C32 has not run yet: read code and staff from the item store the way it will."""
-        index = self.engine.i32(ITEM_INDEX)
-        word = self.engine.i32(0x2091D1C + 4 * index)
-        p1, p2 = struct.unpack("<ff", self.engine.uc.mem_read(0x2053440 + 4 * word, 8))
-        return int(p1), int(p2)
+    def _item_being_drawn(self) -> Item:
+        p1, p2 = struct.unpack("<ff", self.engine.uc.mem_read(P1, 8))
+        return Item(self.engine.i32(ITEM_I), int(p1), int(p2))
 
-    def _current_write(self, uc) -> Write:
+    def _current_write(self, uc, origin: Write | None = None) -> Write:
         self._unwind(uc.reg_read(UC_X86_REG_ESP), entering=False)
-        return Write(tuple(self._stack), uc.reg_read(UC_X86_REG_EIP), self._item)
+        return Write(tuple(self._stack), uc.reg_read(UC_X86_REG_EIP), self._item_being_drawn(), origin)
+
+    def _on_point_write(self, uc, _access, address, _size, _value, _user):
+        self.point_writes[(address - PT_X0) // 4] = self._current_write(uc)
+
+    def _on_vector_write(self, uc, _access, address, size, _value, _user):
+        offset = address - VECTOR_BUF
+        origin = self.point_writes.get(self.engine.i32(EMIT_INDEX)) if offset % 12 == 0 else None
+        if origin is None and offset % 12:
+            previous = self.vector_writes.get(offset - offset % 12)
+            origin = previous.origin if previous else None
+        write = self._current_write(uc, origin)
+        for byte in range(offset, offset + size):
+            self.vector_writes[byte] = write
 
     def _on_watched(self, uc, _access, address, size, value, _user):
         data = (value & ((1 << 8 * size) - 1)).to_bytes(size, "little")
@@ -262,12 +279,18 @@ class Tracer:
         return " > ".join(f"{self.name(f.entry)}@{f.return_address:06x}" for f in frames)
 
     def vector_runs(self, result: EngineResult) -> list[VectorRun]:
-        """Group the result's triples by the write that produced their tag word."""
+        """Group the result's triples by the routines that buffered their points (call sites ignored)."""
         stamped = [(i, t, self.vector_writes.get(12 * i + 8)) for i, t in enumerate(result.vector)]
+
+        def source(entry):
+            write = entry[2]
+            buffered = write.origin if write and write.origin else write
+            return (tuple(f.entry for f in buffered.chain), buffered.item) if buffered else None
+
         runs = []
-        for write, group in groupby(stamped, key=lambda s: s[2]):
+        for _, group in groupby(stamped, key=source):
             members = list(group)
-            runs.append(VectorRun(members[0][0], tuple(t for _, t, _ in members), write))
+            runs.append(VectorRun(members[0][0], tuple(t for _, t, _ in members), members[0][2]))
         return runs
 
     def text_strings(self, result: EngineResult) -> list[TextString]:
@@ -309,10 +332,11 @@ def print_emissions(t: Tracer, result: EngineResult):
     print(f"vector: {len(result.vector)} triples")
     for run in t.vector_runs(result):
         x, y, tag = run.triples[0]
-        where = f"pc {run.write.pc:06x} {describe_item(run.write.item)}" if run.write else "not written in this command"
+        source = run.source if run.write else None
+        where = f"pc {source.pc:06x} {describe_item(source.item)}" if source else "not written in this command"
         print(f"  [{run.first:5d} +{run.count:<4d}] first ({x}, {y}, {tag >> 24:02x}:{tag & 0xFFFFFF:06x})  {where}")
-        if run.write:
-            print(f"      {t.chain_text(run.write.chain)}")
+        if source:
+            print(f"      {t.chain_text(source.chain)}")
     strings = t.text_strings(result)
     print(f"text: {len(strings)} strings")
     for s in strings:
