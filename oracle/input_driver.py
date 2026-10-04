@@ -1,6 +1,8 @@
 """Run SCORE's staged music input (the IN command and its five passes) through the emulated engine.
 
-    input_driver.py CASE_DIR ...     reads CASE_DIR/input.txt, writes result.mus and transcript.txt
+    input_driver.py CASE_DIR ...                 reads CASE_DIR/input.txt, writes result.mus and transcript.txt
+    input_driver.py --corpus FILE OUT [REGEX]    writes every "== name" block of FILE to OUT/name/input.txt
+                                                 and runs it (only names matching REGEX, if given)
 
 input.txt uses the layout of SCORE's own input files (INPUT.TMP, READ files):
 
@@ -12,14 +14,17 @@ input.txt uses the layout of SCORE's own input files (INPUT.TMP, READ files):
     ;                    pass 4, beams
     ;                    pass 5, slurs
 
-A pass ends at its first ";" and may span several lines. Each pass is typed key by key, as a
-user types into the view; a line break inside a pass is typed as Enter.
+A pass ends at its first ";" and may span several lines, which are joined. Each pass is typed
+key by key, as a user types into the view. (Enter is not typed: pass 1 ignores it, but in
+pass 2 it submits the line.)
 """
 from __future__ import annotations
 
+import re
 import struct
 import sys
 import tempfile
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -53,7 +58,7 @@ class InputJob:
         return cls(command.strip(), passes, parse_range(range_line))
 
     def keystrokes(self) -> list[int]:
-        typed = "".join(self.passes).replace("\n", "\r")
+        typed = "".join(self.passes).replace("\n", "")
         return [*typed.encode("latin-1"), ord("X")]
 
 
@@ -157,7 +162,33 @@ def format_items(items: list[list[float]]) -> str:
     return "\n".join(" ".join(f"{p:g}" for p in item) for item in items)
 
 
+def corpus_cases(text: str) -> dict[str, str]:
+    """The "== name" blocks of a corpus file, each an input.txt body."""
+    blocks = re.split(r"^== ", text, flags=re.M)[1:]
+    return {name.strip(): body.strip("\n") + "\n" for name, _, body in (b.partition("\n") for b in blocks)}
+
+
+def write_corpus(corpus: Path, out: Path, pattern: str = "") -> list[Path]:
+    cases = {n: body for n, body in corpus_cases(corpus.read_text(encoding="latin-1")).items() if re.search(pattern, n)}
+    dirs = []
+    for name, body in cases.items():
+        case_dir = out / name
+        case_dir.mkdir(parents=True, exist_ok=True)
+        (case_dir / "input.txt").write_text(body, encoding="latin-1")
+        dirs.append(case_dir)
+    return dirs
+
+
+def report(case_dir: Path) -> str:
+    try:
+        return f"== {case_dir.name}\n{format_items(read_items(run_case(case_dir).mus))}"
+    except Exception as err:
+        return f"== {case_dir.name}\nFAILED: {err!r}"
+
+
 if __name__ == "__main__":
-    for arg in sys.argv[1:]:
-        outcome = run_case(Path(arg))
-        print(f"== {arg}\n{format_items(read_items(outcome.mus))}")
+    args = sys.argv[1:]
+    dirs = write_corpus(Path(args[1]), Path(args[2]), *args[3:4]) if args[:1] == ["--corpus"] else [Path(a) for a in args]
+    with ProcessPoolExecutor() as pool:
+        for text in pool.map(report, dirs):
+            print(text)
