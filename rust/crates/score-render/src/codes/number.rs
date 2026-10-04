@@ -57,6 +57,9 @@ pub struct NumberCall {
     pub staff: i32,
     pub p3: f32,
     pub p4: f32,
+    /// STEP when the caller scales it (rests: staff step × P15); `None` is
+    /// the staff's. Applies to the frame and to draw_text.
+    pub step: Option<f64>,
 }
 
 impl NumberCall {
@@ -85,6 +88,7 @@ impl NumberCall {
             staff: item.staff(),
             p3: p(3),
             p4: p(4),
+            step: None,
         }
     }
 
@@ -149,6 +153,7 @@ fn number_text_call<'t>(call: &NumberCall, at: Pos, text: &'t [u8], current_font
         space: 0.0,
         shift: 0.0,
         colour: (call.p26 != 0.0 && font_override != METER_FONT).then_some(call.p26),
+        step: call.step,
         current_font,
     }
 }
@@ -159,7 +164,7 @@ pub fn draw_number(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_
     let text_call = number_text_call(call, at, &text, font_before(doc, item));
     draw_text(doc, item, canvas, &text_call);
     if call.frame != 0 {
-        let step = doc.staves.get(call.staff).step;
+        let step = call.step.unwrap_or_else(|| doc.staves.get(call.staff).step);
         let (centre, frame) = frame(doc, call, at, step, text.len(), text_call.font_override);
         draw_box(canvas, centre, step, &frame);
         draw_text(doc, item, canvas, &text_call);

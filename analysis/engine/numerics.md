@@ -79,3 +79,7 @@ Accumulations happen in f32: the staff routine adds the line spacing to an f32 y
 ## AMOD
 
 `amod(&x, &y)` (0x54AABA) = `x - INT(x/y)*y`, with the quotient truncated. The difference is computed on the x87 stack and returned in ST0 (not stored to f32 inside the routine).
+
+## Inches
+
+editor-core found that inch values typed in commands ("UI 1", "DC 1") match the engine bit-exactly only with engine units per inch = 1/f32(0.00025) evaluated in double (3999.99981...), rounded to f32 once at the end; an exact 4000 is one ulp off. The engine evidently stores the factor as the f32 constant 0.00025 and divides by it.
