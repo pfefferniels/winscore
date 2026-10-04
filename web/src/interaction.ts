@@ -15,6 +15,8 @@ export interface Hooks {
   /** After an edit; `live` while a drag is still in progress. */
   edited(change: Change | null, live: boolean): void;
   failed(err: unknown): void;
+  /** Runs a SCORE command line on the selection. */
+  command(line: string): void;
 }
 
 const DRAG_THRESHOLD_PX = 4;
@@ -143,6 +145,10 @@ export function bindInteraction(viewport: HTMLElement, hooks: Hooks) {
       run((ed) => ed.deleteSelection());
     } else if (e.key === '[' || e.key === ']') {
       run((ed) => ed.moveStaff(e.key === '[' ? 1 : -1));
+    } else if (e.key === 'Enter') {
+      // WinScore: Enter ends the edit and moves on to the next item.
+      e.preventDefault();
+      hooks.command(e.shiftKey ? 'B' : 'NEX');
     } else if (e.key === 'Escape') {
       editor.select([]);
       hooks.selected();

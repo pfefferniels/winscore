@@ -61,12 +61,40 @@ try {
   await page.fill('#command', 'R 5');
   await page.press('#command', 'Enter');
   assert.equal(await page.inputValue('#p3'), '5');
-  assert.equal(await page.textContent('#message'), 'R 5');
+  assert.match(await page.textContent('#message'), /^R 5 · Item 2 Staff: 8 1 5 24/);
   await page.fill('#command', 'XYZZY');
   await page.press('#command', 'Enter');
   assert.match(await page.textContent('#message'), /unknown word/);
   await page.click('#undo');
   assert.equal(await page.inputValue('#p3'), '0');
+
+  // Typing on the page goes to the command bar; Up recalls the previous line; Escape returns to the page.
+  await page.focus('#viewport');
+  await page.keyboard.type('U 2');
+  assert.equal(await page.inputValue('#command'), 'U 2');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.inputValue('#p4'), '26');
+  await page.keyboard.press('ArrowUp');
+  assert.equal(await page.inputValue('#command'), 'U 2');
+  await page.keyboard.press('ArrowUp');
+  assert.equal(await page.inputValue('#command'), 'XYZZY');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'viewport');
+  await page.keyboard.press('Control+z');
+  assert.equal(await page.inputValue('#p4'), '24');
+
+  // Enter on the page moves edit mode to the next item, as in WinScore.
+  await page.keyboard.press('Enter');
+  assert.equal(await page.textContent('#item h2'), 'Item 3 · Clef');
+  await page.click('#items li[data-index="2"]');
+
+  // The palette sends WinScore's toolbar commands; TREB appends a treble clef and selects it.
+  await page.click('#palette button:text-is("Treble")');
+  assert.equal(await page.textContent('#item-count'), '(345)');
+  assert.match(await page.textContent('#item h2'), /^Item 344 · Clef/);
+  await page.keyboard.press('Control+z');
+  assert.equal(await page.textContent('#item-count'), '(344)');
+  await page.click('#items li[data-index="2"]');
 
   // Delete and undo it.
   await page.click('#items li[data-index="3"]');
