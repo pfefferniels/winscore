@@ -1,6 +1,6 @@
 """Summarise data/commands.tsv as Markdown tables for commands.md.
 
-    python command_summary.py > /tmp/summary.md
+    python command_summary.py > ../data/commands_summary.md
 
 Sections: items created with nothing selected, changes to the selected note, commands with no
 visible effect on the items, and the handler routines grouped by command family.
@@ -12,6 +12,7 @@ from collections import defaultdict
 from pathlib import Path
 
 DATA = Path(__file__).resolve().parents[1] / "data" / "commands.tsv"
+RENAMED = {"cmd_input": "cmd_I", "FUN_0046d088": "edit_params", "FUN_0045ef21": "edit_letters", "FUN_00580b70": "create_by_mnemonic"}
 EVERY_COMMAND = {"FUN_0054943a", "FUN_00549449", "FUN_0054e2a1", "FUN_0059d020", "FUN_005f33c9", "FUN_005f34d1",
                  "FUN_005f4660", "FUN_0048ecfb", "FUN_00518448"}
 
@@ -22,7 +23,7 @@ def rows():
 
 
 def handlers(row) -> str:
-    return " ".join(h for h in row["handlers"].split() if h not in EVERY_COMMAND)
+    return " ".join(RENAMED.get(h, h) for h in row["handlers"].split() if h not in EVERY_COMMAND)
 
 
 def table(header: list[str], body: list[list[str]]) -> str:

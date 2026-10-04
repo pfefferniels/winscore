@@ -24,6 +24,7 @@ What the FORTRAN engine inside WScore.exe (WinScore 5.01) computes, with address
 | [input.md](input.md) | the IN command: passes, spacing, minimum gap |
 | [layout.md](layout.md) | LJ/LI/J: how to drive them, routine map, the 1.5-per-doubling spacing rule (first notes) |
 | [kh_drw.md](kh_drw.md) | the compact "KH" .DRW variant: Microsoft FORTRAN unformatted records with i16 points |
+| [commands.md](commands.md) | the command layer: dispatch, edit mode, parameter forms, creation defaults, all menu strings catalogued |
 | [editing.md](editing.md) | mouse protocol between view and engine, creation-word tables |
 | [prefs.md](prefs.md) | PREF.DAT keywords and the globals they set (slur thickness, beam, metric, paper, ...) |
 | [display.md](display.md) | how the C++ shell paints the engine output (pens, zoom, text) |
