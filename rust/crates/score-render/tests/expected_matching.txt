@@ -114,3 +114,11 @@ code14-p7-displace-m3-bracket
 code14-p8-partial-bracket-1
 code14-p8-partial-bracket-2
 code14-p8-partial-bracket-m1
+code14-p5-brace
+code14-p5-brace-span-1
+code14-p5-brace-span-4
+code14-p6-thick-1-brace
+code14-p6-thick-3-brace
+code14-p7-displace-2-brace
+code14-p7-displace-m3-brace
+code14-system

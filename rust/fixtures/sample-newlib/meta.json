@@ -9,46 +9,48 @@
    "vector_words": 3882
   }
  ],
- "coordinates": "page: origin at the bottom-left paper corner, y up; view = page + view_offset",
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
  "description": "SCORE 4 sample NEWLIB.MUS",
  "events": [
   {
-   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
-   "kind": "dialog"
+   "detail": "C:\\WINSCORE\\SCORLIB\\lb0990.drw",
+   "kind": "not-found"
   },
   {
-   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
-   "kind": "dialog"
+   "detail": "C:\\WINSCORE\\SCORLIB\\lb0990.drw",
+   "kind": "not-found"
   },
   {
-   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
-   "kind": "dialog"
+   "detail": "C:\\WINSCORE\\SCORLIB\\lb0990.drw",
+   "kind": "not-found"
   },
   {
-   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
-   "kind": "dialog"
+   "detail": "C:\\WINSCORE\\SCORLIB\\lb0990.drw",
+   "kind": "not-found"
   },
   {
-   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
-   "kind": "dialog"
+   "detail": "C:\\WINSCORE\\SCORLIB\\lb0990.drw",
+   "kind": "not-found"
   },
   {
-   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
-   "kind": "dialog"
+   "detail": "C:\\WINSCORE\\SCORLIB\\lb0990.drw",
+   "kind": "not-found"
   },
   {
-   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
-   "kind": "dialog"
+   "detail": "C:\\WINSCORE\\SCORLIB\\lb0990.drw",
+   "kind": "not-found"
   },
   {
-   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
-   "kind": "dialog"
+   "detail": "C:\\WINSCORE\\SCORLIB\\lb0710.drw",
+   "kind": "not-found"
   }
  ],
- "invalid_reasons": [
-  "dialog: 0x59b090 args=['0x7d3750', '0x7d36fc', '0x0'] (x8)"
- ],
+ "invalid_reasons": [],
  "items": 59,
+ "not_found": [
+  "C:\\WINSCORE\\SCORLIB\\lb0990.drw (x7)",
+  "C:\\WINSCORE\\SCORLIB\\lb0710.drw"
+ ],
  "page_frames": [
   [
    401,
@@ -64,7 +66,11 @@
  "paper": "Legal",
  "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
  "title": "C:\\WORK\\CASE.MUS   (saved -   59 Items)   <Legal>",
- "valid": false,
+ "valid": true,
+ "view_globals": [
+  2400,
+  10425
+ ],
  "view_offset": [
   400,
   -37373

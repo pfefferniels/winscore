@@ -6,44 +6,46 @@
     <title>WinScore Web</title>
   </head>
   <body>
-    <header class="toolbar">
-      <span class="brand">WinScore Web</span>
-      <button id="open" title="Open a .mus file (or an engine.json reference)">Open…</button>
-      <input id="file" type="file" accept=".mus,.MUS,.json" hidden />
-      <select id="sample" title="Bundled samples"></select>
-      <button id="save" title="Save the score as .mus">Save</button>
-      <span class="sep"></span>
-      <button id="zoom-out" title="Zoom out (−)">−</button>
-      <select id="zoom" title="Zoom"></select>
-      <button id="zoom-in" title="Zoom in (+)">+</button>
-      <button id="fit" title="Fit page width">Fit</button>
-      <span class="sep"></span>
-      <div class="segmented" id="mode" role="radiogroup" title="What to show">
-        <button data-mode="rust" role="radio">Rust</button>
-        <button data-mode="engine" role="radio">Engine</button>
-        <button data-mode="overlay" role="radio">Overlay</button>
-      </div>
-      <span id="legend" class="legend" hidden>
-        <i class="swatch engine"></i>engine only <i class="swatch rust"></i>Rust only <i class="swatch both"></i>both
-      </span>
-      <span class="spacer"></span>
-      <span id="status" class="status"></span>
-    </header>
-    <main class="main">
-      <div class="stage" id="stage">
-        <canvas id="canvas"></canvas>
-        <div class="viewport" id="viewport"><div class="content" id="content"></div></div>
-        <div class="drop-hint" id="drop-hint" hidden>Drop a .mus file or an engine.json</div>
-      </div>
-      <aside class="panel">
-        <section class="item" id="item"></section>
-        <section class="items">
-          <h2>Items <span id="item-count" class="muted"></span></h2>
-          <ol id="items" class="item-list"></ol>
-        </section>
-      </aside>
-    </main>
-    <footer class="footer"><span id="cursor" class="muted"></span><span id="message" class="message"></span></footer>
+    <div id="app" class="app">
+      <header class="toolbar">
+        <span class="brand">WinScore Web</span>
+        <button id="open" title="Open a .mus file (or an engine.json reference)">Open…</button>
+        <input id="file" type="file" accept=".mus,.MUS,.json" hidden />
+        <select id="sample" title="Bundled samples"></select>
+        <button id="save" title="Save the score as .mus">Save</button>
+        <span class="sep"></span>
+        <button id="zoom-out" title="Zoom out (−)">−</button>
+        <select id="zoom" title="Zoom"></select>
+        <button id="zoom-in" title="Zoom in (+)">+</button>
+        <button id="fit" title="Fit page width">Fit</button>
+        <span class="sep"></span>
+        <div class="segmented" id="mode" role="radiogroup" title="What to show">
+          <button data-mode="rust" role="radio">Rust</button>
+          <button data-mode="engine" role="radio">Engine</button>
+          <button data-mode="overlay" role="radio">Overlay</button>
+        </div>
+        <span id="legend" class="legend" hidden>
+          <i class="swatch engine"></i>engine only <i class="swatch rust"></i>Rust only <i class="swatch both"></i>both
+        </span>
+        <span class="spacer"></span>
+        <span id="status" class="status"></span>
+      </header>
+      <main class="main">
+        <div class="stage" id="stage">
+          <canvas id="canvas"></canvas>
+          <div class="viewport" id="viewport"><div class="content" id="content"></div></div>
+          <div class="drop-hint" id="drop-hint" hidden>Drop a .mus file or an engine.json</div>
+        </div>
+        <aside class="panel">
+          <section class="item" id="item"></section>
+          <section class="items">
+            <h2>Items <span id="item-count" class="muted"></span></h2>
+            <ol id="items" class="item-list"></ol>
+          </section>
+        </aside>
+      </main>
+      <footer class="footer"><span id="cursor" class="muted"></span><span id="message" class="message"></span></footer>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

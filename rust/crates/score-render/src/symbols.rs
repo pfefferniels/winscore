@@ -38,7 +38,8 @@ impl SymbolLibrary {
         Ok(Self { files })
     }
 
-    /// The libraries shipped with WinScore 5.01, embedded at build time.
+    /// The libraries shipped with WinScore 5.01, embedded at build time
+    /// (empty without the `bundled-symbols` feature).
     pub fn bundled() -> &'static SymbolLibrary {
         static BUNDLED_LIBRARY: OnceLock<SymbolLibrary> = OnceLock::new();
         BUNDLED_LIBRARY.get_or_init(|| {

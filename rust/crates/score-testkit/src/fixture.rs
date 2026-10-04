@@ -82,8 +82,10 @@ impl Fixture {
     pub fn load(dir: &Path) -> Result<Fixture, FixtureError> {
         let engine = dir.join("engine.json");
         let meta = dir.join("meta.json");
-        let display = display_from_json(&read(&engine)?).map_err(|e| FixtureError::Json(engine, e))?;
-        let meta: Meta = serde_json::from_str(&read(&meta)?).map_err(|e| FixtureError::Json(meta, e))?;
+        let display =
+            display_from_json(&read(&engine)?).map_err(|e| FixtureError::Json(engine, e))?;
+        let meta: Meta =
+            serde_json::from_str(&read(&meta)?).map_err(|e| FixtureError::Json(meta, e))?;
         let name = dir
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
