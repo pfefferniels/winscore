@@ -1,0 +1,12 @@
+# Fixtures of code18 that must match the engine (tests/fixtures.rs).
+code18-p16-pixels-symbol
+code18-p26-grey-symbol
+code18-p5-symbol-91
+code18-p5-symbol-95
+code18-p5-symbol-98
+code18-p5-symbol-99
+code18-p7-size-0.5-symbol
+code18-p7-size-2-symbol
+code18-staff-size-0.75-common
+code18-staff-size-1.4-common
+code18-staff-size-m1-common
