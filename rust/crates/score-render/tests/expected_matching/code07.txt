@@ -1,4 +1,5 @@
 # Code 7 fixtures that must match the engine (tests/fixtures.rs).
+code07-p10-trill-thick
 code07-p11-pedal-arrow
 code07-p11-pedal-bracket
 code07-p11-trill-wave-down
@@ -15,6 +16,7 @@ code07-p15-trill-offset
 code07-p16p18-trill-offsets
 code07-p18-trill-right-offset
 code07-p26-trill-colour
+code07-p28-trill-pixels
 code07-p5-harp-size
 code07-p5-piano-pedal-010
 code07-p5-piano-pedal-111

@@ -18,7 +18,7 @@ use crate::codes::line::{self, end_mark, End, Params};
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
-use crate::symbols::{self, draw_library_symbol, SymbolCall};
+use crate::symbols::{self, draw_library_symbol, ItemContext, SymbolCall};
 use crate::units::{real, trunc, Pos};
 
 const TRILL: i32 = 0;
@@ -49,18 +49,22 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         OTTAVA_UP | OTTAVA_DOWN | QUINDICESIMA_UP => ottava_number(&mark, canvas),
         kind => match PEDAL_SYMBOLS.iter().find(|&&(k, _)| k == kind) {
             Some(&(_, number)) => {
-                let call = SymbolCall::sized(number, f64::from(mark.p(9)), 0.0, item);
-                draw_library_symbol(doc, item, canvas, mark.at, mark.staff.step, &call);
+                let call = SymbolCall::sized(number, f64::from(mark.p(9)), 0.0);
+                draw_library_symbol(doc, &mark.context, canvas, mark.at, mark.step(), &call);
             }
             None => piano_pedal(&mark, canvas),
         },
     }
 }
 
+/// draw_code7 sets IP1 = 9 before drawing its symbols.
+const SYMBOL_CODE: i32 = 9;
+
 /// The item as draw_code7 prepares it.
 struct Mark<'a, 'd> {
     doc: &'a Document<'d>,
-    item: ItemRef<'a>,
+    /// The globals draw_clef and draw_symbol read, with the item's IP10 as pixel thickness.
+    context: ItemContext,
     staff: Staff,
     /// X_POS (with P15) and Y_POS.
     at: Pos,
@@ -72,14 +76,14 @@ struct Mark<'a, 'd> {
 }
 
 impl<'a, 'd> Mark<'a, 'd> {
-    fn new(doc: &'a Document<'d>, item: ItemRef<'a>) -> Self {
+    fn new(doc: &'a Document<'d>, item: ItemRef<'_>) -> Self {
         let mut params = Params::of(item);
         if params.p(18) != 0.0 {
             params.set(16, 1.0);
         }
         Self {
             doc,
-            item,
+            context: ItemContext { code: SYMBOL_CODE, ..ItemContext::of(item) },
             staff: doc.staff_of(item),
             at: doc.position(item),
             kind: trunc(f64::from(item.p(7))),
@@ -128,9 +132,17 @@ impl<'a, 'd> Mark<'a, 'd> {
         }
     }
 
-    fn library_symbol(&self, canvas: &mut Canvas<'_>, at: Pos, number: i32, size: f64, pixels: i32) {
-        let call = SymbolCall { number, size_x: size, size_y: size, thickness: 0, rotation: 0.0, pixels };
-        draw_library_symbol(self.doc, self.item, canvas, at, self.step(), &call);
+    /// The symbol context with IP10 set to `pixels`.
+    fn with_pixels(&self, pixels: i32) -> ItemContext {
+        ItemContext { pixels, ..self.context }
+    }
+
+    fn library_symbol(&self, canvas: &mut Canvas<'_>, context: &ItemContext, at: Pos, number: i32, size: f64) {
+        draw_library_symbol(self.doc, context, canvas, at, self.step(), &SymbolCall::sized(number, size, size));
+    }
+
+    fn clef_symbol(&self, canvas: &mut Canvas<'_>, context: &ItemContext, at: Pos, number: i32, size: f64) {
+        symbols::draw_clef(self.doc, context, canvas, at, self.step(), number, (size, size));
     }
 }
 
@@ -160,15 +172,18 @@ fn extend(mark: &Mark<'_, '_>, style: Extension, level: f64, x: f64, (p8, p9): (
 /// and a wave from 22.85 step units right of P3 to P6.
 fn trill(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
     let y = real(mark.scale_step() + mark.at.y);
-    let size = mark.symbol_size();
-    symbols::draw_clef(mark.doc, mark.item, canvas, Pos::new(mark.at.x, y), mark.step(), TRILL_SYMBOL, (size, size));
+    let context = mark.with_pixels(match mark.ip(28) {
+        0 => -1,
+        ip28 => ip28,
+    });
+    mark.clef_symbol(canvas, &context, Pos::new(mark.at.x, y), TRILL_SYMBOL, mark.symbol_size());
     let wave_size = match mark.p(9) {
         0.0 if mark.ip(6) != 0 => 1.0,
         p9 => f64::from(p9),
     };
     let accidental = mark.ip(8);
     if accidental != 0 && accidental <= 5 {
-        trill_accidental(mark, accidental, y, canvas);
+        trill_accidental(mark, &context, accidental, y, canvas);
     }
     let level = real(f64::from(mark.p(4)) + f64::from(2.2_f32) + f64::from(mark.p(11)) - wave_size);
     let wave = (real(mark.size * wave_size) as f32, 0.0);
@@ -176,7 +191,7 @@ fn trill(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
 }
 
 /// Accidental `kind` (1 flat … 5 double sharp) above and right of the trill.
-fn trill_accidental(mark: &Mark<'_, '_>, kind: i32, y: f64, canvas: &mut Canvas<'_>) {
+fn trill_accidental(mark: &Mark<'_, '_>, context: &ItemContext, kind: i32, y: f64, canvas: &mut Canvas<'_>) {
     let size = real(mark.size * f64::from(0.65_f32));
     let dx = real(mark.size * 23.0 * mark.step());
     let dx = match kind {
@@ -187,7 +202,7 @@ fn trill_accidental(mark: &Mark<'_, '_>, kind: i32, y: f64, canvas: &mut Canvas<
     let lift = if kind == 2 || kind == 3 { f64::from(3.6_f32) } else { 3.0 };
     let lift = real(mark.scale_step() * mark.size * lift);
     let at = Pos::new(real(dx + mark.at.x), real(lift + y));
-    symbols::draw_clef(mark.doc, mark.item, canvas, at, mark.step(), FIRST_ACCIDENTAL_SYMBOL + kind, (size, size));
+    mark.clef_symbol(canvas, context, at, FIRST_ACCIDENTAL_SYMBOL + kind, size);
 }
 
 /// P7 = 8, -8, 15: the 8va, 8ba or 15ma symbol and dashes to P6.
@@ -198,7 +213,8 @@ fn ottava_symbol(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
         OTTAVA_BASSA => (46, 43.0),
         _ => (47, 62.0),
     };
-    mark.library_symbol(canvas, mark.at, number, real(mark.symbol_size() * f64::from(0.75_f32)), 0);
+    let size = real(mark.symbol_size() * f64::from(0.75_f32));
+    mark.library_symbol(canvas, &mark.with_pixels(0), mark.at, number, size);
     extend(mark, Extension::Dashes, f64::from(mark.p(4)), mark.after(width), dashes, canvas);
 }
 
@@ -228,12 +244,11 @@ fn piano_pedal(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
         let gap = real(size * 53.0 * mark.step());
         let x = mark.at.x;
         let down = [(pedals / 100 != 0, x), (pedals % 100 / 10 != 0, real(gap + x)), (pedals % 10 != 0, real(gap + x + gap))];
-        let pixels = symbols::library::pixels(mark.item);
         down.into_iter().filter(|&(on, _)| on).for_each(|(_, x)| {
-            mark.library_symbol(canvas, Pos::new(x, mark.at.y), PIANO_PEDAL_FILLER, size, pixels);
+            mark.library_symbol(canvas, &mark.context, Pos::new(x, mark.at.y), PIANO_PEDAL_FILLER, size);
         });
     }
-    mark.library_symbol(canvas, mark.at, PIANO_PEDAL_SYMBOL, size, 0);
+    mark.library_symbol(canvas, &mark.with_pixels(0), mark.at, PIANO_PEDAL_SYMBOL, size);
     let x = match mark.p(8) {
         0.0 => mark.at.x,
         p8 => real(f64::from(p8) * P3_UNIT),
