@@ -1,4 +1,1 @@
-# Cases score-input does not reproduce yet (one name per line).
-
-# Whole rest in a measure: P6 and the centring position P9
-r-rests
+# Cases score-input does not reproduce yet (one name per line, # comments).
