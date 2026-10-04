@@ -1,0 +1,21 @@
+# Code 15 fixtures that must match the engine (tests/fixtures.rs).
+code15-default
+code15-noname
+code15-p11-unread
+code15-p11-unread-default
+code15-p11-unread-p6
+code15-p12-rotation-0.5
+code15-p12-rotation-30
+code15-p12-rotation-m135
+code15-p26-grey
+code15-p4-level
+code15-p5-size-0
+code15-p5-size-0.07
+code15-p5-size-m0.2
+code15-p6-vsize-0.5
+code15-p6-vsize-m0.1
+code15-recto
+code15-size-0.75
+code15-size-0.75-unread
+code15-staff-2
+code15-two
