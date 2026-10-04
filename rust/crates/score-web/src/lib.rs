@@ -8,14 +8,18 @@
 
 pub mod codes;
 pub mod document;
+pub mod editing;
 pub mod encode;
 pub mod hit;
+pub mod input;
+pub mod param_names;
 
 use score_render::{DisplayList, ItemId};
 use wasm_bindgen::prelude::*;
 
 pub use codes::code_name;
-pub use document::{decode_text, Document, EditError, TEXT_CODE};
+pub use document::{decode_text, Document, TEXT_CODE};
+pub use input::{InputCheck, InputLine};
 pub use encode::{encode, Encoded};
 pub use hit::At;
 
@@ -41,12 +45,6 @@ impl EncodedList {
     #[wasm_bindgen(getter)]
     pub fn texts(&self) -> String {
         self.0.texts.clone()
-    }
-
-    /// Source item index + 1 of each text run, 0 = none (`Uint32Array`).
-    #[wasm_bindgen(getter, js_name = textSources)]
-    pub fn text_sources(&self) -> Vec<u32> {
-        self.0.text_sources.clone()
     }
 }
 
@@ -92,7 +90,7 @@ impl ItemInfo {
 }
 
 #[wasm_bindgen]
-pub struct Score(Document);
+pub struct Score(pub(crate) Document);
 
 #[wasm_bindgen]
 impl Score {
@@ -122,25 +120,12 @@ impl Score {
         EncodedList::from(self.0.render())
     }
 
-    pub fn item(&self, id: u32) -> Option<ItemInfo> {
-        self.0.item(ItemId(id)).map(|item| ItemInfo {
+    pub fn item(&self, index: u32) -> Option<ItemInfo> {
+        self.0.item(ItemId(index)).map(|item| ItemInfo {
             code: item.code(),
             params: item.params().iter().map(|w| w.as_f32()).collect(),
             text: (item.code() == TEXT_CODE).then(|| decode_text(item.text())),
         })
-    }
-
-    /// Sets parameter `n` (1-based) of item `id`; call [`Score::render`] to see it.
-    #[wasm_bindgen(js_name = setParam)]
-    pub fn set_param(&mut self, id: u32, n: usize, value: f32) -> Result<(), JsError> {
-        Ok(self.0.set_param(ItemId(id), n, value)?)
-    }
-
-    /// The item drawn nearest to page point (`x`, `y`) within `tolerance`
-    /// engine units, as rendered by the last [`Score::render`].
-    #[wasm_bindgen(js_name = hitTest)]
-    pub fn hit_test(&self, x: f64, y: f64, tolerance: f64) -> Option<u32> {
-        self.0.hit(At::new(x, y), tolerance).map(|id| id.0)
     }
 
     /// The `.mus` file bytes.
@@ -149,8 +134,33 @@ impl Score {
     }
 }
 
-/// Reads an `engine.json` reference display list (`rust/fixtures/README.md`).
-#[wasm_bindgen(js_name = parseReference)]
-pub fn parse_reference(json: &str) -> Result<EncodedList, JsError> {
-    Ok(EncodedList::from(&score_testkit::display_from_json(json)?))
+/// What parameter `n` of items with code `code` means, in the words of the
+/// WinScore help.
+#[wasm_bindgen(js_name = paramName)]
+pub fn param_name(code: i32, n: usize) -> Option<String> {
+    param_names::param_name(code, n).map(str::to_owned)
+}
+
+/// An engine reference display list, read from `engine.json`
+/// (`rust/fixtures/README.md`).
+#[wasm_bindgen]
+pub struct Reference(DisplayList);
+
+#[wasm_bindgen]
+impl Reference {
+    #[wasm_bindgen(constructor)]
+    pub fn new(json: &str) -> Result<Reference, JsError> {
+        Ok(Reference(score_testkit::display_from_json(json)?))
+    }
+
+    pub fn list(&self) -> EncodedList {
+        EncodedList::from(&self.0)
+    }
+
+    /// The item whose elements the fixture attributes lie nearest to page
+    /// point (`x`, `y`), within `tolerance` engine units.
+    #[wasm_bindgen(js_name = hitTest)]
+    pub fn hit_test(&self, x: f64, y: f64, tolerance: f64) -> Option<u32> {
+        hit::hit_test(&self.0, At::new(x, y), tolerance).map(|id| id.0)
+    }
 }

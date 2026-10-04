@@ -9,7 +9,9 @@ description = "WebAssembly API of the SCORE editor: open, render, hit-test, edit
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+score-edit = { path = "../score-edit" }
 score-format = { path = "../score-format" }
+score-input = { path = "../score-input" }
 score-render = { path = "../score-render" }
 score-testkit = { path = "../score-testkit" }
 wasm-bindgen = "=0.2.129"

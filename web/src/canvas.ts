@@ -1,15 +1,15 @@
 // The scrolling page view: a viewport-sized canvas behind a scroll container
 // whose content div has the size of the zoomed page. Scrolling and zooming
 // repaint the canvas; nothing is drawn outside the visible area.
-import type { Box, DisplayList } from './display';
-import { paint, type Layer } from './paint';
+import type { Box } from './display';
+import { paint, type Highlight, type Layer } from './paint';
 import { contentSize, cssPerUnit, toPage, transform, type Point, type Transform } from './view';
 
 export interface Scene {
   layers: Layer[];
   paper: Box;
   extent: Box;
-  highlight: { list: DisplayList; item: number } | null;
+  highlights: Highlight[];
 }
 
 export interface Elements {
@@ -41,7 +41,7 @@ const EMPTY_BOX: Box = { x0: 0, y0: 0, x1: 34000, y1: 56000 };
 export function createPageView(el: Elements, onZoom: (zoom: number) => void): PageView {
   const ctx = el.canvas.getContext('2d', { alpha: false });
   if (!ctx) throw new Error('Canvas 2D is not available');
-  let scene: Scene = { layers: [], paper: EMPTY_BOX, extent: EMPTY_BOX, highlight: null };
+  let scene: Scene = { layers: [], paper: EMPTY_BOX, extent: EMPTY_BOX, highlights: [] };
   let zoom = 100;
   let frame = 0;
 
@@ -89,8 +89,7 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
       transform: currentTransform(),
       paper: scene.paper,
       layers: scene.layers,
-      highlight: scene.highlight,
-      outlineFills: true,
+      highlights: scene.highlights,
     });
   };
 

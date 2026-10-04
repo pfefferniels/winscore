@@ -14,6 +14,8 @@ Drawing routines never write the output directly. They append points:
 - `add_point(&x, &y, &pen)` (0x44B820): PT_X = trunc(x), PT_Y = trunc(y), PT_PEN = pen, NPT += 1. x, y are f32 variables.
 - `add_segment(&x0, &y0, &x1, &y1)` (0x44B8B1): add_point with pen 1 (int16 constant at 0x760CB4), then with pen 0 (0x760CB0).
 
+Print-mode markers: `0x4D4ED2(&w)` appends the point (999, BMTH-scaled width, pen 99) and `0x4D4F3F` appends (0, 0, pen -99) to set and reset the PostScript line width. They are called around thick lines when OUTPUT_MODE == -1 (and from a few text paths). None appears in the screen output of the four sample scores (no tag bytes other than 0, 1, 2, 3).
+
 Pens: 1 starts a stroked polyline, 2 starts a filled polygon, 3 starts a further sub-path of the same polygon, 0 continues (meanings as decoded by the C++ shell, ARCHITECTURE.md). The engine also writes the buffer directly in a few places (e.g. `barline_gap`).
 
 ## Flush (verified)

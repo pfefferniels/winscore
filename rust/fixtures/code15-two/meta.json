@@ -1,0 +1,44 @@
+{
+ "case": "code15-two",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 59,
+   "vector_words": 123
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
+ "description": "two EPS items after a staff",
+ "events": [],
+ "invalid_reasons": [],
+ "items": 3,
+ "not_found": [],
+ "page_frames": [
+  [
+   401,
+   -8270,
+   34399,
+   47728
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "start of the baseline: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -    3 Items)   <Legal>",
+ "valid": true,
+ "view_globals": [
+  2400,
+  -18677
+ ],
+ "view_offset": [
+  400,
+  -8271
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}

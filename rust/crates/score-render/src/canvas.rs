@@ -13,8 +13,8 @@ use crate::display::{Colour, DisplayList, ItemId, PlacedText, Point, Shape, Shap
 use crate::page::{page_offset, PAPER_ORIGIN};
 use crate::units::Pos;
 
-/// OnDraw (0x5E5910) draws a text record at y + 96, the top of its character cell.
-pub const TEXT_TOP: i32 = 96;
+/// OnDraw (0x5E5910) puts a text record's baseline at its y + 96.
+pub const TEXT_BASELINE: i32 = 96;
 
 /// The pen code stored with each point.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -176,7 +176,7 @@ impl<'a> Canvas<'a> {
         let strings = strings
             .into_iter()
             .map(|s| PlacedText {
-                origin: Point::new(s.at.x - PAPER_ORIGIN.x, s.at.y + TEXT_TOP - PAPER_ORIGIN.y),
+                origin: Point::new(s.at.x - PAPER_ORIGIN.x, s.at.y + TEXT_BASELINE - PAPER_ORIGIN.y),
                 text: s.text,
             })
             .collect();

@@ -8,12 +8,17 @@
 //! `analysis/engine/barlines.md`; constants are REAL*4 as in the engine.
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
+use crate::codes::boxes::{draw_box, BoxCall, CIRCLE_SHAPE};
+use crate::codes::line::{self, Params};
+use crate::codes::rest;
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
-use crate::symbols::{draw_symbol, Scale};
-use crate::units::{real, trunc, Pos};
+use crate::symbols::{draw_clef, ItemContext};
+use crate::text::Font;
+use score_format::Item;
+use crate::units::{constant, real, trunc, Pos};
 
 /// The highest staff number a barline may reach.
 const LAST_STAFF: i32 = 256;
@@ -35,10 +40,6 @@ const SQUARE_BRACKET: i32 = 10;
 /// The brace in the symbol library (LB0000.DRW slot 5).
 const BRACE_SYMBOL: i32 = 5;
 
-fn constant(value: f32) -> f64 {
-    f64::from(value)
-}
-
 /// The state draw_barline works on: positions in internal coordinates and
 /// the parameters it changes while drawing.
 struct Barline {
@@ -56,6 +57,25 @@ struct Barline {
     low: Staff,
     /// trunc(P8), which the dot and bracket routines overwrite.
     ip8: i32,
+    /// P4 as draw_line later reads it: the span, recomputed for 999.
+    p4: f32,
+    /// Dash and space length (P8, P9); an invisible bar sets 0.3 and 1.5.
+    dash: (f32, f32),
+}
+
+/// The rest item draw_barline draws after a two-bar-repeat bar (P5 = -44):
+/// the barline with P4 = 0 and P5 = -44, drawn by draw_rest at the bar's
+/// X_POS. Only a plain visible bar (P4 >= 0, P6 = 0) reaches that call.
+fn two_bar_sign(item: ItemRef<'_>) -> Option<Item> {
+    let plain = item.ip(5) == TWO_BAR_REPEAT && item.ip(4) >= 0 && item.p(6) == 0.0;
+    plain.then(|| item.with_params(&[(4, 0.0), (5, TWO_BAR_REPEAT as f32)]))
+}
+
+/// The font a barline leaves loaded for the next item: that of the number
+/// over a two-bar repeat (see [`crate::text::font_loaded`]).
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    let sign = two_bar_sign(item)?;
+    rest::font_loaded(doc, item.changed(&sign))
 }
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
@@ -64,12 +84,15 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         kind = 0;
     }
     let mut span = trunc(f64::from(item.p(4)));
+    let mut p4 = item.p(4);
     let (mut p10, mut p11) = (item.p(10), item.p(11));
     if span == 999 {
         span = doc.staves.highest().unwrap_or(item.staff()) - item.staff() + 1;
+        p4 = span as f32;
         (p10, p11) = (0.0, 0.0);
     }
     let mut gap_p5 = item.p(5);
+    let mut dash = (item.p(8), item.p(9));
     if span < 0 {
         if !doc.screen() {
             return;
@@ -77,6 +100,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         span = -span;
         kind = DASHED;
         gap_p5 = DASHED as f32;
+        dash = (0.3, 1.5);
     }
     let low = doc.staff_of(item);
     span = span.min(LAST_STAFF - low.number + 1).max(1);
@@ -106,8 +130,13 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         span,
         low,
         ip8: trunc(f64::from(item.p(8))),
+        p4,
+        dash,
     };
     bar.draw(doc, item, canvas);
+    if let Some(sign) = two_bar_sign(item) {
+        rest::draw(doc, item.changed(&sign), bar.x_pos, canvas);
+    }
     if item.p(18) != 0.0 && gap_p5 < 2.0 {
         gap(item, &bar, doc.screen(), canvas.buffer_mut());
     }
@@ -116,9 +145,8 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 impl Barline {
     fn draw(&mut self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         let u = self.unit;
-        let six = real(u * 6.0);
-        let d13 = real(six * f64::from(item.p(13)));
-        let d14 = real(six * f64::from(item.p(14)));
+        let d13 = real(u * 6.0 * f64::from(item.p(13)));
+        let d14 = real(u * 6.0 * f64::from(item.p(14)));
         match self.kind {
             0 if item.p(6) != 0.0 => self.thick(canvas, self.xb, self.xb),
             0 => self.stroke(canvas, self.xb),
@@ -142,16 +170,16 @@ impl Barline {
                     self.dots(doc, item, canvas, constant(-25.5));
                     self.stroke(canvas, real(self.xb - u * constant(13.8) - d13));
                 }
-                self.thick(canvas, real(self.xb - six), self.xb);
+                self.heavy(canvas);
             }
             REPEAT_HEAVY => {
                 self.x_pos = real(self.x_pos - d14);
                 self.dots(doc, item, canvas, constant(-18.36));
                 self.x_pos = real(d13 + self.x_pos + d14 + d14);
                 self.dots(doc, item, canvas, constant(25.2));
-                self.thick(canvas, real(self.xb - six), self.xb);
+                self.heavy(canvas);
                 self.xb = real(u * 13.0 + self.xb + d13);
-                self.thick(canvas, real(self.xb - six), self.xb);
+                self.heavy(canvas);
             }
             BRACE => self.brace(doc, item, canvas),
             BRACKET => {
@@ -162,9 +190,33 @@ impl Barline {
                 self.thick(canvas, a, real(a - u * constant(4.5)));
             }
             SQUARE_BRACKET => self.square_bracket(canvas),
-            k if k > REPEAT_HEAVY => {}
-            _ => self.thick(canvas, real(self.xb - six), self.xb),
+            k if k > REPEAT_HEAVY => self.dashed(item, canvas),
+            _ => self.heavy(canvas),
         }
+    }
+
+    /// Types 7 and above other than 8–10, and invisible bars on the screen:
+    /// a vertical dashed line drawn by the code-4 routine (draw_line
+    /// 0x439963) with P5 = the top as a level of staff P2, P6 = P3, IP7 = 1,
+    /// IP10 = IP6 or (OUTPUT_MODE != 0), which is 1 on the screen and in
+    /// print, P8 dash (default 1), P9 space (default 2).
+    fn dashed(&self, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+        let staff = &self.low;
+        let top_level = real((self.top - f64::from(staff.level0)) / (staff.step * 7.0));
+        let default = |p: f32, value: f32| if p == 0.0 { value } else { p };
+        let thickness = match trunc(f64::from(item.p(6))) {
+            0 => 1,
+            ip6 => ip6,
+        };
+        let params = Params::of(item)
+            .with(4, self.p4)
+            .with(5, top_level as f32)
+            .with(6, item.p(3))
+            .with(7, 1.0)
+            .with(8, default(self.dash.0, 1.0))
+            .with(9, default(self.dash.1, 2.0))
+            .with(10, thickness as f32);
+        line::draw(&params, Pos::new(self.x_pos, self.bottom), staff, canvas);
     }
 
     /// barline_stroke 0x412699 (on screen: one segment).
@@ -175,7 +227,12 @@ impl Barline {
     fn final_bar(&self, canvas: &mut Canvas<'_>, d13: f64) {
         let u = self.unit;
         self.stroke(canvas, real(self.xb - u * constant(13.8) - d13));
-        self.thick(canvas, real(self.xb - real(u * 6.0)), self.xb);
+        self.heavy(canvas);
+    }
+
+    /// The thick bar of width 6 units ending at the bar's x.
+    fn heavy(&self, canvas: &mut Canvas<'_>) {
+        self.thick(canvas, real(self.xb - self.unit * 6.0), self.xb);
     }
 
     /// The thick bar between `a` and `b` (block 0x411FAD), emitted as the
@@ -198,23 +255,20 @@ impl Barline {
         }
     }
 
-    /// barline_brace 0x412B93: library symbol 5 stretched to the bar's height,
-    /// widened with it unless P6 gives the width factor. The symbol is placed
-    /// as draw_clef places it, fitted to the engine for size-1 staves.
+    /// barline_brace 0x412B93: draw_clef with symbol 5 at 21 steps below the
+    /// bar's bottom, stretched to its height and widened with it unless P6
+    /// gives the width factor.
     fn brace(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-        let Some(symbol) = doc.symbols().symbol(BRACE_SYMBOL) else {
-            return;
-        };
         let step = self.low.step;
         let height = real((self.top - self.bottom) * constant(0.0054945) / step);
         let width = match item.p(6) {
             0.0 => real((height - 1.0) / 2.0 + 1.0),
             p6 => f64::from(p6),
         };
-        let level0 = real(self.bottom - step * 21.0);
-        let origin = Pos::new(self.x_pos, real(level0 + 21.0 * step));
-        let scale = Scale { x: real(step / 4.0 * width), y: real(step / 4.0 * height) };
-        draw_symbol(canvas, symbol, origin, scale);
+        let at = Pos::new(self.x_pos, real(self.bottom - step * 21.0));
+        // draw_clef reads IP4 (mini clefs) and IP10 (pixels); the brace routine sets IP10 = 0.
+        let context = ItemContext { ip4: trunc(f64::from(self.p4)), pixels: 0, ..ItemContext::of(item) };
+        draw_clef(doc, &context, canvas, at, step, BRACE_SYMBOL, (width, height));
     }
 
     /// Type 10: an open bracket left of the bar on the middle lines.
@@ -267,28 +321,43 @@ impl Barline {
         };
         let rise = if rise == 0 { 2 } else { rise };
         let size = real(constant(0.58) * if item.p(12) == 0.0 { 1.0 } else { f64::from(item.p(12)) });
+        let call = dot_call(item, size, doc.screen());
         let last = (self.low.number + self.span - 1).min(LAST_STAFF);
         (self.low.number..=last).for_each(|number| {
             let staff = doc.staves.get(number);
             let first = real(f64::from(staff.level0) + staff.step * f64::from(lower) * UNITS_PER_SCALE_STEP);
             let second = real(staff.step * f64::from(rise) * UNITS_PER_SCALE_STEP + first);
-            [first, second].into_iter().for_each(|y| repeat_dot(canvas, Pos::new(x, y), size, staff.step));
+            // barline_dots sets IP12 afresh for every dot, so draw_box's doubled IP12 is not carried over.
+            [first, second].into_iter().for_each(|y| {
+                draw_box(canvas, Pos::new(x, y), staff.step, &call);
+            });
         });
         self.ip8 = 0;
     }
 }
 
-/// One repeat dot. The engine calls the code-12 box routine (draw_box
-/// 0x433530 with IP5 = 1, P6 = P7 = `size`), which on the screen draws a
-/// filled hexagon of radius `size` half-spaces, clockwise from the top. This
-/// model is fitted to the fixtures until draw_box is ported.
-fn repeat_dot(canvas: &mut Canvas<'_>, centre: Pos, size: f64, step: f64) {
-    let radius = real(size * 3.5 * step);
-    (0..=6).for_each(|k| {
-        let angle = f64::from(k) * std::f64::consts::FRAC_PI_3;
-        let at = Pos::new(real(centre.x + radius * angle.sin()), real(centre.y + radius * angle.cos()));
-        canvas.point(at, if k == 0 { Pen::Fill } else { Pen::Continue });
-    });
+/// Degrees per side of a dot on the screen; in print draw_box's default of 1.
+const SCREEN_DOT_ANGLE: i32 = 60;
+
+/// The draw_box call barline_dots makes: a filled circle of `size`, the
+/// integer parameters cleared, the barline's own P8, P9, P10 and P16 left in
+/// place (P16 = 1 is draw_box's inch flag, so it enlarges the dots).
+fn dot_call(item: ItemRef<'_>, size: f64, screen: bool) -> BoxCall {
+    BoxCall {
+        kind: CIRCLE_SHAPE,
+        width: size,
+        height: size,
+        p8: f64::from(item.p(8)),
+        ip8: 0,
+        p9: f64::from(item.p(9)),
+        ip9: 0,
+        p10: f64::from(item.p(10)),
+        ip10: 0,
+        ip11: 0,
+        ip12: if screen { SCREEN_DOT_ANGLE } else { 0 },
+        fill: true,
+        p16: f64::from(item.p(16)),
+    }
 }
 
 /// The bracket end outline, in 0.15 spacing units (f32 tables at 0x78B264 and 0x78B234).

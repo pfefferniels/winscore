@@ -8,7 +8,7 @@ import importlib
 from pathlib import Path
 
 from fixtures import Case
-from musbuild import mus_bytes
+from musbuild import mus_bytes, param, read_items
 
 REPO = Path(__file__).resolve().parents[1]
 WINSCORE = REPO / "WINSCORE 5.01" / "winscore"
@@ -50,6 +50,27 @@ def sample_cases() -> list[Case]:
     score4 = [Case(f"sample-{p.stem.lower()}", f"SCORE 4 sample {p.name}", p.read_bytes())
               for p in (SCORE4 / "NEWLINE.MUS", SCORE4 / "NEWLIB.MUS")]
     return winscore + score4
+
+
+def sample_items(path: Path) -> list[bytes]:
+    return read_items(path.read_bytes())
+
+
+def item_code(packed: bytes) -> int:
+    return int(param(packed, 1))
+
+
+def item_staff(packed: bytes) -> int:
+    return int(param(packed, 2))
+
+
+def excerpt(path: Path, indices: list[int], staves: tuple[int, ...] = ()) -> list[bytes]:
+    """The staff items (code 8) of the staves the chosen items hang on, plus `staves`, then the items."""
+    items = sample_items(path)
+    chosen = [items[i] for i in indices]
+    wanted = {item_staff(p) for p in chosen} | set(staves)
+    staff_items = [p for p in items if item_code(p) == 8 and item_staff(p) in wanted]
+    return staff_items + [p for p in chosen if item_code(p) != 8]
 
 
 def code_modules() -> list[str]:

@@ -26,19 +26,32 @@ from unicorn import UC_HOOK_MEM_WRITE
 from callbacks import Event
 from displaylist import POLYLINE, FILLED, Shape, TextRun, shapes, text_runs
 from emu import LINE_BUF, TEXT_OUT, VECTOR_BUF, Engine, EngineResult, ZOOM
+from musbuild import param, read_items
 from sandbox import make_sandbox
+from winapi import WinApi
 
 REPO = Path(__file__).resolve().parents[1]
 FIXTURES = REPO / "rust" / "fixtures"
 SANDBOXES = Path(__file__).resolve().parent / "sandbox" / "fixtures"
 INPUT = "input.mus"
+RESULT = "result.mus"      # the score as the engine holds it after a case's commands
 SANDBOX_NAME = "case.mus"   # "G I..." drops the I: the engine reads "G input.mus" as NPUT.MUS
 
-TEXT_TOP_OFFSET = 96            # OnDraw (0x5E5910) draws strings at (x, y + 0x60)
-TEXT_RUN_Y_OFFSETS = 0x1576570  # per-run y offset OnDraw adds after scaling
+TEXT_BASELINE_OFFSET = 96       # OnDraw (0x5E5910): the baseline of a string is at y + 0x60 (analysis/engine/display.md)
 VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4   # emit_points: x_out = x + VIEW_DX, y_out = y - VIEW_DY
 PAGE_FROM_INTERNAL = (2000, 26948)        # paper bottom-left at internal (-2000, -26947.7); analysis/engine/coordinates.md
 ITEM_COUNT = 0x20B8E24          # number of items, and the 1-based loop index while drawing
+# Pen-width records (tag = colour + pen << 24), print metadata that also reaches the screen (impl-notes):
+# 0x4D4F3F writes (0, 0, pen -99) "reset width", 0x4D4ED2 writes (999, w, pen 99) "set width".
+PEN_RESET_KIND, PEN_SET_KIND, PEN_SET_X = 0x9D, 0x63, 999
+
+
+def is_pen_record(triple: tuple[int, int, int], view_dx: int, view_dy: int) -> bool:
+    """The record's point passes through emit_points like any other, so it is checked in internal coordinates."""
+    x, y, tag = triple[0] - view_dx, triple[1] + view_dy, triple[2]
+    kind = (tag & 0xFFFFFFFF) >> 24
+    return (kind == PEN_RESET_KIND and x == y == 0) or (kind == PEN_SET_KIND and x == PEN_SET_X)
+YES_NO_QUESTION = 0x595CD0      # "Source Box O.K.?" (LJ, LI, J), "Add bar lines?" (IN); 0 means No (disasm-expert)
 NOT_FOUND_DIALOG = 0x59B090     # "Not found": missing symbol library or instrument; changes no geometry
 # The engine never checks its output buffers; these are the shell's room (disasm-expert).
 SHELL_VECTOR_WORDS, SHELL_OBJECTS, SHELL_TEXT_BYTES = 1_000_000, 10_000, 440_000
@@ -54,6 +67,7 @@ class Case:
     mus: bytes
     commands: tuple[str, ...] = ()
     attachments: tuple[Path, ...] = ()
+    confirm: bool = True   # the answer to the engine's yes/no questions, as a user running the command would give
 
     @property
     def command_lines(self) -> tuple[str, ...]:
@@ -75,9 +89,10 @@ class Run:
     outcomes: list[CommandOutcome] = field(default_factory=list)
     events: list[Event] = field(default_factory=list)
     final: EngineResult | None = None
-    text_run_y_offsets: list[int] = field(default_factory=list)
     vector_writers: dict[int, int] = field(default_factory=dict)
     text_writers: dict[int, int] = field(default_factory=dict)
+    excluded: dict[int, str] = field(default_factory=dict)   # 0-based item -> reason
+    result_mus: bytes | None = None
     view_dx: int = 0
     view_dy: int = 0
     error: str = ""
@@ -111,6 +126,8 @@ class FixtureEngine(Engine):
         super().__post_init__()
         self.vector_writers: dict[int, int] = {}
         self.text_writers: dict[int, int] = {}
+        self.missing_library: dict[int, str] = {}
+        self.confirm = True
         self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_vector_write, begin=VECTOR_BUF, end=VECTOR_BUF + 4 * SHELL_VECTOR_WORDS)
         self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_text_write, begin=TEXT_OUT, end=TEXT_OUT + SHELL_TEXT_BYTES)
 
@@ -122,9 +139,17 @@ class FixtureEngine(Engine):
         self.text_writers.update((a - TEXT_OUT, item) for a in range(address, address + size))
 
     def _on_cpp(self, uc, address, size, _user):
+        if address == YES_NO_QUESTION:
+            answer = "yes" if self.confirm else "no"
+            self.shell.record("question", f"{self.cstr(self.arg(0), 200).strip()} -> {answer}")
+            self.return_from_call(int(self.confirm), 0)
+            return
         if address != NOT_FOUND_DIALOG:
             return super()._on_cpp(uc, address, size, _user)
-        self.shell.record("not-found", self.cstr(LINE_BUF, 0x200).strip())
+        notice = self.cstr(LINE_BUF, 0x200).strip()
+        self.shell.record("not-found", notice)
+        if notice.lower().endswith(".drw"):
+            self.missing_library[self.i32(ITEM_COUNT) - 1] = notice
         self.return_from_call(0, 0)
 
     def command(self, text: str) -> EngineResult:
@@ -136,6 +161,7 @@ class FixtureEngine(Engine):
 def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     fresh_sandbox(root, case)
     engine = FixtureEngine(root)
+    engine.confirm = case.confirm
     engine.initialize()
     engine.put32(ZOOM, zoom)
     run = Run()
@@ -150,10 +176,40 @@ def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     run.view_dx, run.view_dy = engine.i32(VIEW_DX), engine.i32(VIEW_DY)
     run.vector_writers = dict(engine.vector_writers)
     run.text_writers = dict(engine.text_writers)
+    if case.commands and not run.error:
+        run.result_mus = saved_score(engine, root)
+    drawn = read_items(run.result_mus) if run.result_mus else read_items(case.mus)
+    run.excluded = stale_symbol_items(read_items(case.mus), engine.missing_library, drawn)
     if run.final is not None:
-        runs = len(text_runs(run.final.text))
-        run.text_run_y_offsets = [engine.i32(TEXT_RUN_Y_OFFSETS + 4 * i) for i in range(runs)]
+        try:
+            text_runs(run.final.text)
+        except (struct.error, ValueError) as err:
+            run.error = f"text stream does not decode: {err}"
+            run.final = None
     return run
+
+
+def saved_score(engine: FixtureEngine, root: Path) -> bytes | None:
+    """The engine's current score, saved with SA: commands such as LJ move and reorder items."""
+    try:
+        engine.command(f"SA {RESULT}")
+    except RuntimeError:
+        return None
+    saved = WinApi.resolve_case(root / "cwd" / RESULT)
+    return saved.read_bytes() if saved.is_file() else None
+
+
+def stale_symbol_items(items: list[bytes], missing: dict[int, str], drawn: list[bytes]) -> dict[int, str]:
+    """Items that draw a symbol from a library the engine could not load.
+
+    The loader (0x42AD97) does not mark the failed load, so draw_symbol copies whatever the
+    previous library left in its buffers and caches that for the session (disasm-expert,
+    analysis/engine/symbols.md). The shape depends on the draw history, so these items are
+    excluded. Later items asking for the same symbol get the cached result without a notice.
+    """
+    symbols = {(param(items[i], 1), param(items[i], 5)): notice for i, notice in missing.items() if i < len(items)}
+    return {i: f"symbol library not found ({symbols[key]}); the engine draws stale buffers"
+            for i, packed in enumerate(drawn) if (key := (param(packed, 1), param(packed, 5))) in symbols}
 
 
 # -- page frame and coordinates ----------------------------------------------
@@ -220,12 +276,19 @@ class PageView:
 
     @classmethod
     def of(cls, run: Run) -> "PageView":
-        all_shapes = shapes(run.final.vector)
+        kept = [k for k, t in enumerate(run.final.vector) if not is_pen_record(t, run.view_dx, run.view_dy)]
+        all_shapes = shapes([run.final.vector[k] for k in kept])
         frames = [PageFrame.of(s) for s in all_shapes if is_page_frame(s)]
-        content = [(s, shape_writer(s, run.vector_writers)) for s in all_shapes if not is_page_frame(s)]
-        notes = ["shapes without a single writing item; not attributed"] if any(i is None for _, i in content) else []
-        runs = text_runs(run.final.text)
-        text_items = [run_writer(r, run.text_writers) for r in runs]
+        content = [(s, item) for s in all_shapes if not is_page_frame(s)
+                   if (item := shape_writer(s, kept, run.vector_writers)) not in run.excluded]
+        records = len(run.final.vector) - len(kept)
+        # The shell would draw each record as a one-point object of its own kind.
+        notes = [f"{records} pen-width record(s) left out"] if records else []
+        if any(i is None for _, i in content):
+            notes.append("shapes without a single writing item; not attributed")
+        attributed = [(r, run_writer(r, run.text_writers)) for r in text_runs(run.final.text)]
+        runs = [r for r, item in attributed if item not in run.excluded]
+        text_items = [item for _, item in attributed if item not in run.excluded]
         if None in text_items:
             notes.append("text runs without a single writing item; not attributed")
         return cls([s for s, _ in content], [item for _, item in content], runs, text_items, frames, run.offset,
@@ -237,16 +300,17 @@ class PageView:
         return not self.frames or min(f.origin for f in self.frames) == self.offset
 
 
-def single_writer(span: range, writers: dict[int, int]) -> int | None:
+def single_writer(span, writers: dict[int, int]) -> int | None:
     """0-based index of the one item that wrote every word (or byte) of the span, else None."""
     items = {writers.get(i) for i in span}
     (item,) = items if len(items) == 1 else (None,)
     return item - 1 if item else None
 
 
-def shape_writer(shape: Shape, writers: dict[int, int]) -> int | None:
+def shape_writer(shape: Shape, kept: list[int], writers: dict[int, int]) -> int | None:
+    """`kept` maps the decoded triples back to their positions in the engine's stream."""
     start, end = shape.span
-    return single_writer(range(3 * start, 3 * end), writers)
+    return single_writer([3 * kept[k] + w for k in range(start, end) for w in range(3)], writers)
 
 
 def run_writer(run: TextRun, writers: dict[int, int]) -> int | None:
@@ -281,7 +345,7 @@ def as_f32(value: float) -> float:
 
 
 def text_json(run: TextRun, dx: int, dy: int) -> dict:
-    """Height and width in engine units; string origins are TextOut's top-left, y + 96."""
+    """Height and width in engine units; string origins are the baseline start, y + 96."""
     return {
         "font": run.font,
         "height": as_f32(64 * run.height),
@@ -291,7 +355,7 @@ def text_json(run: TextRun, dx: int, dy: int) -> dict:
         "weight": run.weight,
         "italic": run.italic,
         "underline": run.underline,
-        "strings": [{"x": s.x - dx, "y": s.y + TEXT_TOP_OFFSET - dy, "text": s.text} for s in run.strings],
+        "strings": [{"x": s.x - dx, "y": s.y + TEXT_BASELINE_OFFSET - dy, "text": s.text} for s in run.strings],
     }
 
 
@@ -358,8 +422,6 @@ def warnings(run: Run, view: PageView | None) -> list[str]:
         notes.append("more vector output than the shell's display list holds")
     if len(run.final.text) > SHELL_TEXT_BYTES:
         notes.append("more text than the engine's text buffer holds")
-    if any(run.text_run_y_offsets):
-        notes.append(f"OnDraw per-run y offsets are nonzero: {run.text_run_y_offsets}")
     return notes
 
 
@@ -385,12 +447,13 @@ def meta_json(case: Case, run: Run, zoom_run: Run | None, view: PageView | None)
         "title": title,
         "events": [{"kind": e.kind, "detail": e.detail} for e in run.events if e.kind not in QUIET_EVENTS],
         "not_found": counted(e.detail for e in run.events if e.kind == "not-found"),
+        "excluded_items": [{"item": i, "reason": reason} for i, reason in sorted(run.excluded.items())],
         "zoom_checked": zoom_run is not None,
         "valid": not reasons,
         "invalid_reasons": reasons,
         "warnings": warnings(run, view),
         "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
-        "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
+        "text_origin": "start of the baseline: engine (x, y + 96), then translated",
     }
 
 
@@ -416,6 +479,9 @@ def write_fixture(case: Case, out: Path, zoom_check: bool) -> Written:
     target = out / case.name
     target.mkdir(parents=True, exist_ok=True)
     (target / INPUT).write_bytes(case.mus)
+    (target / RESULT).unlink(missing_ok=True)
+    if run.result_mus:
+        (target / RESULT).write_bytes(run.result_mus)
     view = PageView.of(run) if run.final is not None else None
     meta = meta_json(case, run, zoom_run, view)
     (target / "meta.json").write_text(json.dumps(meta, sort_keys=True, indent=1, ensure_ascii=False) + "\n")
@@ -446,8 +512,11 @@ def main(argv: list[str]) -> int:
     if args.list:
         print("\n".join(f"{c.name}\t{c.description}" for c in cases))
         return 0
-    with ProcessPoolExecutor(max_workers=args.jobs) as pool:
-        written = list(pool.map(write_fixture, cases, [args.out] * len(cases), [not args.no_zoom_check] * len(cases)))
+    try:
+        with ProcessPoolExecutor(max_workers=args.jobs) as pool:
+            written = list(pool.map(write_fixture, cases, [args.out] * len(cases), [not args.no_zoom_check] * len(cases)))
+    finally:
+        shutil.rmtree(SANDBOXES, ignore_errors=True)   # one copy of the install per worker process
     for w in written:
         state = "ok" if w.valid else "INVALID " + "; ".join(w.reasons)
         print(f"{w.name:40} shapes={w.shapes:5} strings={w.texts:4} {state}")

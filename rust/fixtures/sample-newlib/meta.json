@@ -45,6 +45,40 @@
    "kind": "not-found"
   }
  ],
+ "excluded_items": [
+  {
+   "item": 5,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 7,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 9,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 11,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 13,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 15,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 17,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 43,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0710.drw); the engine draws stale buffers"
+  }
+ ],
  "invalid_reasons": [],
  "items": 59,
  "not_found": [
@@ -64,7 +98,7 @@
   56000
  ],
  "paper": "Legal",
- "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
+ "text_origin": "start of the baseline: engine (x, y + 96), then translated",
  "title": "C:\\WORK\\CASE.MUS   (saved -   59 Items)   <Legal>",
  "valid": true,
  "view_globals": [

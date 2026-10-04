@@ -26,22 +26,30 @@ Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT
 
 - **Open** a `.mus` file with the button or by dropping it on the window; the bundled samples are in the drop-down (`WINSCORE 5.01/winscore/*.mus`, `SCORE 4/SCORE/NEWLINE.MUS`, `NEWLIB.MUS`). Dropping an `engine.json` loads it as the reference for the current score.
 - **Rust / Engine / Overlay**: the Rust renderer's page, the original engine's display list (`rust/fixtures/sample-*/engine.json`, produced from WScore.exe under emulation), or both, engine in cyan and Rust in magenta, multiplied, so that matching elements come out dark.
-- **Zoom**: −/+, the percent list, Fit, or ctrl/⌘ + wheel (pinch) around the pointer.
-- **Selection**: click an element (Rust and Overlay views) or a row of the item list. The panel shows P1…Pn; edit a value and press Enter to set it and re-render. **Save** downloads the edited `.mus`.
+- **Zoom**: −/+ buttons or the `+` and `_` keys, the percent list, Fit, or ctrl/⌘ + wheel (pinch) around the pointer.
+- **Selection**: click an element or a row of the item list; Shift-click adds or removes; Escape clears. A click selects the item whose drawn outline is under the pointer (in the Engine view through the fixture's item attribution); where there is none, WinScore's own rule picks the item with the nearest reference point within 12 px (decision D8). The panel shows P1…Pn of the last selected item with the help's label for each; edit a value and press Enter to set it and re-render.
+- **Editing**: drag selected items (Shift locks to one axis by WinScore's rule, Escape cancels), arrows move by one P3 space or scale step, Page Up/Down by 4 steps, Home/End by 10 spaces (WinScore's edit-mode keys), `[`/`]` one staff up/down, Enter / Shift+Enter to the next / previous item, Delete, ⌘Z/Ctrl+Z undo, ⇧⌘Z/Ctrl+Y redo. Dragging empty paper pans. **Save** downloads the edited `.mus`. All editing runs in `score-edit` (editor-core's crate, checked against the engine): moves, deletes, commands, drags and the undo history. Drags send the cursor position and keep the grab offset (decision D9); score-edit computes P3/P4 as the engine does, with P4 in whole steps for notes, rests, clefs, keys and meters.
+- **Command bar** (bottom left), as in WinScore: typing anywhere outside a form field goes into it, Enter runs the SCORE command on the selection (`R 5`, `600 5`, `FLI`, `NOTE`, `DE`, …), Up/Down recall earlier lines, Escape returns to the page. Next to it the status line shows what the last action did and the selected item's P1…Pn, as WinScore lists the item in edit mode.
+- **Palette** (below the toolbar): WinScore's Items menu, clefs, note and rest values, and edit-mode buttons, each sending the SCORE command from WinScore's command table (`analysis/data/command_map.tsv`) with its tooltip. Commands `score-edit` does not handle yet are struck through and disabled.
+- **Input…** opens WinScore's five-pass input dialog (Smith's "Computer Keyboard Input", `IN`): staff (proposed one above the highest), input range, and the notes, rhythms, marks, beams and slurs passes. `score-input` checks the passes as you type and marks the failing one; Enter moves to the next pass and inserts after the fifth. A missing staff is created as the engine's `IN n` creates it (`score_input::StaffArgs`). Insert is one undo step.
 - URL parameters for direct links: `?sample=mozart.mus&mode=overlay&zoom=200&select=12`.
 
 ## Conventions
 
 - Page coordinates are engine units of 1/4000 inch, origin at the paper's bottom-left corner, y up, as in `rust/fixtures/README.md`.
-- **Zoom**: 100 % shows the page at physical size on a 96-dpi screen (one CSS pixel = 1/96 in ≈ 41.7 engine units). This matches WinScore's own 100 % (zoom 64 of 256 in an `MM_HIENGLISH` view) on a 96-dpi display.
-- **Painting** follows `CWScoreView::OnDraw` (0x5E5910) as far as it is known: filled objects with the even-odd rule, polylines one device pixel wide, text drawn from the top-left of the character cell (the engine's y + 96 is already folded into the coordinates). Points are snapped to device pixels. Filled objects also get a one-pixel outline, which is how GDI's `PolyPolygon` behaves with a pen selected; whether WinScore selects one is still to be confirmed.
-- **Fonts**: see `fonts/README.md`. The engine positions every character itself, so the substitute faces only change glyph shapes, not positions. The baseline offset below the cell top uses the ascent of the Windows faces WinScore would get (an approximation, listed in `src/fonts.ts`).
+- **Zoom**: 100 % shows the page at physical size on a 96-dpi screen (one CSS pixel = 1/96 in ≈ 41.7 engine units). This matches WinScore's own 100 % (zoom 64 of 256 in an `MM_HIENGLISH` view) on a 96-dpi display. The preset list is WinScore's zoom bar (10 … 500 %) plus larger steps; − and + change the zoom by a quarter, as WinScore's Reduce and Zoom do.
+- **Painting** follows `CWScoreView::OnDraw` (0x5E5910) as `disasm-expert` read it (`analysis/engine/display.md`): polylines with a pen one device pixel wide; filled objects with the even-odd rule and outlined with the same pen; text on its baseline at the engine's y + 96 (folded into the fixture coordinates), stretched horizontally to the run's average width as `CreateFontA` does; a white window with the engine's green page frame. Points are snapped to device pixels.
+- **Fonts**: see `fonts/README.md`. The engine positions every character itself, so the substitute faces only change glyph shapes, not positions. The width stretch uses the average character width of the Windows face GDI would substitute (Times New Roman, Arial, Courier New); for the other families the glyphs are left unstretched. Rotated text turns about the cell's top-left corner (baseline plus the Windows face's ascent) and turns clockwise, following the line on which the engine places the characters (display.md §3.4; inferred from the binary, not observed on Windows).
 
 ## Layout
 
 | Path | What |
 |---|---|
 | `src/main.ts` | app state, file handling, controls |
+| `src/editor.ts` | the editing operations the UI uses, backed by score-edit through score-web |
+| `src/interaction.ts` | pointer and keyboard gestures → editor calls |
+| `src/command-bar.ts` | command bar: typing capture, history |
+| `src/palette.ts` | toolbar palette of SCORE commands |
 | `src/canvas.ts` | scrolling, zooming page view |
 | `src/paint.ts` | display-list painter |
 | `src/display.ts` | decoding of score-web's flat display-list encoding |

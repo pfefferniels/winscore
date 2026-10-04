@@ -1,0 +1,44 @@
+{
+ "case": "code01-sample-chord-flats",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 59,
+   "vector_words": 465
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
+ "description": "stemless note with displaced flat (P5 1.155) and stem-down note with flat at the same P3, staff size 0.85 (sonlcs.mus items 315, 316)",
+ "events": [],
+ "invalid_reasons": [],
+ "items": 3,
+ "not_found": [],
+ "page_frames": [
+  [
+   401,
+   -30349,
+   34399,
+   25649
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "start of the baseline: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -    3 Items)   <Legal>",
+ "valid": true,
+ "view_globals": [
+  2400,
+  3402
+ ],
+ "view_offset": [
+  400,
+  -30350
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}

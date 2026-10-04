@@ -45,3 +45,38 @@ address	name	confidence	role
 00494026	redraw	read	fit_view then draw_items
 004a3f10	cmd_get	inferred	G command (load and display)
 00494c38	load_score	inferred	
+004a060d	box_outline	read	closed rectangle polyline from the corner globals 0x1F93E60..0x1F93E7C (code-12 boxes, page frame)
+004f0871	note_ledger_lines	read	ledger lines of a note (draw_note, when P4 < 2 or > 12, or P30)
+004f14b0	note_head	read	note head, via draw_clef/draw_symbol
+004f06bb	note_tails	read	tails (flags), IP9 % 10, via draw_clef/draw_symbol
+004f2f31	note_accidental	read	accidental, IP5 % 10
+004f0eb9	note_stem	read	stem, when (IP5 % 100) / 10 != 0
+004f2279	note_marks	read	marks (P11)
+00558a40	note_special_head	inferred	IP6 < -2 except -3 and -20..-39
+0042ad97	load_symbol_library	read	builds lbNNNN.drw and reads it; 'Not found' dialog if missing
+0051cf40	input_rhythm_spacing	read	IN pass 2: rhythms and horizontal spacing (input.md)
+0052fc56	input_min_gap	read	IN: minimum gap of 3 after pass 2 (input.md)
+005253fd	input_store_items	verified	IN: writes the work table into the item store
+004aefa0	input_pass	read	IN: parse one pass text and dispatch on the pass number
+0051c64f	input_rhythm_value	read	IN: decode one rhythm value (dur, type, dots, tails)
+004ecdf8	input_pitches	verified	IN pass 1: work table from pitches
+0052c6a0	input_main	verified	IN main routine
+0052f991	input_range_dialog	read	IN range dialog: IP5 begin, IP6 end, IP7 spacing staff
+004afb68	cmd_I	read	commands starting with I: I n (edit item n), II, IN (staged input); also entered after item creation
+0046d088	edit_params	verified	edit mode: parameter pairs p v, relative and transfer forms (commands.md)
+0045ef21	edit_letters	read	edit mode: letter commands (/p relative, R/L/U/D moves, accidentals, ...)
+00580b70	create_by_mnemonic	verified	creates an item from a three-letter mnemonic of the table at 0x7911EC (NOT, RES, CLE, ...)
+004b7ad8	cmd_lineup	read	LJ/LI/J: prompts for the system
+004b906d	lineup_answer	read	LJ/LI/J: takes the staff answer or box, confirms, runs
+004b80b7	lineup_pass	read	LJ/LI/J main pass
+004a30bb	ask_source_box	verified	asks 'Source Box O.K.?' through the yes/no callback 0x595CD0
+0048f663	drag_move	verified	mouse drag (~v/~s/~t): new P3/P4 into the edit buffer (editing.md)
+00498bf0	select_nearest	read	click selection: nearest item anchor (editing.md)
+0041b011	region_select	read	drag rectangle to an x range and staff range
+0042fa58	text_parse	read	code 16 parser (text.md, by impl-text)
+00532ec0	text_emit_char	read	writes one text record string (text.md)
+0056caf0	text_record_header	read	text record header per font change (text.md)
+0056b845	load_font_metrics	read	loads fontlib/FMnn.FMT (text.md)
+0056f920	text_rotate	read	rotates text positions by P9 (display.md, text.md)
+004a830b	read_prefs	verified	parses scorlib/PREF.DAT (prefs.md)
+005ff381	anint	read	Fortran ANINT: x +/- 0.5 in f64, chopped (numerics.md)
