@@ -7,6 +7,7 @@ use score_format::Item;
 
 use crate::command::moves::Increments;
 use crate::document::{Document, ItemId};
+use crate::drag::Ends;
 
 /// The ids in their first-seen order, without repeats.
 fn unique(ids: impl Iterator<Item = ItemId>) -> Vec<ItemId> {
@@ -33,6 +34,8 @@ pub struct Session {
     current: Option<ItemId>,
     pub increments: Increments,
     deleted: Vec<Vec<Deleted>>,
+    /// What a drag moves (LFT, RGT); back to the whole item when edit mode ends.
+    drag_ends: Ends,
 }
 
 impl Session {
@@ -53,11 +56,22 @@ impl Session {
             self.current = Some(last);
         }
         self.selection = chosen;
+        self.drag_ends = Ends::All;
     }
 
     pub fn clear(&mut self) {
         self.selection.clear();
         self.originals.clear();
+        self.drag_ends = Ends::All;
+    }
+
+    pub fn drag_ends(&self) -> Ends {
+        self.drag_ends
+    }
+
+    /// LFT, RGT: drag only that end; the same word again drags the whole item.
+    pub fn toggle_drag_end(&mut self, end: Ends) {
+        self.drag_ends = if self.drag_ends == end { Ends::All } else { end };
     }
 
     /// The selected item as it was when it was selected.

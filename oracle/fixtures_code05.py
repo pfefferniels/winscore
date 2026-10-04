@@ -54,6 +54,11 @@ def cases() -> list[Case]:
         ("p16-number-below", "number under an unbroken slur, P16 = -3", {"p16": -3}),
         ("p16-number-sloped", "number in a sloped slur", {"p16": 3, "p5": 12}),
         ("p16-number-p17-p18", "number moved by P17 = 1, P18 = 1", {"p16": 3, "p17": 1, "p18": 1}),
+        ("p16-number-p19", "number in a slur with P19 = 0.5 (also its rotation)", {"p16": 3, "p19": 0.5}),
+        ("p16-number-dots", "number under a dotted slur, P11 = -8, P16 = -3", {"p16": -3, "p11": -8}),
+        ("p16-number-dashes-3", "three dashes and P16 = 3: no number", {"p16": 3, "p11": 3}),
+        ("p16-number-half-sloped", "number in a sloped right half slur", {"p16": 3, "p12": 2, "p5": 12}),
+        ("p16-number-below-down", "number above a slur curving down, P16 = -5", {"p16": -5, "p7": -3}),
         ("p27-slash", "slash P27 = 3", {"p27": 3}),
         ("p27-slash-p28-p29", "slash P27 = 2 raised P28 = 1 at P29 = 0.3", {"p27": 2, "p28": 1, "p29": 0.3}),
         ("p27-slash-sloped", "slash on a sloped slur", {"p27": 3, "p5": 12}),
@@ -84,6 +89,10 @@ def cases() -> list[Case]:
         *[(f"ending-p13-{label(v)}", f"first ending P13 = {v}", {"p8": 1, "p13": v, "p7": 5, "p4": 10, "p5": 10})
           for v in (1, 2, 3, 0.5)],
         ("ending-p12-size", "first ending stop size P12 = 1.5", {"p8": 1, "p12": 1.5, "p7": 5, "p4": 10, "p5": 10}),
+        ("ending-p14-font", "first ending number in font 12, P14 = 12", {"p8": 1, "p14": 12, "p7": 5, "p4": 10, "p5": 10}),
+        ("ending-p17-letter", "first ending with letter P17 = 2 after the number", {"p8": 1, "p17": 2, "p7": 5, "p4": 10, "p5": 10}),
+        ("tuplet-p11-1-sloped", "sloped continuous bracket, number inside, P11 = 1", {"p8": 3, "p7": 5, "p5": 12, "p11": 1}),
+        ("tuplet-p19", "tuplet number turned by P19 = 2", {"p8": 3, "p7": 5, "p19": 2}),
     ]
     sweep = [built(f"code05-{name}", desc, [staff(), slur(**params)]) for name, desc, params in slurs + brackets]
     other = [
