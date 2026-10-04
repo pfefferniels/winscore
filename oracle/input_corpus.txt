@@ -3028,3 +3028,75 @@ G3/A/B/C4;
 ;
 ;
 ;
+== rnd-1-2
+IN 1
+;
+CN5:C:D/A4/E/D/A/F/A:D:C;
+4./4/8./8/12/4/8;
+U 3:4/WS 5:6;
+3 5;
++2 7/-2 7;
+== rnd-1-5
+IN 1
+30 200
+BA/3 4/R/E4/M/GF:DN/G:DS/AS/AN5:A/F/FS:G:G/F/A/DF/BS/E/CN:D:E;
+8/2/E/8/8./T/E/2/12/12/1/S/S/8.;
+;
++2 6/-11 13;
+;
+== rnd-1-7
+IN 1
+10 190
+AL/C5/G:F:G/AS:GN:G/D/GS/A/FN/E/B4:ES/A:A/G:E:CF;
+Q/1/Q/H/8/T/4./T/16/H/S;
+;
+-5 6/-8 9;
+-4 8/+7 9;
+== rnd-1-9
+IN 1
+;
+TR/C3/M/C/RU/A4/M/B3/M/EN/DS/G:GS:AN/D4/M/C/AF5/M/ES:F:EF/B:GN:EN/BF;
+2/32/4/24/H/16/E/4/E/E/16/H/12/Q;
+A 9:10/ACT 3:5;
+2 3/+5 6;
+-1 2/11 13;
+== rnd-1-10
+IN 1
+2 150
+TR/DS4:B:AN/D/A/RD/GS5/EF5;
+Q/S/1/2/8/16;
+U 5/TR 5;
+4 5;
+-4 5/2 4;
+== rnd-1-16
+IN 1
+2 150
+K3F/F4/G:G/G4;
+E/32/H;
+W 2;
+1 2;
++1 3/2 3;
+== rnd-1-25
+IN 1
+10 190
+AL/K4F/D5:D/M/RU/EN/CN:CF:D/EF4/A/GF/M/G:D;
+2/4/8/8/S/16/8./4;
+FE 2:4;
+2 6;
+;
+== rnd-1-54
+IN 1
+30 200
+K2F/C5/GS/F/AF:AS:G/C/G/M/G/G/G:D/FS/M;
+E/8/24/4./16/T/8/8/S/12;
+;
+-1 3/5 10;
+;
+== rnd-1-57
+IN 1
+10 190
+K3S/B5:F/B3/CN/M/B:ES/D:E:AS/C4:BN:B/RU/R/EN:GS:C/BF/D:AF;
+E/4/H/8/16/8/2/2/24/32/2;
+WS 4:7;
++4 8;
+-7 9/+7 9;

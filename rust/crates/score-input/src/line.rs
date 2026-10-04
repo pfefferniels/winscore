@@ -34,12 +34,15 @@ pub(crate) fn item(params: &[f32]) -> Item {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Note {
     pub x: f32,
-    /// Sorted from the lowest level up.
+    /// In item order: the head carrying the stem first (lowest first for an up stem).
     pub heads: Vec<Head>,
     pub rhythm: Rhythm,
     pub down: bool,
     /// P8 of the head that carries the stem.
     pub extension: f32,
+    /// P8 as the engine's work table keeps it for pass 5: the pass-2 value, not updated when a
+    /// beam fits the stem (that happens in the item store), 0 after a beam turned a chord.
+    pub table_extension: f32,
     /// Flags drawn on the stem; removed when the note is beamed.
     pub tails: i32,
     /// P11 of the head that carries the stem (marks from pass 3).
@@ -52,18 +55,33 @@ pub(crate) struct Note {
 
 impl Note {
     fn new(x: f32, heads: Vec<Head>, rhythm: Rhythm, stems: StemMode, shift: StaffShift) -> Self {
-        let mut note =
-            Note { x, heads, rhythm, down: false, extension: 0.0, tails: rhythm.tails(), mark: 0.0, shift, stray_head: None };
+        let mut note = Note {
+            x,
+            heads,
+            rhythm,
+            down: false,
+            extension: 0.0,
+            table_extension: 0.0,
+            tails: rhythm.tails(),
+            mark: 0.0,
+            shift,
+            stray_head: None,
+        };
         let down = match stems {
             StemMode::Up => false,
             StemMode::Down => true,
             StemMode::Ordinary => note.lowest() + note.highest() >= 2 * MIDDLE_LINE,
         };
-        note.set_stem(down);
+        if down && !note.is_grace() {
+            // From the top, but heads on the same level keep the order they were typed in.
+            note.heads = note.heads.chunk_by(|a, b| a.level == b.level).rev().flatten().copied().collect();
+            note.down = true;
+        }
+        note.fit_stem();
         if note.is_grace() {
             note.extension = note.grace_extension(down);
-            note.down = false;
         }
+        note.table_extension = note.extension;
         note
     }
 
@@ -82,11 +100,11 @@ impl Note {
     }
 
     pub fn lowest(&self) -> i32 {
-        self.heads.first().map_or(0, |h| h.level)
+        self.heads.iter().map(|h| h.level).min().unwrap_or(0)
     }
 
     pub fn highest(&self) -> i32 {
-        self.heads.last().map_or(0, |h| h.level)
+        self.heads.iter().map(|h| h.level).max().unwrap_or(0)
     }
 
     /// The level of the head the stem starts from.
@@ -102,21 +120,26 @@ impl Note {
         self.rhythm == Rhythm::Grace
     }
 
-    /// Sets the stem direction and the P8 that spans the chord and reaches the middle line.
+    /// Turns the stem; the engine reverses the chord's heads (0x413CA8), so the head that
+    /// carried the stem ends up last.
     pub fn set_stem(&mut self, down: bool) {
-        self.down = down;
+        if self.down != down {
+            self.heads.reverse();
+            self.down = down;
+        }
+        self.fit_stem();
+    }
+
+    /// P8 that spans the chord and reaches the middle line.
+    fn fit_stem(&mut self) {
         let (low, high) = (self.lowest(), self.highest());
-        let to_middle = if down { high - STEM - MIDDLE_LINE } else { MIDDLE_LINE - STEM - low };
+        let to_middle = if self.down { high - STEM - MIDDLE_LINE } else { MIDDLE_LINE - STEM - low };
         self.extension = (high - low).max(to_middle).max(0) as f32;
     }
 
     /// The heads in item order: the head carrying the stem first.
     pub fn ordered_heads(&self) -> Vec<&Head> {
-        if self.down {
-            self.heads.iter().rev().collect()
-        } else {
-            self.heads.iter().collect()
-        }
+        self.heads.iter().collect()
     }
 
     fn work_entries(&self, number: usize) -> Vec<WorkEntry> {
@@ -135,7 +158,7 @@ impl Note {
                         (true, false) => STEM_UP,
                     },
                     accidental: head.accidental.map_or(0, |a| a.code()),
-                    extension: if stem_head { self.extension % 100.0 } else { 0.0 },
+                    extension: if stem_head { self.table_extension % 100.0 } else { 0.0 },
                     dotted: stem_head && self.rhythm.dots() > 0,
                     mark: if stem_head { self.mark } else { 0.0 },
                     grace: self.is_grace(),

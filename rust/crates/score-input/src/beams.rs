@@ -312,6 +312,9 @@ impl Beamer<'_> {
             let down = direction == DOWN;
             if note.down != down {
                 note.set_stem(down);
+                if note.heads.len() > 1 {
+                    note.table_extension = 0.0;
+                }
                 recompute_clearance(note);
             }
         }
