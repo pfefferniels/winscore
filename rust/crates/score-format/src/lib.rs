@@ -8,6 +8,6 @@ pub mod drw;
 pub mod mus;
 pub mod word;
 
-pub use drw::{DrwError, DrwLibrary, PathKind, Symbol, SymbolPath};
+pub use drw::{DrwError, DrwLibrary, DrwRecord, PathKind, Symbol, SymbolPath};
 pub use mus::{CountWidth, Item, MusError, MusFile, Trailer};
 pub use word::Word;

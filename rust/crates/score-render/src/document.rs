@@ -10,6 +10,7 @@ use crate::colour;
 use crate::display::{Colour, ItemId};
 use crate::page::{self, Page, P3_UNIT};
 use crate::staff::{Staff, StaffTable};
+use crate::symbols::SymbolLibrary;
 use crate::units::{real, trunc, Pos};
 
 /// Where the picture is going: the screen shows editing aids, print does not.
@@ -71,6 +72,7 @@ impl ItemRef<'_> {
 #[derive(Debug, Clone)]
 pub struct Document<'a> {
     items: &'a [Item],
+    symbols: &'a SymbolLibrary,
     pub page: Page,
     pub staves: StaffTable,
     pub options: Options,
@@ -85,7 +87,17 @@ impl<'a> Document<'a> {
         let items = file.items.as_slice();
         let metric = file.trailer.measurement() == Some(1.0);
         let staves = StaffTable::from_items(refs(items), metric);
-        Self { items, page: Page::default(), staves, options }
+        Self { items, symbols: SymbolLibrary::bundled(), page: Page::default(), staves, options }
+    }
+
+    /// The same document drawn with other symbol libraries.
+    pub fn with_symbols(self, symbols: &'a SymbolLibrary) -> Self {
+        Self { symbols, ..self }
+    }
+
+    /// The symbol library (by default WinScore's bundled `LBnnnn.DRW` files).
+    pub fn symbols(&self) -> &'a SymbolLibrary {
+        self.symbols
     }
 
     pub fn items(&self) -> impl Iterator<Item = ItemRef<'a>> + '_ {

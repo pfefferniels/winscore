@@ -74,7 +74,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 }
 
 fn segment(canvas: &mut Canvas<'_>, x0: f64, x1: f64, y: f64) {
-    canvas.stroke([Pos::new(x0, y).to_point(), Pos::new(x1, y).to_point()]);
+    canvas.segment(Pos::new(x0, y), Pos::new(x1, y));
 }
 
 /// Staff numbers: Helvetica-Narrow in dark green, independent of staff size.

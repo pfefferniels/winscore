@@ -43,6 +43,12 @@ impl Pos {
     }
 }
 
+impl From<Point> for Pos {
+    fn from(p: Point) -> Self {
+        Pos::new(f64::from(p.x), f64::from(p.y))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

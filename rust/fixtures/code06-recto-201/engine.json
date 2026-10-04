@@ -1,0 +1,12 @@
+{"shapes":[
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[36050,2948],[66050,2948]]]},
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[36050,3298],[66050,3298]]]},
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[36050,3648],[66050,3648]]]},
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[36050,3998],[66050,3998]]]},
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[36050,4348],[66050,4348]]]},
+{"colour":[0,0,0],"item":1,"kind":"fill","paths":[[[55975,5048],[55975,5223],[51475,5223],[51475,5048],[55975,5048]]]},
+{"colour":[0,0,0],"item":1,"kind":"fill","paths":[[[55975,4786],[55975,4961],[51475,4961],[51475,4786],[55975,4786]]]}
+],
+"texts":[
+{"colour":[0,115,51],"escapement":0,"font":"Helvetica-Narrow","height":774.8,"italic":false,"item":0,"strings":[{"text":"2","x":34350,"y":3469},{"text":"0","x":34702,"y":3469},{"text":"1","x":35054,"y":3469}],"underline":false,"weight":400,"width":319.605}
+]}

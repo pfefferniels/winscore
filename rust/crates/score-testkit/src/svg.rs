@@ -66,7 +66,10 @@ impl Bounds {
 }
 
 fn list_points(list: &DisplayList) -> Vec<Point> {
-    let shape_points = list.shapes.iter().flat_map(|s| s.paths.iter().flatten().copied());
+    let shape_points = list
+        .shapes
+        .iter()
+        .flat_map(|s| s.paths.iter().flatten().copied());
     let text_points = placed_strings(list, &CompareOptions::default())
         .iter()
         .flat_map(string_points)
@@ -78,7 +81,10 @@ fn string_points(placed: &Placed) -> [Point; 2] {
     let height = placed.run.height;
     let advance = (placed.string.text.chars().count() as f32 * height * 0.5) as i32;
     let origin = placed.string.origin;
-    [origin, Point::new(origin.x + advance, origin.y - height as i32)]
+    [
+        origin,
+        Point::new(origin.x + advance, origin.y - height as i32),
+    ]
 }
 
 /// The points of every element the report lists as missing or extra.
@@ -96,7 +102,10 @@ fn differing_points(
     };
     let text_points = |list: &DisplayList, unmatched: &[Unmatched]| -> Vec<Point> {
         let placed = placed_strings(list, options);
-        unmatched.iter().flat_map(|m| string_points(&placed[m.index])).collect()
+        unmatched
+            .iter()
+            .flat_map(|m| string_points(&placed[m.index]))
+            .collect()
     };
     let mut points = shape_points(expected, &report.shapes.missing);
     points.extend(text_points(expected, &report.texts.missing));
@@ -154,14 +163,21 @@ fn shape_element(out: &mut String, panel: &Panel, shape: &Shape, colour: &str, s
                 r#"<path d="{d}" fill="none" stroke="{colour}" stroke-width="{stroke_width:.1}"/>"#
             )
         }
-        ShapeKind::Fill => writeln!(out, r#"<path d="{d}" fill="{colour}" fill-rule="evenodd"/>"#),
+        ShapeKind::Fill => writeln!(
+            out,
+            r#"<path d="{d}" fill="{colour}" fill-rule="evenodd"/>"#
+        ),
     };
 }
 
 fn font_family(font: &str) -> &'static str {
     match font {
-        f if f.starts_with("Helvetica-Narrow") => "Arial Narrow, Helvetica Neue, Helvetica, Arial, sans-serif",
-        f if f.starts_with("Helvetica") || f.starts_with("AvantGarde") => "Helvetica, Arial, sans-serif",
+        f if f.starts_with("Helvetica-Narrow") => {
+            "Arial Narrow, Helvetica Neue, Helvetica, Arial, sans-serif"
+        }
+        f if f.starts_with("Helvetica") || f.starts_with("AvantGarde") => {
+            "Helvetica, Arial, sans-serif"
+        }
         f if f.starts_with("Courier") => "Courier New, Courier, monospace",
         f if f.starts_with("ZapfChancery") => "Apple Chancery, URW Chancery L, cursive",
         _ => "Times New Roman, Times, serif",
@@ -169,17 +185,30 @@ fn font_family(font: &str) -> &'static str {
 }
 
 fn escape(text: &str) -> String {
-    text.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+    text.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 /// Strings are placed by the top-left of their cell; the baseline sits about 0.9 em lower.
-fn text_element(out: &mut String, panel: &Panel, run: &TextRun, origin: Point, text: &str, colour: &str) {
+fn text_element(
+    out: &mut String,
+    panel: &Panel,
+    run: &TextRun,
+    origin: Point,
+    text: &str,
+    colour: &str,
+) {
     let baseline = origin.y - (0.9 * run.height) as i32;
     let style = format!(
         r#"font-family="{}" font-size="{:.0}"{}{}"#,
         font_family(&run.font),
         run.height,
-        if run.italic { r#" font-style="italic""# } else { "" },
+        if run.italic {
+            r#" font-style="italic""#
+        } else {
+            ""
+        },
         if run.weight >= 600 {
             r#" font-weight="bold""#
         } else {
@@ -234,13 +263,21 @@ fn draw_overlay(
         || (0..placed_strings(expected, options).len()).collect(),
         |r| r.texts.missing.iter().map(|m| m.index).collect(),
     );
-    let draw_texts = |out: &mut String, placed: &[Placed], highlighted: &HashSet<usize>, colour: &str, all: bool| {
+    let draw_texts = |out: &mut String,
+                      placed: &[Placed],
+                      highlighted: &HashSet<usize>,
+                      colour: &str,
+                      all: bool| {
         placed
             .iter()
             .enumerate()
             .filter(|(i, _)| all || highlighted.contains(i))
             .for_each(|(i, p)| {
-                let c = if highlighted.contains(&i) { colour } else { MATCHED };
+                let c = if highlighted.contains(&i) {
+                    colour
+                } else {
+                    MATCHED
+                };
                 text_element(out, panel, p.run, p.string.origin, &p.string.text, c)
             });
     };
@@ -268,7 +305,13 @@ fn draw_overlay(
             .enumerate()
             .filter(|(i, _)| extra_shapes.contains(i))
             .for_each(|(_, s)| shape_element(out, panel, s, ACTUAL_ONLY, stroke_width));
-        draw_texts(out, &placed_strings(actual, options), &extra_texts, ACTUAL_ONLY, false);
+        draw_texts(
+            out,
+            &placed_strings(actual, options),
+            &extra_texts,
+            ACTUAL_ONLY,
+            false,
+        );
     }
 }
 
@@ -389,9 +432,13 @@ pub fn triptych(
         draw(out, panel);
         out.push_str("</g>\n");
     };
-    clipped(&mut out, 0, &|out, panel| draw_list(out, panel, expected, stroke_width));
+    clipped(&mut out, 0, &|out, panel| {
+        draw_list(out, panel, expected, stroke_width)
+    });
     if let Some(actual) = actual {
-        clipped(&mut out, 1, &|out, panel| draw_list(out, panel, actual, stroke_width));
+        clipped(&mut out, 1, &|out, panel| {
+            draw_list(out, panel, actual, stroke_width)
+        });
     }
     clipped(&mut out, 2, &|out, panel| {
         draw_overlay(out, panel, expected, actual, report, options, stroke_width)
