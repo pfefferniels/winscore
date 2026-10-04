@@ -26,6 +26,7 @@ code09-p5-symbol-1110
 code09-p5-symbol-115
 code09-p5-symbol-119
 code09-p5-symbol-123
+code09-p5-symbol-1300
 code09-p5-symbol-1302
 code09-p5-symbol-1304
 code09-p5-symbol-1400

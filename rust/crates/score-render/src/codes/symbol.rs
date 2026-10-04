@@ -129,6 +129,7 @@ fn draw_term(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, num
         origin: doc.position(item),
         p3: p(3),
         item_code: item.code(),
+        step: None,
         staff: item.staff(),
         spread: if p(16) != 0.0 { p(16) } else { TERM_SCALE },
         width: scaled(size_x),
