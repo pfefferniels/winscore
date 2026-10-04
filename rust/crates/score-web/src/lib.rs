@@ -10,6 +10,7 @@ pub mod codes;
 pub mod document;
 pub mod encode;
 pub mod hit;
+pub mod param_names;
 
 use score_render::{DisplayList, ItemId};
 use wasm_bindgen::prelude::*;
@@ -149,8 +150,32 @@ impl Score {
     }
 }
 
-/// Reads an `engine.json` reference display list (`rust/fixtures/README.md`).
-#[wasm_bindgen(js_name = parseReference)]
-pub fn parse_reference(json: &str) -> Result<EncodedList, JsError> {
-    Ok(EncodedList::from(&score_testkit::display_from_json(json)?))
+/// What parameter `n` of items with code `code` means, in the words of the
+/// WinScore help.
+#[wasm_bindgen(js_name = paramName)]
+pub fn param_name(code: i32, n: usize) -> Option<String> {
+    param_names::param_name(code, n).map(str::to_owned)
+}
+
+/// An engine reference display list, read from `engine.json`
+/// (`rust/fixtures/README.md`).
+#[wasm_bindgen]
+pub struct Reference(DisplayList);
+
+#[wasm_bindgen]
+impl Reference {
+    #[wasm_bindgen(constructor)]
+    pub fn new(json: &str) -> Result<Reference, JsError> {
+        Ok(Reference(score_testkit::display_from_json(json)?))
+    }
+
+    pub fn list(&self) -> EncodedList {
+        EncodedList::from(&self.0)
+    }
+
+    /// As [`Score::hit_test`], for elements the fixture attributes to an item.
+    #[wasm_bindgen(js_name = hitTest)]
+    pub fn hit_test(&self, x: f64, y: f64, tolerance: f64) -> Option<u32> {
+        hit::hit_test(&self.0, At::new(x, y), tolerance).map(|id| id.0)
+    }
 }

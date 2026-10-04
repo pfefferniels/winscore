@@ -14,12 +14,17 @@ export interface Layer {
   composite?: GlobalCompositeOperation;
 }
 
+/** An item whose elements in `list` are drawn highlighted. */
+export interface Highlight {
+  list: DisplayList;
+  item: number;
+}
+
 export interface Scene {
   transform: Transform;
   paper: Box;
   layers: Layer[];
-  /** Item whose elements in `list` are drawn highlighted. */
-  highlight: { list: DisplayList; item: number } | null;
+  highlights: Highlight[];
   /**
    * Also stroke the outline of filled objects with a one-pixel pen, as GDI's
    * Polygon does when a pen is selected. Keeps hairline fills visible.
@@ -122,7 +127,5 @@ export function paint(ctx: CanvasRenderingContext2D, scene: Scene) {
     paintList(ctx, t, layer.list, layer.tint ?? null, scene.outlineFills);
   });
   ctx.globalCompositeOperation = 'source-over';
-  if (scene.highlight) {
-    paintList(ctx, t, elementsOf(scene.highlight.list, scene.highlight.item), HIGHLIGHT, scene.outlineFills);
-  }
+  scene.highlights.forEach(({ list, item }) => paintList(ctx, t, elementsOf(list, item), HIGHLIGHT, scene.outlineFills));
 }
