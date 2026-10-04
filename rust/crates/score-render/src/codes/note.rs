@@ -116,6 +116,8 @@ pub(crate) struct Note {
     ledger_start: i32,
     /// P12 without its hundreds: 1 shows the note on the staff above, 2 below.
     borrowed_staff: i32,
+    /// An AlphaNote head (P6 ±20 … ±25).
+    alpha: bool,
 }
 
 impl Note {
@@ -174,7 +176,18 @@ impl Note {
             tails: ip(item, 9) % 10,
             ledger_start,
             borrowed_staff,
+            alpha: head::is_alpha(ip(item, 6)),
         })
+    }
+
+    /// The head width the parts after the head use: the head routine sets
+    /// it to 17.1 units for AlphaNotes (0x4F14B0).
+    fn drawn_head_width(&self) -> f64 {
+        if self.alpha {
+            real(self.unit * c(head::ALPHA_WIDTH))
+        } else {
+            self.head_width
+        }
     }
 
     /// The stem direction dots and marks assume: a stemless note counts as
@@ -241,7 +254,7 @@ fn level(item: ItemRef<'_>) -> f64 {
 fn tails(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
     let down = note.stem.is_down();
     let gap = real(-(note.unit * c(STEPS)));
-    let (x, gap, mirror) = if down { (note.origin.x, gap, 1.0) } else { (real(note.origin.x + note.head_width), -gap, -1.0) };
+    let (x, gap, mirror) = if down { (note.origin.x, gap, 1.0) } else { (real(note.origin.x + note.drawn_head_width()), -gap, -1.0) };
     let p8 = f64::from(item.p(8));
     let amod = p8 - f64::from(trunc(p8 / 100.0) * 100);
     let first = real(amod * gap + note.origin.y + gap);
@@ -289,9 +302,9 @@ fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
         return 0.0;
     }
     let down = note.stem.is_down();
-    let (x, length) = if down { (note.origin.x, -length) } else { (real(note.origin.x + note.head_width), length) };
+    let (x, length) = if down { (note.origin.x, -length) } else { (real(note.origin.x + note.drawn_head_width()), length) };
     let end = real(length + note.origin.y);
-    let source = stem_source(item, head_type);
+    let source = stem_source(item, note, head_type);
     let source = if down { -source } else { source };
     let start = real(note.unit * source + note.origin.y);
     canvas.point(Pos::new(x, start), Pen::Stroke);
@@ -311,9 +324,14 @@ fn has_stem(head_type: i32) -> bool {
 
 /// Where the stem starts, in steps from the head's centre: 2.1, 0 for the
 /// diamonds and X heads, 7 for the X head; P17 (without its hundreds,
-/// which thicken the stem in print) in scale steps.
-fn stem_source(item: ItemRef<'_>, head_type: i32) -> f64 {
-    let p17 = f64::from(item.p(17));
+/// which thicken the stem in print) in scale steps. The head routine sets
+/// P17 to ±0.1 for AlphaNotes.
+fn stem_source(item: ItemRef<'_>, note: &Note, head_type: i32) -> f64 {
+    let p17 = match (note.alpha, item.p(5) < 20.0) {
+        (true, true) => c(-0.1),
+        (true, false) => c(0.1),
+        (false, _) => f64::from(item.p(17)),
+    };
     let p17 = if trunc(p17 / 100.0) != 0 { real(p17 - f64::from(trunc(p17 / 100.0) * 100)) } else { p17 };
     if p17 != 0.0 {
         return real(p17 * c(STEPS));

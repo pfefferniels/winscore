@@ -238,7 +238,7 @@ fn trill(doc: &Document<'_>, note: &Note, placed: &Placed, accidental: i32, canv
 /// The documented meaning of P13 = 99 (the engine moves the mark 99 P3
 /// units right instead): from the head's centre to the stem.
 fn centre_on_stem(note: &Note) -> f64 {
-    let half = real(note.head_width / 2.0);
+    let half = real(note.drawn_head_width() / 2.0);
     if note.implied_stem() == Stem::Down {
         -half
     } else {
