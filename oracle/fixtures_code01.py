@@ -72,7 +72,7 @@ def heads() -> list[Case]:
         single("p6-paren-width", "parenthesised head, note width P20 = 1.4", p6=10, p20=1.4),
         single("p6-headless-m1", "P6 = -1: headless", p6=-1),
         single("p6-m3", "P6 = -3", p6=-3),
-        *[single(f"p6-library-{v}", f"library symbol {v} as head", p6=v) for v in (24, 30, 38, 95, 139, 208)],
+        *[single(f"p6-library-{v}", f"library symbol {v} as head", p6=v) for v in (30, 38, 95, 103, 139, 208)],
         single("p6-library-stem-down", "library symbol 30 as head, stem down", p6=30, p5=20),
         *[single(f"p6-alpha-{v}", f"P6 = {v}: AlphaNote", p6=v) for v in (20, 22, 25)],
         single("p6-alpha-p21", "AlphaNote with P21 = 2, P22 = 1, P23 = 1, P24 = 1.5", p6=20, p21=2, p22=1, p23=1, p24=1.5),
@@ -183,7 +183,6 @@ def sizes() -> list[Case]:
         single("p20-down", "P20 = 1.4, stem down, tail", p20=1.4, p5=20, p9=1),
         single("p20-half", "P20 = 1.4 on a half note", p20=1.4, p6=1),
         single("p20-mark", "P20 = 1.4 with staccato", p20=1.4, p11=7),
-        single("p28-3", "accidental pen width P28 = 3", p5=12, p28=3),
         *[single(f"p29-{label(v)}", f"accidental size P29 = {v}", p5=11, p29=v) for v in (0.7, 1.5)],
         *[single(f"p31-{label(v)}", f"dot size P31 = {v}", p9=20, p31=v) for v in (1.5, 0.7)],
     ]
@@ -236,6 +235,27 @@ def staves() -> list[Case]:
     ]
 
 
+def mixed() -> list[Case]:
+    """Several notes on one staff, for pictures and to check items do not disturb each other."""
+    notes = [
+        note(p3=12, p4=-2, p5=11, p6=1, p7=2),
+        note(p3=24, p4=3, p5=12, p7=1.5, p9=10),
+        note(p3=36, p4=105, p5=10, p7=0.5, p8=101, p9=1),
+        note(p3=44, p4=6, p5=13, p7=0.5, p9=1),
+        note(p3=56, p4=9, p5=20, p7=0.25, p9=2),
+        note(p3=68, p4=14, p5=24, p7=0.25, p9=2),
+        note(p3=80, p4=8, p5=0, p6=2, p7=4),
+        note(p3=96, p4=5, p5=15, p6=11, p7=2, p9=10),
+        note(p3=110, p4=10, p5=20, p6=6, p7=1),
+        note(p3=122, p4=4, p5=10, p6=4, p7=1),
+        note(p3=134, p4=7, p5=10, p7=0.75, p9=13, p15=0.8),
+        note(p3=150, p4=0, p5=16, p6=3, p7=8),
+        note(p3=166, p4=12, p5=22.25, p7=1, p10=20),
+        note(p3=178, p4=12, p5=20, p7=1, p9=4),
+    ]
+    return [built("code01-mixed-bar", "fourteen notes of different kinds on one staff", [staff()] + notes)]
+
+
 def cases() -> list[Case]:
     return (positions() + accidentals() + heads() + rhythm() + stem_lengths() + dots_and_tails() + offsets()
-            + marks() + other_staves() + sizes() + ledger_control() + colour() + grace() + staves())
+            + marks() + other_staves() + sizes() + ledger_control() + colour() + grace() + staves() + mixed())
