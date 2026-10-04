@@ -1,9 +1,10 @@
 //! Passes 4 and 5: beams and slurs between numbered notes.
 //!
-//! Both passes share a syntax: pairs of note numbers (`1 4`, or `1+4` / `1-4` where the sign
-//! belongs to the second number), separated by `/`. A sign in front of either number puts the
-//! beam or slur above (`+`) or below (`-`). Adding 100 times n to a beam's note number puts the
-//! tuplet number n over the beam. `Xn a b c` makes groups of n notes starting at a, b, c.
+//! Both passes share a syntax: pairs of note numbers (`1 4`), separated by `/`. A sign in
+//! front of either number puts the beam or slur above (`+`) or below (`-`). Written without
+//! a space after the first number, `1+4` is only a separator (as in SCORE 4's own files);
+//! the engine misreads `1-4`, which is therefore an error here. Adding 100 times n to a
+//! note number puts the tuplet number n over the beam. `Xn a b c` makes groups of n notes starting at a, b, c.
 //! Pass 4 also has `xB` (beam every x eighths) and `xBy` (after y pickup notes).
 
 use crate::error::{ErrorKind, InputError, Pass};
@@ -55,7 +56,14 @@ fn endpoint(c: &mut Cursor) -> Result<Endpoint, InputError> {
 
 fn pair(c: &mut Cursor) -> Result<Connection, InputError> {
     let a = endpoint(c)?;
-    let b = endpoint(c)?;
+    let tight_plus = c.peek() == Some(b'+');
+    if c.peek() == Some(b'-') {
+        return Err(c.unexpected());
+    }
+    let mut b = endpoint(c)?;
+    if tight_plus {
+        b.side = None;
+    }
     Ok(Connection { first: a.note, last: b.note, side: a.side.or(b.side), tuplet: a.tuplet.max(b.tuplet) })
 }
 
@@ -122,7 +130,7 @@ mod tests {
     fn pairs_signs_and_tuplets() {
         assert_eq!(
             pairs("1 2/-4 306/7 +309/1+4;", Pass::Beams),
-            [(1, 2, None, 0), (4, 6, Some(Side::Below), 3), (7, 9, Some(Side::Above), 3), (1, 4, Some(Side::Above), 0)]
+            [(1, 2, None, 0), (4, 6, Some(Side::Below), 3), (7, 9, Some(Side::Above), 3), (1, 4, None, 0)]
         );
     }
 

@@ -14,12 +14,7 @@ use crate::display::Point;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::symbols::{draw_clef, ItemContext};
-use crate::units::{nint, real, trunc, Pos};
-
-/// A REAL*4 constant of the engine.
-fn c(value: f32) -> f64 {
-    f64::from(value)
-}
+use crate::units::{constant, nint, real, trunc, Pos};
 
 /// The engine's point buffer holds this many points; longer slurs are not drawn.
 const BUFFER_POINTS: usize = 50_000;
@@ -80,7 +75,7 @@ impl Bracket {
         let staff = doc.staff_of(item);
         let step = staff.step;
         let bottom = doc.position(item).y;
-        let top = real(bottom + real(step * params.p7 * c(7.0)));
+        let top = real(bottom + real(step * params.p7 * constant(7.0)));
         let (ip9, ip13) = (trunc(p(9)), trunc(p(13)));
         let open = (ip9 == -1 && params.p8_int != 2) || ip13 == 1 || ip13 == 3;
         if open {
@@ -90,8 +85,8 @@ impl Bracket {
             canvas.point(Pos::new(params.x, top), Pen::Continue);
         }
         let number = if ip9 > 0 { ip9 } else { params.p8_int };
-        let gap = real(step * c(13.0));
-        let gap = if number > 9 { real(gap * c(1.5)) } else { gap };
+        let gap = real(step * constant(13.0));
+        let gap = if number > 9 { real(gap * constant(1.5)) } else { gap };
         Self {
             step,
             left: params.x,
@@ -120,20 +115,20 @@ fn ending(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut C
         return;
     }
     let step = bracket.step;
-    let number_y = real(bracket.top - step * c(28.0));
-    let number_x = real(step * if doc.screen() { c(14.5) } else { c(13.5) });
+    let number_y = real(bracket.top - step * constant(28.0));
+    let number_x = real(step * if doc.screen() { constant(14.5) } else { constant(13.5) });
     // P13 from 0.01 to 0.99 moves the stop right; P13 >= 1 only opens the bracket.
     let p13 = if ip13 > 0 { 0.0 } else { p(13) };
     let (shift, lift) = match p(12) {
-        0.0 => (p13, real(step * c(2.0))),
-        p12 => (real(p13 - (p12 - 1.0) * c(1.3)), real(real(step * c(2.0)) * p12 * c(0.8))),
+        0.0 => (p13, real(step * constant(2.0))),
+        p12 => (real(p13 - (p12 - 1.0) * constant(1.3)), real(real(step * constant(2.0)) * p12 * constant(0.8))),
     };
-    let after_number = real(shift * c(3750.0) / step + number_x);
+    let after_number = real(shift * constant(3750.0) / step + number_x);
     let size = match p(12) {
         0.0 => 1.0,
         p12 => p12,
     };
-    let stop_shift = if first { c(2.0) } else { c(5.0) };
+    let stop_shift = if first { constant(2.0) } else { constant(5.0) };
     let at = Pos::new(real(after_number + bracket.left + step * stop_shift), real(lift + number_y));
     draw_clef(doc, &ItemContext::of(item), canvas, at, step, ENDING_DOT, (size, size));
 }
@@ -151,18 +146,18 @@ fn tuplet_bracket(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas
         0.0 => 1.0,
         p20 => p20,
     };
-    let right = real(step * c(17.5) * width + bracket.right);
+    let right = real(step * constant(17.5) * width + bracket.right);
     let length = real(right - bracket.left);
     let centre = match p(10) {
-        0.0 => c(0.5),
+        0.0 => constant(0.5),
         p10 => p10,
     };
     if ip9 < -1 {
-        bracket.gap = real(-(p(9) * c(75.0)));
+        bracket.gap = real(-(p(9) * constant(75.0)));
     }
     let gap = bracket.gap;
     let middle = real(real(centre * length) + bracket.left - gap);
-    let half_gap = real(step * p(23) * c(6.0));
+    let half_gap = real(step * p(23) * constant(6.0));
     let mut top = bracket.top;
     let mut bottom = bracket.bottom;
     if bracket.dy == 0.0 {
@@ -292,9 +287,9 @@ impl Params {
         let p = |n| f64::from(item.p(n));
         let (mut p6, mut p7) = (p(6), p(7));
         if p6 == 0.0 {
-            p6 = real(p(3) + c(20.0));
+            p6 = real(p(3) + constant(20.0));
             if p7 == 0.0 {
-                p7 = c(3.0);
+                p7 = constant(3.0);
             }
         }
         let mut params = Self { x: doc.position(item).x, p6, p7, p8: p(8), p8_int: trunc(p(8)), p16: p(16) };
@@ -364,6 +359,8 @@ struct Slur {
     /// Point spacing along the slur.
     dx: f64,
     points: usize,
+    /// The screen repeats triangle strokes; print (OUTPUT_MODE = -1) does not.
+    screen: bool,
 }
 
 impl Slur {
@@ -372,25 +369,25 @@ impl Slur {
         let staff = doc.staff_of(item);
         let step = staff.step;
         let centre = match p(10) {
-            0.0 => c(0.5),
+            0.0 => constant(0.5),
             p10 => p10,
         };
         let y0 = doc.position(item).y;
-        let height = real(step * params.p7 * c(7.0));
+        let height = real(step * params.p7 * constant(7.0));
         let dy = real(staff.y(p(5)) - y0);
         let (left_end, right_end) = if params.p8_int == 0 && params.p8 != 0.0 {
-            let left = real(params.p8 * c(36.0));
-            (left, real(c(18.0) - left))
+            let left = real(params.p8 * constant(36.0));
+            (left, real(constant(18.0) - left))
         } else {
             let j = end_table_index(params.p8_int);
             let scale = |v: f32| match p(20) {
-                0.0 => c(v),
-                p20 => real(p20 * c(v)),
+                0.0 => constant(v),
+                p20 => real(p20 * constant(v)),
             };
             (scale(LEFT_END[j]), scale(RIGHT_END[j]))
         };
         let mut xl = real(step * left_end + params.x);
-        let p6 = if params.p6 < p(3) { real(p(3) + c(3.0)) } else { params.p6 };
+        let p6 = if params.p6 < p(3) { real(p(3) + constant(3.0)) } else { params.p6 };
         let right_end = real(step * right_end);
         let p12 = trunc(p(12));
         let (mut start, mut end) = if p12 > 0 { (0.0, 0.0) } else { (p(14), p(15)) };
@@ -408,10 +405,10 @@ impl Slur {
         if start == 0.0 && end == 0.0 {
             if shape > 0 {
                 if shape == 1 {
-                    end = c(0.5);
+                    end = constant(0.5);
                 } else {
                     xl = real(xl - length);
-                    start = c(0.5);
+                    start = constant(0.5);
                     y0 = real(y0 - dy);
                 }
                 length = real(length * 2.0);
@@ -425,7 +422,7 @@ impl Slur {
         }
         let points = point_count(item, length, shape);
         let dx = real(length / f64::from(points as i32 - 1));
-        Self { step, centre, xl, y0, dy, length0, length, height, start, end, shape, dx, points }
+        Self { step, centre, xl, y0, dy, length0, length, height, start, end, shape, dx, points, screen: doc.screen() }
     }
 
     /// The closed outline: along the curve from the left end and back with
@@ -459,13 +456,13 @@ impl Slur {
                 let at = trunc(x);
                 x = real(advance + x);
                 if k == peak {
-                    advance = real((c(2.0) - twice_centre) * self.dx);
+                    advance = real((constant(2.0) - twice_centre) * self.dx);
                 }
                 at
             })
             .collect();
 
-        let exponent = real(f64::from(item.p(9)) + c(2.5)).max(c(0.1));
+        let exponent = real(f64::from(item.p(9)) + constant(2.5)).max(constant(0.1));
         let half = n / 2 - 1;
         let top = f64::from(trunc(self.height + self.y0)) as f32;
         let y_at = |i: usize| {
@@ -487,10 +484,10 @@ impl Slur {
     fn with_thickness(&self, item: ItemRef<'_>, curve: &[Point]) -> Vec<BufferPoint> {
         let n = curve.len();
         let half = n / 2 - 1;
-        let thickness = real(self.thickness_factor(item) * real(self.step * c(3.5)));
-        let full = trunc(thickness + c(0.5));
+        let thickness = real(self.thickness_factor(item) * real(self.step * constant(3.5)));
+        let full = trunc(thickness + constant(0.5));
         let reach = match item.p(19) {
-            0.0 => c(0.85),
+            0.0 => constant(0.85),
             p19 => f64::from(p19),
         };
         let increment = real(thickness / (reach * f64::from(half as f32)));
@@ -524,15 +521,15 @@ impl Slur {
     /// rising to all of it at 3000).
     fn thickness_factor(&self, item: ItemRef<'_>) -> f64 {
         let p13 = match item.p(13) {
-            0.0 => c(DEFAULT_THICKNESS),
+            0.0 => constant(DEFAULT_THICKNESS),
             p13 if p13 <= 0.0 => 1.0,
             p13 => f64::from(p13),
         };
         let length = trunc(self.length);
         let scale = match length {
             l if l >= 3000 => return p13,
-            l if l > 600 => real(1.0 - f64::from(3000 - l) * c(0.4) / c(2400.0)),
-            _ => c(0.6),
+            l if l > 600 => real(1.0 - f64::from(3000 - l) * constant(0.4) / constant(2400.0)),
+            _ => constant(0.6),
         };
         real(p13 * scale)
     }
@@ -556,7 +553,7 @@ impl Slur {
     /// P11 < 0: an octagonal dot on every curve point.
     fn dots(&self, item: ItemRef<'_>, curve: &[BufferPoint]) -> Vec<BufferPoint> {
         let radius = real(self.thickness_factor(item) * self.step);
-        let offsets: Vec<i32> = DOT.iter().map(|&d| nint(radius * c(d))).collect();
+        let offsets: Vec<i32> = DOT.iter().map(|&d| nint(radius * constant(d))).collect();
         curve
             .iter()
             .flat_map(|centre| {
@@ -570,13 +567,13 @@ impl Slur {
     }
 
     /// P9 = 99: two strokes from the ends up to the peak at P10, repeated
-    /// trunc(P13) times seven units higher.
+    /// trunc(P13) times seven units higher on the screen.
     fn triangle(&self, item: ItemRef<'_>) -> Vec<BufferPoint> {
         let y = trunc(self.y0);
         let left = trunc(self.xl);
         let peak = trunc(self.centre * self.length + self.xl);
         let right = trunc(self.length + self.xl);
-        let copies = trunc(f64::from(item.p(13))).max(0) + 1;
+        let copies = if self.screen { trunc(f64::from(item.p(13))).max(0) + 1 } else { 1 };
         (0..copies)
             .flat_map(|copy| {
                 let y = y + 7 * copy;
@@ -603,7 +600,7 @@ impl Slur {
         let dashed = trunc(f64::from(item.p(11))) != 0;
         match self.start {
             s if s <= 0.0 => {}
-            s if s > c(0.94) => buffer.npt = 0,
+            s if s > constant(0.94) => buffer.npt = 0,
             s => cut_before(buffer, trunc(s * self.length + self.xl + self.dx / 2.0), dashed),
         }
         if self.end != 0.0 {
@@ -625,15 +622,15 @@ impl Slur {
     fn slash(&self, item: ItemRef<'_>, first_y: i32) -> [BufferPoint; 5] {
         let p = |n| f64::from(item.p(n));
         let along = match p(29) {
-            0.0 => c(0.5),
+            0.0 => constant(0.5),
             p29 => p29,
         };
         let x = trunc(real(along * self.length + self.xl));
-        let height = real(p(27) * c(7.0) * self.step);
-        let lift = if p(7) < 0.0 { c(-35.0) } else { c(35.0) };
+        let height = real(p(27) * constant(7.0) * self.step);
+        let lift = if p(7) < 0.0 { constant(-35.0) } else { constant(35.0) };
         let mut bottom = real(f64::from(first_y) + self.height - height / 2.0 + lift);
         if p(28) != 0.0 {
-            bottom = real(p(28) * c(7.0) * self.step + bottom);
+            bottom = real(p(28) * constant(7.0) * self.step + bottom);
         }
         let (low, high) = (trunc(bottom), trunc(height + bottom));
         const HALF_WIDTH: i32 = 24;
@@ -771,9 +768,9 @@ fn cut_after(buffer: &mut Buffer, to: i32, dashed: bool) {
 fn number_gap(buffer: &mut Buffer, item: ItemRef<'_>, step: f64, dx: f64) {
     let points: Vec<Point> = buffer.points().iter().map(|p| p.at).collect();
     let next = points.len() + 1;
-    let width = if item.p(16) > 9.0 { c(600.0) } else { c(400.0) };
-    let width = real(width / (c(25.0) / step * dx));
-    let g = trunc(f64::from(next as f32) / c(4.0) - width / c(2.0));
+    let width = if item.p(16) > 9.0 { constant(600.0) } else { constant(400.0) };
+    let width = real(width / (constant(25.0) / step * dx));
+    let g = trunc(f64::from(next as f32) / constant(4.0) - width / constant(2.0));
     // A gap as wide as the slur leaves nothing; NPT = 4G then drops below 1.
     if g < 1 {
         if g == 0 {

@@ -13,14 +13,8 @@ mod mark;
 
 use crate::canvas::{Canvas, Pen};
 use crate::document::{Document, ItemRef};
-use crate::units::{real, trunc, Pos};
+use crate::units::{constant, real, trunc, Pos};
 
-use glyph::clef_symbol;
-
-/// A REAL*4 constant of the engine.
-fn c(value: f32) -> f64 {
-    f64::from(value)
-}
 
 /// trunc(Pn), the engine's IPn.
 fn ip(item: ItemRef<'_>, n: usize) -> i32 {
@@ -116,6 +110,8 @@ pub(crate) struct Note {
     ledger_start: i32,
     /// P12 without its hundreds: 1 shows the note on the staff above, 2 below.
     borrowed_staff: i32,
+    /// An AlphaNote head (P6 ±20 … ±25).
+    alpha: bool,
 }
 
 impl Note {
@@ -137,15 +133,15 @@ impl Note {
             0.0 => staff.step,
             p15 => real(f64::from(p15) * staff.step),
         };
-        let unit = if grace { real(step * c(GRACE_SIZE)) } else { step };
+        let unit = if grace { real(step * constant(GRACE_SIZE)) } else { step };
         let wide = matches!(head % 1000, WHOLE | BREVE);
-        let head_width = real(unit * c(if wide { WIDE_HEAD_WIDTH } else { HEAD_WIDTH }) * width);
+        let head_width = real(unit * constant(if wide { WIDE_HEAD_WIDTH } else { HEAD_WIDTH }) * width);
         let offset = match item.p(10) {
             0.0 => 0.0,
             _ if ip(item, 10) == OFFSET_RIGHT_WITH_ACCIDENTAL => head_width,
             p10 if p10 == OFFSET_RIGHT => head_width,
             p10 if p10 == OFFSET_LEFT => -head_width,
-            p10 => real(step * c(OFFSET_UNIT) * f64::from(p10)),
+            p10 => real(step * constant(OFFSET_UNIT) * f64::from(p10)),
         };
         let position = doc.position(item);
         let p12 = ip(item, 12);
@@ -162,7 +158,7 @@ impl Note {
             origin: Pos::new(if offset == 0.0 { position.x } else { real(offset + position.x) }, y),
             level: p4 % HUNDREDS,
             grace,
-            scale_step: real(staff.step * c(STEPS)),
+            scale_step: real(staff.step * constant(STEPS)),
             step,
             unit,
             width,
@@ -174,7 +170,18 @@ impl Note {
             tails: ip(item, 9) % 10,
             ledger_start,
             borrowed_staff,
+            alpha: head::is_alpha(ip(item, 6)),
         })
+    }
+
+    /// The head width the parts after the head use: the head routine sets
+    /// it to 17.1 units for AlphaNotes (0x4F14B0).
+    fn drawn_head_width(&self) -> f64 {
+        if self.alpha {
+            real(self.unit * constant(head::ALPHA_WIDTH))
+        } else {
+            self.head_width
+        }
     }
 
     /// The stem direction dots and marks assume: a stemless note counts as
@@ -224,7 +231,7 @@ fn stem_extension(item: ItemRef<'_>) -> f64 {
 /// Extra stem length, in scale steps, that makes room for three or more tails.
 fn tail_room(note: &Note) -> f64 {
     if note.tails > 1 {
-        real(f64::from(note.tails * 2 - 2) - c(0.5))
+        real(f64::from(note.tails * 2 - 2) - constant(0.5))
     } else {
         0.0
     }
@@ -240,14 +247,14 @@ fn level(item: ItemRef<'_>) -> f64 {
 /// (and for stemless notes), two scale steps apart.
 fn tails(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
     let down = note.stem.is_down();
-    let gap = real(-(note.unit * c(STEPS)));
-    let (x, gap, mirror) = if down { (note.origin.x, gap, 1.0) } else { (real(note.origin.x + note.head_width), -gap, -1.0) };
+    let gap = real(-(note.unit * constant(STEPS)));
+    let (x, gap, mirror) = if down { (note.origin.x, gap, 1.0) } else { (real(note.origin.x + note.drawn_head_width()), -gap, -1.0) };
     let p8 = f64::from(item.p(8));
     let amod = p8 - f64::from(trunc(p8 / 100.0) * 100);
     let first = real(amod * gap + note.origin.y + gap);
     let first = if note.tails > 1 { real(first - gap / 2.0) } else { first };
     (0..note.tails).fold(first, |y, _| {
-        clef_symbol(canvas, doc.symbols(), TAIL_SYMBOL, Pos::new(x, y), note.width, mirror, note.unit);
+        glyph::clef(doc, item, canvas, TAIL_SYMBOL, Pos::new(x, y), (note.width, mirror), note.unit);
         real(gap + y + gap)
     });
 }
@@ -261,7 +268,7 @@ fn accidental(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
     let shift = real(f64::from(item.p(5)) - f64::from(p5));
     let shift = match shift {
         0.0 => 0.0,
-        s if s > c(0.9) => real(real(c(0.9) - s) * 60.0 * note.unit),
+        s if s > constant(0.9) => real(real(constant(0.9) - s) * 60.0 * note.unit),
         s => real(s * 60.0 * note.unit),
     };
     let follows_head = ip(item, 10) == OFFSET_RIGHT_WITH_ACCIDENTAL;
@@ -271,7 +278,7 @@ fn accidental(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
         p29 => f64::from(p29),
     };
     let at = Pos::new(real(note.origin.x - shift), note.origin.y);
-    clef_symbol(canvas, doc.symbols(), symbol, at, size, size, note.unit);
+    glyph::clef(doc, item, canvas, symbol, at, (size, size), note.unit);
 }
 
 /// The stem (0x4F0EB9): from 0.3 scale steps beyond the head's centre (P17
@@ -283,15 +290,15 @@ fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
     if ip(item, 8).abs() >= HUNDREDS && note.tails != 0 {
         slash(doc, item, note, extension, canvas);
     }
-    let length = real((tail_room(note) + c(STEPS) + extension) * note.unit * c(STEPS));
+    let length = real((tail_room(note) + constant(STEPS) + extension) * note.unit * constant(STEPS));
     let head_type = head::unparenthesised(ip(item, 6));
     if !has_stem(head_type) {
         return 0.0;
     }
     let down = note.stem.is_down();
-    let (x, length) = if down { (note.origin.x, -length) } else { (real(note.origin.x + note.head_width), length) };
+    let (x, length) = if down { (note.origin.x, -length) } else { (real(note.origin.x + note.drawn_head_width()), length) };
     let end = real(length + note.origin.y);
-    let source = stem_source(item, head_type);
+    let source = stem_source(item, note, head_type);
     let source = if down { -source } else { source };
     let start = real(note.unit * source + note.origin.y);
     canvas.point(Pos::new(x, start), Pen::Stroke);
@@ -311,32 +318,37 @@ fn has_stem(head_type: i32) -> bool {
 
 /// Where the stem starts, in steps from the head's centre: 2.1, 0 for the
 /// diamonds and X heads, 7 for the X head; P17 (without its hundreds,
-/// which thicken the stem in print) in scale steps.
-fn stem_source(item: ItemRef<'_>, head_type: i32) -> f64 {
-    let p17 = f64::from(item.p(17));
+/// which thicken the stem in print) in scale steps. The head routine sets
+/// P17 to ±0.1 for AlphaNotes.
+fn stem_source(item: ItemRef<'_>, note: &Note, head_type: i32) -> f64 {
+    let p17 = match (note.alpha, item.p(5) < 20.0) {
+        (true, true) => constant(-0.1),
+        (true, false) => constant(0.1),
+        (false, _) => f64::from(item.p(17)),
+    };
     let p17 = if trunc(p17 / 100.0) != 0 { real(p17 - f64::from(trunc(p17 / 100.0) * 100)) } else { p17 };
     if p17 != 0.0 {
-        return real(p17 * c(STEPS));
+        return real(p17 * constant(STEPS));
     }
     match head_type {
-        6 => c(STEPS),
+        6 => constant(STEPS),
         4..=8 => 0.0,
-        _ => c(2.1),
+        _ => constant(2.1),
     }
 }
 
 /// The grace-note slash across the stem near its end (in 0x4F0EB9).
 fn slash(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, extension: f64, canvas: &mut Canvas<'_>) {
-    let reach = real(note.unit * c(OFFSET_UNIT));
+    let reach = real(note.unit * constant(OFFSET_UNIT));
     let length = real(tail_room(note) + extension);
     let down = note.stem.is_down();
     let (length, levels, columns) = if down {
-        (-length, [c(-5.5), c(-2.8)], [c(-1.883), c(3.8)])
+        (-length, [constant(-5.5), constant(-2.8)], [constant(-1.883), constant(3.8)])
     } else {
-        (length, [c(2.8), c(5.4)], [c(0.783), c(6.5)])
+        (length, [constant(2.8), constant(5.4)], [constant(0.783), constant(6.5)])
     };
     let size = match item.p(15) {
-        0.0 => c(GRACE_SIZE),
+        0.0 => constant(GRACE_SIZE),
         p15 => f64::from(p15),
     };
     let from = real(level(item) + real(length * size));
@@ -361,12 +373,12 @@ fn dots(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
     let on_line = note.level % 2 != 0;
     let lift = if on_line { note.scale_step } else { 0.0 };
     let shift = real(p9 - f64::from(trunc(p9)));
-    let shift = if shift > c(0.9) { real(c(0.9) - shift) } else { shift };
+    let shift = if shift > constant(0.9) { real(constant(0.9) - shift) } else { shift };
     let code = ip(item, 9);
-    let (shift, code) = if code >= 1000 { (real(shift + c(0.284)), code - 1000) } else { (shift, code) };
+    let (shift, code) = if code >= 1000 { (real(shift + constant(0.284)), code - 1000) } else { (shift, code) };
     let (lift, code) = if code >= HUNDREDS { (-lift, code - HUNDREDS) } else { (lift, code) };
     let stem = note.implied_stem();
-    let gap = if ip(item, 8) == 0 && note.tails != 0 && stem == Stem::Up { c(16.2) } else { c(18.0) };
+    let gap = if ip(item, 8) == 0 && note.tails != 0 && stem == Stem::Up { constant(16.2) } else { constant(18.0) };
     let dx = real((shift * 60.0 + gap) * note.unit);
     let headless = note.head == HEADLESS || note.head == -1;
     let dx = if stem != Stem::Up && note.tails == 0 && headless { real(dx / 2.0) } else { dx };
@@ -376,7 +388,7 @@ fn dots(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
         p19 => real(note.scale_step * f64::from(p19) + lift),
     };
     let y = real(note.origin.y + lift);
-    let size = if note.grace { c(GRACE_SIZE) } else { 1.0 };
+    let size = if note.grace { constant(GRACE_SIZE) } else { 1.0 };
     let (x, size) = match item.p(31) {
         0.0 => (x, size),
         p31 => {
@@ -386,7 +398,7 @@ fn dots(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
     };
     let count = (code / 10).max(1);
     (0..count).fold(x, |x, _| {
-        clef_symbol(canvas, doc.symbols(), DOT_SYMBOL, Pos::new(x, y), size, size, note.step);
+        glyph::clef(doc, item, canvas, DOT_SYMBOL, Pos::new(x, y), (size, size), note.step);
         real(note.unit * 13.0 + x)
     });
 }

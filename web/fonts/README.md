@@ -16,7 +16,18 @@ WinScore's engine names text fonts by the family column of its font-metric files
 | Symbol | URW Standard Symbols PS | `standardsymbolsps.woff2` |
 | ZapfDingbats | URW D050000L | `d050000l.woff2` |
 
-The URW symbol faces map the Symbol and Dingbats byte codes directly (e.g. `a` → alpha), so engine strings need no re-encoding. The families of `FM35`–`FM60` (Americana, AntiqueOlive, AGaramond, GillSans, Poetica) have no free metric-compatible face here and fall back to the browser's serif.
+The URW symbol faces map the Symbol and Dingbats byte codes directly (e.g. `a` → alpha), so engine strings need no re-encoding.
+
+The engine also names Adobe display faces for its fonts 35–71 (list from `impl-text`). They have no free metric-compatible versions, so a bundled face of the same kind stands in. Since the engine places every character itself, only the glyph shapes differ.
+
+| Engine family | Stand-in |
+|---|---|
+| Americana, ACaslon, AGaramond / Adobe Garamond, Trajan, Carta, WoodtypeOrnaments | TeX Gyre Termes |
+| AntiqueOlive / Antique Olive, GillSans, Lithos, Tekton, Blackoak | TeX Gyre Heros |
+| ParkAvenue / Park Avenue, Parisian, Kaufmann, Poetica | TeX Gyre Chorus |
+| any other name, including the empty family of `FM66` | TeX Gyre Termes (the engine falls back to Times for missing fonts) |
+
+Carta, WoodtypeOrnaments and Poetica's ornaments are pictorial fonts, so their stand-ins show letters where WinScore would show pictures.
 
 ## Sources and licences
 

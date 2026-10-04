@@ -119,9 +119,9 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     };
     bar.draw(doc, item, canvas);
     if two_bar_repeat && bar.kind == 0 && item.p(6) == 0.0 {
-        // The sign after a plain bar: draw_rest with P4 = 0 and IP5 = -44.
+        // The sign after a plain bar: draw_rest with P4 = 0, IP5 = -44 at the bar's X_POS.
         let sign = item.with_params(&[(4, 0.0), (5, TWO_BAR_REPEAT as f32)]);
-        rest::render(doc, item.changed(&sign), canvas);
+        rest::draw(doc, item.changed(&sign), bar.x_pos, canvas);
     }
     if item.p(18) != 0.0 && gap_p5 < 2.0 {
         gap(item, &bar, doc.screen(), canvas.buffer_mut());

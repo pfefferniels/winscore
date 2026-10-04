@@ -155,6 +155,24 @@ fn parse_entry(entry: &Entry) -> Result<Mark, InputError> {
 }
 
 /// Steps a mark on the note-head side must move to clear the staff, in tenths of P11.
+/// The clearance a P11 mark code gets (codes of the table at 0x7946E4).
+fn clearance_of(code: i32) -> Clearance {
+    match code {
+        5 => Clearance::Accent,
+        4 | 8 | 9 | 10 | 19 => Clearance::Staff,
+        _ => Clearance::None,
+    }
+}
+
+/// 0x4D9475 as the beam pass uses it: a note whose stem was turned by a beam gets the
+/// clearance of its mark computed again for the new stem side.
+pub(crate) fn recompute_clearance(note: &mut Note) {
+    let code = note.mark as i32;
+    if code > 0 {
+        note.mark = code as f32 + clearance(note, clearance_of(code)) / 10.0;
+    }
+}
+
 fn clearance(note: &Note, clearance: Clearance) -> f32 {
     let steps = if note.down { 10 - note.stem_level() } else { note.stem_level() - 4 };
     let base = steps.clamp(0, 9) as f32;

@@ -28,8 +28,8 @@ Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT
 - **Rust / Engine / Overlay**: the Rust renderer's page, the original engine's display list (`rust/fixtures/sample-*/engine.json`, produced from WScore.exe under emulation), or both, engine in cyan and Rust in magenta, multiplied, so that matching elements come out dark.
 - **Zoom**: −/+, the percent list, Fit, or ctrl/⌘ + wheel (pinch) around the pointer.
 - **Selection**: click an element or a row of the item list; Shift-click adds or removes; Escape clears. The Engine view selects through the fixture's item attribution. The panel shows P1…Pn of the last selected item with the help's label for each; edit a value and press Enter to set it and re-render.
-- **Editing**: drag selected items (Shift keeps one axis, Escape cancels), arrows move by one P3 space or scale step, Page Up/Down by 4 steps, Home/End by 10 spaces (WinScore's edit-mode keys), `[`/`]` one staff up/down, Delete, ⌘Z/Ctrl+Z undo, ⇧⌘Z/Ctrl+Y redo, and the command bar takes SCORE edit commands. Dragging empty paper pans. **Save** downloads the edited `.mus`. Until editor-core's `score-edit` crate is wired in, `src/editor.ts` stands in: moves change only P3/P4, drags assume staff size 1, and Delete and commands report that they are not available yet.
-- **Input…** opens WinScore's five-pass input dialog (Smith's "Computer Keyboard Input", `IN`): staff (proposed one above the highest), input range, and the notes, rhythms, marks, beams and slurs passes. `score-input` checks the passes as you type and marks the failing one; Enter moves to the next pass and inserts after the fifth. A missing staff is created as `8 n 0 0 0 0`, as the engine stores it.
+- **Editing**: drag selected items (Shift keeps one axis, Escape cancels), arrows move by one P3 space or scale step, Page Up/Down by 4 steps, Home/End by 10 spaces (WinScore's edit-mode keys), `[`/`]` one staff up/down, Delete, ⌘Z/Ctrl+Z undo, ⇧⌘Z/Ctrl+Y redo, and the command bar takes SCORE edit commands. Dragging empty paper pans. **Save** downloads the edited `.mus`. All editing runs in `score-edit` (editor-core's crate, checked against the engine): moves, deletes, commands, drags and the undo history. Drag offsets are rounded to 0.01 P3 unit or scale step until the engine's own rounding is known.
+- **Input…** opens WinScore's five-pass input dialog (Smith's "Computer Keyboard Input", `IN`): staff (proposed one above the highest), input range, and the notes, rhythms, marks, beams and slurs passes. `score-input` checks the passes as you type and marks the failing one; Enter moves to the next pass and inserts after the fifth. A missing staff is created as the engine's `IN n` creates it (`score_input::StaffArgs`). Insert is one undo step.
 - URL parameters for direct links: `?sample=mozart.mus&mode=overlay&zoom=200&select=12`.
 
 ## Conventions
@@ -37,14 +37,14 @@ Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT
 - Page coordinates are engine units of 1/4000 inch, origin at the paper's bottom-left corner, y up, as in `rust/fixtures/README.md`.
 - **Zoom**: 100 % shows the page at physical size on a 96-dpi screen (one CSS pixel = 1/96 in ≈ 41.7 engine units). This matches WinScore's own 100 % (zoom 64 of 256 in an `MM_HIENGLISH` view) on a 96-dpi display. The preset list is WinScore's zoom bar (10 … 500 %) plus larger steps; − and + change the zoom by a quarter, as WinScore's Reduce and Zoom do.
 - **Painting** follows `CWScoreView::OnDraw` (0x5E5910) as `disasm-expert` read it (`analysis/engine/display.md`): polylines with a pen one device pixel wide; filled objects with the even-odd rule and outlined with the same pen; text on its baseline at the engine's y + 96 (folded into the fixture coordinates), stretched horizontally to the run's average width as `CreateFontA` does; a white window with the engine's green page frame. Points are snapped to device pixels.
-- **Fonts**: see `fonts/README.md`. The engine positions every character itself, so the substitute faces only change glyph shapes, not positions. The width stretch uses the average character width of the Windows face GDI would substitute (Times New Roman, Arial, Courier New); for the other families the glyphs are left unstretched.
+- **Fonts**: see `fonts/README.md`. The engine positions every character itself, so the substitute faces only change glyph shapes, not positions. The width stretch uses the average character width of the Windows face GDI would substitute (Times New Roman, Arial, Courier New); for the other families the glyphs are left unstretched. Rotated text turns about the cell's top-left corner (baseline plus the Windows face's ascent) and follows the clockwise line on which the engine places the characters; whether WinScore's glyphs turn the same way is not yet confirmed.
 
 ## Layout
 
 | Path | What |
 |---|---|
 | `src/main.ts` | app state, file handling, controls |
-| `src/editor.ts` | the editing operations the UI uses, with an interim implementation |
+| `src/editor.ts` | the editing operations the UI uses, backed by score-edit through score-web |
 | `src/interaction.ts` | pointer and keyboard gestures → editor calls |
 | `src/canvas.ts` | scrolling, zooming page view |
 | `src/paint.ts` | display-list painter |

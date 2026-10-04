@@ -6,7 +6,7 @@
 // Drawing happens in device pixels so lines stay crisp at any
 // devicePixelRatio.
 import { elementsOf, type Box, type DisplayList, type Shape, type TextRun } from './display';
-import { cssFont, stretch } from './fonts';
+import { ascent, cssFont, stretch } from './fonts';
 import { toDevice, type Transform } from './view';
 
 export interface Layer {
@@ -68,18 +68,32 @@ function paintShape(ctx: CanvasRenderingContext2D, t: Transform, shape: Shape, c
   ctx.stroke();
 }
 
+/**
+ * Rotation of a run's glyphs. The engine sets escapement = 10 × P9, its
+ * clockwise rotation, and places the characters along that clockwise line;
+ * the glyphs are turned to follow them. Whether GDI under MM_HIENGLISH turns
+ * them that way too is still open (analysis/engine/display.md §3.4 reads
+ * counterclockwise).
+ */
+function glyphAngle(run: TextRun): number {
+  return (run.escapement / 10) * (Math.PI / 180);
+}
+
 function paintText(ctx: CanvasRenderingContext2D, t: Transform, run: TextRun, colour: string) {
   const size = run.height * t.k;
   if (size < 0.5) return;
-  const angle = (-run.escapement / 10) * (Math.PI / 180);
+  const angle = glyphAngle(run);
   const scaleX = stretch(run);
+  // GDI turns text about the cell's top-left corner, one ascent above the baseline.
+  const drop = ascent(run) * t.k;
   ctx.font = cssFont(run, size);
   ctx.fillStyle = colour;
   run.strings.forEach((s) => {
     const origin = toDevice(t, s.x, s.y);
     ctx.save();
-    ctx.translate(Math.round(origin.x), Math.round(origin.y));
+    ctx.translate(Math.round(origin.x), Math.round(origin.y) - drop);
     if (angle !== 0) ctx.rotate(angle);
+    ctx.translate(0, drop);
     ctx.scale(scaleX, 1);
     ctx.fillText(s.text, 0, 0);
     if (run.underline) {

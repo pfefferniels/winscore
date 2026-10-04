@@ -22,6 +22,7 @@ pub mod compare;
 pub mod fixture;
 pub mod json;
 pub mod svg;
+pub mod triage;
 
 pub use compare::{
     compare, is_staff_number, restrict, CompareOptions, Nearest, Report, Section, Unmatched,
@@ -30,7 +31,22 @@ pub use compare::{
 pub use fixture::{fixtures_dir, load_all, Fixture, FixtureError, Meta};
 pub use json::{display_from_json, display_to_json};
 
-use score_render::{DisplayList, ItemId};
+use std::panic::{self, AssertUnwindSafe};
+
+use score_render::{render, DisplayList, Document, ItemId};
+
+/// The fixture's input rendered with `score_render`; a renderer panic becomes an error.
+pub fn render_fixture(fixture: &Fixture) -> Result<DisplayList, String> {
+    let file = fixture.input().map_err(|e| e.to_string())?;
+    panic::catch_unwind(AssertUnwindSafe(|| render(&Document::new(&file)))).map_err(|payload| {
+        let message = payload
+            .downcast_ref::<&str>()
+            .map(|s| s.to_string())
+            .or_else(|| payload.downcast_ref::<String>().cloned())
+            .unwrap_or_else(|| "panic without message".into());
+        format!("render panicked: {message}")
+    })
+}
 
 /// Panics with the comparison report unless `actual` matches the fixture within ±1 unit.
 pub fn assert_matches_fixture(fixture: &Fixture, actual: &DisplayList) {
