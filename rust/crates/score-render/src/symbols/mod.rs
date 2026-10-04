@@ -16,9 +16,11 @@ use crate::units::{real, Pos};
 
 pub mod clef;
 pub mod library;
+pub mod text_symbol;
 
 pub use clef::draw_clef;
 pub use library::{draw_library_symbol, ItemContext, SymbolCall};
+pub use text_symbol::{draw_text_symbol, TextSymbolCall};
 
 include!(concat!(env!("OUT_DIR"), "/bundled_symbols.rs"));
 

@@ -19,6 +19,7 @@ What the FORTRAN engine inside WScore.exe (WinScore 5.01) computes, with address
 | [placement.md](placement.md) | how every item's P3/P4 become x/y; colour (P26) |
 | [barlines.md](barlines.md) | code 14: types, spans, thick bars, repeat dots, brackets |
 | [symbols.md](symbols.md) | library symbols: draw_symbol, draw_clef, text symbols |
+| [text.md](text.md) | code 16 text: parser codes, advances from FMT widths, NINT positions, rotation, current font (by impl-text) |
 | [notes.md](notes.md) | code 1: heads (and the head cache), stems, tails, dots, accidentals, ledger lines |
 | [input.md](input.md) | the IN command: passes, spacing, minimum gap |
 | [editing.md](editing.md) | mouse protocol between view and engine, creation-word tables |
