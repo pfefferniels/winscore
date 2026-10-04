@@ -7,6 +7,8 @@
 //! 0x49EAE0) and the other values (arrows and arcs, 0x432E80) are not drawn
 //! yet.
 
+mod guitar;
+
 use crate::canvas::{Canvas, Pen};
 use crate::colour;
 use crate::document::{Document, ItemRef};
@@ -89,7 +91,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
             draw_box(canvas, at, step, &call);
         }
         REGISTER => draw_register(doc, item, canvas, at, &call),
-        k if k < 0 => {}
+        k if k < 0 => guitar::draw_guitar_grid(doc, item, canvas, at, &call),
         _ => draw_arrow(doc, item, canvas, at, &call, marked),
     }
 }
