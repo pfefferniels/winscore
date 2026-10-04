@@ -304,7 +304,13 @@ fn rest_item(kind: RestKind, rhythm: Rhythm, x: f32, staff: f32) -> Item {
         (_, 0) => rhythm.tails() as f32,
         (_, head) => -head as f32,
     };
-    let dots = if kind == RestKind::Invisible { -1.0 } else { f32::from(rhythm.dots()) };
+    let dots = match kind {
+        RestKind::Invisible => -1.0,
+        RestKind::Whole => 0.0,
+        _ => f32::from(rhythm.dots()),
+    };
+    // -1 asks for centring in the measure; the engine's draw_rest (0x519C38) replaces it
+    // with the computed position when the rest is first drawn.
     let centering = if kind == RestKind::Whole { -1.0 } else { 0.0 };
     item(&[2.0, staff, x, level, symbol, dots, rhythm.quarters(), 0.0, centering])
 }
@@ -427,6 +433,33 @@ impl Line {
     }
 
     pub fn items(&self) -> Vec<Item> {
-        self.elements.iter().flat_map(|e| e.items(self.staff)).chain(self.attachments.iter().cloned()).collect()
+        let bars: Vec<f32> = self.elements.iter().filter_map(|e| if let Element::Bar { x, .. } = e { Some(*x) } else { None }).collect();
+        self.elements
+            .iter()
+            .flat_map(|e| match e {
+                Element::Rest { x, kind: RestKind::Whole, rhythm } => vec![whole_rest_item(*rhythm, *x, self.staff, &bars)],
+                other => other.items(self.staff),
+            })
+            .chain(self.attachments.iter().cloned())
+            .collect()
     }
+}
+
+/// A whole-measure rest; draw_rest (0x519C38) centres it in its measure the first time it is
+/// drawn and stores the position in P9, which is what the saved item holds.
+fn whole_rest_item(rhythm: Rhythm, x: f32, staff: f32, bars: &[f32]) -> Item {
+    const STEP: f32 = 25.0;
+    let right = bars.iter().copied().filter(|b| *b > x).fold(9999.0f32, f32::min);
+    let mut left = bars.iter().copied().filter(|b| *b < x).fold(-9999.0f32, f32::max);
+    let centre = if right == 9999.0 {
+        -1.0
+    } else {
+        let size = STEP / 25.0;
+        if x - left > size * 7.0 {
+            left = x - size * 4.5;
+        }
+        let measure = right - left;
+        ((measure as f64 * 0.5 + left as f64) - STEP as f64 * 0.056f32 as f64) as f32
+    };
+    item(&[2.0, staff, x, 0.0, -2.0, 0.0, rhythm.quarters(), 0.0, centre])
 }
