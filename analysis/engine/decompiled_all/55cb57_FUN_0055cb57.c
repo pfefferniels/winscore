@@ -523,7 +523,7 @@ LAB_0055e2e3:
       DAT_009a4134 = (float)-fVar8;
     }
     ffree(fVar8);
-    fVar8 = (float10)FUN_005ff381(puVar9,0x55e3de);
+    fVar8 = (float10)anint(puVar9,0x55e3de);
     *(int *)(puVar9 + -0xd8) = (int)ROUND(fVar8);
     DAT_009a4108 = *(int *)(puVar9 + -0xd8);
     if (((DAT_009a4108 % 2 == 0) || (DAT_009a4108 < 3)) || (0xb < DAT_009a4108)) {
@@ -533,7 +533,7 @@ LAB_0055e2e3:
       (&ITEM_P4)[DAT_009a4128] = DAT_009a4134 + (float)(&ITEM_P4)[DAT_009a4128];
     }
     ffree(extraout_ST1);
-    fVar8 = (float10)FUN_005ff381(puVar9,0x55e465);
+    fVar8 = (float10)anint(puVar9,0x55e465);
     *(int *)(puVar9 + -0xd8) = (int)ROUND(fVar8);
     DAT_009a4108 = *(int *)(puVar9 + -0xd8);
     if (((DAT_009a4108 % 2 == 0) || (DAT_009a4108 < 3)) || (0xb < DAT_009a4108)) {

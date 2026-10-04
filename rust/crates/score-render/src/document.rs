@@ -58,6 +58,11 @@ impl ItemRef<'_> {
         self.item.param(n)
     }
 
+    /// IPn, the engine's integer copy of parameter `n`: trunc(Pn) (draw_item 0x547210).
+    pub fn ip(&self, n: usize) -> i32 {
+        trunc(f64::from(self.p(n)))
+    }
+
     /// P2, the staff the item hangs on.
     pub fn staff(&self) -> i32 {
         self.p(2) as i32

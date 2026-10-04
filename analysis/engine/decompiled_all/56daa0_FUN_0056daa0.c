@@ -248,7 +248,7 @@ LAB_0056dfbb:
               *(undefined4 *)(puVar6 + -0x38) = 0;
             }
             else {
-              FUN_0056f920(&DAT_009a81dc,&DAT_01cafac0,&DAT_01cb02c0,&P9);
+              text_rotate(&DAT_009a81dc,&DAT_01cafac0,&DAT_01cb02c0,&P9);
             }
             *(int *)(puVar6 + -0x34) = DAT_009a81d0;
             DAT_009a81d4 = 1;

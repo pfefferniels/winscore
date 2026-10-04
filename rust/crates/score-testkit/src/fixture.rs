@@ -107,8 +107,20 @@ impl Fixture {
         self.dir.join("input.mus")
     }
 
+    /// The score the engine drew: `result.mus` when the case ran commands that
+    /// change items (layout), else `input.mus`. Item indices in `display` refer to it.
+    pub fn drawn_path(&self) -> PathBuf {
+        let result = self.dir.join("result.mus");
+        if result.is_file() {
+            result
+        } else {
+            self.input_path()
+        }
+    }
+
+    /// The score the engine drew, see [`Fixture::drawn_path`].
     pub fn input(&self) -> Result<MusFile, FixtureError> {
-        let path = self.input_path();
+        let path = self.drawn_path();
         let bytes = fs::read(&path).map_err(|e| FixtureError::Io(path.clone(), e))?;
         MusFile::parse(&bytes).map_err(|e| FixtureError::Mus(path, e))
     }

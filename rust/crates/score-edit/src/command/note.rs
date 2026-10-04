@@ -12,6 +12,11 @@ const DURATION: usize = 7;
 const STEM_LENGTH: usize = 8;
 const DOTS_TAILS: usize = 9;
 const LEVEL: usize = 4;
+const MARK: usize = 11;
+const DOT_LEVEL: usize = 19;
+
+/// P11 values above this are tremolo strokes.
+const TREMOLO: f32 = 40.0;
 
 /// Cue-size notes and rests carry 100 in P4.
 const CUE: f32 = 100.0;
@@ -197,14 +202,69 @@ fn dot_factor(dots: u32) -> f32 {
     }
 }
 
-/// DOT, DDT: P7 becomes the dotted value, P9's dot digit the number of dots.
-/// The engine undoes the other kind of dotting first, but not its own: DOT on
-/// a dotted note multiplies by 1.5 again.
+/// The duration with `wanted` dots instead of `had`. The engine undoes the
+/// other kind of dotting first, but not its own: DOT on a dotted value
+/// multiplies by 1.5 again.
+fn dotted(duration: f32, had: u32, wanted: u32) -> f32 {
+    let undotted = if had != 0 && had != wanted { duration / dot_factor(had) } else { duration };
+    undotted * dot_factor(wanted)
+}
+
+/// DOT, DDT on a note: P7 becomes the dotted value, P9's dot digit the number of dots.
 pub fn set_dots(draft: &mut Draft, wanted: u32) {
     let had = dots(draft);
-    let undotted = if had != 0 && had != wanted { draft.get(DURATION) / dot_factor(had) } else { draft.get(DURATION) };
-    draft.set(DURATION, undotted * dot_factor(wanted));
+    draft.set(DURATION, dotted(draft.get(DURATION), had, wanted));
     draft.add(DOTS_TAILS, 10.0 * (wanted as f32 - had as f32));
+}
+
+/// DOT, DDT on a rest, which keeps the number of dots in P6.
+pub fn set_rest_dots(draft: &mut Draft, wanted: u32) {
+    let had = draft.get(HEAD).abs() as u32;
+    draft.set(DURATION, dotted(draft.get(DURATION), had, wanted));
+    draft.set(HEAD, wanted as f32);
+}
+
+/// NOD: no dots; the duration stays, and so does the dot spacing.
+pub fn remove_dots(draft: &mut Draft) {
+    draft.add(DOTS_TAILS, -10.0 * dots(draft) as f32);
+    draft.set(DOT_LEVEL, 0.0);
+}
+
+/// SPA: accidentals only.
+pub fn space_accidental(draft: &mut Draft, delta: f32) {
+    if StemDigits::of(draft.get(STEM)).accidental != 0 {
+        draft.add(STEM, delta);
+    }
+}
+
+/// NOS: the accidental back at its normal place.
+pub fn unspace_accidental(draft: &mut Draft) {
+    let p5 = draft.get(STEM);
+    if StemDigits::of(p5).accidental != 0 {
+        draft.set(STEM, p5.trunc());
+    }
+}
+
+/// TM1, TRMn: a tremolo of `beams` strokes in P11 (40 + n); TM+ adds one.
+pub fn tremolo(draft: &mut Draft, beams: Option<f32>) {
+    let current = draft.get(MARK);
+    let value = match beams {
+        Some(n) => TREMOLO + n,
+        None if (TREMOLO + 1.0..TREMOLO + 9.0).contains(&current) => current + 1.0,
+        None => TREMOLO + 1.0,
+    };
+    draft.set(MARK, value);
+}
+
+/// RH3, RH5, RH6, RH10, RH12, …: the duration of an n-tuplet note (4/n quarters),
+/// with the head and tails of the plain value it replaces.
+pub fn set_tuplet_rhythm(draft: &mut Draft, per_whole: f32) {
+    let plain = [DOUBLE_WHOLE, WHOLE, HALF, QUARTER, EIGHTH, SIXTEENTH, THIRTY_SECOND, SIXTY_FOURTH]
+        .into_iter()
+        .rev()
+        .find(|r| 4.0 / r.duration <= per_whole)
+        .unwrap_or(DOUBLE_WHOLE);
+    set_note_rhythm(draft, Rhythm { duration: 4.0 / per_whole, ..plain });
 }
 
 /// Durations that TRP and RHU accept: whole powers of two of a quarter.
@@ -232,13 +292,19 @@ pub fn remove_tails(draft: &mut Draft) {
 
 /// CUE, CUX: 100 added to or taken from P4 (away from zero for negative levels).
 pub fn set_cue(draft: &mut Draft, cue: bool) {
-    let level = draft.get(LEVEL);
-    if (level.abs() >= CUE) == cue {
+    set_hundred(draft, LEVEL, cue);
+}
+
+/// Puts 100 into parameter `n` or takes it out, away from zero, unless it is
+/// already so (cue size in P4, KSCU/KSNO in a key signature's P6).
+pub fn set_hundred(draft: &mut Draft, n: usize, on: bool) {
+    let value = draft.get(n);
+    if (value.abs() >= CUE) == on {
         return;
     }
-    let direction = if level < 0.0 { -1.0 } else { 1.0 };
-    let change = if cue { CUE } else { -CUE };
-    draft.set(LEVEL, level + change * direction);
+    let direction = if value < 0.0 { -1.0 } else { 1.0 };
+    let change = if on { CUE } else { -CUE };
+    draft.set(n, value + change * direction);
 }
 
 /// RHG: a grace note of the engine's default shape.

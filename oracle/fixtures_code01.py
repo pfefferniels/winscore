@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from fixtures import Case
 from fixtures_cases import Item, built, item, label, staff
+from fixtures_code16 import text
 
 HEADS = {0: "black", 1: "half", 2: "whole", 3: "breve", 4: "white-diamond", 5: "black-diamond",
          6: "x", 7: "headless", 8: "diamond-x", 9: "oval-x"}
@@ -80,8 +81,32 @@ def heads() -> list[Case]:
         single("p6-alpha-p15", "AlphaNote at P15 = 0.8", p6=20, p15=0.8),
         single("p6-alpha-p21", "AlphaNote with P21 = 2, P22 = 1, P23 = 1, P24 = 1.5", p6=20, p21=2, p22=1, p23=1, p24=1.5),
         single("p6-tab-m6", "P6 = -6: six-string tablature", p6=-6, p4=3),
+        *tablature(),
         single("p6-x-down", "X head, stem down", p6=6, p5=20),
         single("p6-diamond-down", "white diamond, stem down", p6=4, p5=20),
+    ]
+
+
+def tablature() -> list[Case]:
+    """P6 = -n: a fret number for an n-string instrument (no help text beyond that)."""
+    tab = {"p6": -6, "p5": 0}
+    return [
+        *[single(f"p6-tab-p4-{label(v)}", f"six-string tablature P4 = {v}", **tab, p4=v) for v in (-3, 0, 7, 10, 14, 21)],
+        *[single(f"p6-tab-p5-{v}", f"six-string tablature P5 = {v}", **(tab | {"p5": v}), p4=5) for v in (1, 2, 11, 22)],
+        *[single(f"p6-tab-strings-{label(v)}", f"tablature P6 = {v}", p6=v, p5=0, p4=5) for v in (-4, -5, -7, -8, -16, -14, -86, -96, -156, -46)],
+        *[single(f"p6-tab-p8-{label(v)}", f"forced string P8 = {v}", **tab, p4=5, p8=v) for v in (2, 5, 102)],
+        single("p6-tab-p9-m1", "dead note P9 = -1", **tab, p4=5, p9=-1),
+        single("p6-tab-p10-999", "P10 = 999: nothing drawn", **tab, p4=5, p10=999),
+        *[single(f"p6-tab-p12-{label(v)}", f"tablature P12 = {v}", **tab, p4=5, p12=v) for v in (100, 2, 102)],
+        single("p6-tab-p12-tie", "tablature P12 = 100, P9 = 99 ('Tie')", **tab, p4=5, p12=100, p9=99),
+        single("p6-tab-p13", "tablature rotated P13 = 30", **tab, p4=5, p13=30),
+        single("p6-tab-p14", "tablature moved P14 = 1.5", **tab, p4=5, p14=1.5),
+        single("p6-tab-p15", "tablature size P15 = 0.8", **tab, p4=5, p15=0.8),
+        *[single(f"p6-tab-p{n}-{label(v)}", f"tuning change P{n} = {v}", **tab, p4=5, **{f"p{n}": v}) for n, v in ((16, 201), (17, 2), (18, 99), (19, 2), (19, 150))],
+        single("p6-tab-p20", "tablature with a white box P20 = 1", **tab, p4=5, p20=1),
+        single("p6-tab-p26", "tablature in red", **tab, p4=5, p26=990000),
+        single("p6-tab-grace", "tablature P4 = 105", **tab, p4=105),
+        single("p6-tab-two-digits-paren", "fret 12 in parentheses", **tab, p4=12, p12=100),
     ]
 
 
@@ -264,6 +289,20 @@ def mixed() -> list[Case]:
     return [built("code01-mixed-bar", "fourteen notes of different kinds on one staff", [staff()] + notes)]
 
 
+def font_chain() -> list[Case]:
+    """draw_item makes the font a note loads last current for the next text item (0x547358)."""
+    first, second = text("_02first", p3=5, p4=14), text("second", p3=60, p4=14)
+    notes = [
+        ("font-after-fingering", "plain text after _02 text and a fingering mark (font 1000)", note(p3=35, p11=32)),
+        ("font-after-alpha", "plain text after _02 text and an AlphaNote (letter font 1005)", note(p3=35, p6=20)),
+        ("font-after-alpha-p21", "plain text after _02 text and an AlphaNote with P21 = 3", note(p3=35, p6=20, p21=3)),
+        ("font-after-tab", "plain text after _02 text and a tablature number (font 1005)", note(p3=35, p6=-6, p5=0)),
+        ("font-after-plain-note", "plain text after _02 text and a plain note (loads none)", note(p3=35)),
+    ]
+    return [built(f"code01-{name}", desc, [staff(), first, n, second]) for name, desc, n in notes]
+
+
 def cases() -> list[Case]:
     return (positions() + accidentals() + heads() + rhythm() + stem_lengths() + dots_and_tails() + offsets()
-            + marks() + other_staves() + sizes() + ledger_control() + colour() + grace() + staves() + mixed())
+            + marks() + other_staves() + sizes() + ledger_control() + colour() + grace() + staves() + font_chain()
+            + mixed())

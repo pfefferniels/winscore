@@ -217,7 +217,7 @@ void FUN_005644b8(void)
         Var17 = thunk_FUN_00571d69();
         ffree(Var17);
         pfStack_238 = (float *)0x564802;
-        fVar16 = (float10)FUN_005ff381();
+        fVar16 = (float10)anint();
         *(int *)(puVar18 + -0x210) = (int)ROUND(fVar16);
         DAT_009a7b78 = *(int *)(puVar18 + -0x210);
         if (DAT_009a7b78 < 3) {
@@ -226,7 +226,7 @@ void FUN_005644b8(void)
         P3 = (float)DAT_009a7b78;
         ffree(extraout_ST1);
         pfStack_238 = (float *)0x56484d;
-        fVar16 = (float10)FUN_005ff381();
+        fVar16 = (float10)anint();
         *(int *)(puVar18 + -0x210) = (int)ROUND(fVar16);
         DAT_009a7b78 = *(int *)(puVar18 + -0x210) + 1;
         P4 = (float)DAT_009a7b78;
@@ -1022,7 +1022,7 @@ LAB_005660f6:
   IP8 = *(int *)(puVar7 + -0x210);
   DAT_009a7b44 = DAT_020b9470;
   ffree(Var17);
-  Var17 = thunk_FUN_0042fa58(DAT_01c4d104 + 0x205343f,1,&DAT_01c4d108);
+  Var17 = text_parse(DAT_01c4d104 + 0x205343f,1,&DAT_01c4d108);
   DAT_020b9470 = DAT_009a7b44;
   (&ITEM_P13)[DAT_01c4d110] = P13;
   iVar5 = DAT_01c4d110;

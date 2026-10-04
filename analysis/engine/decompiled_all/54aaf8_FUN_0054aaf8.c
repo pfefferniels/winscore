@@ -126,7 +126,7 @@ void FUN_0054aaf8(void)
       DAT_009a2124 = VEC_N;
       if (((char)DAT_020b8ea0 == '|') || ((char)DAT_020b8ea0 == '~')) {
         DAT_020b90a0 = DAT_00769370;
-        thunk_FUN_0041b011();
+        region_select();
         *(undefined4 *)(puVar4 + -0x34) = 0;
       }
       else {

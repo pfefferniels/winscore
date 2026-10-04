@@ -20,7 +20,7 @@ void FUN_00504835(void)
       DAT_009040b0 = DAT_009040b0 + 1;
       *(int *)(DAT_009040b0 * 4 + 0x907f48) = DAT_009040ac;
       iVar1 = DAT_009040ac * 4;
-      fVar3 = (float10)FUN_005ff381(puVar2,0x5048d2);
+      fVar3 = (float10)anint(puVar2,0x5048d2);
       *(int *)(puVar2 + -0x8c) = (int)ROUND(fVar3);
       *(undefined4 *)(&DAT_009040c8 + iVar1) = *(undefined4 *)(puVar2 + -0x8c);
     }

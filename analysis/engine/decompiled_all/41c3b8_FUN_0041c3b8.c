@@ -245,7 +245,7 @@ LAB_0041de8f:
         _DAT_007d15fc = _DAT_007d1604 - _DAT_007d1600;
         DAT_0079483c = (float)(&STAFF_STEP0)[CUR_STAFF] * f_7;
         _DAT_007d15f8 = _DAT_007d15fc / DAT_0079483c;
-        fVar19 = (float10)FUN_005ff381(puVar6,0x41ca78);
+        fVar19 = (float10)anint(puVar6,0x41ca78);
         *(int *)(puVar6 + -0x234) = (int)ROUND(fVar19);
         DAT_007d1610 = *(int *)(puVar6 + -0x234);
         if (0 < DAT_00794830) {

@@ -2,8 +2,7 @@
 
 use crate::canvas::{BufferPoint, Pen};
 use crate::display::Point;
-use crate::trig::CIRCLE;
-use crate::units::{real, trunc, Pos};
+use crate::units::{real, trunc};
 
 /// Degrees per radian as the REAL*4 constant at 0x75FC6C.
 const DEGREES_PER_RADIAN: f32 = 57.295_776;
@@ -32,17 +31,6 @@ fn turn(points: &mut [BufferPoint], centre: Point, angle: f64) {
         let dy = f64::from(p.at.y) - cy;
         p.at = Point::new(trunc(cos * dx + sin * dy + cx), trunc(cos * dy - sin * dx + cy));
     });
-}
-
-/// The ellipse points of draw_box 0x433530 (IP5 = 1): for every angle,
-/// clockwise in whole degrees from twelve o'clock, the point
-/// (f32(rx·S + x), f32(ry·C + y)) with S, C from the engine's circle table
-/// (about 100·sin, 100·cos), so `rx`, `ry` are in hundredths of the radius.
-pub fn ellipse(centre: Pos, rx: f64, ry: f64, degrees: impl IntoIterator<Item = usize>) -> impl Iterator<Item = Pos> {
-    degrees.into_iter().map(move |a| {
-        let (s, c) = CIRCLE[a % CIRCLE.len()];
-        Pos::new(real(rx * f64::from(s) + centre.x), real(ry * f64::from(c) + centre.y))
-    })
 }
 
 /// Distance between the copies [`thicken`] adds.

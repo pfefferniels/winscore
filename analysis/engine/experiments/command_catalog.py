@@ -24,6 +24,7 @@ OUT = HERE.parents[0] / "data" / "commands.tsv"
 CONTEXTS = {"new": [], "note": ["I 4"]}
 
 _lab: CommandLab | None = None
+_baselines: dict[str, list[list[float]]] = {}
 
 
 def fmt(item: list[float]) -> str:
@@ -37,8 +38,10 @@ def effect(command: str) -> list[list[str]]:
     rows = []
     for context, prefix in CONTEXTS.items():
         try:
-            base = _lab.run(prefix + ["X"]).items
-            run = _lab.run(prefix + [command, "X"], trace=True)
+            if context not in _baselines:
+                _baselines[context] = _lab.run(prefix + ["X"]).items
+            base = _baselines[context]
+            run = _lab.run(prefix + [command, "X"], traced=len(prefix))
         except Exception as err:          # an emulation failure is a result too
             rows.append([command, context, f"error {err!r}"[:80], "", "", "", ""])
             continue

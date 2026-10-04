@@ -143,6 +143,60 @@ button:disabled {
   background: #001a3d;
 }
 
+.palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.palette-group {
+  display: inline-flex;
+}
+
+.palette-group button {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 0;
+  margin-left: -1px;
+  font-size: 12px;
+}
+
+.palette-group button:first-child {
+  border-radius: 6px 0 0 6px;
+  margin-left: 0;
+}
+
+.palette-group button:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.palette-group button.unsupported {
+  text-decoration: line-through;
+}
+
+.viewport:focus {
+  outline: none;
+}
+
+.viewport:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.cursor {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.message {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 .main {
   flex: 1;
   display: flex;

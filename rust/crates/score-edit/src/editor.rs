@@ -2,19 +2,18 @@
 //! commands, drags and undo.
 
 use score_format::{Item, MusError, MusFile};
-use score_render::page::P3_UNIT;
+use score_render::staff::Staff;
 use score_render::Document as RenderDocument;
 
 use crate::command::moves::{shift, Axis};
 use crate::command::Run;
 use crate::document::{Document, Edit, ItemId, Transaction};
+use crate::drag::{self, Axes, Constraint, Ends, PagePoint};
 use crate::error::EditError;
 use crate::history::{History, Step};
 use crate::params::{Draft, MAX_PARAM};
+use crate::pick;
 use crate::session::Session;
-
-/// Drag offsets are kept to this fraction of a P3 unit or scale step.
-const DRAG_GRID: f32 = 0.01;
 
 /// What an action did to the items, by id, and the selection after it.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -51,11 +50,22 @@ impl Change {
     }
 }
 
-/// A drag in progress: the dragged items as they were when it began, and
-/// the size of a scale step on each one's staff.
+/// One dragged item as it was when the drag began, with its staff.
+#[derive(Debug, Clone, PartialEq)]
+struct Dragged {
+    id: ItemId,
+    start: Item,
+    staff: Staff,
+}
+
+/// A drag in progress.
 #[derive(Debug, Clone, PartialEq)]
 struct Drag {
-    start: Vec<(ItemId, Item, f64)>,
+    items: Vec<Dragged>,
+    /// Where the cursor took hold of the selection.
+    grab: PagePoint,
+    ends: Ends,
+    constraint: Constraint,
 }
 
 #[derive(Debug, Clone)]
@@ -121,6 +131,24 @@ impl Editor {
     pub fn clear_selection(&mut self) {
         self.cancel_drag();
         self.session.clear();
+    }
+
+    /// The item WinScore's click at page point (`x`, `y`) would select: the
+    /// one whose reference point (P3, P4 and a per-code offset) is nearest,
+    /// within `radius` page units if given.
+    pub fn pick_at(&self, x: f64, y: f64, radius: Option<f64>) -> Option<ItemId> {
+        let staves = RenderDocument::new(self.doc.file()).staves;
+        let items = self.doc.file().items.iter().map(|item| (item, staves.get(item.param(2) as i32)));
+        pick::nearest(items, PagePoint { x, y }, radius).and_then(|i| self.doc.id_at(i))
+    }
+
+    /// Selects what a click at (`x`, `y`) means (decision D8): the item whose
+    /// drawn outline the shell found under the cursor, or else the nearest
+    /// reference point within `radius`; nothing found clears the selection.
+    pub fn select_at(&mut self, x: f64, y: f64, outline_hit: Option<ItemId>, radius: f64) -> Option<ItemId> {
+        let picked = outline_hit.filter(|&id| self.doc.contains(id)).or_else(|| self.pick_at(x, y, Some(radius)));
+        self.select(picked.as_slice());
+        picked
     }
 
     // -- actions, one undo step each -----------------------------------------
@@ -202,33 +230,41 @@ impl Editor {
 
     // -- dragging -------------------------------------------------------------
 
-    /// Starts dragging the selection.
-    pub fn drag_begin(&mut self) {
+    /// Starts dragging the selection, taken hold of at page point (`x`, `y`)
+    /// (engine units, origin at the paper's bottom-left corner, y up). LFT or
+    /// RGT before it make the drag move only that end of a two-point item.
+    pub fn drag_begin_at(&mut self, x: f64, y: f64) {
         let staves = RenderDocument::new(self.doc.file()).staves;
-        let start = self
+        let items = self
             .selection()
             .iter()
             .filter_map(|&id| {
-                let item = self.doc.item(id)?.clone();
-                let step = staves.get(item.param(2) as i32).scale_step();
-                Some((id, item, step))
+                let start = self.doc.item(id)?.clone();
+                let staff = staves.get(start.param(2) as i32);
+                Some(Dragged { id, start, staff })
             })
             .collect();
-        self.drag = Some(Drag { start });
+        let grab = PagePoint { x, y };
+        self.drag = Some(Drag { items, grab, ends: self.session.drag_ends(), constraint: Constraint::default() });
     }
 
-    /// Shows the selection moved by (`dx`, `dy`) page units since [`Editor::drag_begin`],
-    /// without an undo step.
-    pub fn drag_to(&mut self, dx: f64, dy: f64) -> Change {
-        let Some(drag) = &self.drag else { return Change::default() };
+    /// Moves the selection with the cursor at page point (`x`, `y`), keeping
+    /// the grab offset; P3 and P4 come out as the engine computes them (P4 in
+    /// whole steps for notes, rests, clefs, keys and meters, right ends along).
+    /// `constrain` (Shift) locks the move to the first dominant axis after
+    /// WinScore's rule. No undo step until [`Editor::drag_end`].
+    pub fn drag_to_point(&mut self, x: f64, y: f64, constrain: bool) -> Change {
+        let Some(drag) = &mut self.drag else { return Change::default() };
+        let point = PagePoint { x, y };
+        let axes = if constrain { drag.constraint.admit(point) } else { Some(Axes::Both) };
+        let Some(axes) = axes else { return Change::default() };
+        let (dx, dy) = (point.x - drag.grab.x, point.y - drag.grab.y);
         let edits: Vec<Edit> = drag
-            .start
+            .items
             .iter()
-            .filter_map(|(id, start, step)| {
-                let mut draft = Draft::of(start);
-                shift(&mut draft, Axis::Horizontal, on_grid(dx / P3_UNIT));
-                shift(&mut draft, Axis::Vertical, on_grid(dy / step));
-                replacement(&self.doc, *id, draft.to_item())
+            .filter_map(|item| {
+                let moved = drag::dragged(&Draft::of(&item.start), &item.staff, drag.ends, dx, dy, axes);
+                replacement(&self.doc, item.id, moved.to_item())
             })
             .collect();
         self.doc.apply_all(&edits);
@@ -240,9 +276,9 @@ impl Editor {
     pub fn drag_end(&mut self, commit: bool) -> Change {
         let Some(drag) = self.drag.take() else { return Change::default() };
         let moved: Vec<(ItemId, Item)> =
-            drag.start.iter().filter_map(|(id, ..)| Some((*id, self.doc.item(*id)?.clone()))).collect();
+            drag.items.iter().filter_map(|d| Some((d.id, self.doc.item(d.id)?.clone()))).collect();
         let back: Vec<Edit> =
-            drag.start.iter().filter_map(|(id, start, _)| replacement(&self.doc, *id, start.clone())).collect();
+            drag.items.iter().filter_map(|d| replacement(&self.doc, d.id, d.start.clone())).collect();
         self.doc.apply_all(&back);
         if !commit {
             return Change::new(&back, self.selection());
@@ -299,9 +335,6 @@ impl Editor {
     }
 }
 
-fn on_grid(offset: f64) -> f64 {
-    f64::from(((offset as f32) / DRAG_GRID).round() * DRAG_GRID)
-}
 
 /// The edit that gives item `id` the content `after`, if that changes anything.
 fn replacement(doc: &Document, id: ItemId, after: Item) -> Option<Edit> {

@@ -139,7 +139,7 @@ LAB_00531297:
 LAB_0053150b:
             DAT_0078b4e0 = 0x4c;
             DAT_0078b4e4 = 0x4a;
-            thunk_FUN_004b80b7(&IP2,&IP2,&f_0,&DAT_00768554);
+            lineup_pass(&IP2,&IP2,&f_0,&DAT_00768554);
             *(undefined4 *)(puVar3 + -0x14) = 0;
             goto LAB_005316bb;
           }

@@ -14,7 +14,7 @@ void FUN_0056b706(int param_1)
     P15._0_1_ = *(undefined1 *)(param_1 + 0x18);
   }
   else if (DAT_01cadce4 < 100) {
-    FUN_0056b845();
+    load_font_metrics();
   }
   return;
 }

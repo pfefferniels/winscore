@@ -8,14 +8,17 @@
 
 pub mod create;
 pub mod item;
+pub mod line;
 pub mod moves;
 pub mod note;
 pub mod numeric;
 pub mod parse;
+pub mod signs;
 
 use score_render::Document as RenderDocument;
 
 use crate::document::{ItemId, Transaction};
+use crate::drag::Ends;
 use crate::error::EditError;
 use crate::params::Draft;
 use crate::session::{Deleted, Session};
@@ -53,7 +56,7 @@ enum CopyMode {
 }
 
 /// Words about edit mode itself rather than about an item's parameters.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum SessionWord {
     /// X, or `X n` to go on with item n.
     Leave,
@@ -66,10 +69,23 @@ enum SessionWord {
     /// II.
     EditLast,
     Undelete,
+    /// LFT, RGT: drags move only that end of a line, slur, beam or trill.
+    DragEnd(Ends),
+    /// CN [staff]: P3 of the nearest note or rest.
+    Center,
+    /// PSn: remember Pn of the item in edit mode.
+    SaveParam(Option<f32>),
+    /// PG, PGn: give the item the last remembered parameter (or the one remembered for Pn).
+    RecallParam(Option<f32>),
 }
 
 impl SessionWord {
     fn parse(word: &str) -> Option<Self> {
+        match parse::split_count(word) {
+            ("PS", n) => return Some(Self::SaveParam(n)),
+            ("PG", n) => return Some(Self::RecallParam(n)),
+            _ => {}
+        }
         let parsed = match word {
             "X" => Self::Leave,
             "AB" => Self::Abort { exit: false },
@@ -87,6 +103,9 @@ impl SessionWord {
             "I" => Self::Edit,
             "II" => Self::EditLast,
             "UND" => Self::Undelete,
+            "LFT" => Self::DragEnd(Ends::Left),
+            "RGT" => Self::DragEnd(Ends::Right),
+            "CN" => Self::Center,
             _ => return None,
         };
         Some(parsed)
@@ -171,6 +190,13 @@ impl Run<'_, '_> {
             Some(SessionWord::Edit) => self.edit_item(number),
             Some(SessionWord::EditLast) => self.edit_last(),
             Some(SessionWord::Undelete) => Err(EditError::InEditMode(word)),
+            Some(SessionWord::DragEnd(end)) => {
+                self.session.toggle_drag_end(end);
+                Ok(())
+            }
+            Some(SessionWord::Center) => self.center(number),
+            Some(SessionWord::SaveParam(n)) => self.save_param(n.or(number)),
+            Some(SessionWord::RecallParam(n)) => self.recall_param(n.or(number)),
             None => self.edit_word(&word, args),
         }
     }
@@ -207,7 +233,7 @@ impl Run<'_, '_> {
                 self.session.clear();
                 self.create(&template, args)
             }
-            _ if item::is_edit_word(word) => self.rewrite(word),
+            _ if item::is_edit_word(word) => self.rewrite(word, first_number(args)),
             _ => Err(EditError::UnknownCommand(word.to_owned())),
         }
     }
@@ -251,7 +277,7 @@ impl Run<'_, '_> {
         Ok(())
     }
 
-    fn rewrite(&mut self, word: &str) -> Result<(), EditError> {
+    fn rewrite(&mut self, word: &str, arg: Option<f32>) -> Result<(), EditError> {
         let codes = self.selected_codes();
         if !codes.iter().any(|&code| item::lookup(word, code).is_some()) {
             let code = codes.first().copied().unwrap_or(0);
@@ -259,9 +285,60 @@ impl Run<'_, '_> {
         }
         self.rewrite_selected(|draft| {
             if let Some(entry) = item::lookup(word, draft.code()) {
-                entry.op.apply(draft);
+                entry.op.apply(draft, arg);
             }
         });
+        Ok(())
+    }
+
+    /// CN [staff]: the selected items moved to the P3 of the nearest note or
+    /// rest on their staff (or on `staff`); a beam's ends each to their own nearest.
+    fn center(&mut self, staff: Option<f32>) -> Result<(), EditError> {
+        let selected = self.selection();
+        let anchors: Vec<(f32, f32)> = self
+            .tx
+            .doc()
+            .entries()
+            .filter(|(id, item)| matches!(item.code(), 1 | 2) && !selected.contains(id))
+            .map(|(_, item)| (item.param(2), item.param(3)))
+            .collect();
+        let nearest = |on: f32, p3: f32| {
+            anchors.iter().filter(|(s, _)| *s == on).map(|&(_, x)| x).fold(None, |best: Option<f32>, x| match best {
+                Some(b) if (b - p3).abs() <= (x - p3).abs() => Some(b),
+                _ => Some(x),
+            })
+        };
+        self.rewrite_selected(|draft| {
+            let on = staff.unwrap_or(draft.get(2));
+            let ends: &[usize] = match draft.code() {
+                6 => &[3, 6],
+                4 | 5 | 7 | 8 | 14 => &[],
+                _ => &[3],
+            };
+            ends.iter().for_each(|&n| {
+                if let Some(x) = nearest(on, draft.get(n)) {
+                    draft.set(n, x);
+                }
+            });
+        });
+        Ok(())
+    }
+
+    /// PSn: remembers Pn of the first selected item.
+    fn save_param(&mut self, n: Option<f32>) -> Result<(), EditError> {
+        let n = numeric::param_number(n.ok_or_else(|| EditError::BadArgument("PS".into()))?)?;
+        let first = self.selection().first().and_then(|&id| self.tx.doc().item(id)).map(|item| item.param(n));
+        if let Some(value) = first {
+            self.session.save_param(n, value);
+        }
+        Ok(())
+    }
+
+    /// PG, PGn: sets the remembered parameter on the selection.
+    fn recall_param(&mut self, n: Option<f32>) -> Result<(), EditError> {
+        let wanted = n.map(numeric::param_number).transpose()?;
+        let Some((n, value)) = self.session.saved_param(wanted) else { return Ok(()) };
+        self.rewrite_selected(|draft| draft.set(n, value));
         Ok(())
     }
 

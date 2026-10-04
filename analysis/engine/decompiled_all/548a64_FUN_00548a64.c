@@ -85,7 +85,7 @@ void FUN_00548a64(void)
       DAT_0099f974 = DAT_0099f974 + 1;
       *(int *)(DAT_0099f974 * 4 + 0x9a037c) = DAT_0099f96c;
       _DAT_0099f95c = DAT_0099f96c - *(int *)(DAT_0099f974 * 4 + 0x9a0378);
-      thunk_FUN_0042fa58(*(int *)(DAT_0099f974 * 4 + 0x9a0378) + 0x9a949b,1,&DAT_0099f95c);
+      text_parse(*(int *)(DAT_0099f974 * 4 + 0x9a0378) + 0x9a949b,1,&DAT_0099f95c);
       *(float *)(DAT_0099f974 * 4 + 0x99fba8) = P13;
     }
     else {
@@ -99,7 +99,7 @@ void FUN_00548a64(void)
 LAB_00548f00:
   (&DAT_009a0380)[DAT_0099f974] = DAT_0099f96c + 1;
   _DAT_0099f95c = DAT_0099f96c - *(int *)(DAT_0099f974 * 4 + 0x9a037c);
-  thunk_FUN_0042fa58(*(int *)(DAT_0099f974 * 4 + 0x9a037c) + 0x9a949b,1,&DAT_0099f95c);
+  text_parse(*(int *)(DAT_0099f974 * 4 + 0x9a037c) + 0x9a949b,1,&DAT_0099f95c);
   *(float *)(DAT_0099f974 * 4 + 0x99fbac) = P13;
   return;
 }
