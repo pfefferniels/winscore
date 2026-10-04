@@ -8,6 +8,7 @@
 //! Pass 4 also has `xB` (beam every x eighths) and `xBy` (after y pickup notes).
 
 use crate::error::{ErrorKind, InputError, Pass};
+use crate::motives::Motives;
 use crate::scan::{entries, Cursor, Entry};
 
 /// Where a beam or slur goes relative to the notes, if the input says so.
@@ -120,8 +121,8 @@ fn parse_entry(entry: &Entry, pass: Pass) -> Result<Vec<ConnectEntry>, InputErro
     Ok(vec![ConnectEntry::Pair(made)])
 }
 
-pub fn parse(text: &str, pass: Pass) -> Result<Vec<ConnectEntry>, InputError> {
-    let parsed: Vec<Vec<ConnectEntry>> = entries(text, pass)?
+pub fn parse(text: &str, pass: Pass, motives: &mut Motives) -> Result<Vec<ConnectEntry>, InputError> {
+    let parsed: Vec<Vec<ConnectEntry>> = entries(text, pass, motives)?
         .iter()
         .filter(|e| !e.text.trim().is_empty())
         .map(|e| parse_entry(e, pass))
@@ -134,7 +135,7 @@ mod tests {
     use super::*;
 
     fn pairs(text: &str, pass: Pass) -> Vec<(usize, usize, Option<Side>, u32)> {
-        parse(text, pass)
+        parse(text, pass, &mut Motives::new())
             .unwrap()
             .into_iter()
             .filter_map(|e| match e {
@@ -155,6 +156,6 @@ mod tests {
     #[test]
     fn groups_and_every_eighths() {
         assert_eq!(pairs("X3 1 4 7;", Pass::Slurs), [(1, 3, None, 0), (4, 6, None, 0), (7, 9, None, 0)]);
-        assert_eq!(parse("2B2;", Pass::Beams).unwrap(), [ConnectEntry::EveryEighths { eighths: 2, pickup: 2 }]);
+        assert_eq!(parse("2B2;", Pass::Beams, &mut Motives::new()).unwrap(), [ConnectEntry::EveryEighths { eighths: 2, pickup: 2 }]);
     }
 }

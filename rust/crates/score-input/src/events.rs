@@ -2,6 +2,7 @@
 //! levels computed for the current clef, repeats expanded.
 
 use crate::error::{ErrorKind, InputError, Pass};
+use crate::motives::{transpose, Motives};
 use crate::notes::{Accidental, Clef, KeySignature, Meter, NoteEntry, NoteName, OctaveMode, RestKind, Spanned, StaffShift, StemMode};
 
 const MIDDLE_C_OCTAVE: i32 = 4;
@@ -75,9 +76,12 @@ impl Pitches {
         diatonic
     }
 
-    fn head(&mut self, name: &NoteName) -> Head {
-        let level = self.resolve(name) - 7 * MIDDLE_C_OCTAVE + 1 + self.clef.level_offset();
-        Head { level, accidental: name.accidental }
+    /// The head for a note name, and the name with its octave made explicit.
+    fn head(&mut self, name: &NoteName) -> (Head, NoteName) {
+        let diatonic = self.resolve(name);
+        let level = diatonic - 7 * MIDDLE_C_OCTAVE + 1 + self.clef.level_offset();
+        let explicit = NoteName { octave: Some(diatonic.div_euclid(7).clamp(0, 9) as u8), ..*name };
+        (Head { level, accidental: name.accidental }, explicit)
     }
 }
 
@@ -91,51 +95,98 @@ fn nearest(previous: i32, step: i32) -> i32 {
     }
 }
 
-pub fn resolve(entries: &[Spanned<NoteEntry>]) -> Result<Vec<Event>, InputError> {
-    let mut pitches = Pitches::default();
-    let mut events: Vec<Event> = Vec::new();
-    for spanned in entries {
-        let error = |kind| InputError::new(Pass::Notes, spanned.span, kind);
-        match &spanned.value {
+/// Pass-1 state while the entries are read in order.
+struct Resolver<'a> {
+    pitches: Pitches,
+    events: Vec<Event>,
+    motives: &'a mut Motives,
+    /// The motive being defined and its entries so far (octaves made explicit).
+    defining: Option<(char, Vec<NoteEntry>)>,
+}
+
+impl Resolver<'_> {
+    fn finish_definition(&mut self) {
+        if let Some((name, entries)) = self.defining.take() {
+            self.motives.store_notes(name, entries);
+        }
+    }
+
+    fn spanned(&mut self, spanned: &Spanned<NoteEntry>) -> Result<(), InputError> {
+        if self.defining.as_ref().map(|(name, _)| *name) != spanned.motive {
+            self.finish_definition();
+            self.defining = spanned.motive.map(|name| (name, Vec::new()));
+        }
+        let explicit = self.entry(&spanned.value, spanned.span)?;
+        if let Some((_, entries)) = self.defining.as_mut() {
+            entries.push(explicit);
+        }
+        Ok(())
+    }
+
+    /// Resolves one entry; returns it with explicit octaves, as a motive stores it.
+    fn entry(&mut self, value: &NoteEntry, span: crate::Span) -> Result<NoteEntry, InputError> {
+        let error = |kind| InputError::new(Pass::Notes, span, kind);
+        match value {
             NoteEntry::Chord(names) => {
-                let mut heads: Vec<Head> = names.iter().map(|n| pitches.head(n)).collect();
+                let (mut heads, explicit): (Vec<Head>, Vec<NoteName>) = names.iter().map(|n| self.pitches.head(n)).unzip();
                 heads.sort_by_key(|h| h.level);
-                events.push(Event::Chord(heads));
+                self.events.push(Event::Chord(heads));
+                return Ok(NoteEntry::Chord(explicit));
             }
             NoteEntry::Rest { kind, count } => {
-                events.extend(std::iter::repeat_n(Event::Rest(*kind), *count as usize));
+                self.events.extend(std::iter::repeat_n(Event::Rest(*kind), *count as usize));
             }
             NoteEntry::Bar { staves } => {
-                pitches.staves = staves.unwrap_or(pitches.staves);
-                events.push(Event::Bar { staves: pitches.staves });
+                self.pitches.staves = staves.unwrap_or(self.pitches.staves);
+                self.events.push(Event::Bar { staves: self.pitches.staves });
             }
             NoteEntry::Clef(clef) => {
-                pitches.clef = *clef;
-                events.push(Event::Clef(*clef));
+                self.pitches.clef = *clef;
+                self.events.push(Event::Clef(*clef));
             }
-            NoteEntry::Key(key) => events.push(Event::Key(*key)),
-            NoteEntry::Meter(meter) => events.push(Event::Meter(*meter)),
-            NoteEntry::Stems(mode) => events.push(Event::Stems(*mode)),
-            NoteEntry::Staff(shift) => events.push(Event::Staff(*shift)),
+            NoteEntry::Key(key) => self.events.push(Event::Key(*key)),
+            NoteEntry::Meter(meter) => self.events.push(Event::Meter(*meter)),
+            NoteEntry::Stems(mode) => self.events.push(Event::Stems(*mode)),
+            NoteEntry::Staff(shift) => self.events.push(Event::Staff(*shift)),
             NoteEntry::RepeatPrevious => {
-                let previous = events.iter().rev().find(|e| e.is_rhythmic()).ok_or_else(|| error(ErrorKind::NothingToRepeat))?;
-                events.push(previous.without_accidentals());
+                let previous =
+                    self.events.iter().rev().find(|e| e.is_rhythmic()).ok_or_else(|| error(ErrorKind::NothingToRepeat))?;
+                self.events.push(previous.without_accidentals());
             }
             NoteEntry::Repeat { items, times, keep_accidentals } => {
                 let items = *items as usize;
-                if items == 0 || items > events.len() {
+                if items == 0 || items > self.events.len() {
                     return Err(error(ErrorKind::NothingToRepeat));
                 }
-                let group: Vec<Event> = events[events.len() - items..]
+                let group: Vec<Event> = self.events[self.events.len() - items..]
                     .iter()
                     .map(|e| if *keep_accidentals { e.clone() } else { e.without_accidentals() })
                     .collect();
                 let copies = times.saturating_sub(1) as usize;
-                events.extend(std::iter::repeat_n(group, copies).flatten());
+                self.events.extend(std::iter::repeat_n(group, copies).flatten());
+            }
+            NoteEntry::Recall { name, steps } => {
+                let stored = self.motives.notes(*name).ok_or_else(|| error(ErrorKind::UnknownMotive(*name)))?.to_vec();
+                for entry in stored {
+                    let moved = match entry {
+                        NoteEntry::Chord(names) => NoteEntry::Chord(names.iter().map(|n| transpose(n, *steps)).collect()),
+                        other => other,
+                    };
+                    self.entry(&moved, span)?;
+                }
             }
         }
+        Ok(value.clone())
     }
-    Ok(events)
+}
+
+pub fn resolve(entries: &[Spanned<NoteEntry>], motives: &mut Motives) -> Result<Vec<Event>, InputError> {
+    let mut resolver = Resolver { pitches: Pitches::default(), events: Vec::new(), motives, defining: None };
+    for spanned in entries {
+        resolver.spanned(spanned)?;
+    }
+    resolver.finish_definition();
+    Ok(resolver.events)
 }
 
 #[cfg(test)]
@@ -144,7 +195,8 @@ mod tests {
     use crate::notes::parse;
 
     fn levels(text: &str) -> Vec<Vec<i32>> {
-        resolve(&parse(text).unwrap())
+        let mut motives = Motives::new();
+        resolve(&parse(text, &mut motives).unwrap(), &mut motives)
             .unwrap()
             .into_iter()
             .filter_map(|e| match e {
@@ -168,7 +220,8 @@ mod tests {
 
     #[test]
     fn repeats_drop_accidentals_unless_z() {
-        let events = resolve(&parse("CS4/X1 2/Z1 2/;").unwrap()).unwrap();
+        let mut motives = Motives::new();
+        let events = resolve(&parse("CS4/X1 2/Z1 2/;", &mut motives).unwrap(), &mut motives).unwrap();
         let accidentals: Vec<_> = events
             .iter()
             .map(|e| match e {

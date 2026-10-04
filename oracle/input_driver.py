@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import functools
 import re
+import shutil
 import struct
 import sys
 import tempfile
@@ -133,6 +134,7 @@ def run_job(job: InputJob, root: Path | None = None) -> InputResult:
     engine.initialize()
     target = sandbox / "cwd" / "RESULT.MUS"
     target.unlink(missing_ok=True)
+    shutil.rmtree(sandbox / "cwd" / "!tmp", ignore_errors=True)      # motives of earlier jobs
     engine.command(job.command)
     engine.command("SA result.mus")
     quiet = ("service", "redraw", "text")       # text events echo every keystroke

@@ -8,6 +8,7 @@
 
 use crate::error::{ErrorKind, InputError, Pass};
 use crate::line::{item, Line, Note, STEM};
+use crate::motives::Motives;
 use crate::scan::{entries, Cursor, Entry};
 
 const PASS: Pass = Pass::Marks;
@@ -116,8 +117,8 @@ pub struct Mark {
     pub target: Target,
 }
 
-pub fn parse(text: &str) -> Result<Vec<Mark>, InputError> {
-    entries(text, PASS)?.iter().filter(|e| !e.text.trim().is_empty()).map(parse_entry).collect()
+pub fn parse(text: &str, motives: &mut Motives) -> Result<Vec<Mark>, InputError> {
+    entries(text, PASS, motives)?.iter().filter(|e| !e.text.trim().is_empty()).map(parse_entry).collect()
 }
 
 fn word(c: &mut Cursor) -> Option<MarkKind> {
@@ -332,7 +333,7 @@ mod tests {
 
     #[test]
     fn words_targets_and_flips() {
-        let marks = parse("A 1/S 2:4/-T 5/TRW 1 2.7/C- 2 3/O 5 7/OB 7 8/F3 2/TMS 8;").unwrap();
+        let marks = parse("A 1/S 2:4/-T 5/TRW 1 2.7/C- 2 3/O 5 7/OB 7 8/F3 2/TMS 8;", &mut Motives::new()).unwrap();
         assert_eq!(marks.len(), 9);
         assert_eq!(marks[1].target, Target::Notes { first: 2, last: 4 });
         assert!(marks[2].flipped);

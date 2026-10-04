@@ -5,6 +5,7 @@
 //! repeats the previous rhythm; `Xn m` repeats the last n rhythms so that they occur m times.
 
 use crate::error::{ErrorKind, InputError, Pass};
+use crate::motives::Motives;
 use crate::scan::{entries, Cursor, Entry};
 
 const PASS: Pass = Pass::Rhythms;
@@ -65,9 +66,9 @@ enum RhythmEntry {
     RepeatPrevious,
 }
 
-pub fn parse(text: &str) -> Result<Vec<Rhythm>, InputError> {
+pub fn parse(text: &str, motives: &mut Motives) -> Result<Vec<Rhythm>, InputError> {
     let parsed: Vec<(Entry, RhythmEntry)> =
-        entries(text, PASS)?.into_iter().map(|e| parse_entry(&e).map(|r| (e, r))).collect::<Result<_, _>>()?;
+        entries(text, PASS, motives)?.into_iter().map(|e| parse_entry(&e).map(|r| (e, r))).collect::<Result<_, _>>()?;
     let mut rhythms: Vec<Rhythm> = Vec::new();
     for (entry, parsed) in parsed {
         match parsed {
@@ -120,6 +121,18 @@ fn value(c: &mut Cursor) -> Result<Rhythm, InputError> {
     Ok(Rhythm::Value { per_whole, dots })
 }
 
+/// The rhythm number a piece of pass-2 text starts with, and the rest of the piece
+/// (dots, copies); None for a grace note or text that is not a rhythm.
+pub(crate) fn leading_value(piece: &str) -> Option<(f32, String)> {
+    let entry = Entry { text: piece.to_ascii_uppercase(), start: 0, motive: None };
+    let mut c = entry.cursor(PASS);
+    if c.peek() == Some(b'G') {
+        return None;
+    }
+    let value = per_whole(&mut c).ok()?;
+    Some((value, c.rest().to_string()))
+}
+
 fn per_whole(c: &mut Cursor) -> Result<f32, InputError> {
     if let Some(n) = c.number() {
         return Ok(n);
@@ -158,7 +171,7 @@ mod tests {
     use super::*;
 
     fn quarters(text: &str) -> Vec<f32> {
-        parse(text).unwrap().into_iter().map(Rhythm::quarters).collect()
+        parse(text, &mut Motives::new()).unwrap().into_iter().map(Rhythm::quarters).collect()
     }
 
     #[test]
