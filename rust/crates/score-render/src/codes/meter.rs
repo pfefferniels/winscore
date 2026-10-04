@@ -12,9 +12,10 @@
 
 use crate::canvas::Canvas;
 use crate::codes;
+use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
 use crate::document::{Document, ItemRef};
 use crate::symbols::{draw_clef, draw_library_symbol, ItemContext, SymbolCall};
-use crate::text::{draw_text, font_loaded as text_font_loaded, Font, TextCall};
+use crate::text::{font_loaded as text_font_loaded, Font};
 use crate::units::{real, trunc, Pos};
 
 /// P5 from this value on selects a symbol instead of a number.
@@ -23,6 +24,8 @@ const SYMBOL_BASE: i32 = 117;
 const SYMBOL_SIZE: f32 = 0.75;
 /// The plus between two meters is clef symbol 38 (0x764BE8).
 const PLUS_SYMBOL: i32 = 38;
+/// draw_meter's IP7 without P13: the meter font.
+const METER_FONT_P13: i32 = 6;
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let p5 = trunc(f64::from(item.p(5)));
@@ -32,10 +35,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     }
     let layout = Layout::of(doc, item);
     layout.parts.iter().for_each(|part| match *part {
-        Part::Number { value, at } => {
-            let digits = value.to_string();
-            draw_text(doc, item, canvas, &number_call(doc, item, digits.as_bytes(), at, layout.size));
-        }
+        Part::Number { value, at } => draw_number(doc, item, canvas, at, &number_call(item, value, layout.size)),
         Part::Plus(at) => {
             let context = ItemContext { code: codes::CLEF, ..ItemContext::of(item) };
             draw_clef(doc, &context, canvas, at, doc.staff_of(item).step, PLUS_SYMBOL, (layout.size, layout.size));
@@ -50,11 +50,23 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
         return None;
     }
     let layout = Layout::of(doc, item);
-    let at = layout.parts.iter().find_map(|part| match *part {
-        Part::Number { at, .. } => Some(at),
+    let (value, at) = layout.parts.iter().find_map(|part| match *part {
+        Part::Number { value, at } => Some((value, at)),
         Part::Plus(_) => None,
     })?;
-    text_font_loaded(doc, &number_call(doc, item, b"0", at, layout.size))
+    let call = number_call(item, value, layout.size);
+    let text = number_text(call.value, call.p5, call.p17, call.p18);
+    text_font_loaded(doc, &number_text_call(&call, at, &text, Font::TIMES))
+}
+
+/// What draw_meter hands draw_number for one number (0x4BFC4C): P5 = the
+/// number, P6 = the size, IP8 = 0, IP7 from P13.
+fn number_call(item: ItemRef<'_>, value: i32, size: f64) -> NumberCall {
+    let font = match trunc(f64::from(item.p(13))) {
+        0 => METER_FONT_P13,
+        p13 => p13,
+    };
+    NumberCall { value, p5: value as f32, size: size as f32, font, frame: 0, ..NumberCall::of(item) }
 }
 
 fn draw_meter_symbol(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, p5: i32) {
@@ -196,42 +208,3 @@ impl Layout {
     }
 }
 
-/// Fonts by P13 for numbers (table 0x794FF4): 6, the default, is the meter font.
-const NUMBER_FONTS: [i32; 11] = [1000, 1002, 1004, 1024, 1026, 1006, 94, 1025, 1027, 1001, 1003];
-const METER_FONT_P13: i32 = 6;
-
-/// draw_number's font for IP7 (0x4F65A8).
-fn number_font(ip7: i32) -> i32 {
-    match ip7.max(0) {
-        n @ 90.. => n,
-        n @ 0..=10 => NUMBER_FONTS[n as usize],
-        11 => NUMBER_FONTS[10],
-        _ => NUMBER_FONTS[0],
-    }
-}
-
-/// The draw_text call draw_number makes for one meter number.
-fn number_call<'t>(doc: &Document<'_>, item: ItemRef<'_>, digits: &'t [u8], at: Pos, size: f64) -> TextCall<'t> {
-    let ip7 = match trunc(f64::from(item.p(13))) {
-        0 => METER_FONT_P13,
-        p13 => p13,
-    };
-    let font = number_font(ip7);
-    TextCall {
-        text: digits,
-        origin: at,
-        p3: item.p(3),
-        item_code: codes::METER,
-        staff: item.staff(),
-        spread: item.p(20),
-        width: size as f32,
-        height: 0.0,
-        font_override: font,
-        rotation: item.p(19),
-        space: 0.0,
-        shift: 0.0,
-        step: None,
-        colour: (item.p(26) != 0.0 && font != Font::METER.0).then(|| item.p(26)),
-        current_font: codes::text::font_before(doc, item),
-    }
-}

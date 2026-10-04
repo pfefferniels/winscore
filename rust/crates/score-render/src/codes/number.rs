@@ -137,7 +137,9 @@ pub fn text_call<'t>(doc: &Document<'_>, item: ItemRef<'_>, text: &'t [u8]) -> T
     number_text_call(&NumberCall::of(item), doc.position(item), text, font_before(doc, item))
 }
 
-fn number_text_call<'t>(call: &NumberCall, at: Pos, text: &'t [u8], current_font: Font) -> TextCall<'t> {
+/// The draw_text call draw_number makes for `call` with its string `text`
+/// at X_POS, Y_POS = `at`.
+pub fn number_text_call<'t>(call: &NumberCall, at: Pos, text: &'t [u8], current_font: Font) -> TextCall<'t> {
     let font_override = call.font_override();
     TextCall {
         text,
