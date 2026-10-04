@@ -21,6 +21,7 @@ What the FORTRAN engine inside WScore.exe (WinScore 5.01) computes, with address
 | [symbols.md](symbols.md) | library symbols: draw_symbol, draw_clef, text symbols |
 | [notes.md](notes.md) | code 1: heads (and the head cache), stems, tails, dots, accidentals, ledger lines |
 | [input.md](input.md) | the IN command: passes, spacing, minimum gap |
+| [prefs.md](prefs.md) | PREF.DAT keywords and the globals they set (slur thickness, beam, metric, paper, ...) |
 | [display.md](display.md) | how the C++ shell paints the engine output (pens, zoom, text) |
 | [dispatch.md](dispatch.md) | draw loop, the per-code switch, item store layout |
 | [emitters.md](emitters.md) | point buffer, vector stream writer, pens |
