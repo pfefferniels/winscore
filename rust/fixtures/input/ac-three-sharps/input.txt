@@ -1,0 +1,7 @@
+IN 1
+;
+CS4:ES:GS/DS4:FS:AS/CS5:ES5:GS5/FS4:AS:CS5:ES5;
+4/4/4/4;
+;
+;
+;
