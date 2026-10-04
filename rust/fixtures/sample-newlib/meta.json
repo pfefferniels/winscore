@@ -1,0 +1,74 @@
+{
+ "case": "sample-newlib",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 3716,
+   "vector_words": 3882
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; view = page + view_offset",
+ "description": "SCORE 4 sample NEWLIB.MUS",
+ "events": [
+  {
+   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
+   "kind": "dialog"
+  },
+  {
+   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
+   "kind": "dialog"
+  },
+  {
+   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
+   "kind": "dialog"
+  },
+  {
+   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
+   "kind": "dialog"
+  },
+  {
+   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
+   "kind": "dialog"
+  },
+  {
+   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
+   "kind": "dialog"
+  },
+  {
+   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
+   "kind": "dialog"
+  },
+  {
+   "detail": "0x59b090 args=['0x7d3750', '0x7d36fc', '0x0']",
+   "kind": "dialog"
+  }
+ ],
+ "invalid_reasons": [
+  "dialog: 0x59b090 args=['0x7d3750', '0x7d36fc', '0x0'] (x8)"
+ ],
+ "items": 59,
+ "page_frames": [
+  [
+   401,
+   -37372,
+   34399,
+   18626
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -   59 Items)   <Legal>",
+ "valid": false,
+ "view_offset": [
+  400,
+  -37373
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}
