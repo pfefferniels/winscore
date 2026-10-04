@@ -2019,3 +2019,410 @@ R 1
 base: 8 1; 1 1 100 6 10 0 1; 1 1 100 6 20 0 1
 ~ 17000 3298
 R 1
+
+# -- centring on notes (CN) ---------------------------------------------------------------
+
+== b5_cn_symbol_left
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 6 10 0 1; 9 1 108 13 22 0.25
+I 4
+CN
+== b5_cn_symbol_right
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 6 10 0 1; 9 1 113 13 22 0.25
+I 4
+CN
+== b5_cn_number
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 6 20 0 1; 10 1 117 13 1
+I 4
+CN
+== b5_cn_ignores_note_offset
+base: 8 1; 1 1 100 6 10 0 1 0 0 10; 9 1 103 13 22 0.25
+I 3
+CN
+== b5_cn_rest
+base: 8 1; 2 1 100 0 0 0 1; 9 1 103 13 22 0.25
+I 3
+CN
+== b5_cn_other_staff
+base: 8 1; 8 2; 1 2 100 6 10 0 1; 1 1 130 6 10 0 1; 9 1 103 13 22 0.25
+I 5
+CN 2
+== b5_cn_note
+base: 8 1; 1 1 100 6 10 0 1; 1 1 104 8 10 0 1
+I 3
+CN
+== b5_cn_beam
+base: 8 1; 1 1 100 6 10 0 0.5 0 1; 1 1 120 8 10 0 0.5 0 1; 6 1 103 13 15 118 11
+I 4
+CN
+== b5_cn_midway
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 6 10 0 1; 9 1 110 13 22 0.25
+I 4
+CN
+
+# -- trills and pedals, staves, symbols, numbers, boxes, barlines, keys, meters ------------
+
+== b6_trill_flat
+base: 8 1; 7 1 50 15 0 120
+I 2
+TRF
+TRF
+== b6_trill_sharp_over_flat
+base: 8 1; 7 1 50 15 0 120 0 1
+I 2
+TRS
+== b6_trill_natural
+base: 8 1; 7 1 50 15 0 120
+I 2
+TRN
+== b6_trill_flat_toggle
+base: 8 1; 7 1 50 15 0 120 0 1
+I 2
+TRFW
+== b6_trill_sharp_toggle
+base: 8 1; 7 1 50 15 0 120
+I 2
+TRSW
+== b6_trill_natural_toggle
+base: 8 1; 7 1 50 15 0 120
+I 2
+TRNW
+== b6_trill_no_accidental
+base: 8 1; 7 1 50 15 0 120 0 2
+I 2
+TRZ
+== b6_pedal_size
+base: 8 1; 7 1 50 -1 0 140 20
+I 2
+PDSZ+
+PDSZ+
+== b6_pedal_size_minus
+base: 8 1; 7 1 50 -1 0 140 22
+I 2
+PDSZ-
+== b6_pedal_midpoint
+base: 8 1; 7 1 50 -1 0 140 21
+I 2
+PDM+
+PDM+
+PDM-
+== b6_staff_size
+base: 8 1 0 0 1 200
+I 1
+SZ.4
+== b6_staff_size_9
+base: 8 1 0 0 1 200
+I 1
+SZ.9
+== b6_staff_size_plus
+base: 8 1 0 0 1 200
+I 1
+SZ+
+SZ+
+== b6_staff_size_minus
+base: 8 1 0 0 1 200
+I 1
+SZ-
+== b6_staff_number_toggle
+base: 8 1 0 0 1 200
+I 1
+NMO
+== b6_staff_number_twice
+base: 8 1 0 0 1 200
+I 1
+NMO
+NMO
+== b6_staff_invisible
+base: 8 1 0 0 1 200
+I 1
+SI
+== b6_staff_invisible_twice
+base: 8 1 0 0 1 200
+I 1
+SI
+SI
+== b6_symbol_flip
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+FLI
+== b6_symbol_flip_twice
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+FLI
+FLI
+== b6_symbol_flip_tall
+base: 8 1; 9 1 100 13 22 0.25 0.5
+I 2
+FLI
+== b6_symbol_rotate
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+ROT+
+ROT+
+ROT-
+== b6_symbol_rotate_zero
+base: 8 1; 9 1 100 13 22 0.25 1 0 1
+I 2
+ROT0
+== b6_symbol_larger
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+SZ+
+== b6_symbol_smaller_tall
+base: 8 1; 9 1 100 13 22 0.25 1
+I 2
+SZ-
+== b6_symbol_larger_tall
+base: 8 1; 9 1 100 13 22 0.25 1
+I 2
+SZ+
+== b6_symbol_larger_unsized
+base: 8 1; 9 1 100 13 22
+I 2
+SZ+
+== b6_symbol_cue
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+CUE
+== b6_number_plus
+base: 8 1; 10 1 100 13 1
+I 2
+PLUS1
+PLUS10
+== b6_number_minus
+base: 8 1; 10 1 100 13 1
+I 2
+MINUS10
+== b6_box_wider
+base: 8 1; 12 1 50 12 0 10
+I 2
+BXHP
+== b6_box_narrower_tall
+base: 8 1; 12 1 50 12 1 10 1
+I 2
+BXHM
+== b6_box_taller
+base: 8 1; 12 1 50 12 0 10
+I 2
+BXVP
+== b6_box_lower_tall
+base: 8 1; 12 1 50 12 1 10 1
+I 2
+BXVM
+== b6_box_fill
+base: 8 1; 12 1 50 12 0 10
+I 2
+FILL
+FILL
+== b6_box_dashes
+base: 8 1; 12 1 50 12 0 10
+I 2
+CDSH
+CDSH
+== b6_box_skew
+base: 8 1; 12 1 50 12 0 10
+I 2
+SKWR
+SKWR
+SKWL
+== b6_box_skew_zero
+base: 8 1; 12 1 50 12 0 10 0 0 0 4
+I 2
+SKW0
+== b6_box_rotate
+base: 8 1; 12 1 50 12 0 10
+I 2
+ROT+
+ROT-
+ROT-
+== b6_bar_double
+base: 8 1; 14 1 100 1
+I 2
+BARD
+== b6_bar_double_clears_p16
+base: 8 1; 14 1 100 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+I 2
+BARD
+== b6_bar_heavy
+base: 8 1; 14 1 100 1
+I 2
+BARH
+== b6_bar_repeats
+base: 8 1; 14 1 100 1
+I 2
+BARL
+== b6_bar_repeat_right
+base: 8 1; 14 1 100 1
+I 2
+BARR
+== b6_bar_double_repeat
+base: 8 1; 14 1 100 1
+I 2
+BARRD
+== b6_bar_brace
+base: 8 1; 14 1 100 1
+I 2
+BARBC
+== b6_bar_bracket
+base: 8 1; 14 1 100 1
+I 2
+BARBK
+== b6_bar_invisible
+base: 8 1; 14 1 100 1
+I 2
+INV
+== b6_bar_invisible_twice
+base: 8 1; 14 1 100 1
+I 2
+INV
+INV
+== b6_bar_end
+base: 8 1; 14 1 100 1
+I 2
+END
+== b6_bar_double_space
+base: 8 1; 14 1 100 1 1 0 0 0 0 0 0 0 1
+I 2
+DBRS+
+== b6_bar_double_space_default
+base: 8 1; 14 1 100 1 1 0 0 0 0 0 0 0 1
+I 2
+DBRS0
+== b6_bar_double_width
+base: 8 1; 14 1 100 1 1
+I 2
+DBRW+
+== b6_bar_double_width_set
+base: 8 1; 14 1 100 1 1 0 0 0 0 0 0 0 0 0 0 0 1
+I 2
+DBRW+
+DBRW0
+== b6_key_clefs
+base: 8 1; 17 1 100 0 2
+I 2
+KSAL
+== b6_key_bass
+base: 8 1; 17 1 100 0 2
+I 2
+KSBA
+== b6_key_tenor
+base: 8 1; 17 1 100 0 2
+I 2
+KSTN
+== b6_key_treble
+base: 8 1; 17 1 100 0 -3 1
+I 2
+KSTR
+== b6_key_cue
+base: 8 1; 17 1 100 0 2
+I 2
+KSCU
+KSCU
+== b6_key_normal
+base: 8 1; 17 1 100 0 2 101
+I 2
+KSNO
+== b6_key_flat_from_sharps
+base: 8 1; 17 1 100 0 2
+I 2
+KSFL
+== b6_key_flat_more
+base: 8 1; 17 1 100 0 -2
+I 2
+KSFL
+== b6_key_sharp_from_flats
+base: 8 1; 17 1 100 0 -3
+I 2
+KSSH
+== b6_key_sharp_from_none
+base: 8 1; 17 1 100 0 0
+I 2
+KSSH
+== b6_key_naturals
+base: 8 1; 17 1 100 0 -3
+I 2
+KSNA
+== b6_key_naturals_twice
+base: 8 1; 17 1 100 0 2
+I 2
+KSNA
+KSNA
+== b6_key_justify
+base: 8 1; 17 1 100 0 2 0 0 0 0 0 0 0 0 1
+I 2
+KSJU
+== b6_key_no_justify
+base: 8 1; 17 1 100 0 2
+I 2
+KSNJ
+== b6_key_spacing
+base: 8 1; 17 1 100 0 2
+I 2
+KSSM
+KSSM
+== b6_key_spacing_plus
+base: 8 1; 17 1 100 0 2 0 1.2
+I 2
+KSSP
+== b6_key_spacing_default
+base: 8 1; 17 1 100 0 2 0 1.2
+I 2
+KSSZ
+== b6_key_clear_specials
+base: 8 1; 17 1 100 0 2 0 0 1 1 1 1 1 1 1
+I 2
+KSZR
+== b6_meter_top_right
+base: 8 1; 18 1 100 0 4 4
+I 2
+MTRP
+MTRP
+MTRM
+== b6_meter_top_right_minimum
+base: 8 1; 18 1 100 0 4 4
+I 2
+MTRM
+== b6_meter_bottom
+base: 8 1; 18 1 100 0 6 8
+I 2
+MBLM
+MBLM
+MBLM
+MBLM
+== b6_meter_bottom_double
+base: 8 1; 18 1 100 0 6 8
+I 2
+MBLP
+== b6_meter_bottom_right
+base: 8 1; 18 1 100 0 4 4 0 0 1
+I 2
+MBRM
+MBRM
+MBRP
+== b6_meter_single
+base: 8 1; 18 1 100 0 4 4
+I 2
+MTRS
+MTRSP
+
+# -- remembered parameters (PS, PG) ------------------------------------------------------
+
+== b7_save_and_recall
+I 2
+PS3
+R 10
+PG
+== b7_copy_position_to_another_item
+base: 8 1; 1 1 100 6 10 0 1; 1 1 130 8 10 0 1
+I 2
+PS3
+X
+I 3
+PG
+== b7_recall_by_number
+base: 8 1; 1 1 100 6 10 0 1; 1 1 130 8 10 0 1
+I 2
+PS3
+PS4
+X
+I 3
+PG3

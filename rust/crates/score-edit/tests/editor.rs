@@ -152,9 +152,9 @@ fn a_drag_is_one_undo_step() {
     let mut e = small();
     let note = e.id_at(1).unwrap();
     e.select(&[note]);
-    e.drag_begin();
-    e.drag_to(150.0, 0.0);
-    e.drag_to(300.0, 175.0);
+    e.drag_begin_at(0.0, 0.0);
+    e.drag_to_point(150.0, 0.0, false);
+    e.drag_to_point(300.0, 175.0, false);
     assert_eq!((p(&e, note, 3), p(&e, note, 4)), (102.0, 7.0));
     assert!(!e.can_undo());
     let change = e.drag_end(true);
@@ -169,8 +169,8 @@ fn a_cancelled_drag_leaves_no_trace() {
     let mut e = small();
     let note = e.id_at(1).unwrap();
     e.select(&[note]);
-    e.drag_begin();
-    e.drag_to(1500.0, 0.0);
+    e.drag_begin_at(0.0, 0.0);
+    e.drag_to_point(1500.0, 0.0, false);
     e.drag_end(false);
     assert_eq!(p(&e, note, 3), 100.0);
     assert!(!e.can_undo());
