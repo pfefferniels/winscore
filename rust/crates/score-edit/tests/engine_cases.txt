@@ -2925,3 +2925,13 @@ IF P1=1 THEN P4=-3
 == g2_if_or_then_and
 base: 8 1; 1 1 120 6 10 0 1; 1 1 100 6 10 0 1
 IF P3=120 OR P1=2 AND P2=5 THEN P4=9
+
+# -- library symbols typed as numbers, as the symbol picker creates them -------------------
+
+== g3_symbol_fermata
+base: 8 1
+9 1 80 12 31
+== g3_symbol_then_edit
+base: 8 1
+9 1 80 12 31
+R 2

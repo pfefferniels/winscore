@@ -16,6 +16,9 @@ use crate::params::{Draft, MAX_PARAM};
 use crate::pick;
 use crate::session::Session;
 
+/// P1 of library symbols.
+const SYMBOL_CODE: f32 = 9.0;
+
 /// What an action did to the items, by id, and the selection after it.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Change {
@@ -260,6 +263,16 @@ impl Editor {
         self.act("Text", |run| {
             run.session.clear();
             run.enter_text(&crate::text::encode(text), &rest.join(" "))
+        })
+    }
+
+    /// A code-9 item showing library symbol `number` (see
+    /// [`crate::symbols::library_symbols`]) on `staff` at P3, P4, selected.
+    pub fn insert_symbol(&mut self, number: i32, staff: f32, p3: f32, p4: f32) -> Result<Change, EditError> {
+        let item = Draft::new(&[SYMBOL_CODE, staff, p3, p4, number as f32]).to_item();
+        self.act("Symbol", |run| {
+            run.session.clear();
+            run.append_items(vec![item])
         })
     }
 

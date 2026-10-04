@@ -97,6 +97,16 @@ fn a_box_selects_the_items_inside() {
 }
 
 #[test]
+fn symbols_from_the_picker_are_code_9_items() {
+    let mut e = small();
+    let fermata = score_edit::symbols::library_symbols().into_iter().find(|s| s.name == "fermata").unwrap();
+    let change = e.insert_symbol(fermata.number, 1.0, 80.0, 12.0).unwrap();
+    let item = e.item(change.inserted[0]).unwrap();
+    assert_eq!((item.code(), item.param(3), item.param(4), item.param(5)), (9, 80.0, 12.0, 31.0));
+    assert_eq!(e.selection(), change.inserted);
+}
+
+#[test]
 fn lft_drags_only_the_left_end() {
     let mut e = editor_with(&[&[8.0, 1.0, 0.0], &[4.0, 1.0, 50.0, 5.0, 10.0, 120.0]]);
     let line = e.id_at(1).unwrap();
