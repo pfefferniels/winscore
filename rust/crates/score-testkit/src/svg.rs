@@ -192,7 +192,14 @@ fn escape(text: &str) -> String {
 }
 
 /// Strings are placed by the start of their baseline.
-fn text_element(out: &mut String, panel: &Panel, run: &TextRun, origin: Point, text: &str, colour: &str) {
+fn text_element(
+    out: &mut String,
+    panel: &Panel,
+    run: &TextRun,
+    origin: Point,
+    text: &str,
+    colour: &str,
+) {
     let style = format!(
         r#"font-family="{}" font-size="{:.0}"{}{}"#,
         font_family(&run.font),
@@ -400,7 +407,7 @@ pub fn triptych(
             r##"<text x="{}" y="{:.0}" font-family="Helvetica, Arial, sans-serif" font-size="{:.0}" fill="#4b5563">{}</text>"##,
             panel.left,
             2.6 * label_size,
-            label_size * 0.75,
+            label_size * 0.6,
             escape(title)
         );
         let _ = writeln!(
