@@ -9,10 +9,13 @@
 //! for code-3 items.
 
 use crate::canvas::Canvas;
+use crate::codes::number::{draw_number, NumberCall};
 use crate::document::{Document, ItemRef};
+use crate::page;
 use crate::symbols::clef::{clef_placement, draw_clef_symbol, ClefPlacement};
-use crate::symbols::{draw_library_symbol, ItemContext, SymbolCall};
-use crate::units::{real, trunc, Pos};
+use crate::symbols::library::is_text_symbol;
+use crate::symbols::{draw_library_symbol, draw_text_symbol, ItemContext, SymbolCall, TextSymbolCall};
+use crate::units::{self, real, trunc, Pos};
 
 /// A tablature clef: its P5, size factor and lift in scale steps above P4.
 struct Tablature {
@@ -35,10 +38,95 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let context = ItemContext::of(item);
     let placement =
         clef_placement(&context, doc.position(item), step, kind, f64::from(item.p(6)), f64::from(item.p(7)));
+    let placement = match Octave::of(item.p(5)) {
+        Some(octave) => {
+            draw_octave_number(doc, item, canvas, &octave, placement.size_x, step);
+            ClefPlacement { number: octave.clef, ..placement }
+        }
+        None => placement,
+    };
     match TABLATURE.iter().find(|t| t.p5 == kind) {
         Some(tablature) => draw_tablature(doc, item, canvas, &placement, tablature),
+        None if is_text_symbol(placement.number) => {
+            let call = TextSymbolCall {
+                size_x: placement.size_x,
+                size_y: placement.size_y,
+                ..TextSymbolCall::of(doc, item, placement.number)
+            };
+            draw_text_symbol(doc, item, canvas, &call);
+        }
         None => draw_clef_symbol(doc, &context, canvas, &placement, step),
     }
+}
+
+/// An octave number above or below a clef (P5 = 0.8, 0.88, 0.15, 1.8, and
+/// any |P5| × 100 from 1 to 99): the number, its height above the clef's
+/// P4 in scale steps and its x offset in step units, both times the size.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Octave {
+    number: i32,
+    /// The clef symbol drawn with it: bass for 1.8, treble otherwise.
+    clef: i32,
+    lift: f32,
+    shift: f32,
+}
+
+/// |P5| × 100 of the bass clef with an 8 below; it draws as type 80.
+const BASS_OCTAVE: i32 = 180;
+const BASS_AS: i32 = 80;
+const OCTAVE_ABOVE: i32 = 88;
+const TWO_OCTAVES: i32 = 15;
+/// Clef P4 = 3 is the bottom line.
+const OCTAVE_BASE_LEVEL: f32 = 3.0;
+const OCTAVE_SIZE: f32 = 0.7;
+/// Font Times-BoldItalic (P7 = 11 maps onto table entry 10).
+const OCTAVE_FONT: i32 = 11;
+
+impl Octave {
+    /// draw_clef 0x431DB6: whether P5 asks for a number, and which.
+    fn of(p5: f32) -> Option<Self> {
+        let hundredths = crate::units::nint(f64::from(p5) * 100.0).abs();
+        if hundredths != BASS_OCTAVE && !(1..100).contains(&hundredths) {
+            return None;
+        }
+        let (code, clef, lift, shift) = match hundredths {
+            BASS_OCTAVE => (BASS_AS, 1, 0.0, 0.06),
+            OCTAVE_ABOVE => (OCTAVE_ABOVE, 0, 10.95, 0.12),
+            TWO_OCTAVES => (TWO_OCTAVES, 0, 10.95, 0.085),
+            h => (h, 0, -5.25, 0.08),
+        };
+        let number = match code / 10 {
+            1 => TWO_OCTAVES,
+            n => n,
+        };
+        Some(Self { number, clef, lift, shift })
+    }
+}
+
+/// The octave number through draw_number, placed by item_position from
+/// P3' = P3 + P15 + STEP × shift × size and P4' = AMOD(P4, 100) + 3 +
+/// size × lift, at 0.7 of the clef's size.
+fn draw_octave_number(
+    doc: &Document<'_>,
+    item: ItemRef<'_>,
+    canvas: &mut Canvas<'_>,
+    octave: &Octave,
+    size: f64,
+    step: f64,
+) {
+    let p3 = real(step * f64::from(octave.shift) * size + (f64::from(item.p(15)) + f64::from(item.p(3))));
+    let p4 = real((units::amod(f64::from(item.p(4)), 100.0) + f64::from(OCTAVE_BASE_LEVEL)) + size * f64::from(octave.lift));
+    let at = Pos::new(page::x(p3 as f32), doc.staff_of(item).y(units::amod(p4, 100.0)));
+    let call = NumberCall {
+        value: octave.number,
+        p5: octave.number as f32,
+        size: real(size * f64::from(OCTAVE_SIZE)) as f32,
+        font: OCTAVE_FONT,
+        p3: p3 as f32,
+        p4: p4 as f32,
+        ..NumberCall::of(item)
+    };
+    draw_number(doc, item, canvas, at, &call);
 }
 
 /// Tablature clefs: library symbol 3 at a tenth of the size (times the
