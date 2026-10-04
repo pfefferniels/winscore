@@ -230,7 +230,8 @@ fn place(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, p11: i32, stem_leng
 fn trill(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, placed: &Placed, accidental: i32, canvas: &mut Canvas<'_>) {
     let params = Params::of(item).with(5, placed.size as f32).with(6, 0.0).with(7, 0.0).with(8, accidental as f32);
     let at = Pos::new(placed.at.x, real(placed.at.y - note.scale_step));
-    trill::draw(doc, canvas, ItemContext::of(item), at, note.unit, &params);
+    let globals = trill::Globals { context: ItemContext::of(item), at, step: note.unit };
+    trill::draw(doc, item, canvas, &globals, &params);
 }
 
 /// Marks 30 and up (but the tremolos): the number mark - 30 by draw_number
