@@ -99,7 +99,7 @@ LAB_00527c6b:
             DAT_0094eb1c = 2;
           }
           else {
-            fVar11 = (float10)FUN_005ff381(puVar6,0x527ccd);
+            fVar11 = (float10)anint(puVar6,0x527ccd);
             *(int *)(puVar6 + -0xa4) = (int)ROUND(fVar11);
             DAT_0094eaf8 = *(int *)(puVar6 + -0xa4);
             *(undefined4 *)(puVar6 + -0xa0) = 0;

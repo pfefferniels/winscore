@@ -104,7 +104,7 @@ void draw_clef(undefined4 param_1,float *param_2,int *param_3,float *param_4,flo
     ffree(in_ST1);
     ffree(in_ST0);
     puVar1 = &stack0xfffffffc;
-    fVar4 = (float10)FUN_005ff381(&stack0xfffffffc,0x431dd3);
+    fVar4 = (float10)anint(&stack0xfffffffc,0x431dd3);
     *(int *)(puVar1 + -100) = (int)ROUND(fVar4);
     DAT_007f151c = *(int *)(puVar1 + -100);
     if (DAT_007f151c < 0) {

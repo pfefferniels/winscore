@@ -98,7 +98,7 @@ void FUN_005770d8(void)
       DAT_01fbb8a0 = 6;
       ffree(in_ST1);
       ffree(in_ST0);
-      Var5 = thunk_FUN_0041b011();
+      Var5 = region_select();
       local_a4 = 0;
       Var6 = extraout_ST1_03;
     }
@@ -121,7 +121,7 @@ void FUN_005770d8(void)
     }
     ffree(Var6);
     ffree(Var5);
-    in_ST0 = thunk_FUN_004a30bb(&DAT_009a8d80,&DAT_0076a860);
+    in_ST0 = ask_source_box(&DAT_009a8d80,&DAT_0076a860);
     if (DAT_009a8d80 == 0) {
       FUN_005f33c9(&stack0xfffffffc,0x577319);
       puVar2 = puVar9;

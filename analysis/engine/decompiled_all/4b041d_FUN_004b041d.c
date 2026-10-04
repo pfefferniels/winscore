@@ -81,9 +81,9 @@ void FUN_004b041d(void)
   if (((char)DAT_020b8ea0 == '|') || ((char)DAT_020b8ea0 == '~')) {
     DAT_0089f218 = VEC_N;
     ffree(Var13);
-    Var13 = thunk_FUN_0041b011();
+    Var13 = region_select();
     ffree(Var13);
-    Var13 = thunk_FUN_004a30bb(&DAT_0089f214,&DAT_007645c8);
+    Var13 = ask_source_box(&DAT_0089f214,&DAT_007645c8);
     if (DAT_0089f214 != -2) {
       if (DAT_0089f214 == 0) {
         VEC_N = DAT_0089f218;
@@ -100,7 +100,7 @@ void FUN_004b041d(void)
     ffree(Var13);
     Var13 = thunk_FUN_0041aa88();
     ffree(Var13);
-    Var13 = thunk_FUN_004a30bb(&DAT_0089f214,&DAT_007645c8);
+    Var13 = ask_source_box(&DAT_0089f214,&DAT_007645c8);
     if (DAT_0089f214 != -2) {
       if (DAT_0089f214 == 0) {
         VEC_N = DAT_0089f218;

@@ -48,7 +48,7 @@ void FUN_005073eb(void)
           if (DAT_01b9d5c4 - LOAD_STAFF < DAT_00940348) {
             iVar2 = DAT_01b2a160 + 1;
             DAT_01b2a160 = iVar2;
-            fVar4 = (float10)FUN_005ff381(puVar3,0x507559);
+            fVar4 = (float10)anint(puVar3,0x507559);
             *(int *)(puVar3 + -100) = (int)ROUND(fVar4);
             (&DAT_01b2a160)[iVar2] = DAT_00940350 + *(int *)(puVar3 + -100);
           }

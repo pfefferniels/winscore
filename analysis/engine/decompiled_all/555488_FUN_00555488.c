@@ -352,7 +352,7 @@ LAB_005567a7:
                 (&DAT_01e99988)[(int)DAT_0078dc60] = ITEM_WORDS;
                 *(float *)((int)DAT_0078dc60 * 4 + 0x1e9ec34) = f_0;
                 ffree(extraout_ST1_00);
-                fVar7 = (float10)FUN_005ff381(puVar3,0x55696f);
+                fVar7 = (float10)anint(puVar3,0x55696f);
                 *(int *)(puVar3 + -0x1d8) = (int)ROUND(fVar7);
                 DAT_01a1ae4c = *(int *)(puVar3 + -0x1d8);
                 LOAD_P3 = (float)DAT_01a1ae4c / f_100;

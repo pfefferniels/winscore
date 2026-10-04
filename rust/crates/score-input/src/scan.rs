@@ -4,12 +4,15 @@
 //! next line) and stops at the first semicolon.
 
 use crate::error::{ErrorKind, InputError, Pass, Span};
+use crate::motives::{augment, renumber, Motives};
 
 /// One slash-separated entry: its upper-cased text and where it starts in the pass text.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Entry {
     pub text: String,
     pub start: usize,
+    /// The motive being defined, for entries between `X[` and `]`.
+    pub motive: Option<char>,
 }
 
 impl Entry {
@@ -27,22 +30,89 @@ impl Entry {
 }
 
 /// The entries of a pass, up to its terminating semicolon. An empty pass (`;`) has none;
-/// otherwise every slash separates two entries, so `A/;` ends with an empty entry.
-pub(crate) fn entries(text: &str, pass: Pass) -> Result<Vec<Entry>, InputError> {
+/// otherwise every slash separates two entries, so `A/;` ends with an empty entry. Motive
+/// definitions are entered in place and stored; recalls in passes 2-5 are replaced by the
+/// stored entries (pass 1 resolves them itself, see events.rs).
+pub(crate) fn entries(text: &str, pass: Pass, motives: &mut Motives) -> Result<Vec<Entry>, InputError> {
     let end = text.find(';').ok_or_else(|| InputError::new(pass, Span::at(text.len()), ErrorKind::MissingSemicolon))?;
     let body = &text[..end];
     if body.trim().is_empty() {
         return Ok(Vec::new());
     }
-    let mut start = 0;
-    Ok(body
-        .split('/')
+    let mut out = Vec::new();
+    let mut at = 0;
+    loop {
+        let rest = &body[at..];
+        let upper: Vec<u8> = rest.bytes().take(2).map(|b| b.to_ascii_uppercase()).collect();
+        if upper.len() == 2 && upper[0].is_ascii_alphabetic() && upper[1] == b'[' {
+            let close = rest.find(']').ok_or_else(|| InputError::new(pass, Span::at(at), ErrorKind::Unexpected("[".into())))?;
+            let name = upper[0] as char;
+            let inner = &rest[2..close];
+            if pass != Pass::Notes {
+                motives.store_text(pass, name, &joined_upper(inner));
+            }
+            out.extend(split(inner, at + 2, Some(name)));
+            at += close + 1;
+            match body[at..].chars().next() {
+                Some('/') => at += 1,
+                None => break,
+                Some(_) => {}
+            }
+            continue;
+        }
+        let piece_len = rest.find('/').unwrap_or(rest.len());
+        let piece = &rest[..piece_len];
+        if pass != Pass::Notes && piece.trim_start().starts_with('@') {
+            out.extend(recall(piece, at, pass, motives)?);
+        } else {
+            out.push(Entry { text: joined_upper(piece), start: at, motive: None });
+        }
+        if piece_len == rest.len() {
+            break;
+        }
+        at += piece_len + 1;
+    }
+    // 0x524C4A: in passes 3-5 "=" is typed for "+" (same key without shift).
+    if pass > Pass::Rhythms {
+        out.iter_mut().for_each(|e| e.text = e.text.replace('=', "+"));
+    }
+    Ok(out)
+}
+
+fn split(text: &str, origin: usize, motive: Option<char>) -> Vec<Entry> {
+    let mut start = origin;
+    text.split('/')
         .map(|piece| {
-            let entry = Entry { text: joined_upper(piece), start };
+            let entry = Entry { text: joined_upper(piece), start, motive };
             start += piece.len() + 1;
             entry
         })
-        .collect())
+        .collect()
+}
+
+/// `@X` or `@Xn` in passes 2-5: the stored entries, changed by n.
+fn recall(piece: &str, at: usize, pass: Pass, motives: &Motives) -> Result<Vec<Entry>, InputError> {
+    let (name, number) = recall_parts(piece).ok_or_else(|| InputError::new(pass, Span::at(at), ErrorKind::Unexpected(piece.into())))?;
+    let stored = motives.text(pass, name).ok_or_else(|| InputError::new(pass, Span::at(at), ErrorKind::UnknownMotive(name)))?;
+    let text = match number {
+        0 => stored.to_string(),
+        n if pass == Pass::Rhythms => augment(stored, n),
+        n => renumber(stored, n, pass, at)?,
+    };
+    Ok(split(&text, at, None).into_iter().map(|e| Entry { start: at, ..e }).collect())
+}
+
+/// The letter and (possibly negative) number of a recall `@Xn`; 0 when no number follows.
+pub(crate) fn recall_parts(piece: &str) -> Option<(char, i32)> {
+    let text = piece.trim();
+    let mut chars = text.strip_prefix('@')?.chars();
+    let name = chars.next()?.to_ascii_uppercase();
+    if !name.is_ascii_alphabetic() {
+        return None;
+    }
+    let number = chars.as_str().trim();
+    let value = if number.is_empty() { 0 } else { number.parse().ok()? };
+    Some((name, value))
 }
 
 fn joined_upper(piece: &str) -> String {

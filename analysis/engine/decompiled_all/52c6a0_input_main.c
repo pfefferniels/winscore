@@ -582,7 +582,7 @@ LAB_0052dae3:
                   DAT_0078b4e0 = 0x4c;
                   DAT_0078b4e4 = 0x4a;
                   ffree(Var9);
-                  Var9 = thunk_FUN_004b80b7(&IP2,&IP2,&f_0,&DAT_01fbb8b8);
+                  Var9 = lineup_pass(&IP2,&IP2,&f_0,&DAT_01fbb8b8);
                   *(undefined4 *)(puVar2 + -0x58) = 0;
                 }
                 else {

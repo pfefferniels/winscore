@@ -29,4 +29,6 @@ SCORE 4 names library n `LIB<a><b>.DRW` with `a = chr(ord('R') + n / 26)`, `b = 
 
 ## In WinScore
 
-`load_symbol_library` (0x42AD97) reads only the float variant (its READs expect f32 arrays), so WinScore cannot draw KH symbols: a KH file in scorlib behaves like a missing library (symbols.md). The two KH files shipped in WinScore's scorlib are `FAULT.DRW` (one symbol "fault", 27 points) and `KBRHY.DRW` ("kbrhy" 103 points, "kbrh1" 177 points); no engine routine was found that opens them by name.
+- `load_symbol_library` (0x42AD97, code 9 and the symbols other codes draw) reads only the float variant (its READs expect f32 arrays), so for those a KH file in scorlib behaves like a missing library (symbols.md).
+- Code 11 (user symbols) reads KH files: its reader 0x432998 opens them as Fortran unformatted files and converts the word offsets of slots 2..11 to point indices as o/3 + 1 (when > 1). Found by impl-symbols, whose `score_format::drw` decodes KH (SCORE 4 LIBRB.DRW gives exactly the points of LB0010.DRW). In the oracle code 11 does not run yet: the ReadFile of its unit-3 open fails (reported to verifier).
+- The two KH files shipped in WinScore's scorlib are `FAULT.DRW` (one symbol "fault", 27 points) and `KBRHY.DRW` ("kbrhy" 103 points, "kbrh1" 177 points).

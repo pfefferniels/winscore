@@ -28,11 +28,13 @@ from displaylist import POLYLINE, FILLED, Shape, TextRun, shapes, text_runs
 from emu import LINE_BUF, TEXT_OUT, VECTOR_BUF, Engine, EngineResult, ZOOM
 from musbuild import param, read_items
 from sandbox import make_sandbox
+from winapi import WinApi
 
 REPO = Path(__file__).resolve().parents[1]
 FIXTURES = REPO / "rust" / "fixtures"
 SANDBOXES = Path(__file__).resolve().parent / "sandbox" / "fixtures"
 INPUT = "input.mus"
+RESULT = "result.mus"      # the score as the engine holds it after a case's commands
 SANDBOX_NAME = "case.mus"   # "G I..." drops the I: the engine reads "G input.mus" as NPUT.MUS
 
 TEXT_BASELINE_OFFSET = 96       # OnDraw (0x5E5910): the baseline of a string is at y + 0x60 (analysis/engine/display.md)
@@ -49,6 +51,7 @@ def is_pen_record(triple: tuple[int, int, int], view_dx: int, view_dy: int) -> b
     x, y, tag = triple[0] - view_dx, triple[1] + view_dy, triple[2]
     kind = (tag & 0xFFFFFFFF) >> 24
     return (kind == PEN_RESET_KIND and x == y == 0) or (kind == PEN_SET_KIND and x == PEN_SET_X)
+YES_NO_QUESTION = 0x595CD0      # "Source Box O.K.?" (LJ, LI, J), "Add bar lines?" (IN); 0 means No (disasm-expert)
 NOT_FOUND_DIALOG = 0x59B090     # "Not found": missing symbol library or instrument; changes no geometry
 # The engine never checks its output buffers; these are the shell's room (disasm-expert).
 SHELL_VECTOR_WORDS, SHELL_OBJECTS, SHELL_TEXT_BYTES = 1_000_000, 10_000, 440_000
@@ -64,6 +67,7 @@ class Case:
     mus: bytes
     commands: tuple[str, ...] = ()
     attachments: tuple[Path, ...] = ()
+    confirm: bool = True   # the answer to the engine's yes/no questions, as a user running the command would give
 
     @property
     def command_lines(self) -> tuple[str, ...]:
@@ -88,6 +92,7 @@ class Run:
     vector_writers: dict[int, int] = field(default_factory=dict)
     text_writers: dict[int, int] = field(default_factory=dict)
     excluded: dict[int, str] = field(default_factory=dict)   # 0-based item -> reason
+    result_mus: bytes | None = None
     view_dx: int = 0
     view_dy: int = 0
     error: str = ""
@@ -122,6 +127,7 @@ class FixtureEngine(Engine):
         self.vector_writers: dict[int, int] = {}
         self.text_writers: dict[int, int] = {}
         self.missing_library: dict[int, str] = {}
+        self.confirm = True
         self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_vector_write, begin=VECTOR_BUF, end=VECTOR_BUF + 4 * SHELL_VECTOR_WORDS)
         self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_text_write, begin=TEXT_OUT, end=TEXT_OUT + SHELL_TEXT_BYTES)
 
@@ -133,6 +139,11 @@ class FixtureEngine(Engine):
         self.text_writers.update((a - TEXT_OUT, item) for a in range(address, address + size))
 
     def _on_cpp(self, uc, address, size, _user):
+        if address == YES_NO_QUESTION:
+            answer = "yes" if self.confirm else "no"
+            self.shell.record("question", f"{self.cstr(self.arg(0), 200).strip()} -> {answer}")
+            self.return_from_call(int(self.confirm), 0)
+            return
         if address != NOT_FOUND_DIALOG:
             return super()._on_cpp(uc, address, size, _user)
         notice = self.cstr(LINE_BUF, 0x200).strip()
@@ -150,6 +161,7 @@ class FixtureEngine(Engine):
 def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     fresh_sandbox(root, case)
     engine = FixtureEngine(root)
+    engine.confirm = case.confirm
     engine.initialize()
     engine.put32(ZOOM, zoom)
     run = Run()
@@ -164,7 +176,10 @@ def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     run.view_dx, run.view_dy = engine.i32(VIEW_DX), engine.i32(VIEW_DY)
     run.vector_writers = dict(engine.vector_writers)
     run.text_writers = dict(engine.text_writers)
-    run.excluded = stale_symbol_items(read_items(case.mus), engine.missing_library)
+    if case.commands and not run.error:
+        run.result_mus = saved_score(engine, root)
+    drawn = read_items(run.result_mus) if run.result_mus else read_items(case.mus)
+    run.excluded = stale_symbol_items(read_items(case.mus), engine.missing_library, drawn)
     if run.final is not None:
         try:
             text_runs(run.final.text)
@@ -174,7 +189,17 @@ def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     return run
 
 
-def stale_symbol_items(items: list[bytes], missing: dict[int, str]) -> dict[int, str]:
+def saved_score(engine: FixtureEngine, root: Path) -> bytes | None:
+    """The engine's current score, saved with SA: commands such as LJ move and reorder items."""
+    try:
+        engine.command(f"SA {RESULT}")
+    except RuntimeError:
+        return None
+    saved = WinApi.resolve_case(root / "cwd" / RESULT)
+    return saved.read_bytes() if saved.is_file() else None
+
+
+def stale_symbol_items(items: list[bytes], missing: dict[int, str], drawn: list[bytes]) -> dict[int, str]:
     """Items that draw a symbol from a library the engine could not load.
 
     The loader (0x42AD97) does not mark the failed load, so draw_symbol copies whatever the
@@ -184,7 +209,7 @@ def stale_symbol_items(items: list[bytes], missing: dict[int, str]) -> dict[int,
     """
     symbols = {(param(items[i], 1), param(items[i], 5)): notice for i, notice in missing.items() if i < len(items)}
     return {i: f"symbol library not found ({symbols[key]}); the engine draws stale buffers"
-            for i, packed in enumerate(items) if (key := (param(packed, 1), param(packed, 5))) in symbols}
+            for i, packed in enumerate(drawn) if (key := (param(packed, 1), param(packed, 5))) in symbols}
 
 
 # -- page frame and coordinates ----------------------------------------------
@@ -454,6 +479,9 @@ def write_fixture(case: Case, out: Path, zoom_check: bool) -> Written:
     target = out / case.name
     target.mkdir(parents=True, exist_ok=True)
     (target / INPUT).write_bytes(case.mus)
+    (target / RESULT).unlink(missing_ok=True)
+    if run.result_mus:
+        (target / RESULT).write_bytes(run.result_mus)
     view = PageView.of(run) if run.final is not None else None
     meta = meta_json(case, run, zoom_run, view)
     (target / "meta.json").write_text(json.dumps(meta, sort_keys=True, indent=1, ensure_ascii=False) + "\n")

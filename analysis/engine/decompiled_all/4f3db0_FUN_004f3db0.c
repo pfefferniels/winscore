@@ -22,7 +22,7 @@ void FUN_004f3db0(void)
   iVar1 = FUN_005f4660(0x20);
   if (iVar1 == 0) {
     if ((DAT_020b8ea0._1_1_ == ' ') || (DAT_020b8ea0._1_1_ == '*')) {
-      thunk_FUN_0045ef21();
+      edit_letters();
     }
     else {
       iVar1 = FUN_005f4660(0x20);

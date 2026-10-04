@@ -24,7 +24,7 @@ void FUN_00445143(void)
     P2 = (float)(&ITEM_P3)[DAT_007fbe7c];
     P3 = P2;
     P4 = P1;
-    fVar5 = (float10)FUN_005ff381(&stack0xfffffffc,0x445259);
+    fVar5 = (float10)anint(&stack0xfffffffc,0x445259);
     *(int *)(puVar6 + -0x4c) = (int)ROUND(fVar5);
     DAT_01fbb8ac = *(undefined4 *)(puVar6 + -0x4c);
     DAT_01fbb8b0 = DAT_01fbb8ac;

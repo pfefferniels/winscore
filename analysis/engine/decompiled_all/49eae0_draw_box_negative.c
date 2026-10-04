@@ -615,7 +615,7 @@ LAB_004a0350:
       DAT_020b8f34 = DAT_01cb1068;
       ffree(fVar9);
       P48 = P6;
-      thunk_FUN_0042fa58(&DAT_020b8ea0,1,&DAT_01cb1068);
+      text_parse(&DAT_020b8ea0,1,&DAT_01cb1068);
       DAT_01cb1068 = DAT_020b8f34;
       fVar9 = (float10)DAT_020b8f44 * (float10)DAT_01f93e74 * (float10)DAT_0078cd30 +
               (float10)DAT_01f93e64;

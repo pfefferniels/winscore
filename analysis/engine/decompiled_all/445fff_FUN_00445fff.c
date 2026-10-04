@@ -50,8 +50,8 @@ void FUN_00445fff(void)
   }
   if (((char)DAT_020b8ea0 == '|') || ((char)DAT_020b8ea0 == '~')) {
     DAT_01fbb7e0 = VEC_N;
-    thunk_FUN_0041b011();
-    thunk_FUN_004a30bb(&DAT_007fc0cc,&DAT_00760840);
+    region_select();
+    ask_source_box(&DAT_007fc0cc,&DAT_00760840);
     if (DAT_007fc0cc == -2) {
       ITEM_I = IP18;
       ITEM_WORDS = IP19;

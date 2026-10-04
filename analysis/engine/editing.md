@@ -39,7 +39,7 @@ While the button is held the view sends `~v` (no modifier), `~s` (Shift) or `~t`
 ```
 step = 7 * STAFF_STEP(E2)
 P3'  = f32((mx - VIEW_DX) / 150)            # absolute: the item jumps to the cursor, no grab offset; - 226.66 for staves > 200
-P4'  = f32((my - (STAFF_Y(E2) - VIEW_DY)) / step + c)    c = 2, or -2 for codes 2, 3 and > 16
+P4'  = f32(f32(my - (STAFF_Y(E2) - VIEW_DY)) / step + c)    c = 2, or -2 for codes 2, 3 and > 16
 x parameters (list at 0x78D820, per code): index 3: E3 = P3'; others: + (P3' - E3) when moving the whole item
     (move mode int 0x78DC30 = 0), = P3' for mode 1 or 2 (left/right end; set by the "Move Left End", "Move Right End",
     "Move All" commands in the interpreter)
@@ -47,6 +47,8 @@ y parameters (list at 0x78D838): index 5: E5 += P4' - E4 (= P4' in mode 2); inde
     else E4 = P4' (fractional)
 code 4 with E7 == 100: the extra point pairs E8..E17 move along
 ```
+
+Checked on nine item types (line, note, cue note, rest, clef, key, meter, symbol, number) at two cursor heights: all 18 results equal this formula **with the VIEW_DY of each score**. VIEW_DY depends on the drawn content (max y + 3000, coordinates.md), so the same cursor point gives different P4 in scores with different tops; there is no per-item vertical term. For notes the hundreds digit of P4 is lost: a cue note `P4 = 106` dragged becomes `14` (NINT of P4' replaces the whole value).
 
 `~s`: the first move only records the point; the second decides horizontal or vertical (vertical if |dy| > |dx|); later moves apply only once the cursor has moved at least 50 units since the last applied move, and only along the chosen axis.
 

@@ -35,12 +35,12 @@ void FUN_00455fef(int *param_1,int *param_2,float *param_3)
     *(int *)(puVar2 + -0x24) = (&PT_Y0)[DAT_007fec00] - DAT_007febe8;
     _DAT_007febdc = (float)*(int *)(puVar2 + -0x24);
     ffree((float10)_DAT_007febf0 * (float10)iVar1);
-    fVar3 = (float10)FUN_005ff381(puVar2,0x45610a);
+    fVar3 = (float10)anint(puVar2,0x45610a);
     *(int *)(puVar2 + -0x24) = (int)ROUND(fVar3);
     DAT_007febe4 = DAT_007febec + *(int *)(puVar2 + -0x24);
     (&PT_X0)[DAT_007fec00] = DAT_007febe4;
     ffree((float10)_DAT_007febf0 * (float10)_DAT_007febdc);
-    fVar3 = (float10)FUN_005ff381(puVar2,0x456161);
+    fVar3 = (float10)anint(puVar2,0x456161);
     *(int *)(puVar2 + -0x24) = (int)ROUND(fVar3);
     DAT_007febe4 = DAT_007febe8 + *(int *)(puVar2 + -0x24);
     (&PT_Y0)[DAT_007fec00] = DAT_007febe4;

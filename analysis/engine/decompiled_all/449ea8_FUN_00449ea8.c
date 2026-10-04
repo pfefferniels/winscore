@@ -275,7 +275,7 @@ LAB_0044b2fa:
       fVar3 = (float10)P2;
       P2 = (float)-fVar3;
       ffree(fVar3);
-      in_ST0 = (float10)thunk_FUN_0045ef21();
+      in_ST0 = (float10)edit_letters();
       DAT_0078b4e0 = 0;
       DAT_020b945c = f_0;
       *(undefined4 *)(puVar4 + -0x88) = 0;

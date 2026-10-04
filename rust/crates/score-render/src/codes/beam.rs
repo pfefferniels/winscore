@@ -15,6 +15,7 @@ use crate::codes;
 use crate::codes::slur::BracketNumber;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
+use crate::text::Font;
 use crate::units::{constant, real, trunc, Pos};
 
 /// Note-head width in step units: the stem of an up-stem note stands this
@@ -37,12 +38,17 @@ fn font_from_p8(p8: i32) -> i32 {
 }
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-    let origin = Origin { step: doc.staff_of(item).step, stem_on_left: true };
-    let beam = Beam::new(doc, item, origin);
+    let beam = Beam::of_item(doc, item);
     beam.draw_groups(item, canvas);
-    if trunc(f64::from(item.p(8))) > 0 {
-        beam.number(doc, item, canvas);
+    if let Some(number) = beam.tuplet_number(item) {
+        beam.draw_number(doc, item, canvas, &number);
     }
+}
+
+/// The font a beam leaves loaded: its tuplet number's (see [`crate::text::font_loaded`]).
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    let beam = Beam::of_item(doc, item);
+    beam.tuplet_number(item)?.font_loaded(doc, item, beam.step)
 }
 
 /// A note's tremolo mark P11 = 41–44, which draw_note draws by setting up
@@ -206,6 +212,11 @@ struct Beam {
 }
 
 impl Beam {
+    /// A code-6 item on its own staff.
+    fn of_item(doc: &Document<'_>, item: ItemRef<'_>) -> Self {
+        Self::new(doc, item, Origin { step: doc.staff_of(item).step, stem_on_left: true })
+    }
+
     fn new(doc: &Document<'_>, item: ItemRef<'_>, origin: Origin) -> Self {
         let staff = doc.staff_of(item);
         let width = match item.p(20) {
@@ -291,24 +302,32 @@ impl Beam {
     /// The tuplet number P8 (draw_beam 0x416CD9): at P16 (0.5) along the
     /// main beam, 6.5 steps above it for stems up, 24.5 below for stems
     /// down, P19 scale steps higher; P8 = F0NN sets font F.
-    fn number(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-        let p8 = trunc(f64::from(item.p(8)));
+    fn draw_number(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, number: &BracketNumber) {
         let lift = if self.up { constant(6.5) } else { constant(-24.5) };
         let lift = real(f64::from(item.p(19)) * constant(7.0) + lift);
-        let (lift, size) = if self.cue { (real(lift * constant(0.7)), 0.6) } else { (lift, 0.875) };
+        let lift = if self.cue { real(lift * constant(0.7)) } else { lift };
         let along = match item.p(16) {
             0.0 => constant(0.5),
             p16 => f64::from(p16),
         };
+        let left = self.main.edge.left;
+        let y = real(along * self.main.dy + (self.step * lift + left.y));
+        number.draw(doc, item, canvas, Pos::new(left.x + real(self.main.dx * along), y), self.step);
+    }
+
+    /// The tuplet number P8 > 0, with its font from P8 = F0NN; smaller on cue beams.
+    fn tuplet_number(&self, item: ItemRef<'_>) -> Option<BracketNumber> {
+        let p8 = trunc(f64::from(item.p(8)));
+        if p8 <= 0 {
+            return None;
+        }
         let (value, font) = match p8 {
             p8 if p8 >= FONT_IN_P8 => (p8 % FONT_IN_P8, font_from_p8(p8)),
             p8 => (p8, ITALIC),
         };
-        let left = self.main.edge.left;
-        let y = real(along * self.main.dy + (self.step * lift + left.y));
+        let size = if self.cue { 0.6 } else { 0.875 };
         // IP17 would add a letter: the beam's thickness P17, not meant for the number.
-        let number = BracketNumber { value, size, font, font_p14: 0, letter: 0, rotation: 0.0 };
-        number.draw(doc, item, canvas, Pos::new(left.x + real(self.main.dx * along), y), self.step);
+        Some(BracketNumber { value, size, font, font_p14: 0, letter: 0, rotation: 0.0 })
     }
 
     /// The full beams, then the partial or tremolo groups.

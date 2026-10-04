@@ -333,7 +333,7 @@ LAB_0055bc0c:
       ffree(Var6);
       _DAT_009a3ce0 = f_200;
       _DAT_009a3ce4 = f_0;
-      Var6 = thunk_FUN_004b80b7(&DAT_009a3d14,&DAT_009a3d14,&DAT_009a3ce4,&DAT_009a3ce0);
+      Var6 = lineup_pass(&DAT_009a3d14,&DAT_009a3d14,&DAT_009a3ce4,&DAT_009a3ce0);
       iVar2 = DAT_009a3d14 + 1;
       iVar4 = DAT_009a3d10;
     }

@@ -28,6 +28,7 @@ mod events;
 pub mod file;
 mod line;
 pub mod marks;
+mod motives;
 pub mod notes;
 pub mod rhythm;
 mod scan;
@@ -37,7 +38,8 @@ mod spacing;
 use score_format::Item;
 
 pub use error::{ErrorKind, InputError, Pass, Span};
-pub use file::{InputFile, StaffArgs};
+pub use file::{InputFile, InputLine, StaffArgs, Step};
+pub use motives::Motives;
 
 /// The texts of the five passes, each ending with `;`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,42 +57,52 @@ impl Default for Passes<'_> {
     }
 }
 
-/// Where the line goes: the staff (P2 of every item) and the input range in P3 units.
+/// Where the line goes: the staff (P2 of every item), its size factor (P5 of the staff
+/// item, 1 for a normal staff), the input range in P3 units, and the clef in force on the
+/// staff when the line starts (the engine keeps the last clef of each staff).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Options {
     pub staff: u8,
+    pub size: f32,
     pub begin: f32,
     pub end: f32,
+    pub clef: notes::Clef,
 }
 
 impl Default for Options {
-    /// Staff 1 and the range WinScore's input dialog proposes, 2 to 200.
+    /// Staff 1 of normal size in treble clef and the range WinScore's input dialog proposes,
+    /// 2 to 200.
     fn default() -> Self {
-        Self { staff: 1, begin: 2.0, end: 200.0 }
+        Self { staff: 1, size: 1.0, begin: 2.0, end: 200.0, clef: notes::Clef::Treble }
     }
 }
 
 /// The items for one line of input, in the order the engine creates them (staff item not included).
 pub fn run(passes: &Passes, options: &Options) -> Result<Vec<Item>, InputError> {
-    let events = events::resolve(&notes::parse(passes.notes)?)?;
-    let rhythms = rhythm::parse(passes.rhythms)?;
+    run_with_motives(passes, options, &mut Motives::new())
+}
+
+/// As [`run`], with motives kept from earlier lines and stored for later ones.
+pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motives) -> Result<Vec<Item>, InputError> {
+    let events = events::resolve(&notes::parse(passes.notes, motives)?, options.clef, motives)?;
+    let rhythms = rhythm::parse(passes.rhythms, motives)?;
     let needed = events.iter().filter(|e| e.is_rhythmic()).count();
     if rhythms.len() != needed {
         let kind = ErrorKind::RhythmCount { found: rhythms.len(), needed };
         return Err(InputError::new(Pass::Rhythms, Span::at(0), kind));
     }
-    let marks = marks::parse(passes.marks)?;
-    let beams = connect::parse(passes.beams, Pass::Beams)?;
-    let slurs = connect::parse(passes.slurs, Pass::Slurs)?;
+    let marks = marks::parse(passes.marks, motives)?;
+    let beams = connect::parse(passes.beams, Pass::Beams, motives)?;
+    let slurs = connect::parse(passes.slurs, Pass::Slurs, motives)?;
 
     let mut rhythm_iter = rhythms.into_iter();
     let timed: Vec<line::Timed> = events
         .iter()
         .map(|event| line::Timed { event, rhythm: if event.is_rhythmic() { rhythm_iter.next() } else { None } })
         .collect();
-    let mut line = line::Line::new(&timed, options.staff, options.begin, options.end);
+    let mut line = line::Line::new(&timed, options);
     marks::apply(&mut line, &marks)?;
     beams::apply(&mut line, &beams)?;
-    slurs::apply(&mut line, &slurs)?;
+    slurs::apply(&mut line, &slurs, (options.begin, options.end))?;
     Ok(line.items())
 }

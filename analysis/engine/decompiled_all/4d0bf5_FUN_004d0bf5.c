@@ -251,10 +251,10 @@ LAB_004d14d3:
     _DAT_0078b480 = f_4000 / (float)DAT_0078b47c;
     _DAT_007939ec = DAT_0089ffd4;
     _DAT_007939e8 = DAT_0089ffd8;
-    fVar6 = (float10)FUN_005ff381(puVar2,0x4d153a);
+    fVar6 = (float10)anint(puVar2,0x4d153a);
     *(int *)(puVar2 + -0x80) = (int)ROUND(fVar6);
     DAT_01aae2d0 = *(int *)(puVar2 + -0x80) + 0x318;
-    fVar6 = (float10)FUN_005ff381(puVar2,0x4d156c);
+    fVar6 = (float10)anint(puVar2,0x4d156c);
     *(int *)(puVar2 + -0x80) = (int)ROUND(fVar6);
     DAT_01aae2d4 = *(int *)(puVar2 + -0x80) + 0xd;
     if (DAT_008a0038 != 0) {

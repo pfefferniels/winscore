@@ -167,7 +167,7 @@ void FUN_00424a9f(void)
                   DAT_01e62c8c = i_538976288;
                 }
                 else {
-                  fVar13 = (float10)FUN_005ff381(puVar6,0x4253ae);
+                  fVar13 = (float10)anint(puVar6,0x4253ae);
                   *(int *)(puVar6 + -0x9c) = (int)ROUND(fVar13);
                   _DAT_007d2e98 = *(undefined4 *)(puVar6 + -0x9c);
                   *(undefined4 *)(puVar6 + -0x98) = 0;

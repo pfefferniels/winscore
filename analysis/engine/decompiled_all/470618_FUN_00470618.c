@@ -177,14 +177,14 @@ LAB_00470736:
     P5 = f_1;
   }
   ffree(in_ST0);
-  in_ST0 = (float10)thunk_FUN_0042fa58(&DAT_01fb8cf8,1,&DAT_01cadcf8);
+  in_ST0 = (float10)text_parse(&DAT_01fb8cf8,1,&DAT_01cadcf8);
   DAT_020b9470 = P13;
   if (DAT_0078b4e0 == 0x4a) {
     P11 = f_0;
     ffree(in_ST0);
     Var3 = FUN_00471190();
     ffree(Var3);
-    in_ST0 = (float10)thunk_FUN_0042fa58(&DAT_01fb8cf8,1,&DAT_01cadcf8);
+    in_ST0 = (float10)text_parse(&DAT_01fb8cf8,1,&DAT_01cadcf8);
   }
   else {
     *(undefined4 *)(puVar2 + -0x3c) = 0;

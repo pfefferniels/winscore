@@ -42,7 +42,7 @@ float10 FUN_004aac7d(int *param_1,undefined4 *param_2,undefined4 *param_3)
     else {
       local_14 = 0;
       DAT_02052740 = 8;
-      FUN_004a830b();
+      read_prefs();
       puVar5 = &DAT_00790b90;
       puVar6 = &DAT_019c68ac;
       for (iVar1 = 0x20; iVar1 != 0; iVar1 = iVar1 + -1) {

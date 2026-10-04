@@ -141,7 +141,7 @@ LAB_004d93e4:
 LAB_004d8898:
   if (DAT_01f95c80 < f_1000) {
     ffree(fVar5);
-    fVar5 = (float10)FUN_005ff381(puVar4,0x4d88c0);
+    fVar5 = (float10)anint(puVar4,0x4d88c0);
     *(int *)(puVar4 + -0xc0) = (int)ROUND(fVar5);
     DAT_0078cd3c = *(int *)(puVar4 + -0xc0);
     fVar5 = extraout_ST1;

@@ -29,13 +29,13 @@ void FUN_00494302(void)
   if (DAT_01fbb8a0 < 0) {
     DAT_01fbb7e0 = VEC_N;
     if (((char)DAT_020b8ea0 == '|') || ((char)DAT_020b8ea0 == '~')) {
-      thunk_FUN_0041b011();
+      region_select();
     }
     else {
       thunk_FUN_00518448();
       thunk_FUN_0041aa88();
     }
-    thunk_FUN_004a30bb(&DAT_0082a058,&DAT_00762e40);
+    ask_source_box(&DAT_0082a058,&DAT_00762e40);
     if (DAT_0082a058 == 0) {
       DAT_01fbb8a0 = 0xd;
       puVar5 = &DAT_01c4c860;

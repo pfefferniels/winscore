@@ -21,7 +21,7 @@ void FUN_004727bc(int *param_1,int *param_2,int *param_3,int *param_4,int param_
   if (P48 == f_0) {
     P48 = f_1;
   }
-  thunk_FUN_0042fa58(param_5,1,param_3);
+  text_parse(param_5,1,param_3);
   _DAT_00824f94 = *param_7 + (*param_3 + -1) / 4 + 1;
   (&DAT_01e9997c)[*param_2] = (float)_DAT_00824f94;
   *(float *)(&DAT_01e999ac + *param_2 * 4) = (float)*param_3;

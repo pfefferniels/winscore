@@ -2654,3 +2654,377 @@ C4/D/E/F;
 ;
 ;
 3 1;
+== m-staff-size
+IN 1 0 0 .75
+;
+TR/K2S/3 4/D4/E/F/M/G/A/B/M;
+4/4/4/4/4/4;
+;
+;
+;
+== m-staff-ends
+IN 1 20 0 0 180
+;
+C4/D/E/F;
+4/4/4/4;
+;
+;
+;
+== m-staff-size-big
+IN 1 0 0 1.5
+;
+C4/D/E/F/M/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 4/5 8;
+1 8;
+== m-grace-low
+IN 1
+;
+G3/A3/C4/B3/D4;
+G/G/4/G/4;
+;
+;
+;
+== m-grace-chord
+IN 1
+;
+C4:E/D:F/G4;
+G/G/2;
+;
+;
+;
+== m-grace-beam
+IN 1
+;
+C5/D/E/F;
+G/G/G/2;
+;
+1 3;
+;
+== m-grace-slur
+IN 1
+;
+C5/D/E;
+G/4/4;
+;
+;
+1 2;
+== m-rest-staff-above
+IN 1
+;
+C4/S+/R/C/S0/R;
+4/4/4/4;
+;
+;
+;
+== m-bar-accidental
+IN 1
+;
+C4/D/M/CS4/D/M/EF/F/M;
+4/4/4/4/4/4;
+;
+;
+;
+== m-trailing-key
+IN 1
+;
+C4/D/E/F/M/K2S;
+4/4/4/4;
+;
+;
+;
+== m-trailing-meter
+IN 1
+;
+C4/D/E/F/M/3 4;
+4/4/4/4;
+;
+;
+;
+== m-trailing-key-meter
+IN 1
+;
+C4/D/E/F/M/K3F/6 8;
+4/4/4/4;
+;
+;
+;
+== m-trailing-clef
+IN 1
+;
+C4/D/E/F/M/BA;
+4/4/4/4;
+;
+;
+;
+== m-frac-slur
+IN 1
+;
+C4/D/E/F/G/A;
+4/4/4/4/4/4;
+;
+;
+1.5 3/4 5.5;
+== m-marks-chord
+IN 1
+;
+C4:E:G/C5:E5:G5/D4:F4;
+4/4/4;
+A 1/S 2/FE 3/AO 1/RI 2/TM 3;
+;
+;
+== m-long-line
+IN 1
+;
+C4/D/E/F/G/A/B/C5/D/E/F/G/F/E/D/C/B4/A/G/F/E/D/C/D/E/F/G/A/B/C5;
+16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16/16;
+;
+4B;
+1 8/9 16;
+== m-tremolo-beam
+IN 1
+;
+C4/E/G/C5;
+8/8/8/8;
+TM 1/TME 3;
+1 4;
+;
+== m-meter-bar-key
+IN 1
+;
+TR/K2F/C4/D/M/K2S/E/F/M/3 4/G/A/B/M;
+4/4/4/4/4/4/4;
+;
+;
+;
+== m-mixed-everything
+IN 1
+;
+TR/K1S/6 8/PD4/G/A/B/M/C5/B4/A/G/M/F/D/G;
+8/8/8/4./8/16/16/8/4/8/4.;
+A 1/S 2:4/TR 8;
+1 3/5 7;
+1 4/8 11;
+== m-cue-notes
+IN 1
+;
+C4/D/E/F;
+4/G/G/2;
+S 2;
+;
+2 3;
+== mt-notes
+IN 1
+;
+A[C4/D/E]/@A/@A;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== mt-notes-transposed
+IN 1
+;
+A[C4/D/E]/@A2/@A5;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== mt-notes-context
+IN 1
+;
+A[C/D/E]/G5/@A/F4/@A;
+4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== mt-notes-octave-cross
+IN 1
+;
+A[A4/B/C5]/@A2/@A-1;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== mt-notes-accid
+IN 1
+;
+A[CS4/EF:G]/@A1;
+4/4/4/4;
+;
+;
+;
+== mt-notes-prox
+IN 1
+;
+PC4/A[B/G/E]/@A/C;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== mt-notes-mixed
+IN 1
+;
+A[C4/R/M/D]/@A3;
+4/4/4/4/4/4;
+;
+;
+;
+== mt-rhythm
+IN 1
+;
+C4/D/E/F/G/A;
+R[8/8/4]/@R;
+;
+;
+;
+== mt-rhythm-number
+IN 1
+;
+C4/D/E/F/G/A/B;
+R[8/8/4]/@R2/4;
+;
+;
+;
+== mt-rhythm-letters
+IN 1
+;
+C4/D/E/F/G/A/B;
+R[E/E/Q]/@R2/4;
+;
+;
+;
+== mt-marks
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+4/4/4/4/4/4/4/4;
+Q[S 1:2/A 3]/@Q5;
+;
+;
+== mt-marks-doc
+IN 1
+;
+C4/D/E/F/G/A/B/C5/D/E/F/G/A/B/C6/D/E/F/G/A/B/C7;
+4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4;
+Q[S 5:8/A 11]/@Q14;
+;
+;
+== mt-marks-down
+IN 1
+;
+C4/D/E/F/G/A/B/C5/D/E;
+4/4/4/4/4/4/4/4/4/4;
+Q[A 6/S 7:9]/@Q1;
+;
+;
+== mt-beams
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+B[1 2/3 4]/@B5;
+;
+== mt-slurs
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+4/4/4/4/4/4/4/4;
+;
+;
+S[1 3]/@S4/@S6;
+== sy-equals-sign
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+=1 4/5 =8;
+=1 4;
+== sy-bar-numbers
+IN 1
+;
+C4/M3/D/M/E/M1/F;
+4/4/4/4;
+;
+;
+;
+== sy-chord-octaves
+IN 1
+;
+C4:C5/G3:G4:D5/E4:E4;
+4/4/4;
+;
+;
+;
+== sy-rest-dots
+IN 1
+;
+C4/R/R/R;
+4/8./16/2;
+;
+;
+;
+== sy-invisible-dots
+IN 1
+;
+C4/RI/D;
+4/2./4;
+;
+;
+;
+== sy-key-cancel
+IN 1
+;
+K3S/C4/D/M/K3SN/K2F/E/F;
+4/4/4/4;
+;
+;
+;
+== sy-whole-rest-measure
+IN 1
+;
+3 4/C4/D/E/M/RW/M/F/G/A/M;
+4/4/4/2./4/4/4;
+;
+;
+;
+== sy-stem-modes-chords
+IN 1
+;
+SD/C5:E5/SU/C4:E/SO/G4:D5;
+4/4/4;
+;
+;
+;
+== mb-two-staves
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+;
+;
+;
+IN 2
+;
+TR/G4/A/B/C5;
+4/4/4/4;
+;
+;
+;
+== mb-clef-carries
+IN 1
+2 100
+BA/C3/D/E/F;
+4/4/4/4;
+;
+;
+;
+IN 1
+101 200
+G3/A/B/C4;
+4/4/4/4;
+;
+;
+;
