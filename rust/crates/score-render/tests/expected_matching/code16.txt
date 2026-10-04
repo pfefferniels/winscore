@@ -129,3 +129,6 @@ code16-font-after-ottava
 code16-font-after-term
 code16-font-after-text-symbol
 code16-font-after-two-bar-repeat
+code16-font-after-ending
+code16-font-after-tuplet
+code16-font-after-tuplet-bracket

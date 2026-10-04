@@ -11,7 +11,7 @@ use crate::canvas::Canvas;
 use crate::codes;
 use crate::display::Colour;
 use crate::document::{Document, ItemRef};
-use crate::codes::{barline, clef, meter, note, number, rest, symbol, trill};
+use crate::codes::{barline, beam, clef, meter, note, number, rest, slur, symbol, trill};
 use crate::text::{draw_text, font_loaded, Font, TextCall};
 use crate::units::trunc;
 
@@ -108,6 +108,8 @@ fn font_loaded_by(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
         codes::TRILL => trill::font_loaded(doc, item),
         codes::SYMBOL => symbol::font_loaded(doc, item),
         codes::BARLINE => barline::font_loaded(doc, item),
+        codes::BEAM => beam::font_loaded(doc, item),
+        codes::SLUR => slur::font_loaded(doc, item),
         _ => None,
     }
 }

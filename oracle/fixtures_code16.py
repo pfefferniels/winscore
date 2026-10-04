@@ -101,6 +101,8 @@ def cases() -> list[Case]:
               ("term", "a CODE9.DAT term (code 9, 3004)", item(9, 1, 70, 7, 3004)),
               ("tuplet", "a beam with tuplet number 3 (code 6)", item(6, 1, 100, 9, 9, 130, 11, 3)),
               ("two-bar-repeat", "a two-bar repeat with number 2 (code 14)", item(14, 1, 100, 1, -44, 0, 0, 2)),
+              ("tuplet-bracket", "a tuplet bracket with 3 (code 5)", item(5, 1, 100, 9, 9, 130, 5, 3)),
+              ("ending", "a first ending (code 5)", item(5, 1, 100, 10, 10, 130, 5, 1)),
           )],
         ("colour-then-plain", "a coloured text item before a plain one",
          on_staff(text(p14=-1, p16=990000), text("_02second", p4=4))),
