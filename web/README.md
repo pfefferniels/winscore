@@ -1,0 +1,53 @@
+# WinScore Web
+
+Browser shell of the SCORE editor. The Rust crate `rust/crates/score-web` (WebAssembly, via wasm-bindgen) opens, renders, hit-tests, edits and saves `.mus` files. This TypeScript/Vite app paints its display lists on a canvas and handles input.
+
+## Requirements
+
+- Rust with the `wasm32-unknown-unknown` target (`rustup target add wasm32-unknown-unknown`)
+- `wasm-bindgen` CLI of the same version as the crate: `cargo install wasm-bindgen-cli --version 0.2.129 --locked`
+- Node 24 (`nvm use 24`)
+
+## Run
+
+```sh
+cd web
+npm install
+npm run dev        # builds the wasm, copies samples and references, serves http://localhost:5173
+```
+
+`npm run build` writes a self-contained static site to `web/dist/` (relative paths; wasm, fonts, samples and engine references included). `npm run preview` serves it at http://localhost:4173.
+
+Environment variables: `CARGO_TARGET_DIR` (default `rust/target`), `WASM_PROFILE` (default `release`), `REFERENCE_DIR` (default `rust/fixtures`).
+
+Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT_DIR [name='sample=mozart.mus&mode=overlay&zoom=200' …]` (needs `npx playwright install chromium` once).
+
+## Using it
+
+- **Open** a `.mus` file with the button or by dropping it on the window; the bundled samples are in the drop-down (`WINSCORE 5.01/winscore/*.mus`, `SCORE 4/SCORE/NEWLINE.MUS`, `NEWLIB.MUS`). Dropping an `engine.json` loads it as the reference for the current score.
+- **Rust / Engine / Overlay**: the Rust renderer's page, the original engine's display list (`rust/fixtures/sample-*/engine.json`, produced from WScore.exe under emulation), or both, engine in cyan and Rust in magenta, multiplied, so that matching elements come out dark.
+- **Zoom**: −/+, the percent list, Fit, or ctrl/⌘ + wheel (pinch) around the pointer.
+- **Selection**: click an element (Rust and Overlay views) or a row of the item list. The panel shows P1…Pn; edit a value and press Enter to set it and re-render. **Save** downloads the edited `.mus`.
+- URL parameters for direct links: `?sample=mozart.mus&mode=overlay&zoom=200&select=12`.
+
+## Conventions
+
+- Page coordinates are engine units of 1/4000 inch, origin at the paper's bottom-left corner, y up, as in `rust/fixtures/README.md`.
+- **Zoom**: 100 % shows the page at physical size on a 96-dpi screen (one CSS pixel = 1/96 in ≈ 41.7 engine units). This matches WinScore's own 100 % (zoom 64 of 256 in an `MM_HIENGLISH` view) on a 96-dpi display.
+- **Painting** follows `CWScoreView::OnDraw` (0x5E5910) as far as it is known: filled objects with the even-odd rule, polylines one device pixel wide, text drawn from the top-left of the character cell (the engine's y + 96 is already folded into the coordinates). Points are snapped to device pixels. Filled objects also get a one-pixel outline, which is how GDI's `PolyPolygon` behaves with a pen selected; whether WinScore selects one is still to be confirmed.
+- **Fonts**: see `fonts/README.md`. The engine positions every character itself, so the substitute faces only change glyph shapes, not positions. The baseline offset below the cell top uses the ascent of the Windows faces WinScore would get (an approximation, listed in `src/fonts.ts`).
+
+## Layout
+
+| Path | What |
+|---|---|
+| `src/main.ts` | app state, file handling, controls |
+| `src/canvas.ts` | scrolling, zooming page view |
+| `src/paint.ts` | display-list painter |
+| `src/display.ts` | decoding of score-web's flat display-list encoding |
+| `src/view.ts` | page ↔ device transform, zoom levels |
+| `src/panel.ts` | item list and parameter panel |
+| `src/fonts.ts`, `src/fonts.css` | engine font names → bundled faces |
+| `scripts/` | wasm build, asset copy, screenshots |
+
+The flat encoding (`Uint32Array` shape records, `Int32Array` coordinates, text runs as JSON) is documented in `rust/crates/score-web/src/encode.rs`.

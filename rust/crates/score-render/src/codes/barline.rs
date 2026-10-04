@@ -12,6 +12,7 @@ use crate::display::Point;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
+use crate::symbols::{draw_symbol, Scale};
 use crate::units::{real, trunc, Pos};
 
 /// The highest staff number a barline may reach.
@@ -30,6 +31,9 @@ const DASHED: i32 = 7;
 const BRACE: i32 = 8;
 const BRACKET: i32 = 9;
 const SQUARE_BRACKET: i32 = 10;
+
+/// The brace in the symbol library (LB0000.DRW slot 5).
+const BRACE_SYMBOL: i32 = 5;
 
 fn constant(value: f32) -> f64 {
     f64::from(value)
@@ -149,7 +153,7 @@ impl Barline {
                 self.xb = real(u * 13.0 + self.xb + d13);
                 self.thick(canvas, real(self.xb - six), self.xb);
             }
-            BRACE => {}
+            BRACE => self.brace(doc, item, canvas),
             BRACKET => {
                 if self.ip8 != 3 {
                     self.bracket_ends(canvas);
@@ -192,6 +196,25 @@ impl Barline {
         if matches!(self.ip8, 0 | 1) {
             canvas.point(Pos::new(b, self.top), Pen::Continue);
         }
+    }
+
+    /// barline_brace 0x412B93: library symbol 5 stretched to the bar's height,
+    /// widened with it unless P6 gives the width factor. The symbol is placed
+    /// as draw_clef places it, fitted to the engine for size-1 staves.
+    fn brace(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+        let Some(symbol) = doc.symbols().symbol(BRACE_SYMBOL) else {
+            return;
+        };
+        let step = self.low.step;
+        let height = real((self.top - self.bottom) * constant(0.0054945) / step);
+        let width = match item.p(6) {
+            0.0 => real((height - 1.0) / 2.0 + 1.0),
+            p6 => f64::from(p6),
+        };
+        let level0 = real(self.bottom - step * 21.0);
+        let origin = Pos::new(self.x_pos, real(level0 + 21.0 * step));
+        let scale = Scale { x: real(step / 4.0 * width), y: real(step / 4.0 * height) };
+        draw_symbol(canvas, symbol, origin, scale);
     }
 
     /// Type 10: an open bracket left of the bar on the middle lines.

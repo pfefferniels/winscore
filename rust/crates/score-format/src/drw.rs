@@ -8,7 +8,9 @@
 //!   slot, whose offsets are leftovers and are ignored;
 //! * N x-coordinates (f32), N y-coordinates (f32), N pen codes (i16), with
 //!   N = `off[10] - 1`. Pen 1 starts a stroked line, 2 a filled polygon,
-//!   0 continues the current path.
+//!   3 a further path of the same filled object, 0 continues the current
+//!   path. Negative pens (-1, -2, -3) occur too; the engine draws them as
+//!   continuation points. [`Symbol::records`] keeps every point with its pen.
 //!
 //! The engine draws one library unit as 25 engine units (1/160 inch) at
 //! normal size; checked against WScore.exe output for symbols 20-29.
@@ -37,10 +39,21 @@ pub struct SymbolPath {
     pub points: Vec<(f32, f32)>,
 }
 
+/// One point of a symbol as stored: coordinates in library units and the pen code.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DrwRecord {
+    pub x: f32,
+    pub y: f32,
+    pub pen: i16,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Symbol {
     pub name: String,
+    /// Paths split at pens 1 and 2 only, a simplified view of `records`.
     pub paths: Vec<SymbolPath>,
+    /// Every point in file order, the form the engine draws from.
+    pub records: Vec<DrwRecord>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -123,13 +136,14 @@ impl DrwLibrary {
         let symbol = |k: usize| -> Result<Symbol, DrwError> {
             let name = name(k);
             if name.is_empty() {
-                return Ok(Symbol { name, paths: Vec::new() });
+                return Ok(Symbol { name, paths: Vec::new(), records: Vec::new() });
             }
             let (start, end) = (offsets[k], offsets[k + 1]);
             if start > end || end > n {
                 return Err(DrwError::BadOffsets);
             }
-            Ok(Symbol { name, paths: paths((start..end).map(point)) })
+            let records = (start..end).map(point).map(|((x, y), pen)| DrwRecord { x, y, pen }).collect();
+            Ok(Symbol { name, paths: paths((start..end).map(point)), records })
         };
         let symbols = (0..SYMBOLS).map(symbol).collect::<Result<_, _>>()?;
         Ok(Self { symbols })
