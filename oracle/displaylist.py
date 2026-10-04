@@ -17,6 +17,7 @@ class Shape:
     kind: int                      # high byte of the first tag: 1 polyline, 2 filled, other
     colour: int                    # 0xBBGGRR as stored by the engine (Windows COLORREF)
     paths: tuple[tuple[tuple[int, int], ...], ...]
+    span: tuple[int, int] = field(default=(0, 0), compare=False)   # triples [start, end) of the stream
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,7 @@ class TextRun:
     italic: bool
     underline: bool
     strings: tuple[TextString, ...]
+    span: tuple[int, int] = (0, 0)     # byte range of the run in the text stream
 
     @property
     def engine_height(self) -> float:
@@ -60,7 +62,7 @@ def shapes(vector: list[tuple[int, int, int]]) -> list[Shape]:
     out: list[Shape] = []
     i, n = 0, len(triples)
     while i < n:
-        first_tag = triples[i][2]
+        first_tag, start = triples[i][2], i
         paths: list[list[tuple[int, int]]] = [[]]
         while i < n:
             while i < n and triples[i][2] >> 24 == SKIP:
@@ -78,7 +80,7 @@ def shapes(vector: list[tuple[int, int, int]]) -> list[Shape]:
             if kind != NEW_SUBPATH:
                 break
             paths.append([])
-        out.append(Shape(first_tag >> 24, first_tag & 0xFFFFFF, tuple(tuple(p) for p in paths if p)))
+        out.append(Shape(first_tag >> 24, first_tag & 0xFFFFFF, tuple(tuple(p) for p in paths if p), (start, i)))
     return out
 
 
@@ -95,6 +97,7 @@ def text_runs(buf: bytes) -> list[TextRun]:
     """
     runs, pos = [], 0
     while pos < len(buf):
+        start = pos
         font, nul = _cstring(buf, pos)
         height, double_width, escapement, colour, weight = struct.unpack_from("<ffiii", buf, nul + 1)
         italic, underline = buf[nul + 0x15], buf[nul + 0x19]
@@ -106,5 +109,6 @@ def text_runs(buf: bytes) -> list[TextRun]:
             text, end = _cstring(buf, pos + 8)
             strings.append(TextString(x, y, text))
             pos = end + 1
-        runs.append(TextRun(font, height, double_width / 2, escapement, colour, weight, bool(italic), bool(underline), tuple(strings)))
+        runs.append(TextRun(font, height, double_width / 2, escapement, colour, weight, bool(italic), bool(underline),
+                            tuple(strings), (start, pos)))
     return runs
