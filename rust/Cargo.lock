@@ -65,6 +65,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "score-edit"
+version = "0.1.0"
+dependencies = [
+ "score-format",
+ "score-render",
+]
+
+[[package]]
 name = "score-format"
 version = "0.1.0"
 
