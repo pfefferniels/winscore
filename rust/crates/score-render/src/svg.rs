@@ -4,15 +4,12 @@
 //! objects use the even-odd rule like GDI's ALTERNATE mode. Polylines stand
 //! for GDI's one-pixel pen: by default they are one CSS pixel (1/96 inch)
 //! wide at the SVG's natural size, which rasterisers without support for
-//! `vector-effect` also draw. Text placement is approximate: the engine
-//! positions the top-left of the character cell and the baseline below it
-//! depends on the font's metrics.
+//! `vector-effect` also draw. Text strings start at their baseline origin;
+//! glyph shapes and advances come from whatever font the viewer substitutes,
+//! so text is approximate.
 
 use crate::display::{Colour, DisplayList, Point, Shape, ShapeKind, TextRun, UNITS_PER_INCH};
 use crate::page::Paper;
-
-/// Distance from the top of the character cell to the baseline, as a fraction of the height.
-const ASCENT: f32 = 0.9;
 
 /// One CSS pixel in engine units.
 pub const PIXEL: f64 = UNITS_PER_INCH as f64 / 96.0;
@@ -148,7 +145,6 @@ fn text_run(run: &TextRun) -> String {
         if run.weight >= 600 { " font-weight=\"bold\"" } else { "" },
         if run.underline { " text-decoration=\"underline\"" } else { "" },
     );
-    let baseline_drop = ASCENT * run.height;
     run.strings
         .iter()
         .map(|s| {
@@ -157,11 +153,7 @@ fn text_run(run: &TextRun) -> String {
                 0 => String::new(),
                 e => format!(" transform=\"rotate({} {x} {y})\"", -f64::from(e) / 10.0),
             };
-            format!(
-                "<text x=\"{x}\" y=\"{:.0}\" {style}{rotate}{source}>{}</text>\n",
-                y as f32 + baseline_drop,
-                escape(&s.text)
-            )
+            format!("<text x=\"{x}\" y=\"{y}\" {style}{rotate}{source}>{}</text>\n", escape(&s.text))
         })
         .collect()
 }
