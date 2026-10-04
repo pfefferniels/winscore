@@ -18,7 +18,7 @@ use crate::codes::text::font_before;
 use crate::document::{Document, ItemRef};
 use crate::symbols::library::is_text_symbol;
 use crate::symbols::{self, ItemContext, SymbolCall, TextSymbolCall};
-use crate::text::{draw_text, TextCall};
+use crate::text::{self, draw_text, Font, TextCall};
 use crate::units::{amod, constant, real, trunc};
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
@@ -109,9 +109,13 @@ const TERM_SCALE: f32 = 1.05;
 /// A term: the item's own P3, P8 (font override), P9, P10 (space, or P17
 /// when set), P16 (spread when set) and P26 as the text's colour.
 fn draw_term(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, number: i32) {
-    let Some(text) = TermLibrary::bundled().term(number) else {
-        return;
-    };
+    if let Some(text) = TermLibrary::bundled().term(number) {
+        draw_text(doc, item, canvas, &term_call(doc, item, text, font_before(doc, item)));
+    }
+}
+
+/// The draw_text call for term `text` of `item`, given the font current before it.
+fn term_call<'t>(doc: &Document<'_>, item: ItemRef<'_>, text: &'t [u8], current_font: Font) -> TextCall<'t> {
     let p = |n: usize| item.p(n);
     let size_x = match real(amod(f64::from(p(6)), 100.0)) {
         0.0 => 1.0,
@@ -124,7 +128,7 @@ fn draw_term(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, num
         (0.0, _) => None,
         (p26, _) => Some(p26),
     };
-    let call = TextCall {
+    TextCall {
         text,
         origin: doc.position(item),
         p3: p(3),
@@ -139,9 +143,22 @@ fn draw_term(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, num
         space: if p(17) != 0.0 { p(17) } else { p(10) },
         shift: 0.0,
         colour,
-        current_font: font_before(doc, item),
-    };
-    draw_text(doc, item, canvas, &call);
+        current_font,
+    }
+}
+
+/// The font a code-9 item leaves loaded (draw_item 0x547358 makes it the
+/// current font): that of the last text record a term or text symbol draws.
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    let number = trunc(f64::from(item.p(5))).max(0);
+    if TERMS.contains(&number) {
+        let text = TermLibrary::bundled().term(number)?;
+        text::font_loaded(doc, &term_call(doc, item, text, Font::TIMES))
+    } else if is_text_symbol(number) {
+        symbols::text_symbol_font_loaded(doc, &TextSymbolCall::of(doc, item, number))
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]
@@ -160,5 +177,19 @@ mod tests {
     #[test]
     fn bundled_terms() {
         assert_eq!(TermLibrary::bundled().term(3004), Some(&b"_02l<<eger"[..]));
+    }
+
+    fn loaded(fixture: &[u8]) -> Option<Font> {
+        let file = score_format::MusFile::parse(fixture).expect("fixture parses");
+        let doc = Document::new(&file);
+        let item = doc.items().find(|i| i.code() == crate::codes::SYMBOL).expect("a code-9 item");
+        font_loaded(&doc, item)
+    }
+
+    #[test]
+    fn fonts_loaded_by_terms_and_text_symbols() {
+        assert_eq!(loaded(include_bytes!("../../../../fixtures/code09-p5-text-3004/input.mus")), Some(Font(2)));
+        assert_eq!(loaded(include_bytes!("../../../../fixtures/code09-p5-text-66/input.mus")), Some(Font(0)));
+        assert_eq!(loaded(include_bytes!("../../../../fixtures/code09-p5-symbol-31/input.mus")), None);
     }
 }
