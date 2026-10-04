@@ -189,7 +189,7 @@ fn section(
 
 // -- shapes ----------------------------------------------------------------------
 
-fn point_deviation(a: &Point, b: &Point) -> i32 {
+pub(crate) fn point_deviation(a: &Point, b: &Point) -> i32 {
     (a.x - b.x).abs().max((a.y - b.y).abs())
 }
 
@@ -301,7 +301,7 @@ impl ShapeIndex {
     }
 }
 
-fn shape_summary(shape: &Shape) -> String {
+pub(crate) fn shape_summary(shape: &Shape) -> String {
     let kind = match shape.kind {
         ShapeKind::Stroke => "stroke",
         ShapeKind::Fill => "fill",
@@ -369,7 +369,7 @@ pub fn placed_strings<'a>(list: &'a DisplayList, options: &CompareOptions) -> Ve
         .collect()
 }
 
-fn same_style(a: &TextRun, b: &TextRun, tolerance: f32) -> bool {
+pub(crate) fn same_style(a: &TextRun, b: &TextRun, tolerance: f32) -> bool {
     a.font == b.font
         && a.colour == b.colour
         && a.escapement == b.escapement
@@ -386,7 +386,7 @@ fn text_deviation(expected: &Placed, actual: &Placed, options: &CompareOptions) 
     .then(|| point_deviation(&expected.string.origin, &actual.string.origin))
 }
 
-fn text_summary(placed: &Placed) -> String {
+pub(crate) fn text_summary(placed: &Placed) -> String {
     let Placed { run, string } = placed;
     format!(
         "{:?} in {} {:.1}/{:.1} at ({}, {})",

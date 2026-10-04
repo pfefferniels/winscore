@@ -5,6 +5,7 @@ Case names: sample-<file>, codeNN-<parameter>-<value class>. See rust/fixtures/P
 from __future__ import annotations
 
 import importlib
+import struct
 from pathlib import Path
 
 from fixtures import Case
@@ -50,6 +51,41 @@ def sample_cases() -> list[Case]:
     score4 = [Case(f"sample-{p.stem.lower()}", f"SCORE 4 sample {p.name}", p.read_bytes())
               for p in (SCORE4 / "NEWLINE.MUS", SCORE4 / "NEWLIB.MUS")]
     return winscore + score4
+
+
+TRAILER_WORDS = 6
+
+
+def sample_items(path: Path) -> list[bytes]:
+    """The items of a .mus file as packed words (parameters and characters), in file order."""
+    data = path.read_bytes()
+    short = int.from_bytes(data[:2], "little")
+    words = data[2:] if 2 + 4 * short == len(data) else data[4:]
+    items, pos = [], 0
+    while pos < len(words) - 4 * TRAILER_WORDS:
+        length = int(struct.unpack_from("<f", words, pos)[0])   # the engine truncates stray mantissa bits
+        if length <= 0:
+            break
+        items.append(words[pos + 4:pos + 4 + 4 * length])
+        pos += 4 + 4 * length
+    return items
+
+
+def item_code(packed: bytes) -> int:
+    return int(struct.unpack_from("<f", packed)[0])
+
+
+def item_staff(packed: bytes) -> int:
+    return int(struct.unpack_from("<f", packed, 4)[0]) if len(packed) >= 8 else 0
+
+
+def excerpt(path: Path, indices: list[int], staves: tuple[int, ...] = ()) -> list[bytes]:
+    """The staff items (code 8) of the staves the chosen items hang on, plus `staves`, then the items."""
+    items = sample_items(path)
+    chosen = [items[i] for i in indices]
+    wanted = {item_staff(p) for p in chosen} | set(staves)
+    staff_items = [p for p in items if item_code(p) == 8 and item_staff(p) in wanted]
+    return staff_items + [p for p in chosen if item_code(p) != 8]
 
 
 def code_modules() -> list[str]:

@@ -7,15 +7,15 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::fs;
-use std::panic::{self, AssertUnwindSafe};
+use std::panic;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 
-use score_render::{render, DisplayList, Document, ItemId};
+use score_render::{DisplayList, ItemId};
 use score_testkit::svg::{triptych, Caption};
 use score_testkit::{
-    compare, display_from_json, fixtures_dir, load_all, restrict, CompareOptions, Fixture, Report,
-    Section,
+    compare, display_from_json, display_to_json, fixtures_dir, load_all, render_fixture, restrict,
+    CompareOptions, Fixture, Report, Section,
 };
 
 const USAGE: &str = "\
@@ -26,6 +26,7 @@ score-compare [OPTIONS] [PATTERN ...]
   --against CASE          compare every selected fixture against fixture CASE
   --status FILE           status table (default: <fixtures>/STATUS.md; \"-\" skips it)
   --images DIR            write engine | actual | diff pictures (PNG via resvg, else SVG)
+  --dump DIR              write the compared lists as DIR/<case>.json (engine.json format)
   --width PX              picture width (default 2400)
   --ignore-staff-numbers  leave staff-number texts out of the comparison
   --verbose               print the report of every differing case
@@ -66,6 +67,7 @@ struct Args {
     source: Source,
     status: Option<PathBuf>,
     images: Option<PathBuf>,
+    dump: Option<PathBuf>,
     width: u32,
     options: CompareOptions,
     verbose: bool,
@@ -78,6 +80,7 @@ fn parse_args() -> Result<Args, String> {
         source: Source::Rust,
         status: None,
         images: None,
+        dump: None,
         width: 2400,
         options: CompareOptions::default(),
         verbose: false,
@@ -94,6 +97,7 @@ fn parse_args() -> Result<Args, String> {
             "--against" => args.source = Source::Fixture(value("--against")?),
             "--status" => status = Some(value("--status")?),
             "--images" => args.images = Some(value("--images")?.into()),
+            "--dump" => args.dump = Some(value("--dump")?.into()),
             "--width" => {
                 args.width = value("--width")?
                     .parse()
@@ -136,28 +140,6 @@ enum Actual {
     Failed(String),
 }
 
-fn panic_message(payload: &(dyn std::any::Any + Send)) -> String {
-    payload
-        .downcast_ref::<&str>()
-        .map(|s| s.to_string())
-        .or_else(|| payload.downcast_ref::<String>().cloned())
-        .unwrap_or_else(|| "panic without message".into())
-}
-
-fn render_fixture(fixture: &Fixture) -> Actual {
-    let file = match fixture.input() {
-        Ok(file) => file,
-        Err(err) => return Actual::Failed(err.to_string()),
-    };
-    match panic::catch_unwind(AssertUnwindSafe(|| render(&Document::new(&file)))) {
-        Ok(list) => Actual::List(list),
-        Err(payload) => Actual::Failed(format!(
-            "render panicked: {}",
-            panic_message(payload.as_ref())
-        )),
-    }
-}
-
 fn read_list(path: &Path) -> Actual {
     if !path.is_file() {
         return Actual::Missing;
@@ -173,7 +155,7 @@ fn read_list(path: &Path) -> Actual {
 
 fn actual_for(source: &Source, fixture: &Fixture, fixtures: &[Fixture]) -> Actual {
     match source {
-        Source::Rust => render_fixture(fixture),
+        Source::Rust => render_fixture(fixture).map_or_else(Actual::Failed, Actual::List),
         Source::SelfCheck => Actual::List(fixture.display.clone()),
         Source::Directory(dir) => read_list(&dir.join(format!("{}.json", fixture.name))),
         Source::Fixture(name) => fixtures.iter().find(|f| &f.name == name).map_or_else(
@@ -530,7 +512,7 @@ fn run(args: &Args) -> Result<bool, String> {
             args.patterns.is_empty() || args.patterns.iter().any(|p| glob_match(p, &f.name))
         })
         .collect();
-    if let Some(dir) = &args.images {
+    for dir in args.images.iter().chain(&args.dump) {
         fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     }
     let mut rows = Vec::with_capacity(selected.len());
@@ -543,12 +525,17 @@ fn run(args: &Args) -> Result<bool, String> {
                 print!("{report}");
             }
         }
+        let list = match &actual {
+            Actual::List(list) => Some(list),
+            _ => None,
+        };
         if let Some(dir) = &args.images {
-            let list = match &actual {
-                Actual::List(list) => Some(list),
-                _ => None,
-            };
             write_picture(dir, &row, list, args)?;
+        }
+        if let (Some(dir), Some(list)) = (&args.dump, list) {
+            let path = dir.join(format!("{}.json", fixture.name));
+            fs::write(&path, display_to_json(list))
+                .map_err(|e| format!("{}: {e}", path.display()))?;
         }
         rows.push(row);
     }
