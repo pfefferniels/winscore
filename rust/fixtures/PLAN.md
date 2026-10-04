@@ -14,7 +14,7 @@ Each code's cases live in `oracle/fixtures_codeNN.py` (a `cases()` function; `fi
 | 3, 9, 10, 11, 12, 15, 17, 18 | `fixtures_code03.py` etc. | impl-symbols |
 | 4, 7 | `fixtures_code04.py`, `fixtures_code07.py` | impl-lines |
 | 5, 6 | `fixtures_code05.py`, `fixtures_code06.py` | impl-beams |
-| 16 | `fixtures_code16.py` | verifier |
+| 16 | `fixtures_code16.py` | impl-text (first 91 cases drafted by verifier) |
 | interactions across codes | `fixtures_code99.py` | verifier |
 
 ## Done
@@ -33,7 +33,8 @@ Observed P5 types (from the engine output, not from the help text, whose type ta
 - Item attribution: every element carries the index of the item that drew it, taken from a write hook. The engine's own per-item ranges start one triple late after at least one text item (sonlcs item 466, a code 16 before a recto barline), so they are not used.
 - `G input.mus` is read as `NPUT.MUS`: a leading `I` after `G ` is consumed. The sandbox file is called `case.mus`.
 
+- **Code 16, text** (91 cases, drafted by verifier, continued by impl-text): P5, P6 (with part flags 101–301), P7, P8 font overrides (90–98, 1000–1034, outlines 193, 1105), P9 rotation, P10, P11, P14–P16 colour; fonts `_00`–`_34`, `_90`–`_94`, `_98`, `_99%`; font switches, spaces, tabs, `?c`, `%%`, `[ ]`, backslash, Latin-1; staff sizes, recto. The engine reads characters after P13 whatever the item length, so P13 is always stored; an unclosed `~` or `~~` crashes the emulated engine (impl-text).
+
 ## Next (verifier)
 
-- Code 16, text: P5 character spacing, P6/P7 size, P8 font override (90–98, 1000–1034, +100 outline), P9 rotation, P10 space size, P11 displacement, font escapes `_NN` in the string, tabs `~n~`, P25/P26.
 - Interactions across codes (`code99-*`): a note on a key-signature staff after a clef, stems with beams, ties between chords, a full measure with clef, key, meter, notes, rests and barlines.
