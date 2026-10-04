@@ -86,6 +86,13 @@ def cases() -> list[Case]:
         ("font-after-text", "text without a font code after _02 text", on_staff(text("_02first"), text("second", p4=4))),
         ("font-wraps", "text without a font code before _05 text", on_staff(text("first", p4=4), text("_05second"))),
         ("font-no-staff", "text without a font code, no staff", [text("_02first", p4=4), text("second")]),
+        # draw_item makes the font loaded last current (0x547358); numbers load theirs.
+        ("font-after-number", "plain text after _02 text and a code-10 number (font 1000)",
+         on_staff(text("_02first"), item(10, 1, 70, 5, 7), text("second", p4=4))),
+        ("font-after-meter", "plain text after _02 text and a 3/4 meter (font 94, loads none)",
+         on_staff(text("_02first"), item(18, 1, 70, 0, 3, 4), text("second", p4=4))),
+        ("font-after-meter-p13", "plain text after _02 text and a meter in font P13 = 2 (Helvetica)",
+         on_staff(text("_02first"), item(18, 1, 70, 0, 3, 4, p13=2), text("second", p4=4))),
         ("colour-then-plain", "a coloured text item before a plain one",
          on_staff(text(p14=-1, p16=990000), text("_02second", p4=4))),
     ]
