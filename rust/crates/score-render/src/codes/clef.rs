@@ -4,13 +4,14 @@
 //! draw library symbols), 0.8/0.88/0.15 treble and 1.8 bass with an octave
 //! number, 44/55/66 tablature clefs for 4, 5 and 6 lines. P4 vertical
 //! position, |P4| >= 100 a mini clef; P6/P7 size; P15 offset. The clef
-//! itself is the shared [`symbols::clef_placement`] and
-//! [`symbols::draw_clef_symbol`]; this module adds what draw_clef does only
+//! itself is the shared [`clef_placement`] and
+//! [`draw_clef_symbol`]; this module adds what draw_clef does only
 //! for code-3 items.
 
 use crate::canvas::Canvas;
 use crate::document::{Document, ItemRef};
-use crate::symbols::{self, ClefPlacement, SymbolCall};
+use crate::symbols::clef::{clef_placement, draw_clef_symbol, ClefPlacement};
+use crate::symbols::{draw_library_symbol, SymbolCall};
 use crate::units::{real, trunc, Pos};
 
 /// A tablature clef: its P5, size factor and lift in scale steps above P4.
@@ -32,10 +33,10 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let step = doc.staff_of(item).step;
     let kind = trunc(f64::from(item.p(5)));
     let placement =
-        symbols::clef_placement(item, doc.position(item), step, kind, f64::from(item.p(6)), f64::from(item.p(7)));
+        clef_placement(item, doc.position(item), step, kind, f64::from(item.p(6)), f64::from(item.p(7)));
     match TABLATURE.iter().find(|t| t.p5 == kind) {
         Some(tablature) => draw_tablature(doc, item, canvas, &placement, tablature),
-        None => symbols::draw_clef_symbol(doc, item, canvas, &placement, step),
+        None => draw_clef_symbol(doc, item, canvas, &placement, step),
     }
 }
 
@@ -56,5 +57,5 @@ fn draw_tablature(
         .lift
         .map_or(placement.at.y, |lift| staff.y(real(f64::from(item.p(4)) + f64::from(lift))));
     let call = SymbolCall::sized(TABLATURE_SYMBOL, size_x, size_y, item);
-    symbols::draw_library_symbol(doc, item, canvas, Pos::new(placement.at.x, y), staff.step, &call);
+    draw_library_symbol(doc, item, canvas, Pos::new(placement.at.x, y), staff.step, &call);
 }
