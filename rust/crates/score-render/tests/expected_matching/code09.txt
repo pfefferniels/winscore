@@ -65,6 +65,13 @@ code09-p5-symbol-750
 code09-p5-symbol-83
 code09-p5-symbol-900
 code09-p5-symbol-91
+code09-p5-text-276
+code09-p5-text-3000
+code09-p5-text-3004
+code09-p5-text-45
+code09-p5-text-63
+code09-p5-text-66
+code09-p5-text-78
 code09-p6-size-0.5
 code09-p6-size-1.7
 code09-p6-size-101.5

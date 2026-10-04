@@ -8,17 +8,18 @@
 //! (P5 XYZ pedals down, P9 size). P5 size (0 = 1), P6 end of the extension
 //! line, which draw_line draws as a wave, dashes or a line with the item's
 //! P10-P13 and P16-P18 (P18 alone sets P16); P11/P12 brackets and arrows of
-//! pedal lines; P15 left offset (applied by item_position).
-//!
-//! Not drawn yet: the numbers of types 88/-88/155 (code 10's draw_number),
-//! and the 8va/8ba/15ma symbols 45-47, which the engine draws as text.
+//! pedal lines; P15 left offset (applied by item_position). The 8va, 8ba
+//! and 15ma symbols are text (draw_symbol's text path), the numbers of
+//! 88/-88/155 come from draw_number, the harp pedals from draw_box.
 
 use crate::canvas::{Canvas, Pen};
+use crate::codes::boxes::{draw_box, BoxCall};
 use crate::codes::line::{self, end_mark, End, Params};
+use crate::codes::number::{draw_number, NumberCall};
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
-use crate::symbols::{self, draw_library_symbol, ItemContext, SymbolCall};
+use crate::symbols::{self, draw_library_symbol, draw_text_symbol, ItemContext, SymbolCall, TextSymbolCall};
 use crate::units::{constant, real, trunc, Pos};
 
 const TRILL: i32 = 0;
@@ -38,18 +39,31 @@ const TRILL_SYMBOL: i32 = 37;
 const FIRST_ACCIDENTAL_SYMBOL: i32 = 5;
 const PIANO_PEDAL_SYMBOL: i32 = 48;
 const PIANO_PEDAL_FILLER: i32 = 49;
+/// draw_code7 sets IP7 = 1 (italic Times) for the ottava numbers.
+const OTTAVA_NUMBER_FONT: i32 = 1;
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-    let step = doc.staff_of(item).step;
-    draw(doc, canvas, ItemContext::of(item), doc.position(item), step, &Params::of(item));
+    let globals = Globals { context: ItemContext::of(item), at: doc.position(item), step: doc.staff_of(item).step };
+    draw(doc, item, canvas, &globals, &Params::of(item));
 }
 
-/// draw_code7 with its globals given: the symbol context of the calling
-/// item (IP2 names the staff whose levels apply; IP1 becomes 9), X_POS and
-/// Y_POS `at`, STEP `step` and the P-array `params`. Notes draw their trill
-/// marks through this.
-pub fn draw(doc: &Document<'_>, canvas: &mut Canvas<'_>, context: ItemContext, at: Pos, step: f64, params: &Params) {
-    let mark = Mark::new(doc, context, at, step, params);
+/// The globals draw_code7 reads besides the P-array.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Globals {
+    /// The symbol context of the calling item; IP2 names the staff whose
+    /// levels apply, IP1 becomes 9.
+    pub context: ItemContext,
+    /// X_POS, Y_POS.
+    pub at: Pos,
+    /// STEP.
+    pub step: f64,
+}
+
+/// draw_code7 for `item` (whose text and current font the text paths use)
+/// with its globals and P-array given. Notes draw their trill marks
+/// through this.
+pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, globals: &Globals, params: &Params) {
+    let mark = Mark::new(doc, item, globals, params);
     match mark.kind {
         TRILL => trill(&mark, canvas),
         HARP => harp(&mark, canvas),
@@ -72,6 +86,7 @@ const SYMBOL_CODE: i32 = 9;
 /// The item as draw_code7 prepares it.
 struct Mark<'a, 'd> {
     doc: &'a Document<'d>,
+    item: ItemRef<'a>,
     /// The globals draw_clef and draw_symbol read, with the item's IP10 as pixel thickness.
     context: ItemContext,
     staff: Staff,
@@ -87,17 +102,18 @@ struct Mark<'a, 'd> {
 }
 
 impl<'a, 'd> Mark<'a, 'd> {
-    fn new(doc: &'a Document<'d>, context: ItemContext, at: Pos, step: f64, params: &Params) -> Self {
+    fn new(doc: &'a Document<'d>, item: ItemRef<'a>, globals: &Globals, params: &Params) -> Self {
         let mut params = params.clone();
         if params.p(18) != 0.0 {
             params.set(16, 1.0);
         }
         Self {
             doc,
-            context: ItemContext { code: SYMBOL_CODE, ..context },
-            staff: doc.staves.get(context.staff),
-            step,
-            at,
+            item,
+            context: ItemContext { code: SYMBOL_CODE, ..globals.context },
+            staff: doc.staves.get(globals.context.staff),
+            step: globals.step,
+            at: globals.at,
             kind: trunc(f64::from(params.p(7))),
             size: match params.p(5) {
                 0.0 => 1.0,
@@ -142,6 +158,11 @@ impl<'a, 'd> Mark<'a, 'd> {
             }
             p8 => (p8, self.p(9)),
         }
+    }
+
+    /// P6 and P7 for the ottava symbols and numbers: three quarters of the symbol size.
+    fn ottava_size(&self) -> f64 {
+        real(self.symbol_size() * constant(0.75))
     }
 
     /// The symbol context with IP10 set to `pixels`.
@@ -225,8 +246,25 @@ fn ottava_symbol(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
         OTTAVA_BASSA => (46, 43.0),
         _ => (47, 62.0),
     };
-    let size = real(mark.symbol_size() * constant(0.75));
-    mark.library_symbol(canvas, &mark.with_pixels(0), mark.at, number, size);
+    let size = mark.ottava_size();
+    let call = TextSymbolCall {
+        number,
+        size_x: size,
+        size_y: size,
+        origin: mark.at,
+        item_code: crate::codes::TRILL,
+        staff: mark.context.staff,
+        p3: mark.p(3),
+        p6: size as f32,
+        p7: size as f32,
+        p9: 0.0,
+        p11: mark.p(11),
+        p12: mark.p(12),
+        p14: mark.p(14),
+        p16: mark.p(16),
+        p26: mark.p(26),
+    };
+    draw_text_symbol(mark.doc, mark.item, canvas, &call);
     extend(mark, Extension::Dashes, f64::from(mark.p(4)), mark.after(width), dashes, canvas);
 }
 
@@ -234,7 +272,17 @@ fn ottava_symbol(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
 /// symbol sizes except for -88.
 fn ottava_number(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
     let dashes = mark.dash_lengths();
-    let width = if mark.kind.abs() == OTTAVA_UP { 18.0 } else { 29.0 };
+    let (value, width) = if mark.kind.abs() == OTTAVA_UP { (8, 18.0) } else { (15, 29.0) };
+    let call = NumberCall {
+        value,
+        p5: value as f32,
+        size: mark.ottava_size() as f32,
+        font: OTTAVA_NUMBER_FONT,
+        frame: 0,
+        frame_thickness: 0,
+        ..NumberCall::of(mark.item)
+    };
+    draw_number(mark.doc, mark.item, canvas, mark.at, &call);
     let level = f64::from(mark.p(4));
     let level = match mark.kind {
         OTTAVA_DOWN => level,
@@ -336,12 +384,12 @@ fn harp(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
     let rise = real(mark.staff.y(real(mark.size * 2.5 + p4)) - mark.at.y);
     let top = real(mark.at.y - rise * 2.0);
     let spacing = real(unit * 375.0);
-    let pedal_box = PedalBox::new(mark);
+    let pedal = pedal_box(mark);
     let sides = [(real((centre - unit * 7.5) * P3_UNIT), mark.ip(8), 3), (real((unit * 2.5 + centre) * P3_UNIT), mark.ip(9), 4)];
     sides.into_iter().for_each(|(first_x, positions, count)| {
         let xs = std::iter::successors(Some(first_x), |&x| Some(real(spacing + x)));
         digits(positions, count).zip(xs).for_each(|(position, x)| {
-            pedal_box.draw(canvas, Pos::new(x, real(rise * f64::from(position) + top)));
+            draw_box(canvas, Pos::new(x, real(rise * f64::from(position) + top)), mark.step(), &pedal);
         });
     });
 }
@@ -359,35 +407,26 @@ fn digits(value: i32, count: u32) -> impl Iterator<Item = i32> {
     })
 }
 
-/// A harp pedal: draw_box 0x433530 type 0, filled (P13 = 1), one size wide
-/// and three high, its top slanted by P10 scale steps.
-struct PedalBox {
-    half_width: f64,
-    half_height: f64,
-    slant: f64,
-}
-
-impl PedalBox {
-    fn new(mark: &Mark<'_, '_>) -> Self {
-        let step = mark.step();
-        let height = real(mark.size * 3.0);
-        Self {
-            half_width: real(step * 3.5 * mark.size),
-            half_height: real(step * 3.5 * height),
-            slant: real(step * 7.0 * f64::from(mark.p(10))),
-        }
-    }
-
-    fn draw(&self, canvas: &mut Canvas<'_>, at: Pos) {
-        let (left, right) = (real(at.x - self.half_width), real(self.half_width + at.x));
-        let (bottom, top) = (real(at.y - self.half_height), real(self.half_height + at.y));
-        canvas.fill([[
-            Pos::new(left, bottom),
-            Pos::new(right, bottom),
-            Pos::new(real(self.slant + right), top),
-            Pos::new(real(self.slant + left), top),
-            Pos::new(left, bottom),
-        ]]);
+/// A harp pedal as draw_code7 sets up draw_box: a filled box (IP5 = 0,
+/// P13 = 1) one size wide and three high, its top slanted by P10 scale
+/// steps (IP10 = 1), neither thickened nor rotated. P16 is left at 0: the
+/// engine passes P16 = 1 when P18 is set, which would scale the boxes by
+/// 22.857 (draw_box's centimetre sizes), an accident of the shared globals.
+fn pedal_box(mark: &Mark<'_, '_>) -> BoxCall {
+    BoxCall {
+        kind: 0,
+        width: mark.size,
+        height: real(mark.size * 3.0),
+        p8: 0.0,
+        ip8: 0,
+        p9: 0.0,
+        ip9: 0,
+        p10: f64::from(mark.p(10)),
+        ip10: 1,
+        ip11: mark.ip(11),
+        ip12: mark.ip(12),
+        fill: true,
+        p16: 0.0,
     }
 }
 
