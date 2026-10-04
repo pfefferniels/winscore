@@ -1,0 +1,39 @@
+{
+ "case": "code14-p5-repeat-both",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 236,
+   "vector_words": 369
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; view = page + view_offset",
+ "description": "type P5 = 5 (repeat-both)",
+ "events": [],
+ "invalid_reasons": [],
+ "items": 5,
+ "page_frames": [
+  [
+   401,
+   -16797,
+   34399,
+   39201
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -    5 Items)   <Legal>",
+ "valid": true,
+ "view_offset": [
+  400,
+  -16798
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}

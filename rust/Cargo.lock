@@ -68,6 +68,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "score-testkit"
+version = "0.1.0"
+dependencies = [
+ "score-format",
+ "score-render",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "score-web"
 version = "0.1.0"
 dependencies = [
