@@ -36,6 +36,7 @@ pub mod codes;
 pub mod colour;
 pub mod display;
 pub mod document;
+pub mod geometry;
 pub mod page;
 pub mod staff;
 pub mod svg;

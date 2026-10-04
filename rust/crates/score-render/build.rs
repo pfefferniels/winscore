@@ -10,16 +10,21 @@ fn first_symbol(path: &Path) -> Option<i32> {
     digits.parse().ok()
 }
 
-fn main() {
-    let scorlib = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore/scorlib");
-    println!("cargo:rerun-if-changed={}", scorlib.display());
-    let mut files: Vec<(i32, PathBuf)> = fs::read_dir(&scorlib)
+fn library_files(scorlib: &Path) -> Vec<(i32, PathBuf)> {
+    let mut files: Vec<(i32, PathBuf)> = fs::read_dir(scorlib)
         .unwrap_or_else(|e| panic!("{}: {e}", scorlib.display()))
         .filter_map(Result::ok)
         .map(|entry| entry.path())
         .filter_map(|path| Some((first_symbol(&path)?, fs::canonicalize(&path).ok()?)))
         .collect();
     files.sort();
+    files
+}
+
+fn main() {
+    let scorlib = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore/scorlib");
+    println!("cargo:rerun-if-changed={}", scorlib.display());
+    let files = if env::var_os("CARGO_FEATURE_BUNDLED_SYMBOLS").is_some() { library_files(&scorlib) } else { Vec::new() };
     let entries: String = files
         .iter()
         .map(|(number, path)| format!("    ({number}, include_bytes!({:?})),\n", path.display().to_string()))

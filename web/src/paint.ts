@@ -3,7 +3,7 @@
 // (PolyPolygon, ALTERNATE), polylines with a pen one device pixel wide, text
 // placed by the top-left of its character cell. Drawing happens in device
 // pixels so lines stay crisp at any devicePixelRatio.
-import type { Box, DisplayList, Shape, TextRun } from './display';
+import { elementsOf, type Box, type DisplayList, type Shape, type TextRun } from './display';
 import { cssFont, face } from './fonts';
 import { toDevice, type Transform } from './view';
 
@@ -93,13 +93,6 @@ function paintList(ctx: CanvasRenderingContext2D, t: Transform, list: DisplayLis
   list.texts.forEach((run) => paintText(ctx, t, run, tint ?? rgb(run.colour)));
 }
 
-function selected(list: DisplayList, item: number): DisplayList {
-  return {
-    shapes: list.shapes.filter((s) => s.source === item),
-    texts: list.texts.filter((r) => r.source === item),
-  };
-}
-
 function paintPaper(ctx: CanvasRenderingContext2D, t: Transform, paper: Box) {
   const a = toDevice(t, paper.x0, paper.y1);
   const b = toDevice(t, paper.x1, paper.y0);
@@ -130,6 +123,6 @@ export function paint(ctx: CanvasRenderingContext2D, scene: Scene) {
   });
   ctx.globalCompositeOperation = 'source-over';
   if (scene.highlight) {
-    paintList(ctx, t, selected(scene.highlight.list, scene.highlight.item), HIGHLIGHT, scene.outlineFills);
+    paintList(ctx, t, elementsOf(scene.highlight.list, scene.highlight.item), HIGHLIGHT, scene.outlineFills);
   }
 }

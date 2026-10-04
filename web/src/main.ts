@@ -1,7 +1,7 @@
 import './style.css';
 import init, { parseReference, Score, type EncodedList } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
-import { bounds, decode, EMPTY, union, type Box, type DisplayList } from './display';
+import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
 import { loadFaces } from './fonts';
 import { markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer } from './paint';
@@ -19,6 +19,7 @@ interface ReferenceInfo {
 
 interface Sample {
   title: string;
+  /** The `.mus` bytes as base64 text. */
   url: string;
   case: string;
   reference: ReferenceInfo | null;
@@ -48,6 +49,7 @@ const RUST_TINT = '#e11d74';
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
 const ui = {
+  app: $<HTMLDivElement>('app'),
   open: $<HTMLButtonElement>('open'),
   file: $<HTMLInputElement>('file'),
   sample: $<HTMLSelectElement>('sample'),
@@ -168,7 +170,7 @@ function details(score: Score, index: number): ItemDetails | null {
       p3: params[2] ?? 0,
       params,
       text: info.text ?? null,
-      drawn: state.rust.shapes.some((s) => s.source === index) || state.rust.texts.some((t) => t.source === index),
+      drawn: bounds(elementsOf(state.rust, index)) !== null,
     };
   } finally {
     info.free();
@@ -200,10 +202,12 @@ async function loadFontsAndRepaint() {
   view.repaint();
 }
 
-function select(index: number | null) {
+function select(index: number | null, reveal = false) {
   state.selected = index;
   refreshPanel();
   redraw();
+  const box = index !== null && reveal ? bounds(elementsOf(state.rust, index)) : null;
+  if (box) view.reveal(box);
 }
 
 function setParam(index: number, n: number, value: number) {
@@ -224,7 +228,7 @@ function setParam(index: number, n: number, value: number) {
   message(`Item ${index}: P${n} = ${value}`);
 }
 
-const handlers: PanelHandlers = { select, setParam };
+const handlers: PanelHandlers = { select: (index) => select(index, true), setParam };
 
 async function fetchReference(info: ReferenceInfo): Promise<Reference> {
   const json = await (await fetch(info.url)).text();
@@ -255,7 +259,8 @@ function openScore(bytes: Uint8Array, name: string, reference: Reference | null)
 
 async function openSample(sample: Sample) {
   try {
-    const bytes = new Uint8Array(await (await fetch(sample.url)).arrayBuffer());
+    const base64 = (await (await fetch(sample.url)).text()).trim();
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
     const reference = sample.reference ? await fetchReference(sample.reference) : null;
     openScore(bytes, sample.title, reference);
   } catch (err) {
@@ -379,9 +384,9 @@ async function applyQuery(samples: Sample[]) {
   const zoom = Number(query.get('zoom'));
   if (zoom > 0) view.setZoom(zoom);
   const selected = query.get('select');
-  if (selected !== null) select(Number(selected));
+  if (selected !== null) select(Number(selected), true);
   await loadFontsAndRepaint();
-  document.body.dataset.ready = 'true';
+  ui.app.dataset.ready = 'true';
 }
 
 async function main() {

@@ -1,0 +1,416 @@
+== p1-octaves
+IN 1
+;
+C4/D/E/F/G/A/B/C5/D3/B2/C8/A0;
+4/4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== p1-proximity
+IN 1
+;
+PC4/B/G/C/F/E5/OB/C/D;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== p1-accidentals
+IN 1
+;
+CS4/DF/EN/FSS/GFF/AS/A/AN;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== p1-chord
+IN 1
+;
+C4:E:G/D:F:A/C'E'G/E4:C/;
+4/4/4/4/4;
+;
+;
+;
+== p1-rests
+IN 1
+;
+C4/R/RU/RD/RW/RI/RX3/D;
+4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== p1-bars
+IN 1
+;
+C4/D/M/E/F/M2/G/A/M/B/C5/M;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== p1-clefs
+IN 1
+;
+TR/C4/BA/C/AL/C/TE/C/PR/C;
+4/4/4/4/4;
+;
+;
+;
+== p1-keys
+IN 1
+;
+K2S/C4/K3F/D/K1SN/E/K4FN/F;
+4/4/4/4;
+;
+;
+;
+== p1-meters
+IN 1
+;
+COM/C4/CUT/D/3 4/E/6 8/F/7 16/G;
+4/4/4/4/4;
+;
+;
+;
+== p1-stems
+IN 1
+;
+C4/A/C6/SU/C/C6/SD/C4/C6/SO/C4/C6;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== p1-staffupdown
+IN 1
+;
+C4/S+/C/S-/C/S0/C;
+4/4/4/4;
+;
+;
+;
+== p1-repeatx
+IN 1
+;
+C4/D/E/X3 2/F;
+4/4/4/4/4/4/4;
+;
+;
+;
+== p1-repeatz
+IN 1
+;
+CS4/D/EF/Z3 2/F;
+4/4/4/4/4/4/4;
+;
+;
+;
+== p1-slashrepeat
+IN 1
+;
+C4/D///E;
+4/4/4/4/4;
+;
+;
+;
+== sp-clef-mid-1
+IN 1
+;
+C4/C/BA/C/C;
+4/4/4/4;
+;
+;
+;
+== sp-clef-mid-2
+IN 1
+;
+C4/BA/C/C/C;
+4/4/4/4;
+;
+;
+;
+== sp-clef-mid-3
+IN 1
+;
+C4/C/C/BA/C;
+4/4/4/4;
+;
+;
+;
+== sp-clef-start
+IN 1
+;
+TR/C4/C/C/C;
+4/4/4/4;
+;
+;
+;
+== sp-clef-two
+IN 1
+;
+C4/BA/C/TR/C/C;
+4/4/4/4;
+;
+;
+;
+== sp-clef-end
+IN 1
+;
+C4/C/C/C/BA;
+4/4/4/4;
+;
+;
+;
+== sp-clef-mid-8
+IN 1
+;
+C4/C/C/C/BA/C/C/C/C;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== sp-meter-mid
+IN 1
+;
+C4/C/3 4/C/C;
+4/4/4/4;
+;
+;
+;
+== sp-key-mid
+IN 1
+;
+C4/C/K2S/C/C;
+4/4/4/4;
+;
+;
+;
+== sp-bar-mid
+IN 1
+;
+C4/C/M/C/C;
+4/4/4/4;
+;
+;
+;
+== sp-bar-mid-half
+IN 1
+;
+C4/C/M/C/C;
+2/4/4/4;
+;
+;
+;
+== sp-clef-mid-half
+IN 1
+;
+C4/C/BA/C/C;
+2/4/4/4;
+;
+;
+;
+== sp-clef-mid-range
+IN 1
+50 150
+C4/C/BA/C/C;
+4/4/4/4;
+;
+;
+;
+== p2-numbers
+IN 1
+;
+C4/C/C/C/C/C/C/C;
+1/2/4/8/16/32/64/.5;
+;
+;
+;
+== p2-letters
+IN 1
+;
+C4/C/C/C/C/C;
+D/W/H/Q/E/S;
+;
+;
+;
+== p2-dots
+IN 1
+;
+C4/C/C/C/C/C;
+4./4../8./H./2../16.;
+;
+;
+;
+== p2-triplets
+IN 1
+;
+C4/C/C/C/C/C/C/C;
+TH/T2/TQ/T4/T/TE/T8/TS;
+;
+;
+;
+== p2-tuplet-numbers
+IN 1
+;
+C4/C/C/C/C/C/C;
+3/6/12/24/48/20/10;
+;
+;
+;
+== p2-grace
+IN 1
+;
+C4/D/E/F;
+4/G/G/4;
+;
+;
+;
+== p2-slash-repeat
+IN 1
+;
+C4/C/C/C/C;
+8///4/;
+;
+;
+;
+== p2-repeat-x
+IN 1
+;
+C4/C/C/C/C/C/C;
+8/16/16/X3 2/4;
+;
+;
+;
+== p2-rests
+IN 1
+;
+C4/R/C/R/R/R;
+4/4/8/8/2/1;
+;
+;
+;
+== p2-t16-t32
+IN 1
+;
+C4/C/C;
+T16/T32/T;
+;
+;
+;
+== p2-sx-adda
+IN 1
+;
+G3/G4/D4/B3/G3/G4/D4/B3/G3/G4/D4/BF3/G3/G4/D4/BF3;
+SX14/SX2;
+;
+;
+;
+== p3-basic
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+4/4/4/4/4/4/4/4;
+A 1/S 2:4/-T 5/W 6/FE 7/TR 8;
+;
+;
+== p3-more
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+4/4/4/4/4/4/4/4;
+WS 1/AS 2/TS 3/ACT 4/D 5/U 6/H 7/PL 8;
+;
+;
+== p3-more2
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+4/4/4/4/4/4/4/4;
+HW 1/M 2/I 3/TRF 4/TRS 5/TRN 6;
+;
+;
+== p3-code9
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+4/4/4/4/4/4/4/4;
+AO 1/PZ 2/RI 3/AC 4/CR 5/DI 6;
+;
+;
+== p3-lines
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+4/4/4/4/4/4/4/4;
+TRW 1 2.7/C 4.6 7/O 5 7/C- 2 3/OB 7 8;
+;
+;
+== p3-fingers
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+4/4/4/4/4/4/4/4;
+F0 1/F1 2/F5 3/FIF 4/FIS 5/FIN 6/TM 7/TMS 8;
+;
+;
+== p4-basic
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 2/3 4/5 8;
+;
+== p4-signs
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
++1 2/-3 4/5 -8;
+;
+== p4-xB
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+4B;
+;
+== p4-16
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+16/16/16/16/8/16/16/4;
+;
+1 4/5 7;
+;
+== p4-numbers
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+12/12/12/8/8/8/8/4;
+;
+301 3/4 5;
+;
+== p5-basic
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+4/4/4/4/4/4/4/4;
+;
+;
+1 2/3 5/6 8;
+== p5-signs
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+4/4/4/4/4/4/4/4;
+;
+;
++1 2/-3 5/6 +8;
+== p5-ties
+IN 1
+;
+C4/C/E/E/G/G/C5/C;
+4/4/4/4/4/4/4/4;
+;
+;
+1 2/3 4/5 6/7 8;
