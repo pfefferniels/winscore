@@ -15,7 +15,7 @@ use crate::canvas::Canvas;
 use crate::codes::boxes::{draw_box, BoxCall};
 use crate::codes::text::font_before;
 use crate::document::{Document, ItemRef};
-use crate::text::{draw_text, Font, TextCall};
+use crate::text::{self, draw_text, Font, TextCall};
 use crate::units::{amod, real, trunc, Pos};
 
 /// What draw_number reads from P() and IP() besides the position: the
@@ -165,7 +165,8 @@ pub fn draw_number(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_
     draw_text(doc, item, canvas, &text_call);
     if call.frame != 0 {
         let step = call.step.unwrap_or_else(|| doc.staves.get(call.staff).step);
-        let (centre, frame) = frame(doc, call, at, step, text.len(), text_call.font_override);
+        let width = text::width(doc, &text_call);
+        let (centre, frame) = frame(doc, call, at, step, (text.len(), width), text_call.font_override);
         draw_box(canvas, centre, step, &frame);
         draw_text(doc, item, canvas, &text_call);
     }
@@ -184,10 +185,13 @@ const BOX_HEIGHT: f32 = 5.0;
 const CIRCLE_SIDES: i32 = 4;
 
 /// The circle or box round a number: its centre and draw_box's parameters.
-/// The horizontal displacement is P14 + P13, as the engine computes it.
-fn frame(doc: &Document<'_>, call: &NumberCall, at: Pos, step: f64, length: usize, font: i32) -> (Pos, BoxCall) {
+/// `text` is the string's length in characters and its width in P3 units
+/// (the P13 draw_text leaves), which centres the frame: x = X_POS + 75 ×
+/// (P14 + width).
+fn frame(doc: &Document<'_>, call: &NumberCall, at: Pos, step: f64, text: (usize, f32), font: i32) -> (Pos, BoxCall) {
+    let (length, text_width) = text;
     let size = f64::from(call.size());
-    let shift = real(f64::from(call.p14) + f64::from(call.p13));
+    let shift = real(f64::from(call.p14) + f64::from(text_width));
     let x = real(shift * f64::from(FRAME_X_UNIT) + at.x);
     let x = if font % 100 > 89 { real(x - step * f64::from(MUSIC_FONT_SHIFT) * size) } else { x };
     let thickness = if call.frame_thickness == 0 { 1 } else { call.frame_thickness };
