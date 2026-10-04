@@ -1,12 +1,4 @@
 # Cases score-input does not reproduce yet (one name per line).
 
-# Beams (0x413CA8, 0x40CDE4)
-bd-extreme-mid
-bd-slope-big
-bd-slope-down
-r-adda
-r-melody
-s2-marks-staccato
-
-# Whole rest centring (P9) and dots
+# Whole rest in a measure: P6 and the centring position P9
 r-rests
