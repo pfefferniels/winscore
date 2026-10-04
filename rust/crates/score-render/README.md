@@ -37,4 +37,4 @@ Shared primitives (library symbols, thick lines, curves, polygons) belong in mod
 
 ## Tests
 
-`tests/fixtures.rs` compares every valid fixture with the rendering. It is a ratchet: the cases listed in `tests/expected_matching.txt` must match, all others are reported (`cargo test -p score-render --test fixtures -- --nocapture`). When your code makes a case match, add it to the list in the same commit.
+`tests/fixtures.rs` compares every valid fixture with the rendering. It is a ratchet: the cases listed in `tests/expected_matching/*.txt` must match, all others are reported (`cargo test -p score-render --test fixtures -- --nocapture`). There is one list per code (`code06.txt`, …), owned by that code's implementer; when your code makes a case match, add it to your list in the same commit (create the file if it does not exist yet).

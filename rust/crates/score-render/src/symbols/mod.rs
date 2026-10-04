@@ -14,6 +14,10 @@ use score_format::{DrwError, DrwLibrary, Symbol};
 use crate::canvas::{Canvas, Pen};
 use crate::units::{real, Pos};
 
+pub mod clef;
+
+pub use clef::draw_clef;
+
 include!(concat!(env!("OUT_DIR"), "/bundled_symbols.rs"));
 
 const SYMBOLS_PER_FILE: i32 = 10;
