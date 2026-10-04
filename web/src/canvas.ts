@@ -90,7 +90,6 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
       paper: scene.paper,
       layers: scene.layers,
       highlights: scene.highlights,
-      outlineFills: true,
     });
   };
 

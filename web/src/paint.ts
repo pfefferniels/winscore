@@ -1,10 +1,12 @@
 // Replays display lists on a canvas the way WinScore's CWScoreView::OnDraw
-// (0x5E5910) replays them with GDI: filled objects with the even-odd rule
-// (PolyPolygon, ALTERNATE), polylines with a pen one device pixel wide, text
-// placed by the top-left of its character cell. Drawing happens in device
-// pixels so lines stay crisp at any devicePixelRatio.
+// (0x5E5910) replays them with GDI (analysis/engine/display.md): polylines
+// with a pen one device pixel wide; filled objects with the even-odd rule
+// (PolyPolygon, ALTERNATE) and outlined with that same pen; text on the
+// baseline at the engine's y + 96, stretched to the run's average width.
+// Drawing happens in device pixels so lines stay crisp at any
+// devicePixelRatio.
 import { elementsOf, type Box, type DisplayList, type Shape, type TextRun } from './display';
-import { cssFont, face } from './fonts';
+import { cssFont, stretch } from './fonts';
 import { toDevice, type Transform } from './view';
 
 export interface Layer {
@@ -25,16 +27,13 @@ export interface Scene {
   paper: Box;
   layers: Layer[];
   highlights: Highlight[];
-  /**
-   * Also stroke the outline of filled objects with a one-pixel pen, as GDI's
-   * Polygon does when a pen is selected. Keeps hairline fills visible.
-   */
-  outlineFills: boolean;
 }
 
-const BACKGROUND = '#f3f4f6';
-const PAPER = '#ffffff';
-const PAPER_EDGE = '#d1d5db';
+const BACKGROUND = '#ffffff';
+/** The engine's page frame colour (COLORREF 0x00FD00). */
+const FRAME = 'rgb(0 253 0)';
+/** The engine's three nested frame rectangles, inset from the paper edge. */
+const FRAME_INSETS = [1, -24, -49];
 const HIGHLIGHT = '#2563eb';
 
 function hex(colour: number): string {
@@ -45,10 +44,10 @@ function rgb([r, g, b]: [number, number, number]): string {
   return `rgb(${r} ${g} ${b})`;
 }
 
-/** Points snapped to pixel centres (polylines) or pixel corners (fills). */
-function tracePath(ctx: CanvasRenderingContext2D, t: Transform, path: Int32Array, centre: number, close: boolean) {
+/** Points snapped to device pixel centres, where a one-pixel pen is crisp. */
+function tracePath(ctx: CanvasRenderingContext2D, t: Transform, path: Int32Array, close: boolean) {
   const at = (i: number) => toDevice(t, path[i]!, path[i + 1]!);
-  const snap = (v: number) => Math.round(v - centre) + centre;
+  const snap = (v: number) => Math.round(v - 0.5) + 0.5;
   const first = at(0);
   ctx.moveTo(snap(first.x), snap(first.y));
   for (let i = 2; i + 1 < path.length; i += 2) {
@@ -58,57 +57,52 @@ function tracePath(ctx: CanvasRenderingContext2D, t: Transform, path: Int32Array
   if (close) ctx.closePath();
 }
 
-function paintShape(ctx: CanvasRenderingContext2D, t: Transform, shape: Shape, colour: string, outline: boolean) {
+function paintShape(ctx: CanvasRenderingContext2D, t: Transform, shape: Shape, colour: string) {
   ctx.beginPath();
-  const centre = shape.fill && !outline ? 0 : 0.5;
-  shape.paths.forEach((path) => tracePath(ctx, t, path, centre, shape.fill));
+  shape.paths.forEach((path) => tracePath(ctx, t, path, shape.fill));
   if (shape.fill) {
     ctx.fillStyle = colour;
     ctx.fill('evenodd');
   }
-  if (!shape.fill || outline) {
-    ctx.strokeStyle = colour;
-    ctx.stroke();
-  }
+  ctx.strokeStyle = colour;
+  ctx.stroke();
 }
 
 function paintText(ctx: CanvasRenderingContext2D, t: Transform, run: TextRun, colour: string) {
   const size = run.height * t.k;
   if (size < 0.5) return;
-  const ascent = face(run.font).ascent * size;
   const angle = (-run.escapement / 10) * (Math.PI / 180);
+  const scaleX = stretch(run);
   ctx.font = cssFont(run, size);
   ctx.fillStyle = colour;
   run.strings.forEach((s) => {
     const origin = toDevice(t, s.x, s.y);
     ctx.save();
-    ctx.translate(origin.x, origin.y);
+    ctx.translate(Math.round(origin.x), Math.round(origin.y));
     if (angle !== 0) ctx.rotate(angle);
-    ctx.fillText(s.text, 0, ascent);
+    ctx.scale(scaleX, 1);
+    ctx.fillText(s.text, 0, 0);
     if (run.underline) {
-      const thickness = Math.max(1, size / 20);
-      ctx.fillRect(0, ascent + size / 10, ctx.measureText(s.text).width, thickness);
+      ctx.fillRect(0, size / 10, ctx.measureText(s.text).width, Math.max(1, size / 20));
     }
     ctx.restore();
   });
 }
 
-function paintList(ctx: CanvasRenderingContext2D, t: Transform, list: DisplayList, tint: string | null, outline: boolean) {
-  list.shapes.forEach((shape) => paintShape(ctx, t, shape, tint ?? hex(shape.colour), outline));
+function paintList(ctx: CanvasRenderingContext2D, t: Transform, list: DisplayList, tint: string | null) {
+  list.shapes.forEach((shape) => paintShape(ctx, t, shape, tint ?? hex(shape.colour)));
   list.texts.forEach((run) => paintText(ctx, t, run, tint ?? rgb(run.colour)));
 }
 
-function paintPaper(ctx: CanvasRenderingContext2D, t: Transform, paper: Box) {
-  const a = toDevice(t, paper.x0, paper.y1);
-  const b = toDevice(t, paper.x1, paper.y0);
-  const x = Math.round(a.x);
-  const y = Math.round(a.y);
-  const w = Math.round(b.x) - x;
-  const h = Math.round(b.y) - y;
-  ctx.fillStyle = PAPER;
-  ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = PAPER_EDGE;
-  ctx.strokeRect(x - 0.5, y - 0.5, w + 1, h + 1);
+/** WinScore's page frame: three green rectangles around the paper edge, drawn by the engine. */
+function paintFrame(ctx: CanvasRenderingContext2D, t: Transform, paper: Box) {
+  ctx.beginPath();
+  FRAME_INSETS.forEach((d) => {
+    const rect = [paper.x0 + d, paper.y0 + d, paper.x1 - d, paper.y0 + d, paper.x1 - d, paper.y1 - d, paper.x0 + d, paper.y1 - d];
+    tracePath(ctx, t, Int32Array.from(rect), true);
+  });
+  ctx.strokeStyle = FRAME;
+  ctx.stroke();
 }
 
 export function paint(ctx: CanvasRenderingContext2D, scene: Scene) {
@@ -121,11 +115,12 @@ export function paint(ctx: CanvasRenderingContext2D, scene: Scene) {
   ctx.lineWidth = 1;
   ctx.lineJoin = 'miter';
   ctx.lineCap = 'butt';
-  paintPaper(ctx, t, scene.paper);
+  ctx.textBaseline = 'alphabetic';
+  paintFrame(ctx, t, scene.paper);
   scene.layers.forEach((layer) => {
     ctx.globalCompositeOperation = layer.composite ?? 'source-over';
-    paintList(ctx, t, layer.list, layer.tint ?? null, scene.outlineFills);
+    paintList(ctx, t, layer.list, layer.tint ?? null);
   });
   ctx.globalCompositeOperation = 'source-over';
-  scene.highlights.forEach(({ list, item }) => paintList(ctx, t, elementsOf(list, item), HIGHLIGHT, scene.outlineFills));
+  scene.highlights.forEach(({ list, item }) => paintList(ctx, t, elementsOf(list, item), HIGHLIGHT));
 }
