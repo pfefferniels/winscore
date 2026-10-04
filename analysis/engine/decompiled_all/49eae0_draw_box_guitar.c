@@ -1,10 +1,10 @@
-// draw_box_negative @ 0049eae0 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// draw_box_guitar @ 0049eae0 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING (jumptable): Unable to track spacebase fully for stack */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void draw_box_negative(void)
+void draw_box_guitar(void)
 
 {
   float fVar1;

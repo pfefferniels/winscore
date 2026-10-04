@@ -91,11 +91,11 @@ LAB_0054756a:
       goto LAB_005474a4;
     case 0xc:
       if (IP5 == 10) {
-        draw_box_grid();
+        draw_box_accordion();
         puVar1 = &stack0xfffffffc;
       }
       else if (IP5 < 0) {
-        draw_box_negative();
+        draw_box_guitar();
         puVar1 = &stack0xfffffffc;
       }
       else if ((IP5 < 2) || (IP5 == 3)) {

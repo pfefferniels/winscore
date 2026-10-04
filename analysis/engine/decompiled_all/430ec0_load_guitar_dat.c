@@ -1,7 +1,7 @@
-// FUN_00430ec0 @ 00430ec0 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// load_guitar_dat @ 00430ec0 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
-void FUN_00430ec0(void)
+void load_guitar_dat(void)
 
 {
   int iVar1;

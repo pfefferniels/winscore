@@ -55,7 +55,7 @@ address	name	bytes	callers	callees	codes	file
 004277c9	FUN_004277c9	204	FUN_00426950 FUN_00427c68			4277c9_FUN_004277c9.c
 00427c68	FUN_00427c68	4313	FUN_0052e0a3 FUN_0053174c	FUN_004277c9 FUN_004e5988 FUN_0052fef6 FUN_0054943a FUN_005494b2 FUN_00549afb		427c68_FUN_00427c68.c
 00429178	FUN_00429178	506	draw_symbol	FUN_0042a5f4 add_point load_symbol_library		429178_FUN_00429178.c
-004293f0	draw_symbol	4612	FUN_0053421b FUN_0056b529 FUN_005715b3 draw_box_negative draw_clef draw_code7 draw_item draw_meter draw_rest note_head	FUN_00429178 FUN_0042a5f4 FUN_0042a8ae FUN_00432518 FUN_004d4ed2 FUN_004d4f3f FUN_005344ba FUN_0054c473 FUN_0054c590 FUN_0054c8e5 add_point amod draw_text load_symbol_library	1,2,3,5,7,9,12,14,16,17,18	4293f0_draw_symbol.c
+004293f0	draw_symbol	4612	FUN_0053421b FUN_0056b529 FUN_005715b3 draw_box_guitar draw_clef draw_code7 draw_item draw_meter draw_rest note_head	FUN_00429178 FUN_0042a5f4 FUN_0042a8ae FUN_00432518 FUN_004d4ed2 FUN_004d4f3f FUN_005344ba FUN_0054c473 FUN_0054c590 FUN_0054c8e5 add_point amod draw_text load_symbol_library	1,2,3,5,7,9,12,14,16,17,18	4293f0_draw_symbol.c
 0042a5f4	FUN_0042a5f4	698	FUN_00429178 draw_box draw_box_other draw_eps draw_line draw_slur draw_symbol draw_text		5	42a5f4_FUN_0042a5f4.c
 0042a8ae	FUN_0042a8ae	928	draw_line draw_symbol		4,7	42a8ae_FUN_0042a8ae.c
 0042ac4e	FUN_0042ac4e	329	FUN_00432518 FUN_0044b928 FUN_00486214 FUN_00497f00 FUN_004a7440 FUN_004aac7d FUN_004ac54f FUN_004ac7fb FUN_004acfe5 FUN_004e620c FUN_0050b0c2 FUN_005147b8 FUN_00522bd8 FUN_00554a38 FUN_00554d2c FUN_00567e5b draw_eps engine_init load_score load_symbol_library		15	42ac4e_FUN_0042ac4e.c
@@ -76,19 +76,19 @@ address	name	bytes	callers	callees	codes	file
 0042e82d	FUN_0042e82d	288	FUN_0042e6ab FUN_0042e94d	load_item_header		42e82d_FUN_0042e82d.c
 0042e94d	FUN_0042e94d	319	FUN_0042c9b0	FUN_0042e82d load_item_header		42e94d_FUN_0042e94d.c
 0042ea8c	FUN_0042ea8c	1548		FUN_0054c590 FUN_005725fa draw_items edit_letters load_item_header text_parse		42ea8c_FUN_0042ea8c.c
-0042fa58	text_parse	3843	FUN_0042ea8c FUN_004401d8 FUN_00469da7 FUN_00470618 FUN_004727bc FUN_00548a64 FUN_005644b8 FUN_005704f8 draw_box_negative draw_text edit_letters	FUN_004309af FUN_00430a61 FUN_005194d5 FUN_0054d831 FUN_0054da52 FUN_0056edfd FUN_0058c2c9 load_font_metrics	2,5,7,8,9,10,12,16,18	42fa58_text_parse.c
+0042fa58	text_parse	3843	FUN_0042ea8c FUN_004401d8 FUN_00469da7 FUN_00470618 FUN_004727bc FUN_00548a64 FUN_005644b8 FUN_005704f8 draw_box_guitar draw_text edit_letters	FUN_004309af FUN_00430a61 FUN_005194d5 FUN_0054d831 FUN_0054da52 FUN_0056edfd FUN_0058c2c9 load_font_metrics	2,5,7,8,9,10,12,16,18	42fa58_text_parse.c
 004309af	FUN_004309af	178	text_parse		12,16	4309af_FUN_004309af.c
 00430a61	FUN_00430a61	70	FUN_00471190 text_parse	load_font_metrics	5,7,8,9,10,12,16	430a61_FUN_00430a61.c
-00430ec0	FUN_00430ec0	2374	FUN_004a07b1	FUN_00431806	12	430ec0_FUN_00430ec0.c
-00431806	FUN_00431806	105	FUN_00430ec0		12	431806_FUN_00431806.c
+00430ec0	load_guitar_dat	2374	FUN_004a07b1	FUN_00431806	12	430ec0_load_guitar_dat.c
+00431806	FUN_00431806	105	load_guitar_dat		12	431806_FUN_00431806.c
 00431ae0	draw_clef	2092	barline_brace draw_code7 draw_item draw_keysig draw_meter draw_note draw_rest draw_slur note_accidental note_head note_marks note_tails	add_point amod draw_item draw_number draw_symbol item_position pop_words push_words staff_level_y	1,2,3,5,7,14,17,18	431ae0_draw_clef.c
-00432518	FUN_00432518	1152	draw_symbol	FUN_0042ac4e FUN_00432998 FUN_0050b0c2 FUN_0054c590 FUN_0054cd71 FUN_00571b78		432518_FUN_00432518.c
-00432998	FUN_00432998	772	FUN_00432518			432998_FUN_00432998.c
+00432518	FUN_00432518	1152	draw_symbol	FUN_0042ac4e FUN_0050b0c2 FUN_0054c590 FUN_0054cd71 FUN_00571b78 read_user_symbols		432518_FUN_00432518.c
+00432998	read_user_symbols	772	FUN_00432518			432998_read_user_symbols.c
 00432e80	draw_box_other	1712		FUN_0042a5f4 FUN_004d4ed2 FUN_004d4f3f add_point draw_box pop_words push_words staff_level_y		432e80_draw_box_other.c
-00433530	draw_box	2494	FUN_0043464d FUN_004f1f69 FUN_00559733 barline_dots draw_box_negative draw_box_other draw_code7 draw_item draw_number	FUN_0042a5f4 FUN_00434b6d FUN_004cf166 FUN_004d4ed2 FUN_004d4f3f FUN_0050e203 FUN_0050e352 add_point box_outline pop_words push_words	7,10,12,14	433530_draw_box.c
-00433eee	draw_box_grid	1792	draw_item	FUN_004345ee FUN_0043464d pop_words push_words	12	433eee_draw_box_grid.c
-004345ee	FUN_004345ee	95	draw_box_grid	draw_line staff_level_y	12	4345ee_FUN_004345ee.c
-0043464d	FUN_0043464d	102	draw_box_grid	draw_box staff_level_y	12	43464d_FUN_0043464d.c
+00433530	draw_box	2494	FUN_0043464d FUN_004f1f69 FUN_00559733 barline_dots draw_box_guitar draw_box_other draw_code7 draw_item draw_number	FUN_0042a5f4 FUN_00434b6d FUN_004cf166 FUN_004d4ed2 FUN_004d4f3f FUN_0050e203 FUN_0050e352 add_point box_outline pop_words push_words	7,10,12,14	433530_draw_box.c
+00433eee	draw_box_accordion	1792	draw_item	FUN_004345ee FUN_0043464d pop_words push_words	12	433eee_draw_box_accordion.c
+004345ee	FUN_004345ee	95	draw_box_accordion	draw_line staff_level_y	12	4345ee_FUN_004345ee.c
+0043464d	FUN_0043464d	102	draw_box_accordion	draw_box staff_level_y	12	43464d_FUN_0043464d.c
 004346b3	FUN_004346b3	1210		FUN_0054d831 load_item_header		4346b3_FUN_004346b3.c
 00434b6d	FUN_00434b6d	1462	draw_box	FUN_00549422 add_point push_words		434b6d_FUN_00434b6d.c
 004359d0	FUN_004359d0	2431	edit_letters	FUN_00449ea8 FUN_00467fc1 FUN_00468df8 FUN_0048ecfb FUN_0054d7d4		4359d0_FUN_004359d0.c
@@ -131,8 +131,8 @@ address	name	bytes	callers	callees	codes	file
 00449908	FUN_00449908	638		FUN_0054c590		449908_FUN_00449908.c
 00449b86	FUN_00449b86	511	FUN_00449ea8 edit_params input_main interpret	FUN_00547799 FUN_00549b5b FUN_0054e546 draw_item draw_items		449b86_FUN_00449b86.c
 00449ea8	FUN_00449ea8	4717	FUN_004359d0 FUN_004710d4 edit_params	FUN_00449b86 FUN_0046f774 FUN_0054c68f amod draw_item edit_letters		449ea8_FUN_00449ea8.c
-0044b820	add_point	145	FUN_004122c7 FUN_00429178 FUN_00434b6d FUN_00439598 FUN_0043b806 FUN_0043c11a FUN_0043c415 FUN_0053c14e FUN_0056beec add_segment barline_bracket barline_stroke box_outline draw_barline draw_beam draw_box draw_box_negative draw_box_other draw_clef draw_code7 draw_eps draw_line draw_rest draw_slur draw_symbol note_ledger_lines note_stem		1,2,3,4,5,6,7,8,9,10,12,14,16,17,18	44b820_add_point.c
-0044b8b1	add_segment	62	FUN_005459a2 draw_box_negative draw_staff	add_point	8,12	44b8b1_add_segment.c
+0044b820	add_point	145	FUN_004122c7 FUN_00429178 FUN_00434b6d FUN_00439598 FUN_0043b806 FUN_0043c11a FUN_0043c415 FUN_0053c14e FUN_0056beec add_segment barline_bracket barline_stroke box_outline draw_barline draw_beam draw_box draw_box_guitar draw_box_other draw_clef draw_code7 draw_eps draw_line draw_rest draw_slur draw_symbol note_ledger_lines note_stem		1,2,3,4,5,6,7,8,9,10,12,14,16,17,18	44b820_add_point.c
+0044b8b1	add_segment	62	FUN_005459a2 draw_box_guitar draw_staff	add_point	8,12	44b8b1_add_segment.c
 0044b928	FUN_0044b928	8982	interpret	FUN_0042ac4e FUN_0044dc3e FUN_0044de36 FUN_0044e255 FUN_0044e9e5 FUN_0044efa3 FUN_0044f600 FUN_0045058c FUN_00450b9c FUN_00450bb7 FUN_00450d32 FUN_00450f1b FUN_00452648 FUN_00454dbe FUN_004552cc FUN_0045a8d7 FUN_0045bc18 FUN_00468df8 FUN_00518448 FUN_0054946a FUN_0054c78b FUN_0054cd71 FUN_0054d831 FUN_00571f5d FUN_00579770 load_symbol_library		44b928_FUN_0044b928.c
 0044dc3e	FUN_0044dc3e	504	FUN_0044b928 FUN_00452648	FUN_00450b9c		44dc3e_FUN_0044dc3e.c
 0044de36	FUN_0044de36	1055	FUN_0044b928 FUN_0045bc18			44de36_FUN_0044de36.c
@@ -282,12 +282,12 @@ address	name	bytes	callers	callees	codes	file
 0049daa6	FUN_0049daa6	268	FUN_0049ce38			49daa6_FUN_0049daa6.c
 0049dbb2	FUN_0049dbb2	414	FUN_0049ce38			49dbb2_FUN_0049dbb2.c
 0049e4e0	FUN_0049e4e0	1225		FUN_0054c419 load_item_header		49e4e0_FUN_0049e4e0.c
-0049eae0	draw_box_negative	6683	draw_item	FUN_004a06ea FUN_004a0729 FUN_004a07b1 FUN_004a0a2f FUN_0054c4c6 add_point add_segment amod box_outline draw_box draw_symbol draw_text item_position pop_words push_words text_parse	12	49eae0_draw_box_negative.c
-004a060d	box_outline	221	draw_beam draw_box draw_box_negative note_marks	add_point	6,7,10,12	4a060d_box_outline.c
-004a06ea	FUN_004a06ea	63	draw_box_negative		12	4a06ea_FUN_004a06ea.c
-004a0729	FUN_004a0729	136	draw_box_negative		12	4a0729_FUN_004a0729.c
-004a07b1	FUN_004a07b1	638	draw_box_negative	FUN_00430ec0	12	4a07b1_FUN_004a07b1.c
-004a0a2f	FUN_004a0a2f	45	draw_box_negative			4a0a2f_FUN_004a0a2f.c
+0049eae0	draw_box_guitar	6683	draw_item	FUN_004a06ea FUN_004a0729 FUN_004a07b1 FUN_004a0a2f FUN_0054c4c6 add_point add_segment amod box_outline draw_box draw_symbol draw_text item_position pop_words push_words text_parse	12	49eae0_draw_box_guitar.c
+004a060d	box_outline	221	draw_beam draw_box draw_box_guitar note_marks	add_point	6,7,10,12	4a060d_box_outline.c
+004a06ea	FUN_004a06ea	63	draw_box_guitar		12	4a06ea_FUN_004a06ea.c
+004a0729	FUN_004a0729	136	draw_box_guitar		12	4a0729_FUN_004a0729.c
+004a07b1	FUN_004a07b1	638	draw_box_guitar	load_guitar_dat	12	4a07b1_FUN_004a07b1.c
+004a0a2f	FUN_004a0a2f	45	draw_box_guitar			4a0a2f_FUN_004a0a2f.c
 004a1240	FUN_004a1240	1025	FUN_00442800 FUN_00443b70 FUN_00494302 FUN_005770d8 interpret	FUN_0041b68a FUN_00468df8 FUN_004a2c81 FUN_00549422 FUN_0054d7d4 FUN_0054d831 FUN_005725fa draw_items		4a1240_FUN_004a1240.c
 004a217d	FUN_004a217d	2820	FUN_0045d278 FUN_004a2c81 interpret	FUN_0041aa88 FUN_0041b68a FUN_0044695d FUN_0045deb2 FUN_00468df8 FUN_0049b1d8 FUN_00518448 FUN_0054061d FUN_00549422 FUN_0054c590 FUN_0054d831 FUN_005725fa ask_source_box draw_items pop_words push_words region_select		4a217d_FUN_004a217d.c
 004a2c81	FUN_004a2c81	1082	FUN_004a1240	FUN_00442800 FUN_004a217d FUN_00518448 FUN_0055b1f8 cmd_lineup		4a2c81_FUN_004a2c81.c
@@ -661,9 +661,9 @@ address	name	bytes	callers	callees	codes	file
 00545f58	FUN_00545f58	2488	FUN_0053ec10	FUN_00468df8 FUN_00518448 FUN_005239c9 FUN_00546a1b FUN_0054d831 FUN_0054e546 FUN_005725fa staff_p4_error		545f58_FUN_00545f58.c
 00546910	staff_p4_error	267	FUN_005459a2 FUN_00545f58 draw_staff	FUN_0054d831		546910_staff_p4_error.c
 00546a1b	FUN_00546a1b	357	FUN_00545f58			546a1b_FUN_00546a1b.c
-00547210	draw_item	469	FUN_00449b86 FUN_00449ea8 FUN_0048fd5c FUN_004a3172 FUN_004d4930 FUN_004ddb6e FUN_004f1bd4 FUN_004f1d5e FUN_00502a82 FUN_00502b10 FUN_00502cae FUN_00523c2d FUN_00525ae4 FUN_00549b5b FUN_0054d90a FUN_00552d80 FUN_00573c5f drag_move draw_clef draw_items draw_page_frame	draw_barline draw_beam draw_box draw_box_grid draw_box_negative draw_clef draw_code7 draw_eps draw_keysig draw_line draw_meter draw_note draw_number draw_rest draw_slur draw_staff draw_symbol draw_text item_position pop_words push_words	1,2,3,4,5,6,7,8,9,10,12,14,15,16,17,18	547210_draw_item.c
+00547210	draw_item	469	FUN_00449b86 FUN_00449ea8 FUN_0048fd5c FUN_004a3172 FUN_004d4930 FUN_004ddb6e FUN_004f1bd4 FUN_004f1d5e FUN_00502a82 FUN_00502b10 FUN_00502cae FUN_00523c2d FUN_00525ae4 FUN_00549b5b FUN_0054d90a FUN_00552d80 FUN_00573c5f drag_move draw_clef draw_items draw_page_frame	draw_barline draw_beam draw_box draw_box_accordion draw_box_guitar draw_clef draw_code7 draw_eps draw_keysig draw_line draw_meter draw_note draw_number draw_rest draw_slur draw_staff draw_symbol draw_text item_position pop_words push_words	1,2,3,4,5,6,7,8,9,10,12,14,15,16,17,18	547210_draw_item.c
 00547799	FUN_00547799	530	FUN_00449b86 FUN_00476628 FUN_00525ae4	FUN_004a6228 FUN_0054c590		547799_FUN_00547799.c
-005479ab	item_position	248	FUN_00471190 FUN_00525ae4 draw_box_negative draw_clef draw_item draw_rest	FUN_0054a967 amod	1,2,3,4,5,6,7,8,9,10,12,14,15,16,17,18	5479ab_item_position.c
+005479ab	item_position	248	FUN_00471190 FUN_00525ae4 draw_box_guitar draw_clef draw_item draw_rest	FUN_0054a967 amod	1,2,3,4,5,6,7,8,9,10,12,14,15,16,17,18	5479ab_item_position.c
 00547aa3	staff_level_y	61	FUN_004345ee FUN_0043464d FUN_00439598 FUN_00559733 FUN_005784f1 draw_barline draw_beam draw_box_other draw_clef draw_code7 draw_line draw_meter draw_number draw_rest draw_slur draw_staff_number note_marks note_special_head note_stem		2,4,5,6,7,8,10,12,14,18	547aa3_staff_level_y.c
 00547ae0	FUN_00547ae0	338	FUN_004d8460 FUN_0053d1e0			547ae0_FUN_00547ae0.c
 00547c32	load_item_header	216	FUN_0040cde4 FUN_0040f003 FUN_00417738 FUN_00419498 FUN_0041ef66 FUN_00421651 FUN_0042c1ed FUN_0042c9b0 FUN_0042d887 FUN_0042daf8 FUN_0042e6ab FUN_0042e82d FUN_0042e94d FUN_0042ea8c FUN_004346b3 FUN_00438009 FUN_004385a7 FUN_00441fb8 FUN_0044695d FUN_004479a8 FUN_00448235 FUN_0046885a FUN_00473d22 FUN_00474742 FUN_00477d48 FUN_0047a4a8 FUN_0047b2fd FUN_0047b668 FUN_0047c3e8 FUN_004998c0 FUN_0049b1d8 FUN_0049e4e0 FUN_004b3fe8 FUN_004b47b5 FUN_004b5db0 FUN_004b8b97 FUN_004b93f2 FUN_004bcd68 FUN_004c0418 FUN_004c5ad8 FUN_004c8290 FUN_004c9510 FUN_004cb010 FUN_004e1c96 FUN_004e7820 FUN_004e79d2 FUN_004e9018 FUN_004ebd10 FUN_004ec885 FUN_00505e84 FUN_005069a0 FUN_005073eb FUN_005077a2 FUN_0051ffc0 FUN_0052127b FUN_00523c2d FUN_00524678 FUN_00525ae4 FUN_00525e62 FUN_0052f871 FUN_0052fb54 FUN_00533a88 FUN_00534c40 FUN_0053ec10 FUN_0053fc37 FUN_0054061d FUN_00541b97 FUN_00541c6b FUN_00542cda FUN_00543b7e FUN_00545752 FUN_00555488 FUN_0055b1f8 FUN_0055c373 FUN_00560be2 FUN_005611da FUN_00574d4c FUN_0057513b FUN_00575e58 FUN_005770d8 FUN_00577f17 FUN_005784f1 FUN_00586a80 FUN_005870fd input_main lineup_pass load_score select_nearest			547c32_load_item_header.c
@@ -690,7 +690,7 @@ address	name	bytes	callers	callees	codes	file
 0054a497	flush_points	517	FUN_0048fd5c FUN_004a3172 FUN_004ddb6e FUN_00502f69 FUN_00523c2d FUN_0054d90a drag_move draw_items draw_page_frame note_ledger_lines	emit_points	1,2,3,4,5,6,7,8,9,10,12,14,16,17,18	54a497_flush_points.c
 0054a69c	emit_points	715	FUN_004f1f69 FUN_00549b5b FUN_00559733 flush_points note_ledger_lines		1,2,3,4,5,6,7,8,9,10,12,14,16,17,18	54a69c_emit_points.c
 0054a967	FUN_0054a967	339	draw_text item_position			54a967_FUN_0054a967.c
-0054aaba	amod	62	FUN_0040bc18 FUN_0040c1c0 FUN_0040cde4 FUN_00413ca8 FUN_00417738 FUN_0041a14c FUN_00422d98 FUN_0042c60e FUN_0042c9b0 FUN_0042e437 FUN_00438009 FUN_004385a7 FUN_00449ea8 FUN_00468130 FUN_0046885a FUN_0046cf30 FUN_0046f774 FUN_004727bc FUN_0047c3e8 FUN_0047e0a9 FUN_0048fd5c FUN_00497f00 FUN_0049ce38 FUN_004a5ecf FUN_004af456 FUN_004b6c51 FUN_004bcd68 FUN_004c7374 FUN_004d8460 FUN_004d9475 FUN_004ee442 FUN_004f7808 FUN_005077a2 FUN_0050e830 FUN_0051c824 FUN_0053d1e0 FUN_0053de20 FUN_0053e094 FUN_0053e32f FUN_005459a2 FUN_00549b5b FUN_00555488 FUN_0055b1f8 FUN_0055c373 FUN_00560be2 FUN_005611da FUN_00561b90 FUN_005644b8 FUN_005704f8 FUN_00575e58 FUN_0058991a draw_box_negative draw_clef draw_note draw_number draw_rest draw_staff draw_symbol draw_text edit_letters edit_params fit_view input_rhythm_spacing input_rhythm_value item_position note_accidental note_marks note_special_head note_stem note_tails select_nearest		1,2,3,5,6,7,8,9,10,12,14,16,17,18	54aaba_amod.c
+0054aaba	amod	62	FUN_0040bc18 FUN_0040c1c0 FUN_0040cde4 FUN_00413ca8 FUN_00417738 FUN_0041a14c FUN_00422d98 FUN_0042c60e FUN_0042c9b0 FUN_0042e437 FUN_00438009 FUN_004385a7 FUN_00449ea8 FUN_00468130 FUN_0046885a FUN_0046cf30 FUN_0046f774 FUN_004727bc FUN_0047c3e8 FUN_0047e0a9 FUN_0048fd5c FUN_00497f00 FUN_0049ce38 FUN_004a5ecf FUN_004af456 FUN_004b6c51 FUN_004bcd68 FUN_004c7374 FUN_004d8460 FUN_004d9475 FUN_004ee442 FUN_004f7808 FUN_005077a2 FUN_0050e830 FUN_0051c824 FUN_0053d1e0 FUN_0053de20 FUN_0053e094 FUN_0053e32f FUN_005459a2 FUN_00549b5b FUN_00555488 FUN_0055b1f8 FUN_0055c373 FUN_00560be2 FUN_005611da FUN_00561b90 FUN_005644b8 FUN_005704f8 FUN_00575e58 FUN_0058991a draw_box_guitar draw_clef draw_note draw_number draw_rest draw_staff draw_symbol draw_text edit_letters edit_params fit_view input_rhythm_spacing input_rhythm_value item_position note_accidental note_marks note_special_head note_stem note_tails select_nearest		1,2,3,5,6,7,8,9,10,12,14,16,17,18	54aaba_amod.c
 0054aaf8	FUN_0054aaf8	1796	FUN_00413188 FUN_004d0bf5 interpret	FUN_00413608 FUN_0041b68a FUN_004c9510 FUN_004f7808 FUN_00518448 FUN_0053ec10 FUN_0054946a FUN_0054e79e draw_items fit_view region_select		54aaf8_FUN_0054aaf8.c
 0054b1fc	FUN_0054b1fc	1212	interpret	FUN_004ea5ef FUN_00575e58 draw_items load_score		54b1fc_FUN_0054b1fc.c
 0054b6b8	FUN_0054b6b8	10				54b6b8_FUN_0054b6b8.c
@@ -705,7 +705,7 @@ address	name	bytes	callers	callees	codes	file
 0054c3ec	FUN_0054c3ec	45	FUN_00529628	FUN_004aec88		54c3ec_FUN_0054c3ec.c
 0054c419	FUN_0054c419	90	FUN_0040bc18 FUN_0040cde4 FUN_00417738 FUN_00473454 FUN_0049e4e0 FUN_004b6ced FUN_004b6f4a FUN_004d8460 FUN_004de270 FUN_004e19fa FUN_004ebd10 FUN_004ee442 FUN_00504835 FUN_00504fcb FUN_00508ad8 FUN_00518b3f FUN_00519746 FUN_005239c9 FUN_0054d90a FUN_0054de6b FUN_0054e79e FUN_00555488 FUN_00561b90 FUN_00563510 FUN_005644b8 FUN_00575e58 FUN_00582d56 edit_params			54c419_FUN_0054c419.c
 0054c473	FUN_0054c473	83	FUN_00473454 FUN_004de270 FUN_00526042 FUN_005644b8 draw_symbol note_special_head		9	54c473_FUN_0054c473.c
-0054c4c6	FUN_0054c4c6	102	FUN_0042c9b0 FUN_00439598 FUN_00441430 FUN_004575c8 FUN_004581be FUN_0045deb2 FUN_00476628 FUN_00476da3 FUN_0049846f FUN_004b9c10 FUN_004c9510 FUN_004fb990 FUN_005147b8 FUN_00529628 FUN_0053c18d draw_box_negative draw_slur		4,12	54c4c6_FUN_0054c4c6.c
+0054c4c6	FUN_0054c4c6	102	FUN_0042c9b0 FUN_00439598 FUN_00441430 FUN_004575c8 FUN_004581be FUN_0045deb2 FUN_00476628 FUN_00476da3 FUN_0049846f FUN_004b9c10 FUN_004c9510 FUN_004fb990 FUN_005147b8 FUN_00529628 FUN_0053c18d draw_box_guitar draw_slur		4,12	54c4c6_FUN_0054c4c6.c
 0054c52c	FUN_0054c52c	100	FUN_00476da3			54c52c_FUN_0054c52c.c
 0054c590	FUN_0054c590	104	FUN_0040bc18 FUN_0040cde4 FUN_0040f003 FUN_00417738 FUN_00421651 FUN_0042ea8c FUN_00432518 FUN_004401d8 FUN_00441430 FUN_00441fb8 FUN_0044236f FUN_004479a8 FUN_00449145 FUN_00449908 FUN_0045d278 FUN_0045deb2 FUN_0046f81d FUN_00470618 FUN_00471190 FUN_004716d8 FUN_0047330a FUN_00473454 FUN_00475020 FUN_00476628 FUN_00476cbf FUN_00476da3 FUN_00477d48 FUN_0047a4a8 FUN_0048fd5c FUN_0049846f FUN_004998c0 FUN_0049aa8c FUN_0049bf20 FUN_0049c760 FUN_0049ce38 FUN_004a217d FUN_004b47b5 FUN_004b6f4a FUN_004c2711 FUN_004c9510 FUN_004d3e78 FUN_004f7808 FUN_004f8794 FUN_004f889e FUN_004f8d48 FUN_004feeb1 FUN_005069a0 FUN_0050b5ce FUN_0050f5c8 FUN_005147b8 FUN_00516bf9 FUN_00529628 FUN_0054037e FUN_00547799 FUN_00549b5b FUN_0054d90a FUN_00555488 FUN_005644b8 FUN_00566cb2 FUN_0057288b FUN_005734d7 FUN_005857c8 FUN_005870fd FUN_0058adc1 drag_move draw_code7 draw_keysig draw_meter draw_rest draw_symbol edit_letters edit_params input_pitches interpret load_score		1,2,3,5,7,9,12,14,16,17,18	54c590_FUN_0054c590.c
 0054c5f8	FUN_0054c5f8	113	FUN_0041fab5 FUN_00441091 FUN_0045d278 FUN_004c04fb FUN_004c2912 FUN_004de270 FUN_004f5268 FUN_004f97d8 FUN_00501a98 FUN_00526f23 FUN_0052789c FUN_0052e0a3 FUN_0053174c FUN_00566cb2 FUN_00567bc7			54c5f8_FUN_0054c5f8.c
@@ -727,8 +727,8 @@ address	name	bytes	callers	callees	codes	file
 0054d863	FUN_0054d863	167	FUN_0044586d			54d863_FUN_0054d863.c
 0054d90a	FUN_0054d90a	328		FUN_0054c419 FUN_0054c590 draw_item flush_points		54d90a_FUN_0054d90a.c
 0054da52	FUN_0054da52	164	FUN_0045ea40 FUN_004de270 FUN_004f3db0 FUN_00530dd8 edit_params input_main text_parse			54da52_FUN_0054da52.c
-0054daf6	push_words	146	FUN_0040bc18 FUN_0040cde4 FUN_00421651 FUN_00422d98 FUN_00434b6d FUN_00444745 FUN_00494302 FUN_004a217d FUN_004ddb6e FUN_004f1bd4 FUN_004f1d5e FUN_004f1f69 FUN_0050d078 FUN_0050d78e FUN_00524c4a FUN_0053bfc6 FUN_0054061d FUN_00541619 FUN_00559733 FUN_00567bc7 FUN_0056b529 FUN_00579410 cmd_I draw_box draw_box_grid draw_box_negative draw_box_other draw_clef draw_item draw_line draw_number draw_slur input_main interpret note_marks note_special_head region_select		1,2,4,5,7,8,9,10,12,14,16,18	54daf6_push_words.c
-0054db88	pop_words	163	FUN_0040bc18 FUN_0040cde4 FUN_00421651 FUN_00422d98 FUN_00444745 FUN_00494302 FUN_004a217d FUN_004ddb6e FUN_004f1bd4 FUN_004f1d5e FUN_004f1f69 FUN_0050d078 FUN_0050d78e FUN_00524c4a FUN_0053bfc6 FUN_0054061d FUN_00541619 FUN_00559733 FUN_00567bc7 FUN_0056b529 FUN_00579410 cmd_I draw_box draw_box_grid draw_box_negative draw_box_other draw_clef draw_item draw_line draw_number draw_slur input_main interpret note_marks note_special_head region_select		2,4,5,7,8,9,10,12,14,16,18	54db88_pop_words.c
+0054daf6	push_words	146	FUN_0040bc18 FUN_0040cde4 FUN_00421651 FUN_00422d98 FUN_00434b6d FUN_00444745 FUN_00494302 FUN_004a217d FUN_004ddb6e FUN_004f1bd4 FUN_004f1d5e FUN_004f1f69 FUN_0050d078 FUN_0050d78e FUN_00524c4a FUN_0053bfc6 FUN_0054061d FUN_00541619 FUN_00559733 FUN_00567bc7 FUN_0056b529 FUN_00579410 cmd_I draw_box draw_box_accordion draw_box_guitar draw_box_other draw_clef draw_item draw_line draw_number draw_slur input_main interpret note_marks note_special_head region_select		1,2,4,5,7,8,9,10,12,14,16,18	54daf6_push_words.c
+0054db88	pop_words	163	FUN_0040bc18 FUN_0040cde4 FUN_00421651 FUN_00422d98 FUN_00444745 FUN_00494302 FUN_004a217d FUN_004ddb6e FUN_004f1bd4 FUN_004f1d5e FUN_004f1f69 FUN_0050d078 FUN_0050d78e FUN_00524c4a FUN_0053bfc6 FUN_0054061d FUN_00541619 FUN_00559733 FUN_00567bc7 FUN_0056b529 FUN_00579410 cmd_I draw_box draw_box_accordion draw_box_guitar draw_box_other draw_clef draw_item draw_line draw_number draw_slur input_main interpret note_marks note_special_head region_select		2,4,5,7,8,9,10,12,14,16,18	54db88_pop_words.c
 0054dc2b	FUN_0054dc2b	252	interpret	FUN_00518448		54dc2b_FUN_0054dc2b.c
 0054de6b	FUN_0054de6b	101	edit_letters edit_params interpret	FUN_0054c419		54de6b_FUN_0054de6b.c
 0054e2a1	FUN_0054e2a1	272	interpret	FUN_0054c768 FUN_0054cd71		54e2a1_FUN_0054e2a1.c
@@ -783,7 +783,7 @@ address	name	bytes	callers	callees	codes	file
 005684a8	FUN_005684a8	65				5684a8_FUN_005684a8.c
 005684e9	FUN_005684e9	138	FUN_005644b8			5684e9_FUN_005684e9.c
 00568573	FUN_00568573	1083	FUN_005644b8			568573_FUN_00568573.c
-00569af0	draw_text	4908	draw_box_negative draw_item draw_number draw_symbol note_special_head	FUN_0042a5f4 FUN_00470618 FUN_004d4ed2 FUN_004d4f3f FUN_0054a967 FUN_0054d831 FUN_0056b529 FUN_0056b706 FUN_0056f14d FUN_005704f8 FUN_005784f1 amod load_font_metrics text_emit_char text_parse text_record_header text_rotate	2,5,7,8,9,10,12,16,18	569af0_draw_text.c
+00569af0	draw_text	4908	draw_box_guitar draw_item draw_number draw_symbol note_special_head	FUN_0042a5f4 FUN_00470618 FUN_004d4ed2 FUN_004d4f3f FUN_0054a967 FUN_0054d831 FUN_0056b529 FUN_0056b706 FUN_0056f14d FUN_005704f8 FUN_005784f1 amod load_font_metrics text_emit_char text_parse text_record_header text_rotate	2,5,7,8,9,10,12,16,18	569af0_draw_text.c
 0056ae1c	FUN_0056ae1c	102	FUN_0056daa0 FUN_0056eaca FUN_00580738			56ae1c_FUN_0056ae1c.c
 0056ae82	FUN_0056ae82	1205		FUN_0056b529 FUN_0056b706 FUN_0056beec FUN_0056daa0		56ae82_FUN_0056ae82.c
 0056b337	FUN_0056b337	498		FUN_0056b529 FUN_0056b706 FUN_0056b7ae FUN_0056beec		56b337_FUN_0056b337.c

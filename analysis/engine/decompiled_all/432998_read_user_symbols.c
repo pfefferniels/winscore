@@ -1,9 +1,9 @@
-// FUN_00432998 @ 00432998 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// read_user_symbols @ 00432998 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_00432998(void)
+void read_user_symbols(void)
 
 {
   uint uVar1;

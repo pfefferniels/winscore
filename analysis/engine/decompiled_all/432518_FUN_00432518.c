@@ -125,7 +125,7 @@ LAB_0043281e:
             puVar7 = puVar7 + 1;
           }
         }
-        FUN_00432998();
+        read_user_symbols();
       }
     }
     else {

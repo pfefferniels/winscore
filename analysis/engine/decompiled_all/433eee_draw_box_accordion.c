@@ -1,7 +1,7 @@
-// draw_box_grid @ 00433eee (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// draw_box_accordion @ 00433eee (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
-void draw_box_grid(void)
+void draw_box_accordion(void)
 
 {
   int iVar1;
