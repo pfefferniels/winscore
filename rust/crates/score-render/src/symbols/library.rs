@@ -6,6 +6,7 @@ use crate::canvas::Canvas;
 use crate::codes;
 use crate::document::{Document, ItemRef};
 use crate::geometry::{rotate_points, thicken};
+use score_format::Symbol;
 use crate::staff::STEP_UNIT;
 use crate::symbols::{draw_symbol, Scale};
 use crate::units::{amod, real, trunc, Pos};
@@ -108,19 +109,35 @@ pub fn draw_library_symbol(
     let Some(symbol) = doc.symbols().symbol(number) else {
         return;
     };
-    let size_x = match real(amod(size_x, SIZE_FLAGS)) {
+    let normal_size = if SMALL_SYMBOLS.contains(&number) { f64::from(SMALL_SYMBOL_SIZE) } else { 1.0 };
+    let pixels = if number >= FIRST_THIN_SYMBOL { context.pixels - 1 } else { context.pixels };
+    let call = SymbolCall { size_x, ..*call };
+    draw_scaled_symbol(doc, canvas, symbol, at, step, &call, normal_size, pixels);
+}
+
+/// The drawing common to library and user symbols (draw_symbol after it
+/// has found the points): sizes (AMOD 100, 0 read as 1, the vertical size
+/// 0 read as the horizontal) times `normal_size` and STEP, then rotation
+/// and thickening (`pixels` > 0 thickens on the screen like P8 = 101 ×
+/// pixels).
+#[allow(clippy::too_many_arguments)]
+pub fn draw_scaled_symbol(
+    doc: &Document<'_>,
+    canvas: &mut Canvas<'_>,
+    symbol: &Symbol,
+    at: Pos,
+    step: f64,
+    call: &SymbolCall,
+    normal_size: f64,
+    pixels: i32,
+) {
+    let size_x = match real(amod(call.size_x, SIZE_FLAGS)) {
         0.0 => 1.0,
         s => s,
     };
     let size_y = if call.size_y == 0.0 { size_x } else { call.size_y };
-    let (size_x, size_y) = if SMALL_SYMBOLS.contains(&number) {
-        let small = f64::from(SMALL_SYMBOL_SIZE);
-        (real(size_x * small), real(size_y * small))
-    } else {
-        (size_x, size_y)
-    };
-    let pixels = if number >= FIRST_THIN_SYMBOL { context.pixels - 1 } else { context.pixels };
-
+    let (size_x, size_y) =
+        if normal_size == 1.0 { (size_x, size_y) } else { (real(size_x * normal_size), real(size_y * normal_size)) };
     let start = canvas.buffer_mut().len();
     draw_symbol(canvas, symbol, at, Scale { x: real(step * size_x), y: real(step * size_y) });
     if trunc(call.rotation) != 0 {
