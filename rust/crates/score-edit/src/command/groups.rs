@@ -14,6 +14,10 @@ use crate::group::{Destination, GroupCommand, Order, Pending, Region, FIXED_BY_M
 use crate::params::Draft;
 use crate::session::Deleted;
 
+/// Staff numbers of the recto page start above this; PGR adds this many.
+const RECTO_FROM: f32 = 200.0;
+const RECTO_STAVES: f32 = 200.0;
+
 impl Run<'_, '_> {
     /// Starts a group command; numbers typed after the word give the area at once.
     pub fn start_group(&mut self, command: GroupCommand, args: &[Token]) -> Result<(), EditError> {
@@ -195,6 +199,25 @@ impl Run<'_, '_> {
             statement.apply(&mut draft);
             self.tx.replace(id, draft.to_item());
         });
+        Ok(())
+    }
+
+    /// PGR: every item 200 staves up to the recto page, or back from it if
+    /// anything is there already.
+    pub fn page_right(&mut self) -> Result<(), EditError> {
+        let entries: Vec<(ItemId, Draft)> =
+            self.tx.doc().entries().map(|(id, item)| (id, Draft::of(item))).collect();
+        let on_recto = entries.iter().any(|(_, d)| d.get(2) > RECTO_FROM);
+        entries.into_iter().for_each(|(id, mut draft)| {
+            let change = match (on_recto, draft.get(2) > RECTO_FROM) {
+                (false, _) => RECTO_STAVES,
+                (true, true) => -RECTO_STAVES,
+                (true, false) => return,
+            };
+            draft.add(2, change);
+            self.tx.replace(id, draft.to_item());
+        });
+        self.session.clear();
         Ok(())
     }
 

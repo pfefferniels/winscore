@@ -2728,3 +2728,82 @@
 # dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
 8 1 0
 8 3 0
+== h1_slider_plus_one
+8 1 0
+1 2 100 6 10 0 1
+== h1_slider_minus_tenth
+8 1 0
+1 0.899999976 100 6 10 0 1
+== h1_slider_zero_refused
+8 1 0
+1 1 100 6 10 0 1
+== h1_slider_minus_one_refused
+8 1 0
+1 1 100 6 10 0 1
+== h1_slider_plus_five
+8 1 0
+1 6 100 6 10 0 1
+== h1_arrow_left
+8 1 0
+1 1 99 6 10 0 1
+== h1_arrow_up
+8 1 0
+1 1 100 7 10 0 1
+== h1_arrow_right
+8 1 0
+1 1 101 6 10 0 1
+== h1_arrow_down
+8 1 0
+1 1 100 5 10 0 1
+== h1_page_right
+8 201 0
+8 202 0
+1 201 100 6 10 0 1
+== h1_page_back
+8 1 0
+1 1 100 6 10 0 1
+== h1_staff_above_below
+8 1 0
+1 1 100 6 10 0 1 0 0 0 0 1
+== h1_staff_above_below_twice
+8 1 0
+1 1 100 6 10 0 1 0 0 0 0 2
+== h1_staff_above_below_thrice
+8 1 0
+1 1 100 6 10 0 1
+== h1_ottava_up
+8 1 0
+7 1 50 15 0 120 88 0 0 0 0 -1
+== h1_ottava_down
+8 1 0
+7 1 50 15 0 120 -88 0 0 0 0 1
+== h1_ottava
+8 1 0
+7 1 50 15 1 120 8 1 1 1 1 -1 1 1
+== h1_ottava_bassa
+8 1 0
+7 1 50 15 1 120 -8 1 1 1 0 1 1 1
+== h1_quindicesima
+8 1 0
+7 1 50 15 0 120 15 0 0 0 0 -1
+== h1_quindicesima_up
+8 1 0
+7 1 50 15 0 120 155 0 0 0 0 -1
+== h1_pairs_with_slash
+8 1 0
+1 1 100 6 10 0 1 0 0 0 0 16
+== h1_new_item_with_slash
+8 1 0
+2 4 0
+== h1_cut_time_word
+8 1 0
+18 1 100 0 98
+== h1_accordion
+8 1 0
+12 1 100 18 10 0 0 101 101
+== h1_library_symbol
+8 1 0
+9 1 100
+== h1_ottava_up_word
+8 1 0
+7 1 100 14 0 120 8 0 0 0 0 -1

@@ -82,6 +82,11 @@ const PLAIN: &[(&str, f32, &[f32])] = &[
     ("OVA", 7.0, &[100.0, 14.0, 0.0, 120.0, 8.0, 0.0, 0.0, 0.0, 0.0, -1.0]),
     ("OBA", 7.0, &[100.0, -2.0, 0.0, 120.0, -8.0, 0.0, 0.0, 0.0, 0.0, 1.0]),
     ("OMA", 7.0, &[100.0, 14.0, 0.0, 120.0, 15.0, 0.0, 0.0, 0.0, 0.0, -1.0]),
+    ("OVAU", 7.0, &[100.0, 14.0, 0.0, 120.0, 8.0, 0.0, 0.0, 0.0, 0.0, -1.0]),
+    ("OVAD", 7.0, &[100.0, 14.0, 0.0, 120.0, 8.0, 0.0, 0.0, 0.0, 0.0, -1.0]),
+    ("OMAU", 7.0, &[100.0, 14.0, 0.0, 120.0, 15.0, 0.0, 0.0, 0.0, 0.0, -1.0]),
+    ("ACCORD", 12.0, &[100.0, 18.0, 10.0, 0.0, 0.0, 101.0, 101.0]),
+    ("LIB", 9.0, &[100.0]),
     ("PEDA", 7.0, &[100.0, -1.0, 0.0, 140.0, 20.0]),
     ("PEDB", 7.0, &[100.0, -1.0, 0.0, 140.0, 21.0]),
     ("PEDC", 7.0, &[100.0, -1.0, 0.0, 140.0, 22.0]),
@@ -262,8 +267,10 @@ fn symbol(word: &str) -> Option<Template> {
     Some(Template::new(9.0, &[DEFAULT_P3, level, symbol, size]))
 }
 
-/// The template a creation word stands for (words are upper case).
+/// The template a creation word stands for (words are upper case); a
+/// trailing slash, as rhythm input lines end (`CUT/`), is ignored.
 pub fn template(word: &str) -> Option<Template> {
+    let word = word.strip_suffix('/').filter(|w| w.len() > 1).unwrap_or(word);
     note(word)
         .or_else(|| clef(word))
         .or_else(|| staff(word))
