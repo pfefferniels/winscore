@@ -125,3 +125,7 @@ code16-tabs
 code16-font-after-meter
 code16-font-after-meter-p13
 code16-font-after-number
+code16-font-after-ottava
+code16-font-after-term
+code16-font-after-text-symbol
+code16-font-after-two-bar-repeat
