@@ -13,6 +13,7 @@ use crate::canvas::{BufferPoint, Canvas, Pen};
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
+use crate::symbols::{draw_clef, ItemContext};
 use crate::units::{nint, real, trunc, Pos};
 
 /// A REAL*4 constant of the engine.
@@ -40,14 +41,163 @@ const TRIANGLE: i32 = 99;
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let params = Params::new(doc, item);
-    if (1..=9).contains(&params.p8_int) {
+    match params.p8_int {
+        TUPLET => tuplet_bracket(doc, item, &params, canvas),
+        1..=9 => ending(doc, item, &params, canvas),
+        _ => slur(doc, item, &params, canvas),
+    }
+}
+
+/// P8 = 3: a tuplet bracket; every other P8 from 1 to 9 is an ending.
+const TUPLET: i32 = 3;
+
+/// The ending's number is followed by this library symbol, a full stop.
+const ENDING_DOT: i32 = 24;
+
+/// What brackets and endings share (draw_slur from 0x53ABAA): the left
+/// hook and the bracket's corners.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Bracket {
+    step: f64,
+    left: f64,
+    right: f64,
+    /// The level of P4, where the hooks end.
+    bottom: f64,
+    /// P4 raised by the curvature P7.
+    top: f64,
+    dy: f64,
+    /// The bracket's number: P9 when positive, else P8.
+    number: i32,
+    /// Room left in the line for the number.
+    gap: f64,
+}
+
+impl Bracket {
+    /// Starts the polyline with the left hook unless P9 = -1 (but for the
+    /// second ending) or P13 = 1 or 3 leave it open.
+    fn new(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Canvas<'_>) -> Self {
+        let p = |n| f64::from(item.p(n));
+        let staff = doc.staff_of(item);
+        let step = staff.step;
+        let bottom = doc.position(item).y;
+        let top = real(bottom + real(step * params.p7 * c(7.0)));
+        let (ip9, ip13) = (trunc(p(9)), trunc(p(13)));
+        let open = (ip9 == -1 && params.p8_int != 2) || ip13 == 1 || ip13 == 3;
+        if open {
+            canvas.point(Pos::new(params.x, top), Pen::Stroke);
+        } else {
+            canvas.point(Pos::new(params.x, bottom), Pen::Stroke);
+            canvas.point(Pos::new(params.x, top), Pen::Continue);
+        }
+        let number = if ip9 > 0 { ip9 } else { params.p8_int };
+        let gap = real(step * c(13.0));
+        let gap = if number > 9 { real(gap * c(1.5)) } else { gap };
+        Self {
+            step,
+            left: params.x,
+            right: real(params.p6 * P3_UNIT),
+            bottom,
+            top,
+            dy: real(staff.y(p(5)) - bottom),
+            number,
+            gap,
+        }
+    }
+}
+
+/// Endings: a line at P4 + P7 from P3 to P6, hooks down at the ends (the
+/// right one on first endings only), and the number with its full stop.
+fn ending(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Canvas<'_>) {
+    let p = |n| f64::from(item.p(n));
+    let bracket = Bracket::new(doc, item, params, canvas);
+    let (ip9, ip13) = (trunc(p(9)), trunc(p(13)));
+    let first = params.p8_int == 1;
+    canvas.point(Pos::new(bracket.right, bracket.top), Pen::Continue);
+    if ip13 < 2 && first {
+        canvas.point(Pos::new(bracket.right, bracket.bottom), Pen::Continue);
+    }
+    if ip9 < 0 || trunc(p(12)) < 0 {
         return;
     }
-    let slur = Slur::new(doc, item, &params);
+    let step = bracket.step;
+    let number_y = real(bracket.top - step * c(28.0));
+    let number_x = real(step * if doc.screen() { c(14.5) } else { c(13.5) });
+    // P13 from 0.01 to 0.99 moves the stop right; P13 >= 1 only opens the bracket.
+    let p13 = if ip13 > 0 { 0.0 } else { p(13) };
+    let (shift, lift) = match p(12) {
+        0.0 => (p13, real(step * c(2.0))),
+        p12 => (real(p13 - (p12 - 1.0) * c(1.3)), real(real(step * c(2.0)) * p12 * c(0.8))),
+    };
+    let after_number = real(shift * c(3750.0) / step + number_x);
+    let size = match p(12) {
+        0.0 => 1.0,
+        p12 => p12,
+    };
+    let stop_shift = if first { c(2.0) } else { c(5.0) };
+    let at = Pos::new(real(after_number + bracket.left + step * stop_shift), real(lift + number_y));
+    draw_clef(doc, &ItemContext::of(item), canvas, at, step, ENDING_DOT, (size, size));
+}
+
+/// Tuplet brackets: a line at P4 + P7 with a gap for the number at P10
+/// (P11 = 1, 2 close it, P23 widens it, P9 <= -2 sets it), sloping to P5;
+/// hooks at both ends (P13 = 1, 2, 3 leave them out, P12 lengthens the
+/// right one).
+fn tuplet_bracket(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Canvas<'_>) {
+    let p = |n| f64::from(item.p(n));
+    let mut bracket = Bracket::new(doc, item, params, canvas);
+    let step = bracket.step;
+    let (ip9, ip11, ip13) = (trunc(p(9)), trunc(p(11)), trunc(p(13)));
+    let width = match p(20) {
+        0.0 => 1.0,
+        p20 => p20,
+    };
+    let right = real(step * c(17.5) * width + bracket.right);
+    let length = real(right - bracket.left);
+    let centre = match p(10) {
+        0.0 => c(0.5),
+        p10 => p10,
+    };
+    if ip9 < -1 {
+        bracket.gap = real(-(p(9) * c(75.0)));
+    }
+    let gap = bracket.gap;
+    let middle = real(real(centre * length) + bracket.left - gap);
+    let half_gap = real(step * p(23) * c(6.0));
+    let mut top = bracket.top;
+    let mut bottom = bracket.bottom;
+    if bracket.dy == 0.0 {
+        if ip11 == 0 {
+            canvas.point(Pos::new(real(middle - half_gap), top), Pen::Continue);
+            canvas.point(Pos::new(real(half_gap + middle + gap + gap), top), Pen::Stroke);
+        }
+    } else {
+        bottom = real(bracket.dy + bottom);
+        let slope = real(bracket.dy / length);
+        // 0x53C14E: a point on the line through the left top corner.
+        let along = |x: f64| Pos::new(x, real((x - params.x) * slope + top));
+        if ip11 == 0 {
+            canvas.point(along(real(half_gap + middle)), Pen::Continue);
+            canvas.point(along(real(real(gap + middle + gap) - half_gap)), Pen::Stroke);
+        }
+        top = real(bracket.dy + top);
+    }
+    canvas.point(Pos::new(right, top), Pen::Continue);
+    if p(12) != 0.0 {
+        let extra = if params.p7 < 0.0 { -p(12).abs() } else { p(12).abs() };
+        bottom = doc.staff_of(item).y(real(p(5) + extra + params.p7));
+    }
+    if ip13 < 2 {
+        canvas.point(Pos::new(right, bottom), Pen::Continue);
+    }
+}
+
+/// Slurs and ties: the curve and everything P9–P29 do to it.
+fn slur(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Canvas<'_>) {
+    let slur = Slur::new(doc, item, params);
     let mut buffer = Buffer::new(slur.outline(item));
     buffer.fallback = slur.cut_fallback(item);
     slur.cut(item, &mut buffer);
-    if slur.has_number_gap(item, &params) {
+    if slur.has_number_gap(item, params) {
         number_gap(&mut buffer, item, slur.step, slur.dx);
     }
     if item.p(27) != 0.0 {
