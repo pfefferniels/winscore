@@ -6,17 +6,7 @@ bd-slope-big
 bd-slope-down
 r-adda
 r-melody
+s2-marks-staccato
 
 # Whole rest centring (P9) and dots
 r-rests
-
-# Slurs ending on the stem side (0x53D1E0)
-p5-basic
-p5-signs
-sl-forced-above
-sl-forced-below
-sl-forced-end
-sl-mid
-sl-mixed
-sl-steep
-sl-steep-down

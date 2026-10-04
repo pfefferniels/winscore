@@ -7,6 +7,7 @@ use crate::chords::{accidental_offsets, dot_offsets, ChordHead};
 use crate::events::{Event, Head};
 use crate::notes::{Clef, KeySignature, Meter, RestKind, StaffShift, StemMode};
 use crate::rhythm::Rhythm;
+use crate::slurs::WorkEntry;
 use crate::spacing::{positions, Entry, GRACE_DURATION};
 
 /// Middle staff line: notes from here up take a down stem, and a stem reaches at least here.
@@ -98,6 +99,32 @@ impl Note {
         } else {
             self.heads.iter().collect()
         }
+    }
+
+    fn work_entries(&self, number: usize) -> Vec<WorkEntry> {
+        self.ordered_heads()
+            .iter()
+            .enumerate()
+            .map(|(i, head)| {
+                let stem_head = i == 0;
+                WorkEntry {
+                    code: 1,
+                    x: self.x,
+                    level: head.level,
+                    stem: match (stem_head, self.down) {
+                        (false, _) => 0,
+                        (true, true) => STEM_DOWN,
+                        (true, false) => STEM_UP,
+                    },
+                    accidental: head.accidental.map_or(0, |a| a.code()),
+                    extension: if stem_head { self.extension % 100.0 } else { 0.0 },
+                    dotted: stem_head && self.rhythm.dots() > 0,
+                    mark: if stem_head { self.mark } else { 0.0 },
+                    grace: self.is_grace(),
+                    note: stem_head.then_some(number),
+                }
+            })
+            .collect()
     }
 
     fn spacing_entries(&self) -> Vec<Entry> {
@@ -261,12 +288,16 @@ impl Element {
     }
 }
 
-fn rest_item(kind: RestKind, rhythm: Rhythm, x: f32, staff: f32) -> Item {
-    let level = match kind {
+fn rest_level(kind: RestKind) -> f32 {
+    match kind {
         RestKind::Up => 6.0,
         RestKind::Down => -6.0,
         _ => 0.0,
-    };
+    }
+}
+
+fn rest_item(kind: RestKind, rhythm: Rhythm, x: f32, staff: f32) -> Item {
+    let level = rest_level(kind);
     // P5: flags for short rests, 0 quarter, -1 half, -2 whole, -3 breve.
     let symbol = match (kind, rhythm.head()) {
         (RestKind::Whole, _) => -2.0,
@@ -366,6 +397,33 @@ impl Line {
 
     pub fn note_mut(&mut self, number: usize) -> Option<&mut Note> {
         number.checked_sub(1).and_then(|i| self.notes_mut().nth(i))
+    }
+
+    /// The engine's work table as passes 4 and 5 read it: one entry per chord member.
+    pub fn work_entries(&self) -> Vec<WorkEntry> {
+        let mut number = 0;
+        self.elements
+            .iter()
+            .flat_map(|element| match element {
+                Element::Note(note) => {
+                    number += 1;
+                    note.work_entries(number)
+                }
+                Element::Rest { x, kind, .. } => vec![WorkEntry::other(2, *x, rest_level(*kind) as i32)],
+                Element::Bar { x, .. } => vec![WorkEntry::other(14, *x, 0)],
+                Element::Clef { x, .. } => vec![WorkEntry::other(3, *x, 0)],
+                Element::Key { x, .. } => vec![WorkEntry::other(17, *x, 0)],
+                Element::Meter { x, .. } => vec![WorkEntry::other(18, *x, 0)],
+            })
+            .collect()
+    }
+
+    /// Takes over the marks of the notes from a work table (the slur pass can move them).
+    pub fn take_marks(&mut self, work: &[WorkEntry]) {
+        let marks = work.iter().filter(|e| e.note.is_some()).map(|e| e.mark);
+        for (note, mark) in self.notes_mut().zip(marks) {
+            note.mark = mark;
+        }
     }
 
     pub fn items(&self) -> Vec<Item> {
