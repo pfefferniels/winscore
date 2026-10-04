@@ -6,17 +6,22 @@ Written by `score-compare` (crate `score-testkit`). Compared: the engine's `engi
 
 | group | cases | valid | compared | matching | shapes | texts |
 |---|---|---|---|---|---|---|
-| code01 | 270 | 270 | 270 | 246 | 2513/2543 +15 | 286/302 |
+| code01 | 270 | 270 | 270 | 250 | 2532/2543 +15 | 286/302 |
+| code02 | 148 | 148 | 148 | 128 | 1268/1297 | 154/159 |
 | code03 | 96 | 96 | 96 | 75 | 1132/1132 +3 | 100/124 |
 | code04 | 113 | 113 | 113 | 113 | 1959/1959 | 116/116 |
+| code05 | 96 | 96 | 96 | 67 | 703/703 | 99/130 |
 | code06 | 71 | 71 | 71 | 61 | 488/488 | 74/86 |
+| code07 | 69 | 69 | 69 | 55 | 1277/1277 +31 | 71/107 |
 | code08 | 59 | 59 | 59 | 59 | 419/419 | 92/92 |
-| code14 | 93 | 93 | 93 | 91 | 2401/2410 | 359/359 |
-| code16 | 91 | 91 | 91 | 0 | 460/502 | 94/1482 |
+| code09 | 105 | 105 | 105 | 97 | 1486/1560 +16 | 108/139 |
+| code14 | 93 | 93 | 93 | 92 | 2409/2410 | 359/359 |
+| code15 | 20 | 20 | 20 | 20 | 143/143 | 23/23 |
+| code16 | 123 | 123 | 123 | 123 | 681/681 | 1949/1949 |
 | code17 | 42 | 42 | 42 | 42 | 950/950 | 44/44 |
 | code18 | 47 | 47 | 47 | 11 | 291/400 | 49/55 |
-| code99 | 17 | 17 | 17 | 8 | 268/291 | 18/26 |
-| sample | 6 | 6 | 6 | 0 | 6122/7965 +7 | 111/2143 |
+| code99 | 17 | 17 | 17 | 13 | 285/291 | 25/26 |
+| sample | 6 | 6 | 6 | 1 | 7658/7952 +45 | 1925/2143 |
 
 ## By item code
 
@@ -24,20 +29,20 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 
 | code | items | fixtures with output | fully matching | shapes | texts |
 |---|---|---|---|---|---|
-| 1 | notes | 292 | 264 | 5789/5842 +22 | 0/18 |
-| 2 | rests | 6 | 0 | 0/761 | 0/0 |
+| 1 | notes | 292 | 270 | 5826/5842 +22 | 0/18 |
+| 2 | rests | 150 | 129 | 1257/1288 | 0/5 |
 | 3 | clefs | 105 | 84 | 988/988 +3 | 0/24 |
 | 4 | lines, hairpins | 118 | 118 | 1482/1482 | 0/0 |
-| 5 | slurs, brackets | 9 | 0 | 0/144 | 0/4 |
+| 5 | slurs, brackets | 105 | 74 | 362/362 | 0/35 |
 | 6 | beams | 81 | 70 | 548/548 | 0/13 |
-| 7 | trills, ottava, pedal | 2 | 0 | 0/220 | 0/9 |
-| 8 | staves | 902 | 902 | 6384/6384 | 1343/1343 |
-| 9 | library symbols | 6 | 0 | 0/392 | 0/52 |
+| 7 | trills, ottava, pedal | 71 | 56 | 1152/1152 +40 | 0/45 |
+| 8 | staves | 1371 | 1371 | 8774/8774 | 1833/1833 |
+| 9 | library symbols | 111 | 99 | 1335/1409 +45 | 0/83 |
 | 10 | numbers | 3 | 0 | 0/18 | 0/130 |
 | 12 | boxes, grids | 1 | 0 | 0/110 | 0/21 |
-| 14 | barlines | 103 | 101 | 817/826 | 0/0 |
-| 15 | EPS | 1 | 0 | 0/4 | 0/0 |
-| 16 | text | 98 | 0 | 0/71 | 0/3209 |
+| 14 | barlines | 108 | 107 | 835/836 | 0/0 |
+| 15 | EPS | 21 | 21 | 42/42 | 0/0 |
+| 16 | text | 130 | 130 | 85/85 | 3641/3641 |
 | 17 | key signatures | 46 | 46 | 931/931 | 0/0 |
 | 18 | meters | 54 | 12 | 64/338 | 0/6 |
 
@@ -81,10 +86,10 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code01-p11-mark-18 | match | 12/12 | 1/1 | 0 | mark P11 = 18 |
 | code01-p11-mark-19 | match | 8/8 | 1/1 | 0 | mark P11 = 19 |
 | code01-p11-mark-2 | match | 11/11 | 1/1 | 0 | mark P11 = 2 |
-| code01-p11-mark-20 | differs | 7/9 | 1/1 | 0 | mark P11 = 20 |
-| code01-p11-mark-21 | differs | 7/12 | 1/1 | 0 | mark P11 = 21 |
-| code01-p11-mark-22 | differs | 7/13 | 1/1 | 0 | mark P11 = 22 |
-| code01-p11-mark-23 | differs | 7/13 | 1/1 | 0 | mark P11 = 23 |
+| code01-p11-mark-20 | match | 9/9 | 1/1 | 0 | mark P11 = 20 |
+| code01-p11-mark-21 | match | 12/12 | 1/1 | 0 | mark P11 = 21 |
+| code01-p11-mark-22 | match | 13/13 | 1/1 | 0 | mark P11 = 22 |
+| code01-p11-mark-23 | match | 13/13 | 1/1 | 0 | mark P11 = 23 |
 | code01-p11-mark-24 | match | 9/9 | 1/1 | 0 | mark P11 = 24 |
 | code01-p11-mark-25 | match | 9/9 | 1/1 | 0 | mark P11 = 25 |
 | code01-p11-mark-26 | match | 9/9 | 1/1 | 0 | mark P11 = 26 |
@@ -315,6 +320,154 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code01-staff-1.3-full | match | 18/18 | 1/1 | 0 | staff size 1.3: sharp, dot, two tails, ledger line |
 | code01-staff-p4-offset | match | 8/8 | 1/1 | 0 | note on a staff moved up (P4 = 2.5) |
 | code01-staff-recto | match | 7/7 | 3/3 | 0 | note on staff 201 (recto page) |
+| code02-grace-dot | match | 10/10 | 1/1 | 0 | grace quarter rest with a dot |
+| code02-grace-eighth | match | 7/7 | 1/1 | 0 | grace-size eighth rest (P4 = 100) |
+| code02-grace-fermata | match | 11/11 | 1/1 | 0 | grace quarter rest with a fermata |
+| code02-grace-half | match | 6/6 | 1/1 | 0 | grace-size half rest (P4 = 100) |
+| code02-grace-p4-103 | match | 9/9 | 1/1 | 0 | grace quarter rest P4 = 103 |
+| code02-grace-quarter | match | 9/9 | 1/1 | 0 | grace-size quarter rest (P4 = 100) |
+| code02-grace-sixteenth | match | 9/9 | 1/1 | 0 | grace-size sixteenth rest (P4 = 100) |
+| code02-grace-whole | match | 6/6 | 1/1 | 0 | grace-size whole rest (P4 = 100) |
+| code02-mixed-bar | match | 46/46 | 1/1 | 0 | twelve rests of different kinds on one staff |
+| code02-p10-2 | match | 9/9 | 1/1 | 0 | offset P10 = 2 |
+| code02-p10-m3 | match | 9/9 | 1/1 | 0 | offset P10 = -3 |
+| code02-p10-whole | match | 6/6 | 1/1 | 0 | offset P10 = 2 on a whole rest |
+| code02-p11-fermata-height | match | 11/11 | 1/1 | 0 | fermata height P11 = -2 |
+| code02-p11-height-3 | differs | 6/7 | 1/1 | 0 | number height P11 = 3 |
+| code02-p12-fermata-size | match | 11/11 | 1/1 | 0 | fermata size P12 = 1.5 |
+| code02-p12-size-1.5 | differs | 6/7 | 1/1 | 0 | number size P12 = 1.5 |
+| code02-p13-cue | match | 9/9 | 1/1 | 0 | cue instrument P13 = 3 |
+| code02-p14-font-2 | differs | 6/6 | 1/2 | 0 | number font P14 = 2 |
+| code02-p15-0.75-quarter | match | 9/9 | 1/1 | 0 | rest size P15 = 0.75, quarter |
+| code02-p15-0.75-sixteenth | match | 9/9 | 1/1 | 0 | rest size P15 = 0.75, sixteenth |
+| code02-p15-0.75-whole | match | 6/6 | 1/1 | 0 | rest size P15 = 0.75, whole |
+| code02-p15-1.3-quarter | match | 9/9 | 1/1 | 0 | rest size P15 = 1.3, quarter |
+| code02-p15-1.3-sixteenth | match | 9/9 | 1/1 | 0 | rest size P15 = 1.3, sixteenth |
+| code02-p15-1.3-whole | match | 6/6 | 1/1 | 0 | rest size P15 = 1.3, whole |
+| code02-p15-dot-number | match | 12/12 | 1/1 | 0 | P15 = 0.75 with dot and fermata |
+| code02-p16-fermata-move | match | 11/11 | 1/1 | 0 | fermata moved P16 = -1.5 |
+| code02-p16-move-2 | differs | 6/7 | 1/1 | 0 | number moved P16 = 2 |
+| code02-p17-1 | match | 19/19 | 3/3 | 0 | rest on staff 2 shown on staff above (P17 = 1) |
+| code02-p17-2 | match | 19/19 | 3/3 | 0 | rest on staff 2 shown on staff below (P17 = 2) |
+| code02-p20-spread-1 | differs | 6/8 | 1/1 | 0 | number digits spread P20 = 1 |
+| code02-p26-grey | match | 9/9 | 1/1 | 0 | grey rest P26 = 0.5 |
+| code02-p3-20.3 | match | 9/9 | 1/1 | 0 | P3 = 20.3 |
+| code02-p30-m1-whole | match | 6/6 | 1/1 | 0 | whole rest P4 = 4 with P30 = -1 (no ledger line) |
+| code02-p4-2-half | match | 6/6 | 1/1 | 0 | half rest P4 = 2 |
+| code02-p4-2-whole | match | 6/6 | 1/1 | 0 | whole rest P4 = 2 |
+| code02-p4-2.5-quarter | match | 9/9 | 1/1 | 0 | quarter rest P4 = 2.5 |
+| code02-p4-3-quarter | match | 9/9 | 1/1 | 0 | quarter rest P4 = 3 |
+| code02-p4-3-whole | match | 6/6 | 1/1 | 0 | whole rest P4 = 3 |
+| code02-p4-4-eighth | match | 7/7 | 1/1 | 0 | eighth rest P4 = 4 |
+| code02-p4-4-half | match | 6/6 | 1/1 | 0 | half rest P4 = 4 |
+| code02-p4-4-whole | match | 7/7 | 1/1 | 0 | whole rest P4 = 4 |
+| code02-p4-5-half | match | 7/7 | 1/1 | 0 | half rest P4 = 5 |
+| code02-p4-6-whole | match | 7/7 | 1/1 | 0 | whole rest P4 = 6 |
+| code02-p4-7-half | match | 7/7 | 1/1 | 0 | half rest P4 = 7 |
+| code02-p4-m2-whole | match | 6/6 | 1/1 | 0 | whole rest P4 = -2 |
+| code02-p4-m3-sixteenth | match | 9/9 | 1/1 | 0 | sixteenth rest P4 = -3 |
+| code02-p4-m4-quarter | match | 9/9 | 1/1 | 0 | quarter rest P4 = -4 |
+| code02-p4-m6-half | match | 7/7 | 1/1 | 0 | half rest P4 = -6 |
+| code02-p4-m7-half | match | 7/7 | 1/1 | 0 | half rest P4 = -7 |
+| code02-p4-m7-whole | match | 7/7 | 1/1 | 0 | whole rest P4 = -7 |
+| code02-p4-m8-whole | match | 7/7 | 1/1 | 0 | whole rest P4 = -8 |
+| code02-p5-128th | match | 15/15 | 1/1 | 0 | P5 = 5: 128th rest |
+| code02-p5-256th | match | 17/17 | 1/1 | 0 | P5 = 6: 256th rest |
+| code02-p5-32nd | match | 11/11 | 1/1 | 0 | P5 = 3: 32nd rest |
+| code02-p5-64th | match | 13/13 | 1/1 | 0 | P5 = 4: 64th rest |
+| code02-p5-composite-m11 | match | 6/6 | 1/1 | 0 | P5 = -11: composite rest |
+| code02-p5-composite-m12 | match | 6/6 | 1/1 | 0 | P5 = -12: composite rest |
+| code02-p5-composite-m13 | match | 7/7 | 1/1 | 0 | P5 = -13: composite rest |
+| code02-p5-composite-m14 | match | 6/6 | 1/1 | 0 | P5 = -14: composite rest |
+| code02-p5-composite-m15 | match | 7/7 | 1/1 | 0 | P5 = -15: composite rest |
+| code02-p5-composite-m16 | match | 7/7 | 1/1 | 0 | P5 = -16: composite rest |
+| code02-p5-composite-m17 | match | 8/8 | 1/1 | 0 | P5 = -17: composite rest |
+| code02-p5-composite-m18 | match | 7/7 | 1/1 | 0 | P5 = -18: composite rest |
+| code02-p5-composite-m19 | match | 8/8 | 1/1 | 0 | P5 = -19: composite rest |
+| code02-p5-eighth | match | 7/7 | 1/1 | 0 | P5 = 1: eighth rest |
+| code02-p5-four-bar | match | 6/6 | 1/1 | 0 | P5 = -7: four-bar rest |
+| code02-p5-h-bar | match | 8/8 | 1/1 | 0 | P5 = -5: h-bar rest |
+| code02-p5-h-bar-p9 | match | 8/8 | 1/1 | 0 | P5 = -5, right end P9 = 60 |
+| code02-p5-h-bar-p9-number | differs | 8/9 | 1/1 | 0 | P5 = -5, P9 = 60, number P8 = 8 |
+| code02-p5-half | match | 6/6 | 1/1 | 0 | P5 = -1: half rest |
+| code02-p5-hundreds-0 | match | 11/11 | 1/1 | 0 | P5 = 100: quarter rest, hundreds flag |
+| code02-p5-hundreds-1 | match | 9/9 | 1/1 | 0 | P5 = 101: eighth rest, hundreds flag |
+| code02-p5-hundreds-m1 | match | 8/8 | 1/1 | 0 | P5 = -101: half rest, hundreds flag |
+| code02-p5-hundreds-m101-p9 | match | 8/8 | 1/1 | 0 | P5 = -101 with P9 = 30 |
+| code02-p5-hundreds-m2 | match | 8/8 | 1/1 | 0 | P5 = -102: whole rest, hundreds flag |
+| code02-p5-multi-bar | match | 6/6 | 1/1 | 0 | P5 = -3: multi-bar rest |
+| code02-p5-quarter | match | 9/9 | 1/1 | 0 | P5 = 0: quarter rest |
+| code02-p5-repeat | match | 8/8 | 1/1 | 0 | P5 = -4: repeat rest |
+| code02-p5-sixteenth | match | 9/9 | 1/1 | 0 | P5 = 2: sixteenth rest |
+| code02-p5-two-bar | match | 6/6 | 1/1 | 0 | P5 = -6: two-bar rest |
+| code02-p5-two-bar-repeat | match | 9/9 | 1/1 | 0 | P5 = -44: two-bar repeat |
+| code02-p5-two-bar-repeat-p8 | differs | 9/10 | 1/1 | 0 | P5 = -44 with P8 = 2 |
+| code02-p5-unused-m10 | match | 5/5 | 1/1 | 0 | P5 = -10 (not drawn) |
+| code02-p5-unused-m20 | match | 5/5 | 1/1 | 0 | P5 = -20 (not drawn) |
+| code02-p5-unused-m8 | match | 5/5 | 1/1 | 0 | P5 = -8 (not drawn) |
+| code02-p5-unused-m9 | match | 5/5 | 1/1 | 0 | P5 = -9 (not drawn) |
+| code02-p5-whole | match | 6/6 | 1/1 | 0 | P5 = -2: whole rest |
+| code02-p6-composite-spacing | match | 7/7 | 1/1 | 0 | P6 = 1.5 on a composite rest |
+| code02-p6-dot-p4 | match | 8/8 | 1/1 | 0 | dotted eighth rest P4 = 3 |
+| code02-p6-dots-1-32nd | match | 12/12 | 1/1 | 0 | 1 dot(s) on a 32nd rest |
+| code02-p6-dots-1-64th | match | 14/14 | 1/1 | 0 | 1 dot(s) on a 64th rest |
+| code02-p6-dots-1-eighth | match | 8/8 | 1/1 | 0 | 1 dot(s) on a eighth rest |
+| code02-p6-dots-1-half | match | 7/7 | 1/1 | 0 | 1 dot(s) on a half rest |
+| code02-p6-dots-1-quarter | match | 10/10 | 1/1 | 0 | 1 dot(s) on a quarter rest |
+| code02-p6-dots-1-sixteenth | match | 10/10 | 1/1 | 0 | 1 dot(s) on a sixteenth rest |
+| code02-p6-dots-1-whole | match | 7/7 | 1/1 | 0 | 1 dot(s) on a whole rest |
+| code02-p6-dots-1.5 | match | 10/10 | 1/1 | 0 | P6 = 1.5: dot moved right |
+| code02-p6-dots-2-32nd | match | 13/13 | 1/1 | 0 | 2 dot(s) on a 32nd rest |
+| code02-p6-dots-2-64th | match | 15/15 | 1/1 | 0 | 2 dot(s) on a 64th rest |
+| code02-p6-dots-2-eighth | match | 9/9 | 1/1 | 0 | 2 dot(s) on a eighth rest |
+| code02-p6-dots-2-half | match | 8/8 | 1/1 | 0 | 2 dot(s) on a half rest |
+| code02-p6-dots-2-quarter | match | 11/11 | 1/1 | 0 | 2 dot(s) on a quarter rest |
+| code02-p6-dots-2-sixteenth | match | 11/11 | 1/1 | 0 | 2 dot(s) on a sixteenth rest |
+| code02-p6-dots-2-whole | match | 8/8 | 1/1 | 0 | 2 dot(s) on a whole rest |
+| code02-p6-dots-3 | match | 12/12 | 1/1 | 0 | three dots on a quarter rest |
+| code02-p6-invisible | match | 9/9 | 1/1 | 0 | P6 = -1: invisible rest |
+| code02-p6-invisible-whole | match | 6/6 | 1/1 | 0 | P6 = -1: invisible whole rest |
+| code02-p6-line-12-multi-bar | match | 7/7 | 1/1 | 0 | P6 = 12: centring line, multi-bar rest |
+| code02-p6-line-12-quarter | match | 10/10 | 1/1 | 0 | P6 = 12: centring line, quarter rest |
+| code02-p6-line-12-whole | match | 7/7 | 1/1 | 0 | P6 = 12: centring line, whole rest |
+| code02-p6-line-6-multi-bar | match | 7/7 | 1/1 | 0 | P6 = 6: centring line, multi-bar rest |
+| code02-p6-line-6-quarter | match | 10/10 | 1/1 | 0 | P6 = 6: centring line, quarter rest |
+| code02-p6-line-6-whole | match | 7/7 | 1/1 | 0 | P6 = 6: centring line, whole rest |
+| code02-p6-multi-bar-dots | match | 8/8 | 1/1 | 0 | P6 = 2 on a multi-bar rest (dots dropped) |
+| code02-p8-fermata-eighth | match | 9/9 | 1/1 | 0 | P8 = -1: fermata over a eighth rest |
+| code02-p8-fermata-half | match | 8/8 | 1/1 | 0 | P8 = -1: fermata over a half rest |
+| code02-p8-fermata-quarter | match | 11/11 | 1/1 | 0 | P8 = -1: fermata over a quarter rest |
+| code02-p8-fermata-whole | match | 8/8 | 1/1 | 0 | P8 = -1: fermata over a whole rest |
+| code02-p8-inverted-fermata-eighth | match | 9/9 | 1/1 | 0 | P8 = -2: inverted-fermata over a eighth rest |
+| code02-p8-inverted-fermata-half | match | 8/8 | 1/1 | 0 | P8 = -2: inverted-fermata over a half rest |
+| code02-p8-inverted-fermata-quarter | match | 11/11 | 1/1 | 0 | P8 = -2: inverted-fermata over a quarter rest |
+| code02-p8-inverted-fermata-whole | match | 8/8 | 1/1 | 0 | P8 = -2: inverted-fermata over a whole rest |
+| code02-p8-m3 | differs | 9/9 | 1/5 | 0 | P8 = -3 over a quarter rest |
+| code02-p8-number-101 | differs | 6/9 | 1/1 | 0 | number P8 = 101 over a multi-bar rest |
+| code02-p8-number-111 | differs | 6/9 | 1/1 | 0 | number P8 = 111 over a multi-bar rest |
+| code02-p8-number-12 | differs | 6/8 | 1/1 | 0 | number P8 = 12 over a multi-bar rest |
+| code02-p8-number-123 | differs | 6/9 | 1/1 | 0 | number P8 = 123 over a multi-bar rest |
+| code02-p8-number-211 | differs | 6/9 | 1/1 | 0 | number P8 = 211 over a multi-bar rest |
+| code02-p8-number-3 | differs | 6/7 | 1/1 | 0 | number P8 = 3 over a multi-bar rest |
+| code02-p8-number-eighth | differs | 7/9 | 1/1 | 0 | number P8 = 11 over an eighth rest |
+| code02-p8-number-p4 | differs | 6/7 | 1/1 | 0 | number over a multi-bar rest at P4 = 4 |
+| code02-p8-number-quarter | differs | 9/10 | 1/1 | 0 | number P8 = 5 over a quarter rest |
+| code02-p8-number-whole | differs | 6/7 | 1/1 | 0 | number P8 = 5 over a whole rest |
+| code02-p9-30-multi-bar | match | 6/6 | 1/1 | 0 | multi-bar rest drawn at P9 = 30 |
+| code02-p9-30-quarter | match | 9/9 | 1/1 | 0 | quarter rest with P9 = 30 |
+| code02-p9-30-whole | match | 6/6 | 1/1 | 0 | whole rest drawn at P9 = 30 |
+| code02-p9-cw-composite | match | 9/9 | 1/1 | 0 | composite rest centred between barlines |
+| code02-p9-cw-h-bar | match | 10/10 | 1/1 | 0 | h-bar rest spread between barlines |
+| code02-p9-cw-multi-bar | match | 8/8 | 1/1 | 0 | multi-bar rest centred between barlines |
+| code02-p9-cw-repeat | match | 10/10 | 1/1 | 0 | repeat sign centred between barlines |
+| code02-p9-cw-whole | match | 8/8 | 1/1 | 0 | whole rest centred between barlines (P9 = -1) |
+| code02-staff-0.73-quarter | match | 9/9 | 1/1 | 0 | staff size 0.73: quarter rest |
+| code02-staff-0.73-sixteenth-dot | match | 10/10 | 1/1 | 0 | staff size 0.73: dotted sixteenth |
+| code02-staff-0.73-whole-number | differs | 6/7 | 1/1 | 0 | staff size 0.73: whole rest with number 3 |
+| code02-staff-1.3-quarter | match | 9/9 | 1/1 | 0 | staff size 1.3: quarter rest |
+| code02-staff-1.3-sixteenth-dot | match | 10/10 | 1/1 | 0 | staff size 1.3: dotted sixteenth |
+| code02-staff-1.3-whole-number | differs | 6/7 | 1/1 | 0 | staff size 1.3: whole rest with number 3 |
+| code02-staff-recto | match | 9/9 | 3/3 | 0 | rest on staff 201 (recto page) |
 | code03-no-staff | match | 5/5 | 0/0 | 0 | treble clef without a staff |
 | code03-p10-pixels-1-bass | match | 30/30 | 1/1 | 0 | pixel thickness P10 = 1, type 1 |
 | code03-p10-pixels-1-treble | match | 30/30 | 1/1 | 0 | pixel thickness P10 = 1, type 0 |
@@ -524,6 +677,102 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code04-size-0.75-wavy | match | 45/45 | 1/1 | 0 | heavy wavy line on a size 0.75 staff |
 | code04-size-1.3-saw | match | 52/52 | 1/1 | 0 | sawtooth on a size 1.3 staff |
 | code04-staff-2 | match | 11/11 | 2/2 | 0 | line on staff 2 |
+| code05-default | match | 6/6 | 1/1 | 0 | slur curving up three scale steps |
+| code05-ending-1 | differs | 7/7 | 1/2 | 0 | first ending P8 = 1 |
+| code05-ending-1-continued | match | 6/6 | 1/1 | 0 | first ending continued, P9 = -1 |
+| code05-ending-1-no-number | match | 6/6 | 1/1 | 0 | first ending without number, P9 = -2 |
+| code05-ending-2 | differs | 7/7 | 1/2 | 0 | second ending P8 = 2 |
+| code05-ending-2-open | match | 6/6 | 1/1 | 0 | second ending open, P9 = -1 |
+| code05-ending-4-p9-3 | differs | 7/7 | 1/2 | 0 | third ending P8 = 4, P9 = 3 |
+| code05-ending-p12-size | differs | 7/7 | 1/2 | 0 | first ending stop size P12 = 1.5 |
+| code05-ending-p13-0.5 | differs | 7/7 | 1/2 | 0 | first ending P13 = 0.5 |
+| code05-ending-p13-1 | differs | 7/7 | 1/2 | 0 | first ending P13 = 1 |
+| code05-ending-p13-2 | differs | 7/7 | 1/2 | 0 | first ending P13 = 2 |
+| code05-ending-p13-3 | differs | 7/7 | 1/2 | 0 | first ending P13 = 3 |
+| code05-long | match | 6/6 | 1/1 | 0 | long slur from P3 = 20 to 180 |
+| code05-p10-centre-0.3 | match | 6/6 | 1/1 | 0 | centre of curvature P10 = 0.3 |
+| code05-p10-centre-0.75 | match | 6/6 | 1/1 | 0 | centre of curvature P10 = 0.75 |
+| code05-p11-dashes | match | 25/25 | 1/1 | 0 | dashes P11 = 1 |
+| code05-p11-dashes-5 | match | 10/10 | 1/1 | 0 | five dashes P11 = 5 |
+| code05-p11-dashes-sloped | match | 25/25 | 1/1 | 0 | dashes on a sloped slur |
+| code05-p11-dots | match | 23/23 | 1/1 | 0 | dots P11 = -1 |
+| code05-p11-dots-8 | match | 13/13 | 1/1 | 0 | eight dots P11 = -8 |
+| code05-p12-half-1 | match | 6/6 | 1/1 | 0 | half slur P12 = 1 |
+| code05-p12-half-2 | match | 6/6 | 1/1 | 0 | half slur P12 = 2 |
+| code05-p12-half-dashes | match | 8/8 | 1/1 | 0 | dashed left half slur |
+| code05-p12-half-sloped | match | 6/6 | 1/1 | 0 | right half slur on a slope |
+| code05-p12-reverse | match | 6/6 | 1/1 | 0 | change of direction P12 = -1 |
+| code05-p13-thick-0.5 | match | 6/6 | 1/1 | 0 | thickness P13 = 0.5 |
+| code05-p13-thick-1.5 | match | 6/6 | 1/1 | 0 | thickness P13 = 1.5 |
+| code05-p14-dashes | match | 16/16 | 1/1 | 0 | dashes from P14 = 0.4 |
+| code05-p14-p15 | match | 6/6 | 1/1 | 0 | visible part from P14 = 0.2 to P15 = 0.6 |
+| code05-p14-sloped | match | 6/6 | 1/1 | 0 | P14 = 0.4 on a sloped slur |
+| code05-p14-start | match | 6/6 | 1/1 | 0 | visible part from P14 = 0.3 |
+| code05-p14-start-negative | match | 6/6 | 1/1 | 0 | P14 = -0.4 |
+| code05-p15-dashes | match | 17/17 | 1/1 | 0 | dashes up to P15 = 0.6 |
+| code05-p15-end | match | 6/6 | 1/1 | 0 | visible part up to P15 = 0.7 |
+| code05-p16-number | differs | 7/7 | 1/2 | 0 | number 3 in a broken slur, P16 = 3 |
+| code05-p16-number-12 | differs | 7/7 | 1/3 | 0 | number 12 in a broken slur |
+| code05-p16-number-below | differs | 6/6 | 1/2 | 0 | number under an unbroken slur, P16 = -3 |
+| code05-p16-number-p17-p18 | differs | 7/7 | 1/2 | 0 | number moved by P17 = 1, P18 = 1 |
+| code05-p16-number-sloped | differs | 7/7 | 1/2 | 0 | number in a sloped slur |
+| code05-p16-offsets | match | 6/6 | 1/1 | 0 | end offsets P16 = 1, P17 = 2, P18 = -1.5 |
+| code05-p19-thicken | match | 6/6 | 1/1 | 0 | thickness reached at P19 = 0.5 |
+| code05-p20-width | match | 6/6 | 1/1 | 0 | end placement P8 = -1 with note width P20 = 1.5 |
+| code05-p25-layer | match | 6/6 | 1/1 | 0 | layer number P25 = 1 |
+| code05-p26-grey-0.5 | match | 6/6 | 1/1 | 0 | P26 = 0.5 |
+| code05-p26-red | match | 6/6 | 1/1 | 0 | P26 = 990000 |
+| code05-p27-slash | match | 7/7 | 1/1 | 0 | slash P27 = 3 |
+| code05-p27-slash-p28-p29 | match | 7/7 | 1/1 | 0 | slash P27 = 2 raised P28 = 1 at P29 = 0.3 |
+| code05-p27-slash-sloped | match | 7/7 | 1/1 | 0 | slash on a sloped slur |
+| code05-p5-right-12 | match | 6/6 | 1/1 | 0 | right end level P5 = 12 |
+| code05-p5-right-5.5 | match | 6/6 | 1/1 | 0 | right end level P5 = 5.5 |
+| code05-p6-before-p3 | match | 6/6 | 1/1 | 0 | P6 left of P3 |
+| code05-p6-zero | match | 6/6 | 1/1 | 0 | P6 = 0 and P7 = 0: P3 + 20 and curvature 3 |
+| code05-p7-curve-0 | match | 6/6 | 1/1 | 0 | curvature P7 = 0 |
+| code05-p7-curve-1.5 | match | 6/6 | 1/1 | 0 | curvature P7 = 1.5 |
+| code05-p7-curve-6 | match | 6/6 | 1/1 | 0 | curvature P7 = 6 |
+| code05-p7-down | match | 6/6 | 1/1 | 0 | slur curving down, P7 = -3 |
+| code05-p8-ends-0.3 | match | 6/6 | 1/1 | 0 | end placement P8 = 0.3 |
+| code05-p8-ends-11 | match | 6/6 | 1/1 | 0 | end placement P8 = 11 |
+| code05-p8-ends-15 | match | 6/6 | 1/1 | 0 | end placement P8 = 15 |
+| code05-p8-ends-m1 | match | 6/6 | 1/1 | 0 | end placement P8 = -1 |
+| code05-p8-ends-m3 | match | 6/6 | 1/1 | 0 | end placement P8 = -3 |
+| code05-p8-ends-m4 | match | 6/6 | 1/1 | 0 | end placement P8 = -4 |
+| code05-p8-ends-m5 | match | 6/6 | 1/1 | 0 | end placement P8 = -5 |
+| code05-p8-ends-m6 | match | 6/6 | 1/1 | 0 | end placement P8 = -6 |
+| code05-p8-ends-m7 | match | 6/6 | 1/1 | 0 | end placement P8 = -7 |
+| code05-p8-ends-m8 | match | 6/6 | 1/1 | 0 | end placement P8 = -8 |
+| code05-p8-ends-m9 | match | 6/6 | 1/1 | 0 | end placement P8 = -9 |
+| code05-p9-flatten-2 | match | 6/6 | 1/1 | 0 | flattening P9 = 2 |
+| code05-p9-flatten-m1 | match | 6/6 | 1/1 | 0 | flattening P9 = -1 |
+| code05-p9-triangle | match | 6/6 | 1/1 | 0 | triangle P9 = 99 |
+| code05-p9-triangle-line | match | 6/6 | 1/1 | 0 | triangle with P7 = 0: a line |
+| code05-p9-triangle-p10-p13 | match | 8/8 | 1/1 | 0 | triangle with peak at P10 = 0.3, P13 = 2 extra strokes |
+| code05-recto-201 | match | 6/6 | 3/3 | 0 | slur on recto staff 201 |
+| code05-short | match | 6/6 | 1/1 | 0 | short slur over three P3 units |
+| code05-staff-2 | match | 11/11 | 2/2 | 0 | slur on staff 2 |
+| code05-staff-size-0.75 | match | 6/6 | 1/1 | 0 | slur on a staff of size 0.75 |
+| code05-tie | match | 6/6 | 1/1 | 0 | tie: P8 = -2, curvature 2 |
+| code05-tuplet | differs | 7/7 | 1/2 | 0 | tuplet bracket P8 = 3 |
+| code05-tuplet-down | differs | 7/7 | 1/2 | 0 | tuplet bracket below, P7 = -4 |
+| code05-tuplet-p10 | differs | 7/7 | 1/2 | 0 | tuplet number at P10 = 0.3 |
+| code05-tuplet-p11-1 | differs | 6/6 | 1/2 | 0 | tuplet bracket P11 = 1 |
+| code05-tuplet-p11-2 | differs | 6/6 | 1/2 | 0 | tuplet bracket P11 = 2 |
+| code05-tuplet-p11-3 | match | 6/6 | 1/1 | 0 | tuplet bracket P11 = 3 |
+| code05-tuplet-p12 | differs | 7/7 | 1/2 | 0 | tuplet bracket right hook lengthened P12 = 2 |
+| code05-tuplet-p13-1 | differs | 7/7 | 1/2 | 0 | tuplet bracket P13 = 1 (open ends) |
+| code05-tuplet-p13-2 | differs | 7/7 | 1/2 | 0 | tuplet bracket P13 = 2 (open ends) |
+| code05-tuplet-p13-3 | differs | 7/7 | 1/2 | 0 | tuplet bracket P13 = 3 (open ends) |
+| code05-tuplet-p14-font | differs | 7/7 | 1/2 | 0 | tuplet number in font 12, P14 = 12 |
+| code05-tuplet-p20 | differs | 7/7 | 1/2 | 0 | tuplet bracket with P20 = 1.5 |
+| code05-tuplet-p21 | differs | 7/7 | 1/2 | 0 | tuplet number size P21 = 1.2 |
+| code05-tuplet-p23 | differs | 7/7 | 1/2 | 0 | tuplet gap P23 = 2 |
+| code05-tuplet-p9-12 | differs | 7/7 | 1/3 | 0 | tuplet bracket with 12, P9 = 12 |
+| code05-tuplet-p9-5 | differs | 7/7 | 1/2 | 0 | tuplet bracket with 5, P9 = 5 |
+| code05-tuplet-p9-open | match | 7/7 | 1/1 | 0 | tuplet bracket with open space P9 = -3 |
+| code05-tuplet-sloped | differs | 7/7 | 1/2 | 0 | sloped tuplet bracket, P5 = 12 |
+| code05-two-slurs | match | 7/7 | 1/1 | 0 | two slurs in one file |
 | code06-combined-12 | match | 9/9 | 1/1 | 0 | two full beams and floating beams P10 = 22 (P11 = P12 = 0) |
 | code06-default | match | 6/6 | 1/1 | 0 | single beam, stems up, horizontal |
 | code06-floating-10 | match | 7/7 | 1/1 | 0 | floating beams P7 = 10, P10 = 2 |
@@ -595,6 +844,75 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code06-trem-p11-main-end | match | 7/7 | 1/1 | 0 | tremolo P7 = -10 with P11 = -1 |
 | code06-trem-width | match | 7/7 | 1/1 | 0 | tremolo across the stem, width P12 = 8 |
 | code06-two-beams | match | 8/8 | 1/1 | 0 | two beams in one file |
+| code07-p10-ottava-thick | differs | 62/62 +3 | 1/4 | 0 | 8va dashes, P10 1 |
+| code07-p10-trill-thick | match | 31/31 | 1/1 | 0 | trill extension, P10 1 |
+| code07-p11-pedal-arrow | match | 7/7 | 1/1 | 0 | pedal line, left arrow P11 101 |
+| code07-p11-pedal-bracket | match | 6/6 | 1/1 | 0 | pedal line, left bracket P11 2 |
+| code07-p11-trill-wave-down | match | 31/31 | 1/1 | 0 | trill extension lowered, P11 -0.6 |
+| code07-p11-trill-wave-up | match | 31/31 | 1/1 | 0 | trill extension raised, P11 1 |
+| code07-p11p12-piano-pedal-brackets | match | 14/14 | 1/1 | 0 | piano pedal symbol line with brackets |
+| code07-p12-ottava-88-bracket | differs | 25/25 | 1/2 | 0 | ottava 88 with end bracket P12 -1.5 |
+| code07-p12-ottava-bracket | differs | 24/24 +3 | 1/4 | 0 | 8va with end bracket P12 -2 |
+| code07-p12-pedal-arrow | match | 7/7 | 1/1 | 0 | pedal line, right arrow P12 101 |
+| code07-p12-pedal-bracket | match | 6/6 | 1/1 | 0 | pedal line, right bracket P12 2 |
+| code07-p12-pedal-updown | match | 7/7 | 1/1 | 0 | pedal line, right P12 201 |
+| code07-p12-trill-arrow | match | 32/32 | 1/1 | 0 | trill extension with arrow, P12 100 |
+| code07-p13-trill-rotated | match | 31/31 | 1/1 | 0 | trill extension, P13 5 |
+| code07-p15-harp-offset | match | 18/18 | 1/1 | 0 | harp pedal symbol, P15 4 |
+| code07-p15-pedal-offset | match | 6/6 | 1/1 | 0 | pedal line, P15 2 |
+| code07-p15-trill-offset | match | 29/29 | 1/1 | 0 | trill, P15 3 |
+| code07-p16p18-trill-offsets | match | 32/32 | 1/1 | 0 | trill, P16 1, P17 2, P18 5 |
+| code07-p18-ottava-offset | differs | 25/25 +3 | 1/4 | 0 | 8va, P18 3 |
+| code07-p18-trill-right-offset | match | 29/29 | 1/1 | 0 | trill, P18 -4 (P16 set by the engine) |
+| code07-p26-trill-colour | match | 31/31 | 1/1 | 0 | trill with extension, P26 0.5 |
+| code07-p28-trill-pixels | match | 15/15 | 1/1 | 0 | trill, P28 1 |
+| code07-p5-harp-size | match | 18/18 | 1/1 | 0 | harp pedal symbol, P5 1.5 |
+| code07-p5-ottava-size | differs | 17/17 +3 | 1/4 | 0 | 8va, P5 1.5 |
+| code07-p5-piano-pedal-010 | match | 12/12 | 1/1 | 0 | piano pedal symbol, P5 10 |
+| code07-p5-piano-pedal-111 | match | 18/18 | 1/1 | 0 | piano pedal symbol, P5 111 |
+| code07-p5-piano-pedal-off | match | 9/9 | 1/1 | 0 | piano pedal symbol, all pedals up |
+| code07-p5-trill-size-0.7 | match | 10/10 | 1/1 | 0 | trill, P5 0.7, with flat |
+| code07-p5-trill-size-1.5 | match | 22/22 | 1/1 | 0 | trill, P5 1.5, with extension |
+| code07-p6-ottava-dashes | differs | 24/24 +3 | 1/4 | 0 | 8va with dashes to P6 80 |
+| code07-p6-piano-pedal-line | match | 13/13 | 1/1 | 0 | piano pedal symbol with line to P6 70 |
+| code07-p6-trill-wave | match | 31/31 | 1/1 | 0 | trill with wavy extension to P6 70 |
+| code07-p7-25 | match | 6/6 | 1/1 | 0 | P7 25: symbol 120 |
+| code07-p7-asterisk | match | 6/6 | 1/1 | 0 | P7 24: asterisk |
+| code07-p7-harp | match | 18/18 | 1/1 | 0 | harp pedal symbol, P8 012, P9 1201 |
+| code07-p7-harp-down | match | 18/18 | 1/1 | 0 | harp pedals all down (222, 2222) |
+| code07-p7-harp-flat | match | 18/18 | 1/1 | 0 | harp pedals all up (000, 0000) |
+| code07-p7-ottava | differs | 5/5 +3 | 1/4 | 0 | 8va symbol, P7 8 |
+| code07-p7-ottava-88 | differs | 25/25 | 1/2 | 0 | ottava, dashes up, P7 88 |
+| code07-p7-ottava-bassa | differs | 24/24 +3 | 1/4 | 0 | 8ba with dashes, P7 -8 |
+| code07-p7-ottava-m88 | differs | 25/25 | 1/2 | 0 | ottava, dashes down, P7 -88 |
+| code07-p7-ped | match | 7/7 | 1/1 | 0 | P7 23: Ped. symbol |
+| code07-p7-pedal-line | match | 6/6 | 1/1 | 0 | pedal line, P7 21, to P6 80 |
+| code07-p7-pedal-line-22 | match | 6/6 | 1/1 | 0 | pedal line, P7 22, to P6 80 |
+| code07-p7-piano-pedal | match | 15/15 | 1/1 | 0 | piano pedal symbol, P5 101 |
+| code07-p7-quindicesima | differs | 23/23 +4 | 1/5 | 0 | 15ma with dashes, P7 15 |
+| code07-p7-quindicesima-155 | differs | 24/24 | 1/3 | 0 | quindicesima, dashes up, P7 155 |
+| code07-p7-trill | match | 7/7 | 1/1 | 0 | trill symbol, P7 0 |
+| code07-p8-pedal-notch | match | 6/6 | 1/1 | 0 | pedal line with notch at P8 50 |
+| code07-p8-pedal-notch-22 | match | 6/6 | 1/1 | 0 | pedal line 22 with notch at P8 50 |
+| code07-p8-piano-pedal-left | match | 13/13 | 1/1 | 0 | piano pedal symbol, lines from P8 10 to P6 70 |
+| code07-p8-trill-4 | match | 13/13 | 1/1 | 0 | trill with P8 4 (double flat) |
+| code07-p8-trill-5 | match | 8/8 | 1/1 | 0 | trill with P8 5 (double sharp) |
+| code07-p8-trill-6 | match | 7/7 | 1/1 | 0 | trill with P8 6 (no accidental) |
+| code07-p8-trill-flat | match | 10/10 | 1/1 | 0 | trill with flat, P8 1 |
+| code07-p8-trill-natural | match | 11/11 | 1/1 | 0 | trill with natural, P8 3 |
+| code07-p8-trill-sharp | match | 11/11 | 1/1 | 0 | trill with sharp, P8 2 |
+| code07-p8-trill-wave | match | 35/35 | 1/1 | 0 | trill with sharp and extension |
+| code07-p8p9-ottava-dashes | differs | 21/21 +3 | 1/4 | 0 | 8va dashes P8 2, P9 1 |
+| code07-p9-ped-size | match | 7/7 | 1/1 | 0 | P7 23, P9 1.5 |
+| code07-p9-pedal-notch-height | match | 6/6 | 1/1 | 0 | pedal notch, P9 3 |
+| code07-p9-piano-pedal-size | match | 12/12 | 1/1 | 0 | piano pedal symbol, P9 1.5 |
+| code07-p9-trill-wave-size | match | 23/23 | 1/1 | 0 | trill extension, P9 1.5 |
+| code07-p9-trill-wave-small | match | 46/46 | 1/1 | 0 | trill extension, P9 0.6 |
+| code07-recto | match | 31/31 | 3/3 | 0 | trill with extension on the recto staff 201 |
+| code07-size-0.75-harp | match | 18/18 | 1/1 | 0 | harp pedal symbol on a size 0.75 staff |
+| code07-size-0.75-ottava | differs | 39/39 +3 | 1/4 | 0 | 8va with dashes on a size 0.75 staff |
+| code07-size-0.75-pedal | match | 6/6 | 1/1 | 0 | pedal line with notch on a size 0.75 staff |
+| code07-size-0.75-trill | match | 42/42 | 1/1 | 0 | trill with flat and extension on a size 0.75 staff |
 | code08-default | match | 5/5 | 1/1 | 0 | staff 1, size 1 |
 | code08-p10-inches-1.5 | match | 5/5 | 1/1 | 0 | staff 2 placed 1.5 in above staff 1 with P10 (P4 = 4 ignored) |
 | code08-p10-inches-3 | match | 5/5 | 1/1 | 0 | staff 2 placed 3 in above staff 1 with P10 (P4 = 4 ignored) |
@@ -654,6 +972,111 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code08-staves-p10 | match | 15/15 | 3/3 | 0 | staves 1-3, staves 2 and 3 placed by P10 = 1.2 and 2.6 in |
 | code08-staves-recto | match | 10/10 | 4/4 | 0 | staff 1 and recto staff 201 |
 | code08-staves-sizes | match | 20/20 | 4/4 | 0 | staves 1-4 with sizes 1, 0.75, 1.2, 0.6 |
+| code09-p10-pixels-1 | match | 15/15 | 1/1 | 0 | symbol 31, P10 1 |
+| code09-p10-pixels-2 | match | 23/23 | 1/1 | 0 | symbol 31, P10 2 |
+| code09-p10-pixels-m1 | match | 7/7 | 1/1 | 0 | symbol 31, P10 -1 |
+| code09-p10-pixels-p8 | match | 11/11 | 1/1 | 0 | symbol 31, P10 2 with P8 1 (P8 wins) |
+| code09-p10-pixels-small | match | 20/20 | 1/1 | 0 | symbol 53, P10 2 (one less for symbols from 45 on) |
+| code09-p11-special | match | 85/85 | 1/1 | 0 | special symbol 1302 with P11 1 (hidden in print only) |
+| code09-p15-offset-3 | match | 6/6 | 1/1 | 0 | symbol 24, P15 3 |
+| code09-p15-offset-m2.5 | match | 6/6 | 1/1 | 0 | symbol 24, P15 -2.5 |
+| code09-p25-layer | match | 7/7 | 1/1 | 0 | symbol 31, P25 2 |
+| code09-p26-grey | match | 7/7 | 1/1 | 0 | symbol 31, P26 0.5 |
+| code09-p26-rgb | match | 8/8 | 1/1 | 0 | symbol 53, P26 336699 |
+| code09-p3-fraction | match | 6/6 | 1/1 | 0 | symbol 24, P3 30.37 |
+| code09-p4-level-0 | match | 6/6 | 1/1 | 0 | symbol 24, P4 0 |
+| code09-p4-level-14.5 | match | 6/6 | 1/1 | 0 | symbol 24, P4 14.5 |
+| code09-p4-level-m3 | match | 6/6 | 1/1 | 0 | symbol 24, P4 -3 |
+| code09-p5-missing | match | 8/8 | 1/1 | 0 | P5 3 (empty slot) |
+| code09-p5-negative | match | 10/10 | 1/1 | 0 | P5 -3 draws symbol 0 |
+| code09-p5-symbol-0 | match | 10/10 | 1/1 | 0 | library symbol 0 |
+| code09-p5-symbol-1 | match | 10/10 | 1/1 | 0 | library symbol 1 |
+| code09-p5-symbol-1000 | match | 7/7 | 1/1 | 0 | library symbol 1000 |
+| code09-p5-symbol-103 | match | 6/6 | 1/1 | 0 | library symbol 103 |
+| code09-p5-symbol-107 | match | 7/7 | 1/1 | 0 | library symbol 107 |
+| code09-p5-symbol-11 | match | 6/6 | 1/1 | 0 | library symbol 11 |
+| code09-p5-symbol-1110 | match | 79/79 | 1/1 | 0 | library symbol 1110 |
+| code09-p5-symbol-115 | match | 9/9 | 1/1 | 0 | library symbol 115 |
+| code09-p5-symbol-119 | match | 7/7 | 1/1 | 0 | library symbol 119 |
+| code09-p5-symbol-123 | match | 7/7 | 1/1 | 0 | library symbol 123 |
+| code09-p5-symbol-1300 | differs | 5/79 | 1/1 | 0 | library symbol 1300 |
+| code09-p5-symbol-1302 | match | 85/85 | 1/1 | 0 | library symbol 1302 |
+| code09-p5-symbol-1304 | match | 105/105 | 1/1 | 0 | library symbol 1304 |
+| code09-p5-symbol-1400 | match | 79/79 | 1/1 | 0 | library symbol 1400 |
+| code09-p5-symbol-147 | match | 8/8 | 1/1 | 0 | library symbol 147 |
+| code09-p5-symbol-151 | match | 16/16 | 1/1 | 0 | library symbol 151 |
+| code09-p5-symbol-18 | match | 9/9 | 1/1 | 0 | library symbol 18 |
+| code09-p5-symbol-1960 | match | 6/6 | 1/1 | 0 | library symbol 1960 |
+| code09-p5-symbol-199 | match | 29/29 | 1/1 | 0 | library symbol 199 |
+| code09-p5-symbol-207 | match | 8/8 | 1/1 | 0 | library symbol 207 |
+| code09-p5-symbol-21 | match | 7/7 | 1/1 | 0 | library symbol 21 |
+| code09-p5-symbol-219 | match | 6/6 | 1/1 | 0 | library symbol 219 |
+| code09-p5-symbol-239 | match | 7/7 | 1/1 | 0 | library symbol 239 |
+| code09-p5-symbol-24 | match | 6/6 | 1/1 | 0 | library symbol 24 |
+| code09-p5-symbol-263 | match | 9/9 | 1/1 | 0 | library symbol 263 |
+| code09-p5-symbol-283 | match | 12/12 | 1/1 | 0 | library symbol 283 |
+| code09-p5-symbol-31 | match | 7/7 | 1/1 | 0 | library symbol 31 |
+| code09-p5-symbol-34 | match | 11/11 | 1/1 | 0 | library symbol 34 |
+| code09-p5-symbol-37 | match | 7/7 | 1/1 | 0 | library symbol 37 |
+| code09-p5-symbol-39 | match | 8/8 | 1/1 | 0 | library symbol 39 |
+| code09-p5-symbol-41 | match | 6/6 | 1/1 | 0 | library symbol 41 |
+| code09-p5-symbol-44 | match | 7/7 | 1/1 | 0 | library symbol 44 |
+| code09-p5-symbol-48 | match | 9/9 | 1/1 | 0 | library symbol 48 |
+| code09-p5-symbol-49 | match | 8/8 | 1/1 | 0 | library symbol 49 |
+| code09-p5-symbol-5 | match | 6/6 | 1/1 | 0 | library symbol 5 |
+| code09-p5-symbol-50 | match | 17/17 | 1/1 | 0 | library symbol 50 |
+| code09-p5-symbol-53 | match | 8/8 | 1/1 | 0 | library symbol 53 |
+| code09-p5-symbol-55 | match | 9/9 | 1/1 | 0 | library symbol 55 |
+| code09-p5-symbol-6 | match | 8/8 | 1/1 | 0 | library symbol 6 |
+| code09-p5-symbol-600 | match | 11/11 | 1/1 | 0 | library symbol 600 |
+| code09-p5-symbol-62 | match | 8/8 | 1/1 | 0 | library symbol 62 |
+| code09-p5-symbol-652 | match | 9/9 | 1/1 | 0 | library symbol 652 |
+| code09-p5-symbol-70 | match | 7/7 | 1/1 | 0 | library symbol 70 |
+| code09-p5-symbol-71 | match | 6/6 | 1/1 | 0 | library symbol 71 |
+| code09-p5-symbol-74 | match | 8/8 | 1/1 | 0 | library symbol 74 |
+| code09-p5-symbol-75 | match | 6/6 | 1/1 | 0 | library symbol 75 |
+| code09-p5-symbol-750 | match | 21/21 | 1/1 | 0 | library symbol 750 |
+| code09-p5-symbol-83 | match | 6/6 | 1/1 | 0 | library symbol 83 |
+| code09-p5-symbol-900 | match | 6/6 | 1/1 | 0 | library symbol 900 |
+| code09-p5-symbol-91 | match | 7/7 | 1/1 | 0 | library symbol 91 |
+| code09-p5-text-276 | differs | 5/5 +5 | 1/5 | 0 | symbol 276, drawn as text |
+| code09-p5-text-3000 | differs | 5/5 | 1/3 | 0 | symbol 3000, drawn as text |
+| code09-p5-text-3004 | differs | 5/5 | 1/6 | 0 | symbol 3004, drawn as text |
+| code09-p5-text-45 | differs | 5/5 +3 | 1/4 | 0 | symbol 45, drawn as text |
+| code09-p5-text-63 | differs | 5/5 +1 | 1/7 | 0 | symbol 63, drawn as text |
+| code09-p5-text-66 | differs | 5/5 +1 | 1/6 | 0 | symbol 66, drawn as text |
+| code09-p5-text-78 | differs | 5/5 +6 | 1/7 | 0 | symbol 78, drawn as text |
+| code09-p6-size-0.5 | match | 7/7 | 1/1 | 0 | symbol 31, P6 0.5 |
+| code09-p6-size-1.7 | match | 7/7 | 1/1 | 0 | symbol 31, P6 1.7 |
+| code09-p6-size-101.5 | match | 7/7 | 1/1 | 0 | symbol 31, P6 101.5 |
+| code09-p6-size-250 | match | 7/7 | 1/1 | 0 | symbol 31, P6 250 |
+| code09-p6-size-300 | match | 7/7 | 1/1 | 0 | symbol 31, P6 300 |
+| code09-p6-size-m1 | match | 7/7 | 1/1 | 0 | symbol 31, P6 -1 |
+| code09-p6-size-small-0.6 | match | 8/8 | 1/1 | 0 | symbol 53, P6 0.6 |
+| code09-p6-size-small-2 | match | 8/8 | 1/1 | 0 | symbol 53, P6 2 |
+| code09-p7-only | match | 7/7 | 1/1 | 0 | symbol 31, P7 1.5 without P6 |
+| code09-p7-vsize-0.5 | match | 7/7 | 1/1 | 0 | symbol 31, P6 1, P7 0.5 |
+| code09-p7-vsize-2 | match | 7/7 | 1/1 | 0 | symbol 31, P6 1, P7 2 |
+| code09-p7-vsize-m1 | match | 7/7 | 1/1 | 0 | symbol 31, P6 1, P7 -1 |
+| code09-p8-thick-101 | match | 15/15 | 1/1 | 0 | symbol 31, P8 101 |
+| code09-p8-thick-202 | match | 23/23 | 1/1 | 0 | symbol 31, P8 202 |
+| code09-p8-thick-3 | match | 19/19 | 1/1 | 0 | symbol 31, P8 3 |
+| code09-p8-thick-300 | match | 19/19 | 1/1 | 0 | symbol 31, P8 300 |
+| code09-p8-thick-m1 | match | 7/7 | 1/1 | 0 | symbol 31, P8 -1 |
+| code09-p8-thick-small | match | 20/20 | 1/1 | 0 | symbol 53, P8 101 |
+| code09-p9-rotation-0.5 | match | 7/7 | 1/1 | 0 | symbol 37, P9 0.5 |
+| code09-p9-rotation-1.5 | match | 7/7 | 1/1 | 0 | symbol 37, P9 1.5 |
+| code09-p9-rotation-30 | match | 7/7 | 1/1 | 0 | symbol 37, P9 30 |
+| code09-p9-rotation-90 | match | 7/7 | 1/1 | 0 | symbol 37, P9 90 |
+| code09-p9-rotation-m45 | match | 7/7 | 1/1 | 0 | symbol 37, P9 -45 |
+| code09-p9-rotation-small | match | 7/7 | 1/1 | 0 | symbol 70, P9 20 |
+| code09-recto | match | 7/7 | 3/3 | 0 | symbol 31 on the recto staff 201 |
+| code09-several | match | 23/23 | 1/1 | 0 | several symbols in a row |
+| code09-size-0.75 | match | 10/10 | 1/1 | 0 | symbols 31 and 53 on a size 0.75 staff |
+| code09-size-0.75-special | match | 85/85 | 1/1 | 0 | special symbol 1302 on a size 0.75 staff |
+| code09-size-1.3 | match | 10/10 | 1/1 | 0 | symbols 31 and 53 on a size 1.3 staff |
+| code09-staff-0-special | match | 85/85 | 1/1 | 0 | special symbol 1302 on staff 0 |
+| code09-staff-2 | match | 12/12 | 2/2 | 0 | symbol 31 on staff 2 |
 | code14-lines-3 | match | 4/4 | 1/1 | 0 | barline on a three-line staff |
 | code14-no-staff | match | 1/1 | 0/0 | 0 | barline without any staff |
 | code14-p10-bottom-4 | match | 21/21 | 4/4 | 0 | partial bar, bottom origin P10 = 4 |
@@ -720,7 +1143,7 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code14-p5-single | match | 21/21 | 4/4 | 0 | type P5 = 0 (single) |
 | code14-p5-square-bracket | match | 21/21 | 4/4 | 0 | type P5 = 10 (square-bracket) |
 | code14-p5-square-bracket-span-4 | match | 21/21 | 4/4 | 0 | type P5 = 10 spanning all four staves |
-| code14-p5-two-bar-repeat | differs | 21/25 | 4/4 | 0 | type P5 = -44 (two-bar-repeat) |
+| code14-p5-two-bar-repeat | match | 25/25 | 4/4 | 0 | type P5 = -44 (two-bar-repeat) |
 | code14-p5-type-11 | match | 53/53 | 4/4 | 0 | type P5 = 11 (type-11) |
 | code14-p5-type-14 | match | 53/53 | 4/4 | 0 | type P5 = 14 (type-14) |
 | code14-p6-thick-1-brace | match | 21/21 | 4/4 | 0 | thickness P6 = 1, type 8 |
@@ -740,104 +1163,156 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code14-p8-partial-bracket-1 | match | 23/23 | 4/4 | 0 | bracket with P8 = 1 (partial bracket) |
 | code14-p8-partial-bracket-2 | match | 23/23 | 4/4 | 0 | bracket with P8 = 2 (partial bracket) |
 | code14-p8-partial-bracket-m1 | match | 24/24 | 4/4 | 0 | bracket with P8 = -1 (partial bracket) |
-| code14-p8-two-bar-number | differs | 21/26 | 4/4 | 0 | two-bar repeat with number P8 = 2 |
+| code14-p8-two-bar-number | differs | 25/26 | 4/4 | 0 | two-bar repeat with number P8 = 2 |
 | code14-p9-space-0.5 | match | 74/74 | 4/4 | 0 | dashed bar, space P9 = 0.5 |
 | code14-p9-space-2 | match | 47/47 | 4/4 | 0 | dashed bar, space P9 = 2 |
 | code14-sizes-repeat | match | 22/22 | 2/2 | 0 | repeat bar across staves of size 0.7 and 1 |
 | code14-sizes-span-3 | match | 18/18 | 3/3 | 0 | staves of size 1, 0.7, 1.2; final bar spanning 3 |
 | code14-staff-offset | match | 11/11 | 2/2 | 0 | barline spanning staves moved by P4 |
 | code14-system | match | 30/30 | 4/4 | 0 | system: brace, bracket, start bar, middle and final bars |
-| code16-default | differs | 5/5 | 1/16 | 0 | Times (_00) at size 1 |
-| code16-font-00 | differs | 5/5 | 1/16 | 0 | font _00 |
-| code16-font-01 | differs | 5/5 | 1/16 | 0 | font _01 |
-| code16-font-02 | differs | 5/5 | 1/16 | 0 | font _02 |
-| code16-font-03 | differs | 5/5 | 1/16 | 0 | font _03 |
-| code16-font-04 | differs | 5/5 | 1/16 | 0 | font _04 |
-| code16-font-05 | differs | 5/5 | 1/16 | 0 | font _05 |
-| code16-font-06 | differs | 5/5 | 1/16 | 0 | font _06 |
-| code16-font-07 | differs | 5/5 | 1/16 | 0 | font _07 |
-| code16-font-08 | differs | 5/5 | 1/16 | 0 | font _08 |
-| code16-font-09 | differs | 5/5 | 1/16 | 0 | font _09 |
-| code16-font-10 | differs | 5/5 | 1/16 | 0 | font _10 |
-| code16-font-11 | differs | 5/5 | 1/16 | 0 | font _11 |
-| code16-font-12 | differs | 5/5 | 1/16 | 0 | font _12 |
-| code16-font-13 | differs | 5/5 | 1/16 | 0 | font _13 |
-| code16-font-14 | differs | 5/5 | 1/16 | 0 | font _14 |
-| code16-font-15 | differs | 5/5 | 1/16 | 0 | font _15 |
-| code16-font-16 | differs | 5/5 | 1/16 | 0 | font _16 |
-| code16-font-17 | differs | 5/5 | 1/16 | 0 | font _17 |
-| code16-font-18 | differs | 5/5 | 1/16 | 0 | font _18 |
-| code16-font-19 | differs | 5/5 | 1/16 | 0 | font _19 |
-| code16-font-20 | differs | 5/5 | 1/16 | 0 | font _20 |
-| code16-font-21 | differs | 5/5 | 1/16 | 0 | font _21 |
-| code16-font-22 | differs | 5/5 | 1/16 | 0 | font _22 |
-| code16-font-23 | differs | 5/5 | 1/16 | 0 | font _23 |
-| code16-font-24 | differs | 5/5 | 1/16 | 0 | font _24 |
-| code16-font-25 | differs | 5/5 | 1/16 | 0 | font _25 |
-| code16-font-26 | differs | 5/5 | 1/16 | 0 | font _26 |
-| code16-font-27 | differs | 5/5 | 1/16 | 0 | font _27 |
-| code16-font-28 | differs | 5/5 | 1/16 | 0 | font _28 |
-| code16-font-29 | differs | 5/5 | 1/16 | 0 | font _29 |
-| code16-font-30 | differs | 5/5 | 1/16 | 0 | font _30 |
-| code16-font-31 | differs | 5/5 | 1/16 | 0 | font _31 |
-| code16-font-32 | differs | 5/5 | 1/16 | 0 | font _32 |
-| code16-font-33 | differs | 5/5 | 1/16 | 0 | font _33 |
-| code16-font-34 | differs | 5/5 | 1/16 | 0 | font _34 |
-| code16-font-90 | differs | 5/5 | 1/19 | 0 | font _90 |
-| code16-font-91 | differs | 5/5 | 1/19 | 0 | font _91 |
-| code16-font-92 | differs | 5/5 | 1/19 | 0 | font _92 |
-| code16-font-93 | differs | 5/5 | 1/19 | 0 | font _93 |
-| code16-font-94 | differs | 5/13 | 1/1 | 0 | meter font _94 |
-| code16-font-98 | differs | 5/5 | 1/19 | 0 | font _98 |
-| code16-font-99-comment | differs | 5/5 | 1/10 | 0 | non-printing comment _99% |
-| code16-fonts-mixed | differs | 5/5 | 1/24 | 0 | font changes inside the string |
-| code16-latin1 | differs | 5/5 | 1/12 | 0 | Latin-1 characters |
-| code16-lines | differs | 5/5 | 1/16 | 0 | three lines of text |
-| code16-long | differs | 5/5 | 1/109 | 0 | a long line |
-| code16-one-char | differs | 5/5 | 1/2 | 0 | a single character |
-| code16-p10-space-2 | differs | 5/5 | 1/12 | 0 | space size P10 = 2 |
-| code16-p11-displace-10 | differs | 5/5 | 1/16 | 0 | horizontal displacement P11 = 10 |
-| code16-p11-displace-m5 | differs | 5/5 | 1/16 | 0 | horizontal displacement P11 = -5 |
-| code16-p14-colour-red | differs | 5/5 | 1/16 | 0 | P14 = -1, P16 = 990000 |
-| code16-p14-grey | differs | 5/5 | 1/16 | 0 | P14 = -1, P16 = 0.5 |
-| code16-p14-layer | differs | 5/5 | 1/17 | 0 | P14 = -1, layer P15 = 1 |
-| code16-p3-right | differs | 5/5 | 1/16 | 0 | near the right margin, P3 = 180 |
-| code16-p4-low | differs | 5/5 | 1/16 | 0 | below the staff, P4 = -6 |
-| code16-p5-spacing-0.8 | differs | 5/5 | 1/16 | 0 | character space factor P5 = 0.8 |
-| code16-p5-spacing-1.3 | differs | 5/5 | 1/16 | 0 | character space factor P5 = 1.3 |
-| code16-p6-parts-101 | differs | 5/5 | 1/16 | 0 | part-extraction flag in P6 = 101 |
-| code16-p6-parts-201 | differs | 5/5 | 1/16 | 0 | part-extraction flag in P6 = 201 |
-| code16-p6-parts-301 | differs | 5/5 | 1/16 | 0 | part-extraction flag in P6 = 301 |
-| code16-p6-size-0 | differs | 5/5 | 1/16 | 0 | size P6 = 0 |
-| code16-p6-size-0.5 | differs | 5/5 | 1/16 | 0 | size P6 = 0.5 |
-| code16-p6-size-2 | differs | 5/5 | 1/16 | 0 | size P6 = 2 |
-| code16-p7-vertical-2 | differs | 5/5 | 1/16 | 0 | P6 = 1, vertical size P7 = 2 |
-| code16-p7-vertical-half | differs | 5/5 | 1/16 | 0 | P6 = 2, vertical size P7 = 0.5 |
-| code16-p8-font-1000 | differs | 5/5 | 1/16 | 0 | font override P8 = 1000 |
-| code16-p8-font-1004 | differs | 5/5 | 1/16 | 0 | font override P8 = 1004 |
-| code16-p8-font-1034 | differs | 5/5 | 1/16 | 0 | font override P8 = 1034 |
-| code16-p8-font-90 | differs | 5/5 | 1/16 | 0 | font override P8 = 90 |
-| code16-p8-font-91 | differs | 5/5 | 1/16 | 0 | font override P8 = 91 |
-| code16-p8-font-92 | differs | 5/5 | 1/16 | 0 | font override P8 = 92 |
-| code16-p8-font-93 | differs | 5/5 | 1/16 | 0 | font override P8 = 93 |
-| code16-p8-font-94 | differs | 5/23 | 1/1 | 0 | font override P8 = 94 |
-| code16-p8-font-98 | differs | 5/5 | 1/16 | 0 | font override P8 = 98 |
-| code16-p8-outline-1105 | differs | 5/5 | 1/16 | 0 | outline font override P8 = 1105 |
-| code16-p8-outline-193 | differs | 5/5 | 1/16 | 0 | outline font override P8 = 193 |
-| code16-p9-rotate-180 | differs | 5/5 | 1/16 | 0 | rotation P9 = 180 degrees |
-| code16-p9-rotate-30 | differs | 5/5 | 1/16 | 0 | rotation P9 = 30 degrees |
-| code16-p9-rotate-90 | differs | 5/5 | 1/16 | 0 | rotation P9 = 90 degrees |
-| code16-p9-rotate-m45 | differs | 5/5 | 1/16 | 0 | rotation P9 = -45 degrees |
-| code16-punctuation | differs | 5/13 | 1/13 | 0 | punctuation and digits |
-| code16-spaces | differs | 5/5 | 1/12 | 0 | words separated by spaces |
-| code16-special-brackets | differs | 5/13 | 1/12 | 0 | [ and ] (note symbols in music text) |
-| code16-special-copyright | differs | 5/5 | 1/6 | 0 | ?c escape |
-| code16-special-slash | differs | 5/5 | 1/10 | 0 | backslash for a printable slash |
-| code16-special-umlaut | differs | 5/5 | 1/13 | 0 | %% escapes |
-| code16-staff-large | differs | 5/5 | 1/16 | 0 | text on a staff of size 1.5 |
-| code16-staff-recto | differs | 10/10 | 4/19 | 0 | text on recto staff 201 |
-| code16-staff-small | differs | 5/5 | 1/16 | 0 | text on a staff of size 0.7 |
-| code16-tab | differs | 5/5 | 1/10 | 0 | tab stops ~n~ |
+| code15-default | match | 7/7 | 1/1 | 0 | logo-col.eps at size 0.2: bounding box with diagonals |
+| code15-noname | match | 7/7 | 1/1 | 0 | no file name in P14… |
+| code15-p11-unread | match | 6/6 | 1/1 | 0 | P11 0 (bounding box not read): placeholder square of P5 scale steps |
+| code15-p11-unread-default | match | 6/6 | 1/1 | 0 | P11 0, P5 0: placeholder of 3 scale steps |
+| code15-p11-unread-p6 | match | 6/6 | 1/1 | 0 | P11 0, P5 2, P6 1 |
+| code15-p12-rotation-0.5 | match | 7/7 | 1/1 | 0 | P12 0.5 |
+| code15-p12-rotation-30 | match | 7/7 | 1/1 | 0 | P12 30 |
+| code15-p12-rotation-m135 | match | 7/7 | 1/1 | 0 | P12 -135 |
+| code15-p26-grey | match | 7/7 | 1/1 | 0 | P26 0.5 |
+| code15-p4-level | match | 7/7 | 1/1 | 0 | P4 -6.4, P3 55.3 |
+| code15-p5-size-0 | match | 7/7 | 1/1 | 0 | P5 0 |
+| code15-p5-size-0.07 | match | 7/7 | 1/1 | 0 | P5 0.07 |
+| code15-p5-size-m0.2 | match | 7/7 | 1/1 | 0 | P5 -0.2 |
+| code15-p6-vsize-0.5 | match | 7/7 | 1/1 | 0 | P5 0.2, P6 0.5 |
+| code15-p6-vsize-m0.1 | match | 7/7 | 1/1 | 0 | P5 0.2, P6 -0.1 |
+| code15-recto | match | 7/7 | 3/3 | 0 | on the recto staff 201 |
+| code15-size-0.75 | match | 7/7 | 1/1 | 0 | on a size 0.75 staff |
+| code15-size-0.75-unread | match | 6/6 | 1/1 | 0 | placeholder on a size 0.75 staff |
+| code15-staff-2 | match | 12/12 | 2/2 | 0 | on staff 2 |
+| code15-two | match | 9/9 | 1/1 | 0 | two EPS items after a staff |
+| code16-colour-then-plain | match | 5/5 | 22/22 | 0 | a coloured text item before a plain one |
+| code16-default | match | 5/5 | 16/16 | 0 | Times (_00) at size 1 |
+| code16-font-00 | match | 5/5 | 16/16 | 0 | font _00 |
+| code16-font-01 | match | 5/5 | 16/16 | 0 | font _01 |
+| code16-font-02 | match | 5/5 | 16/16 | 0 | font _02 |
+| code16-font-03 | match | 5/5 | 16/16 | 0 | font _03 |
+| code16-font-04 | match | 5/5 | 16/16 | 0 | font _04 |
+| code16-font-05 | match | 5/5 | 16/16 | 0 | font _05 |
+| code16-font-06 | match | 5/5 | 16/16 | 0 | font _06 |
+| code16-font-07 | match | 5/5 | 16/16 | 0 | font _07 |
+| code16-font-08 | match | 5/5 | 16/16 | 0 | font _08 |
+| code16-font-09 | match | 5/5 | 16/16 | 0 | font _09 |
+| code16-font-10 | match | 5/5 | 16/16 | 0 | font _10 |
+| code16-font-11 | match | 5/5 | 16/16 | 0 | font _11 |
+| code16-font-12 | match | 5/5 | 16/16 | 0 | font _12 |
+| code16-font-13 | match | 5/5 | 16/16 | 0 | font _13 |
+| code16-font-14 | match | 5/5 | 16/16 | 0 | font _14 |
+| code16-font-15 | match | 5/5 | 16/16 | 0 | font _15 |
+| code16-font-16 | match | 5/5 | 16/16 | 0 | font _16 |
+| code16-font-17 | match | 5/5 | 16/16 | 0 | font _17 |
+| code16-font-18 | match | 5/5 | 16/16 | 0 | font _18 |
+| code16-font-19 | match | 5/5 | 16/16 | 0 | font _19 |
+| code16-font-20 | match | 5/5 | 16/16 | 0 | font _20 |
+| code16-font-21 | match | 5/5 | 16/16 | 0 | font _21 |
+| code16-font-22 | match | 5/5 | 16/16 | 0 | font _22 |
+| code16-font-23 | match | 5/5 | 16/16 | 0 | font _23 |
+| code16-font-24 | match | 5/5 | 16/16 | 0 | font _24 |
+| code16-font-25 | match | 5/5 | 16/16 | 0 | font _25 |
+| code16-font-26 | match | 5/5 | 16/16 | 0 | font _26 |
+| code16-font-27 | match | 5/5 | 16/16 | 0 | font _27 |
+| code16-font-28 | match | 5/5 | 16/16 | 0 | font _28 |
+| code16-font-29 | match | 5/5 | 16/16 | 0 | font _29 |
+| code16-font-30 | match | 5/5 | 16/16 | 0 | font _30 |
+| code16-font-31 | match | 5/5 | 16/16 | 0 | font _31 |
+| code16-font-32 | match | 5/5 | 16/16 | 0 | font _32 |
+| code16-font-33 | match | 5/5 | 16/16 | 0 | font _33 |
+| code16-font-34 | match | 5/5 | 16/16 | 0 | font _34 |
+| code16-font-35 | match | 5/5 | 19/19 | 0 | font _35 (WinScore extension) |
+| code16-font-40 | match | 5/5 | 19/19 | 0 | font _40 (WinScore extension) |
+| code16-font-45 | match | 5/5 | 19/19 | 0 | font _45 (WinScore extension) |
+| code16-font-50 | match | 5/5 | 19/19 | 0 | font _50 (WinScore extension) |
+| code16-font-51 | match | 5/5 | 19/19 | 0 | font _51 (WinScore extension) |
+| code16-font-55 | match | 5/5 | 19/19 | 0 | font _55 (WinScore extension) |
+| code16-font-57 | match | 5/5 | 19/19 | 0 | font _57 (WinScore extension) |
+| code16-font-60 | match | 5/5 | 19/19 | 0 | font _60 (WinScore extension) |
+| code16-font-61 | match | 5/5 | 19/19 | 0 | font _61 (WinScore extension) |
+| code16-font-63 | match | 5/5 | 19/19 | 0 | font _63 (WinScore extension) |
+| code16-font-90 | match | 5/5 | 19/19 | 0 | font _90 |
+| code16-font-91 | match | 5/5 | 19/19 | 0 | font _91 |
+| code16-font-92 | match | 5/5 | 19/19 | 0 | font _92 |
+| code16-font-93 | match | 5/5 | 19/19 | 0 | font _93 |
+| code16-font-94 | match | 13/13 | 1/1 | 0 | meter font _94 |
+| code16-font-98 | match | 5/5 | 19/19 | 0 | font _98 |
+| code16-font-99-comment | match | 5/5 | 10/10 | 0 | non-printing comment _99% |
+| code16-font-after-staff | match | 5/5 | 6/6 | 0 | text without a font code after a staff (Helvetica-Narrow) |
+| code16-font-after-text | match | 5/5 | 12/12 | 0 | text without a font code after _02 text |
+| code16-font-no-staff | match | 0/0 | 11/11 | 0 | text without a font code, no staff |
+| code16-font-wraps | match | 5/5 | 12/12 | 0 | text without a font code before _05 text |
+| code16-fonts-mixed | match | 5/5 | 24/24 | 0 | font changes inside the string |
+| code16-latin1 | match | 5/5 | 12/12 | 0 | Latin-1 characters |
+| code16-lines | match | 5/5 | 16/16 | 0 | three lines of text |
+| code16-long | match | 5/5 | 109/109 | 0 | a long line |
+| code16-one-char | match | 5/5 | 2/2 | 0 | a single character |
+| code16-outline | match | 5/5 | 8/8 | 0 | outline font __05 |
+| code16-p10-space-0.5 | match | 5/5 | 12/12 | 0 | space size P10 = 0.5 |
+| code16-p10-space-2 | match | 5/5 | 12/12 | 0 | space size P10 = 2 |
+| code16-p10-space-m0.5 | match | 5/5 | 12/12 | 0 | space size P10 = -0.5 |
+| code16-p11-displace-10 | match | 5/5 | 16/16 | 0 | horizontal displacement P11 = 10 |
+| code16-p11-displace-m5 | match | 5/5 | 16/16 | 0 | horizontal displacement P11 = -5 |
+| code16-p14-colour-red | match | 5/5 | 16/16 | 0 | P14 = -1, P16 = 990000 |
+| code16-p14-grey | match | 5/5 | 16/16 | 0 | P14 = -1, P16 = 0.5 |
+| code16-p14-layer | match | 5/5 | 17/17 | 0 | P14 = -1, layer P15 = 1 |
+| code16-p3-fraction | match | 5/5 | 16/16 | 0 | P3 = 55.37 |
+| code16-p3-negative | match | 5/5 | 16/16 | 0 | P3 = -10 |
+| code16-p3-right | match | 5/5 | 16/16 | 0 | near the right margin, P3 = 180 |
+| code16-p4-fraction | match | 5/5 | 16/16 | 0 | P4 = 13.5 |
+| code16-p4-low | match | 5/5 | 16/16 | 0 | below the staff, P4 = -6 |
+| code16-p5-spacing-0.5 | match | 5/5 | 12/12 | 0 | character space factor P5 = 0.5 |
+| code16-p5-spacing-0.8 | match | 5/5 | 16/16 | 0 | character space factor P5 = 0.8 |
+| code16-p5-spacing-1.3 | match | 5/5 | 16/16 | 0 | character space factor P5 = 1.3 |
+| code16-p6-parts-101 | match | 5/5 | 16/16 | 0 | part-extraction flag in P6 = 101 |
+| code16-p6-parts-201 | match | 5/5 | 16/16 | 0 | part-extraction flag in P6 = 201 |
+| code16-p6-parts-301 | match | 5/5 | 16/16 | 0 | part-extraction flag in P6 = 301 |
+| code16-p6-size-0 | match | 5/5 | 16/16 | 0 | size P6 = 0 |
+| code16-p6-size-0.5 | match | 5/5 | 16/16 | 0 | size P6 = 0.5 |
+| code16-p6-size-2 | match | 5/5 | 16/16 | 0 | size P6 = 2 |
+| code16-p7-vertical-2 | match | 5/5 | 16/16 | 0 | P6 = 1, vertical size P7 = 2 |
+| code16-p7-vertical-half | match | 5/5 | 16/16 | 0 | P6 = 2, vertical size P7 = 0.5 |
+| code16-p8-font-1000 | match | 5/5 | 16/16 | 0 | font override P8 = 1000 |
+| code16-p8-font-1004 | match | 5/5 | 16/16 | 0 | font override P8 = 1004 |
+| code16-p8-font-1004-tab | match | 5/5 | 3/3 | 0 | font override P8 = 1004 with a font code and a tab |
+| code16-p8-font-1034 | match | 5/5 | 16/16 | 0 | font override P8 = 1034 |
+| code16-p8-font-90 | match | 5/5 | 16/16 | 0 | font override P8 = 90 |
+| code16-p8-font-91 | match | 5/5 | 16/16 | 0 | font override P8 = 91 |
+| code16-p8-font-92 | match | 5/5 | 16/16 | 0 | font override P8 = 92 |
+| code16-p8-font-93 | match | 5/5 | 16/16 | 0 | font override P8 = 93 |
+| code16-p8-font-94 | match | 23/23 | 1/1 | 0 | font override P8 = 94 |
+| code16-p8-font-98 | match | 5/5 | 16/16 | 0 | font override P8 = 98 |
+| code16-p8-outline-1105 | match | 5/5 | 16/16 | 0 | outline font override P8 = 1105 |
+| code16-p8-outline-193 | match | 5/5 | 16/16 | 0 | outline font override P8 = 193 |
+| code16-p9-rotate-180 | match | 5/5 | 16/16 | 1 | rotation P9 = 180 degrees |
+| code16-p9-rotate-30 | match | 5/5 | 16/16 | 0 | rotation P9 = 30 degrees |
+| code16-p9-rotate-30-large | match | 5/5 | 16/16 | 0 | rotation P9 = 30 at size 2 |
+| code16-p9-rotate-90 | match | 5/5 | 16/16 | 0 | rotation P9 = 90 degrees |
+| code16-p9-rotate-m45 | match | 5/5 | 16/16 | 0 | rotation P9 = -45 degrees |
+| code16-punctuation | match | 13/13 | 13/13 | 0 | punctuation and digits |
+| code16-spaces | match | 5/5 | 12/12 | 0 | words separated by spaces |
+| code16-special-accents | match | 5/5 | 13/13 | 0 | ~n, ^e, %%o, ##c, <<e, >>a |
+| code16-special-ascii | match | 5/5 | 16/16 | 0 | # $ % & < > @ |
+| code16-special-braces | match | 19/19 | 5/5 | 0 | { } and / (symbols) |
+| code16-special-brackets | match | 13/13 | 12/12 | 0 | [ and ] (note symbols in music text) |
+| code16-special-copyright | match | 5/5 | 6/6 | 0 | ?c escape |
+| code16-special-escapes | match | 5/5 | 9/9 | 0 | ?A ?E ?a ?s ?t !a !A !f |
+| code16-special-octal | match | 5/5 | 4/4 | 0 | octal escape \\351 |
+| code16-special-slash | match | 5/5 | 10/10 | 0 | backslash for a printable slash |
+| code16-special-umlaut | match | 5/5 | 13/13 | 0 | %% escapes |
+| code16-staff-2 | match | 10/10 | 17/17 | 0 | text on staff 2 |
+| code16-staff-200 | match | 10/10 | 19/19 | 0 | text on staff 200 (verso for text, recto for shapes) |
+| code16-staff-large | match | 5/5 | 16/16 | 0 | text on a staff of size 1.5 |
+| code16-staff-recto | match | 10/10 | 19/19 | 0 | text on recto staff 201 |
+| code16-staff-small | match | 5/5 | 16/16 | 0 | text on a staff of size 0.7 |
+| code16-tab | match | 5/5 | 10/10 | 0 | tab stops ~n~ |
+| code16-tabs | match | 5/5 | 20/20 | 0 | several tab stops |
 | code17-irregular-3 | match | 16/16 | 1/1 | 0 | irregular: flat at 7, sharp at 9, natural at 4 |
 | code17-irregular-7 | match | 30/30 | 1/1 | 0 | irregular: seven accidentals through P16 |
 | code17-irregular-cue | match | 12/12 | 1/1 | 0 | irregular with cue size |
@@ -935,18 +1410,18 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code99-chord | match | 10/10 | 1/1 | 0 | C major triad with one stem |
 | code99-chord-down | match | 19/19 | 1/1 | 0 | chord with stem down and accidentals |
 | code99-chord-second | match | 9/9 | 1/1 | 0 | chord with a second: the upper note displaced right |
-| code99-chord-tie | differs | 11/13 | 1/1 | 0 | two tied chords |
-| code99-dynamics | differs | 22/27 | 1/8 | 0 | melody with p, hairpin, tempo text and final bar |
-| code99-grace | differs | 12/13 | 1/1 | 0 | grace note with slashed stem slurred to its main note |
-| code99-measure-bass | differs | 30/34 | 1/1 | 0 | bass clef, three flats, 6/8, notes with ledger lines and a rest |
+| code99-chord-tie | match | 13/13 | 1/1 | 0 | two tied chords |
+| code99-dynamics | differs | 25/27 | 8/8 | 0 | melody with p, hairpin, tempo text and final bar |
+| code99-grace | match | 13/13 | 1/1 | 0 | grace note with slashed stem slurred to its main note |
+| code99-measure-bass | differs | 32/34 | 1/1 | 0 | bass clef, three flats, 6/8, notes with ledger lines and a rest |
 | code99-measure-treble | differs | 25/27 | 1/1 | 0 | treble clef, two sharps, 3/4, three quarter notes, barline |
-| code99-rests | differs | 13/20 | 1/1 | 0 | notes and rests in one measure, centred whole rest in the next |
-| code99-slur | differs | 13/14 | 1/1 | 0 | slur over four quarter notes |
+| code99-rests | match | 20/20 | 1/1 | 0 | notes and rests in one measure, centred whole rest in the next |
+| code99-slur | match | 14/14 | 1/1 | 0 | slur over four quarter notes |
 | code99-system | match | 28/28 | 2/2 | 0 | two staves with brace, notes on both, barlines |
-| code99-tie | differs | 9/10 | 1/1 | 0 | two half notes tied |
-| sample-000 | differs | 279/550 +6 | 4/175 | 1 | WinScore sample 000.mus |
-| sample-carmen | differs | 2628/3300 | 35/331 | 1 | WinScore sample carmen.mus |
-| sample-mozart | differs | 684/768 | 8/136 | 1 | WinScore sample mozart.mus |
-| sample-newlib | differs | 20/195 | 4/219 | 0 | SCORE 4 sample NEWLIB.MUS |
-| sample-newline | differs | 159/165 | 13/960 | 0 | SCORE 4 sample NEWLINE.MUS |
-| sample-sonlcs | differs | 2352/2987 +1 | 47/322 | 1 | WinScore sample sonlcs.mus |
+| code99-tie | match | 10/10 | 1/1 | 0 | two half notes tied |
+| sample-000 | differs | 406/550 +16 | 80/175 | 1 | WinScore sample 000.mus |
+| sample-carmen | differs | 3254/3300 | 325/331 | 1 | WinScore sample carmen.mus |
+| sample-mozart | differs | 768/768 +1 | 130/136 | 1 | WinScore sample mozart.mus |
+| sample-newlib | differs | 182/182 | 159/219 | 0 | SCORE 4 sample NEWLIB.MUS |
+| sample-newline | match | 165/165 | 960/960 | 0 | SCORE 4 sample NEWLINE.MUS |
+| sample-sonlcs | differs | 2883/2987 +28 | 271/322 | 1 | WinScore sample sonlcs.mus |
