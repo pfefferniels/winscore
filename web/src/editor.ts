@@ -23,7 +23,7 @@ export interface Editor {
   /** Adds one line of five-pass input; the new items become the selection. */
   insertInput(line: InputLine): Change | null;
   dragBegin(): void;
-  /** Total pointer travel since `dragBegin`, in page units; `constrain` keeps the larger axis. */
+  /** Total pointer travel since `dragBegin`, in page units; `constrain` (Shift) keeps the first dominant axis. */
   dragTo(dx: number, dy: number, constrain: boolean): void;
   dragEnd(commit: boolean): Change | null;
   undo(): Change | null;
@@ -34,7 +34,18 @@ export interface Editor {
 
 const change = (label: string | undefined): Change | null => (label ? { label } : null);
 
+/** WinScore locks a Shift-drag to the first axis whose travel exceeds this many engine units (analysis/engine/editing.md). */
+const AXIS_LOCK_UNITS = 50;
+
+type Axis = 'x' | 'y';
+
+function lockedAxis(dx: number, dy: number): Axis | null {
+  if (Math.max(Math.abs(dx), Math.abs(dy)) <= AXIS_LOCK_UNITS) return null;
+  return Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
+}
+
 export function scoreEditor(score: Score): Editor {
+  let axis: Axis | null = null;
   return {
     selection: () => Array.from(score.selection()),
     select: (items) => score.select(Uint32Array.from(items)),
@@ -44,10 +55,14 @@ export function scoreEditor(score: Score): Editor {
     deleteSelection: () => change(score.deleteSelection()),
     execute: (command) => change(score.execute(command)),
     insertInput: (line) => change(score.insertInput(line)),
-    dragBegin: () => score.dragBegin(),
+    dragBegin() {
+      axis = null;
+      score.dragBegin();
+    },
     dragTo(dx, dy, constrain) {
-      const horizontal = Math.abs(dx) >= Math.abs(dy);
-      score.dragTo(!constrain || horizontal ? dx : 0, !constrain || !horizontal ? dy : 0);
+      axis ??= lockedAxis(dx, dy);
+      const keep = (a: Axis) => !constrain || axis === null || axis === a;
+      score.dragTo(keep('x') ? dx : 0, keep('y') ? dy : 0);
     },
     dragEnd: (commit) => change(score.dragEnd(commit)),
     undo: () => change(score.undo() && `Undo ${score.redoLabel()}`),
