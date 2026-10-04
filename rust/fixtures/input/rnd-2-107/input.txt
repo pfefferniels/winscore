@@ -1,0 +1,7 @@
+IN 1 0 0 0 180
+;
+RI/EN4/CF:G/G/C:D:GF:BS/CN:EF:E:F/D:FS:E:F/R/D:FS:E:F/CN/E:EN/SD/A4;
+8/S/8../24/24/1/8./4./12/G/16/4.;
+TS 4:6/HW 7:10/RI 9/TR 4:6;
+6 7;
++1 2;

@@ -7,7 +7,7 @@ use crate::connect::{ConnectEntry, Connection, Side};
 use crate::error::InputError;
 use crate::line::{item, Element, Line, Note};
 use crate::marks::recompute_clearance;
-use crate::notes::StemMode;
+use crate::notes::{StaffShift, StemMode};
 
 const UP: i32 = 10;
 const DOWN: i32 = 20;
@@ -116,13 +116,10 @@ fn every_eighths(line: &Line, eighths: u32, pickup: u32) -> Vec<Connection> {
     groups
 }
 
-/// Level of the head a beam is measured from: the head nearest the beam.
+/// Level of the head a beam is measured from (0x41A4F9): the last in item order, which is
+/// the head nearest the beam.
 fn beam_side_level(note: &Note) -> f32 {
-    if note.down {
-        note.lowest() as f32
-    } else {
-        note.highest() as f32
-    }
+    note.heads.last().map_or(0.0, |h| h.level as f32)
 }
 
 /// 0x559F38: the levels of the beam's ends (in note-level terms), and the direction when
@@ -490,14 +487,9 @@ impl Beamer<'_> {
             (offset + start, offset + end, fewest)
         };
 
-        for n in first..=last {
-            if self.beamed[n] == 0 {
-                self.set_direction(n, direction);
-            }
-        }
-
-        let head = [6.0, self.line.staff, note_xs[0], y1, y2, note_xs[note_xs.len() - 1], (fewest + direction) as f32, group.tuplet as f32, 0.0];
+        let head =[6.0, self.line.staff, note_xs[0], y1, y2, note_xs[note_xs.len() - 1], (fewest + direction) as f32, group.tuplet as f32, 0.0];
         let segments = if tails.iter().any(|t| *t != 0 && *t != tails[0]) { secondary_beams(&tails, &note_xs, fewest) } else { Vec::new() };
+        self.point_unclaimed_stems(first..=last, direction);
         self.attach_tremolos(first..=last, &head, direction);
         if segments.is_empty() {
             return vec![item(&head)];
@@ -510,6 +502,22 @@ impl Beamer<'_> {
                 item(&params)
             })
             .collect()
+    }
+
+    /// 0x4156EC: notes of the group that no beam has claimed yet (possible when the group's
+    /// first note had its direction already) point their stems the beam's way, or away
+    /// from the staff they were moved to. Only the stem changes; heads and marks stay.
+    fn point_unclaimed_stems(&mut self, numbers: std::ops::RangeInclusive<usize>, direction: i32) {
+        let unclaimed: Vec<usize> = numbers.filter(|n| self.beamed[*n] == 0).collect();
+        for n in unclaimed {
+            if let Some(note) = self.line.note_mut(n) {
+                note.down = match note.shift {
+                    StaffShift::Main => direction == DOWN,
+                    StaffShift::Above => true,
+                    StaffShift::Below => false,
+                };
+            }
+        }
     }
 
     /// 0x4156EC: a tremolo of pass 3 on a beamed note takes the beam's ends and direction.

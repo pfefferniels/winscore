@@ -1,0 +1,7 @@
+IN 1
+;
+TR/CF5/FF4/A/F4:D/G4/G4/TE/CS/CS/C:DN:GF/B/M2/CF4:CN:CF;
+1/1/24/12/12/T/2/S/T/2/8..;
+TM 3/TM 9;
+8 9;
+-2 4;

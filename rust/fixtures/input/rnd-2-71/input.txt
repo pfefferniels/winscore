@@ -1,0 +1,7 @@
+IN 1
+;
+K5S/3 4/C5:BN/E3/FN:AF:CS:DN/D/BN:ES:FF/M/FS3/D/DF/DF/D:E:D:D/D:E:D:D/FF/RI/DN4/AS:E:CN:DF/R;
+8./12/8/8../16/T/4/2/8/8/S/8../8/E/S/2;
+;
+3B;
+-3 4/1 5/-1 6;
