@@ -1,0 +1,44 @@
+{
+ "case": "code05-p9-triangle-p10-p13",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 59,
+   "vector_words": 102
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
+ "description": "triangle with peak at P10 = 0.3, P13 = 2 extra strokes",
+ "events": [],
+ "invalid_reasons": [],
+ "items": 2,
+ "not_found": [],
+ "page_frames": [
+  [
+   401,
+   -7711,
+   34399,
+   48287
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "start of the baseline: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -    2 Items)   <Legal>",
+ "valid": true,
+ "view_globals": [
+  2400,
+  -19236
+ ],
+ "view_offset": [
+  400,
+  -7712
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}
