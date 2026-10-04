@@ -77,6 +77,7 @@ pub fn text_call<'a>(doc: &Document<'_>, item: ItemRef<'_>, text: &'a [u8], curr
         rotation: item.p(9),
         space: item.p(10),
         shift: item.p(11),
+        step: None,
         colour: (item.p(14) == -1.0).then(|| stored_word(item, 16)),
         current_font,
     }

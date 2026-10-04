@@ -230,6 +230,7 @@ fn number_call<'t>(doc: &Document<'_>, item: ItemRef<'_>, digits: &'t [u8], at: 
         rotation: item.p(19),
         space: 0.0,
         shift: 0.0,
+        step: None,
         colour: (item.p(26) != 0.0 && font != Font::METER.0).then(|| item.p(26)),
         current_font: codes::text::font_before(doc, item),
     }
