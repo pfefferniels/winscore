@@ -3,8 +3,9 @@
 A code-16 item starts with "t" in place of 16 and lists P2 to P11; its characters follow
 on the next line. P12 is their count. Some listings (Sapp's 1999 files) stop at P11, so
 P13, the string length SCORE computes, stays 0; others (Sapp's "SCORE 4 PMX" of 2014) also
-list P12 and P13. Lines starting with "#" or with code 99 are comments, two-letter
-SCORE commands (RS, SM) are skipped. Trailing zero parameters are dropped as SCORE does when saving.
+list P12 and P13. A text item without characters is left out: the engine deletes it as an
+unknown code. Lines starting with "#" or with code 99 are comments, two-letter SCORE
+commands (RS, SM) are skipped. Trailing zero parameters are dropped as SCORE does when saving.
 """
 from __future__ import annotations
 
@@ -62,7 +63,8 @@ def pmx_items(source: str) -> list | None:
             head, text = numbers(rest), next(lines, None)
             if head is None or text is None:
                 return None
-            items.append(text_item(text_params(head, text.encode("latin-1")), text.encode("latin-1")))
+            if text:
+                items.append(text_item(text_params(head, text.encode("latin-1")), text.encode("latin-1")))
             continue
         if code.rstrip(".") == COMMENT_CODE:
             continue
