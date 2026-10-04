@@ -57,12 +57,37 @@ def cases() -> list[Case]:
         ("latin1", "Latin-1 characters", "_00\u00e9tude \u00e7a \u00fcber", {}),
         ("one-char", "a single character", "_00X", {}),
         ("long", "a long line", "_00" + "The quick brown fox jumps over the lazy dog. " * 3, {}),
+        *[(f"font-{n}", f"font _{n} (WinScore extension)", f"_{n}Hamburgefonstiv 123", {})
+          for n in (35, 40, 45, 50, 51, 55, 57, 60, 61, 63)],
+        ("outline", "outline font __05", "__05Outline", {}),
+        ("p5-spacing-0.5", "character space factor P5 = 0.5", "_04one two three", {"p5": 0.5}),
+        *[(f"p10-space-{label(v)}", f"space size P10 = {v}", "_00one two  three", {"p10": v}) for v in (0.5, -0.5)],
+        ("p9-rotate-30-large", "rotation P9 = 30 at size 2", SAMPLE, {"p9": 30, "p6": 2}),
+        ("p8-font-1004-tab", "font override P8 = 1004 with a font code and a tab", "_02A~60~B", {"p8": 1004}),
+        ("special-ascii", "# $ % & < > @", "_00A#B$C%D&E<F>G@H", {}),
+        ("special-accents", "~n, ^e, %%o, ##c, <<e, >>a", "_00A~nB ^e S%%ohne ##c <<e >>a", {}),
+        ("special-escapes", "?A ?E ?a ?s ?t !a !A !f", "_00?A ?E ?a ?s ?t !a !A !f", {}),
+        ("special-octal", "octal escape \\\\351", "_00A\\\\351B", {}),
+        ("special-braces", "{ } and | (symbols)", "_00A{B}C|D", {}),
+        ("tabs", "several tab stops", "_00Works~55~Composers~105~Dates", {}),
+        ("p3-negative", "P3 = -10", SAMPLE, {"p3": -10}),
+        ("p3-fraction", "P3 = 55.37", SAMPLE, {"p3": 55.37}),
+        ("p4-fraction", "P4 = 13.5", SAMPLE, {"p4": 13.5}),
     ]
     staves = [
         ("staff-small", "text on a staff of size 0.7", on_staff(text(), p5=0.7)),
         ("staff-large", "text on a staff of size 1.5", on_staff(text(), p5=1.5)),
         ("staff-recto", "text on recto staff 201", [staff(), staff(p2=201), text(p2=201)]),
         ("lines", "three lines of text", on_staff(*(text(f"_00line {n}", p4=12 - 4 * n) for n in range(3)))),
+        ("staff-2", "text on staff 2", [staff(), staff(p2=2), text(p2=2)]),
+        ("staff-200", "text on staff 200 (verso for text, recto for shapes)", [staff(), staff(p2=200), text(p2=200)]),
+        # The engine keeps the current font across items and drawing passes.
+        ("font-after-staff", "text without a font code after a staff (Helvetica-Narrow)", on_staff(text("plain"))),
+        ("font-after-text", "text without a font code after _02 text", on_staff(text("_02first"), text("second", p4=4))),
+        ("font-wraps", "text without a font code before _05 text", on_staff(text("first", p4=4), text("_05second"))),
+        ("font-no-staff", "text without a font code, no staff", [text("_02first", p4=4), text("second")]),
+        ("colour-then-plain", "a coloured text item before a plain one",
+         on_staff(text(p14=-1, p16=990000), text("_02second", p4=4))),
     ]
     return ([built(f"code16-{name}", desc, on_staff(text(**params))) for name, desc, params in single]
             + [built(f"code16-{name}", desc, on_staff(text(string, **params))) for name, desc, string, params in strings]

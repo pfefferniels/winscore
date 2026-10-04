@@ -2,14 +2,13 @@
 //! the normal size of the symbol, rotation and thickening around the
 //! common core [`draw_symbol`].
 
-use crate::canvas::{BufferPoint, Canvas, Pen};
+use crate::canvas::Canvas;
 use crate::codes;
-use crate::display::Point;
 use crate::document::{Document, ItemRef};
-use crate::geometry::rotate_points;
+use crate::geometry::{rotate_points, thicken};
 use crate::staff::STEP_UNIT;
 use crate::symbols::{draw_symbol, Scale};
-use crate::units::{real, trunc, Pos};
+use crate::units::{amod, real, trunc, Pos};
 
 /// What draw_symbol is called with besides the position. Sizes are REAL*4
 /// values.
@@ -131,7 +130,9 @@ pub fn draw_library_symbol(
         0 if doc.screen() && pixels > 0 => pixels * PIXELS_TO_THICKNESS,
         t => t,
     };
-    thicken(canvas.buffer_mut(), start, thickness);
+    if thickness != 0 {
+        thicken(canvas.buffer_mut(), start, thickness);
+    }
 }
 
 /// Symbols draw_symbol writes as text (table 0x78EAAC; strings at 0x78EA10).
@@ -159,8 +160,8 @@ const TEXT_SYMBOLS: [(i32, &str); 21] = [
     (276, "G.P."),
 ];
 
-/// Whether draw_symbol writes symbol `number` as text: these go through
-/// draw_text, which is not ported yet, so nothing is drawn for them.
+/// Whether draw_symbol writes symbol `number` as text: its text path is not
+/// ported yet, so nothing is drawn for these.
 pub fn is_text_symbol(number: i32) -> bool {
     TEXT_SYMBOLS.iter().any(|&(n, _)| n == number)
 }
@@ -168,77 +169,4 @@ pub fn is_text_symbol(number: i32) -> bool {
 /// The text draw_symbol writes for symbol `number`, in SCORE's text coding.
 pub fn symbol_text(number: i32) -> Option<&'static str> {
     TEXT_SYMBOLS.iter().find(|&&(n, _)| n == number).map(|&(_, text)| text)
-}
-
-/// Fortran AMOD (amod 0x54AABA): x - trunc(x / y) * y.
-fn amod(x: f64, y: f64) -> f64 {
-    x - f64::from(trunc(x / y)) * y
-}
-
-/// Distance between thickening copies (0x42A8AE).
-const THICKENING_STEP: i32 = 14;
-/// Points this far left are not moved by horizontal thickening.
-const UNMOVED_X: i32 = -200_792;
-
-/// Thickening (0x42A8AE) of the points from `start` on. `X0Y` adds 2X
-/// copies shifted vertically by +14, -14, +28, -28, … and then 2Y shifted
-/// horizontally, each a copy of the original points; a negative value
-/// turns every filled path into an outline.
-fn thicken(buffer: &mut Vec<BufferPoint>, start: usize, thickness: i32) {
-    if thickness == 0 {
-        return;
-    }
-    if thickness < 0 {
-        buffer[start..]
-            .iter_mut()
-            .filter(|p| matches!(p.pen, Pen::Fill | Pen::SubPath))
-            .for_each(|p| p.pen = Pen::Stroke);
-        return;
-    }
-    let original = buffer[start..].to_vec();
-    let offsets = |copies: i32| (0..copies).map(|i| THICKENING_STEP * (i / 2 + 1) * if i % 2 == 0 { 1 } else { -1 });
-    let vertical: Vec<BufferPoint> = offsets(2 * (thickness / 100))
-        .flat_map(|dy| original.iter().map(move |p| BufferPoint { at: Point::new(p.at.x, p.at.y + dy), ..*p }))
-        .collect();
-    let horizontal: Vec<BufferPoint> = offsets(2 * (thickness % 100))
-        .flat_map(|dx| {
-            original.iter().map(move |p| {
-                let x = if p.at.x >= UNMOVED_X { p.at.x + dx } else { p.at.x };
-                BufferPoint { at: Point::new(x, p.at.y), ..*p }
-            })
-        })
-        .collect();
-    buffer.extend(vertical);
-    buffer.extend(horizontal);
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn points(xs: &[i32]) -> Vec<BufferPoint> {
-        xs.iter().map(|&x| BufferPoint { at: Point::new(x, 0), pen: Pen::Fill }).collect()
-    }
-
-    #[test]
-    fn thickening_alternates_sides_and_copies_the_originals() {
-        let mut buffer = points(&[0]);
-        thicken(&mut buffer, 0, 102);
-        let at: Vec<(i32, i32)> = buffer.iter().map(|p| (p.at.x, p.at.y)).collect();
-        assert_eq!(at, [(0, 0), (0, 14), (0, -14), (14, 0), (-14, 0), (28, 0), (-28, 0)]);
-    }
-
-    #[test]
-    fn negative_thickness_outlines() {
-        let mut buffer = points(&[0, 1]);
-        thicken(&mut buffer, 1, -1);
-        assert_eq!(buffer[0].pen, Pen::Fill);
-        assert_eq!(buffer[1].pen, Pen::Stroke);
-    }
-
-    #[test]
-    fn amod_keeps_the_sign() {
-        assert_eq!(amod(101.5, 100.0), 1.5);
-        assert_eq!(amod(-250.0, 100.0), -50.0);
-    }
 }

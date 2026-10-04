@@ -7,15 +7,13 @@
 //! 0x49EAE0) and the other values (arrows and arcs, 0x432E80) are not drawn
 //! yet.
 
-mod circle;
-
 use crate::canvas::{Canvas, Pen};
 use crate::colour;
 use crate::document::{Document, ItemRef};
 use crate::geometry::rotate_points;
+use crate::trig::CIRCLE;
 use crate::units::{real, trunc, Pos};
 
-use circle::CIRCLE;
 
 pub const BOX: i32 = 0;
 pub const CIRCLE_SHAPE: i32 = 1;
