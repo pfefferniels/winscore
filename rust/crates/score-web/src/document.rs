@@ -89,7 +89,7 @@ impl Document {
 
     /// The editor's id of the item at file position `index`.
     pub fn id(&self, index: ItemId) -> Result<score_edit::ItemId, EditError> {
-        self.editor.id_at(index.0 as usize).ok_or(EditError::NoSuchItem(index.0 as f32))
+        self.editor.id_at(index.0 as usize).ok_or(EditError::NoSuchItem(index.0 as usize + 1))
     }
 
     pub fn select(&mut self, indices: &[ItemId]) {
