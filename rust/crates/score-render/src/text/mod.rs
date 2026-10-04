@@ -75,25 +75,24 @@ pub fn draw_text(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>,
     text.emit(doc, item, canvas, &placed);
 }
 
-/// The font the engine leaves current after drawing `call`: that of the
-/// last font change drawn.
-pub fn font_after(doc: &Document<'_>, call: &TextCall<'_>) -> Font {
-    let text = Text::new(doc, call);
-    text.place()
-        .iter()
-        .rev()
-        .find_map(|p| match p.code {
-            Code::Font(font) => Some(font),
-            _ => None,
-        })
-        .unwrap_or(text.scan_font)
+/// The width the engine leaves in P13 after drawing `call` (0x42FA58): the
+/// string's length in P3 units, times the spread factor.
+pub fn width(doc: &Document<'_>, call: &TextCall<'_>) -> f32 {
+    Text::new(doc, call).length
 }
 
-/// The font the string itself makes current, by a font change of its own
-/// or the override; `None` if it keeps the font current before it.
-pub fn font_change(doc: &Document<'_>, call: &TextCall<'_>) -> Option<Font> {
+/// The font whose metrics the string leaves loaded (0x791444), if it loads
+/// one other than the font current before it. draw_item makes the loaded
+/// font the current font of every item (0x547358), so this is what an item
+/// drawing `call` hands on to the next. Only text record headers load a
+/// font for good (0x56CAF0); the meter font 94 has none.
+pub fn font_loaded(doc: &Document<'_>, call: &TextCall<'_>) -> Option<Font> {
     let probe = TextCall { current_font: NO_FONT, ..call.clone() };
-    Some(font_after(doc, &probe)).filter(|&font| font != NO_FONT)
+    let text = Text::new(doc, &probe);
+    text.place().iter().rev().find_map(|p| match p.code {
+        Code::Font(font) if font != Font::METER && font != NO_FONT => Some(font),
+        _ => None,
+    })
 }
 
 /// Stands for the font current before a string while probing it.
@@ -160,6 +159,8 @@ struct Text<'c> {
     entries: Vec<Entry>,
     /// The font after scanning, current until the first font change is drawn.
     scan_font: Font,
+    /// P13 as the scan leaves it.
+    length: f32,
     font_override: i32,
     fonts: &'static FontLibrary,
     /// STEP of the staff.
@@ -207,6 +208,7 @@ impl<'c> Text<'c> {
             call,
             entries,
             scan_font: scanned.font,
+            length: scanned.length,
             font_override,
             fonts,
             step,
