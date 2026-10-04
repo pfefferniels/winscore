@@ -11,26 +11,16 @@
 //! factor, P17 moves it to the staff above (1) or below (2).
 
 use crate::canvas::Canvas;
-use crate::codes::note::glyph::{clef_symbol, library_symbol};
+use crate::codes::note::glyph;
 use crate::colour;
 use crate::document::{Document, ItemRef};
 use crate::page::{self, P3_UNIT};
 use crate::staff::Staff;
-use crate::units::{real, trunc, Pos};
-
-/// A REAL*4 constant of the engine.
-fn c(value: f32) -> f64 {
-    f64::from(value)
-}
+use crate::units::{amod, constant, real, trunc, Pos};
 
 /// trunc(Pn), the engine's IPn.
 fn ip(item: ItemRef<'_>, n: usize) -> i32 {
     trunc(f64::from(item.p(n)))
-}
-
-/// Fortran AMOD: x - trunc(x / y) * y.
-fn amod(x: f64, y: f64) -> f64 {
-    x - f64::from(trunc(x / y)) * y
 }
 
 const H_BAR: i32 = -5;
@@ -115,7 +105,7 @@ impl Rest {
             _ => doc.staves.get(item.staff() + 1),
         };
         let number_shift = if two_bar_repeat && ip(item, 8) != 0 {
-            real(-(staff.step * c(3.2) / 25.0))
+            real(-(staff.step * constant(3.2) / 25.0))
         } else {
             f64::from(item.p(16))
         };
@@ -133,7 +123,7 @@ impl Rest {
         let grace = p4.abs() >= 100;
         let level = f64::from(item.p(4));
         let (unit, size, level) =
-            if grace { (real(step * c(GRACE_SIZE)), c(GRACE_SIZE), real(amod(level, 100.0))) } else { (step, 1.0, level) };
+            if grace { (real(step * constant(GRACE_SIZE)), constant(GRACE_SIZE), real(amod(level, 100.0))) } else { (step, 1.0, level) };
         Some(Self {
             staff,
             x: if ip(item, 17) == 0 { x_pos } else { page::x(item.p(3)) },
@@ -212,7 +202,7 @@ fn neighbouring_bars(doc: &Document<'_>, item: ItemRef<'_>, p3: f64, unit: f64) 
     let staff = item.staff();
     let composite = item.p(5) < -4.0;
     let mut bars =
-        Bars { left: -c(NO_BAR), right: c(NO_BAR), left_type: 0, right_type: 0, right_is_barline: false };
+        Bars { left: -constant(NO_BAR), right: constant(NO_BAR), left_type: 0, right_type: 0, right_is_barline: false };
     doc.items().for_each(|other| {
         let other_staff = other.staff();
         let code = other.code();
@@ -240,12 +230,12 @@ fn neighbouring_bars(doc: &Document<'_>, item: ItemRef<'_>, p3: f64, unit: f64) 
             bars.left_type = bar_type();
         }
     });
-    if bars.right == c(NO_BAR) {
+    if bars.right == constant(NO_BAR) {
         return None;
     }
     let u = real(unit / 25.0);
     if u * 7.0 < p3 - bars.left {
-        bars.left = real(p3 - u * c(4.5));
+        bars.left = real(p3 - u * constant(4.5));
         bars.left_type = 0;
     }
     Some(bars)
@@ -256,7 +246,7 @@ impl Bars {
     /// middle of the bar, less a little.
     fn centre(&self, unit: f64, t: i32) -> f64 {
         let width = real(self.right - self.left);
-        let less = if t == T_REPEAT { c(0.137) } else { c(0.056) };
+        let less = if t == T_REPEAT { constant(0.137) } else { constant(0.056) };
         real(width * 0.5 + self.left - unit * less)
     }
 
@@ -266,10 +256,10 @@ impl Bars {
         let (mut left, mut right) = (self.left, self.right);
         if self.right_is_barline {
             if self.right_type != 0 {
-                right = real(right - u * c(BAR_RIGHT_EDGE[self.right_type.clamp(0, 6) as usize]));
+                right = real(right - u * constant(BAR_RIGHT_EDGE[self.right_type.clamp(0, 6) as usize]));
             }
             if self.left_type != 0 {
-                left = real(u * c(BAR_LEFT_EDGE[self.left_type.clamp(0, 6) as usize]) + left);
+                left = real(u * constant(BAR_LEFT_EDGE[self.left_type.clamp(0, 6) as usize]) + left);
             }
         }
         let end = real(right - p3 + left);
@@ -298,7 +288,7 @@ impl Drawing<'_, '_, '_> {
         let rest = *self.rest;
         let mut level = match t {
             t if t > 12 => 4.0,
-            t if t > 0 => c(LEVELS[t as usize]),
+            t if t > 0 => constant(LEVELS[t as usize]),
             _ => 0.0,
         };
         let mut flag_step = match self.item.p(15) {
@@ -310,9 +300,9 @@ impl Drawing<'_, '_, '_> {
                 self.symbol_stack(t, x, level, flag_step, size, number);
                 return;
             }
-            flag_step = c(1.4);
+            flag_step = constant(1.4);
             if t >= 10 {
-                level = real(real(level + c(0.7)) + c(0.7));
+                level = real(real(level + constant(0.7)) + constant(0.7));
             }
         }
         let mut dots = dots;
@@ -335,7 +325,7 @@ impl Drawing<'_, '_, '_> {
                 let Some(centre) = self.h_bar(number) else { return };
                 x = centre;
             } else if self.doc.screen() {
-                let reach = real(rest.unit * if t == T_REPEAT { c(40.8) } else { c(16.8) });
+                let reach = real(rest.unit * if t == T_REPEAT { constant(40.8) } else { constant(16.8) });
                 if dots >= 5 && t >= -2 {
                     self.centring_line(x, reach);
                     dots = 0;
@@ -366,7 +356,7 @@ impl Drawing<'_, '_, '_> {
         let (left, right) = self.h_bar;
         let (low, high) = (rest.y(rest.level + 5.0), rest.y(rest.level + 9.0));
         [left, right].into_iter().for_each(|x| self.canvas.segment(Pos::new(x, low), Pos::new(x, high)));
-        let (top, bottom) = (rest.y(rest.level + c(7.75)), rest.y(rest.level + c(6.25)));
+        let (top, bottom) = (rest.y(rest.level + constant(7.75)), rest.y(rest.level + constant(6.25)));
         self.canvas.fill([[Pos::new(left, top), Pos::new(right, top), Pos::new(right, bottom), Pos::new(left, bottom)]]);
         if number <= 0 {
             return None;
@@ -392,13 +382,13 @@ impl Drawing<'_, '_, '_> {
         let kind = rest.kind;
         let level = if kind > 2 { 10.0 } else { 8.0 };
         let y = rest.y(rest.level + level);
-        let gap = c(DOT_GAPS[(kind + 4).clamp(0, 8) as usize]);
+        let gap = constant(DOT_GAPS[(kind + 4).clamp(0, 8) as usize]);
         let p6 = f64::from(self.item.p(6));
         let shift = real(amod(p6, 1.0));
         let x = if shift != 0.0 { real(shift * 60.0 * rest.unit + x) } else { x };
         let first = real(rest.unit * gap + x);
         (0..dots.max(1)).fold(first, |x, _| {
-            clef_symbol(self.canvas, self.doc.symbols(), DOT_SYMBOL, Pos::new(x, y), size, size, rest.step);
+            glyph::clef(self.doc, self.item, self.canvas, DOT_SYMBOL, Pos::new(x, y), (size, size), rest.step);
             real(rest.unit * 13.0 + x)
         });
     }
@@ -418,7 +408,7 @@ impl Drawing<'_, '_, '_> {
             0.0 => 1.0,
             p12 => f64::from(p12),
         };
-        let offset = c(match rest.kind {
+        let offset = constant(match rest.kind {
             k if k < 0 => 1.42,
             0 => 0.95,
             1 => 1.35,
@@ -426,7 +416,7 @@ impl Drawing<'_, '_, '_> {
         });
         let six = real(rest.unit * 6.0);
         let offset = real(six * offset);
-        let narrow = real(scale * c(1.69) * six);
+        let narrow = real(scale * constant(1.69) * six);
         let x = real(rest.number_shift * P3_UNIT + (offset + x - narrow));
         let sx = real(size * scale);
         let (sy, level) = if number == -2 { (-sx, 1.0) } else { (sx, 13.0) };
@@ -437,7 +427,7 @@ impl Drawing<'_, '_, '_> {
             let _ = FERMATA_M3_SYMBOL;
             return;
         }
-        clef_symbol(self.canvas, self.doc.symbols(), FERMATA_SYMBOL, Pos::new(x, y), sx, sy, rest.step);
+        glyph::clef(self.doc, self.item, self.canvas, FERMATA_SYMBOL, Pos::new(x, y), (sx, sy), rest.step);
     }
 
     /// From label 0x51B349: the rest symbol, repeated two scale steps up and
@@ -450,7 +440,7 @@ impl Drawing<'_, '_, '_> {
             let level_used = if t < 0 { real(rest.level + 8.0) } else { level };
             let y = rest.y(level_used);
             let (t, size) = if rest.two_bar_repeat {
-                (TWO_BAR_REPEAT_SYMBOL - FIRST_REST_SYMBOL, real(size * c(BAR_SYMBOL_SIZE)))
+                (TWO_BAR_REPEAT_SYMBOL - FIRST_REST_SYMBOL, real(size * constant(BAR_SYMBOL_SIZE)))
             } else {
                 (t, size)
             };
@@ -458,7 +448,7 @@ impl Drawing<'_, '_, '_> {
                 self.bar_rests(t, x, y, size, number);
                 return;
             }
-            clef_symbol(self.canvas, self.doc.symbols(), t + FIRST_REST_SYMBOL, Pos::new(x, y), size, size, rest.step);
+            glyph::clef(self.doc, self.item, self.canvas, t + FIRST_REST_SYMBOL, Pos::new(x, y), (size, size), rest.step);
             if kind < 2 {
                 self.tail(t, x, y);
                 return;
@@ -473,9 +463,9 @@ impl Drawing<'_, '_, '_> {
     /// P5 = -11 … -19 built from them and a whole rest.
     fn bar_rests(&mut self, t: i32, x: f64, y: f64, size: f64, number: i32) {
         let rest = *self.rest;
-        let small = real(size * c(BAR_SYMBOL_SIZE));
+        let small = real(size * constant(BAR_SYMBOL_SIZE));
         let draw = |canvas: &mut Canvas<'_>, t: i32, x: f64| {
-            library_symbol(canvas, self.doc.symbols(), BAR_SYMBOLS - t, Pos::new(x, y), small, small, rest.step);
+            glyph::library(self.doc, self.item, canvas, BAR_SYMBOLS - t, Pos::new(x, y), (small, small), rest.step);
         };
         if t >= 0 {
             draw(self.canvas, t, x);
@@ -486,8 +476,8 @@ impl Drawing<'_, '_, '_> {
             p6 => f64::from(p6),
         };
         let spacing = real(rest.step * spacing);
-        let at = |units: f32| real(spacing * c(units) + x);
-        let back = |units: f32| real(x - spacing * c(units));
+        let at = |units: f32| real(spacing * constant(units) + x);
+        let back = |units: f32| real(x - spacing * constant(units));
         // Pieces of 4 (t = 1) and 2 (t = 2) bars, then maybe a whole rest.
         let (pieces, whole): (Vec<(i32, f64)>, Option<f64>) = match -t - 2 {
             1 => (vec![], Some(x)),
@@ -539,17 +529,17 @@ impl Drawing<'_, '_, '_> {
         };
         let p3 = real(p10_shift + f64::from(item.p(3)));
         let p3 = if item.p(5) < -101.0 && item.p(9) > 0.0 { f64::from(item.p(9)) } else { p3 };
-        let mut p4 = real(amod(f64::from(item.p(4)), 100.0) + c(PAREN_LEVEL[k]));
+        let mut p4 = real(amod(f64::from(item.p(4)), 100.0) + constant(PAREN_LEVEL[k]));
         if k > 5 && rest.step != rest.unit {
             p4 = real(p4 + 1.0);
         }
-        let size = if k < 4 { 1.0 } else { c(1.9) };
-        let size = if ip(item, 4).abs() >= 100 { real(size * c(GRACE_SIZE)) } else { size };
+        let size = if k < 4 { 1.0 } else { constant(1.9) };
+        let size = if ip(item, 4).abs() >= 100 { real(size * constant(GRACE_SIZE)) } else { size };
         let y = rest.staff.y(amod(p4, 100.0));
-        let left = real(real(p3 - unit * c(PAREN_LEFT[k])) * P3_UNIT);
-        library_symbol(self.canvas, self.doc.symbols(), PARENTHESIS_SYMBOL, Pos::new(left, y), size, size, rest.staff.step);
-        let right_units = if ip(item, 6) == 1 { real(c(PAREN_RIGHT[k]) + c(1.9)) } else { c(PAREN_RIGHT[k]) };
+        let left = real(real(p3 - unit * constant(PAREN_LEFT[k])) * P3_UNIT);
+        glyph::library(self.doc, self.item, self.canvas, PARENTHESIS_SYMBOL, Pos::new(left, y), (size, size), rest.staff.step);
+        let right_units = if ip(item, 6) == 1 { real(constant(PAREN_RIGHT[k]) + constant(1.9)) } else { constant(PAREN_RIGHT[k]) };
         let right = real(real(unit * right_units + p3) * P3_UNIT);
-        library_symbol(self.canvas, self.doc.symbols(), PARENTHESIS_SYMBOL, Pos::new(right, y), -size, size, rest.staff.step);
+        glyph::library(self.doc, self.item, self.canvas, PARENTHESIS_SYMBOL, Pos::new(right, y), (-size, size), rest.staff.step);
     }
 }

@@ -102,6 +102,7 @@ code01-p25-layer
 code01-p26-grey
 code01-p26-red-ledger
 code01-p27-red-ledger
+code01-p28-3
 code01-p29-0.7
 code01-p29-1.5
 code01-p3-20.3
@@ -166,6 +167,8 @@ code01-p5-sharp-p10-2.5
 code01-p5-sharp-p10-20
 code01-p5-three-quarter-flat
 code01-p5-three-quarter-sharp
+code01-p6-alpha-24
+code01-p6-alpha-25
 code01-p6-black
 code01-p6-black-diamond
 code01-p6-breve
@@ -241,6 +244,7 @@ code01-p9-tails-3-up
 code01-p9-tails-4-down
 code01-p9-tails-4-up
 code01-p9-whole-dot
+code01-sample-chord-flats
 code01-staff-0.73-base
 code01-staff-0.73-down
 code01-staff-0.73-full

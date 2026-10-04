@@ -2,7 +2,7 @@ import './style.css';
 import init, { paramName, Reference as EngineList, Score, type EncodedList } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
 import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
-import { interimEditor, type Change, type Editor } from './editor';
+import { scoreEditor, type Change, type Editor } from './editor';
 import { loadFaces } from './fonts';
 import { createInputDialog } from './input-dialog';
 import { bindInteraction } from './interaction';
@@ -157,8 +157,12 @@ function refreshStatus() {
   const items = state.score?.itemCount() ?? 0;
   ui.status.textContent = state.score ? `${state.fileName}${state.modified ? ' (modified)' : ''} · ${items} items` : '';
   ui.save.disabled = !state.score;
-  ui.undo.disabled = !state.editor?.canUndo();
-  ui.redo.disabled = !state.editor?.canRedo();
+  const undo = state.editor?.undoLabel() ?? null;
+  const redo = state.editor?.redoLabel() ?? null;
+  ui.undo.disabled = undo === null;
+  ui.redo.disabled = redo === null;
+  ui.undo.title = undo === null ? 'Nothing to undo' : `Undo ${undo} (⌘Z / Ctrl+Z)`;
+  ui.redo.title = redo === null ? 'Nothing to redo' : `Redo ${redo} (⇧⌘Z / Ctrl+Y)`;
   ui.command.disabled = !state.editor;
   ui.input.disabled = !state.editor;
   ui.mode.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
@@ -312,7 +316,7 @@ function openScore(bytes: Uint8Array, name: string, reference: Reference | null)
   const score = new Score(bytes);
   state.score?.free();
   state.score = score;
-  state.editor = interimEditor(score);
+  state.editor = scoreEditor(score);
   state.fileName = name;
   state.rust = decodeAndFree(score.render());
   setReference(reference);

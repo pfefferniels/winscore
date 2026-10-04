@@ -5,11 +5,10 @@ Case names: sample-<file>, codeNN-<parameter>-<value class>. See rust/fixtures/P
 from __future__ import annotations
 
 import importlib
-import struct
 from pathlib import Path
 
 from fixtures import Case
-from musbuild import mus_bytes
+from musbuild import mus_bytes, param, read_items
 
 REPO = Path(__file__).resolve().parents[1]
 WINSCORE = REPO / "WINSCORE 5.01" / "winscore"
@@ -53,30 +52,16 @@ def sample_cases() -> list[Case]:
     return winscore + score4
 
 
-TRAILER_WORDS = 6
-
-
 def sample_items(path: Path) -> list[bytes]:
-    """The items of a .mus file as packed words (parameters and characters), in file order."""
-    data = path.read_bytes()
-    short = int.from_bytes(data[:2], "little")
-    words = data[2:] if 2 + 4 * short == len(data) else data[4:]
-    items, pos = [], 0
-    while pos < len(words) - 4 * TRAILER_WORDS:
-        length = int(struct.unpack_from("<f", words, pos)[0])   # the engine truncates stray mantissa bits
-        if length <= 0:
-            break
-        items.append(words[pos + 4:pos + 4 + 4 * length])
-        pos += 4 + 4 * length
-    return items
+    return read_items(path.read_bytes())
 
 
 def item_code(packed: bytes) -> int:
-    return int(struct.unpack_from("<f", packed)[0])
+    return int(param(packed, 1))
 
 
 def item_staff(packed: bytes) -> int:
-    return int(struct.unpack_from("<f", packed, 4)[0]) if len(packed) >= 8 else 0
+    return int(param(packed, 2))
 
 
 def excerpt(path: Path, indices: list[int], staves: tuple[int, ...] = ()) -> list[bytes]:
