@@ -8,6 +8,7 @@
 use super::glyph;
 use super::Note;
 use crate::canvas::Canvas;
+use crate::codes::number::{draw_number, NumberCall};
 use crate::display::Colour;
 use crate::page::P3_UNIT;
 use crate::document::{Document, ItemRef};
@@ -152,6 +153,48 @@ fn alpha_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
     let at = Pos::new(real(p3 * P3_UNIT), staff.y(p4));
     let symbol = if hollow { HOLLOW_ALPHA_HEAD } else { ALPHA_HEAD };
     glyph::library(doc, item, canvas, symbol, at, (real(size * constant(0.58)), real(size * constant(0.475))), staff.step);
+    if doc.screen() {
+        alpha_letter(doc, item, note, size, canvas);
+    }
+}
+
+/// The letter name in an AlphaNote (0x4F1D5E, screen only, P6 ±20 … ±23
+/// for treble, bass, alto, tenor clef names): a code-10 number item with
+/// P5 = 1001 + the letter, at P22/P23 from its default place, size P24,
+/// font P21 (default 5, bold), white in a black head.
+fn alpha_letter(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, size: f64, canvas: &mut Canvas<'_>) {
+    let kind = unparenthesised(trunc(f64::from(item.p(6)))).abs();
+    let clef_shift = match kind {
+        21 => -5,
+        22 => 1,
+        23 => -1,
+        24.. => return,
+        _ => 0,
+    };
+    let letter = (note.level + clef_shift + 71) % 7 + 1001;
+    let p = |n: usize| f64::from(item.p(n));
+    let p24 = if item.p(24) == 0.0 { 1.0 } else { p(24) };
+    let x150 = real(note.origin.x / P3_UNIT);
+    let mut changes = vec![
+        (1, 10.0),
+        (3, real(note.unit * constant(0.022) + x150 + p(22)) as f32),
+        (4, real(p(4) - size * constant(0.72) + p(23)) as f32),
+        (5, letter as f32),
+        (6, real(size * constant(0.45) * p24) as f32),
+        (7, if item.p(21) == 0.0 { 1005.0 } else { item.p(21) + 1000.0 }),
+        (8, 0.0),
+        (24, p24 as f32),
+    ];
+    if trunc(p(6)) > 0 {
+        changes.push((26, 0.99));
+    }
+    let changed = item.with_params(&changes);
+    let letter_item = item.changed(&changed);
+    // The letter's P26 is pushed and popped around it in the engine; the
+    // note's points are flushed in the note's own colour.
+    let own = canvas.colour;
+    draw_number(doc, letter_item, canvas, doc.position(letter_item), &NumberCall::of(letter_item));
+    canvas.colour = own;
 }
 
 /// draw_box type 0, filled, 2.4 by 0.35 half-widths of 3.5 steps, centred
