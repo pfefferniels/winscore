@@ -14,9 +14,10 @@ def shape(**named: float):
 
 def cases() -> list[Case]:
     one = [
-        *[(f"p5-{name}", f"P5 = {k}, default size", {"p5": k}) for k, name in KINDS.items()],
+        # Dashed boxes of size 0 or below draw only continuation points, which join the previous item's stroke.
+        *[(f"p5-{name}", f"P5 = {k}, P6 = 0", {"p5": k}) for k, name in KINDS.items() if k != 3],
         *[(f"p6-{label(v)}-{name}", f"P6 = {v}, P5 = {k}", {"p5": k, "p6": v})
-          for k, name in KINDS.items() for v in (2, 4.5, -3)],
+          for k, name in KINDS.items() for v in (2, 4.5, -3) if not (k == 3 and v < 0)],
         *[(f"p6-p7-{name}", f"P6 = 4, P7 = 2, P5 = {k}", {"p5": k, "p6": 4, "p7": 2}) for k, name in KINDS.items()],
         *[(f"p8-thick-{label(v)}-{name}", f"thickness P8 = {v}, P5 = {k}", {"p5": k, "p6": 3, "p8": v})
           for k, name in KINDS.items() for v in (1, 3, -1)],
@@ -42,7 +43,7 @@ def cases() -> list[Case]:
     single = [built(f"code12-{name}", desc, [staff(), shape(**params)]) for name, desc, params in one]
     staves = [
         *[(f"staff-size-{label(s)}-{name}", f"staff size {s}, P5 = {k}", {"p5": s}, {"p5": k, "p6": 3})
-          for s in (0.75, 1.4, -1) for k, name in KINDS.items()],
+          for s in (0.75, 1.4, -1) for k, name in KINDS.items() if not (k == 3 and s < 0)],
         ("staff-recto-201", "recto staff 201, circle", {"p2": 201}, {"p2": 201, "p5": 1}),
     ]
     on_staves = [built(f"code12-{name}", desc, [staff(**s), shape(**b)]) for name, desc, s, b in staves]

@@ -30,7 +30,6 @@ code12-p26-marked
 code12-p26-marked-circle
 code12-p5-box
 code12-p5-circle
-code12-p5-dashed
 code12-p5-other-m5
 code12-p6-2-box
 code12-p6-2-circle
@@ -40,7 +39,6 @@ code12-p6-4.5-circle
 code12-p6-4.5-dashed
 code12-p6-m3-box
 code12-p6-m3-circle
-code12-p6-m3-dashed
 code12-p6-p7-box
 code12-p6-p7-circle
 code12-p6-p7-dashed
@@ -71,4 +69,3 @@ code12-staff-size-1.4-circle
 code12-staff-size-1.4-dashed
 code12-staff-size-m1-box
 code12-staff-size-m1-circle
-code12-staff-size-m1-dashed
