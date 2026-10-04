@@ -341,10 +341,25 @@ button:disabled {
 
 .footer {
   display: flex;
+  align-items: center;
   gap: 16px;
   padding: 4px 12px;
   border-top: 1px solid var(--border);
   min-height: 24px;
+}
+
+.command {
+  width: 320px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+}
+
+.command:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
 }
 
 .message.error {

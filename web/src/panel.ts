@@ -15,6 +15,8 @@ export interface ItemDetails extends ItemSummary {
   text: string | null;
   /** Whether the Rust renderer drew anything for this item. */
   drawn: boolean;
+  /** How many other items are selected with it. */
+  others: number;
 }
 
 export interface PanelHandlers {
@@ -53,12 +55,12 @@ export function renderItemList(list: HTMLOListElement, items: ItemSummary[], han
   list.replaceChildren(...items.map((item) => itemRow(item, handlers)));
 }
 
-export function markSelected(list: HTMLOListElement, index: number | null) {
+/** Marks the rows of `items` and scrolls the last one into view. */
+export function markSelected(list: HTMLOListElement, items: number[]) {
   list.querySelectorAll('li.selected').forEach((li) => li.classList.remove('selected'));
-  if (index === null) return;
-  const row = list.querySelector<HTMLLIElement>(`li[data-index="${index}"]`);
-  row?.classList.add('selected');
-  row?.scrollIntoView({ block: 'nearest' });
+  const rows = items.map((index) => list.querySelector<HTMLLIElement>(`li[data-index="${index}"]`));
+  rows.forEach((row) => row?.classList.add('selected'));
+  rows.at(-1)?.scrollIntoView({ block: 'nearest' });
 }
 
 function paramInput(item: ItemDetails, n: number, value: number, handlers: PanelHandlers): HTMLInputElement {
@@ -116,8 +118,9 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
     ...(item.text !== null ? [element('div', { className: 'text-value', title: 'Text (P12 characters)' }, [item.text])] : []),
     ...(item.drawn ? [] : [element('p', { className: 'muted' }, ['The Rust renderer does not draw this item yet.'])]),
   ];
+  const others = item.others > 0 ? [element('span', { className: 'muted' }, [` (+${item.others} selected)`])] : [];
   section.replaceChildren(
-    element('h2', {}, [`Item ${item.index} · ${item.name}`]),
+    element('h2', {}, [`Item ${item.index} · ${item.name}`, ...others]),
     grid,
     ...notes,
     addParamRow(item, handlers),
