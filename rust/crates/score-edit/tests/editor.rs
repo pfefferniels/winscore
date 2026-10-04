@@ -46,6 +46,67 @@ fn a_drag_keeps_its_grab_offset_and_snaps_notes() {
 }
 
 #[test]
+fn text_entry_and_new_characters_keep_count_and_length() {
+    let mut e = small();
+    let change = e.insert_text("_00Hello", &[1.0, 50.0, 10.0]).unwrap();
+    let text = change.inserted[0];
+    let item = e.item(text).unwrap();
+    assert_eq!((item.text(), item.param(12), item.param(13)), (&b"_00Hello"[..], 8.0, 11.434_941));
+    e.set_text(text, "Hello, world").unwrap();
+    let item = e.item(text).unwrap();
+    assert_eq!((item.text(), item.param(12)), (&b"_00Hello, world"[..], 15.0));
+    assert!(item.param(13) > 11.434_941);
+    assert_eq!(e.undo_label(), Some("Edit text"));
+    e.undo();
+    assert_eq!(e.item(text).unwrap().text(), b"_00Hello");
+    assert!(matches!(e.set_text(e.id_at(1).unwrap(), "x"), Err(EditError::NotForCode { code: 1, .. })));
+}
+
+#[test]
+fn divided_text_makes_one_item_per_part() {
+    let mut e = small();
+    let change = e.execute("\"_04This/is/how\"").unwrap();
+    assert_eq!(change.inserted.len(), 3);
+    assert_eq!(change.selection, [change.inserted[2]]);
+    assert_eq!(e.execute("\"unclosed 1 2"), Err(EditError::UnknownCommand("\"".into())));
+}
+
+#[test]
+fn group_commands_ask_line_by_line_and_undo_in_one_step() {
+    let mut e = small();
+    assert_eq!(e.prompt(), None);
+    e.execute("M").unwrap();
+    assert!(e.prompt().unwrap().starts_with("Enter staff"));
+    e.execute("1 90 130").unwrap();
+    assert!(e.prompt().unwrap().starts_with("Enter destination"));
+    let change = e.execute("1 5").unwrap();
+    assert_eq!(e.prompt(), None);
+    assert_eq!(change.modified.len(), 2);
+    assert_eq!(p(&e, e.id_at(1).unwrap(), 3), 105.0);
+    e.undo();
+    assert_eq!(p(&e, e.id_at(1).unwrap(), 3), 100.0);
+}
+
+#[test]
+fn a_box_selects_the_items_inside() {
+    let mut e = small();
+    e.select_region(&score_edit::group::Region::parse(&[1.0, 110.0, 130.0]).unwrap());
+    assert_eq!(e.selection(), [e.id_at(2).unwrap()]);
+    e.execute("U 1").unwrap();
+    assert_eq!(p(&e, e.id_at(2).unwrap(), 4), 8.0);
+}
+
+#[test]
+fn symbols_from_the_picker_are_code_9_items() {
+    let mut e = small();
+    let fermata = score_edit::symbols::library_symbols().into_iter().find(|s| s.name == "fermata").unwrap();
+    let change = e.insert_symbol(fermata.number, 1.0, 80.0, 12.0).unwrap();
+    let item = e.item(change.inserted[0]).unwrap();
+    assert_eq!((item.code(), item.param(3), item.param(4), item.param(5)), (9, 80.0, 12.0, 31.0));
+    assert_eq!(e.selection(), change.inserted);
+}
+
+#[test]
 fn lft_drags_only_the_left_end() {
     let mut e = editor_with(&[&[8.0, 1.0, 0.0], &[4.0, 1.0, 50.0, 5.0, 10.0, 120.0]]);
     let line = e.id_at(1).unwrap();

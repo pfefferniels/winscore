@@ -8,6 +8,7 @@ use score_format::Item;
 use crate::command::moves::Increments;
 use crate::document::{Document, ItemId};
 use crate::drag::Ends;
+use crate::group::Pending;
 
 /// The ids in their first-seen order, without repeats.
 fn unique(ids: impl Iterator<Item = ItemId>) -> Vec<ItemId> {
@@ -38,6 +39,18 @@ pub struct Session {
     drag_ends: Ends,
     /// Parameters remembered by PS, latest last.
     saved: Vec<(usize, f32)>,
+    /// The font in effect at the end of the text entered last.
+    pub text_font: u8,
+    /// The position CT centred on last (CT alone reuses it).
+    pub centre_at: Option<f32>,
+    /// The position JR justified to last.
+    pub right_at: Option<f32>,
+    /// The positions J justified between last.
+    pub justify_between: Option<(f32, f32)>,
+    /// A group command waiting for its next line.
+    pub pending: Option<Pending>,
+    /// Items cut for pasting (IF … THEN CUT), pasted by PST.
+    pub clipboard: Vec<Item>,
 }
 
 impl Session {

@@ -2102,3 +2102,568 @@
 8 1 0
 1 1 100 6 10 0 1
 1 1 100 8 10 0 1
+== c1_text_plain
+8 1 0
+16 1 100 0 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_font_and_params
+8 1 0
+16 1 20 14 1 2 0 0 0 0 0 31 123.489151 "_15A stitch in time saves nine."
+== c1_text_on_staff_3
+8 1 0
+8 3 0
+16 3 20 14 1 2 0 0 0 0 0 11 32.3080826 "_00A stitch"
+== c1_text_centred
+8 1 0
+16 1 69.7100983 13 1 1.5 0 0 0 0 0 9 20.5798054 "_00Centre"
+== c1_text_centred_size2
+8 1 0
+16 1 66.2801285 13 1 2 0 0 0 0 0 9 27.439743 "_00Centre"
+== c1_text_divided
+8 1 0
+16 1 100 0 1 1 0 0 0 0 0 7 9.72124386 "_04This"
+16 1 111.721245 0 1 1 0 0 0 0 0 5 3.7155838 "_04is"
+16 1 117.436829 0 1 1 0 0 0 0 0 6 9.4382 "_04how"
+== c1_text_divided_size2
+8 1 0
+16 1 20 10 1 2 0 0 0 0 0 7 19.4424877 "_04This"
+16 1 41.4424896 10 1 2 0 0 0 0 0 5 7.4311676 "_04is"
+16 1 50.8736572 10 1 2 0 0 0 0 0 6 18.8764 "_04how"
+== c1_text_divided_spread
+8 1 0
+16 1 20 10 1.5 1 0 0 0 0 0 7 14.5818653 "_04This"
+16 1 36.5818634 10 1.5 1 0 0 0 0 0 5 5.5733757 "_04is"
+== c1_text_divided_centred
+8 1 0
+16 1 78.8575363 10 1 1 0 0 0 0 0 4 2.28492975 "_00a"
+16 1 78.7134399 10 1 1 0 0 0 0 0 4 2.57311893 "_00b"
+== c1_text_divided_font_carried
+8 1 0
+16 1 100 0 1 1 0 0 0 0 0 9 6.1446085 "_00a _02b"
+16 1 108.144608 0 1 1 0 0 0 0 0 4 2.28492975 "_02c"
+== c1_text_divided_font_changes
+8 1 0
+16 1 100 0 1 1 0 0 0 0 0 4 2.28492975 "_00a"
+16 1 104.284927 0 1 1 0 0 0 0 0 4 2.57311893 "_02b"
+16 1 108.858047 0 1 1 0 0 0 0 0 4 2.28492975 "_02c"
+== c1_text_backslash
+8 1 0
+16 1 100 0 1 1 0 0 0 0 0 6 6.28870296 "_00a\b"
+== c1_text_last_font
+8 1 0
+16 1 100 0 1 1 0 0 0 0 0 8 10.0094328 "_02First"
+16 1 100 0 1 1 0 0 0 0 0 9 14.8623352 "_02Second"
+== c1_text_last_font_mixed
+8 1 0
+16 1 100 0 1 1 0 0 0 0 0 9 7.08122396 "_00a _16b"
+16 1 100 0 1 1 0 0 0 0 0 4 3.32961631 "_16c"
+== c1_text_staff_1_by_default
+8 1 0
+8 2 0
+1 2 100 6 10 0 1
+16 1 100 0 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_mixed_fonts
+8 1 0
+16 1 20 14 1 2 0 0 0 0 0 40 123.190659 "_00A stitch _02in time _16saves _23nine."
+== c1_text_spaces
+8 1 0
+16 1 100 0 1 1 0 0 0 0 0 9 11.0026569 "_00a b  c"
+== c1_text_alphabet
+8 1 0
+16 1 100 0 1 1 0 0 0 0 0 29 61.461525 "_00abcdefghijklmnopqrstuvwxyz"
+== c1_text_empty
+8 1 0
+== c1_text_negative_p3
+8 1 0
+16 1 -10 0 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"
+== c1_text_spread_zero_is_one
+8 1 0
+16 1 50 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_spread_two
+8 1 0
+16 1 50 10 2 1 0 0 0 0 0 8 22.8698826 "_00Hello"
+== c1_text_rotated
+8 1 0
+16 1 50 10 1 1.5 0 0 30 0 0 8 17.1524105 "_00Hello"
+== c1_text_move
+8 1 0
+16 1 55 12 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_size_param
+8 1 0
+16 1 50 10 1 2 0 0 0 0 0 8 22.8698826 "_00Hello"
+== c1_text_spread_param
+8 1 0
+16 1 50 10 1.5 1 0 0 0 0 0 8 17.1524124 "_00Hello"
+== c1_text_font_override
+8 1 0
+16 1 50 10 1 1 0 1004 0 0 0 8 11.7231293 "_00Hello"
+== c1_text_vertical_size
+8 1 0
+16 1 50 10 1 1 2 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_rotation_param
+8 1 0
+16 1 50 10 1 1 0 0 30 0 0 8 11.4349413 "_00Hello"
+== c1_text_character_space_plus
+8 1 0
+16 1 50 10 1.03999996 1 0 0 0 0 0 8 11.8923388 "_00Hello"
+== c1_text_character_space_minus
+8 1 0
+16 1 50 10 0.980000019 1 0 0 0 0 0 8 11.2062426 "_00Hello"
+== c1_text_character_space_normal
+8 1 0
+16 1 50 10 0 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_larger
+8 1 0
+16 1 50 10 1 1.10000002 0 0 0 0 0 8 12.5784359 "_00Hello"
+== c1_text_smaller
+8 1 0
+16 1 50 10 1 0.899999976 0 0 0 0 0 8 10.2914476 "_00Hello"
+== c1_text_rotate
+8 1 0
+16 1 50 10 1 1 0 0 10 0 0 8 11.4349413 "_00Hello"
+== c1_text_rotate_back
+8 1 0
+16 1 50 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_font_word_italic
+8 1 0
+16 1 50 10 1 1 0 1002 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_font_word_palatino
+8 1 0
+16 1 50 10 1 1 0 1015 0 0 0 8 12.5774059 "_00Hello"
+== c1_text_font_word_music
+8 1 0
+16 1 50 10 1 1 0 1094 0 0 0 8 14.1181898 "_00Hello"
+== c1_text_font_word_then_size
+8 1 0
+16 1 50 10 1 2 0 1002 0 0 0 8 22.8698826 "_00Hello"
+== c1_text_points
+8 1 0
+16 1 50 10 1 0.884955704 0 0 0 0 0 8 10.1194162 "_00Hello"
+== c1_text_points_24
+8 1 0
+16 1 50 10 1 1.76991141 0 0 0 0 0 8 20.2388325 "_00Hello"
+== c1_text_points_small_staff
+8 1 0 0 0.5
+16 1 50 10 1 1.76991141 0 0 0 0 0 8 10.1194162 "_00Hello"
+== c1_text_points_large_staff
+8 1 0 0 2
+16 1 50 10 1 0.442477852 0 0 0 0 0 8 10.1194162 "_00Hello"
+== c1_text_centre_at
+8 1 0
+16 1 74.2825317 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_centre_default
+8 1 0
+16 1 94.2825317 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_centre_remembered
+8 1 0
+16 1 54.2825279 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+16 1 57.4268799 10 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"
+== c1_text_centre_on_note
+8 1 0
+1 1 80 6 10 0 1
+1 1 120 6 10 0 1
+16 1 80 10 1 1 0 0 0 0 -4.11747074 8 11.4349413 "_00Hello"
+== c1_text_centre_on_note_wide
+8 1 0
+1 1 80 6 10 0 1
+16 1 80 10 1 1 0 0 0 0 -10.7638359 14 24.7276726 "_00Hello world"
+== c1_text_centre_on_note_size2
+8 1 0
+1 1 80 6 10 0 1
+16 1 80 10 1 2 0 0 0 0 -9.83494091 8 22.8698826 "_00Hello"
+== c1_text_centre_on_rest
+8 1 0
+2 1 80 0 0 0 1
+16 1 80 10 1 1 0 0 0 0 -4.11747074 8 11.4349413 "_00Hello"
+== c1_text_centre_on_note_comma
+8 1 0
+1 1 80 6 10 0 1
+16 1 80 10 1 1 0 0 0 0 -4.76075029 9 12.7215004 "_00Hello,"
+== c1_text_centre_without_comma
+8 1 0
+1 1 80 6 10 0 1
+16 1 80 10 1 1 0 0 0 0 -4.11747074 9 12.7215004 "_00Hello,"
+== c1_text_centre_keeps_parentheses
+8 1 0
+1 1 80 6 10 0 1
+16 1 80 10 1 1 0 0 0 0 -5.83116817 10 14.8623362 "_00(Hello)"
+== c1_text_leading_edge_on_note
+8 1 0
+1 1 80 6 10 0 1
+1 1 120 6 10 0 1
+16 1 80 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_copy
+8 1 0
+16 1 50 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+16 1 60 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c1_text_from_file_moved
+8 1 0
+16 1 53 10 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"
+== c1_text_from_file_resized
+8 1 0
+16 1 50 10 1 3 0 0 0 0 0 5 15.438714 "_00Hi"
+== c1_text_from_file_font_carried
+8 1 0
+16 1 50 10 1 1 0 0 0 0 0 6 9.02650261 "_16Old"
+16 1 100 0 1 1 0 0 0 0 0 6 9.71609688 "_00New"
+== c1_text_without_font_code_in_file
+8 1 0
+16 1 50 10 1 2 0 0 0 0 0 2 7.9663763 "Hi"
+== c2_adjust_stems_from_beam
+8 1 0
+1 1 100 6 10 0 0.5 7 0
+1 1 110 8 10 0 0.5 6 0
+1 1 120 7 10 0 0.5 8 0
+6 1 100 13 15 120 11
+== c2_adjust_stems_from_beam_down
+8 1 0
+1 1 100 6 20 0 0.5 6 0
+1 1 110 8 20 0 0.5 7.5 0
+1 1 120 7 20 0 0.5 6 0
+6 1 100 0 1 120 21
+== c2_adjust_stems_four_notes
+8 1 0
+1 1 100 6 10 0 0.5 7 0
+1 1 110 8 10 0 0.5 5.66666651 0
+1 1 120 7 10 0 0.5 7.33333349 0
+1 1 130 6 10 0 0.5 9 0
+6 1 100 13 15 130 11
+== c2_adjust_stems_dotted_sixteenths
+8 1 0
+1 1 100 6 10 0 0.75 7 10
+1 1 110 8 10 0 0.25 7 0
+6 1 100 13 15 110 12
+== c2_adjust_stems_other_staff_untouched
+8 1 0
+8 2 0
+1 1 100 6 10 0 0.5 7 0
+1 2 110 8 10 0 0.5 0 1
+1 1 120 7 10 0 0.5 8 0
+6 1 100 13 15 120 11
+== c2_adjust_one_note
+8 1 0
+1 1 100 6 10 0 0.5 0 1
+1 1 110 8 10 0 0.5 6
+1 1 120 7 10 0 0.5 0 1
+6 1 100 13 15 120 11
+== c2_adjust_one_note_down
+8 1 0
+1 1 100 6 20 0 0.5 0 1
+1 1 110 8 20 0 0.5 7.5
+1 1 120 7 20 0 0.5 0 1
+6 1 100 0 1 120 21
+== c2_chord_rhythm
+# message: Chord notes rhythms (P7) changed to 0.500
+8 1 0
+1 1 100 3 10 0 0.5 0 1
+1 1 100 5 0 0 0.5
+1 1 100 7 0 0 0.5
+== c2_chord_rhythm_value
+# message: Chord notes rhythms (P7) changed to 0.250
+8 1 0
+1 1 100 3 10 0 0.25 0 1
+1 1 100 5 0 0 0.25
+1 1 100 7 0 0 0.25
+== c2_chord_rhythm_from_stemless
+# message: *** no rhythm changes made ***
+8 1 0
+1 1 100 3 10 0 0.5 0 1
+1 1 100 5 0 0 1
+1 1 100 7 0 0 2
+== c2_chord_rhythm_other_chord_untouched
+# message: Chord notes rhythms (P7) changed to 0.500
+8 1 0
+1 1 100 3 10 0 0.5 0 1
+1 1 100 5 0 0 0.5
+1 1 110 7 10 0 2
+== c3_text_right_hello
+8 1 0
+16 1 138.719452 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c3_text_right_wide
+8 1 0
+16 1 125.318642 10 1 1 0 0 0 0 0 14 24.7276726 "_00Hello world"
+== c3_text_right_size2
+8 1 0
+16 1 127.438889 10 1 2 0 0 0 0 0 8 22.8698826 "_00Hello"
+== c3_text_right_capital
+8 1 0
+16 1 146.36676 10 1 1 0 0 0 0 0 4 3.7155838 "_00A"
+== c3_text_right_default
+8 1 0
+16 1 188.719452 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c3_text_right_remembered
+8 1 0
+16 1 108.719444 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+16 1 114.951538 10 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"
+== c3_text_right_helvetica
+8 1 0
+16 1 138.513596 10 1 1 0 0 0 0 0 8 11.7231293 "_04Hello"
+== c3_text_justify
+8 1 0
+16 1 20 10 1 1 0 0 0 75.2242889 0 8 160.164673 "_00a b c"
+== c3_text_justify_size2
+8 1 0
+16 1 10 10 1 2 0 0 0 28.7275944 0 18 180.092651 "_00Hello big world"
+== c3_text_justify_spread
+8 1 0
+16 1 10 10 1.5 1 0 0 0 43.7198753 0 18 180.046326 "_00Hello big world"
+== c3_text_justify_without_spaces
+# message: *** No spaces.  Cannot justify line.
+8 1 0
+16 1 50 10 1 1 0 0 0 0 0 8 11.4349413 "_00Hello"
+== c3_text_justify_again
+8 1 0
+16 1 20 10 1 1 0 0 0 153.989197 0 6 160.133804 "_00a b"
+16 1 20 12 1 1 0 0 0 153.901703 0 6 160.04631 "_00c d"
+== g1_delete_staff
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 2 0
+1 2 120 7 10 0 1
+== g1_delete_code
+# question: Source Box O.K.? - -> yes
+8 1 0
+8 2 0
+1 1 100 6 10 0 1
+1 2 120 7 10 0 1
+== g1_delete_two_codes
+# question: Source Box O.K.? - -> yes
+8 1 0
+9 1 130 13 22 0.25
+== g1_delete_range_two_staves
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 1 0
+8 2 0
+1 1 150 7 10 0 1
+== g1_delete_with_d
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 2 0
+1 2 120 7 10 0 1
+== g1_move_to_staff
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x0']
+8 2 0
+8 2 0
+1 2 100 6 10 0 1
+1 2 120 7 10 0 1
+== g1_move_left
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42a00000']
+8 1 0
+8 2 0
+1 1 90 6 10 0 1
+1 1 130 7 10 0 1
+== g1_move_scaled
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42480000']
+8 1 0
+8 2 0
+1 2 50 6 10 0 1
+1 2 90 7 10 0 1
+4 2 50 5 5 90
+== g1_move_staff_and_shift
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42be0000']
+8 1 0
+8 2 0
+1 2 105 6 10 0 1
+4 2 105 5 5 125
+== g1_move_right_end_outside
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42be0000']
+8 1 0
+8 2 0
+4 1 105 5 5 120
+== g1_move_two_staves_up
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x0']
+8 2 0
+8 3 0
+8 3 0
+1 2 100 6 10 0 1
+1 3 100 6 10 0 1
+== g1_copy_to_staff
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x0']
+8 1 0
+8 2 0
+1 1 100 6 10 0 1
+1 2 120 7 10 0 1
+8 2 0
+1 2 100 6 10 0 1
+== g1_copy_shifted
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42dc0000']
+8 1 0
+1 1 100 6 10 0 1
+1 1 120 6 10 0 1
+== g1_alter_notes
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 100 6 10 0 0.5 0 1
+1 1 120 7 10 0 0.5 0 1
+2 1 110 0 0 0 1
+== g1_alter_relative
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 100 6 10 1 1
+1 1 120 7 10 1 1
+== g1_move_up_down
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x20b9374', '0x2']
+8 1 0
+1 1 100 9 10 0 1
+3 1 2
+14 1 120 1
+9 1 130 16 22 0.25
+== g1_move_up_down_lines
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x2']
+8 1 0
+4 1 100 3 3 120
+4 1 130 -3 999 150
+5 1 100 11 12 120 3
+6 1 100 11 13 120 11
+17 1 100 0 2
+18 1 100 0 4 4
+2 1 110 -2 0 0 1
+== g1_copy_to_staves
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x0']
+8 1 0
+8 2 0
+8 3 0
+1 1 100 6 10 0 1
+8 2 0
+1 2 100 6 10 0 1
+8 3 0
+1 3 100 6 10 0 1
+== g1_order_by_staff
+8 1 0
+1 1 110 8 10 0 1
+1 1 120 7 10 0 1
+8 2 0
+1 2 100 6 10 0 1
+== g1_order_by_staff_mixed
+8 1 0
+3 1 2
+1 1 110 8 10 0 1
+1 1 120 7 10 0 1
+8 2 0
+1 2 100 6 10 0 1
+== g1_order_by_staff_equal_positions
+8 1 0
+1 1 90 7 10 0 1
+2 1 100 0 0 0 1
+1 1 100 6 10 0 1
+1 1 100 8 0 0 1
+== g1_order_by_staff_catalogue_base
+8 1 0 0 1
+3 1 2 0 0
+1 1 30 5 10 0 1
+2 1 50 0 0 0 1
+14 1 70 1
+8 2 0 0 1
+== g1_order_horizontal
+8 1 0
+8 2 0
+1 2 100 6 10 0 1
+1 1 110 8 10 0 1
+1 1 120 7 10 0 1
+== g1_order_horizontal_mixed
+8 1 0
+8 2 0
+3 1 2
+1 2 100 6 10 0 1
+1 1 110 8 10 0 1
+1 1 120 7 10 0 1
+== g1_order_text
+16 2 30 10 1 1 0 0 0 0 0 5 6.28870296 "_00Ho"
+16 1 50 10 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"
+8 1 0
+1 1 110 8 10 0 1
+8 2 0
+1 2 100 6 10 0 1
+== g1_cancelled
+# message: Leaving Group Edit.
+# message: ERROR -- unknown word in this context: R 1
+8 1 0
+1 1 100 6 10 0 1
+== g2_if_move_right_part
+8 1 0
+1 1 100 6 10 0 1
+1 1 100 7 10 0 1
+9 1 130 13 22 0.25
+== g2_if_semicolon
+8 1 0
+1 1 100 6 10 0 1
+1 1 100 7 10 0 1
+9 1 130 13 22 0.25
+== g2_if_delete_codes
+8 1 0
+8 6 0
+1 6 120 7 10 0 1
+2 1 110 0 0 0 1
+== g2_if_mod_and_two_changes
+8 1 0
+8 4 0
+1 4 100 6 10 6 0.5 0 1 0 5
+1 4 110 6 10 0 1
+1 1 120 6 10 6 1 0 0 0 5
+1 1 90 7 10 0 1
+== g2_if_not_equal_tilde
+8 1 0
+1 1 100 6 10 0 1
+1 1 120 7 20 0 1
+== g2_if_less_equal_brace
+8 1 0 2
+1 1 100 8 10 0 1
+1 1 120 7 10 0 1
+== g2_if_greater_equal_brace
+8 1 0
+1 1 100 6 10 0 1
+1 1 120 14 10 0 1
+== g2_if_arithmetic
+8 1 0
+1 1 212 6 10 0 1
+1 1 254 7 10 0 1
+== g2_if_divide
+8 1 0
+1 1 100 6 10 0 0.333333343
+== g2_if_colour
+8 1 0
+1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 990000
+2 1 110 0 0 0 1
+== g2_if_grey
+8 1 0
+1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5
+== g2_if_black
+8 1 0
+1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+== g2_if_cut_keeps_items
+8 1 0
+1 1 100 6 10 0 1
+9 1 130 13 22 0.25
+== g2_if_negative_value
+8 1 0
+1 1 100 -3 10 0 1
+== g2_if_or_then_and
+8 1 0
+1 1 120 6 10 0 1
+1 1 100 6 10 0 1
+== g3_symbol_fermata
+8 1 0
+9 1 80 12 31
+== g3_symbol_then_edit
+8 1 0
+9 1 82 12 31

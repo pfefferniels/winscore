@@ -10,10 +10,14 @@ use crate::command::Run;
 use crate::document::{Document, Edit, ItemId, Transaction};
 use crate::drag::{self, Axes, Constraint, Ends, PagePoint};
 use crate::error::EditError;
+use crate::group::{Pending, Region};
 use crate::history::{History, Step};
 use crate::params::{Draft, MAX_PARAM};
 use crate::pick;
 use crate::session::Session;
+
+/// P1 of library symbols.
+const SYMBOL_CODE: f32 = 9.0;
 
 /// What an action did to the items, by id, and the selection after it.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -77,8 +81,15 @@ pub struct Editor {
 }
 
 impl Editor {
+    /// Opens `file`. Text items get the lengths (P13) the engine measures when
+    /// it first draws the page; scores saved by WinScore already have them.
     pub fn new(file: MusFile) -> Self {
-        Self { doc: Document::new(file), session: Session::default(), history: History::default(), drag: None }
+        let mut doc = Document::new(file);
+        let mut session = Session::default();
+        let mut tx = Transaction::new(&mut doc);
+        Run { session: &mut session, tx: &mut tx }.refresh_text_lengths();
+        tx.commit();
+        Self { doc, session, history: History::default(), drag: None }
     }
 
     pub fn open(bytes: &[u8]) -> Result<Self, MusError> {
@@ -133,6 +144,20 @@ impl Editor {
         self.session.clear();
     }
 
+    /// Selects every item of an area (a box drawn on the page): staves
+    /// `region.bottom..=region.top`, P3 between `left` and `right`, the given codes.
+    pub fn select_region(&mut self, region: &Region) {
+        self.cancel_drag();
+        let mut tx = Transaction::new(&mut self.doc);
+        Run { session: &mut self.session, tx: &mut tx }.select_region(region);
+    }
+
+    /// The question a group command is waiting to have answered by the next
+    /// line given to [`Editor::execute`], if any.
+    pub fn prompt(&self) -> Option<&'static str> {
+        self.session.pending.as_ref().map(Pending::prompt)
+    }
+
     /// The item WinScore's click at page point (`x`, `y`) would select: the
     /// one whose reference point (P3, P4 and a per-code offset) is nearest,
     /// within `radius` page units if given.
@@ -162,7 +187,9 @@ impl Editor {
         self.cancel_drag();
         let mut session = self.session.clone();
         let mut tx = Transaction::new(&mut self.doc);
-        action(&mut Run { session: &mut session, tx: &mut tx })?;
+        let mut run = Run { session: &mut session, tx: &mut tx };
+        action(&mut run)?;
+        run.refresh_text_lengths();
         let edits = tx.commit();
         let before = std::mem::replace(&mut self.session, session);
         let change = Change::new(&edits, self.session.selection());
@@ -221,6 +248,32 @@ impl Editor {
     /// Deletes the selection and leaves edit mode (UND brings it back).
     pub fn delete_selection(&mut self) -> Result<Change, EditError> {
         self.act("Delete", |run| run.delete_selected(None))
+    }
+
+    /// New characters for text item `id` (WinScore's Edit Text). Without a
+    /// font code of their own they keep the item's font; P12 and P13 follow.
+    pub fn set_text(&mut self, id: ItemId, text: &str) -> Result<Change, EditError> {
+        self.act("Edit text", |run| run.set_text(id, &crate::text::encode(text)))
+    }
+
+    /// New text items as quick entry `"text" p2 p3 …` makes them: `params`
+    /// are P2, P3, … (0 keeps the default), `/` divides the text into items.
+    pub fn insert_text(&mut self, text: &str, params: &[f32]) -> Result<Change, EditError> {
+        let rest: Vec<String> = params.iter().map(f32::to_string).collect();
+        self.act("Text", |run| {
+            run.session.clear();
+            run.enter_text(&crate::text::encode(text), &rest.join(" "))
+        })
+    }
+
+    /// A code-9 item showing library symbol `number` (see
+    /// [`crate::symbols::library_symbols`]) on `staff` at P3, P4, selected.
+    pub fn insert_symbol(&mut self, number: i32, staff: f32, p3: f32, p4: f32) -> Result<Change, EditError> {
+        let item = Draft::new(&[SYMBOL_CODE, staff, p3, p4, number as f32]).to_item();
+        self.act("Symbol", |run| {
+            run.session.clear();
+            run.append_items(vec![item])
+        })
     }
 
     /// Appends items (from the music input passes, say) and selects them.

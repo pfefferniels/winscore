@@ -56,6 +56,14 @@ pub fn tokens(line: &str) -> Vec<Token> {
     line.split([' ', ',', '\t']).filter(|t| !t.is_empty()).map(token).collect()
 }
 
+/// A line of quick text entry, `"text" p2 p3 …`: the text between the quotes
+/// and the rest of the line, or `None` if the line does not start with a quote.
+/// An unclosed quote is an error, as in the engine.
+pub fn quoted(line: &str) -> Option<Option<(&str, &str)>> {
+    let after = line.trim_start().strip_prefix('"')?;
+    Some(after.split_once('"'))
+}
+
 /// Splits a count off the end of a word: `R10` gives `("R", 10)`, `U` gives `("U", None)`.
 pub fn split_count(word: &str) -> (&str, Option<f32>) {
     let start = word.find(|c: char| c.is_ascii_digit() || c == '.' || c == '-').unwrap_or(word.len());
@@ -97,6 +105,13 @@ mod tests {
         assert_eq!(number("."), None);
         assert_eq!(number("1.2.3"), None);
         assert_eq!(number("5e3"), None);
+    }
+
+    #[test]
+    fn quoted_text_and_the_rest() {
+        assert_eq!(quoted(r#""_15A stitch, in time" 3 20 14"#), Some(Some(("_15A stitch, in time", " 3 20 14"))));
+        assert_eq!(quoted(r#""unclosed 1 2"#), Some(None));
+        assert_eq!(quoted("NOTE 1"), None);
     }
 
     #[test]

@@ -198,7 +198,8 @@ const ST: &[i32] = &[8];
 const SY: &[i32] = &[9];
 const NU: &[i32] = &[10];
 const BX: &[i32] = &[12];
-const SB: &[i32] = &[9, 12];
+const SB: &[i32] = &[9, 12, 16];
+const TX: &[i32] = &[16];
 const BA: &[i32] = &[14];
 const K: &[i32] = &[17];
 const M: &[i32] = &[18];
@@ -446,6 +447,16 @@ const LINES: &[Entry] = &[
 ];
 
 const SIGNS: &[Entry] = &[
+    mark("TRFW", 21.0, "Trill with flat (P11 = 21)"),
+    mark("TRSW", 22.0, "Trill with sharp (P11 = 22)"),
+    mark("TRNW", 23.0, "Trill with natural (P11 = 23)"),
+    entry("SZ.4", N, Op::SetParam { n: 15, value: 0.4 }, "Note size .4 (P15)"),
+    entry("SZ.5", N, Op::SetParam { n: 15, value: 0.5 }, "Note size .5 (P15)"),
+    entry("SZ.6", N, Op::SetParam { n: 15, value: 0.6 }, "Note size .6 (P15)"),
+    entry("SZ.7", N, Op::SetParam { n: 15, value: 0.7 }, "Note size .7 (P15)"),
+    entry("SZ.8", N, Op::SetParam { n: 15, value: 0.8 }, "Note size .8 (P15)"),
+    entry("SZ.9", N, Op::SetParam { n: 15, value: 0.9 }, "Note size .9 (P15)"),
+    entry("SZ1", N, Op::SetParam { n: 15, value: 1.0 }, "Note size 1 (P15)"),
     entry("TRF", T, Op::SetParam { n: 8, value: 1.0 }, "Trill with flat (P8 = 1)"),
     entry("TRS", T, Op::SetParam { n: 8, value: 2.0 }, "Trill with sharp (P8 = 2)"),
     entry("TRN", T, Op::SetParam { n: 8, value: 3.0 }, "Trill with natural (P8 = 3)"),
@@ -529,9 +540,59 @@ const SIGNS: &[Entry] = &[
     entry("MTRSP", M, Op::AddParam { n: 6, delta: 1.0 }, "Single meter number plus (P6)"),
 ];
 
+const fn font(word: &'static str, number: f32, meaning: &'static str) -> Entry {
+    entry(word, TX, Op::SetParam { n: 8, value: 1000.0 + number }, meaning)
+}
+
+const TEXTS: &[Entry] = &[
+    entry("CHSP", TX, Op::Nudge { n: 5, default: 1.0, delta: 0.02 }, "Character space plus (P5 + .02)"),
+    entry("CHSM", TX, Op::Nudge { n: 5, default: 1.0, delta: -0.02 }, "Character space minus (P5 - .02)"),
+    entry("CHSD", TX, Op::SetParam { n: 5, value: 0.0 }, "Character space normal (P5 = 0)"),
+    entry("SZ+", TX, Op::Nudge { n: 6, default: 1.0, delta: 0.1 }, "Larger text (P6 + .1)"),
+    entry("SZ-", TX, Op::Nudge { n: 6, default: 1.0, delta: -0.1 }, "Smaller text (P6 - .1)"),
+    font("FNT00", 0.0, "Times-Roman (P8 = 1000)"),
+    font("FNT01", 1.0, "Times-Bold (P8 = 1001)"),
+    font("FNT02", 2.0, "Times-Italic (P8 = 1002)"),
+    font("FNT03", 3.0, "Times-BoldItalic (P8 = 1003)"),
+    font("FNT04", 4.0, "Helvetica (P8 = 1004)"),
+    font("FNT05", 5.0, "Helvetica-Bold (P8 = 1005)"),
+    font("FNT06", 6.0, "Helvetica-Oblique (P8 = 1006)"),
+    font("FNT07", 7.0, "Helvetica-BoldOblique (P8 = 1007)"),
+    font("FNT08", 8.0, "Helvetica-Narrow (P8 = 1008)"),
+    font("FNT09", 9.0, "Helvetica-Narrow-Bold (P8 = 1009)"),
+    font("FNT10", 10.0, "Helvetica-Narrow-Oblique (P8 = 1010)"),
+    font("FNT11", 11.0, "Helvetica-Narrow-BoldOblique (P8 = 1011)"),
+    font("FNT12", 12.0, "Palatino-Roman (P8 = 1012)"),
+    font("FNT13", 13.0, "Palatino-Bold (P8 = 1013)"),
+    font("FNT14", 14.0, "Palatino-Italic (P8 = 1014)"),
+    font("FNT15", 15.0, "Palatino-BoldItalic (P8 = 1015)"),
+    font("FNT16", 16.0, "AvantGarde-Book (P8 = 1016)"),
+    font("FNT17", 17.0, "AvantGarde-BookOblique (P8 = 1017)"),
+    font("FNT18", 18.0, "AvantGarde-Demi (P8 = 1018)"),
+    font("FNT19", 19.0, "AvantGarde-DemiOblique (P8 = 1019)"),
+    font("FNT20", 20.0, "Bookman-Light (P8 = 1020)"),
+    font("FNT21", 21.0, "Bookman-LightItalic (P8 = 1021)"),
+    font("FNT22", 22.0, "Bookman-Demi (P8 = 1022)"),
+    font("FNT23", 23.0, "Bookman-DemiItalic (P8 = 1023)"),
+    font("FNT24", 24.0, "NewCenturySchlbk-Roman (P8 = 1024)"),
+    font("FNT25", 25.0, "NewCenturySchlbk-Bold (P8 = 1025)"),
+    font("FNT26", 26.0, "NewCenturySchlbk-Italic (P8 = 1026)"),
+    font("FNT27", 27.0, "NewCenturySchlbk-BoldItalic (P8 = 1027)"),
+    font("FNT28", 28.0, "ZapfChancery-MediumItalic (P8 = 1028)"),
+    font("FNT29", 29.0, "Courier (P8 = 1029)"),
+    font("FNT30", 30.0, "Courier-Bold (P8 = 1030)"),
+    font("FNT31", 31.0, "Courier-Oblique (P8 = 1031)"),
+    font("FNT32", 32.0, "Courier-BoldOblique (P8 = 1032)"),
+    font("FNT33", 33.0, "Symbol (P8 = 1033)"),
+    font("FNT34", 34.0, "ZapfDingbats (P8 = 1034)"),
+    font("FNT35", 35.0, "Font 35 (P8 = 1035)"),
+    font("FNT36", 36.0, "Font 36 (P8 = 1036)"),
+    font("FNT94", 94.0, "Music font (P8 = 1094)"),
+];
+
 /// Every word, in lookup order.
 pub fn entries() -> impl Iterator<Item = &'static Entry> {
-    MARKS.iter().chain(RHYTHMS.iter().flatten()).chain(OTHERS).chain(LINES).chain(SIGNS)
+    MARKS.iter().chain(RHYTHMS.iter().flatten()).chain(OTHERS).chain(LINES).chain(SIGNS).chain(TEXTS)
 }
 
 /// The rewrite `word` stands for on an item of `code`.

@@ -7,7 +7,8 @@
 CASES (rust/crates/score-edit/tests/engine_cases.txt) holds blocks like
 
     == flip_stem_up
-    base: 8 1; 1 1 100 6 10 0 1      the starting score, items separated by ';' (optional)
+    base: 8 1; 1 1 100 6 10 0 1      the starting score, items separated by ';' (optional); a text
+                                     item ends with its characters: 16 1 50 10 1 1 0 0 0 0 0 5 9 "_00Hi"
     I 2                              command lines, typed one after the other
     FLI
     X
@@ -38,7 +39,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from emu import COMMAND, ENGINE_ZOOM, FLAG_9A9498, LINE_BUF, MESSAGE_BUF, TEXT_OUT, ZOOM, Engine, EngineResult
-from musbuild import mus_bytes
+from musbuild import mus_bytes, text_item
 from sandbox import INSTALL
 
 DEFAULT_BASE = "8 1; 1 1 100 6 10 0 1"
@@ -51,13 +52,26 @@ MOUSE_ACTIONS = {"~v": ("~v", "~v"), "~s": ("~s", "~s"), "~x": ("~x", "|"), "~":
 ENGINE_DATA = ("scorlib", "fontlib")
 EDIT_MODE = -1
 TEXT_CODE, TEXT_LENGTH_PARAM = 16, 12
-REPORTED_EVENTS = ("message", "prompt-unanswered", "dialog")
+REPORTED_EVENTS = ("message", "prompt-unanswered", "dialog", "question")
+# "Source Box O.K.?" and similar yes/no questions of group edits (disasm-expert): answered yes.
+YES_NO_QUESTION = 0x595CD0
+YES = 1
+
+
+class EditEngine(Engine):
+    """The emulated engine, answering yes to the questions group edits ask."""
+
+    def _on_cpp(self, uc, address, size, user):
+        if address != YES_NO_QUESTION:
+            return super()._on_cpp(uc, address, size, user)
+        self.shell.record("question", f"{self.cstr(self.arg(0), 200).strip()} -> yes")
+        self.return_from_call(YES, 0)
 
 
 @dataclass(frozen=True)
 class Case:
     name: str
-    base: tuple[tuple[float, ...], ...]
+    base: tuple[tuple[float, ...] | bytes, ...]
     commands: tuple[str, ...]
 
 
@@ -67,8 +81,15 @@ class Outcome:
     transcript: list[str] = field(default_factory=list)
 
 
-def parse_base(line: str) -> tuple[tuple[float, ...], ...]:
-    return tuple(tuple(float(v) for v in item.split()) for item in line.split(";") if item.strip())
+def parse_item(text: str) -> tuple[float, ...] | bytes:
+    """Numbers, or a text item's numbers followed by its characters in double quotes."""
+    numbers, quote, characters = text.partition('"')
+    params = tuple(float(v) for v in numbers.split())
+    return text_item(list(params), characters.rstrip().removesuffix('"').encode("latin-1")) if quote else params
+
+
+def parse_base(line: str) -> tuple[tuple[float, ...] | bytes, ...]:
+    return tuple(parse_item(item) for item in line.split(";") if item.strip())
 
 
 def parse_cases(text: str) -> list[Case]:
@@ -141,8 +162,8 @@ def mouse(engine: Engine, line: str) -> EngineResult | None:
 def run_case(case: Case) -> Outcome:
     with tempfile.TemporaryDirectory(prefix="wscore-edit-") as tmp:
         root = lean_sandbox(Path(tmp))
-        (root / "cwd" / "BASE.MUS").write_bytes(mus_bytes([list(item) for item in case.base]))
-        engine = Engine(root)
+        (root / "cwd" / "BASE.MUS").write_bytes(mus_bytes(list(case.base)))
+        engine = EditEngine(root)
         engine.initialize()
         engine.command("G base.mus")
         transcript, status = [], 0

@@ -12,14 +12,18 @@
 //! in `tests/engine_cases.txt`); `COMMANDS.md` lists what is covered.
 
 pub mod command;
+pub mod conditional;
 pub mod document;
 pub mod drag;
 pub mod editor;
 pub mod error;
+pub mod group;
 pub mod history;
 pub mod params;
 pub mod pick;
 mod session;
+pub mod symbols;
+pub mod text;
 
 pub use document::{Document, Edit, ItemId};
 pub use editor::{Change, Editor};

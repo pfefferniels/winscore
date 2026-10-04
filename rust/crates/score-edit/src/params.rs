@@ -7,6 +7,9 @@ pub const TEXT_CODE: i32 = 16;
 
 /// The engine keeps at least P1–P3 when it drops trailing zero parameters.
 const MIN_STORED: usize = 3;
+const TEXT_WORDS: usize = 13;
+const TEXT_COLOUR_WORDS: usize = 16;
+const TEXT_COLOUR_FLAG: usize = 14;
 
 /// Highest parameter number an edit may set; the engine ignores `46 v` and above.
 pub const MAX_PARAM: usize = 45;
@@ -67,9 +70,30 @@ impl Draft {
         }
     }
 
-    /// The item the engine would store: trailing zeros dropped, but never below P3.
+    /// The characters of a text item.
+    pub fn text(&self) -> &[u8] {
+        &self.text
+    }
+
+    pub fn set_text(&mut self, text: &[u8]) {
+        self.text = text.to_vec();
+    }
+
+    /// Parameters that must be stored whatever their value: P1–P3, and for
+    /// text items every word before the characters, which the engine reads
+    /// from word 14 (word 17 when P14 = -1 adds a colour).
+    fn min_stored(&self) -> usize {
+        match self.code() {
+            TEXT_CODE if self.get(TEXT_COLOUR_FLAG) == -1.0 => TEXT_COLOUR_WORDS,
+            TEXT_CODE => TEXT_WORDS,
+            _ => MIN_STORED,
+        }
+    }
+
+    /// The item the engine would store: trailing zeros dropped, but never
+    /// below the words that must be stored.
     pub fn to_item(&self) -> Item {
-        let kept = self.params.iter().rposition(|&p| p != 0.0).map_or(0, |i| i + 1).max(MIN_STORED);
+        let kept = self.params.iter().rposition(|&p| p != 0.0).map_or(0, |i| i + 1).max(self.min_stored());
         let mut params: Vec<Word> = self.params.iter().map(|&p| Word::from_f32(zero_signless(p))).collect();
         params.resize(kept, Word::from_f32(0.0));
         if self.code() == TEXT_CODE {
