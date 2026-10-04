@@ -20,6 +20,7 @@ pass 2 it submits the line.)
 """
 from __future__ import annotations
 
+import functools
 import re
 import struct
 import sys
@@ -119,20 +120,26 @@ class InputResult:
     transcript: list[str]
 
 
+@functools.cache
+def process_sandbox() -> tempfile.TemporaryDirectory:
+    """One sandbox per process, reused by its jobs: a copy of the install is 26 MB."""
+    return tempfile.TemporaryDirectory(prefix="wscore-input-")
+
+
 def run_job(job: InputJob, root: Path | None = None) -> InputResult:
     """Type the job into a fresh engine, save the score, and return the saved file."""
-    with tempfile.TemporaryDirectory(prefix="wscore-input-") as tmp:
-        sandbox = make_sandbox(root or Path(tmp))
-        engine = InputEngine(sandbox, keys=job.keystrokes(), input_range=job.input_range)
-        engine.initialize()
-        engine.command(job.command)
-        target = sandbox / "cwd" / "RESULT.MUS"
-        target.unlink(missing_ok=True)
-        engine.command("SA result.mus")
-        transcript = [f"{ev.kind}: {ev.detail}" for ev in engine.shell.events if ev.kind not in ("service", "redraw")]
-        if engine.keys:
-            transcript.append(f"unused keystrokes: {bytes(engine.keys)!r}")
-        return InputResult(target.read_bytes(), transcript)
+    sandbox = make_sandbox(root or Path(process_sandbox().name))
+    engine = InputEngine(sandbox, keys=job.keystrokes(), input_range=job.input_range)
+    engine.initialize()
+    target = sandbox / "cwd" / "RESULT.MUS"
+    target.unlink(missing_ok=True)
+    engine.command(job.command)
+    engine.command("SA result.mus")
+    quiet = ("service", "redraw", "text")       # text events echo every keystroke
+    transcript = [f"{ev.kind}: {ev.detail}" for ev in engine.shell.events if ev.kind not in quiet]
+    if engine.keys:
+        transcript.append(f"unused keystrokes: {bytes(engine.keys)!r}")
+    return InputResult(target.read_bytes(), transcript)
 
 
 def read_items(mus: bytes) -> list[list[float]]:
@@ -189,6 +196,6 @@ def report(case_dir: Path) -> str:
 if __name__ == "__main__":
     args = sys.argv[1:]
     dirs = write_corpus(Path(args[1]), Path(args[2]), *args[3:4]) if args[:1] == ["--corpus"] else [Path(a) for a in args]
-    with ProcessPoolExecutor() as pool:
+    with ProcessPoolExecutor(max_workers=6) as pool:
         for text in pool.map(report, dirs):
             print(text)

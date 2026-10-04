@@ -1,5 +1,5 @@
 import './style.css';
-import init, { parseReference, Score, type EncodedList } from './wasm/score_web.js';
+import init, { paramName, Reference as EngineList, Score, type EncodedList } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
 import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
 import { loadFaces } from './fonts';
@@ -26,6 +26,8 @@ interface Sample {
 }
 
 interface Reference {
+  /** Owns the list on the wasm side, for hit-testing. */
+  engine: EngineList;
   list: DisplayList;
   pageSize: [number, number] | null;
   note: string | null;
@@ -125,12 +127,12 @@ function layers(): Layer[] {
 
 function scene(): Scene {
   const paper = paperBox();
-  const showsRust = state.mode !== 'engine';
+  const selected = state.selected;
   return {
     layers: layers(),
     paper,
     extent: extent(paper),
-    highlight: showsRust && state.selected !== null ? { list: state.rust, item: state.selected } : null,
+    highlights: selected === null ? [] : shownLists().map((list) => ({ list, item: selected })),
   };
 }
 
@@ -169,6 +171,7 @@ function details(score: Score, index: number): ItemDetails | null {
       staff: params[1] ?? 0,
       p3: params[2] ?? 0,
       params,
+      paramNames: Array.from(params, (_, i) => paramName(info.code, i + 1) ?? null),
       text: info.text ?? null,
       drawn: bounds(elementsOf(state.rust, index)) !== null,
     };
@@ -202,11 +205,17 @@ async function loadFontsAndRepaint() {
   view.repaint();
 }
 
+/** The display lists on screen in the current mode. */
+function shownLists(): DisplayList[] {
+  const engine = state.reference ? [state.reference.list] : [];
+  return { rust: [state.rust], engine, overlay: [state.rust, ...engine] }[state.mode];
+}
+
 function select(index: number | null, reveal = false) {
   state.selected = index;
   refreshPanel();
   redraw();
-  const box = index !== null && reveal ? bounds(elementsOf(state.rust, index)) : null;
+  const box = index !== null && reveal ? shownLists().map((list) => bounds(elementsOf(list, index))).reduce(union, null) : null;
   if (box) view.reveal(box);
 }
 
@@ -230,10 +239,20 @@ function setParam(index: number, n: number, value: number) {
 
 const handlers: PanelHandlers = { select: (index) => select(index, true), setParam };
 
+function readReference(json: string, pageSize: [number, number] | null, note: string | null): Reference {
+  const engine = new EngineList(json);
+  return { engine, list: decodeAndFree(engine.list()), pageSize, note };
+}
+
+function setReference(reference: Reference | null) {
+  state.reference?.engine.free();
+  state.reference = reference;
+}
+
 async function fetchReference(info: ReferenceInfo): Promise<Reference> {
   const json = await (await fetch(info.url)).text();
   const note = info.valid ? null : `engine reference marked invalid: ${info.invalidReasons.join('; ')}`;
-  return { list: decodeAndFree(parseReference(json)), pageSize: info.pageSize, note };
+  return readReference(json, info.pageSize, note);
 }
 
 function openScore(bytes: Uint8Array, name: string, reference: Reference | null) {
@@ -242,7 +261,7 @@ function openScore(bytes: Uint8Array, name: string, reference: Reference | null)
   state.score = score;
   state.fileName = name;
   state.rust = decodeAndFree(score.render());
-  state.reference = reference;
+  setReference(reference);
   state.selected = null;
   state.modified = false;
   const rustDraws = state.rust.shapes.length > 0;
@@ -271,8 +290,7 @@ async function openSample(sample: Sample) {
 async function openFile(file: File) {
   try {
     if (file.name.toLowerCase().endsWith('.json')) {
-      const list = decodeAndFree(parseReference(await file.text()));
-      state.reference = { list, pageSize: null, note: null };
+      setReference(readReference(await file.text(), null, null));
       state.mode = 'overlay';
       redraw();
       void loadFontsAndRepaint();
@@ -301,10 +319,13 @@ function setMode(mode: Mode) {
   redraw();
 }
 
+/** The item under the pointer in the Rust list, else in the engine list (when the fixture attributes items). */
 function clickTarget(e: MouseEvent): number | null {
-  if (!state.score || state.mode === 'engine') return null;
   const p = view.pageAt(e.clientX, e.clientY);
-  return state.score.hitTest(p.x, p.y, view.unitsPerCss(CLICK_TOLERANCE_PX)) ?? null;
+  const tolerance = view.unitsPerCss(CLICK_TOLERANCE_PX);
+  const rust = state.mode !== 'engine' ? state.score?.hitTest(p.x, p.y, tolerance) : undefined;
+  const engine = state.mode !== 'rust' ? state.reference?.engine.hitTest(p.x, p.y, tolerance) : undefined;
+  return rust ?? engine ?? null;
 }
 
 function bindPointer() {
@@ -389,10 +410,35 @@ async function applyQuery(samples: Sample[]) {
   ui.app.dataset.ready = 'true';
 }
 
+/** A failure that leaves the app unusable, shown over the page area. */
+function fatal(title: string, err: unknown) {
+  const box = document.createElement('div');
+  box.className = 'fatal';
+  const heading = Object.assign(document.createElement('strong'), { textContent: title });
+  const detail = Object.assign(document.createElement('p'), { textContent: String(err) });
+  box.append(heading, detail);
+  ui.stage.append(box);
+  message(`${title}: ${String(err)}`, true);
+}
+
+async function loadSamples(): Promise<Sample[]> {
+  try {
+    return (await (await fetch('samples/index.json')).json()) as Sample[];
+  } catch (err) {
+    message(`Samples are not available: ${String(err)}`, true);
+    return [];
+  }
+}
+
 async function main() {
-  await init();
+  try {
+    await init();
+  } catch (err) {
+    fatal('The WebAssembly module could not be loaded, so scores cannot be opened. The browser or the hosting page may block WebAssembly.', err);
+    return;
+  }
   showZoom(view.zoom);
-  const samples = (await (await fetch('samples/index.json')).json()) as Sample[];
+  const samples = await loadSamples();
   ui.sample.replaceChildren(new Option('Samples…', ''), ...samples.map((s) => new Option(s.title, s.url)));
   bindControls(samples);
   refreshStatus();
@@ -400,4 +446,4 @@ async function main() {
   await applyQuery(samples);
 }
 
-main().catch((err) => message(String(err), true));
+main().catch((err) => fatal('The app failed to start.', err));

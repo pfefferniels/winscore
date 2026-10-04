@@ -46,6 +46,13 @@ try {
   assert.equal(saved.length, original.length);
   assert.notDeepEqual(saved, original);
   assert.deepEqual(errors, []);
+
+  // Without the wasm module the page says so instead of staying blank.
+  const blocked = await browser.newPage();
+  await blocked.route('**/*.wasm', (route) => route.abort());
+  await blocked.goto('http://localhost:4178/');
+  await blocked.waitForSelector('.fatal');
+  assert.match(await blocked.textContent('.fatal strong'), /WebAssembly module could not be loaded/);
   console.log('smoke: ok');
 } finally {
   await browser.close();

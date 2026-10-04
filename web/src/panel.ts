@@ -10,6 +10,8 @@ export interface ItemSummary {
 
 export interface ItemDetails extends ItemSummary {
   params: Float32Array;
+  /** What each parameter means, from the WinScore help; null where it says nothing. */
+  paramNames: (string | null)[];
   text: string | null;
   /** Whether the Rust renderer drew anything for this item. */
   drawn: boolean;
@@ -103,11 +105,13 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
     );
     return;
   }
-  const grid = element(
-    'div',
-    { className: 'params' },
-    Array.from(item.params, (value, i) => [element('label', { htmlFor: `p${i + 1}` }, [`P${i + 1}`]), paramInput(item, i + 1, value, handlers)]).flat(),
-  );
+  const row = (value: number, i: number) => {
+    const name = item.paramNames[i];
+    const cell = element('div', { className: 'param' }, [paramInput(item, i + 1, value, handlers)]);
+    if (name) cell.append(element('span', { className: 'param-name' }, [name]));
+    return [element('label', { htmlFor: `p${i + 1}` }, [`P${i + 1}`]), cell];
+  };
+  const grid = element('div', { className: 'params' }, Array.from(item.params, row).flat());
   const notes: HTMLElement[] = [
     ...(item.text !== null ? [element('div', { className: 'text-value', title: 'Text (P12 characters)' }, [item.text])] : []),
     ...(item.drawn ? [] : [element('p', { className: 'muted' }, ['The Rust renderer does not draw this item yet.'])]),

@@ -7,34 +7,39 @@ import type { TextRun } from './display';
 export interface Face {
   family: string;
   /**
-   * Cell top to baseline, in em. WinScore draws text from the top-left of
-   * the character cell, which Windows takes from the face's ascent. The
-   * values are those of the faces Windows substitutes (Times New Roman,
-   * Arial, Courier New, Symbol); the others are assumed until checked.
+   * Average character width in em of the Windows face that GDI substitutes
+   * for the engine's name (OS/2 xAvgCharWidth of Times New Roman, Arial,
+   * Courier New). OnDraw passes the run's width to CreateFontA, and GDI
+   * stretches the face until its average width matches; null where the
+   * substitute is unknown, which leaves the glyphs unstretched.
    */
-  ascent: number;
+  windowsAverage: number | null;
 }
 
-const ASSUMED_ASCENT = 0.9;
-
 const FACES: Record<string, Face> = {
-  Times: { family: 'WS Termes', ascent: 0.891 },
-  Helvetica: { family: 'WS Heros', ascent: 0.905 },
-  'Helvetica-Narrow': { family: 'WS Heros Cn', ascent: 0.905 },
-  Courier: { family: 'WS Cursor', ascent: 0.833 },
-  Palatino: { family: 'WS Pagella', ascent: ASSUMED_ASCENT },
-  AvantGarde: { family: 'WS Adventor', ascent: ASSUMED_ASCENT },
-  Bookman: { family: 'WS Bonum', ascent: ASSUMED_ASCENT },
-  NewCenturySchlbk: { family: 'WS Schola', ascent: ASSUMED_ASCENT },
-  ZapfChancery: { family: 'WS Chorus', ascent: ASSUMED_ASCENT },
-  Symbol: { family: 'WS Symbol', ascent: 1.005 },
-  ZapfDingbats: { family: 'WS Dingbats', ascent: ASSUMED_ASCENT },
+  Times: { family: 'WS Termes', windowsAverage: 821 / 2048 },
+  Helvetica: { family: 'WS Heros', windowsAverage: 904 / 2048 },
+  'Helvetica-Narrow': { family: 'WS Heros Cn', windowsAverage: null },
+  Courier: { family: 'WS Cursor', windowsAverage: 1229 / 2048 },
+  Palatino: { family: 'WS Pagella', windowsAverage: null },
+  AvantGarde: { family: 'WS Adventor', windowsAverage: null },
+  Bookman: { family: 'WS Bonum', windowsAverage: null },
+  NewCenturySchlbk: { family: 'WS Schola', windowsAverage: null },
+  ZapfChancery: { family: 'WS Chorus', windowsAverage: null },
+  Symbol: { family: 'WS Symbol', windowsAverage: null },
+  ZapfDingbats: { family: 'WS Dingbats', windowsAverage: null },
 };
 
-const FALLBACK: Face = { family: 'serif', ascent: ASSUMED_ASCENT };
+const FALLBACK: Face = { family: 'serif', windowsAverage: null };
 
 export function face(font: string): Face {
   return FACES[font] ?? FALLBACK;
+}
+
+/** Horizontal stretch GDI applies to `run`'s glyphs. */
+export function stretch(run: TextRun): number {
+  const average = face(run.font).windowsAverage;
+  return average && run.width > 0 && run.height > 0 ? run.width / (average * run.height) : 1;
 }
 
 /** A CSS font shorthand for `run` at `size` pixels. */

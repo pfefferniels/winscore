@@ -15,8 +15,8 @@
 //! same order, in page coordinates (engine units, y up).
 //!
 //! `texts` is the `engine.json` document of the text runs alone
-//! (`{"shapes":[],"texts":[…]}`, see `rust/fixtures/README.md`), and
-//! `text_sources` (`Uint32Array`) gives each run's source item index + 1.
+//! (`{"shapes":[],"texts":[…]}`, see `rust/fixtures/README.md`); a run's
+//! `item` is its source item index.
 
 use score_render::{Colour, DisplayList, ItemId, Shape, ShapeKind};
 use score_testkit::display_to_json;
@@ -28,7 +28,6 @@ pub struct Encoded {
     pub shapes: Vec<u32>,
     pub coords: Vec<i32>,
     pub texts: String,
-    pub text_sources: Vec<u32>,
 }
 
 fn rgb(colour: Colour) -> u32 {
@@ -59,7 +58,6 @@ pub fn encode(list: &DisplayList) -> Encoded {
         shapes: list.shapes.iter().flat_map(header).collect(),
         coords: list.shapes.iter().flat_map(coords).collect(),
         texts: display_to_json(&texts_only),
-        text_sources: list.texts.iter().map(|run| source_word(run.source)).collect(),
     }
 }
 
@@ -90,11 +88,10 @@ mod tests {
         let encoded = encode(&list);
         assert_eq!(encoded.shapes, vec![1, 0x123456, 5, 2, 3, 1, 0, 0, 0, 1, 2]);
         assert_eq!(encoded.coords, vec![1, 2, 3, 4, 5, 6, 7, 8, -1, -2, 9, 9]);
-        assert!(encoded.text_sources.is_empty());
     }
 
     #[test]
-    fn text_sources_parallel_the_runs() {
+    fn texts_keep_their_source_items() {
         let run = |source| TextRun {
             font: "Times".into(),
             height: 487.2,
@@ -108,10 +105,7 @@ mod tests {
             source,
         };
         let list = DisplayList { shapes: vec![], texts: vec![run(Some(ItemId(2))), run(None)] };
-        let encoded = encode(&list);
-        assert_eq!(encoded.text_sources, vec![3, 0]);
-        let back = score_testkit::display_from_json(&encoded.texts).unwrap();
-        assert_eq!(back.texts.len(), 2);
-        assert_eq!(back.texts[0].strings[0].origin, Point::new(10, 20));
+        let back = score_testkit::display_from_json(&encode(&list).texts).unwrap();
+        assert_eq!(back.texts, list.texts);
     }
 }

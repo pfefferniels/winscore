@@ -50,7 +50,6 @@ export interface Encoded {
   readonly shapes: Uint32Array;
   readonly coords: Int32Array;
   readonly texts: string;
-  readonly textSources: Uint32Array;
 }
 
 const FLAG_FILL = 1;
@@ -89,9 +88,8 @@ export function decode(encoded: Encoded): DisplayList {
     source: source(r.source),
     paths: Array.from(r.lengths, take),
   }));
-  const runs = (JSON.parse(encoded.texts) as { texts: TextRun[] }).texts;
-  const sources = encoded.textSources;
-  const texts = runs.map((run, i) => ({ ...run, source: source(sources[i] ?? 0) }));
+  const runs = (JSON.parse(encoded.texts) as { texts: (Omit<TextRun, 'source'> & { item?: number })[] }).texts;
+  const texts = runs.map(({ item, ...run }) => ({ ...run, source: item ?? null }));
   return { shapes, texts };
 }
 
