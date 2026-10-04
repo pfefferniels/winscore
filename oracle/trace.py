@@ -54,6 +54,7 @@ TEXT_BYTES = 20_000
 ITEM_I, P1, P2 = 0x20B8E24, 0x20B9360, 0x20B9364     # draw_items' loop index, current P1, P2
 PT_X0, PT_Y0 = 0x1FD3F7C, 0x2004CBC                     # point buffer: PT_X(k) = PT_X0 + 4k
 EMIT_INDEX = 0x9A20BC                                    # emit_points' k
+DRAW_ITEMS = 0x547FC8
 
 
 @dataclass(frozen=True)
@@ -148,6 +149,7 @@ class Tracer:
     blocks: Counter = field(default_factory=Counter)         # block address -> executions
     vector_writes: dict[int, Write] = field(default_factory=dict)   # byte offset -> last write
     point_writes: dict[int, Write] = field(default_factory=dict)    # point-buffer index k -> last write
+    codes: dict[int, set] = field(default_factory=dict)             # entry -> item codes drawn when it was called
     text_writes: dict[int, Write] = field(default_factory=dict)
     watches: list[range] = field(default_factory=list)       # address ranges to log
     hits: list[WatchHit] = field(default_factory=list)
@@ -187,6 +189,7 @@ class Tracer:
             counter.clear()
         self.vector_writes.clear()
         self.point_writes.clear()
+        self.codes.clear()
         self.text_writes.clear()
         self.hits.clear()
 
@@ -235,6 +238,8 @@ class Tracer:
             self.calls[entry] += 1
             self.edges[caller, entry] += 1
             self.sites[expected_return, entry] += 1
+            if any(f.entry == DRAW_ITEMS for f in stack):
+                self.codes.setdefault(entry, set()).add(int(struct.unpack("<f", uc.mem_read(P1, 4))[0]))
         else:
             self._unwind(esp, entering=False)
 

@@ -21,6 +21,8 @@ What the FORTRAN engine inside WScore.exe (WinScore 5.01) computes, with address
 | [symbols.md](symbols.md) | library symbols: draw_symbol, draw_clef, text symbols |
 | [notes.md](notes.md) | code 1: heads (and the head cache), stems, tails, dots, accidentals, ledger lines |
 | [input.md](input.md) | the IN command: passes, spacing, minimum gap |
+| [editing.md](editing.md) | mouse protocol between view and engine, creation-word tables |
+| [prefs.md](prefs.md) | PREF.DAT keywords and the globals they set (slur thickness, beam, metric, paper, ...) |
 | [display.md](display.md) | how the C++ shell paints the engine output (pens, zoom, text) |
 | [dispatch.md](dispatch.md) | draw loop, the per-code switch, item store layout |
 | [emitters.md](emitters.md) | point buffer, vector stream writer, pens |
@@ -30,6 +32,6 @@ What the FORTRAN engine inside WScore.exe (WinScore 5.01) computes, with address
 
 - `names.tsv`: our routine names (address, name, confidence, role). Read by `oracle/trace.py` and applied to the Ghidra project by `ghidra/ApplyNames.java`.
 - `globals.tsv`: names and types of engine globals (COMMON-block variables). Applied the same way.
-- `decompiled/<addr>_<name>.c`: Ghidra decompilations of the routines the topic notes rely on. The whole engine (878 routines) is decompiled at `/Users/nielspfeffer/Projects/winscore/tools/decompiled/` (not in git; `ghidra/ghidra.sh all` regenerates it). Constants are labelled by value (`f_150` is the f32 constant 150.0, `i_3` the int 3, `d_...` a double). Ghidra prints `ROUND(x)` for every `fistp`; in this engine nearly all of them run with the rounding control set to truncate (see numerics.md).
+- `decompiled/<addr>_<name>.c`: Ghidra decompilations of the routines the topic notes rely on. The whole engine (878 routines) is decompiled at `analysis/engine/decompiled_all/` with `index.tsv` (callers, callees, item codes; `ghidra/ghidra.sh all` and `make_index.py` regenerate it). Constants are labelled by value (`f_150` is the f32 constant 150.0, `i_3` the int 3, `d_...` a double). Ghidra prints `ROUND(x)` for every `fistp`; in this engine nearly all of them run with the rounding control set to truncate (see numerics.md).
 - `experiments/`: scripts that reproduce the verified statements.
 - `ghidra/`: GhidraScripts and the runner `ghidra.sh`.

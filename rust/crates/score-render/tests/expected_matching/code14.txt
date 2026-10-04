@@ -65,6 +65,7 @@ code14-p5-repeat-right
 code14-p5-single
 code14-p5-square-bracket
 code14-p5-square-bracket-span-4
+code14-p5-two-bar-repeat
 code14-p5-type-11
 code14-p5-type-14
 code14-p6-thick-1-brace

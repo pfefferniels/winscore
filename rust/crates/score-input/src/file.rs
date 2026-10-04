@@ -23,6 +23,7 @@ use crate::{run, InputError, Options, Passes};
 const PASS_COUNT: usize = 5;
 
 /// `IN a b c d e`: staff number, left end, vertical offset, size factor, right end (P2-P6 of the staff).
+/// Zeros mean the defaults (left end 0, no offset, size 1, right end 200).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct StaffArgs {
     pub number: u8,
@@ -30,6 +31,19 @@ pub struct StaffArgs {
     pub offset: f32,
     pub size: f32,
     pub right: f32,
+}
+
+impl StaffArgs {
+    /// `IN n` with all other values left at 0.
+    pub fn on(number: u8) -> Self {
+        Self { number, left: 0.0, offset: 0.0, size: 0.0, right: 0.0 }
+    }
+
+    /// The code-8 staff item IN creates when staff `number` does not exist yet; the engine
+    /// stores the values as typed, zeros included.
+    pub fn staff_item(&self) -> Item {
+        Item::new([8.0, f32::from(self.number), self.left, self.offset, self.size, self.right].map(Word::from_f32).to_vec())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -115,8 +129,7 @@ impl InputFile {
 
     /// The staff item IN creates when the staff does not exist yet.
     pub fn staff_item(&self) -> Item {
-        let s = self.staff;
-        Item::new([8.0, f32::from(s.number), s.left, s.offset, s.size, s.right].map(Word::from_f32).to_vec())
+        self.staff.staff_item()
     }
 
     /// The staff item followed by the items of the line.

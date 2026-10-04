@@ -1,6 +1,6 @@
 # Staged music input (IN)
 
-The IN command and its five passes, as far as needed by `input-lang`. Call chains come from `oracle/trace.py` on `oracle/input_driver.py` runs (`experiments/input_trace.py`). Decompilations: `/Users/nielspfeffer/Projects/winscore/tools/decompiled/`.
+The IN command and its five passes, as far as needed by `input-lang`. Call chains come from `oracle/trace.py` on `oracle/input_driver.py` runs (`experiments/input_trace.py`). Decompilations: `analysis/engine/decompiled_all/`.
 
 ## Routine map
 
@@ -46,7 +46,7 @@ Notation: `s` = STAFF_STEP(IN staff)/25 (staff size), `begin`, `end` = range (f3
 3. **Widths of non-note entries** (codes >= 3), `avail = end - begin` minus each width:
    - key signature (17): `w = |amod(P6,100)|*2.8 + 2`, -0.3 if the next entry is a meter; if the previous entry is also a non-note, its width grows by s;
    - barline (14), not last: w = 3.5; w = 1.5 if the next entry is a clef (3) or code > 16; w = 4.5 if the next is a note whose P6 has an accidental (amod(P6,10) != 0);
-   - meter (18), not last: w = 7, or 9 if P6 >= 10 or P7 >= 10;
+   - meter (18), not last: w = 7, or 9 if P6 >= 10 or P7 >= 10 (also true for C and alla breve, stored as 99/98: they are 9 wide, 7 when trailing; input-lang);
    - any other code, not last: w = 8 (9 for entries 1 and 2), plus (c' - 19) if the next entry's code c' > 16 (key: -2, meter: -1);
    - the last entry: w = 0;
    - then `w *= s`; `avail -= w`; w is kept in the entry's P15.
@@ -55,7 +55,7 @@ Notation: `s` = STAFF_STEP(IN staff)/25 (staff size), `begin`, `end` = range (f3
    - note or rest: `P3 = x; x += (dur/total) * avail`. A following note marked as chord member (P15 slot of the current entry < 0) gets the same x and duration.
    Because `avail` changes at each mid-line clef, later notes get slightly wider spacing.
 5. **Clefs after notes** (entries 2..N-1, code 3, previous entry not a barline): if `P3(j+1) - P3(j-1) >= 7s + 0.625`, then `P3(j) = P3(j+1) - 7s`.
-6. **Unplaced entries** (P3 < 0, e.g. grace notes), scanning from the end: the last entry gets `end - 4`; any other gets `P3(j+1) - e` with `e = 3`, or half the distance from the previous placed entry to P3(j+1) if that distance is <= 4. If entry j+1 is followed by a chord member (P15 slot of j+1 < 0), e = 0 (read; not checked).
+6. **Unplaced entries** (P3 still < 0 at the end), scanning from the end: the last entry gets `end - 4`; any other gets `P3(j+1) - e` with `e = 3`, or half the distance from the previous placed entry to P3(j+1) if that distance is <= 4. If entry j+1 is followed by a chord member (P15 slot of j+1 < 0), e = 0 (read; not checked).
 
 Checked: 4 quarters in 2..200 give 2, 51.5, 101, 150.5. With a mid-line clef (C4/C/BA/C/C), w = 8, avail = 190: notes 2 and 49.5; the clef is first placed at 97 - 8/3 = 94.333 (avail becomes 192.667); the next note at 102.333; the last at 102.333 + 192.667/4 = 150.5; step 5 moves the clef to 102.333 - 7 = 95.333. These match the engine (input-lang's numbers).
 
@@ -76,3 +76,7 @@ if deficit != 0 and f = (ok - deficit)/ok > 0:
 ```
 
 Gaps between 3 and 3.6 count as "ok" in f but are then set to exactly 3. Because the copy loop runs N-2 times, the last entry keeps its old x, so the gap before it can stay below 3. That explains why the minimum shows on the 16th and 32nd but not on the final 64th in input-lang's example: 1/2/4/8/16/32/64/.5 in 2..200 gives 2, 49.7996, 73.6994, 85.6493, 91.6243, 94.6243, 97.6243 and an unchanged 100.6118 (verified).
+
+## Grace notes (verified by input-lang)
+
+A grace note's work-table P3 is first set to -1 (0x51E157), then overwritten in the main loop like any note (P3 = x at 0x51E60B), with duration 0.1. So it advances x by (0.1/total)*avail: `4/G/G/4` in 2..200 has total 2.2, and each grace note takes 0.1/2.2*198 = 9 units.
