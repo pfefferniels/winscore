@@ -359,6 +359,8 @@ struct Slur {
     /// Point spacing along the slur.
     dx: f64,
     points: usize,
+    /// The screen repeats triangle strokes; print (OUTPUT_MODE = -1) does not.
+    screen: bool,
 }
 
 impl Slur {
@@ -420,7 +422,7 @@ impl Slur {
         }
         let points = point_count(item, length, shape);
         let dx = real(length / f64::from(points as i32 - 1));
-        Self { step, centre, xl, y0, dy, length0, length, height, start, end, shape, dx, points }
+        Self { step, centre, xl, y0, dy, length0, length, height, start, end, shape, dx, points, screen: doc.screen() }
     }
 
     /// The closed outline: along the curve from the left end and back with
@@ -565,13 +567,13 @@ impl Slur {
     }
 
     /// P9 = 99: two strokes from the ends up to the peak at P10, repeated
-    /// trunc(P13) times seven units higher.
+    /// trunc(P13) times seven units higher on the screen.
     fn triangle(&self, item: ItemRef<'_>) -> Vec<BufferPoint> {
         let y = trunc(self.y0);
         let left = trunc(self.xl);
         let peak = trunc(self.centre * self.length + self.xl);
         let right = trunc(self.length + self.xl);
-        let copies = trunc(f64::from(item.p(13))).max(0) + 1;
+        let copies = if self.screen { trunc(f64::from(item.p(13))).max(0) + 1 } else { 1 };
         (0..copies)
             .flat_map(|copy| {
                 let y = y + 7 * copy;
