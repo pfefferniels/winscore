@@ -70,6 +70,8 @@ enum SessionWord {
     Undelete,
     /// LFT, RGT: drags move only that end of a line, slur, beam or trill.
     DragEnd(Ends),
+    /// CN [staff]: P3 of the nearest note or rest.
+    Center,
 }
 
 impl SessionWord {
@@ -93,6 +95,7 @@ impl SessionWord {
             "UND" => Self::Undelete,
             "LFT" => Self::DragEnd(Ends::Left),
             "RGT" => Self::DragEnd(Ends::Right),
+            "CN" => Self::Center,
             _ => return None,
         };
         Some(parsed)
@@ -181,6 +184,7 @@ impl Run<'_, '_> {
                 self.session.toggle_drag_end(end);
                 Ok(())
             }
+            Some(SessionWord::Center) => self.center(number),
             None => self.edit_word(&word, args),
         }
     }
@@ -271,6 +275,39 @@ impl Run<'_, '_> {
             if let Some(entry) = item::lookup(word, draft.code()) {
                 entry.op.apply(draft, arg);
             }
+        });
+        Ok(())
+    }
+
+    /// CN [staff]: the selected items moved to the P3 of the nearest note or
+    /// rest on their staff (or on `staff`); a beam's ends each to their own nearest.
+    fn center(&mut self, staff: Option<f32>) -> Result<(), EditError> {
+        let selected = self.selection();
+        let anchors: Vec<(f32, f32)> = self
+            .tx
+            .doc()
+            .entries()
+            .filter(|(id, item)| matches!(item.code(), 1 | 2) && !selected.contains(id))
+            .map(|(_, item)| (item.param(2), item.param(3)))
+            .collect();
+        let nearest = |on: f32, p3: f32| {
+            anchors.iter().filter(|(s, _)| *s == on).map(|&(_, x)| x).fold(None, |best: Option<f32>, x| match best {
+                Some(b) if (b - p3).abs() <= (x - p3).abs() => Some(b),
+                _ => Some(x),
+            })
+        };
+        self.rewrite_selected(|draft| {
+            let on = staff.unwrap_or(draft.get(2));
+            let ends: &[usize] = match draft.code() {
+                6 => &[3, 6],
+                4 | 5 | 7 | 8 | 14 => &[],
+                _ => &[3],
+            };
+            ends.iter().for_each(|&n| {
+                if let Some(x) = nearest(on, draft.get(n)) {
+                    draft.set(n, x);
+                }
+            });
         });
         Ok(())
     }
