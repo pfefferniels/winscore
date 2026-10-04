@@ -4,6 +4,7 @@
 #   ghidra.sh constants                 type read-only constants (run once)
 #   ghidra.sh decompile 0xADDR ...      write analysis/engine/decompiled/<addr>_<name>.c
 #   ghidra.sh tmp out_dir 0xADDR ...    decompile into another directory (read-only)
+#   ghidra.sh all                       decompile every engine routine into tools/decompiled/ (read-only, ~1 h)
 H=${0:A:h}; E=${H:h}; R=${E:h:h}
 T=$R/tools
 run() { JAVA_HOME=/opt/homebrew/opt/openjdk@21 $T/ghidra/support/analyzeHeadless $T/ghidra-project WinScore \
@@ -13,5 +14,6 @@ case $1 in
   constants) run -postScript TypeConstants.java ;;
   decompile) shift; run -readOnly -postScript DecompileEach.java $E/decompiled "$@" ;;
   tmp) shift; d=${1:A}; shift; run -readOnly -postScript DecompileEach.java $d "$@" ;;
-  *) echo "usage: ghidra.sh names|constants|decompile ADDR...|tmp DIR ADDR..." ;;
+  all) rm -rf $T/decompiled; run -readOnly -postScript DecompileRange.java $T/decompiled 0x40BC18 0x58C7E2 ;;
+  *) echo "usage: ghidra.sh names|constants|decompile ADDR...|tmp DIR ADDR...|all" ;;
 esac

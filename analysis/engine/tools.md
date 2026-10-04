@@ -46,6 +46,9 @@ Cost: about 1 s for a small score (block hook in Python). The module name shadow
 
 - `ghidra.sh names`: apply `names.tsv` and `globals.tsv`;
 - `ghidra.sh constants`: type the engine's read-only constants and label them by value (done once; `f_150`, `i_3`, `d_...`);
-- `ghidra.sh decompile 0xADDR ...`: write `decompiled/<addr>_<name>.c`.
+- `ghidra.sh decompile 0xADDR ...`: write `decompiled/<addr>_<name>.c`;
+- `ghidra.sh all`: decompile all 878 engine routines into `/Users/nielspfeffer/Projects/winscore/tools/decompiled/<addr>_<name>.c` plus `index.tsv` (6 MB, a few minutes; not in git, regenerated after renames).
+
+**Everyone can read the full engine decompilation** at `/Users/nielspfeffer/Projects/winscore/tools/decompiled/` without running Ghidra. File names carry our routine names where we have them (`545140_draw_staff.c`), else `FUN_`. Globals and constants are named as in `globals.tsv` and by value (`f_150`).
 
 A copy of the project before our changes is at `tools/ghidra-project.orig-2026-10-04`.
