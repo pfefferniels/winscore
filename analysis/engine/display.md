@@ -152,7 +152,13 @@ With `TA_TOP` and y up, the cell top is at Y and the baseline at `Y - A[i] = rou
 
 ### 3.4 Escapement
 
-GDI rotates the string counterclockwise by e/10 degrees about the reference point, here the top-left cell corner (X, Y) (inferred, GDI). `A[i]` is not adjusted for rotation (read). For e != 0 the browser should rotate about (X, Y) and draw with a top baseline, not rotate about the baseline origin. In y-up logical coordinates the baseline origin then lies at `(X + A sin t, Y - A cos t)`.
+What the binary shows (read):
+
+- The engine writes escapement = trunc(10*P9) into the text record (0x56CAF0, line 142 of the decompilation); the help calls P9 "clockwise rotation".
+- The engine lays the characters out clockwise for positive P9: 0x56F920 rotates each character position about (NINT X, NINT Y) with `x' = x0 + NINT(c*dx + s*dy)`, `y' = y0 + NINT(c*dy - s*dx)` (c, s = cos, sin of P9 degrees; disassembly 0x56FB50–0x56FBE3), which in the y-up page is a clockwise turn.
+- The shell passes the value unchanged as nEscapement and nOrientation (0x5A4570 copies it, OnDraw uses it). WScore.exe imports neither SetGraphicsMode nor SetWorldTransform, so the DC stays in GM_COMPATIBLE under MM_HIENGLISH (y up).
+
+What it does not show: the direction in which GDI turns the glyphs for a positive escapement in GM_COMPATIBLE when the logical y axis points up. In MM_TEXT a positive escapement turns text counterclockwise on screen. If the same held under MM_HIENGLISH, real WinScore would draw glyphs turned against their own clockwise line, which the help's "clockwise rotation" and the engine's layout argue against. A plausible reading (unverified, no Windows run available) is that GM_COMPATIBLE takes the angle in the MM_TEXT sense in logical space, so the y flip of MM_HIENGLISH reverses it and the glyphs turn clockwise. Recommendation: turn the glyphs clockwise by e/10 degrees so they follow the engine's positions, pivoting at the cell top-left (X, Y) = baseline + tmAscent. `A[i]` is not adjusted for rotation (read).
 
 ## 4. View background and other output
 
