@@ -1,0 +1,286 @@
+F1 Help³2 File¯³3 <File³4 File>³5 Input³6 Print³7 Play ³8 Exit ³9  I   ³10-->³? .
+ FullPg³Screen¯³ Group¯³EDInput³  Type ³  Cut  ³ Paste ³UNDelet³ Items¯³User¯³? .
+1 Bottm³2 Top  ³3 MovDn³4 MovUp³5 <-Mov³6 Mov->³7 -Zoom³8 +Zoom³9  <--       ³? .
+   Drag Screen ³  TopDn³  TopUp³FullScr³ZoomFit³  Show ³  SHX  ³ Zoom 1³     ³? .
+F1 Move³2 MvSys³3 Copy ³4 CpSys³5 Alter³6 DElet³7 TRnsp³8 TAB  ³9  <-- ³10 LJ³? .
+   FLIp³  FLUp ³  FLDn ³  FLNrm³  CnWhl³  ENHrm³VertJus³JusText³CntrDsh³CuRVe³? .
+F1 SC1 ³2 SC2  ³3 SC3  ³4 SC4  ³5 SC0  ³6 SCX  ³7 Hght ³8 HS   ³9  <-- ³ UNDO³? .
+   Dir *.DRW   ³   Dir *.EPS   ³  OS   ³  OH   ³  OT   ³  Pref ³Del.this file³? .
+F1 *** NO -- Do NOT Exit/Clear SCORE ****      ³F8 ***YES - Exit/Clear SCORE**  .
+                                                                                .
+F1 *** NO -- Do NOT get new file ********      ³F8 *** YES - Get new file ****  .
+                                               ³                                .
+ 1 ³ 2 ³ 3 ³ 4 ³ 5 ³ 6 ³ 7 ³ 8 ³ 9 ³10 ³11 ³12 ³14 ³15 ³16 ³17 ³18 ³All³<esc>³  .
+   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³     ³  .
+1 MkDir³2 Open ³3 SavSm³4 Save ³5 SavNb³6 SavNx³7 Path ³8 GtMor³9 <--- ³10-->³? .
+  NxtBk³GetNext³GetPrev³ReadTxt³ReStart³  RSM  ³Combine³  Decom³ Delete³Macro³? .
+F1  PM ³2 PMX  ³3 Date ³                                       ³9 <-----     ³? .
+       ³       ³                                               ³             ³? .
+F1 PgDn³F2 PgUp³       ³       ³F5 Sort by ext.³F7 Reverse Alph³F9 <-----    ³? .
+       ³       ³       ³       ³               ³               ³             ³? .
+F1 Help³2 <-|->³3 Copy ³4 Flip ³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+ Rhyth¯³ Marks¯³ Accis¯³  OffLf³  OffRt³ -Offst³ +Offst³ NoOff ³ Tab¯  ³User¯³± .
+1 NoStm³2 Stem-³3 Stem+³4 StNrm³5 CueSz³6 NrmSz³7 -NtHd³8 +NtHd³9 <--- ³10 ED³? .
+ Staff-³ Staff+³ Staff0³  ADJ  ³  ADJØ ³  ADF  ³  ADFØ ³       ³ CHdRhy³     ³± .
+1 Whole³F2 1/2 ³F3 1/4 ³F4 1/8 ³F5 1/16³F6 1/32³F7 Dot ³8 Grace³F9 <-- ³10 DW³? .
+  1/64 ³  Tripl³  Quint³  -SpDt³  +SpDt³  DtU/D³  Sp1Nt³  Dotx2³ NoTAil³+Tail³± .
+1 Wedge³2 Accnt³3 Tenut³4 Stacc³5 Ferma³6 Plus ³7 NoMrk³8 LRUD ³9 <--- ³10-->³? .
+  DnBow³  UpBow³  HvyWd³  WdgSt³  AccSt³  TenSt³  AccTn³  MOrd ³  InvMo³FlpMk³± .
+1 Fing1³2 Fing2³3 Fing3³4 Fing4³5 Fing5³6 Harmo³7      ³8 LRUD ³9 <--- ³     ³? .
+  FicFl³  FicSh³  FicNt³  Trill³  TrFlt³  TrShp³  TrNat³  2Dots³  3Dots³4Dots³± .
+F1     ³2 MovDn³3 MovUp³4 MovLf³5 MovRt³6 NoMov³7      ³8      ³9 <--- ³ FLM ³? .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³± .
+F1 Flat³2 Sharp³3 Natrl³4 DblFl³5 DblSh³6 NoAcc³7+Space³8 NoSpc³9 <--- ³10 ()³? .
+  ENH-1³  ENH+1³       ³       ³       ³       ³ -Space³AutoSpc³       ³     ³± .
+F1 Help³2 <-|->³3 Copy ³4 CnWhl³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+  Rhyth³  RstDn³  RstUp³  RsFrm³  RsInv³ -Offst³ +Offst³  NoOfs³       ³User¯³± .
+1 Whole³F2 1/2 ³F3 1/4 ³F4 1/8 ³F5 1/16³F6 1/32³F7 Dot ³8 RPbar³F9 <-- ³10-->³? .
+  1/64 ³  Tripl³  Quint³  -SpDt³  +SpDt³       ³       ³  Dotx2³ CueSz ³NrmSz³? .
+1 WhB1 ³2 WhB2 ³3 WhB3 ³4 WhB4 ³5 WhB5 ³6 WhB6 ³7 WhB7 ³8 WhB8 ³9 <--- ³10 DW³? .
+  Eur1 ³  Eur2 ³  Eur3 ³  Eur4 ³  Eur5 ³  Eur6 ³  Eur7 ³  Eur8 ³  NoNum³     ³? .
+F1 Help³2 <-|->³3 Copy ³4 Front³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+  Trebl³  Bass ³  Alto ³  Tenor³  Perc ³  Tab  ³       ³  Mini ³       ³User¯³± .
+1 Trb-8³2 Trb+8³3 Trb15³4 Bas-8³5 Tab4 ³6 Tab5 ³       ³       ³9 <--- ³     ³? .
+  -Size³  +Size³  0Size³  OffLf³  OffRt³ NoOFf ³       ³       ³       ³     ³± .
+0³.0/.5³P3 ³ 4 ³ 5 ³ 6 ³ 7 ³ 8 ³ 9 ³10 ³11 ³12 ³13 ³14 ³15 ³16 ³17 ³18 ³<esc>³? .
+ Normal³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³<esc>³? .
+F1 Help³2 <-|->³3 Copy ³4 MovLf³5 MovRt³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+   Line³  Dash ³  Dot  ³  Wiggl³  Arpeg³  Cres<³ Decrs>³  Rotat³  Centr³User¯³± .
+F1 Vert³2 Horz ³3 Dsh- ³4 Dsh+ ³5 Dsh0 ³6 Spc- ³7 Spc+ ³8 Spc0 ³9 <--- ³10-->³? .
+  LfBr-³  LfBr+³  LfBr0³  RtBr-³  RtBr+³  RtBr0³  Lft< ³  Rht> ³ Arp>Dn³Ap>Up³? .
+F1     ³2      ³3 Thick³4 0Thk ³5 Thn~~³6 Thn^^³7 Thk^^³8 P5=P4³9 <--- ³     ³? .
+ CntDsh³       ³ -LfOff³ +LfOff³ 0LfOff³ -RtOff³ +RtOff³ 0RtOff³ Rotate³0Rota³± .
+F1 Help³2 <-|->³3 Copy ³4 MovLf³5 MovRt³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+   Slur³  Tie  ³  Brk3 ³  Brk+ ³  CenVt³  Curve³  FLIp ³  P5=P4³  Centr³User¯³± .
+1 LftHf³2 RhtHf³3 ChDir³4 0P12 ³5 Dash ³6 Dots ³7 End1 ³8 End2 ³9 <--  ³10-->³? .
+ P8-.05³ P8+.05³ -LfOff³ +LfOff³ 0LfOff³ -RtOff³ +RtOff³ 0RtOff³  P8-1 ³ P8+1³± .
+F1 Help³2 <-|->³3 Copy ³4 MovLf³5 MovRt³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+AdjOfsØ³  AdjFr³ AdjFØ ³  AdjSt³  AdjØ ³ AutoBm³AutoBmØ³  FLIp ³  Centr³User¯³± .
+F1 Spl1³2 Spl2 ³3 Spl3 ³4 Spl4 ³5 Mini ³6 P5=P4³7 Lft0 ³8 Rht0 ³9 <--  ³10-->³? .
+  1Beam³ +Beam ³  -Num ³  +Num ³  Lf-Nt³  Lf+Nt³  Rt-Nt³  Rt+Nt³ +-P10 ³+-P13³± .
+F1 Help³2 <-|->³3 Copy ³4 MovLf³5 MovRt³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³     ³? .
+ -LfOff³ +LfOff³ 0LfOff³ -RtOff³ +RtOff³ 0RtOff³Wgl Y/N³  Acci ³  Centr³User¯³± .
+F1 Help³2 <-|->³3 Copy ³4 MovLf³5 MovRt³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+ D Ped ³ C Ped ³ B Ped º E Ped ³ F Ped ³ G Ped ³ A Ped ³       ³  Centr³User¯³± .
+F1 Siz1³2 -Size³3 +Size³4 -Off ³5 +Off ³6 0Off ³7      ³8      ³9 <--  ³     ³? .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³± .
+F1 Help³2 <-|->³3 Copy ³4 MovLf³5 MovRt³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+ LfPed ³ MidPed³ RtPed ³ -LfLin³ +LfLin³ -RtLin³ +RtLin³-^-Peds³  Centr³User¯³± .
+F1 -Siz³2 +Siz ³3      ³4      ³5 LfBrk³6 RtBrk³7      ³8      ³9 <--  ³     ³? .
+ -LfOff³ +LfOff³ 0LfOff³ -RtOff³ +RtOff³ 0RtOff³ -PdOff³ +PdOff³ 0PdOff³     ³± .
+F1 Help³2 <-|->³3 Copy ³4 MovLf³5 MovRt³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+  -^v- ³  -^-  ³ -Point³ +Point³ 0Point³  LfBrk³  RtBrk³GrphPed³  Centr³User¯³± .
+F1 Help³2 <-|->³3 Copy ³4 MovLf³5 MovRt³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+   8va ³   8   ³  8ba  ³  -88  ³  15ma ³   15  ³  RtBrk³       ³  Centr³User¯³± .
+1 -LfOf³2 +LfOf³3 0LfOf³4 -RtOf³5 +RtOf³6 0RtOf³7      ³8      ³9 <--  ³     ³? .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³± .
+F1 Help³2 <-|->³3 Copy ³4 MovLf³5 MovRt³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³     ³? .
+ -Line ³ +Line ³ 5-Line³Siz-.05³Siz+.05³ Siz=1 ³BtmLin#³       ³  0/200³User¯³± .
+F1 Note³2 Rest ³3 Clef ³4 Line ³5 Slur ³6 Beam ³7 Bar  ³8 Staff³9  <-- ³10-->³? .
+ Code9 ³ Number³ Cres< ³ Decr> ³ KeySig³ Meter ³  End1 ³  End2 ³ 8va/15³ Text³  .
+1 Harp ³2 PedA ³3 PedB ³4 PedC ³5 Arpeg³6 Box  ³7 Circl³8 Guitr³9  <---      ³? .
+ TREM1 ³ TREM2 ³ TREM3 ³ TREM4 ³ Trill ³ Accord³  Bends³ Code11³ Code15³     ³  .
+       ³  Save this staff of input to a file?  ³F7 Yes ³F8 No  ³ Backup³     ³  .
+       ³                                                                     ³  .
+F1 Help³2 <-|->³3 Copy ³4 Flip ³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+ -OffSt³ +OffSt³ NoOff ³-HorzSz³+HorzSz³  P6=1 ³-VertSz³+VertSz³  P7=0 ³User¯³± .
+1 pppp ³2  ppp ³3  pp  ³4  p   ³5  mp  ³6  mf  ³7  f   ³8  ff  ³9 <--  ³10-->³? .
+   fff ³  ffff ³   fp  ³   sf  ³  sfz  ³  sff  ³  sffz ³  sfff ³  -P5  ³ +P5 ³± .
+1  fz  ³2  rf  ³3 rfz  ³4 sfpp ³5 sfp  ³6 sffp ³7 mfpp ³8 mfp  ³9 <--  ³10-->³? .
+  fpp  ³   ffp ³  sfffz³ sffffz³  sfzp ³  sffzp³ sfffzp³8 arrow³  cresc³decrs³± .
+1 pizz.³2 arco ³3  dim.³4 accel³5 rit. ³6 rall.³7 a tmp³8 espr.³9 <--  ³10-->³? .
+  perc.³  early³  poco ³  molto³  meno ³   piu ³  mosso³  subto³ gliss ³SCORE³± .
+1  ped ³2  *   ³3 p(ed)³4 turn ³5 segno³6 frmta³7 frmtã³8 frmt^³9 <--  ³     ³? .
+   (>) ³ orn.1 ³ orn.2 ³ diamx ³ VrtBk ³  (b)  ³ micro1³ micro2³  -P5  ³ +P5 ³± .
+F1     ³2  Dir ³3 NewNm³4 -P5  ³5 +P5  ³6-OffSt³7+OffSt³8 NoOff³9 <--  ³     ³? .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³± .
+F1 Help³2 <-|->³3 Copy ³4 CntMs³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+NoBox/C³  Box  ³ Circle³ Font¯ ³  -10  ³  +10  ³   -1  ³   +1  ³       ³User¯³± .
+F1     ³2      ³3      ³4      ³5      ³6      ³7 JstOn³8 JsOff³9 <--  ³10-->³? .
+ -OffSt³ +OffSt³ NoOff ³ -Size ³ +Size ³ Size 1³+Spread³NoSpred³ Num.1 ³Ltr A³± .
+1 TmsRm³2 TmsBd³3 TmsIt³4 TBdIt³5 Helv ³6 HlvBd³7 HlvOb³8 HBdOb³9 <--  ³10-->³? .
+HelvNrw³HelvNBd³HelvNOb³HlvNBOb³PaltnRm³PaltnBd³PaltnIt³PalBdIt³       ³     ³± .
+1 AvGBk³2 AvBOb³3 AvDem³4 AvDOb³5 BkmLt³6 BkLIt³7 BkDem³8 BkDIt³9 <--  ³     ³? .
+NwCnSRm³NwCnSBd³NwCnSIt³NwCBdIt³ZapfChn³Courier³ CurBld³ CurObl³CurBlOb³Music³± .
+F1 <-10³F2 10->³F3 <-1 ³F4 1-> ³F5 1 Dn³F6 1 Up³F7 4 Dn³F8 4 Up³F9 <-- ³10 Ed³? .
+   Step Moves  ³       ³       ºStaffDn³StaffUpº       ³       ³  Copy ³Abort³± .
+F1 <-10³F2 10->³F3 <-1 ³F4 1-> ³F5 1-Dn³F6 1-Up³F7 4-Dn³F8 4-Up³F9 <-- ³10 AB³? .
+  <-Lft³  Lft->³ LftDn ³ LftUp ³ RhtDn ³ RhtUp ³ <-Rht ³ Rht-> ³ P4=P5 ³P5=P4³± .
+F1 TRM1³2 TREM2³3 TREM3³4 TREM4³5 P7-  ³6 P7+  ³7 P10- ³8 P10+ ³9 <--  ³10-->³? .
+  P11- ³  P11+ ³  P12- ³  P12+ ³  P13- ³  P13+ ³  P14- ³  P14+ ³  P15- ³ P15+³± .
+F1 -.1 ³2  +.1 ³3 -.02 ³4 +.02 ³5  -1  ³6  +1  ³7 -.2  ³8 +.2  ³9 <--  ³10®-¯³? .
+      Move number left/right   ³  Move number down/up  ³ 0 Horz³ 0 Vert³  ®-¯³± .
+F1 Help³2 <-|->³3 Copy ³4 Fill ³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+ -Thick³ +Thick³ NoThikºBox/Cirº -XSize³ +XSize³ -YSize³ +YSizeº  P7=0 ³P7=P6³± .
+1 Arc-A³2 Arc+A³3 Arc-B³4 Arc+B³5 NoArc³6      ³7      ³8      ³9  <-- ³10-->³? .
+ Circle³Triangl³Pentagn³Hexagon³Octagon³       ³VrtOval³HrzOval³       ³User¯³± .
+F1 Help³2 <-|->³3 Copy ³4      ³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+ -Thick³ +Thick³ NoThk º -Size ³ +Size ³       º -OffSt³ +OffSt³ NoOff ºUser¯³± .
+1 1-Lin³2 2-Lin³3 3-Lin³4      ³5      ³6      ³7      ³8      ³9  <-- ³     ³? .
+ TopDot³  Dot2 ³  Dot3 ³  Dot4 º       ºLeftDot³RghtDotº       ³       ³     ³± .
+F1 Help³2 <-|->³3 Copy ³4 PreSt³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+  Dots ³ChrdNam³ Barre ³FingNum³ P5=-1 ³ P5=-2 ³ P5=-3 ³-OffSet³+OffSet³NoOff³± .
+1 -Size³2 +Size³3 NrmSz³4      ³5      ³6 -Strs³7 +Strs³8 0=6St³9  <-- ³     ³? .
+  -Wdth³2 +Wdth³3 NrmWd³       ³       ³  -Fret³  +Fret³  0=5Fr³       ³     ³± .
+1 Str1 ³2 Str2 ³3 Str3 ³4 Str4 ³5 Str5 ³6 Str6 ³7 St1-6³8 Clear³9  <-- ³     ³? .
+Fret 1 ³   2   ³   3   ³   4   ³   5   ³   6   ³   7   ³OpenStr³   X   ³Blank³± .
+1-ChdNt³2+ChdNt³3 b/#/nº4-ChTyp³5+ChTypº6 -Intv³7 +Intv³8 IntAc³9  <-- ³10-->³? .
+  Font¯³-FntSiz³+FntSiz³0FntSiz³       ³TxLv-.5³TxLv+.5³ TxLv-5³ TxLv+5³TxLv0³± .
+1      ³2 SusAd³3 Acci ³4 -Num ³5 +Num ³6 P10=0³7      ³8      ³9  <-- ³10   ³? .
+ -/Note³ +/Note³ /Acci ³ -/Num ³ +/Num ³  P11=0³       ³       ³       ³     ³± .
+Lft St1³F2 Str2³F3 Str3³F4 Str4³F5 Str5ºF6     ºF7 -Fr ³F8 +Fr º9  <-- ³     ³? .
+BarrRht³   Str2³   Str3³   Str4³   Str5³   Str6º -FrLev³ +FrLevºNoBarre³ NoFr³± .
+1 Str1 ³2 Str2 ³3 Str3 ³4 Str4 ³5 Str5 ³6 Str6 ³7 St1-6³8 P18=0³9  <-- ³     ³? .
+Fing 1 ³   2   ³   3   ³   4   ³       ³       ³ Blank ³   0   ³   T   ³     ³± .
+1   C  ³2  C#  ³3  Db  ³4  D   ³5  Eb  ³6  E   ³7 Fing ³8  P5  ³9  <-- ³     ³? .
+    F  ³   F#  ³   Gb  ³   G   ³   Ab  ³   A   ³   Bb  ³   B   ³-ChdTyp³+ChTy³± .
+F1 Help³2 <-|->³3 Copy ³4 Flip ³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+-HorzSz³+HorzSz³  P6=1 ³-VertSz³+VertSz³  P7=1 ³ -Flatn³ +Flatn³  P11=0³P7=P6³± .
+1 -Offs³2 +Offs³3 NoOff³4      ³5-Rotat³6+Rotat³7 NoRot³8      ³9  <-- ³     ³? .
+       ³ NoArrw³NormArw³ -Arrow³ +Arrow³NormLng³+ArwLng³ -Thick³ +Thick³NoThk³± .
+1 -Offs³2 +Offs³3 NoOff³4      ³5-Rotat³6+Rotat³7 NoRot³8      ³9  <-- ³     ³? .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³± .
+1 Str1 ³2 ±±±  ³3 ±±±  ³4 ±±±  ³5 ±±±  ³6 ±±±  ³7 St1-6³8 P13=0³9  <-- ³     ³  .
+Fret 1 ³   2   ³   3   ³   4   ³   5   ³   6   ³   7   ³OpenStr³   X   ³Blank³  .
+1 ±±±  ³2 Str2 ³3 ±±±  ³4 ±±±  ³5 ±±±  ³6 ±±±  ³7 St1-6³8 P13=0³9  <-- ³     ³  .
+Fret 1 ³   2   ³   3   ³   4   ³   5   ³   6   ³   7   ³OpenStr³   X   ³Blank³  .
+1 ±±±  ³2 ±±±  ³3 Str3 ³4 ±±±  ³5 ±±±  ³6 ±±±  ³7 St1-6³8 P13=0³9  <-- ³     ³  .
+Fret 1 ³   2   ³   3   ³   4   ³   5   ³   6   ³   7   ³OpenStr³   X   ³Blank³  .
+1 ±±±  ³2 ±±±  ³3 ±±±  ³4 Str4 ³5 ±±±  ³6 ±±±  ³7 St1-6³8 P13=0³9  <-- ³     ³  .
+Fret 1 ³   2   ³   3   ³   4   ³   5   ³   6   ³   7   ³OpenStr³   X   ³Blank³  .
+1 ±±±  ³2 ±±±  ³3 ±±±  ³4 ±±±  ³5 Str5 ³6 ±±±  ³7 St1-6³8 P13=0³9  <-- ³     ³  .
+Fret 1 ³   2   ³   3   ³   4   ³   5   ³   6   ³   7   ³OpenStr³   X   ³Blank³  .
+1 ±±±  ³2 ±±±  ³3 ±±±  ³4 ±±±  ³5 ±±±  ³6 Str6 ³7 St1-6³8 P13=0³9  <-- ³     ³  .
+Fret 1 ³   2   ³   3   ³   4   ³   5   ³   6   ³   7   ³OpenStr³   X   ³Blank³  .
+1 Str1 ³2 ±±±  ³3 ±±±  ³4 ±±±  ³5 ±±±  ³6 ±±±  ³7 St1-6³8 P18=0³9  <-- ³     ³  .
+Fing 1 ³   2   ³   3   ³   4   ³       ³       ³ Blank ³   0   ³   T   ³     ³  .
+1 ±±±  ³2 Str2 ³3 ±±±  ³4 ±±±  ³5 ±±±  ³6 ±±±  ³7 St1-6³8 P18=0³9  <-- ³     ³  .
+Fing 1 ³   2   ³   3   ³   4   ³       ³       ³ Blank ³   0   ³   T   ³     ³  .
+1 ±±±  ³2 ±±±  ³3 Str3 ³4 ±±±  ³5 ±±±  ³6 ±±±  ³7 St1-6³8 P18=0³9  <-- ³     ³  .
+Fing 1 ³   2   ³   3   ³   4   ³       ³       ³ Blank ³   0   ³   T   ³     ³  .
+1 ±±±  ³2 ±±±  ³3 ±±±  ³4 Str4 ³5 ±±±  ³6 ±±±  ³7 St1-6³8 P18=0³9  <-- ³     ³  .
+Fing 1 ³   2   ³   3   ³   4   ³       ³       ³ Blank ³   0   ³   T   ³     ³  .
+1 ±±±  ³2 ±±±  ³3 ±±±  ³4 ±±±  ³5 Str5 ³6 ±±±  ³7 St1-6³8 P18=0³9  <-- ³     ³  .
+Fing 1 ³   2   ³   3   ³   4   ³       ³       ³ Blank ³   0   ³   T   ³     ³  .
+1 ±±±  ³2 ±±±  ³3 ±±±  ³4 ±±±  ³5 ±±±  ³6 Str6 ³7 St1-6³8 P18=0³9  <-- ³     ³  .
+Fing 1 ³   2   ³   3   ³   4   ³       ³       ³ Blank ³   0   ³   T   ³     ³  .
+1 -StrN³2 +StrN³3 0StrNº4 4Strs³5 5Strs³6 6Strs³7 7Strs³8 8Strsº9  <-- ³10-->³? .
+   Bass³ Treble³  8va  ³  15ma º  Tie  ³   X   º -Capo ³ +Capo º Font¯ ³User¯³± .
+1 Manual Tab Notation->º4 4Strs³5 5Strs³6 6Strs³7 7Strs³8      º9  <-- ³     ³? .
+1 TP0  ³2 TP3  ³3 TP5  ³4 TP7  ³5 TP9  º-StrNum³+StrNumº-FretNm³+FretNmº ( ) ³± .
+F1 Help³2 <-|->³3 Copy ³4 0/200³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+ -Staff³ +Staff³ 1Staff³NormBar³ DblBar³  ³Ý   ³Rpt Þ³:³Rpt :³Ý³Rp:³Û³:³User¯³± .
+1 -Offs³2 +Offs³3 NoOff³4 Invis³5 :ÝÝ: ³6 Brace³7 Brakt³8 SubBk³9  <-- ³10-->³? .
+ TopBrk³ BotBrk³ MidBrkº+BarSpc³0BarSpc³+DotSpc³0DotSpc³  +P17 ³  0P17 ³ Dash³± .
+1-LowDt³2+LowDt³3-HiDot³4+HiDot³5 0Dotsº6-Thick³7+Thick³8NrmThk³9  <-- ³     ³? .
+-PrtBot³+PrtBot³0PrtBot³-PrtTop³+PrtTop³0PrtTopº+DshSiz³0DshSiz³+DshSpc³0DhSp³± .
+F1 Help³2 <-|->³3 Copy ³4 Flip ³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+-HorzSz³+HorzSz³  P5=1 ³-VertSz³+VertSz³  P6=0 ³-Rotate³+Rotate³0Rotate³User¯³± .
+F1     ³2  Dir ³3 NewNm³4      ³5      ³6      ³7      ³8      ³9 <--  ³     ³? .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³± .
+F1 -Rot³2 +Rota³3 0Rota³4      ³5 P5-1 ³6 P5+1 ³7 P5-10³8 P5+10³9 <--  ³10-->³? .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³± .
+F1 Help³2 <-|->³3 Copy ³4 Flip ³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+-HorzSz³+HorzSz³  P6=1 ³-VertSz³+VertSz³  P7=0 ³-Rotate³+Rotate³0Rotate³User¯³± .
+F1 -Spc³2 +Spc ³3 NrmSp³4 Font¯³5 CTN  ³6 CTx  ³7 <EdTx³8 >EdTx³9 <--  ³10-->³? .
+ -ChrSp³ +ChrSp³NrmChSp³ -Parts³ +Parts³ 0Parts³-Rotate³+Rotate³0Rotate³ JRx ³± .
+F1     ³2      ³3      ³4      ³5      ³6      ³7      ³8      ³9 <--  ³     ³? .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³± .
+1 TmsRm³2 TmsBd³3 TmsIt³4 TBdIt³5 !!- -³6 ??___³7 Helv ³8 HlvBd³9 <--  ³10-->³? .
+ HelvOb³HlvBdOb³HelvNrw³HelvNBd³HelvNOb³HlvNBOb³PaltnRm³PaltnBd³PaltnIt³PBdIt³± .
+1 TmsRm³2 TmsBd³3 TmsIt³4 TBdIt³5 Helv ³6 HlvBd³7 HlvOb³8 HBdOb³9 <--  ³10-->³? .
+HelvNrw³HelvNBd³HelvNOb³HlvNBOb³PaltnRm³PaltnBd³PaltnIt³PalBdIt³OutLine³ P8=0³± .
+F1 -Pnt³2 Pnt10³3 Pnt16³4 Pnt24³5 +Pnt ³6      ³7 AbsSz³8      ³9 <--  ³     ³? .
+  Rip-1³  Rip-2³  Rip-3³  Rip-4³  Rip 1³  Rip 2³  Rip 3³  Rip 4³ Ripx-1³Ripx1³± .
+F1 Help³2 <-|->³3 Copy ³4 CntMs³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+ -OffSt³ +OffSt³ NoOff ³ 1 Flat³ +Flat ³1 Sharp³+Sharp ³Natural³0 Natrl³User¯³± .
+F1 Treb³2 Bass ³3 Alto ³4 Tenor³5 CueSz³6 -Spc ³7 +Spc ³8 0Spc ³9 <--  ³0Acci³? .
+ Acci1 ³ Acci2 ³ Acci3 ³ Acci4 ³ Acci5 ³ Acci6 ³ AcciDn³ AcciUp³JustOff³JstOn³± .
+F1     ³2      ³3      ³4      ³5      ³6      ³7      ³8      ³9 <--  ³     ³? .
+ **** not used ³       ³       ³       ³       ³       ³       ³0 P8-13³     ³± .
+F1 Help³2 <-|->³3 Copy ³4 CntMs³5 Centr³6 Zm³Mv³7 DElet³8 Abort³9 EndEd³10-->³? .
+ -OffSt³ +OffSt³ NoOff ³  2/4  ³  3/4  ³  4/4  ³  5/4  ³   ›   ³   C   ³User¯³± .
+F1 3/8 ³2  5/8 ³3  6/8 ³4  9/8 ³5 12/8 ³6 -Size³7 +Size³8 NrmSz³9 <--  ³10-->³? .
+1 Alone³ +Num  ³  3/16 ³  6/16 ³  9/16 ³-TopNum³+TopNum³ Font¯ ³JustOff³JstOn³± .
+1-TopLf³2+TopLf³3      ³4 0 Dbl³5      ³6-RtTop³7+RtTop³8      ³9 <--  ³     ³? .
+BotLf 2³BotLf 4³BotLf 8³BotLf16³+on/off³RtBot 2³RtBot 4³RtBot 8³RtBot16³RtBt0³± .
+F1     ³2      ³3  Click here to draw  ³6      ³7      ³8      ³9 <--  ³<esc>³  .
+       ³       ³limiting box - or type.³       ³       ³       ³       ³     ³  .
+F1     ³2      ³3      ³4      ³5      ³6      ³7      ³8   Box OK     ³<esc>³  .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³  .
+F1     ³2      ³3 --- Cut ---  ³5 -- Paste --  ³7      ³8      ³9 <--  ³     ³? .
+       ³       ³               ³               ³       ³       ³       ³     ³? .
+ 1 ³ 2 ³ 3 ³ 4 ³ 5 ³ 6 ³ 7 ³ 8 ³ 9 ³10 ³11 ³12 ³14 ³15 ³16 ³17 ³18 ³   ³<esc>³? .
+   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³     ³? .
+       ³       ³       ³       ³       ³       ³       ³       ³F9 <-- ³<esc>³  .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³  .
+F1 #01 ³2  #02 ³3  #03 ³4  #04 ³5  #05 ³6  #06 ³7  #07 ³8  #08 ³9 <--  ³ Type³? .
+   #09 ³   #10 ³   #11 ³   #12 ³   #13 ³   #14 ³   ;   ³   ;;  ³  ;;;  ³ ;;;;³? .
+F1 -1  ³2  -2  ³3  -3  ³4  -4  ³5  -5  ³6  -6  ³7  -7  ³8 -8   ³9 Insts³<esc>³  .
+   +1  ³   +2  ³   +3  ³   +4  ³   +5  ³   +6  ³   +7  ³  +8   ³  +12  ³ -12 ³  .
+F1 Ab ³2  F  ³3  E  ³4  Eb ³5  D  ³6  Bb ³7  A  ³8  G  ³9 <--  ³<esc>³  .
+       ³9  F  ³10 E  ³11 Eb ³12 D  ³13 Bb³14 Eb³       ³  +12  ³ -12 ³  .
+F1 Change clef?³3  --- No ---  ³5 Treb ³6 Bass ³7 Alto ³8 Tenor³9 <--  ³<esc>³  .
+               ³               ³       ³       ³       ³       ³       ³     ³  .
+F1            Add key sig?     ³5  --- No ---  ³7 --- Yes ---  ³9 <--  ³<esc>³  .
+                               ³               ³               ³       ³     ³  .
+F1 Normalize stem directions?  ³5  --- No ---  ³7 --- Yes ---  ³9 <--  ³<esc>³  .
+                               ³               ³               ³       ³     ³  .
+F1 -1  ³2  -2  ³3  -3  ³4  -4  ³5  -5  ³6  -6  ³7  -7  ³8 -8   ³9 Insts³<esc>³  .
+   +1  ³   +2  ³   +3  ³   +4  ³   +5  ³   +6  ³   +7  ³  +8   ³  -12  ³ +12 ³  .
+F1 -1  ³2  -2  ³3  -3  ³4  -4  ³5  -5  ³6  -6  ³7  -7  ³8   Box OK     ³<esc>³  .
+   +1  ³   +2  ³   +3  ³   +4  ³   +5  ³   +6  ³   +7  ³               ³     ³  .
+F1 Treb³2 Bass ³3 Alto ³4 Tenor³5 Perc ³6 Treb8³7 Piano³8 Organ³9 <esc>³10-->³? .
+  StrQt³Voc+Pno³  SATB ³Chr+Pno³  Orch1³  Orch2³       ³  Reset³  Start³     ³? .
+1 Set21³2 Set22³3 Set23³4 Set24³5 Set25³6 Set26³7 Set27³8 Set28³9 <--  ³     ³? .
+Strings³  Perc ³  Brass³WoodWnd³       ³       ³       ³       ³       ³     ³? .
+1 Clef¯³2 StmUp³3 StmDn³4 StmOr³5  M   ³6 Rest ³7 RsWhl³8 RsInv³9 <esc>³10-->³? .
+   Flat³  Sharp³Natural³ DblFlt³ DblShp³   :   ³BackSpc³   /   ³   ;   ³(acc)³? .
+F1 Treb³2 Bass ³3 Alto ³4 Tenor³5 Perc ³6      ³7      ³8      ³9 <--  ³     ³? .
+  -Treb³ -Bass ³ -Alto ³ -Tenor³       ³       ³       ³       ³       ³     ³? .
+1 Flat ³2 Flats³3 Flats³4 Flats³5 Flats³6 Flats³7 Flats³8      ³9 <--  ³     ³? .
+1 Sharp³2 Shrps³3 Shrps³4 Shrps³5 Shrps³6 Shrps³7 Shrps³Natural³BackSpc³     ³? .
+F1 3/16³2  2/4 ³3  3/4 ³4  4/4 ³5  5/4 ³6  6/4 ³7  C   ³8  ›   ³9 <--  ³ 9/16³? .
+   6/16³   2/8 ³   3/8 ³   4/8 ³   5/8 ³   6/8 ³  7/8  ³  8/8  ³  9/8  ³12/8 ³? .
+F1  M  ³2  MD  ³3  MH  ³4  MR  ³5  ML  ³6  MRD ³7  MS  ³8  MI  ³9 <--  ³     ³? .
+1 Staff³2 Stvs ³3 Stvs ³4 Stvs ³5 Stvs ³6 Stvs ³7 Stvs ³8 Stvs ³9 Stvs ³     ³? .
+1 DblWh³2 Whole³F3 1/2 ³F4 1/4 ³F5 1/8 ³F6 1/16³F7 1/32³F8 1/64³9 <esc>³10-->³? .
+ Quint ³ Triple³   1/2.³   1/4.³   1/8.³  Dot  ³BackSpc³   /   ³   ;   ³ 1/12³? .
+F1     ³2      ³3 PrxOn³4 PrOff³5      ³6KySig¯³7Meter¯³8 Bars¯³9 <--  ³     ³? .
+       ³       ³       ³       ³       ³ StafUp³ StafDn³StafOrd³       ³     ³? .
+1 Wedge³2 Accnt³3 Tenut³4 Stacc³5 Ferma³6 AccSt³7 Harm ³8  Go  ³9 <esc>³10-->³? .
+    ö  ³    ö  ³    ö  ³    ö  ³    ö  ³   ö   ³BackSpc³   /   ³   ;   ³     ³? .
+1 HvyWd³2 ACtTn³3 TenSt³4 WdgSt³5 C <  ³6 C- > ³7 DnBow³8 UpBow³9 <--  ³10-->³? .
+    ö  ³    ö  ³    ö  ³    ö  ³    ö  ³   ö   ³BackSpc³   /   ³   ;   ³     ³? .
+F1 ppp ³2  pp  ³3  p   ³4  mp  ³5  mf  ³6  f   ³7 pizz ³8 arco ³9 <--  ³10-->³? .
+    ö  ³    ö  ³    ö  ³    ö  ³    ö  ³   ö   ³BackSpc³   /   ³   ;   ³     ³? .
+F1  ff ³2 fff  ³3  fp  ³4  sf  ³5  sfz ³6      ³7      ³8      ³9 <--  ³10-->³? .
+    ö  ³    ö  ³    ö  ³    ö  ³    ö  ³       ³BackSpc³   /   ³   ;   ³     ³? .
+1 cresc³2  dim ³3  rit ³3 accel³5  8va ³6  8ba ³7      ³8      ³9 <--  ³10-->³? .
+    ö  ³    ö  ³    ö  ³    ö  ³       ³       ³BackSpc³   /   ³   ;   ³     ³? .
+1 Fing1³2 Fing2³3 Fing3³4 Fing4³5 Fing5³ FictFl³ FictSh³ FictNt³9 <--  ³10-->³? .
+    ö  ³    ö  ³    ö  ³    ö  ³    ö  ³       ³BackSpc³   /   ³   ;   ³     ³? .
+1 Trill³2 TrFlt³3 TrShp³4 TrNat³5      ³6      ³7      ³8      ³9 <--  ³10-->³? .
+  Tr~~~³  TrF~~³  TrS~~³  TrN~~³       ³       ³BackSpc³   /   ³   ;   ³     ³? .
+F1     ³2      ³3      ³4      ³5      ³6      ³7      ³8      ³9 <--  ³     ³? .
+ TM1(8)³TM2(16)³TM3(32)³TM4(64)³       ³       ³BackSpc³   /   ³   ;   ³     ³? .
+F1  1B;³2  2B; ³3  3B; ³4  4B; ³5 ÄÄ5ÄÄ³6 ÄÄ6ÄÄ³7 ÄÄ3ÄÄ³8  Go  ³9 <esc>³Above³? .
+ 1 Pkup³ 2 Pkup³ 3 Pkup³       ³AutoBms³       ³BackSpc³   /   ³   ;   ³Below³? .
+F1     ³2      ³3      ³4      ³5 ÚÄ5Ä¿³6 ÚÄ6Ä¿³7 ÚÄ3Ä¿³8  Go  ³9 <esc>³Above³? .
+       ³       ³       ³       ³       ³       ³BackSpc³   /   ³   ;   ³Below³? .
+F1     ³2  X2  ³3  X3  ³4  X4  ³5  X5  ³6  X6  ³7  X7  ³8  X8  ³9 <--  ³Grace³? .
+   X9  ³   X10 ³   X12 ³   X16 ³   X20 ³   X24 ³   X28 ³   X32 ³   X35 ³ X40 ³? .
+³                                                                            ³  .
+³                                                                            ³  .
+F1     ³2      ³3  Click here to draw  ³6      ³7      ³ To all³9 <--  ³<esc>³  .
+       ³       ³limiting box - or type.³       ³       ³ staves³       ³     ³  .
+F1 Help³                           <escape>                                     .
+                                                                                .
+                                                               ³ <esc> ³     ³? .
+                                                                                .
+F1     ³2      ³3      ³4      ³5      ³6      ³7      ³8      ³9 <--  ³     ³? .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³? .
+0³.0/.5³P3 ³ 4 ³ 5 ³ 6 ³ 7 ³ 8 ³ 9 ³10 ³11 ³12 ³13 ³14 ³15 ³16 ³17 ³18 ³<esc>³? .
+ Fine  ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³   ³<esc>³? .
+1      ³2      ³3   CNLeft    4³5   CNRight   6³7      ³8      ³9 <--  ³10mid³? .
+       ³       ³       ³       ³       ³       ³       ³       ³       ³     ³± .

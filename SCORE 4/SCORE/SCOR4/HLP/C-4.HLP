@@ -1,0 +1,125 @@
+"C" commands:                                                             1/5
+              C = group copy.
+             CD = change current disk directory.
+            CDn = center lyrics dashes on staff n.
+            COM = combine alphabetically ordered files.
+            CRV = group adjustment of slur curvature.
+            COL = set colors.
+             CS = copy complete system.
+            CWn = center all whole rests on staff n. 
+             CT = CUT - for CUT and PASTE.
+
+In Edit mode only:
+              C = copy and exit edit mode.  Cz = copy and move to item z.
+             CC = copy and select the copy for further editing.
+             CX = copy and select the next item for editing.
+             CN = center on nearest note or rest  (no vert shift).
+            CNs = center on nearest note or rest on staff s.
+             CM = center meter or number above nearby barline. ( P4 >= 2 )
+             CR = set curve of slur to what is "normal" for length.
+             CV = as above, but vertical move to just above a note.
+            CTx = center text on position x (if editing code 16).
+           CTNs = center text on center of closest note head (on staff s).
+             CD = center dashes between text syllables (edit).
+         CU,CUX = cue notes/beams (minis) on/off. (Also with Group ALTER.)
+*
+In Command mode.                                                          2/5
+
+C = group copy. The group copy works exactly like the Move command except that
+     the old material is left intact and a new set of items is created at the
+     position given in response to the the 2nd prompt. (Type "?M" for details.)
+
+CS  = copies complete systems to new staff positions.  (Works same as MS.)
+
+CD \name = do a DOS Change Directory command to directory "name".
+           See also the Path command (PA).
+
+COM = combine files.   Reads in alphabetically ordered files.  As each
+      is read in, the previous data are shifted to higher staff numbers.
+      (Useful to combine single line files from part extractor in PAGE, etc.)
+
+CT = CUT. You will be prompted to designate an area of the screen to be cut
+          and saved in the !!CUT.TMP file. The designated area will NOT be
+          deleted from the screen. (To delete an area, use the DE command.)
+          The CUT area will remain available to be PASTED into any other
+          page of music, until a new CT command is given. Type "?B" for
+          information on the creation of BOXES to designate screen areas.
+
+      To "cut" a single item, select it into edit mode, then type XX. This
+      will exit from edit mode and put the item into the !!CUT.TMP file.
+*
+                                                                          3/5
+
+CW x = centers all whole rests on staff x.  If x > 32, all staves affected.
+        (Rest's P5 must = -2 or less.)
+
+-----The following work only while in Edit mode.------
+
+C (copy) is the same as X but the original form of the item is left intact
+and the edited form is copied to the end of the item list.
+  CC is the same as copy except that the copy is then selected for editing.
+  CX is the same as copy except that the next item is selected for editing.
+
+CN will center an item's horizontal parameters on the position of the closest
+   note or rest.  In the case of items with more than 1 horizontal parameter
+   (slurs, lines, beams) each parameter is automatically centered separately.
+
+CN, followed by a number (x), works as above except that only notes and rests
+    on staff 'x' will be used for centering positions.
+
+
+
+
+
+
+*
+                                                                          4/5
+----- In Edit mode.
+
+CT x = center a string of text (code 16) on position 'x'.  A musical title
+      might be centered on the page by typing: CT100  (center on position 100).
+
+CTN = center text string on nearest note or rest.
+
+CD = center dash(es) separating the syllables of text (lyrics) under music.
+
+CM = center meters or numbers over bar line found nearby (within 15 steps).
+     CM x = center a bar line on bar line found on staff x.
+
+Next for editing Code 5 (slurs/ties) only:
+
+    CNR, CNL:  While editing slurs or ties, CNR will center the right end
+    of the slur to a point just before the last bar line.
+    CNL will center the left end to just before the first note in the line.
+
+    CV centers on notes and changes the vertical position to about 2 steps
+    beyond the note head.  (Used for centering slurs and adjusting their
+    height.)
+    CR = set the curve of a slur to what is normal, considering the slur
+    length.
+*
+                                                                          5/5
+
+
+Extended letter commands:
+
+     These commands are shortcuts for creating various items.  They should
+     normally be followed by 2 or 3 numbers (parameters 2, 3, 4).
+
+         crs 3 45 14   will put "cresc." on staff 3 at position 45,
+                       vertical position 14.
+
+CIR    = circle
+CLE    = treble clef (CLEFM = mini clef)
+CLEFTA = tablature clef
+COMM   = common time - C
+CRH    = crescendo hairpin
+CRS    = cresc.
+CUT    = cut time, alla breve
+
+
+
+
+
+-------------------------------------------------------------------------end---
+~

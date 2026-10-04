@@ -1,0 +1,36 @@
+New Page 1
+
+ Code 12 -- Accordion Symbols -- parameter structure
+
+P1 code number (12)
+
+P2 staff number
+
+P3 horizontal position
+
+P4 vertical position
+
+P5 accordion symbols
+(P5 = 10)
+
+P6 symbol
+size
+
+P7 symbol type
+
+P8, P9 dot positions
+
+P10 
+circle thickness
+
+P15 
+horizontal
+displacement
+
+P25 layer number. 
+
+See Color Control.
+
+ P26 color/gray
+value. 
+See Color Control.

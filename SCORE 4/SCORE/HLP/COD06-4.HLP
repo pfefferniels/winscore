@@ -1,0 +1,175 @@
+                                                                            1/7
+Code 6 -- Beams --
+                           ษอออออออออออหอออออออออออป
+  parameter structure:     บ     p1    บ     p2    บ
+                           บ code num. บ staff num.บ
+                           ศอออออออออออสอออออออออออผ
+            ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+            ณ                 ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ               ณ
+ ษออออออออออฯอออออออออหอออออออฯอออออออออออหออออออออฯออออออออหออออออฯออออออออป
+ บ         p3         บ       p4          บ        p5       บ      p6       บ
+ บleft horizontal pos.บ left vertical pos.บ right vert. pos.บ rt. horz. pos.บ
+ ศออออออออออออออออออออสอออออออออออออออออออสอออออออออออออออออสอออออออออออออออผ
+
+       ษออออออออออออออออออออออออออหอออออออออออออออออออหอออออออออออออออป
+       บ            p7            บ         p8        บ     p9        บ
+       บ stem dir., num. of beams บ number over beams บ horz. offsets บ
+       ศออออออออออออออออออออออออออสอออ(split beam)ออออสอออออออออออออออผ
+
+ ษออออออออออออออหอออออออหออออออหอออออออออออออหอออออหอออออหออออออหออออออหอออออป
+ บ     p10      บ  p11  บ  p12 บ    p13      บ p14 บ p15 บ p16  บ p17  บ p18 บ
+ บ2nd beam groupบlft.posบrt.posบ3rd beam grp.บ lft.บ rt. บ#disp.บthick.บ sizeบ
+ ศออออออออออออออสอออออออสออออออสอออออออออออออสอออออสอออออสออออออสออออออสอออออผ
+
+
+*
+                                                                            2/7
+   P7 = implied stem direction and number of beams.
+
+          P7 is always a two-digit number.  The left digit indicates the
+          stem direction of the notes attached to the beam.
+
+          1 = stems up, 2 = stems down.  The right digit holds the number
+          of full beams drawn between position P3 and position P6.
+
+                    P7 = 12 = stems up, 2 full beams
+                       = 23 = stems down, 3 full beams
+
+                    (See below re. P7 and tremolo beams.)
+
+   P8 = number to be centered above or below the full beams. (-P8 splits beam)
+         Use P16 for % of horiz. displacement.  P16 = 0 = default .5 (50%).
+         ******* P19 can shift the number up or down. *******
+
+     When EDITING ONLY: A negative value in P8 is used to split beams into
+     smaller units. E.g. if 6 notes are found under a continuous double beam,
+     typing '8 -3' will cause the appearance of 1 long single beam and 2
+     secondary beams attaching 3 notes each.  The negative number indicates
+     the last note to be included under the 1st secondary beam.  In this case
+     the number may have 1 or 2 digits.
+*
+                                                                            3/7
+  P8 continued
+
+     If P8 has 3 or 4 digits, the ORIGINAL beam will have 2 partials and a
+     NEW beam will be created made up of 1 or 2 partials.  In this case the
+     sum of the digits MUST equal the total of the notes involved.
+       If there are 9 notes under a beam, P8 = -333 creates 3 partials, 1 for
+       each 3 notes.
+       If there are 10 notes under a beam, P8 = -3223 creates 4 partials,
+       encompassing 3 notes, 2 notes, 2 notes, and 3 notes.
+
+     To use the split beam feature when the beamed group involves notes with
+     stems both up and down, an "x" must follow the command. Some further
+     editing mahy be necessary.
+
+        Example: 8 -222 x
+
+     After this feature is used P8 will reset itself to 0.
+
+
+
+   P9 is used to adjust beam's end points when note stems are not all in
+   same direction. (see below)
+
+*
+                                                                            4/7
+P10, 11, 12 -- P13, 14, 15
+Composite partial beams:  2 levels of composite beams may be added to the full
+         beams.  Parameters 10, 11, 12 are used for the 1st composite, and
+         P13, 14, 15 for the 2nd composite.  The role of the parameters in
+         each group of 3 is exactly the same, so only P10, 11, 12 will be
+         described.   (See below re. P14, P15 and offset notes.)
+
+    There are 2 kinds of partial beams; attached and unattached.  Attached
+    partial beams are secondary beams which do not extend the length of the
+    full beam but are attached on both left and right sides to note stems.
+    An unattached partial is connected on one side only, leaving the other
+    end of the beam free floating.
+
+    P10 is a 2-digit number where the left digit gives the displacement (in
+    beam widths) from the level of the full beam(s).  The right digit tells
+    how many partial beams will be drawn. If p10 is negative then the added
+    beam(s) will appear above the main beam if stems are up, or below the
+    main beam if stems are down.  (In this case the displacement value,
+    i.e. the left hand digit, will equal the number of partial beams, i.e.
+    the right hand digit.  This feature will often be used in situations
+    where stems do not all go the same direction.)
+
+
+*
+                                                                            5/7
+    P11 sets the left position of the partial beam.  If P11 = -1 the left
+    position will equal the value found in P3.
+
+    P12 sets the right position of the partial beam.  If P12 = -1 the right
+    position will equal the value found in P6.
+
+    P9 is used in complex situations where some of the note stems do not go
+    in the same direction (e.g. notes on staff above or staff below).  P9 may
+    have up to 3 digits, (using 0, 1, 2, 3 only).  Here these digits will be
+    labeled "abc".  Digit "a" refers to P3 and P6 (left and right ends of the
+    main beam).  Digit "b" refers to P11 and P12 (left and right ends of first
+    added partial beam).  Digit "c" refers to P14 and P15 (left and right ends
+    of second partial beam).  The role of these digits is as follows:
+    0=no offset, 1=left beam end is offset, 2=right end offset, 3=both offset
+
+    **** When editing, set P9 to -1 to create the proper values automatically.
+    
+    This use of P9 insures that the beam end points will exactly meet the note
+    stems.
+
+       Be sure to use the centering (CN) and adjust (AD) commands to make sure
+       that the beam ends and stem lengths are accurately placed.
+
+*
+                                                                            6/7
+Tremolos:  P7 = -10 (stems up) or -20 (stems down).
+           P10 = "mn" where m = displacement, n = number of tremolo beams.
+             If the tremolo beams are not appearing as secondary beams in
+             conjunction with full beams then P5 = 0  and P6 = 0.
+
+           P12 can set the width of the tremolo beams. 
+             If P12 = 0 the default width is 4.
+
+        P11:  When tremolo beams are used in conjunction with full beams, a
+        separate item must be set up with parameters 1 through 6 identical to
+        those of the full beam item.  This is necessary so that the tremolo
+        beams will be parallel to the slope of the full beam.  Now P11 is used
+        to set the particular position of each tremolo unit.
+
+    "Floating" tremolo beams:  P7 = 10 or 20.  The beams will be suspended
+     between positions in P3 and P6.  P10 = the number of beams.
+     P11 and P12 set distance of beam ends from note stems.
+         Default values are 3.5 and -3.5 if P11 = 0 and P12 = 0.
+
+                   (Tremolos continued - )
+
+
+
+*
+                                                                            7/7
+Tremolos with combined attached and floating beams:
+
+ IF: 2nd digit (n) of P7 is NOT = 0 and P10 is NOT = 0 and P11 = 0 and P12 = 0,
+THEN: n = number of full-length beams, and P10 will have a 2-digit number (xy),
+      where x = offset of floating beams, y = number of floating beams.
+
+
+P17 = beam thickness factor. (0 = default, .9 = thinner, 1.1 = thicker)
+                             (This feature should rarely be used.)
+
+P18 = beam size factor for beams attached to notes with P15 size factor set.
+                                                                       
+ ******* Beam offsets to match note offsets *******
+
+ ******* P14 and P15 can be used to aid aligning beams with notes which have
+an offset value set in the note's P10.   The beam's P13 MUST be left at 0.
+The beam's P14 should have the same value as the P10 of the 1st note under 
+the beam.  The beam's P15 should have the same value as the P10 of the last 
+note under the beam.  Use CN (center) for final alignment.
+(Since P13 must = 0, doubly composite beams cannot use this feature.  
+Such composites must be broken up into 2 separate items.)
+
+-------------------------------------------------------------------------end---
+.

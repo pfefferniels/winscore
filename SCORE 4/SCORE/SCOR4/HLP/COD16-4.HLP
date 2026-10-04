@@ -1,0 +1,200 @@
+                                                                           1/8
+Code 16 -- Text
+  parameter structure
+ษอออออออออหอออออออออออหออออออออออออหอออออออออออหออออออออออออออออออออออออป
+บ   p1    บ    p2     บ    p3      บ     p4    บ          p5            บ
+บcode num.บ staff num.บ horiz. pos.บ vert. pos.บ character space factor บ
+ศออ 16 อออสอออออออออออสออออออออออออสอออออออออออสออออออออออออออออออออออออผ
+
+ษออออออออออออหออออออออออออหอออออออออออออออหออออออออออหออออออออออออออออออป
+บ     p6     บ     p7     บ     p8        บ    p9    บ       p10        บ
+บ horz. size บ vert. size บ font override บ rotation บ size of a space  บ
+ศออออออออออออสออออออออออออสอออออออออออออออสออออออออออสออออออออออออออออออผ
+
+ษออออออออออออออออออหอออออออออออออหอออออออออออออออหออออออออออออป
+บ        p11       บ     p12     บ     p13       บ  p14 --    บ
+บ horz. displcmnt. บ char. count บ string length บ (the text) บ
+ศออออออออออออออออออสอออออออออออออสอออออออออออออออสออออออออออออผ
+
+P5 can adjust the space used by each character.  e.g. if P5 = .9 then each
+    character will occupy only 90% of its ordinary space.  (The SIZE of the
+    character remains the same.)  The factor will hold for the entire string.
+
+P6 and P7 control the size.  If P7 is left at zero it will become equal to P6.
+
+*
+  ******* If 100 is added to P6's size value, the part extractor feature   2/8
+  ******* in the PAGE program will put the text in all player's parts.
+  ******* P6+200 makes all parts ignore this text string.
+  ******* P6+300 = use string in all parts and change size to 1.
+
+P8 can be used to override the originally given font with a different font.
+   90 = Bodoni, 91 = Bodoni-Bold, 92 = Bodoni-Italic, 93 = Italic-Bold,
+   94 = Music Traditional, 98 = Stick.
+   Use 1000-1034 to substitute PostScript fonts 0-34.
+   Outline fonts (unfilled) are made by adding 100.
+       e.g. 193 = Italic-Bold outline, 1105 = Helvetica-Bold outline.
+
+P9 = degrees of rotation for the entire string.
+
+P10 sets the size of the space chararacter only.  Both P10 and P5 are factors
+     which act relative to the P6 size factor.
+
+P11 is used to displace the start of the text string to the left or right.
+     This is useful when it is desired to keep the P3 value locked on to
+     a particular note position so that the relative position of the text
+     will not change when notes are justified, etc.  (See CTN.)
+
+P12 and P13 should never be altered.
+
+*
+                                                                           3/8
+--EDITING THE TEXT--(You must be in Edit Mode to use the following commands.)
+
+[, ] (or TX)-- The text itself may be edited by entering EDIT MODE and
+typing TX<enter> or just hitting the [ key.  The text will appear just above
+the graphics window.  At this point the left and right cursor keys (arrows)
+may be used to locate individual characters to changed. Characters may be
+inserted by first hitting the <insert> key.  Hitting the <insert> key again
+causes a return to the normal (or overstrike) mode.  The <home> key moves the
+cursor to the far left end of the text string.  The <end> key moves the cursor
+to the right end of the line.  When <enter> is hit, the new text will appear
+on top of the original form of the text.
+
+When [ is hit the cursor will appear at the front of the line, just after the
+font number.  When ] is hit the cursor will appear at the end of the line.
+
+The <tab> key will move the cursor to the next word to the right.
+<shft><tab> will move the the cursor to the word to the left.
+
+Deleting characters:  The <delete> key is used to remove single characters.
+
+<ctrl><end> deletes all the characters from the cursor to the end of the line.
+<ctrl><home> deletes all from the cursor back to the front of the line.
+
+*
+                                                                           4/8
+--RIPPLING WORDS--
+
+RIP n --This command will "ripple" a total of n words from one line to the
+        next.  If n is not given, only one word will be moved.  If n is
+        negative, the words will go to the previous line (usually the line
+        above.)  If the next item is not a Code 16 text string, RIP will
+        create a new line below or above the one being edited.  The command
+        RIPX n will ALWAYS create a new text line.  (If the text lines are
+        not in their proper order, the OT (order text) command should be used.
+        This command CANNOT be given while you are still in EDIT MODE.)
+
+
+
+--CENTERING TEXT--
+
+CT x -- The text may be centered on any position (x) by typing CT followed
+        by the position number.  The last number given for this command 
+        will be reused if no new number is given.
+
+CTN s --  Centers the text on the nearest note or rest on staff s. 
+          (P11 is altered.)
+
+
+*
+                                                                           5/8
+--JUSTIFYING TEXT--
+
+J n1 n2 -- This command justifies the text between the two positions given.
+           If no position numbers are given, the previously given numbers will
+           again be used.  The line is justified by increasing the size of the
+           space between each word (i.e. p10 gets changed).
+
+JR n --  JR = Justify Right.  This sets the right end of the text string at
+         position n.  If n is not given the previous value of n is used.
+
+
+
+RM n1 n2 n3 -- RM = set Right Margin.  With this, a total n2 lines will be
+            adjusted so that no words extend beyond the position given as n1.
+            The spaces between words will not be changed, but some words may
+            be "rippled" from one line to another.
+
+               If n2 is 0, or not given, this command will effect all
+            following text lines until no line is found which is on the
+            same staff and has the same P3 position.
+
+               If n3 is not 0, it will set the vertical spacing of the lines.
+
+*
+                                                                           6/8
+RMJ n1 n2 n3 -- RMJ = set Right Margin and Justify the text between its
+                current P3 position and position n1.  The other features
+                of this command are the same as above.
+
+PT n -- This sets the type size of the text in terms of 'n' typography points.
+        (P7 will be set to 0, hence equal to P6.)
+        IMPORTANT: If the staff size is changed later, or if the text is moved
+        to a staff with a different size factor, the PT n command must be used
+        again in order to reset the desired point size.
+
+             Type PT alone to learn what the current point size is.
+
+
+LS n1 n2 n3 -- LS sets vertical line spacing.  In the simple form of this
+               command, n1 sets the space between text lines in terms of
+               vertical scale steps.  n2 is used to indicate how many lines
+               are to be involved.  If n2 is left at 0, then all lines in the
+               proper order, on the same staff, and in the same P3 position
+               will be respaced.  If n3 is set to 1, then only the first two
+               conditions above must be met.  All affected lines will be moved
+               to the same P3 position as the original line.
+
+
+*
+                                                                           7/8
+LSI, LSC, LSP  These work in the same way as LS except that the "I" will set
+               vertical spacing in inches, the "C" sets it in centimeters,
+               and the "P" sets it in typography points.
+
+               All lines altered by the use of LS will have their size factors
+               (P6, P7) set to the values found in the original text line.
+
+
+
+L,R,U,D -- The normal left-right-up-down edit letters may have a P added.
+           Thus, LP 20, moves text 20 points to the left, etc.
+           There are 72 points in an inch.
+
+    The above commands can sometimes alter many different items at once.  It
+    is generally a good idea to save the work (SA) before using such commands.
+
+
+
+
+
+
+
+
+*
+                                                                           8/8
+ --- Tabs ---
+
+Tabs may be set within a line of text by means of the following syntax:
+
+            aaaaa ~n1~bbbb cccc ~n2~dddd eeee  ~n3~.... etc.
+
+   The portion of the text string beginning with bbbb will start at the
+   horizontal position given as n1.  N2 sets the starting position of the
+   next part of the string, etc.  The given tab positions are unaffected by
+   changes to P3.  The tab positions can be changed only by means of the TX
+   command. The tab feature may be useful when setting up various columns
+   of text.
+
+
+
+Type ?T to get help on the various options when doing original text input.
+
+
+
+
+
+
+-------------------------------------------------------------------------end---
+.

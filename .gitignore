@@ -1,0 +1,10 @@
+*.zip
+.DS_Store
+__pycache__/
+tools/
+oracle/.venv/
+oracle/sandbox/
+rust/target/
+web/node_modules/
+web/dist/
+*:Zone.Identifier*

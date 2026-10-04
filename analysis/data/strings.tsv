@@ -1,0 +1,3386 @@
+0040bc18	0075f054	*** Adjusting stem to beam.
+0040db50	0075f1c8	Item         P5 =    
+0040db50	0075f198	Item 1234,  P5=123,           
+0040db50	0075f184	00.DRW  (P5=    )
+0040db50	0075f174	\scorlib\
+0040db50	0075f148	Replace      in LB0000.DRW
+0040db50	0075f134	\scorlib\LB9990.DRW
+0040db50	0075f128	binary
+0040db50	0075f128	binary
+0040db50	0075f10c	DELETE
+0040db50	0075f10c	DELETE
+0040db50	0075f174	\scorlib\
+0040db50	0075f128	binary
+0040db50	0075f128	binary
+0040db50	0075f174	\scorlib\
+0040db50	0075f0e4	unknown
+0040db50	0075f128	binary
+0040db50	0075f0e4	unknown
+0040db50	0075f128	binary
+0040f003	0075f2f4	ADD 0
+0040f003	0075f2f4	ADD 0
+0040f003	0075f28c	Type P#, chng,  P#, chng,  P#, chng,  P#, chng.
+0040f003	0078b160	p  +p  =if p2>=    and p2<=    and p3>=         and p3<=         and p1=   then  
+0040f003	0075f254	Exit Group Alter.
+0040f003	0075f238	Type Code number to alter.
+0041bc5a	0075f6b4	(1i3)
+0041bc5a	0075f6b4	(1i3)
+0041bc5a	0075f6a4	(1f7.2)
+0041bc5a	0075f6a4	(1f7.2)
+0041bc5a	0075f6a4	(1f7.2)
+0041bc5a	0075f6a4	(1f7.2)
+0041bc5a	0075f6b4	(1i3)
+0041bc5a	0075f6b4	(1i3)
+0041c3b8	0075f74c	ERROR
+0041c3b8	0075f74c	ERROR
+0041fab5	0075f868	\!tmp\
+00420e60	0075f868	\!tmp\
+00420e60	0075f878	ERROR - motive " " not found.
+00422d98	0075f9a8	1.25/
+00424a9f	0075fa80	\!tmp\
+00424a9f	0078e931	WHQEST
+00425722	0075fa88	Note/Rest mismatch.
+00425722	0075fa88	Note/Rest mismatch.
+004293f0	0078ea10	pizz.arcoa tempo8va8ba15macresc.dim.rit.accel.gliss.moltoespr.menopi>>usubitopocodecresc.rall.mossoG.P.                                                         B
+0042ad97	0078ed6e	0000.drw
+0042ad97	0078ed6e	0000.drw
+0042ad97	0075fcd4	binary
+0042ad97	0075fcd4	binary
+0042ad97	0075fc9c	 - Changed to clef.
+0042ad97	0078ed6e	0000.drw
+0042ad97	0075fc88	Code 9: lb0000.drw
+0042fa58	0075fef4	(1i4)
+0042fa58	0075fef4	(1i4)
+00432518	0076008c	\WINSCORE\SCORLIB\
+00432518	00760080	binary
+00432518	00760080	binary
+004359d0	0078f3b0	TREBASALTTENPERSOPMEZBARTDOTUOTUQBDOMINTABTB*NORPRWIENMKRHTRDODDCUSPASNOSTFLSHNADBACADNTDULORONSCHOFTM
+004359d0	0078f418	FCFFCSFCNW  AC TN STAWSTASTTNSDNBUPBHARFE ARSTHEMO IMOHW TR TRFTRSTRNPLUACTSO2SO3SO4FNGFG1FG2FG3FG4FG5FG6___
+004385a7	007603f0	Chord notes rhythms (P7) changed to      
+004385a7	007603c8	*** no rhythm changes made ***
+004385a7	007603c8	*** no rhythm changes made ***
+00439963	007604f8	*** Code 4 needs value in P5 or P6 ***
+0043d0b0	0078f78c	ADAUBESPCULOROBNPBTRNLNUFLTHTM
+0043d0b0	0078f7ac	ARCRDCDTDSHOLILBLALOLRRORBRASASPTHVIVEWIDODAXO
+0043f52f	007606dc	C:\!TMP\!savebeam.tmp
+0043f52f	007606d4	unknown
+0043f52f	007606cc	binary
+0043f52f	007606dc	C:\!TMP\!savebeam.tmp
+0043f52f	007606d4	unknown
+0043f52f	007606cc	binary
+00442800	007607d8	Cannot move or copy to same place.
+00442800	007607d8	Cannot move or copy to same place.
+00442800	007607cc	!!cpr.tmp
+00443b70	00760850	!!cut1.tmp
+00443b70	00760848	(1i1)
+00443b70	00760848	(1i1)
+00444745	007608d8	COMBINE.MUS
+00444745	007608c0	combine.mus
+00444745	007608a4	Reading file    
+00444745	00760894	File not found
+00444745	00760894	File not found
+00445143	0076097c	!!cut0.tmp
+00445143	007924dd	tmp  
+00445143	007924dd	tmp  
+00445143	0076096c	binary
+00445143	0076096c	binary
+00445143	0076091c	Area copied = 000  000.0  000.0  000
+00445143	00760914	(1i3)
+00445143	00760914	(1i3)
+00445143	00760914	(1i3)
+00445143	00760914	(1i3)
+00445143	007608fc	(1f5.1)
+00445143	007608fc	(1f5.1)
+00445143	007608fc	(1f5.1)
+00445143	007608fc	(1f5.1)
+0044586d	00760850	!!cut1.tmp
+0044586d	00760848	(1i1)
+0044586d	00760848	(1i1)
+0044586d	0076096c	binary
+0044586d	0076096c	binary
+0044586d	007609b8	File not found --> 
+0044586d	0076099c	Available PST numbers:
+0044586d	00760848	(1i1)
+0044586d	00760848	(1i1)
+00445fff	007609e4	Enter Staff number, Left position, Right position, (Upper staff)  or draw box.
+00448e00	00760b5c	\r\nThis file appears to include more than 1 system.\r\nDo you want to "decombine" all the input?
+0044b928	00760f00	*****
+0044b928	00760ed8	Drawing #
+0044b928	00760ea4	\nAre you sure you want to delete this library item?
+0044b928	00760e70	Type output file name. (Default = DRW.TMP)
+0044b928	00760e70	Type output file name. (Default = DRW.TMP)
+0044b928	00760e68	drw.tmp
+0044b928	00760e38	**** Jump/fill ****
+0044b928	00760e24	#### Jump ****
+0044b928	00760e24	#### Jump ****
+0044b928	00760e14	**** Jump ****
+0044b928	00760dc0	Drawing not saved --   continue to exit?***** Editing - 1234 Points
+0044b928	00760da4	**** Leaving Draw Mode ****
+0044b928	00760da4	**** Leaving Draw Mode ****
+0044b928	00760da4	**** Leaving Draw Mode ****
+0044b928	00760d88	**** Draw Mode ****
+0044b928	00760d34	Type input file name. (Default = DRW.TMP)
+0044b928	00760d34	Type input file name. (Default = DRW.TMP)
+0044b928	00760e68	drw.tmp
+0044b928	00760cec	1234 ***** Drawing - 1234 Points
+0044b928	00760cc0	Must do restart (RS) before using "DRAW."
+0044b928	00760cc0	Must do restart (RS) before using "DRAW."
+0044f600	00761058	Type Drawing number and name.
+0044f600	00761058	Type Drawing number and name.
+0044f600	0076103c	**** No number given, ****
+0044f600	00761030	#0000
+0044f600	00760fe0	\r\nNumbers 0 to 4999 are permanent library numbers.\r\nDo you wish to continue?
+0044f600	0078fabe	0000.drw
+0044f600	0078fabe	0000.drw
+0044f600	00760fb0	 exists. Do you want to replace it?
+0044f600	00760fa8	unknown
+0044f600	00760fa0	binary
+0044f600	00760fa8	unknown
+0044f600	00760fa0	binary
+0044f600	00760f68	**** Drawing saved ****
+00450f1b	0078fac8	  Number=      Name=           
+00452648	00761258	Moving selected points.
+00452648	00761258	Moving selected points.
+00452648	0076122c	Type numbers for size x, size y.
+00452648	0076122c	Type numbers for size x, size y.
+00452648	00761214	***** Editing *****    
+00452648	007611f0	**** Leaving Edit mode. ****
+00452648	007611a8	Move to 1st point, hit F4, then move to last point and hit F4.
+00452648	00761180	Moving selected points.  "X" = finish.
+004575c8	007613a8	Number of points per segment?
+004575c8	007613a8	Number of points per segment?
+004575c8	00761378	*** Must have more than 2 points.
+004575c8	00761378	*** Must have more than 2 points.
+004575c8	00761358	*** Too many points. Limit=50
+004575c8	00761358	*** Too many points. Limit=50
+004581be	007613cc	*** Can't locate curve markers
+004581be	007613cc	*** Can't locate curve markers
+0045bf90	00790914	\scor4\lib\                                                     
+0045bf90	00790914	\scor4\lib\                                                     
+0045bf90	00790914	\scor4\lib\                                                     
+0045bf90	00790914	\scor4\lib\                                                     
+0045bf90	00761588	Type 4-digit number -- last digit must be 0.
+0045bf90	0076157c	LB0000.DRW
+0045bf90	00761570	\scorlib\
+0045bf90	00761554	binary
+0045bf90	00761554	binary
+0045bf90	00761528	unknown
+0045bf90	00761554	binary
+0045bf90	00761528	unknown
+0045bf90	00761554	binary
+0045bf90	00761504	 Error or file not found. 
+0045bf90	00761504	 Error or file not found. 
+0045bf90	007614d0	File already exists - use a different number.
+0045bf90	00761480	Type complete path and file name of old .DRW file. <enter> = Cancel.
+0045d278	0076160c	Delete this file? -- 
+0045dc26	00761648	(1x,1a1,':\',1a60/' Type new directory name or <Enter> ->'$) 
+0045dc26	00761648	(1x,1a1,':\',1a60/' Type new directory name or <Enter> ->'$) 
+0045dc26	00761640	(1i2.2)
+0045dc26	00761640	(1i2.2)
+0045e1ee	007616e4	vsub.f90
+0045e1ee	007616e4	vsub.f90
+0045e1ee	00761688	New date in VSUB,F90 Recompile         
+0045ea40	00761940	*** Absolute size =         ||Staff size =     
+0045ea40	00761938	(1f7.2)
+0045ea40	00761938	(1f7.2)
+0045ea40	00761928	(1f5.2)
+0045ea40	00761928	(1f5.2)
+00469127	00761ca0	P26 =      
+0046d088	00761eb0	Cannot perform function until done editing current item.
+0046d088	00761eb0	Cannot perform function until done editing current item.
+0046d088	00761ea8	binary
+0046d088	00761ea8	binary
+0046d088	00761e48	*** Point size =       ||Staff size =     
+0046d088	00761e40	(1f7.2)
+0046d088	00761e40	(1f7.2)
+0046d088	00761e30	(1f5.2)
+0046d088	00761e30	(1f5.2)
+00470618	00761fb8	*** Can't do RM if any parameters have just been changed.
+00470618	00761fb8	*** Can't do RM if any parameters have just been changed.
+00470ea5	00762048	20000 2
+0047330a	0076216c	*** Nothing to RESTORE.
+0047330a	0076216c	*** Nothing to RESTORE.
+00475020	007622c4	binary
+00475020	007622cc	files.tmp
+00475020	007622c4	binary
+00475020	007622cc	files.tmp
+00475020	0076227c	unknown
+00475020	007622c4	binary
+00475020	0076227c	unknown
+00475020	007622c4	binary
+0047a276	00795090	PARTS
+0047a276	00795090	PARTS
+0047c3e8	00762450	*** end of beam out of range, or tremolo, or P7 rhythm >= 1. - Can't flip Item     
+0047c3e8	00762448	(1i4)
+0047c3e8	00762448	(1i4)
+0047dc96	007624cc	*** beam/note mismatch - can't flip Item     
+0047dc96	00762448	(1i4)
+0047dc96	00762448	(1i4)
+0047ec50	00762980	Q    
+0047ec50	00762970	~~114
+0047ec50	00762964	RESTO
+0047ec50	00762964	RESTO
+0047ec50	00762948	Cancel
+0047ec50	007628e8	UNDOPLA
+0047ec50	00762888	500 -1
+0047ec50	00762880	500 1
+0047ec50	0076282c	4 999
+0047ec50	007627f4	Cannot do UNDELETE while still in Edit Mode.
+0047ec50	007627f4	Cannot do UNDELETE while still in Edit Mode.
+0047ec50	007627a0	Move Left End -- P3/P4
+0047ec50	007627a0	Move Left End -- P3/P4
+0047ec50	00762788	Move Right End -- P5/P6
+0047ec50	00762788	Move Right End -- P5/P6
+0047ec50	0076276c	Move All 
+0047ec50	0076276c	Move All 
+0047ec50	00762750	Arrow Move by        
+0047ec50	00762748	(1f7.2)
+0047ec50	00762748	(1f7.2)
+0047ec50	00762728	IN* Leaving Group Edit.
+0047ec50	00762704	New items will go direct to edit.
+0047ec50	00762704	New items will go direct to edit.
+0047ec50	007626dc	New items will NOT go direct to edit.
+0047ec50	007626dc	New items will NOT go direct to edit.
+0047ec50	007626c0	Freeze Screen Position
+0047ec50	007626a4	Unfreeze Screen Position
+0047ec50	00762650	PAUS 
+0047ec50	00762650	PAUS 
+0047ec50	00762650	PAUS 
+0047ec50	00762650	PAUS 
+0047ec50	00762624	ALL PAUSSTOPPLAYEXITNB 
+0047ec50	00762624	ALL PAUSSTOPPLAYEXITNB 
+0047ec50	00762684	(1i5)
+0047ec50	00762684	(1i5)
+0047ec50	007625e4	delete
+0047ec50	007625e4	delete
+0047ec50	007625b8	--> Forward Direction = STRING
+0047ec50	007625b8	--> Forward Direction = STRING
+0047ec50	007625ac	<-- Back 
+0047ec50	007625ac	<-- Back 
+0047ec50	007625a0	Printed: 
+004861bc	007629b0	(1i7)
+004861bc	007629b0	(1i7)
+00486214	007629c0	File = 
+00488567	00762bc8	Q    
+00488a8d	00762c24	000.mus
+00488a8d	00762c24	000.mus
+0048ecfb	00762cd4	(1f5.2)
+0048ecfb	00762cd4	(1f5.2)
+0048ecfb	00762cb4	(1i2)
+0048ecfb	00762cb4	(1i2)
+0048ecfb	00762cd4	(1f5.2)
+0048ecfb	00762cd4	(1f5.2)
+0048ecfb	00762c90	(1i4)
+0048ecfb	00762c90	(1i4)
+0048ecfb	00762c84	(1i1)
+0048ecfb	00762c84	(1i1)
+0048ecfb	00762c74	(1f5.1)
+0048ecfb	00762c74	(1f5.1)
+0048ecfb	00762c64	(1f7.2)
+0048ecfb	00762c64	(1f7.2)
+0048ecfb	00762c64	(1f7.2)
+0048ecfb	00762c64	(1f7.2)
+0048ecfb	00762c4c	(1f8.1)
+0048ecfb	00762c4c	(1f8.1)
+0048ecfb	00762c30	Move All 
+0048ecfb	00762c30	Move All 
+0048f4eb	00762c90	(1i4)
+0048f4eb	00762c90	(1i4)
+0049095a	00762d80	/2 -4
+0049095a	00762d74	/2 -3
+0049095a	00762d68	/2 -2
+0049095a	00762d5c	/2 -1
+00494302	00762f94	Normalize Stem Directions.
+00494302	00762f68	Flip Stems, etc. Up.Flip Stems, etc. Down.
+00494302	00762f50	Adjust Stems to Beams.
+00494302	00762f30	To set default Slur curvature:
+00494302	00762ed4	\r\nEnter Staff number, Left position, Right position, Top staff\r\n-- or Draw Box.
+00494302	00762eac	Flip Stems, etc. to Opposite Direction.
+00494302	00762e64	\r\nEnter Staff number, Left position, Right position \r\n-- or Draw Box.
+00494c38	007630c0	Type a number for staff offset.
+00494c38	007630c0	Type a number for staff offset.
+00494c38	0076309c	c:\\!tmp\\!last!.tmp
+00494c38	00763094	unknown
+00494c38	00763094	unknown
+00495d4f	00763178	(saved - 1234 Items) 
+00495d4f	00763154	* (not saved - 0000 Items) 
+00495d4f	00763100	 <Letter>
+00496aee	007631e0	No file name given.
+00496aee	007631e0	No file name given.
+00496aee	007631c4	   -- Add .MUS extension?
+00496aee	007631b0	File saved:  
+0049712c	007631f8	C:\!TMP\!save.tmp
+0049712c	007631f8	C:\!TMP\!save.tmp
+00497f00	007632b4	Reading - 
+00497f00	0076329c	Error opening file.
+00498826	007632ec	binary
+00498826	007632ec	binary
+00498bf0	00763384	2     3          4        
+00498bf0	00763370	(1i3)
+00498bf0	00763370	(1i3)
+00498bf0	00763360	(1f8.3)
+00498bf0	00763360	(1f8.3)
+00498bf0	00763350	(1f7.3)
+00498bf0	00763350	(1f7.3)
+00498bf0	00763350	(1f7.3)
+00498bf0	00763350	(1f7.3)
+00498bf0	00763350	(1f7.3)
+00498bf0	00763350	(1f7.3)
+00498bf0	00763318	(1i4)
+00498bf0	00763318	(1i4)
+00498bf0	00763318	(1i4)
+00498bf0	00763318	(1i4)
+00498bf0	00763318	(1i4)
+00498bf0	00763318	(1i4)
+0049eae0	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+0049eae0	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+004a1240	0079182c	M C DELJLIJ TREDCTCPSTJTMUMD
+004a1240	007637b8	Enter Staff#, Left pos., Right pos., [Upper Staff#] -- or Draw Box.
+004a1240	007636f0	Enter Staff number, Left position, Right position, and upper staff num. -- or draw box.
+004a1240	007636ac	Enter Staff number, Left position, Right position, -- or draw box.
+004a1240	00763660	Enter Lowest Staff# of system and how many staves in system - or Draw Box.
+004a1240	0079182c	M C DELJLIJ TREDCTCPSTJTMUMD
+004a1240	0079182c	M C DELJLIJ TREDCTCPSTJTMUMD
+004a217d	00763854	Select Code Numbers to DELETE.
+004a217d	0076383c	Nothing to do.
+004a217d	0076383c	Nothing to do.
+004a217d	007637b8	Enter Staff#, Left pos., Right pos., [Upper Staff#] -- or Draw Box.
+004a30bb	007638a8	Source Box O.K.? -      
+004a30bb	0076388c	Destination Box O.K.? - 
+004a3f10	00763994	G C:\!tmp\!save.tmp
+004a3f10	00763958	TYPE 
+004a4ae3	00763a00	\!last!.tmp
+004a5d09	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+004a5f84	00763a6c	(1i8)
+004a5f84	00763a6c	(1i8)
+004a60d6	00763a78	(1f11.4)
+004a60d6	00763a78	(1f11.4)
+004a6730	00763c04	C:\winscore\scorlib\PREF.DAT
+004a6730	00763b8c	C:\Program Files (x86)\winscore\scorlib\PREF.DAT
+004a6730	00763b8c	C:\Program Files (x86)\winscore\scorlib\PREF.DAT
+004a6730	00763b7c	\hlp\whlp.chm
+004a6adc	00763c2c	0.00-beta    
+004a6adc	00763c2c	0.00-beta    
+004a6baa	00763c4c	start
+004a6f47	00763c80	lb*.drw
+004a7440	00763d3c	\scorlib\WSCORE.DAT
+004a7440	00763d24	\scorlib\CODE9.DAT
+004a7440	00763d10	\scorlib\GUITAR.DAT
+004a7440	007921c0	                                                                                                                                METRINCHBEAMBMTHRESTDASHMIDKPROCSETSTIESDYNASLURAFTCAFTBAFTKAFTMXDASSYMBFONTVER PAPEIDSCADOBARROFULLPRNTTXTDEDPTNSLR
+004a7440	00763cf8	\scorlib\PREF.DAT
+004a7440	007921c0	                                                                                                                                METRINCHBEAMBMTHRESTDASHMIDKPROCSETSTIESDYNASLURAFTCAFTBAFTKAFTMXDASSYMBFONTVER PAPEIDSCADOBARROFULLPRNTTXTDEDPTNSLR
+004a7440	007921c0	                                                                                                                                METRINCHBEAMBMTHRESTDASHMIDKPROCSETSTIESDYNASLURAFTCAFTBAFTKAFTMXDASSYMBFONTVER PAPEIDSCADOBARROFULLPRNTTXTDEDPTNSLR
+004a7440	00763cb8	Type last 4 digits of Serial Number on disk.
+004a7440	00763cb8	Type last 4 digits of Serial Number on disk.
+004a7da8	00763d54	SCORE.MUS
+004a7da8	00763d54	SCORE.MUS
+004a7da8	00763d54	SCORE.MUS
+004a830b	00763d98	\scorlib\
+004a830b	00763d8c	\fontlib\
+004a94ff	0078dccc	\\computer\printer                                                                                                              
+004a94ff	0078dccc	\\computer\printer                                                                                                              
+004a94ff	00763e88	C:\PROGRAM FILES (X86)\WINSCORE\SCORLIB\PREF.DAT
+004a94ff	00763e88	C:\PROGRAM FILES (X86)\WINSCORE\SCORLIB\PREF.DAT
+004a94ff	00763e4c	C:\PROGRAM FILES\WINSCORE\SCORLIB\
+004a94ff	00763e20	C:\PROGRAM FILES (X86)\WINSCORE\SCORLIB\
+004a94ff	00763de4	C:\PROGRAM FILES\WINSCORE\FONTLIB\
+004a94ff	00763db8	C:\PROGRAM FILES (X86)\WINSCORE\FONTLIB\
+004a94ff	0078dccc	\\computer\printer                                                                                                              
+004a94ff	0078dccc	\\computer\printer                                                                                                              
+004aac7d	0079218e	INCHESMETRIC
+004aac7d	00763f24	\computer\printer
+004abc64	007921c0	                                                                                                                                METRINCHBEAMBMTHRESTDASHMIDKPROCSETSTIESDYNASLURAFTCAFTBAFTKAFTMXDASSYMBFONTVER PAPEIDSCADOBARROFULLPRNTTXTDEDPTNSLR
+004abc64	007921c0	                                                                                                                                METRINCHBEAMBMTHRESTDASHMIDKPROCSETSTIESDYNASLURAFTCAFTBAFTKAFTMXDASSYMBFONTVER PAPEIDSCADOBARROFULLPRNTTXTDEDPTNSLR
+004abc64	0079218e	INCHESMETRIC
+004abc64	00763f24	\computer\printer
+004ac54f	00763fa8	C:\Program Files (x86)\winscore\scorlib\lb0000.drw
+004ac54f	00763f78	C:\Program Files\winscore\scorlib\lb0000.drw
+004ac54f	00763f58	C:\winscore\scorlib\lb0000.drw
+004ac7fb	00764028	C:\Program Files (x86)\winscore\fontlib\fm00.fmt
+004ac7fb	00763ffc	C:\Program Files\winscore\fontlib\fm00.fmt
+004ac7fb	00763fdc	C:\winscore\fontlib\fm00.fmt
+004aca90	00764130	SYMB  C:\WINSCORE\SCORLIB\
+004aca90	00764104	SYMB  C:\PROGRAM FILES\WINSCORE\SCORLIB\
+004aca90	007640d4	SYMB  C:\PROGRAM FILES (x86)\WINSCORE\SCORLIB\
+004aca90	007640b8	FONT  C:\WINSCORE\FONTLIB\
+004aca90	0076408c	FONT  C:\PROGRAM FILES\WINSCORE\FONTLIB\
+004aca90	0076405c	FONT  C:\PROGRAM FILES (x86)\WINSCORE\FONTLIB\
+004acee1	00764154	Path missing.
+004acee1	00764154	Path missing.
+004afb68	007643f8	text or Enter Staff#, Left pos., Right pos., Upper Staff# -- or Draw Box.
+004afb68	007643b4	Click on Staff for input.  X = exit.
+004afb68	0076437c	Invisible items are visible on screen.
+004afb68	00764350	Invisible items are NOT visible on screen.
+004b041d	00764598	(p2>=   \ p2<=    \ p3>=     \ p3<=      ) 
+004b041d	00764590	(1i3)
+004b041d	00764590	(1i3)
+004b041d	00764590	(1i3)
+004b041d	00764590	(1i3)
+004b041d	00764578	(1f6.2)
+004b041d	00764578	(1f6.2)
+004b041d	00764578	(1f6.2)
+004b041d	00764578	(1f6.2)
+004b041d	00764550	p1=18
+004b041d	0076453c	,p5=12
+004b041d	007644fc	P11=-99
+004b041d	007644f4	P11=-98
+004b041d	007644ec	P26=0
+004b041d	007644b0	binary
+004b041d	007644b0	binary
+004b041d	0076445c	Area copied = 000  000.0  000.0  000
+004b041d	00764590	(1i3)
+004b041d	00764590	(1i3)
+004b041d	00764590	(1i3)
+004b041d	00764590	(1i3)
+004b041d	00764450	(1f5.1)
+004b041d	00764450	(1f5.1)
+004b041d	00764450	(1f5.1)
+004b041d	00764450	(1f5.1)
+004b3e1e	007645fc	IF P2>    AND P2<    AND P3>       AND P3<       AND 
+004b3e1e	00764590	(1i3)
+004b3e1e	00764590	(1i3)
+004b3e1e	00764590	(1i3)
+004b3e1e	00764590	(1i3)
+004b3e1e	00764578	(1f6.2)
+004b3e1e	00764578	(1f6.2)
+004b3e1e	00764578	(1f6.2)
+004b3e1e	00764578	(1f6.2)
+004b3fe8	00764648	*** Closing " missing. ***
+004b3fe8	00764648	*** Closing " missing. ***
+004b3fe8	00764634	*** Missing " ***
+004b3fe8	00764634	*** Missing " ***
+004b3fe8	00764648	*** Closing " missing. ***
+004b3fe8	00764648	*** Closing " missing. ***
+004b5db0	00764768	*** Not enough space to justify ideally. ||Needed=         , Available=         
+004b5db0	00764760	(1f9.3)
+004b5db0	00764760	(1f9.3)
+004b5db0	00764760	(1f9.3)
+004b5db0	00764760	(1f9.3)
+004b7ad8	0076491c	c:\\!tmp\\!last!.tmp
+004b7ad8	007648cc	**** Click on text to be justified. ****
+004b7ad8	00764878	Enter Lowest Staff# of system and how many staves in system - or Draw Box.
+004b93f2	00764988	(1i3)
+004b93f2	00764988	(1i3)
+004b93f2	00764988	(1i3)
+004b93f2	00764988	(1i3)
+004b9c10	00764aa8	 ****** nbar OVERFLOW >200 ******
+004b9c10	00764aa8	 ****** nbar OVERFLOW >200 ******
+004b9c10	00764a74	Line lengths: Average=     Minimum=     Maximum=   
+004b9c10	00764a6c	(1i3)
+004b9c10	00764a6c	(1i3)
+004b9c10	00764a6c	(1i3)
+004b9c10	00764a6c	(1i3)
+004b9c10	00764a6c	(1i3)
+004b9c10	00764a6c	(1i3)
+004b9c10	00792533	4,0x69a1,1i3)
+004b9c10	00792533	4,0x69a1,1i3)
+004b9c10	00792533	4,0x69a1,1i3)
+004b9c10	00792533	4,0x69a1,1i3)
+004b9c10	00792533	4,0x69a1,1i3)
+004b9c10	00792533	4,0x69a1,1i3)
+004b9c10	00764a6c	(1i3)
+004b9c10	00764a6c	(1i3)
+004b9c10	007649d0	 XXXXYYYYZZZZAAAABBBBCCCC --XXXXYYYYZZZZAAAABBBBCCCC ****XXXXYYYYZZZZAAAABBBB
+004c04fb	007925e0	TRBAALTEPR
+004c2912	00792619	WHQESG
+004c2912	00764d44	**** Input error ****               +
+004c2912	00764d44	**** Input error ****               +
+004c9510	00764fd0	Staff --- has --.--- beats
+004c9510	00764fc8	(1i3)
+004c9510	00764fc8	(1i3)
+004c9510	00764fb8	(1f6.3)
+004c9510	00764fb8	(1f6.3)
+004c9510	00764f94	\r\n\r\nType X to exit.
+004c9510	00764f08	*** ERROR: Wrong number of beats *** ||Staff --- has --.--- beats ||Staff --- has --.--- beats
+004c9510	00764fc8	(1i3)
+004c9510	00764fc8	(1i3)
+004c9510	00764fb8	(1f6.3)
+004c9510	00764fb8	(1f6.3)
+004c9510	00764fc8	(1i3)
+004c9510	00764fc8	(1i3)
+004c9510	00764fb8	(1f6.3)
+004c9510	00764fb8	(1f6.3)
+004ccf20	00765200	Leaving Batch Printing.
+004ccf20	00765200	Leaving Batch Printing.
+004ccf20	007651a4	File or Device Open Error =    
+004ccf20	0076518c	unknown
+004ccf20	0076518c	unknown
+004ccf20	00765174	%%Pages: 
+004ccf20	0076516c	(1i3)
+004ccf20	0076516c	(1i3)
+004ccf20	0076512c	(1i5)
+004ccf20	0076512c	(1i5)
+004ccf20	0076512c	(1i5)
+004ccf20	0076512c	(1i5)
+004ccf20	0076512c	(1i5)
+004ccf20	0076512c	(1i5)
+004ccf20	0076512c	(1i5)
+004ccf20	0076512c	(1i5)
+004ccf20	0076518c	unknown
+004ccf20	007650d4	PSFNAMES.TMPX
+004ccf20	007650b0	Error opening temp. font name file.
+004ccf20	007650b0	Error opening temp. font name file.
+004d09d8	00765330	.EPSEPS
+004d09d8	00765310	Output must be to .EPS file.
+004d09d8	00765310	Output must be to .EPS file.
+004d0bf5	0078dccc	\\computer\printer                                                                                                              
+004d0bf5	0078dccc	\\computer\printer                                                                                                              
+004d0bf5	00765330	.EPSEPS
+004d0bf5	0078dccc	\\computer\printer                                                                                                              
+004d0bf5	0078dccc	\\computer\printer                                                                                                              
+004d0bf5	00765368	Letter (default)
+004d0bf5	00765368	Letter (default)
+004d0bf5	0078dccc	\\computer\printer                                                                                                              
+004d0bf5	0078dccc	\\computer\printer                                                                                                              
+004d19df	00765470	PRINT.SCR               
+004d19df	00765470	PRINT.SCR               
+004d19df	0076544c	*** File not found. ***
+004d19df	0076544c	*** File not found. ***
+004d19df	007653e0	Error reading file.
+004d19df	007653e0	Error reading file.
+004d19df	0078dccc	\\computer\printer                                                                                                              
+004d19df	0078dccc	\\computer\printer                                                                                                              
+004d19df	0078dccc	\\computer\printer                                                                                                              
+004d19df	0078dccc	\\computer\printer                                                                                                              
+004d19df	00793a1c	EPSLPTNET
+004d19df	007653c4	INCHES
+004d19df	007653bc	METRIC
+004d54b8	007655ec	binary
+004d54b8	007655ec	binary
+004d54b8	007655a8	delete
+004d54b8	007655a8	delete
+004d54b8	00765594	DIRECT
+004d54b8	0076558c	BINARY
+004d54b8	00765594	DIRECT
+004d54b8	0076558c	BINARY
+004d54b8	00765548	Error opening temp. font name file.
+004d54b8	00765548	Error opening temp. font name file.
+004d6318	0076576c	Leaving Batch Printing.
+004d6318	0076576c	Leaving Batch Printing.
+004d6318	00765750	unknown
+004d6318	00765750	unknown
+004d6318	00765700	(1i5)
+004d6318	00765700	(1i5)
+004d6318	00765700	(1i5)
+004d6318	00765700	(1i5)
+004d6318	00765700	(1i5)
+004d6318	00765700	(1i5)
+004d6318	00765700	(1i5)
+004d6318	00765700	(1i5)
+004d6318	00765750	unknown
+004d6318	007656a4	PSFNAMES.TMPX
+004d6318	00765680	Error opening temp. font name file.
+004d6318	00765680	Error opening temp. font name file.
+004d6318	0076566c	Printing to file - 
+004d6318	00765658	Printing to LPT1.
+004d6318	00765658	Printing to LPT1.
+004d6318	00765638	File or Device Open Error =    
+004d9ea0	00794736	TEQHWDRX.
+004d9ea0	00794736	TEQHWDRX.
+004dce58	00794784	TRBAALTEPR
+004de270	00765d30	/2  4       /PR         /TE         /AL         /BA         /TR         /K1F        ^
+004de270	00765d30	/2  4       /PR         /TE         /AL         /BA         /TR         /K1F        ^
+004de270	00765cf0	/CUT        /COM        /3  16      /12 16      /12 8       8
+004de270	00765cf0	/CUT        /COM        /3  16      /12 16      /12 8       8
+004de270	00765ccc	Middle C is shifted    octave(s).
+004de270	00765bc0	**** Type Notes, etc. ****
+004de270	00765bc0	**** Type Notes, etc. ****
+004e2cc8	0079490d	MOPRSTXZ-.Q=
+004e5988	00765f9c	unknown
+004e5988	00765f9c	unknown
+004e5988	00794af0	NOTES RHYTHMMARKS BEAMS SLURS 
+004e5988	00794af0	NOTES RHYTHMMARKS BEAMS SLURS 
+004e5988	00794b10	.MOT.MRH.MRK.MBM.MSL.MOT.MRH.MRK.MBM.MSL
+004e5988	00794b10	.MOT.MRH.MRK.MBM.MSL.MOT.MRH.MRK.MBM.MSL
+004e5988	00765f38	type C:\!tmp\msee.tmp
+004e620c	00765fe8	\!TMP\
+004e620c	00765fc4	error
+004e79d2	00766064	Text not found.
+004e79d2	00766064	Text not found.
+004e7f79	0076614c	Cannot move or copy to same place.
+004e7f79	0076614c	Cannot move or copy to same place.
+004e7f79	0076610c	Enter Bottom Staff# of New System -- or Draw Box.
+004e7f79	007660c0	Enter Lowest Staff# of system and how many staves in system - or Draw Box.
+004e8642	007661e0	abcd\n1234
+004e8642	00766180	Macro file =                         
+004e8adf	007661ec	#MUSDIR#.TMP not found.
+004e8adf	007661ec	#MUSDIR#.TMP not found.
+004ea5ef	00794c2c	AFMPFBPFMFMTCPPF90DATRC H  DRWDLLEPSEXEDATINLLIBPDFFOROBJTXTMIDWAVBASBMPHTMJPGTIF
+004ea5ef	0076629c	binary
+004ea5ef	0076629c	binary
+004ea5ef	0076629c	binary
+004ea5ef	0076629c	binary
+004ebd10	00766350	*** missing rhythm (P7) - Item     
+004ebd10	00766348	(1i4)
+004ebd10	00766348	(1i4)
+004f3db0	00766620	(1i4)
+004f3db0	00766620	(1i4)
+004f3db0	00766618	 items.
+004f3db0	0076660c	NOPRO
+004f3db0	007665f8	*** NOPRO on ***
+004f3db0	007665e4	*** NOPRO off ***
+004f4889	0076666c	** NAME is blank. ***
+004f4889	0076666c	** NAME is blank. ***
+004f4f54	00794f80	ZZZ9999ZAAA0000AZZZZZ9Z9999999Z9ZZ9Z9Z9ZAAAAA0A0000000A0AA0A0A0A
+004f5268	007666b0	(1i3)
+004f5268	007666b0	(1i3)
+004f65a8	0076675c	(1i1)
+004f65a8	0076675c	(1i1)
+004f65a8	00766750	(1i2)
+004f65a8	00766750	(1i2)
+004f65a8	00766744	(1i3)
+004f65a8	00766744	(1i3)
+004f65a8	00766750	(1i2)
+004f65a8	00766750	(1i2)
+004f65a8	00766734	(1i4)
+004f65a8	00766734	(1i4)
+004f65a8	00766728	(1i5)
+004f65a8	00766728	(1i5)
+004f65a8	00766714	(1i3.3)
+004f65a8	00766714	(1i3.3)
+004f8d48	007668fc	***** PAGE LAYOUT *****
+004f8d48	007668fc	***** PAGE LAYOUT *****
+004f8d48	007668e0	***** PART EXTRACTION *****
+004f8d48	007668e0	***** PART EXTRACTION *****
+004f8d48	00795090	PARTS
+004f8d48	007668bc	DECAA.TMP        
+004f8d48	007668b0	files.tmp
+004f8d48	007668a8	unknown
+004f8d48	007668b0	files.tmp
+004f8d48	007668a8	unknown
+004f8d48	00766890	delete
+004f8d48	00766890	delete
+004f8d48	007668a8	unknown
+004f8d48	007668a8	unknown
+004f8d48	00766890	delete
+004f8d48	00766890	delete
+004f8d48	00766878	pts2.tmppts.tmp
+004f8d48	007668a8	unknown
+004f8d48	00766878	pts2.tmppts.tmp
+004f8d48	007668a8	unknown
+004f8d48	00766890	delete
+004f8d48	00766890	delete
+004f8d48	0076685c	**** Leaving Page Layout
+004f9e92	00766934	.MUS 
+004f9e92	0076692c	error
+004faa2c	00766988	Found duplicate staff   , should be deleted.
+004fb990	00766b7c	\scorlib\wpage.prf
+004fb990	00766b6c	BARS.TMP
+004fb990	00766b7c	\scorlib\wpage.prf
+004fb990	00766b0c	unknown
+004fb990	00766b0c	unknown
+004fb990	00766a88	Wrong number of bars.    /    needed.
+004fb990	00766a6c	File not found -> 
+004fb990	00766a60	BARS.TMP
+004ff387	00766a88	Wrong number of bars.    /    needed.
+004ff46b	00766bb0	bars-page
+004ff46b	00766bb0	bars-page
+00501a98	00795530	AA.PAG
+00501a98	00766cbc	Type output file name.
+00501a98	00766cbc	Type output file name.
+00501a98	00766c94	Extension ".PAG" added to output name.
+00501a98	00766c94	Extension ".PAG" added to output name.
+00501a98	00766c80	Replace file 
+00501a98	00766c68	New name
+00501a98	00766c68	New name
+00502575	00766d54	unknown
+00502575	00766d4c	binary
+00502575	00766d54	unknown
+00502575	00766d4c	binary
+00502575	00766d54	unknown
+00502575	00766d54	unknown
+00502575	00766d54	unknown
+00502575	00766d18	unformatted
+00502575	00766d54	unknown
+00502575	00766d18	unformatted
+0050290d	00766d90	 Page --    ~~
+0050290d	00766d80	T"***
+00502d0b	00766d80	T"***
+005069a0	00766f04	c:\!tmp\wscmidi.mid
+005069a0	00766edc	No Notes Found.
+005069a0	00766edc	No Notes Found.
+005077a2	00766f3c	Missing rhythm (P7): Item=    ,  Staff=   ,  Pos.=      \n\rRhythm changed to whole note.
+005091eb	00766ff0	midilist
+005091eb	00766ff0	midilist
+005091eb	00795784	CHNINSAMPTRN
+005091eb	00795784	CHNINSAMPTRN
+005091eb	00795784	CHNINSAMPTRN
+0050a650	0076703c	Code 15 -- 
+0050b0c2	007670b0	No Name
+0050b0c2	00767090	\WINSCORE\SCORLIB\
+0050bea3	0076713c	File not found:
+0050bea3	00795b80	%BoundingBox
+0050bea3	00795b80	%BoundingBox
+0050bea3	007670f8	(atend)
+0050bea3	007670f8	(atend)
+0050bea3	00795b80	%BoundingBox
+0050bea3	00795b80	%BoundingBox
+0050d078	0076723c	Enter lowest staff # of system and how many staves in system.
+0050d078	0076723c	Enter lowest staff # of system and how many staves in system.
+0050d078	00767204	 Type Code number.         
+0050d078	007671f8	 0 = all.
+0050d078	007671f8	 0 = all.
+0050d078	007671b8	Enter Staff number, Left position, Right position or draw box.
+0050d078	007671b8	Enter Staff number, Left position, Right position or draw box.
+0050d078	007671a0	Draw Box with Mouse ***
+0050d706	007672d0	*** No Staff number given. ***
+0050e830	00767434	\r\n         bars,         beats.
+0050e830	00767434	\r\n         bars,         beats.
+0050f8ec	00767484	BARS.TMP        
+00510430	007674b8	Enter Staff#, Left pos., Right pos., [Upper Staff#] -- or Draw Box.
+00510b90	007675c0	Some items already on other page.
+00510b90	007675c0	Some items already on other page.
+00510b90	007675a4	saved for PGMAKEDIR
+00510b90	007675a4	saved for PGMAKEDIR
+00510b90	00796648	NOTE REST CLEF LINE SLUR BEAM TRILLSTAFFMISC NUMB LIBRYCIRCLDUMMYBARS POST WORD KSIG METER
+00510b90	00796648	NOTE REST CLEF LINE SLUR BEAM TRILLSTAFFMISC NUMB LIBRYCIRCLDUMMYBARS POST WORD KSIG METER
+00510b90	00767594	!path.tmp
+00510b90	00767594	!path.tmp
+00510b90	00767560	Path = 
+00510b90	00767520	Must do restart (RS) before using "PAGE LAYOUT or PARTS."
+00510b90	00767520	Must do restart (RS) before using "PAGE LAYOUT or PARTS."
+00512009	007675f8	Output to file - 
+00512009	007675e8	Output to LPT1.
+0051210f	0076760c	TYPE PMXFile written:
+005147b8	00767768	parts
+005147b8	00795090	PARTS
+005147b8	00795090	PARTS
+005147b8	00767748	AAAAA.TMP
+005147b8	00767734	pts.tmp
+005147b8	0076772c	binary
+005147b8	00767734	pts.tmp
+005147b8	0076772c	binary
+005147b8	00767734	pts.tmp
+005147b8	0076772c	binary
+005147b8	00767734	pts.tmp
+005147b8	0076772c	binary
+005147b8	007676ec	Inst.#     
+005147b8	007676b0	pts2.tmpInstrument #     not found in some system. 
+005147b8	0076772c	binary
+005147b8	007676b0	pts2.tmpInstrument #     not found in some system. 
+005147b8	0076772c	binary
+005147b8	007676b0	pts2.tmpInstrument #     not found in some system. 
+005147b8	0076772c	binary
+005147b8	007676b0	pts2.tmpInstrument #     not found in some system. 
+005147b8	0076772c	binary
+005147b8	007676b0	pts2.tmpInstrument #     not found in some system. 
+005147b8	0076772c	binary
+005147b8	007676b0	pts2.tmpInstrument #     not found in some system. 
+005147b8	0076772c	binary
+005147b8	007676b0	pts2.tmpInstrument #     not found in some system. 
+005147b8	0076772c	binary
+005147b8	007676b0	pts2.tmpInstrument #     not found in some system. 
+005147b8	0076772c	binary
+00518448	007677d4	*** Hit enter to continue.
+00518448	007677d4	*** Hit enter to continue.
+00519c38	007676ec	Inst.#     
+0051cf40	00767aa4	Mismatch --    rhythms,    needed.
+0051cf40	00767a14	 *** Mismatch - Spacing Staff has        Quarter Notes.\nQuarter Notes on this staff =       
+00522bd8	00767cec	RESTO
+00522bd8	00767cec	RESTO
+00522bd8	00767cb0	*** Nothing to REDO.
+00522bd8	00767cb0	*** Nothing to REDO.
+00522bd8	00767ca0	!redo!.tmp
+00522bd8	00767c7c	No file name given after "RE"
+00522bd8	00767c7c	No file name given after "RE"
+00522bd8	00767c6c	\!read!.tmp
+00522bd8	00767c60	unknown
+00522bd8	00767c60	unknown
+00522bd8	00767c18	Reading:                              
+00522bd8	00767c6c	\!read!.tmp
+00522bd8	00767c60	unknown
+00522bd8	00767c60	unknown
+00524678	00767d60	-- Add bar lines?
+005259e5	00767d9c	*** Syntax Error ***  
+00526042	00767e24	SP   
+00526042	00767e08	Spacing staff =    
+00526042	00767ddc	*** No rhythms on spacing staff.
+00526042	00767ddc	*** No rhythms on spacing staff.
+00526451	00767e7c	input.tmp               File exists - write over file? (Y/N) >
+00526451	00767e7c	input.tmp               File exists - write over file? (Y/N) >
+00526451	00767e2c	Error writing file
+00526451	00767e2c	Error writing file
+0052789c	00796d38	TSTETQTHDWHQEST
+00529628	00767ff8	*** Input data error.    ***  
+00529628	00796ddc	 ***Error writing file:                                                                                                         
+00529628	00767fb4	!SAVE
+00529628	00767f9c	Getting Backup of     
+00529628	00767f80	Error opening file-> 
+00529628	00767f50	*** This is NOT a SCORE file. ***  
+0052b61a	00768094	C:\!tmp\!history.tmp:
+0052b61a	00768094	C:\!tmp\!history.tmp:
+0052b61a	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0052b61a	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0052b61a	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0052b61a	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0052b61a	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0052b61a	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0052b61a	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0052b61a	00768094	C:\!tmp\!history.tmp:
+0052b61a	00768094	C:\!tmp\!history.tmp:
+0052b61a	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0052b61a	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0052c6a0	00768240	Set Input Space for Staff 123
+0052c6a0	007681a4	E = Edit these lines of input. \r\nS = Save these lines of input to a file. \r\nX = Exit from input mode.
+0052c6a0	00768158	Continue Input on Staff 123 ?
+0052c6a0	00768148	IN    
+0052e0a3	007683bc	Type Pos. 1, Pos. 2 >\r\n(Default = 2, 200)
+0052e0a3	00768388	Type Notes, Rest, Clefs, etc.  Semicolon = end. >
+0052e0a3	00768364	*** No notes/rests given. ***
+0052e0a3	00768364	*** No notes/rests given. ***
+0052e0a3	0076834c	Type       Rhythms >
+0052e0a3	00768318	Type Mark letter(s) and note numbers . . . >
+0052e0a3	007682f0	Type pairs of numbers for Beams >
+0052e0a3	007682c8	Type pairs of numbers for Slurs >
+0052e0a3	007682ac	No MIDI for input.
+0052e0a3	007682ac	No MIDI for input.
+0052f62e	0076842c	!abandon.tmp
+0052f62e	00768424	unknown
+0052f62e	0076841c	binary
+0052f62e	0076842c	!abandon.tmp
+0052f62e	00768424	unknown
+0052f62e	0076841c	binary
+00530dd8	00768564	E = Edit these lines of input. \r\nS = Save these lines of input to a file. \r\nX = Exit from input mode.
+00530dd8	00768538	*** Leaving input ***
+00530dd8	00768538	*** Leaving input ***
+0053174c	0076874c	Set input staff. >
+0053174c	00768728	No MIDI for input.
+0053174c	00768728	No MIDI for input.
+0053174c	007686e8	Type Pos. 1, Pos. 2 -- (Default = 2, 200)
+0053174c	007686b8	Type Notes, Rest, Clefs, etc. Semicolon=end. >
+0053174c	00768694	*** No notes/rests given. ***
+0053174c	00768694	*** No notes/rests given. ***
+0053174c	0076867c	Type       Rhythms >
+0053174c	0076863c	Type Mark letter(s) and note numbers . . . >
+0053174c	00768614	Type pairs of numbers for Beams >
+0053174c	007685ec	Type pairs of numbers for Slurs >
+00537938	007689e0	Leaving Batch Printing.
+00537bb4	00768a1c	print
+00538550	00768ae4	*** Code 7 needs value in P6 ***
+0053ec10	00768c50	Spacing staff OFF.
+0053ec10	00768c0c	Items found on staff    . Can't proceed.
+0053fc37	00768d64	Cannot re-edit counterpoint. See "SEPX" in Help.
+0053fc37	00768d64	Cannot re-edit counterpoint. See "SEPX" in Help.
+0054061d	00768dc0	Ignore Invisible Rests? (See HELP for info.)
+00545f58	00768f24	No upper staff found.
+00545f58	00768f24	No upper staff found.
+00546910	00768f6c	*** Warning: P4 of Staff     out of range.\r\n
+00547fc8	00769164	Item     , Unknown Code Number - this item will be deleted.\nP1=  , P2=   , P3=     
+00548a64	00769250	_12This is a test
+00548a64	00769234	of the RM feature in SCORE.
+00548a64	00769228	It creates
+00548a64	00769210	one long string that is
+00548a64	00769200	then broken up
+0054a967	007692f4	Stf    ,  Code   .  P3 is out of bounds. < -140
+0054a967	007692c4	Stf    ,  Code   .  P3 is out of bounds. > 280
+0054aaf8	00769324	Enter Staff# to see how many quarters in line -\r\n or Draw Box.\r\nX = exit.
+0054b1fc	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0054b1fc	0078b6d0	.                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               .                                                                                                                               
+0054b1fc	0076938c	 files
+0054b1fc	0076938c	 files
+0054b79d	00769444	This is UX
+0054b79d	00769404	This is in BOX 2 %%%%%%%%%%%%
+0054b79d	007693fc	textpos
+0054b79d	007693f4	binary
+0054b79d	007693fc	textpos
+0054b79d	007693f4	binary
+0054c15e	00769458	Try to edit this string.
+0054c22c	0076947c	*** P4 of Staff out of range.
+0054e2a1	0079d6f5	|XNADQ
+0054e9f2	0076963c	INCHES
+0054e9f2	0076963c	INCHES
+00552d80	00769884	\DPY.TMPDPY.TMP
+00554d2c	00769920	symblist_alf.txt
+00554d2c	00769920	symblist_alf.txt
+00554d2c	00769904	symblist.txt
+00554d2c	00769904	symblist.txt
+00555488	00769a08	**** Items found on tab staff   , try another one.
+00557d66	00769a54	**** impossible chord **** P3 =      
+0055b1f8	00769c44	*** No enharmonic change with key signature.
+0055b1f8	00769c44	*** No enharmonic change with key signature.
+0055b1f8	00769c24	*** Can't mix sharps and flats.
+0055b1f8	00769c24	*** Can't mix sharps and flats.
+0055c373	00769ccc	!trns1.tmp
+0055c373	00769cb0	!trns2.tmp
+0055cb57	00769ccc	!trns1.tmp
+0055cb57	00769cb0	!trns2.tmp
+005644b8	0076a008	IF P2=     and P1=1 and p6<0 then P20=1
+005644b8	00769fd8	Type new text *****
+005644b8	00769fb4	Can't use [ or ] as text divider.
+005644b8	00769fb4	Can't use [ or ] as text divider.
+005644b8	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+005644b8	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+005644b8	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+005644b8	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+005644b8	00769ec0	Display: Top Left = YES
+005644b8	00769ea8	Display: Top Left = NO
+005644b8	00769fb4	Can't use [ or ] as text divider.
+005644b8	00769fb4	Can't use [ or ] as text divider.
+005644b8	00769e90	Time =   :      .    
+00566cb2	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+00567bc7	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+00567bc7	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+00567bc7	0078da40	 /;.,:'09+-*InchesMetricParallel  Parallel_2Serial    
+00567e5b	0076a0b0	binary
+00567e5b	0076a0b0	binary
+00567e5b	0076a081	C:\!tmp\msee.tmp
+00567e5b	0076a0b0	binary
+00567e5b	0076a074	unknown
+00567e5b	0076a0b0	binary
+00567e5b	0076a074	unknown
+00569af0	0079f774	BODN0BODB0BODI0BDIB0MUSI0
+00569af0	0079f774	BODN0BODB0BODI0BDIB0MUSI0
+0056b845	0076a220	Item      - Font not found:
+0056b845	0076a204	\n\rsubstituting Times-Roman
+0056caf0	0076a320	DEMIBOLDOBLIITALz
+0056caf0	0076a30c	COURIER-BOLDCOURIER
+0056caf0	0076a2ec	COURIER-BOLDOBLIQUE           
+0056caf0	0076a2cc	COURIER-OBLIQUE               
+0056ecc3	0076a39c	) aw) show
+0056ecc3	0076a39c	) aw) show
+0056edfd	0076a3d4	fmfontinit.psc
+0056f324	007a0008	0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ.,()abcdefghijklmnopqrstuvwxyz:;?!+-*/=`'""&#$%&[]<>@      
+005704f8	007a0168	BODN0BODB0BODI0BDIB0MUSI0
+005704f8	007a0168	BODN0BODB0BODI0BDIB0MUSI0
+005704f8	007a0168	BODN0BODB0BODI0BDIB0MUSI0
+005704f8	007a0168	BODN0BODB0BODI0BDIB0MUSI0
+005704f8	007a0168	BODN0BODB0BODI0BDIB0MUSI0
+005704f8	007a0168	BODN0BODB0BODI0BDIB0MUSI0
+00572158	0076a4b4	Type Filename.
+00572158	0076a4b4	Type Filename.
+005721e2	0076a4d4	(SAVED)
+005721e2	0076a4d4	(SAVED)
+005721e2	0076a4c8	       
+005721e2	0076a4c8	       
+00572321	0076a4dc	Press "B" or <ESC> to backout, <Enter> to continue. ->
+00572321	0076a4dc	Press "B" or <ESC> to backout, <Enter> to continue. ->
+00572420	0076a53c	*** Nothing to UNDO.
+00572420	0076a53c	*** Nothing to UNDO.
+00572420	0076a52c	!undo!.tmp
+005725fa	0076a52c	!undo!.tmp
+0057275d	0076a558	!redo!.tmp
+0057288b	0076a588	**** Nothing to UNDO or changes made ****
+0057288b	0076a588	**** Nothing to UNDO or changes made ****
+0057288b	0076a564	*** Nothing to UNDELETE.
+0057288b	0076a564	*** Nothing to UNDELETE.
+00572c60	0076a5f0	Edit Mini-Macro ;;;
+00574370	0076a6b4	Multiple staves not found. Cannot do VJ.
+00574370	0076a6b4	Multiple staves not found. Cannot do VJ.
+00574370	0076a674	Staff            
+00575e58	0076a7e8	Page height(inches) =             
+00575e58	0076a79c	\r\nType new size ->
+00575e58	0076a760	Version =      --  Serial # =      
+00575e58	007a03f0	01-NOV-13
+00575e58	0076a738	VINDX =        NVPOINT =       
+005770d8	0076a86c	Type number of staff containing notes to be adjusted.
+005770d8	0076a86c	Type number of staff containing notes to be adjusted.
+005770d8	0076a86c	Type number of staff containing notes to be adjusted.
+00579410	0076a9d0	      exists - Write over file? - 
+00579410	0076a9ac	\r\nClear or Load new file?
+00579410	0076a988	Exit SCORE program?
+00579410	0076a954	Warning: Unsaved entries or changes will be lost.
+00579410	0076a930	FILE EXISTS - Write over file? - 
+005870fd	0076ae4c	(1f5.1)
+005870fd	0076ae4c	(1f5.1)
+005870fd	0076ae38	(1f6.2)
+005870fd	0076ae38	(1f6.2)
+005870fd	0076ae38	(1f6.2)
+005870fd	0076ae38	(1f6.2)
+005870fd	007a0580	S0S+S-
+005870fd	007a0578	SOSUSD
+005870fd	007a0578	SOSUSD
+00589e4a	007a05f4	FSNWATSWATDUHFATMIH
+00589e4a	007a05f4	FSNWATSWATDUHFATMIH
+00589e4a	007a05f4	FSNWATSWATDUHFATMIH
+00589e4a	007a05f4	FSNWATSWATDUHFATMIH
+00589e4a	007a05ed	RHOMW
+00589e4a	007a05ed	RHOMW
+0058d3d0	007a06d4	C:\WS\ChildFrm.cpp
+0058db30	007a06f0	C:\WS\CntrItem.cpp
+0058de60	007a06f0	C:\WS\CntrItem.cpp
+0058df40	007a06f0	C:\WS\CntrItem.cpp
+0058e0b0	007a06f0	C:\WS\CntrItem.cpp
+0058e130	007a06f0	C:\WS\CntrItem.cpp
+0058e130	007a06f0	C:\WS\CntrItem.cpp
+0058fcd0	0076bde8	~~124
+0058fcd0	0076bd98	~~113
+0058fcd0	0076bd90	~~114
+0058fcd0	0076bd88	~~115
+0058fcd0	0076bd80	~~116
+0058fcd0	0076bd78	~~117
+0058fcd0	0076bd70	~~118
+0058fcd0	0076bd68	~~119
+0058fcd0	0076bd60	~~120
+0058fcd0	0076bd58	~~121
+0058fcd0	0076bd50	~~122
+0058fcd0	0076bd48	~~123
+00590620	0076bdf0	No typing while using MIDI input.
+00591770	0076c494	1 360
+00591770	0076c488	100 100
+00591770	0076c47c	50 50
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00592d30	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+00593c20	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+005949a0	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+00595010	0076cc6c	%8.3f
+0059d7e0	0076d0f8	Type file name:
+0059e770	0076d7f0	Type File Names to Print.
+0059e7e0	0076d810	Type Batch_Printing_List File Name.
+0059eaa0	0076d9cc	Inches
+0059eaa0	0076d9ac	Centimeters
+0059eaa0	0076d994	Points
+0059eaa0	0076d988	%5.2f
+0059eaa0	0076d988	%5.2f
+005a0ac0	007a0a04	C:\WS\IpFrame.cpp
+005a0e80	0076e324	Failed to create resize bar\n
+005a16a0	0076e720	MACRO
+005a19b0	007a0a68	C:\WS\MainFrm.cpp
+005a1db0	00778d74	Failed to create status bar\n
+005a1db0	00778d68	ToolTips
+005a1db0	00778d5c	General
+005a1db0	00778d3c	Failed to create DlgBar\n
+005a1db0	00778d18	Failed to create input tools\n
+005a1db0	00778cf8	Failed to create ZoomBar\n
+005a1db0	00778cdc	Failed to create tool2\n
+005a1db0	00778cbc	Failed to create ItemBar\n
+005a27e0	007a0a90	WindowPos
+005a27e0	007a0a84	Settings
+005a27e0	007a0a9c	%u,%u,%d,%d,%d,%d,%d,%d,%d,%d %d
+005a2970	007a0ad8	ToolbarState
+005a2970	007a0a84	Settings
+005a2970	007a0b44	%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d
+005a2970	007a0acc	TbarRects
+005a2970	007a0a84	Settings
+005a2970	007a0afc	%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d
+005a2970	007a0ac0	TbarDocks
+005a2970	007a0a84	Settings
+005a2970	007a0ae8	%d,%d,%d,%d,%d,%d
+005a42e0	00778da0	Text metrics error!
+005a4d50	00778dc4	Failed to create NoteBar\n
+005a4fa0	00778de4	Failed to create OptBar\n
+005a53e0	00778e48	Exit MIDI input?
+005a53e0	00778e04	This mouse click not available while using MIDI input.
+005a5840	00778e64	New Note
+005a5840	00778e5c	NOTE 
+005a5890	00778e78	New Rest
+005a5890	00778e70	REST 
+005a58e0	00778e8c	New Clef
+005a58e0	00778e84	CLEF 
+005a5930	00778ea0	New Line
+005a5930	00778e98	LINE 
+005a5980	00778eb4	New Slur
+005a5980	00778eac	SLUR 
+005a59d0	00778ec8	New Beam
+005a59d0	00778ec0	BEAM 
+005a5a20	00778edc	New Trill
+005a5a20	00778ed4	TRILL 
+005a5a70	00778ef0	New Staff
+005a5a70	00778ee8	STAFF 
+005a5ac0	00778f00	New Code 9
+005a5b10	00778f18	New Number
+005a5b10	00778f10	NUMB 
+005a5b60	00778f30	New Box
+005a5bb0	00778f48	New Circle
+005a5bb0	00778f3c	CIRCLE 
+005a5c00	00778f60	Guitar Grid
+005a5c00	00778f58	GUIT 
+005a5c60	00778f78	New Bar
+005a5cb0	00778f94	Input Text
+005a5cb0	00778f84	TZ 12 100 14 
+005a5d00	00778fac	New Key Sig
+005a5d00	00778fa4	KSIG 
+005a5d50	00778fc4	New Meter 4/4
+005a5d50	00778fbc	METER 
+005a5da0	00778fe0	New Meter 2/4
+005a5da0	00778fd4	METER24 
+005a5df0	00778ffc	New Meter 3/4
+005a5df0	00778ff0	METER34 
+005a5e40	00779018	New Meter 6/8
+005a5e40	0077900c	METER68 
+005a6220	00779058	Next File Back
+005a6270	00779070	Get Next File
+005a62c0	00779084	Edit Last Item
+005a6310	007790a0	Items menu
+005a6310	00779098	QQ165 
+005a6360	007790b4	Save with Same Name
+005a63b0	007790e0	Get file 0.mus
+005a63b0	007790cc	G \WINZ\MUS\0  
+005a6400	007790fc	Order by Staff Reversed
+005a6450	0077911c	Order by Staff
+005a64a0	00779134	Order by Horizontal Position
+005a64f0	0077915c	Order Text
+005a6540	00779174	Restart program
+005a6590	00779190	Restart with same file
+005a6590	00779188	RSM  
+005a65e0	007791b0	Get previous file
+005a6630	007791cc	Print
+005a6680	007791dc	Print to .EPS file
+005a6680	007791d4	PRPS 
+005a66d0	007791f8	Exit from edit mode
+005a6780	00779218	Copy and exit from edit mode
+005a6780	00779210	C    
+005a67d0	00779244	Copy and continue editing
+005a67d0	0077923c	CC   
+005a6820	0077926c	Height
+005a6820	00779264	H    
+005a6870	0077927c	Height of Staves only
+005a6870	00779274	HS   
+005a68c0	007792a0	Copy and move on to next item
+005a68c0	00779298	CX   
+005a6910	007792cc	Abort the edit
+005a6910	007792c4	AB   
+005a6960	007792e8	Rebuild display
+005a69b0	00779304	zoom * 2
+005a6a00	00779314	Edit next item back
+005a6a50	00779330	Edit next item
+005a6aa0	0077934c	Flip the item
+005a6af0	00779360	Center on nearest note/rest
+005a6b40	0077938c	Bass Clef
+005a6b90	007793a0	Tenor Clef
+005a6b90	00779398	TENOR
+005a6be0	007793b8	Alto Clef
+005a6c30	007793cc	Treble Clef
+005a6c80	007793e4	Treble Clef, 8 below
+005a6cd0	00779408	Treble Clef, 8 above
+005a6cd0	00779400	5 .88
+005a6d20	0077942c	Treble Clef, 15 above
+005a6d20	00779424	5 .15
+005a6d70	00779450	Bass Clef, 8 below
+005a6d70	00779448	5 1.8
+005a6dc0	00779470	Percussion Clef
+005a6e10	0077948c	Tab Clef
+005a6e60	007794a0	Mini Clef
+005a6e60	00779498	MINI 
+005a6eb0	007794b4	Normal Size
+005a6eb0	007794ac	NORM 
+005a6fa0	007794cc	Left Offset
+005a6fa0	007794c4	10 20 
+005a6ff0	007794e4	Right Offset
+005a6ff0	007794dc	10 10 
+005a7040	007794fc	Shorten Stem (STM)
+005a7090	0077951c	Lengthen Stem (STP)
+005a70e0	0077953c	No Stem (NST)
+005a7130	00779554	Normal Stem (STN)
+005a7180	00779570	Cue Size (CUE)
+005a71d0	0077958c	Normal Size Note (CUX)
+005a7220	007795b0	Double Whole Note (RHD)
+005a7270	007795d4	Whole Note
+005a72c0	007795ec	Half Note
+005a7310	00779600	Quarter Note
+005a7360	00779618	Eighth Note
+005a73b0	00779630	Sixteenth Note
+005a7400	0077964c	Thirty-second Note
+005a7400	00779644	RH32 
+005a7450	0077966c	Sixty-fourth Note
+005a7450	00779664	RH64 
+005a74a0	0077968c	Grace Note
+005a74f0	007796a4	Convert to Triplet
+005a7540	007796c4	Convert to Quintuplet
+005a7590	007796e8	Add Dot
+005a75e0	007796fc	Double Dot
+005a7630	00779714	Space Dot to Left
+005a7630	0077970c	SPD- 
+005a7680	00779734	Space Dot to Right
+005a76d0	00779754	Dot Up/Down Toggle
+005a7720	00779774	No Tail on Note
+005a7770	00779790	Add a Tail
+005a7860	007797a8	Spacing Scale
+005a78b0	007797c0	Remove Spacing Scale
+005a78b0	007797b8	SCX  
+005a7900	007797e0	Left 1
+005a7950	007797ec	Right 1
+005a79a0	00779800	Left 10
+005a79f0	00779814	Right 10
+005a7a90	00779830	Up .5
+005a7ae0	0077983c	Down 1
+005a7b30	00779848	Down .5
+005a7b80	0077985c	Up 10
+005a7bd0	0077986c	Down 10
+005a7c20	0077987c	Macro 1
+005a7c70	0077988c	Macro 2
+005a7cc0	007798a0	Macro 3
+005a7d10	007798b0	Delete Item
+005a7d60	007798c8	Delete, back to same code#
+005a7db0	007798f0	Delete, next to same code#
+005a7e00	00779918	Undo last GROUP COPY, COPY SYS, GM, MN
+005a7e00	00779910	UNDO 
+005a7e50	00779950	Undo font change
+005a7e50	00779948	FONTX 
+005a7ea0	0077996c	Undelete item
+005a7ef0	00779984	move left end of item
+005a7f40	007799a8	move right end of item
+005a7f90	007799cc	both ends move normally
+005a7f90	007799c4	NRMV 
+005a7fe0	007799f4	String Number -1 (P8)
+005a7fe0	007799e8	800 -1 
+005a8030	00779a18	String Number +1 (P8)
+005a8030	00779a10	800 1 
+005a8080	00779a3c	String Number = 0
+005a80d0	00779a5c	Go to Tablature Menu
+005a80d0	00779a54	QQ163 
+005a8120	00779a80	.5 Plus Left Offset
+005a8120	00779a78	OFM  
+005a8170	00779aa0	.5 Minus Right Offset
+005a8170	00779a98	OFP  
+005a81c0	00779ac8	Set Offset to 0
+005a81c0	00779abc	NOFST  
+005a8210	007795d4	Whole Note
+005a8210	00779adc	NOTE RHW 
+005a8260	007795ec	Half Note
+005a8260	00779ae8	NOTE RHH 
+005a82b0	00779b00	8th Note
+005a82b0	00779af4	NOTE RHE 
+005a8300	00779b18	16th Note
+005a8300	00779b0c	NOTE RHS 
+005a8350	00779b30	Whole Rest
+005a8350	00779b24	REST RHW 
+005a83a0	00779b4c	Half Rest
+005a83a0	00779b40	REST RHH 
+005a83f0	00779b64	8th Rest
+005a83f0	00779b58	REST RHE 
+005a8440	00779b7c	16th Rest
+005a8440	00779b70	REST RHS 
+005a8490	00779b90	Crescendo Hairpin
+005a84e0	00779bb0	Decrescendo Hairpin
+005a8530	00779bd0	Soprano Clef
+005a8580	00779be8	Mezzo Soprano Clef
+005a85d0	00779c00	Baritone Clef
+005a8620	00779c18	Triplet bracket
+005a8620	00779c10	SLUR3 
+005a8670	00779c34	1st ending
+005a8670	00779c2c	END1 
+005a86c0	00779c4c	2nd ending
+005a86c0	00779c44	END2 
+005a8710	00779c60	Center Whole Rest
+005a8760	00779c7c	Add Fermata
+005a87b0	00779c94	Move to Rhythm Menu
+005a87b0	00779c8c	QQ168 
+005a8800	00779cb8	Move to Multi-bar Menu
+005a8800	00779cac	QQ168  
+005a8850	00779cd8	Repeate Bar Sign
+005a88a0	00779cf4	Make Rest Invisible
+005a88a0	00779cec	RINV 
+005a88f0	00779d0c	Double Whole Rest
+005a8940	00779d2c	1 Bar Rest
+005a8990	00779d44	2 Bar Rest
+005a89e0	00779d5c	3 Bar Rest
+005a8a30	00779d74	4 Bar Rest
+005a8a80	00779d8c	5 Bar Rest
+005a8ad0	00779da4	6 Bar Rest
+005a8b20	00779dbc	7 Bar Rest
+005a8b70	00779dd4	8 Bar Rest
+005a8bc0	00779dec	9 Bar Rest
+005a8c10	00779e04	2 European Rest
+005a8c60	00779e20	3 European Rest
+005a8cb0	00779e3c	4 European Rest
+005a8d00	00779e58	5 European Rest
+005a8d50	00779e74	6 European Rest
+005a8da0	00779e90	7 European Rest
+005a8df0	00779eac	8 European Rest
+005a8e40	00779ec8	9 European Rest
+005a8e90	00779ee4	Return to Rest Menu
+005a8e90	00779edc	QQ158 
+005a8ee0	00779efc	Minus 1 Bar
+005a8ee0	007799e8	800 -1 
+005a8f30	00779f0c	Plus 1 Bar
+005a8f30	00779a10	800 1 
+005a8f80	00779f24	No Number on Rest
+005a8fd0	00779f44	Straight Line
+005a9020	00779f5c	Dashes
+005a9070	00779f6c	Dotted Line
+005a9070	00779f64	DTS4 
+005a90c0	00779f84	Wiggle Line
+005a9110	00779f9c	Arpeggio
+005a9160	00779b90	Crescendo Hairpin
+005a91b0	00779bb0	Decrescendo Hairpin
+005a9200	00779fb0	Crescendo Dashes Hairpin
+005a9250	00779fd8	Decrescendo DashesHairpin
+005a92a0	00779ff8	Less Spread
+005a92a0	0077970c	SPD- 
+005a92f0	0077a010	More Spread
+005a92f0	0077a008	SPD+1 
+005a9340	0077a028	Default Spread
+005a9340	0077a020	SPD0 
+005a9390	0077a044	Clockwise Rotation
+005a9390	0077a03c	ROT+ 
+005a93e0	0077a064	Counter-Clockwise Rotation
+005a93e0	0077a05c	ROT- 
+005a9430	0077a08c	No Rotation
+005a9430	0077a084	ROT0 
+005a9480	0077a0a4	Vertical Line
+005a9480	0077a09c	VERT 
+005a94d0	0077a0bc	Horizontal Line
+005a94d0	0077a0b4	HORZ 
+005a9520	0077a0d8	Decrease Dash Length
+005a9520	0077a0d0	DSHL- 
+005a9570	0077a0fc	Increase Dash Length
+005a9570	0077a0f4	DSHL+ 
+005a95c0	0077a120	Default Dash Length
+005a95c0	0077a118	DSHL0 
+005a9610	0077a140	Decrease Dash Space
+005a9610	0077a138	DSHS- 
+005a9660	0077a160	Increase Dash Space
+005a9660	0077a158	DSHS+ 
+005a96b0	0077a180	Default Dash Space
+005a96b0	0077a178	DSHS0 
+005a9700	0077a1a0	Left Bracket On/Off
+005a9750	0077a1c0	Shorten Left Bracket
+005a9750	0077a1b8	LBR- 
+005a97a0	0077a1e4	Lengthen Left Bracket
+005a97a0	0077a1dc	LBR+ 
+005a97f0	0077a208	Right Bracket On/Off
+005a9840	0077a22c	Shorten Right Bracket
+005a9840	0077a224	RBR- 
+005a9890	0077a250	Lengthen Right Bracket
+005a9890	0077a248	RBR+ 
+005a98e0	0077a274	Left Arrow On/Off
+005a9930	0077a294	Right Arrow On/Off
+005a9980	0077a2b4	Arpeggio Up Arrow On/Off
+005a99d0	0077a2dc	Arpeggio Down Arrow On/Off
+005a9a20	0077a314	Lines
+005a9a20	0077a30c	QQ161 
+005a9a20	0077a314	Lines
+005a9a20	0077a304	QQ223 
+005a9a20	0077a314	Lines
+005a9a20	0077a2fc	QQ224 
+005a9ac0	0077a334	Brackets
+005a9ac0	0077a32c	QQ172 
+005a9ac0	0077a334	Brackets
+005a9ac0	0077a324	QQ268 
+005a9ac0	0077a334	Brackets
+005a9ac0	0077a31c	QQ269 
+005a9b60	0077a348	Left Bracket Down
+005a9b60	0077a340	LBRD 
+005a9bb0	0077a368	Right Bracket Down
+005a9bb0	0077a360	RBRD 
+005a9c00	0077a388	4 Line Tab
+005a9c50	0077a3a0	5 Line Tab
+005a9ca0	0077a3bc	Increase Curve
+005a9ca0	0077a3b0	700 .5 
+005a9cf0	0077a3dc	Decrease Curve
+005a9cf0	0077a3d0	700 -.5 
+005a9d40	0077a3f4	Default Curve
+005a9d90	0077a40c	2 Beams
+005a9d90	0077a404	BEAM2 
+005a9e80	0077a43c	15ma dash up
+005a9e80	0077a434	OMAU 
+005a9f20	0077a454	Tie between Notes
+005a9f70	0077a474	Tie between Notes after dot
+005a9fc0	0077a4a0	Tie between Notes P8 = .5
+005aa010	0077a4c8	Center To Left
+005aa010	0077a4c0	MIDL 
+005aa060	0077a4e4	Center To Right
+005aa060	0077a4dc	MIDR 
+005aa0b0	0077a500	Center To Default
+005aa0b0	0077a4f8	MID0 
+005aa100	0077a520	Up/Down Slur
+005aa100	0077a518	SUPDN 
+005aa150	0077a538	Half Slur Left
+005aa150	0077a530	SLHL 
+005aa1a0	0077a554	Half Slur Right
+005aa1a0	0077a54c	SLHR 
+005aa1f0	0077a570	Slur Dashes
+005aa1f0	0077a568	SLDSH 
+005aa240	0077a588	Slur Dots
+005aa240	0077a580	SLDTS 
+005aa290	0077a594	P8 = P8-1
+005aa290	007799e8	800 -1 
+005aa2e0	0077a5a0	P8 = P8+1
+005aa2e0	00779a10	800 1 
+005aa330	0077a5b8	P8 = P8-.05
+005aa330	0077a5ac	800 -.05 
+005aa380	0077a5d4	P8 = P8+.05
+005aa380	0077a5c8	800 .05 
+005aa470	0077a5ec	P12 = 0
+005aa470	0077a5e4	12 0 
+005aa4c0	0077a600	Add to Line Thickness
+005aa510	0077a624	Default Line Thickness
+005aa510	0077a61c	THK0 
+005aa560	0077a648	Left End Offset Minus
+005aa560	0077a640	LLOFM 
+005aa5b0	0077a66c	Left End Offset Plus
+005aa5b0	0077a664	LLOFP 
+005aa600	0077a690	Right End Offset Minus
+005aa600	0077a688	LROFM 
+005aa650	0077a6b4	Right End Offset Plus
+005aa650	0077a6ac	LROFP 
+005aa6a0	0077a6d8	Zero Line End Offsets
+005aa6a0	0077a6d0	LLOF0 
+005aa6f0	0077a6fc	Vibrato Waves
+005aa740	0077a714	Sawtooth Line
+005aa790	0077a72c	Heavy Sawtooth Line
+005aa790	0077a724	SAWX 
+005aa7e0	0077a74c	Beam Offsets_Opp_Dir
+005aa7e0	0077a744	ADOF 
+005aa830	0077a770	Adjust Stems_French
+005aa880	0077a790	Adjust Stems_French_Opp
+005aa880	0077a788	ADFX 
+005aa8d0	0077a7b4	Adjust Stems
+005aa920	0077a7cc	Adjust Stems_Opp_Dir
+005aa970	0077a7f0	Auto Beam Config
+005aa970	0077a7e8	AUTO 
+005aa9c0	0077a80c	Auto Beam Config Stems_Opp
+005aa9c0	0077a804	AUTOX 
+005aaa10	0077a834	Add a Beam
+005aaa10	0077a82c	BEAM+ 
+005aaa60	0077a84c	Split Beam after 1 Note
+005aaa60	0077a844	SPL1 
+005aaab0	0077a870	Split Beam after 2 Notes
+005aaab0	0077a868	SPL2 
+005aab00	0077a89c	Split Beam 2-2-2
+005aab00	0077a890	SPL222 
+005aab50	0077a8b8	Split Beam after 3 Notes
+005aab50	0077a8b0	SPL3 
+005aaba0	0077a8e0	Split Beam after 4 Notes
+005aaba0	0077a8d8	SPL4 
+005aadd0	0077a908	Plus Number over Beam
+005aadd0	0077a900	BNUMP 
+005aae20	0077a92c	Delete Number over Beam
+005aae20	0077a924	BNUM0 
+005aae70	0077a950	 Number 3 over Beam
+005aae70	0077a948	BNUM3 
+005aaec0	0077a970	 Number 5 over Beam
+005aaec0	0077a968	BNUM5 
+005aaf10	0077a990	Minus Offset Left End
+005aaf10	0077a988	LOFFM 
+005aaf60	0077a9b4	Plus Offset Left End
+005aaf60	0077a9ac	LOFFP 
+005aafb0	0077a9d8	Zero Offset Left End
+005aafb0	0077a9d0	LOFF0 
+005ab000	0077a9fc	Minus Offset Right End
+005ab000	0077a9f4	ROFFM 
+005ab050	0077aa20	Plus Offset Right End
+005ab050	0077aa18	ROFFP 
+005ab0a0	0077aa44	Zero Offset Right End
+005ab0a0	0077aa3c	ROFF0 
+005ab0f0	0077aa68	Partial Beam P10 Up/Dn
+005ab0f0	0077aa60	PB10 
+005ab140	0077aa8c	Partial Beam P13 Up/Dn
+005ab140	0077aa84	PB13 
+005ab190	0077aab0	1 Tremolo Beam
+005ab1e0	0077aacc	Add 1 Tremolo Beam
+005ab230	0077aab0	1 Tremolo Beam
+005ab230	0077aae4	TRM1 
+005ab280	0077aaf4	2 Tremolo Beams
+005ab280	0077aaec	TRM2 
+005ab2d0	0077ab10	3 Tremolo Beams
+005ab2d0	0077ab08	TRM3 
+005ab320	0077ab2c	4 Tremolo Beam
+005ab320	0077ab24	TRM4 
+005ab370	0077ab48	Number to Middle
+005ab370	0077ab40	NLR0 
+005ab3c0	0077ab64	Number to Left .02
+005ab3c0	0077ab5c	NLRM 
+005ab410	0077ab84	Number to Right .02
+005ab410	0077ab7c	NLRP 
+005ab460	0077aba4	Number Zero Position
+005ab460	0077ab9c	NUD0 
+005ab4b0	0077abc8	Number Up .2
+005ab4b0	0077abc0	NUDP 
+005ab500	0077abe0	Number Down .2
+005ab500	0077abd8	NUDM 
+005ab550	0077abfc	Flip Horz. 1st Inner Partial
+005ab550	0077abf4	FLR11 
+005ab5a0	0077ac28	Flip Horz. 2nd Inner Partial
+005ab5a0	0077ac20	FLR14 
+005ab5f0	0077ac54	Play Midi
+005ab640	0077ac54	Play Midi
+005ab690	0077ac64	Move Group
+005ab6f0	0077ac64	Move Group
+005ab750	0077ac78	Move points
+005ab7b0	0077ac8c	Copy Draw
+005ab810	0077ac9c	Move System
+005ab860	0077acb0	Move Vertical
+005ab8b0	0077acb0	Move Vertical
+005ab900	0077acc8	Copy Group
+005ab960	0077acdc	Copy System
+005ab9b0	0077acf0	Delete Group
+005aba10	0077acf0	Delete Group
+005aba60	0077ad08	Draw Box
+005aba60	0077ad00	DRWB 
+005abab0	0077ad1c	Type Box Limits
+005abab0	0077ad14	TYPB 
+005abb00	0077ad38	Code1
+005abb50	0077ad48	Code2
+005abba0	0077ad58	Code3
+005abbf0	0077ad68	Code4
+005abc40	0077ad78	Code5
+005abc90	0077ad88	Code6
+005abce0	0077ad98	Code7
+005abd30	0077ada8	Code8
+005abd80	0077adb8	Code9
+005abdd0	0077adc8	Code10
+005abdd0	0077adc0	CD10 
+005abe20	0077add8	Code12
+005abe20	0077add0	CD12 
+005abe70	0077ade8	Code14
+005abe70	0077ade0	CD14 
+005abec0	0077adf8	Code15
+005abec0	0077adf0	CD15 
+005abf10	0077ae08	Code16
+005abf10	0077ae00	CD16 
+005abf60	0077ae18	Code17
+005abf60	0077ae10	CD17 
+005abfb0	0077ae28	Code18
+005abfb0	0077ae20	CD18 
+005ac000	0077ae38	Thickness -.05
+005ac000	0077ae30	THM  
+005ac050	0077ae54	Default Thickness
+005ac0a0	0077ae74	Double Bar
+005ac0a0	0077ae6c	BARD 
+005ac0f0	0077ae8c	Heavy Double Bar
+005ac0f0	0077ae84	BARH 
+005ac140	0077aea8	Repeat, Dots to Left
+005ac140	0077aea0	BARL 
+005ac190	0077aecc	Repeat, Dots to Right
+005ac190	0077aec4	BARR 
+005ac1e0	0077aef0	Double Repeat
+005ac1e0	0077aee8	BARRD 
+005ac230	0077af08	Heavy Double Repeat
+005ac280	0077af28	Dash Bar
+005ac2d0	0077af3c	Invisible Bar
+005ac320	0077af54	extend to stop staff
+005ac320	0077af4c	4 999 
+005ac370	0077af7c	Sub-Bracket
+005ac370	0077af70	5 10 4 2 
+005ac3c0	0077af98	Top Section of Bracket
+005ac3c0	0077af8c	5 9 8 1 
+005ac410	0077afc0	Bottom Section of Bracket
+005ac410	0077afb4	5 9 8 2 
+005ac460	0077afec	Middle Section of Bracket
+005ac460	0077afe0	5 9 8 3 
+005ac4b0	0077b014	Brace
+005ac4b0	0077b00c	BARBC 
+005ac500	0077b024	Bracket
+005ac500	0077b01c	BARBK 
+005ac550	0077b038	Staff Up
+005ac550	0077b030	/2 1 
+005ac5a0	0077b04c	Staff Down
+005ac5a0	0077b044	/2 -1 
+005ac5f0	0077b038	Staff Up
+005ac5f0	0077b030	/2 1 
+005ac640	0077b060	Staff +
+005ac690	0077b070	Staff -
+005ac6e0	0077b080	Staff 0
+005ac780	0077b094	Dash Size Plus (P8 +.2)
+005ac780	0077b08c	DSH+ 
+005ac7d0	0077b0b8	Dash Size Default (P8 = 0)
+005ac7d0	0077b0b0	DSH0 
+005ac820	0077b0e0	Dash Space Plus (P9 +.2)
+005ac820	0077b0d8	DSP+ 
+005ac870	0077b108	Dash Space Default (P9 = 0)
+005ac870	0077b100	DSP0 
+005ac8c0	0077b134	Position 0
+005ac910	0077b14c	Position end
+005ac960	0077b164	Add Dot Space
+005ac960	0077b15c	DTS+ 
+005ac9b0	0077b17c	Default Dot Space
+005ac9b0	0077b174	DTS0 
+005aca00	0077b19c	Move Low Dot Down
+005aca00	0077b194	DTLD 
+005aca50	0077b1bc	Move Low Dot Up
+005aca50	0077b1b4	DTLU 
+005acaa0	0077b1d8	Move High Dot Down
+005acaa0	0077b1d0	DTHD 
+005acaf0	0077b1f8	Move High Dot Up
+005acaf0	0077b1f0	DTHU 
+005acb40	0077b214	Add Space in Double Bar
+005acb40	0077b20c	DBRS+ 
+005acb90	0077b238	Default Space in Double Bar
+005acb90	0077b230	DBRS0 
+005acbe0	0077b264	Add Width to Double Bar
+005acbe0	0077b25c	DBRW+ 
+005acc30	0077b288	Default Width of Double Bar
+005acc30	0077b280	DBRW0 
+005acc80	0077b2b4	Move Bottom of Bar Down
+005acc80	0077b2ac	BOTD 
+005accd0	0077b2d8	Move Bottom of Bar Up
+005accd0	0077b2d0	BOTU 
+005acd20	0077b2fc	Move Top of Bar Down
+005acd20	0077b2f4	TOPD 
+005acd70	0077b320	Move Top of Bar Up
+005acd70	0077b318	TOPU 
+005ace10	0077b340	Add Parentheses to Note
+005ace60	0077b364	Increase Note Width
+005ace60	0077b35c	WID+ 
+005aceb0	0077b384	Decrease Note Width
+005aceb0	0077b37c	WID- 
+005acf00	0077b3a4	Default Note Width
+005acf00	0077b39c	WID0 
+005acfa0	0077b3c0	Wedge
+005acff0	0077b3cc	Accent
+005ad040	0077b3d8	Tenuto
+005ad090	0077b3e8	Staccato
+005ad0e0	0077b3fc	Wdg_Stac
+005ad130	0077b410	Act_Stacc
+005ad180	0077b424	Ten_Stacc
+005ad1d0	0077b438	Down_Bow
+005ad220	0077b44c	Up_Bow
+005ad270	0077b45c	Harmonic
+005ad2c0	0077b46c	Fermata
+005ad310	0077b480	Arsis
+005ad360	0077b490	Thesis
+005ad3b0	0077b49c	Mordant
+005ad400	0077b4b0	Inv_Mordant
+005ad450	0077b4c4	Heavy_Wedge
+005ad4a0	0077b4d8	Trill
+005ad4f0	0077b4e8	Trill with Flat
+005ad540	0077b504	Trill with Sharp
+005ad590	0077b520	Trill with Natural
+005ad5e0	0077b540	Plus Sign
+005ad630	0077b554	Accent Tenuto
+005ad680	0077b56c	No Mark
+005ad680	0077b564	NOM  
+005ad6d0	0077b580	Ficta Flat
+005ad720	0077b598	Ficta Sharp
+005ad770	0077b5b0	Ficta Natural
+005ad7c0	0077b5c8	Fingering Plus
+005ad7c0	0077b5c0	FNG+ 
+005ad810	0077b5e4	Fingering Minus
+005ad810	0077b5dc	FNG- 
+005ad860	0077b600	Flip Mark
+005ad8b0	0077b614	Mark Up
+005ad900	0077b628	Mark Down
+005ad950	0077b63c	Vertical Default
+005ad9a0	0077b658	Mark Left
+005ad9f0	0077b66c	Mark Right
+005ada40	0077b684	Horizontal Default
+005ada90	0077b69c	5 51  
+005adae0	0077b6a8	5 52  
+005adb30	0077b6b4	5 53  
+005adb80	0077b6c0	5 54 
+005adbd0	0077b6cc	5 55 
+005adc20	0077b6d8	5 56 
+005adc70	0077b6e4	5 57 
+005adcc0	0077b6f0	5 58 
+005add10	0077b6fc	5 59 
+005add60	0077b70c	5 60 
+005addb0	0077b718	5 61 
+005ade00	0077b724	5 62 
+005ade50	0077b730	5 50 
+005adea0	0077b740	5 160 
+005adef0	0077b74c	5 161 
+005adf40	0077b764	Size Plus
+005adf90	0077b778	VSize Plus
+005adf90	0077b770	VSZ+ 
+005adfe0	0077b790	Size Minus
+005ae030	0077b7a8	VSize Minus
+005ae030	0077b7a0	VSZ- 
+005ae080	0077b7c0	cen txt on note
+005ae0d0	0077b7c0	cen txt on note
+005ae120	0077b7e4	Size Default
+005ae170	0077b7f4	5 162 
+005ae1c0	0077b804	5 163 
+005ae210	0077b810	5 164 
+005ae260	0077b820	5 165 
+005ae2b0	0077b830	5 166 
+005ae300	0077b83c	5 167 
+005ae350	0077b848	5 168 
+005ae3a0	0077b858	5 169 
+005ae3f0	0077b864	5 123 
+005ae440	0077b870	5 127 
+005ae490	0077b87c	5 128 
+005ae4e0	0077b888	5 129 
+005ae530	0077b8a0	Add Parentheses to some
+005ae530	0077b898	ADPR 
+005ae6c0	0077b8dc	Pedal
+005ae6c0	0077b8bc	1 9 5 70 6 0 7 0 8 0 9 0 
+005ae710	0077b8e4	1 9 5 71 6 0 7 0 8 0 
+005ae760	0077b8dc	Pedal
+005ae760	0077b908	7 23 
+005ae7b0	0077b910	7 24 
+005ae800	0077b920	Pedal P
+005ae800	0077b918	7 25 
+005ae8a0	0077b940	Sharp
+005ae8f0	0077b950	Natural
+005ae940	0077b964	Double Flat
+005ae990	0077b97c	Double Sharp
+005ae9e0	0077b994	No Accidental
+005aea30	0077b9ac	Enharmonic 1 Step Lower
+005aea30	0077b9a4	ENH-1 
+005aea80	0077b9d0	Enharmonic 1 Step Higher
+005aea80	0077b9c8	ENH+1 
+005aead0	0077b9f8	Decrease Space to Acci.
+005aead0	0077b9f0	SPA- 
+005aeb20	0077ba1c	Increase Space to Acci.
+005aeb20	0077ba14	SPA+ 
+005aeb70	0077ba40	Default Space to Acci.
+005aebc0	0077ba64	Auto Space Acci. for Chord
+005aec10	0077ba8c	Parentheses on Accidental
+005aec60	0077b920	Pedal P
+005aec60	0077baac	1 9 5 120 6 0 7 0 8 0 9 0
+005aecb0	0077bad4	Cresc
+005aecb0	0077bacc	5 63 
+005aed00	0077bae4	Decresc
+005aed00	0077badc	5 111 
+005aed50	0077baf8	Diminuendo
+005aed50	0077baf0	5 64 
+005aeda0	0077bb10	Ritardando
+005aeda0	0077bb08	5 65 
+005aedf0	0077bb28	Rallantando
+005aedf0	0077bb20	5 113 
+005aee40	0077bb40	Accelerando
+005aee40	0077bb38	5 68 
+005aee90	0077bb58	Pizzicato
+005aee90	0077bb50	5 66 
+005aeee0	0077bb64	5 67 
+005aef30	0077bb7c	P5 +1
+005aef30	0077bb74	/5 1 
+005aef80	0077bb8c	P5 -1
+005aef80	0077bb84	/5 -1 
+005aefd0	0077bb9c	P5 +10
+005aefd0	0077bb94	/5 10 
+005af020	0077bbb0	P5 -10
+005af020	0077bba4	/5 -10 
+005af070	0077bbb8	5 86 
+005af0c0	0077bbd8	Code 9 Flat
+005af0c0	0077bbc8	5 6 6 .25 
+005af110	0077bbf8	Code 9 Sharp
+005af110	0077bbe8	5 7 6 .25 
+005af160	0077bc18	Code 9 Natural
+005af160	0077bc08	5 8 6 .25 
+005af1b0	0077bc3c	Code 9 Double Flat
+005af1b0	0077bc2c	5 9 6 .25 
+005af200	0077bc64	Code 9 Double Sharp
+005af200	0077bc54	5 10 6 .25 
+005af250	0077bc8c	Percussion Library
+005af250	0077bc7c	5 600 6 0 
+005af2a0	0077bcb4	Early Music Notation
+005af2a0	0077bca4	5 1000 6 0 
+005af2f0	0077bce0	Lute Tablature Library
+005af2f0	0077bcd0	5 900 6 0 
+005af340	0077bd0c	Chant Notation Library
+005af340	0077bcfc	5 1060 6 0 
+005af390	0077bd30	Comma
+005af390	0077bd28	5 118 
+005af3e0	0077bd40	Comma Slash
+005af3e0	0077bd38	5 180 
+005af430	0077bd58	Ornament 1
+005af430	0077bd50	5 93 
+005af480	0077bd70	Ornament 2
+005af480	0077bd68	5 94 
+005af4d0	0077bd88	Ornament 3
+005af4d0	0077bd80	5 109 
+005af520	0077bda0	Double Slash
+005af520	0077bd98	5 76 
+005af570	0077bdb8	Molto
+005af570	0077bdb0	5 73 
+005af5c0	0077bdc8	Mosso
+005af5c0	0077bdc0	5 114 
+005af610	0077bdd0	5 80 
+005af660	0077bde8	Micro
+005af660	0077bde0	5 182 
+005af6b0	0077bdf0	5 81 
+005af700	0077be04	Espressivo
+005af700	0077bdfc	5 79 
+005af750	0077be1c	a tempo
+005af750	0077be14	5 78 
+005af7a0	0077be30	Subito
+005af7a0	0077be28	5 85 
+005af7f0	0077be40	Segno
+005af7f0	0077be38	5 74 
+005af840	0077be48	5 75 
+005af890	0077be60	Horizontal Slashes
+005af890	0077be58	5 77 
+005af8e0	0077be80	Guitar Notation
+005af8e0	0077be78	5 131 
+005af930	0077be9c	White Circle
+005af930	0077be94	5 270 
+005af980	0077beb4	Black Circle
+005af980	0077beac	5 271 
+005af9d0	0077becc	White/Black Circle
+005af9d0	0077bec4	5 272 
+005afa20	0077beec	Roman
+005afa20	0077bee4	5 221 
+005afa70	0077befc	Roman Lower Case
+005afa70	0077bef4	5 231 
+005afac0	0077bf18	Figured Bass
+005afac0	0077bf10	5 240 
+005afb10	0077bf30	Figured Bass2
+005afb10	0077bf28	5 250 
+005afb60	0077bf48	Arrow
+005afb60	0077bf40	5 69 
+005afc00	0077bf60	Ottava Dash Up
+005afc00	0077bf58	OVAU 
+005afc50	0077bf7c	Ottava Dash Down
+005afc50	0077bf74	OVAD 
+005afca0	0077bf98	Ottava Bassa
+005afcf0	0077bfa8	5 2 6 4 8 0 9 0 
+005afd40	0077bfc0	5 3 6 4 8 0 9 0 
+005afd90	0077bfd8	5 4 6 4 8 0 9 0 
+005afde0	0077bff0	5 5 6 4 8 0 9 0 
+005afe30	0077c008	5 6 6 4 8 0 9 0 
+005afe80	0077c020	5 2 6 8 8 0 9 0 
+005afed0	0077c038	5 3 6 8 8 0 9 0 
+005aff20	0077c050	5 5 6 8 8 0 9 0 
+005aff70	0077c068	5 6 6 8 8 0 9 0 
+005affc0	0077c080	5 9 6 8 8 0 9 0 
+005b0010	0077c098	5 12 6 8 8 0 9 0 
+005b0060	0077c0b8	5 3 6 16 8 0 9 0 
+005b00b0	0077c0d8	5 6 6 16 8 0 9 0 
+005b0100	0077c0f8	5 9 6 16 8 0 9 0 
+005b0150	0077c130	12/16
+005b0150	0077c118	5 12 6 16 8 0 9 0 
+005b01a0	0077c138	Top Number Plus
+005b01a0	0077bb74	/5 1 
+005b01f0	0077c14c	Top Number Minus
+005b01f0	0077bb84	/5 -1 
+005b0240	0077c168	Bottom Number X2
+005b0240	0077c160	BOTX 
+005b0290	0077c17c	5 4 6 8 8 0 9 0 
+005b0380	0077c198	Center over Bar
+005b03d0	0077c1b4	Justify Normal
+005b03d0	0077c1ac	14 0 
+005b0420	0077c1d0	Justify Off
+005b0420	0077c1c8	14 1 
+005b0470	0077c1e8	Common Time
+005b0470	0077c1e0	5 99 
+005b04c0	0077c200	Cut Time
+005b04c0	0077c1f8	5 98 
+005b0510	0077c214	Harp Menu
+005b0510	0077c20c	HARP 
+005b0560	0077c228	Pedal Menu
+005b0650	0077c244	PEDA0 
+005b06a0	0077c254	PEDA1 
+005b06f0	0077c264	PEDA100 
+005b0740	0077c278	PEDA10 
+005b0790	0077c298	Ped101
+005b0790	0077c28c	PEDA101 
+005b07e0	0077c2ac	Ped011
+005b07e0	0077c2a0	PEDA011 
+005b0830	0077c2c0	Ped110
+005b0830	0077c2b4	PEDA110 
+005b0880	0077c2cc	Harp D Pedal
+005b08d0	0077c2e0	Harp C Pedal
+005b0920	0077c2f4	Harp B Pedal
+005b0970	0077c308	Harp E Pedal
+005b09c0	0077c31c	Harp F Pedal
+005b0a10	0077c330	Harp G Pedal
+005b0a60	0077c344	Harp A Pedal
+005b0ab0	0077c374	Circle 1
+005b0ab0	0077c354	1 9 5 90 6 0 7 0 8 0 9 0 
+005b0b00	0077c3a0	Circle 2
+005b0b00	0077c380	1 9 5 211 6 0 7 0 8 0 9 0 
+005b0b50	0077c3cc	Circle 3
+005b0b50	0077c3ac	1 9 5 212 6 0 7 0 8 0 9 0 
+005b0ba0	0077c3f8	Circle 4
+005b0ba0	0077c3d8	1 9 5 112 6 0 7 0 8 0 9 0 
+005b0bf0	0077c40c	Pedal size +
+005b0bf0	0077c404	PDSZ+ 
+005b0c40	0077c424	Pedal size -
+005b0c40	0077c41c	PDSZ- 
+005b0c90	0077c43c	Pedal size 0
+005b0c90	0077c434	PDSZ0 
+005b0ce0	0077c454	Pedal Left Line Minus
+005b0ce0	0077c44c	PDLF- 
+005b0d30	0077c478	Pedal Left Line Plus
+005b0d30	0077c470	PDLF+ 
+005b0d80	0077c49c	Pedal Right Line Minus
+005b0d80	0077c494	PDRF- 
+005b0dd0	0077c4c0	Pedal Right Line Plus
+005b0dd0	0077c4b8	PDRF+ 
+005b0e20	0077c4e4	Pedal 21
+005b0e20	0077c4dc	PEDB 
+005b0e70	0077c4f8	Pedal 22
+005b0e70	0077c4f0	PEDC 
+005b0ec0	0077c50c	Pedal Left Line Zero
+005b0ec0	0077c504	PDL0 
+005b0f10	0077c530	Pedal Right Line Zero
+005b0f10	0077c528	PDR0 
+005b0f60	0077c554	Pedal Midpoint Zero
+005b0f60	0077c54c	PDM0 
+005b0fb0	0077c574	Pedal Midpoint Plus
+005b0fb0	0077c56c	PDM+ 
+005b1000	0077c594	Pedal Midpoint Minus
+005b1000	0077c58c	PDM- 
+005b1050	0077c5bc	Init the Slider
+005b1050	0077c5b0	SLIDER  
+005b10b0	0077c5dc	Level the line P5=P4
+005b10b0	0077c5d0	50000 4 
+005b1420	0077c670	QP10 
+005b1470	0077c67c	QP11 
+005b14c0	0077c688	QP12 
+005b1510	0077c694	QP13 
+005b1560	0077c6a0	QP14 
+005b15b0	0077c6ac	QP15 
+005b1600	0077c6b8	QP16 
+005b1650	0077c6c4	QP17 
+005b16a0	0077c6d0	QP18 
+005b16f0	0077c6dc	QP19 
+005b1740	0077c6e8	QP20 
+005b1790	0077c6f4	QP21 
+005b17e0	0077c70c	Return to Previous Menu
+005b17e0	0077c704	RTRN 
+005b1830	0077c730	Plus 1
+005b1830	0077c728	PLUS1 
+005b1880	0077c744	Plus 10
+005b1880	0077c738	PLUS10 
+005b18d0	0077c75c	Plus 100
+005b18d0	0077c750	PLUS100 
+005b1920	0077c774	Minus 1
+005b1920	0077c768	MINUS1 
+005b1970	0077c78c	Minus 10
+005b1970	0077c780	MINUS10 
+005b19c0	0077c7a4	Minus 100
+005b19c0	0077c798	MINUS100 
+005b1a10	0077c7bc	Spread the Digits
+005b1a10	0077c7b0	SPREAD 
+005b1a60	0077c7dc	No Spread
+005b1a60	0077c7d4	SPRX 
+005b1ab0	0077c7f0	Upper Case Letters
+005b1b00	0077c810	Lower Case Letters
+005b1b50	0077c830	Box/Circle
+005b1b50	0077c828	BXCI 
+005b1c40	0077c848	Item in all Parts
+005b1c40	0077c840	ALPTS 
+005b1c90	0077c868	Item in no Parts
+005b1c90	0077c860	NOPTS 
+005b1ce0	0077c884	Normal P6
+005b1ce0	0077c87c	NORM6 
+005b1d30	0077c898	Increase vertical size
+005b1d30	0077c890	BXVP 
+005b1d80	0077c898	Increase vertical size
+005b1d80	0077c8b4	BXVM 
+005b1dd0	0077c898	Increase vertical size
+005b1dd0	0077c8bc	BXHP 
+005b1e20	0077c898	Increase vertical size
+005b1e20	0077c8c4	BXHM 
+005b1e70	0077c8d4	Default of last param
+005b1e70	0077c8cc	DFLT 
+005b1ec0	0077c8f8	Go to Font Menu
+005b1ec0	0077c8f0	FONT 
+005b1f10	0077c918	Accordion Menu
+005b1f10	0077c90c	ACCORD 
+005b1f60	0077c934	1 line
+005b1fb0	0077c944	2 line
+005b2000	0077c954	3 line
+005b2050	0077c95c	Top dot
+005b2050	0077b2f4	TOPD 
+005b20a0	0077c968	Bottom dot
+005b20a0	0077b2ac	BOTD 
+005b20f0	0077c980	Upper middle dot
+005b20f0	0077c978	MIDU 
+005b2140	0077c99c	Lower middle dot
+005b2140	0077c994	MIDD 
+005b2190	0077c9b8	Left dot
+005b2190	0077c9b0	LEFD 
+005b21e0	0077c9cc	Right dot
+005b21e0	0077c9c4	RHTD 
+005b2230	0077c9d8	GRID 
+005b2280	0077c9f0	Auto Grid
+005b2280	0077c9e8	AGRD 
+005b22e0	0077ca04	Left end of Barre
+005b2330	0077ca24	Right end of Barre
+005b2380	0077ca44	Remove Barre
+005b2380	0077ca3c	NOBR 
+005b23d0	0077ca5c	Fret Number
+005b23d0	0077ca54	FRETZ 
+005b2420	0077ca74	Chord accidental
+005b2420	0077ca6c	CHDA 
+005b2470	0077ca90	Chord type +
+005b2470	0077ca88	CHDT+ 
+005b24c0	0077caa8	Chord type -
+005b24c0	0077caa0	CHDT- 
+005b2510	0077cac0	Chord fingering
+005b2510	0077cab8	CHDF 
+005b2560	0077cadc	Grid All
+005b2560	0077cad4	5 -4 
+005b25b0	0077caf0	No chord name
+005b25b0	0077cae8	5 -6 
+005b2600	0077cb08	Chord name only
+005b2600	0077cb00	5 -5  
+005b2650	0077cb24	Chord C
+005b2650	0077cb1c	CHRC 
+005b26a0	0077cb38	Chord D
+005b26a0	0077cb30	CHRD 
+005b26f0	0077cb4c	Chord E
+005b26f0	0077cb44	CHRE 
+005b2740	0077cb60	Chord F
+005b2740	0077cb58	CHRF 
+005b2790	0077cb74	Chord G
+005b2790	0077cb6c	CHRG 
+005b27e0	0077cb88	Chord A
+005b27e0	0077cb80	CHRA 
+005b2830	0077cb9c	Chord B
+005b2830	0077cb94	CHRB 
+005b2880	0077cbb0	String 1 +
+005b2880	0077cba8	DT1P 
+005b28d0	0077cbc8	String 2 +
+005b28d0	0077cbc0	DT2P 
+005b2920	0077cbe0	String 3 +
+005b2920	0077cbd8	DT3P 
+005b2970	0077cbf8	String 4 +
+005b2970	0077cbf0	DT4P 
+005b29c0	0077cc10	String 5 +
+005b29c0	0077cc08	DT5P 
+005b2a10	0077cc28	String 6 +
+005b2a10	0077cc20	DT6P 
+005b2a60	0077cc40	String 1 -
+005b2a60	0077cc38	DT1M 
+005b2ab0	0077cc58	String 2 -
+005b2ab0	0077cc50	DT2M 
+005b2b00	0077cc70	String 3 -
+005b2b00	0077cc68	DT3M 
+005b2b50	0077cc88	String 4 -
+005b2b50	0077cc80	DT4M 
+005b2ba0	0077cca0	String 5 -
+005b2ba0	0077cc98	DT5M 
+005b2bf0	0077ccb8	String 6 -
+005b2bf0	0077ccb0	DT6M 
+005b2d30	0077ccd0	C to A
+005b2d80	0077cce0	Add accidental
+005b2dd0	0077ccfc	Chord type
+005b2dd0	0077ccf4	CHNT 
+005b2e20	0077cd14	Add sus, add, etc.
+005b2e70	0077cd34	Add more to name
+005b2e70	0077cd2c	ADMR 
+005b2ec0	0077cd50	Add interval number
+005b2f10	0077cd70	Subtract interval number
+005b2f10	0077cd68	ADNM 
+005b2f60	0077cd98	How many strings
+005b2f60	0077cd90	STRS 
+005b2fb0	0077cdb4	How many frets
+005b2fb0	0077cdac	FRTS 
+005b3000	0077cdd0	Accidental in front of number
+005b3050	0077ce04	Read Macro
+005b3050	0077cdf4	RE          
+005b30a0	0077ce20	Zero given parameter
+005b30a0	0077ce14	PCHNG0 
+005b30f0	0077ce48	subtract .05
+005b30f0	0077ce3c	PCHNG13 
+005b3140	0077ce64	add .05
+005b3140	0077ce58	PCHNG14 
+005b3190	0077ce80	Zero all higher params
+005b3190	0077ce70	PCHNG-9999 
+005b3280	0077cea4	Key Sig Flat
+005b3280	0077ce9c	KSFL 
+005b32d0	0077cebc	Key Sig Sharp
+005b32d0	0077ceb4	KSSH 
+005b3320	0077ced4	Key Sig Natural
+005b3320	0077cecc	KSNA 
+005b3370	0077cef0	Key Sig Treble
+005b3370	0077cee8	KSTR 
+005b33c0	0077cf0c	Key Sig bass
+005b33c0	0077cf04	KSBA 
+005b3410	0077cf24	Key Sig alto
+005b3410	0077cf1c	KSAL 
+005b3460	0077cf3c	Key Sig tenor
+005b3460	0077cf34	KSTN 
+005b34b0	0077cf54	Key Sig Cue Size
+005b34b0	0077cf4c	KSCU 
+005b3500	0077cf70	Key Sig Normal Size
+005b3500	0077cf68	KSNO 
+005b3550	0077cf90	Key Sig Justify on
+005b3550	0077cf88	KSJU 
+005b35a0	0077cfb0	Key Sig Justify off
+005b35a0	0077cfa8	KSNJ 
+005b35f0	0077cfd0	Key Sig Space +
+005b35f0	0077cfc8	KSSP 
+005b3640	0077cfec	Key Sig Space -
+005b3640	0077cfe4	KSSM 
+005b3690	0077d008	Key Sig Space 0
+005b3690	0077d000	KSSZ 
+005b36e0	0077d024	Key Sig 1st acci
+005b3730	0077d040	Key Sig 2nd acci
+005b3780	0077d05c	Key Sig 3rd acci
+005b37d0	0077d078	Key Sig 4th acci
+005b3820	0077d094	Key Sig 5th acci
+005b3870	0077d0b0	Key Sig 6th acci
+005b38c0	0077d0cc	Key Sig acci down
+005b38c0	0077d0c4	KSDN 
+005b3910	0077d0ec	Key Sig acci up
+005b3910	0077d0e4	KSUP 
+005b3960	0077d108	Key Sig clear special format
+005b3960	0077d100	KSZR 
+005b39b0	0077d134	Single Meter
+005b39b0	0077d12c	MTRS 
+005b3a00	0077d14c	Single Meter Plus
+005b3a00	0077d144	MTRSP 
+005b3a50	0077d16c	Comp top lf +
+005b3a50	0077d164	MTLP 
+005b3aa0	0077d184	Comp top lf -
+005b3aa0	0077d17c	MTLM 
+005b3af0	0077d19c	Comp top rt +
+005b3af0	0077d194	MTRP 
+005b3b40	0077d1b4	Comp top rt -
+005b3b40	0077d1ac	MTRM 
+005b3b90	0077d1cc	Comp Bot lf +
+005b3b90	0077d1c4	MBLP 
+005b3be0	0077d1e4	Comp Bot lf -
+005b3be0	0077d1dc	MBLM 
+005b3c30	0077d1fc	Comp Bot rt +
+005b3c30	0077d1f4	MBRP 
+005b3c80	0077d214	Comp Bot rt -
+005b3c80	0077d20c	MBRM 
+005b3cd0	0077d230	Increase space to +
+005b3cd0	0077d224	/10 .1 
+005b3d20	0077d254	Reduce space to +
+005b3d20	0077d248	/10 -.1 
+005b3d70	0077d278	Increase space to number
+005b3d70	0077d26c	/11 .1 
+005b3dc0	0077d2a4	Reduce space to number
+005b3dc0	0077d298	/11 -.1 
+005b3e10	0077d2d0	Zero params
+005b3e10	0077d2c0	10 0 11 0 
+005b3e60	0077d2e8	Laser thickness
+005b3e60	0077d2e0	MLAS 
+005b3eb0	0077d304	Plus off/on
+005b3eb0	0077d2fc	PONF 
+005b3f00	0077d320	Text up .5
+005b3f00	0077d314	/19 .5 
+005b3f50	0077d33c	Text down .5
+005b3f50	0077d330	/19 -.5 
+005b3fa0	0077d354	Text up 5
+005b3fa0	0077d34c	/19 5 
+005b3ff0	0077d36c	Text down 5
+005b3ff0	0077d360	/19 -5 
+005b4040	0077d384	Text normal level
+005b4040	0077d37c	19 0 
+005b4090	0077d3a4	Text size plus
+005b4090	0077d39c	TSZP 
+005b40e0	0077d3c0	Text size minus
+005b40e0	0077d3b8	TSZM 
+005b4130	0077d3dc	Text size normal
+005b4130	0077d3d4	TSZN 
+005b4180	0077d3fc	Guit text Menu
+005b4180	0077d3f0	QQ211  
+005b41d0	0077d418	Add number after slash
+005b41d0	0077d410	ADMN 
+005b4220	0077d43c	Add accidental after slash
+005b4220	0077d434	ADMA 
+005b4270	0077d45c	Add more after slash
+005b4270	0077cd2c	ADMR 
+005b42c0	0077d478	Normal strings/frets
+005b42c0	0077c1ac	14 0 
+005b4310	0077d49c	Fingering menu
+005b4310	0077d494	QQ207 
+005b4360	0077d4b8	Finger 0
+005b4360	0077d4b0	FNG0 
+005b43b0	0077d4cc	Finger T
+005b43b0	0077d4c4	FNGT 
+005b4400	0077d4e0	Finger 1
+005b4400	0077d4d8	FNG1 
+005b4450	0077d4f4	Finger 2
+005b4450	0077d4ec	FNG2 
+005b44a0	0077d508	Finger 3
+005b44a0	0077d500	FNG3 
+005b44f0	0077d51c	Finger 4
+005b44f0	0077d514	FNG4 
+005b4540	0077d530	Finger Blank
+005b4540	0077d528	FNGB 
+005b4590	0077d548	String 1
+005b45e0	0077d55c	String 2
+005b4630	0077d570	String 3
+005b4680	0077d584	String 4
+005b46d0	0077d598	String 5
+005b4720	0077d5ac	String 6
+005b4770	0077d5c0	fr number +
+005b4770	0077d5b8	FRNP 
+005b47c0	0077d5d8	fr number -
+005b47c0	0077d5d0	FRNM 
+005b4810	0077d5f0	fr down vertical offset
+005b4810	0077d5e8	FRND 
+005b4860	0077d614	fr up offset
+005b4860	0077d60c	FRNU 
+005b48b0	0077d658	Bends menu
+005b48b0	0077d624	5 2  6 2  7 2 8 0 9 0 10 0 11 0 12 0 13 0 
+005b4910	0077d670	Increase grid width
+005b4960	0077d690	Decrease grid width
+005b49b0	0077d6b0	Normal grid width
+005b4a00	0077d6d0	Next guitar menu
+005b4a00	0077d6c8	QQ209 
+005b4a60	0077d6ec	Font menu
+005b4a60	0077d6e4	QQ213 
+005b4ab0	0077d700	Times-Roman
+005b4ab0	0077d6f8	FNT00 
+005b4b00	0077d718	Times-Bold
+005b4b00	0077d710	FNT01 
+005b4b50	0077d730	Times-Italic
+005b4b50	0077d728	FNT02 
+005b4ba0	0077d748	Times-BoldItalic
+005b4ba0	0077d740	FNT03 
+005b4bf0	0077d764	Palatino-Roman
+005b4bf0	0077d75c	FNT12 
+005b4c40	0077d780	Palatino-Bold
+005b4c40	0077d778	FNT13 
+005b4c90	0077d798	Palatino-Italic
+005b4c90	0077d790	FNT14 
+005b4ce0	0077d7b4	Palatino-BoldItalic
+005b4ce0	0077d7ac	FNT15 
+005b4d30	0077d7d4	Helvetica
+005b4d30	0077d7cc	FNT04 
+005b4d80	0077d7e8	Helvetica-Bold
+005b4d80	0077d7e0	FNT05 
+005b4dd0	0077d804	Helvetica-Oblique
+005b4dd0	0077d7fc	FNT06 
+005b4e20	0077d824	Helvetica-BoldOblique
+005b4e20	0077d81c	FNT07 
+005b4e70	0077d848	Helvetica-Narrow
+005b4e70	0077d840	FNT08 
+005b4ec0	0077d864	Helvetica-Narrow-Bold
+005b4ec0	0077d85c	FNT09 
+005b4f10	0077d888	Helvetica-Narrow-Oblique
+005b4f10	0077d880	FNT10 
+005b4f60	0077d8b0	Helvetica-Narrow-BoldOblique
+005b4f60	0077d8a8	FNT11 
+005b4fb0	0077d8dc	Return to previous menu
+005b4fb0	0077d8d4	QQ000 
+005b5000	0077d900	Font 35
+005b5000	0077d8f8	FNT35 
+005b5050	0077d914	Font 36
+005b5050	0077d90c	FNT36 
+005b50a0	0077d928	Dingbats
+005b50a0	0077d920	FNT34 
+005b50f0	0077d93c	Symbol
+005b50f0	0077d934	FNT33 
+005b5140	0077d94c	Courier
+005b5140	0077d944	FNT29 
+005b5190	0077d960	Courier-Bold
+005b5190	0077d958	FNT30 
+005b51e0	0077d978	Courier-Oblique
+005b51e0	0077d970	FNT31 
+005b5230	0077d994	Courier-BoldOblique
+005b5230	0077d98c	FNT32 
+005b5280	0077d9b4	AvandGarde-Book
+005b5280	0077d9ac	FNT16 
+005b52d0	0077d9d0	AvandGarde-BookOblique
+005b52d0	0077d9c8	FNT17 
+005b5320	0077d9f4	AvandGarde-Demi
+005b5320	0077d9ec	FNT18 
+005b5370	0077da10	AvandGarde-DemiOblique
+005b5370	0077da08	FNT19 
+005b53c0	0077da34	Bookman-Light
+005b53c0	0077da2c	FNT20 
+005b5410	0077da4c	Bookman-LightItalic
+005b5410	0077da44	FNT21 
+005b5460	0077da6c	Bookman-Demi
+005b5460	0077da64	FNT22 
+005b54b0	0077da84	Bookman-DemiItalic
+005b54b0	0077da7c	FNT23 
+005b5500	0077daa4	NewCentury-Roman
+005b5500	0077da9c	FNT24 
+005b5550	0077dac0	NewCentury-Bold
+005b5550	0077dab8	FNT25 
+005b55a0	0077dadc	NewCentury-Italic
+005b55a0	0077dad4	FNT26 
+005b55f0	0077dafc	NewCentury-BoldItalic
+005b55f0	0077daf4	FNT27 
+005b5640	0077db20	ZapfChancery-MediumItalic
+005b5640	0077db18	FNT28 
+005b5690	0077db48	Music font
+005b5690	0077db40	FNT94 
+005b56e0	0077db60	Character space +
+005b56e0	0077db58	CHSP 
+005b5730	0077db80	Character space -
+005b5730	0077db78	CHSM 
+005b5780	0077dba0	Character space normal
+005b5780	0077db98	CHSD 
+005b57d0	0077dbc4	Space character space +
+005b57d0	0077dbbc	SPSP 
+005b5820	0077dbe8	Space character space -
+005b5820	0077dbe0	SPSM 
+005b5870	0077dc0c	Space character space normal
+005b5870	0077dc04	SPSD 
+005b58c0	0077dc38	Sus/add acci
+005b58c0	0077dc30	SUSA 
+005b5910	0077dc50	Sus/add number
+005b5910	0077dc48	SUSN 
+005b5960	0077dc6c	Edit text string
+005b59b0	0077dc84	Center on pos. x
+005b5a00	0077dc98	Center on note
+005b5a50	0077dcb0	Justify text
+005b5aa0	0077dcc4	Right Justify text
+005b5af0	0077dce4	Next text menu
+005b5af0	0077dcdc	QQ214 
+005b5b40	0077dd00	Main text menu
+005b5b40	0077dcf8	QQ194 
+005b5b90	0077dd1c	Ripple text down
+005b5be0	0077dd38	Ripple text up
+005b5be0	0077dd30	RIP-1 
+005b5c30	0077dd54	Ripple text down-new line
+005b5c30	0077dd4c	RIPX 
+005b5c80	0077dd80	Ripple text up-new line
+005b5c80	0077dd74	RIPX-1 
+005b5cd0	0077dda4	box size default
+005b5d20	0077ddc0	box up
+005b5d70	0077ddd0	box down
+005b5dc0	0077dde4	box right
+005b5e10	0077ddf8	box left
+005b5e60	0077de0c	box normal
+005b5eb0	0077de1c	13 1 
+005b5f00	0077de34	no fill
+005b5f00	0077de2c	13 0 
+005b5f50	0077de50	triangle
+005b5f50	0077de40	12 120 5 1 
+005b5fa0	0077de6c	pentagon
+005b5fa0	0077de5c	12 72 5 1 
+005b5ff0	0077de88	hexagon
+005b5ff0	0077de78	12 60 5 1 
+005b6040	0077de9c	next box menu
+005b6040	0077de94	QQ215 
+005b6090	0077deb4	return to code 12 menu
+005b6090	0077deac	QQ195 
+005b60e0	0077ded8	arc A +5
+005b60e0	0077ded0	ARCAP 
+005b6130	0077deec	arc A -5
+005b6130	0077dee4	ARCAM 
+005b6180	0077df00	arc B +5
+005b6180	0077def8	ARCBP 
+005b61d0	0077df14	arc B -5
+005b61d0	0077df0c	ARCBM 
+005b6220	0077df20	no arc
+005b6220	0077d2c0	10 0 11 0 
+005b6270	0077df30	circle dashes
+005b6270	0077df28	CDSH 
+005b62c0	0077df48	skew left
+005b62c0	0077df40	SKWL 
+005b6310	0077df5c	skew right
+005b6310	0077df54	SKWR 
+005b6360	0077df74	No skew
+005b6360	0077df6c	SKW0 
+005b63b0	0077df88	slider factor 1/2
+005b63b0	0077df80	SLDB 
+005b6400	0077dfa8	slider small increments
+005b6400	0077dfa0	SLDS 
+005b6450	0077dfcc	round off to .1
+005b6450	0077dfc4	RNDF1 
+005b64a0	0077dfe8	round off to 0
+005b64a0	0077dfe0	RNDF0 
+005b64f0	0077e004	round off to 0 or .5
+005b64f0	0077dffc	RNDF5 
+005b6540	0077e02c	Change param -.1
+005b6540	0077e020	PCHNG1 
+005b6590	0077e04c	Change param -.5
+005b6590	0077e040	PCHNG2 
+005b65e0	0077e06c	Change param -1
+005b65e0	0077e060	PCHNG3 
+005b6630	0077e08c	Change param -5
+005b6630	0077e080	PCHNG4 
+005b6680	0077e0ac	Change param -10
+005b6680	0077e0a0	PCHNG5 
+005b66d0	0077e0cc	Change param -20
+005b66d0	0077e0c0	PCHNG6 
+005b6720	0077e0ec	Change param +.1
+005b6720	0077e0e0	PCHNG7 
+005b6770	0077e10c	Change param +.5
+005b6770	0077e100	PCHNG8 
+005b67c0	0077e12c	Change param +1
+005b67c0	0077e120	PCHNG9 
+005b6810	0077e14c	Change param +5
+005b6810	0077e140	PCHNG10 
+005b6860	0077e16c	Change param +10
+005b6860	0077e160	PCHNG11 
+005b68b0	0077e18c	Change param +20
+005b68b0	0077e180	PCHNG12 
+005b6900	0077e1a4	Center vertical
+005b6950	0077e1c0	Center on note to left
+005b69a0	0077e1e4	Center on note to right
+005b69f0	0077e20c	Triplet slur
+005b69f0	0077e200	SLTRIP 
+005b6a40	0077e224	Triangle slur
+005b6a40	0077e21c	TRIA 
+005b6a90	0077e234	p12=0
+005b6a90	0077a5e4	12 0 
+005b6ae0	0077e244	number up
+005b6ae0	0077e23c	NUMU 
+005b6b30	0077e258	number down
+005b6b30	0077e250	NUMD 
+005b6b80	0077e270	number vert. default
+005b6b80	0077e268	NUMV0 
+005b6bd0	0077e294	number horz. default
+005b6bd0	0077e28c	NUMH0 
+005b6c20	0077e2b8	number left
+005b6c20	0077e2b0	NUML 
+005b6c70	0077e2d0	number right
+005b6c70	0077e2c8	NUMR 
+005b6cc0	0077e2e8	number plus
+005b6cc0	0077e2e0	NUMP 
+005b6d10	0077e300	number minus
+005b6d10	0077e2f8	NUMM 
+005b6d60	0077e31c	turn off mouse drag
+005b6d60	0077e310	DRGOFF 
+005b6db0	0077e33c	P4 +1
+005b6db0	0077e334	/4 1 
+005b6e00	0077e34c	P4 -1
+005b6e00	0077e344	/4 -1 
+005b6e50	0077e35c	P6 minus
+005b6e50	0077e354	PSIXM 
+005b6ea0	0077e370	P7 minus
+005b6ea0	0077e368	PSEVM 
+005b6ef0	0077e384	P7 zero
+005b6ef0	0077e37c	PSEVZ 
+005b6f40	0077e398	P11 minus
+005b6f40	0077e390	PELVM 
+005b6f90	0077e3ac	P12 minus
+005b6f90	0077e3a4	PTWLM 
+005b6fe0	0077e3c0	P13 zero
+005b6fe0	0077e3b8	PTHRZ 
+005b7030	0077e3d4	P6 plus
+005b7080	0077e3e8	P7 plus
+005b70d0	0077e3fc	P11 plus
+005b70d0	0077e3f4	PB11 
+005b7120	0077e410	P12 plus
+005b7120	0077e408	PB12 
+005b7170	0077e42c	Get 000
+005b7170	0077e41c	RS !000.mus 
+005b71c0	0077e43c	repeat last command
+005b7210	0077e454	Pedal line
+005b7210	0077c4f0	PEDC 
+005b7260	0077e46c	Edit box OK
+005b7260	0077e464	BOXOK 
+005b72b0	0077e480	del cd 1
+005b7300	0077e490	del cd 2
+005b7350	0077e4a0	del cd 3
+005b73a0	0077e4b0	del cd 4
+005b73f0	0077e4c0	del cd 5
+005b7440	0077e4d0	del cd 6
+005b7490	0077e4e0	del cd 7
+005b74e0	0077e4f0	del cd 8
+005b7530	0077e500	del cd 9
+005b7580	0077e510	del cd 10
+005b75d0	0077e520	del cd 12
+005b7620	0077e530	del cd 14
+005b7670	0077e540	del cd 15
+005b76c0	0077e550	del cd 16
+005b7710	0077e560	del cd 17
+005b7760	0077e570	del cd 18
+005b77b0	0077e580	del all
+005b7800	0077e590	Lineup
+005b7850	0077e598	Justify
+005b78a0	0077e5a4	Flip all
+005b78f0	0077e5b8	Flip up
+005b7940	0077e5cc	Flip down
+005b7990	0077e5e0	Flip normal
+005b79e0	0077e5f8	group Adjust stems
+005b7b30	0077e61c	STUD 
+005b7bd0	0077e630	Transpose
+005b7c80	0077e648	Transpose -1
+005b7c80	0077aae4	TRM1 
+005b7cd0	0077e658	Transpose -2
+005b7cd0	0077aaec	TRM2 
+005b7d20	0077e668	Transpose -3
+005b7d20	0077ab08	TRM3 
+005b7d70	0077e678	Transpose -4
+005b7d70	0077ab24	TRM4 
+005b7dc0	0077e690	Transpose -5
+005b7dc0	0077e688	TRM5 
+005b7e10	0077e6a8	Transpose -6
+005b7e10	0077e6a0	TRM6 
+005b7e60	0077e6c0	Transpose -7
+005b7e60	0077e6b8	TRM7 
+005b7eb0	0077e6d8	Transpose -8
+005b7eb0	0077e6d0	TRM8 
+005b7f00	0077e6f0	Transpose -9
+005b7f00	0077e6e8	TRM9 
+005b7f50	0077e708	Transpose -10
+005b7f50	0077e700	TRM10 
+005b7fa0	0077e720	Transpose -11
+005b7fa0	0077e718	TRM11 
+005b7ff0	0077e738	Transpose -12
+005b7ff0	0077e730	TRM12 
+005b8040	0077e750	Transpose +1
+005b8040	0077e748	TRP1 
+005b8090	0077e768	Transpose +2
+005b8090	0077e760	TRP2 
+005b80e0	0077e780	Transpose +3
+005b80e0	0077e778	TRP3 
+005b8130	0077e798	Transpose +4
+005b8130	0077e790	TRP4 
+005b8180	0077e7b0	Transpose +5
+005b8180	0077e7a8	TRP5 
+005b81d0	0077e7c8	Transpose +6
+005b81d0	0077e7c0	TRP6 
+005b8220	0077e7e0	Transpose +7
+005b8220	0077e7d8	TRP7 
+005b8270	0077e7f8	Transpose +8
+005b8270	0077e7f0	TRP8 
+005b82c0	0077e810	Transpose +9
+005b82c0	0077e808	TRP9 
+005b8310	0077e828	Transpose +10
+005b8310	0077e820	TRP10 
+005b8360	0077e840	Transpose +11
+005b8360	0077e838	TRP11 
+005b83b0	0077e858	Transpose +12
+005b83b0	0077e850	TRP12 
+005b8400	0077e870	Transpose by Inst. Key
+005b8450	0077e894	Top of display
+005b84a0	0077e8b0	Bottom of display
+005b84f0	0077e8c8	0 200 
+005b8540	0077e8d0	1 200 
+005b8590	0077e8d8	2 200 
+005b85e0	0077e8e0	10 200 
+005b8630	0077e8ec	100 200 
+005b8680	0077e8f8	0 100 
+005b8b80	0077e944	backspace in input mode
+005b9440	0077ea34	MDH/ 
+005b9490	0077ea3c	INZ   
+005b9530	0077ea54	percussion clef
+005b9850	0077ea94	MRD/ 
+005b9990	0077eab4	K1F/ 
+005b99e0	0077eabc	K2F/ 
+005b9a30	0077eac4	K3F/ 
+005b9a80	0077eacc	K4F/ 
+005b9ad0	0077ead4	K5F/ 
+005b9b20	0077eadc	K6F/ 
+005b9b70	0077eae4	K7F/ 
+005b9bc0	0077eaec	K1S/ 
+005b9c10	0077eaf4	K2S/ 
+005b9c60	0077eafc	K3S/ 
+005b9cb0	0077eb04	K4S/ 
+005b9d00	0077eb0c	K5S/ 
+005b9d50	0077eb14	K6S/ 
+005b9da0	0077eb1c	K7S/ 
+005b9e40	0077eb2c	common time   
+005b9e40	0077eb24	COM/ 
+005b9e90	0077eb48	cut time   
+005b9e90	0077eb40	CUT/ 
+005b9ee0	0077eb60	2/4   
+005b9ee0	0077eb58	2 4/ 
+005b9f30	0077eb68	3 4/ 
+005b9f80	0077eb70	4 4/ 
+005b9fd0	0077eb78	5 4/ 
+005ba020	0077eb80	6 4/ 
+005ba070	0077eb88	2 8/ 
+005ba0c0	0077eb90	3 8/ 
+005ba110	0077eb98	4 8/ 
+005ba160	0077eba0	5 8/ 
+005ba1b0	0077eba8	6 8/ 
+005ba200	0077ebb0	9 8/ 
+005ba250	0077ebb8	12 8/ 
+005ba2a0	0077ebc0	3 16/ 
+005ba2f0	0077ebc8	6 16/ 
+005ba340	0077ebd0	9 16/ 
+005ba390	0077ebd8	12 16/ 
+005ba3e0	0077ebec	      
+005ba430	0077ebec	      
+005ba480	0077ec04	 ordinary 
+005ba570	0077ec04	 ordinary 
+005ba5c0	0077ec2c	RWU/ 
+005ba610	0077ec34	RWD/ 
+005ba6b0	0077ec48	repeat last item
+005bab60	0077ecb4	32./ 
+005babb0	0077ecbc	X3 2/ 
+005bac00	0077ecc4	X3 3/ 
+005bac50	0077eccc	X3 4/ 
+005baca0	0077ecd4	X4 2/ 
+005bacf0	0077ecdc	X4 3/ 
+005bad40	0077ece4	X4 4/ 
+005bad90	0077ecec	Z3 2/ 
+005bade0	0077ecf4	Z3 3/ 
+005bae30	0077ecfc	Z3 4/ 
+005bae80	0077ed04	Z4 2/ 
+005baed0	0077ed0c	Z4 3/ 
+005baf20	0077ed14	Z4 4/ 
+005bb010	0077ebec	      
+005bb060	0077ebec	      
+005bb0b0	0077ebec	      
+005bb100	0077ebec	      
+005bb470	0077ed68	IN + 
+005bb660	0077ed88	-WS  
+005bb6b0	0077ed90	-AS  
+005bb700	0077ed98	-TS  
+005bb750	0077eda0	-ACT 
+005bb9d0	0077eddc	1 8th per beam
+005bba20	0077edf8	3 16ths per beam
+005bba70	0077ee14	2 8ths per beam
+005bbac0	0077ee30	3 8ths per beam
+005bbb10	0077ee4c	4 8ths per beam
+005bbb60	0077ee68	6 8ths per beam
+005bbbb0	0077ee84	1 pickup
+005bbc00	0077ee98	2 pickup
+005bbc50	0077eeac	3 pickup
+005bbca0	0077eec0	3 over beams
+005bbcf0	0077eed8	4 over beams
+005bbd40	0077eef0	5 over beams
+005bbd90	0077ef08	6 over beams
+005bbde0	0077ef1c	beam/slur up
+005bbe30	0077ef34	beam/slur down
+005bbe30	0077ef2c	DOWN 
+005bbe80	0077ef48	99 1/ 
+005bbed0	0077ef50	## 99/ 
+005bbf20	0077ef5c	0 1/ 
+005bbf70	0077ef64	%% %%/ 
+005bbfc0	0077ef78	Start MIDI
+005bbfc0	0077ef70	MIDI 
+005bc010	0077ef90	Edit Input
+005bc060	0077efb0	Read TMP.TXT
+005bc060	0077efa0	RE TMP.TXT 
+005bc0b0	0077efc8	No dot (note/rest)
+005bc1a0	0077eff4	Ten. Sax
+005bc1a0	0077efec	TRP14 
+005bc1f0	0077f008	Bar. Sax
+005bc1f0	0077f000	TRP21 
+005bc240	0077f01c	Get last file read in
+005bc240	0077f014	LAST 
+005bc290	0077f040	Clef change
+005bc290	0077f038	TRM0 
+005bc2e0	0077f058	Middle of display
+005bc330	0077f07c	Freeze display position
+005bc330	0077f070	FREEZE 
+005bc380	0077f0a0	How many beats in line?
+005bc380	0077f098	BEATS 
+005bc3d0	0077f0c0	Repeat last command
+005bc420	0077f0dc	Center dash
+005bc470	0077f0f4	Vertical inches
+005bc650	0077f138	TRFW 
+005bc830	0077f158	CHF+ 
+005bc880	0077f160	CHF- 
+005bc8d0	0077ebec	      
+005bc8d0	0077f168	FNG5 
+005bc920	0077f170	TRNW 
+005bc970	0077f138	TRFW 
+005bc9c0	0077f178	TRSW 
+005bca60	0077f18c	vertical just
+005bcb80	0077f1ac	XOFF 
+005bccf0	0077f1c4	MDSTOP 
+005bcd50	0077f1d0	MDAUTO 
+005bcda0	0077f1dc	MDTRKS 
+005bcdf0	0077f1e8	MDTRNSP 
+005bce40	0077f1f4	MDINST 
+005bce90	0077f200	MDAMPLS 
+005bcee0	0077f20c	MDTEMPO 
+005bcf30	0077f218	MDEXIT 
+005bcf90	0077f224	MDALL 
+005bcfe0	0077f22c	MDLIST 
+005bd0d0	0077f240	5 2 6 2 8 0 9 0 
+005bd120	0077f258	5 3 6 2 8 0 9 0 
+005bd170	0077de1c	13 1 
+005bd1c0	0077de1c	13 1 
+005bd300	0077f28c	STP+ 
+005bd350	0077f294	STP- 
+005bd3a0	0076bd88	~~115
+005bd3f0	0076bd58	~~121
+005bd580	0077f2b4	CRV1 
+005bd5e0	0077f2bc	CRV2 
+005bd630	0077f2c4	FILL 
+005bd8b0	0077f2f4	SKIP 
+005bd900	0077f2fc	SKIPB 
+005bdae0	0077ebec	      
+005bdd20	0077f340	RESTO 
+005bddc0	0077ebec	      
+005bde10	0077f350	~~037x
+005bde60	0077f358	~~039x
+005bdeb0	0077f360	~~0>> 
+005bdf00	0077f368	~~0==
+005bdf50	0077f370	~~038x
+005bdfa0	0077f378	~~040x
+005bdff0	0077f380	~~===
+005be0e0	0077f390	SZ.9 
+005be130	0077f398	SZ.8 
+005be180	0077f3a0	SZ.7 
+005be1d0	0077f3a8	SZ.6 
+005be220	0077f3b0	SZ.5 
+005be270	0077f3b8	SZ.4 
+005be630	0077f410	6 10 
+005be680	0077f418	6 11 
+005be6d0	0077f420	6 12 
+005be720	0077f428	6 13 
+005be770	0077f430	6 14 
+005be7c0	0077f438	6 15 
+005be810	0077f440	6 17 
+005be860	0077f448	6 16 
+005be8b0	0077f450	6 18 
+005be900	0077f458	6 19 
+005beb30	0077f47c	STSP 
+005beb80	0077f484	PREF 
+005bebd0	0077f48c	H../ 
+005bec20	0077f494	Q../ 
+005bec70	0077f49c	E../ 
+005becc0	0077f4a4	S../ 
+005bed10	0077f4ac	10./ 
+005bed60	0077f4b4	TE./ 
+005bee00	0077f4bc	5 1001 18 100
+005bee50	0077f4cc	5 1001 18 1
+005bef90	0077f4e8	900 .5
+005bf1c0	0077f50c	LIB  
+005bf260	0077f51c	HALF 
+005bf530	0077f550	SUD  
+005bfbb0	0077f5ac	P110 
+005bfc00	0077f5b4	PATHX 
+005bfd90	0077f5cc	Failed to create SlurBar\n
+005bffd0	0077f5ec	Tablature
+005c0050	00778d5c	General
+005c02e0	007a0a9c	%u,%u,%d,%d,%d,%d,%d,%d,%d,%d %d
+005c02e0	007a0a90	WindowPos
+005c02e0	007a0a84	Settings
+005c03d0	007a0b44	%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d
+005c03d0	007a0ad8	ToolbarState
+005c03d0	007a0a84	Settings
+005c03d0	007a0afc	%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d
+005c03d0	007a0acc	TbarRects
+005c03d0	007a0a84	Settings
+005c03d0	007a0ae8	%d,%d,%d,%d,%d,%d
+005c03d0	007a0ac0	TbarDocks
+005c03d0	007a0a84	Settings
+005c1cc0	0077f5f8	::/contents.html
+005c21e0	0076bd58	~~121
+005c22d0	0077f644	RESTO
+005c2640	0077f674	PRINT
+005c2870	007792cc	Abort the edit
+005c2870	007792c4	AB   
+005c28c0	0077e630	Transpose
+005c2940	0077e598	Justify
+005c29e0	00779174	Restart program
+005c2a30	00779190	Restart with same file
+005c2a30	00779188	RSM  
+005c2a80	007791b0	Get previous file
+005c2ad0	0077f68c	Z2/Z1 flip-flop
+005c2b20	0077f01c	Get last file read in
+005c2b20	0077f014	LAST 
+005c2b70	0077926c	Height
+005c2b70	00779264	H    
+005c2c60	007797a8	Spacing Scale
+005c3420	0077f370	~~038x
+005c3470	0077f6b0	8 -3)
+005c34c0	0077f6b8	MM60 
+005c3510	0077f6c0	MM72 
+005c3560	0077f6c8	MM48 
+005c35b0	0077f6d0	MM54 
+005c3600	0077f6d8	MM84 
+005c3650	0077f6e0	MM96 
+005c36a0	0077f6e8	MM108
+005c36f0	0077f6f0	MM120
+005c3740	0077f6f8	MM132
+005c3790	0077f700	MM-6 
+005c37e0	0077f708	MM144
+005c3830	0077f710	MM-12 
+005c3880	0077f718	PATHX 0 
+005c38d0	0077f724	PATHX 1 
+005c3920	0077f730	PATHX 4 
+005c3970	0077f73c	PATHX 5 
+005c39c0	0077f748	PATHX 6 
+005c3a10	0077f754	PATHX 7 
+005c3a60	0077f760	PATHX 8 
+005c3ab0	0077f76c	PATHX 9 
+005c3b00	0077f778	PATHX 2 
+005c3f80	0077f784	PATHX 3 
+005c4700	007a0c58	c:\!tmp\wscmidi.mid
+005c4b30	007a0fe8	MIDIPlyrTWnd
+005c57a0	007a0c58	c:\!tmp\wscmidi.mid
+005c57a0	007a0e58	MIDI File (*.MID;*.RMI)
+005c57a0	007a0c58	c:\!tmp\wscmidi.mid
+005c5e20	0077f7ac	Midi file Write error
+005c5e20	0077f790	midi file close error
+005c7fe0	007a0fd8	MIDIPlyrMWnd
+005c7fe0	007a0fe8	MIDIPlyrTWnd
+005c8160	007a0fd8	MIDIPlyrMWnd
+005c9c20	00780670	%d %d
+005ca010	0076d988	%5.2f
+005ca290	00780670	%d %d
+005ca540	00780670	%d %d
+005ca840	0076d988	%5.2f
+005ce060	007a11d0	%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d
+005ce1a0	007a11d0	%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d
+005d2fd0	00781e6c	C:\PROGRAM FILES\WINSCORE\SCORLIB\PREF.DAT
+005d2fd0	00781e40	C:\PROGRAM FILES\WINSCORE\SCORLIB\
+005d2fd0	00781e14	C:\PROGRAM FILES\WINSCORE\FONTLIB\
+005d2fd0	00781dfc	\\COMPUTER\PRINTER
+005d2fd0	00781dc0	C:\PROGRAM FILES (x86)\WINSCORE\SCORLIB\PREF.DAT
+005d2fd0	00781d8c	C:\PROGRAM FILES (x86)\WINSCORE\SCORLIB\
+005d2fd0	00781d58	C:\PROGRAM FILES (x86)\WINSCORE\FONTLIB\
+005d3f10	00782348	%f %*c %f
+005d4690	007823c4	Letter (default)
+005d4690	007823b0	Legal (8.5x14)
+005d4690	0078238c	Ledger (Portrait mode 11x17)
+005d4690	00782368	Ledger (Landscape mode 17x11)
+005d4690	00782354	Concert (9x12)
+005d5d80	00782420	LOADED
+005d5d80	00782404	PRINT.SCR
+005d69c0	00782428	SAVED
+005d92b0	00782ae8	File not found.
+005d92b0	00782404	PRINT.SCR
+005d92b0	00782ac0	Load Print Parameters from file:
+005d92b0	00782a98	Save Print Parameters in file:
+005ddc40	007a1348	C:\WS\SrvrItem.cpp
+005ddd30	007a1348	C:\WS\SrvrItem.cpp
+005dddf0	007a1348	C:\WS\SrvrItem.cpp
+005e0040	007a140c	444444444
+005e0040	007a140c	444444444
+005e20b0	007a1468	%s:\n%s
+005e2400	007a1470	arial
+005e3440	00784408	SanAndreasPress
+005e3440	007a14b0	C:\WS\WScore.cpp
+005e3440	007a14b0	C:\WS\WScore.cpp
+005e3440	007843f8	hlp\whlp.chm
+005e3440	007843e4	midiInGetDevCaps
+005e3440	007843d0	IDS_NOMEM_IBUF
+005e3440	007843c4	IDS_NOMEM
+005e3440	007843b0	midiInOpen(%u)
+005e44c0	007a14c8	C:\WS\WScoreDoc.cpp
+005e4830	007a14c8	C:\WS\WScoreDoc.cpp
+005e4830	007a14c8	C:\WS\WScoreDoc.cpp
+005e4920	007a14c8	C:\WS\WScoreDoc.cpp
+005e4ae0	007847ec	Can't open file %s, error = %u\n
+005e5010	00784814	Font Test
+005e5010	0076cfa4	error
+005e5460	007a14e8	C:\WS\WScoreView.cpp
+005e5910	007a14e8	C:\WS\WScoreView.cpp
+005e5910	007a1500	Anastasia
+005e5910	007a1500	Anastasia
+005e5910	007a1500	Anastasia
+005e5910	007a1520	Test text string.
+005e5910	007a1520	Test text string.
+005e5910	007a1520	Test text string.
+005e5910	007a1520	Test text string.
+005e5910	00784814	Font Test
+005e5910	007a1500	Anastasia
+005e5910	007a1500	Anastasia
+005e5910	007a1500	Anastasia
+005e5910	007a1520	Test text string.
+005e5910	007a1520	Test text string.
+005e5910	007a1520	Test text string.
+005e5910	007a1520	Test text string.
+005e7300	007791cc	Print
+005e7970	007a14e8	C:\WS\WScoreView.cpp
+005e7ac0	007a14e8	C:\WS\WScoreView.cpp
+005e7ac0	007a14e8	C:\WS\WScoreView.cpp
+005e7ac0	007a14e8	C:\WS\WScoreView.cpp
+005e7ac0	007a14e8	C:\WS\WScoreView.cpp
+005e7ac0	007a14e8	C:\WS\WScoreView.cpp
+005e7cd9	007a14e8	C:\WS\WScoreView.cpp
+005e7cd9	007a14e8	C:\WS\WScoreView.cpp
+005e7eb0	007a14e8	C:\WS\WScoreView.cpp
+005e8220	007a14e8	C:\WS\WScoreView.cpp
+005e8360	00784d88	%d/%d
+005e8360	00784d7c	 Item #
+005e8360	00784d74	 P1/11
+005e8360	00784d6c	 P2/12
+005e8360	00784d64	 P3/13
+005e8360	00784d5c	 P4/14
+005e8360	00784d54	 P5/15
+005e8360	00784d4c	 P6/16
+005e8360	00784d44	 P7/17
+005e8360	00784d3c	 P8/18
+005e8360	00784d34	 P9/19
+005e8360	00784d2c	P10/20
+005e8360	00784d24	%2.0f
+005e8360	00784d1c	%5.1f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	0076cc6c	%8.3f
+005e8360	00784d88	%d/%d
+005ecbf0	00785094	Continue
+005ecfa0	00785094	Continue
+005ee5f8	00785424	KERNEL32
+005ee71f	00785430	e+000
+005ef7b1	00785710	<program name unknown>
+005ef7b1	007856f0	Runtime Error!\n\nProgram: 
+005ef7b1	00785644	R6009\r\n- not enough space for environment\r\n
+005ef7b1	007856c4	Microsoft Visual C++ Runtime Library
+005ef7b1	00785644	R6009\r\n- not enough space for environment\r\n
+005ef7b1	00785644	R6009\r\n- not enough space for environment\r\n
+005f1e63	00785758	user32.dll
+005f1e63	0078574c	MessageBoxA
+005f1e63	0078573c	GetActiveWindow
+005f1e63	00785728	GetLastActivePopup
+005f2cea	007857a8	1#SNAN
+005f2cea	007857a0	1#IND
+005f2cea	00785798	1#INF
+005f2cea	00785790	1#QNAN
+005f3219	007857b0	hhctrl.ocx
+005f32b2	007857c0	CLSID\{ADB880A6-D8FF-11CF-9377-00AA003B7A11}\InprocServer32
+005f3311	007857b0	hhctrl.ocx
+005f34f0	007a1e14	Internal Formatted Write or ENCODE
+005f34f0	007a1e38	ENCODE
+005f34f0	007a1e40	Internal Formatted Write
+005f47c0	007a1e5c	unknown
+005f47c0	007a1e64	unknown
+005f47c0	007a1e6c	unknown
+005f47c0	007a1e74	unknown
+005f47c0	007a1e7c	unknown
+005f47c0	007a1eb0	UNDEFINED
+005f47c0	007a1ebc	UNKNOWN
+005f47c0	007a1ec8	UNKNOWN
+005f47c0	007a1ed4	UNKNOWN
+005f47c0	007a1ee4	UNKNOWN
+005f47c0	007a1eec	UNKNOWN
+005f47c0	007a1efc	UNKNOWN
+005f47c0	007a1f04	UNKNOWN
+005f47c0	007a1f0c	UNKNOWN
+005f47c0	007a1f14	UNKNOWN
+005f47c0	007a1f1c	E:\forrtl\build\for_inquire.c
+005f47c0	007a1f64	UNKNOWN
+005f47c0	007a1f6c	E:\forrtl\build\for_inquire.c
+005f47c0	007a1fd4	UNKNOWN
+005f47c0	007a1fdc	UNKNOWN
+005f47c0	007a1ff0	UNKNOWN
+005f47c0	007a2004	UNKNOWN
+005f47c0	007a200c	UNKNOWN
+005f47c0	007a2014	UNDEFINED
+005f47c0	007a2028	WRITE
+005f47c0	007a2030	READWRITE
+005f47c0	007a203c	UNDEFINED
+005f47c0	007a2048	UNDEFINED
+005f47c0	007a2054	UNDEFINED
+005f47c0	007a2068	APOSTROPHE
+005f47c0	007a2074	QUOTE
+005f47c0	007a207c	UNDEFINED
+005f47c0	007a2098	UNDEFINED
+005f47c0	007a20a4	UNDEFINED
+005f47c0	007a20c0	REWIND
+005f47c0	007a20c8	UNDEFINED
+005f47c0	007a20b8	APPEND
+005f47c0	007a20d4	UNDEFINED
+005f47c0	007a20e0	UNKNOWN
+005f47c0	007a20f0	UNKNOWN
+005f47c0	007a20f8	UNKNOWN
+005f47c0	007a2108	UNKNOWN
+005f47c0	007a2110	UNKNOWN
+005f47c0	007a2120	UNKNOWN
+005f47c0	007a2128	E:\forrtl\build\for_inquire.c
+005f47c0	007a2148	SEQUENTIAL
+005f47c0	007a2154	DIRECT
+005f47c0	007a215c	KEYED
+005f47c0	007a2164	UNDEFINED
+005f47c0	007a2170	UNKNOWN
+005f47c0	007a2178	UNDEFINED
+005f47c0	007a2184	UNKNOWN
+005f47c0	007a218c	UNDEFINED
+005f47c0	007a2198	UNKNOWN
+005f47c0	007a21b0	UNDEFINED
+005f47c0	007a21bc	UNKNOWN
+005f47c0	007a21c4	UNDEFINED
+005f47c0	007a21d0	UNKNOWN
+005f47c0	007a21d8	FORMATTED
+005f47c0	007a21e4	BINARY
+005f47c0	007a21f8	UNDEFINED
+005f47c0	007a2204	UNKNOWN
+005f47c0	007a21ec	UNFORMATTED
+005f47c0	007a220c	UNDEFINED
+005f47c0	007a2218	UNKNOWN
+005f47c0	007a2220	UNDEFINED
+005f47c0	007a222c	UNKNOWN
+005f47c0	007a2234	UNKNOWN
+005f6540	007a2248	unknown
+005f6b60	007a2474	E:\forrtl\build\for_open.c
+005f6b60	007a2250	SEQUENTIAL
+005f6b60	007a225c	DIRECT
+005f7360	007a2490	E:\forrtl\build\for_open.c
+005f7360	007a24ac	FORT_CONVERT%d
+005f7360	007a24bc	NATIVE
+005f7360	007a24bc	NATIVE
+005f7360	007a24c4	BIG_ENDIAN
+005f7360	007a24c4	BIG_ENDIAN
+005f7360	007a24e8	LITTLE_ENDIAN
+005f7360	007a24e8	LITTLE_ENDIAN
+005f7950	007a2514	unknown
+005f8240	007a251c	unknown
+005f9240	007a2524	unknown
+005f9240	007a252c	Internal Formatted Read or DECODE
+005f9240	007a2550	DECODE
+005f9240	007a2558	Internal Formatted Read
+005fa4d0	007a2570	unknown
+005fa4d0	007a2578	E:\forrtl\build\for_wseq.c
+005fa9f0	007a2594	E:\forrtl\build\for_wseq.c
+005fa9f0	007a25b0	E:\forrtl\build\for_wseq.c
+005fb890	007a25cc	E:\forrtl\build\for_wseq.c
+005fba00	007a25e8	E:\forrtl\build\for_wseq.c
+005fbd50	007a2604	E:\forrtl\build\for_wseq.c
+005fc010	007a2620	E:\forrtl\build\for_wseq.c
+005fc010	007a263c	E:\forrtl\build\for_wseq.c
+005fc330	007a2658	unknown
+005fc330	007a2660	E:\forrtl\build\for_wseq_fmt.c
+005fdbd0	007a26c8	unknown
+005fdbd0	007a26d0	E:\forrtl\build\for_rseq_fmt.c
+005ffa30	007a272c	unknown
+006013a0	007a27a8	Stop - Program terminated.
+006013a0	007a27c8	Return code 
+006013a0	007a27d8	unknown
+006013a0	007a27e0	E:\forrtl\build\for_stop.c
+006013a0	007a27fc	E:\forrtl\build\for_stop.c
+006013a0	007a27c8	Return code 
+00602d10	007a2828	SeSystemtimePrivilege
+00602e30	007a2840	advapi32.dll
+00602e30	007a2850	AdjustTokenPrivileges
+00602ea0	007a2868	advapi32.dll
+00602ea0	007a2878	LookupPrivilegeValueA
+00602f10	007a2890	advapi32.dll
+00602f10	007a28a0	OpenProcessToken
+00602f80	007a28b4	SeSystemtimePrivilege
+00603150	007a28e0	Fortran Pause - Enter command<CR> or <CR> to continue.\n
+00603150	007a28e0	Fortran Pause - Enter command<CR> or <CR> to continue.\n
+00603150	007a28e0	Fortran Pause - Enter command<CR> or <CR> to continue.\n
+00603150	007a2918	Fortran Pause - 
+006039e0	007a292c	%Y%m%d
+006039e0	007a2934	%H%M%S.
+006039e0	007a293c	%3.3d
+006039e0	007a2944	%c%2.2d%2.2d
+00603f70	007a2958	unknown
+006050d0	007a2960	unknown
+006050d0	007a2968	Internal List-Directed Read
+00606890	007a2984	unknown
+00606890	007a298c	E:\forrtl\build\for_wseq_lis.c
+00606ed0	007a2a4c	E:\forrtl\build\for_wseq_lis.c
+006084b0	007a2a6c	E:\forrtl\build\for_wseq_lis.c
+006084b0	007a2a8c	E:\forrtl\build\for_wseq_lis.c
+006084b0	007a2aac	E:\forrtl\build\for_wseq_lis.c
+00608eb0	007a2acc	E:\forrtl\build\for_desc_item.c
+00609310	007a7840	"Unknown"
+00609310	007a785c	E:\forrtl\build\for_diags.c
+00609310	007a3a60	operation completed successfully\r\n
+00609310	007a784c	forrtl
+00609310	007a7854	forrtl
+006097c0	007a7878	FormatMessage failed for sysmem message number %i
+006097c0	007a78ac	%s: %s
+006097c0	007a78b4	%s: %s
+006097c0	00785db0	Visual Fortran run-time error 
+006098d0	007a78c0	FORT0
+00609940	007a78dc	FOR_DISABLE_STACK_TRACE
+00609940	007a3a84	ignored requested disposition\r\n
+00609940	007a78f4	Message not found\n
+00609940	007a78f4	Message not found\n
+00609940	007a7908	%s (%i): %s
+00609940	007a7918	%s (%i): %s
+00609940	00785dd0	run-time error 
+00609940	00785dd0	run-time error 
+00609940	00785dd0	run-time error 
+00609940	00785dd0	run-time error 
+00609940	00785dd0	run-time error 
+00609940	007a7948	\r\n%s%s%s
+00609940	007a7970	FOR_GENERATE_DEBUG_EXCEPTION
+00609940	007a7990	FOR__IS_DEBUGGER_PRESENT
+00609940	007a79ac	f77_dump_flag
+00609940	007a79bc	decfort_dump_flag
+0060a2a0	007a4070	OPEN or DEFINE FILE required\r\n
+0060a340	007a79d0	\nIncrementally linked image--PC correlation disabled.\n
+0060a340	007a7a08	\nStack trace terminated abnormally.\n
+0060a340	007a7a30	imagehlp.dll
+0060a340	007a7a40	StackWalk
+0060a340	007a7a4c	SymInitialize
+0060a340	007a7a5c	SymCleanup
+0060a340	007a7a68	ImagehlpApiVersionEx
+0060a340	007a7a80	SymFunctionTableAccess
+0060a340	007a7a98	FOR_ENABLE_VERBOSE_STACK_TRACE
+0060a340	007a79d0	\nIncrementally linked image--PC correlation disabled.\n
+0060a340	007a79d0	\nIncrementally linked image--PC correlation disabled.\n
+0060a340	007a79d0	\nIncrementally linked image--PC correlation disabled.\n
+0060a850	007a7ab8	****Can't get image name*
+0060a850	007a7ab8	****Can't get image name*
+0060ab50	007a7b18	Source
+0060ab50	007a7b28	Routine
+0060ab50	007a7b34	Image
+0060ab50	007a7b3c	%-19.19s%-10.10s%-19.19s%-12.12s%-19.19s\n
+0060ab50	007a7b6c	Traceback symbolic or hex stack dump follows:\n\n
+0060ab50	007a7b6c	Traceback symbolic or hex stack dump follows:\n\n
+0060ab50	007a7b9c	FOR_FULL_SRC_FILE_SPEC
+0060ab50	007a7bb4	%-17.17s  %8.8lX  %-17.17s  %10.10s  %s\n
+0060ab50	007a7be4	  Params[3]:   
+0060ab50	007a7bf4	Params[2]:      
+0060ab50	007a7c08	  Params[1]:   
+0060ab50	007a7c18	Params[0]:      
+0060ab50	007a7c2c	  Stack.Mode:   
+0060ab50	007a7c40	  Stack.Segment:   
+0060ab50	007a7c54	Stack.Offset:   
+0060ab50	007a7c68	  Frame.Mode:   
+0060ab50	007a7c7c	  Frame.Segment:   
+0060ab50	007a7c90	Frame.Offset:   
+0060ab50	007a7ca4	  Return.Mode:  
+0060ab50	007a7cb8	  Return.Segment:  
+0060ab50	007a7ccc	Return.Offset:  
+0060ab50	007a7ce0	  PC.Mode:      
+0060ab50	007a7cf4	  PC.Segment:      
+0060ab50	007a7d08	PC.Offset:      
+0060ab50	007a7d1c	Info from StackFrame is:\n\n
+0060ab50	007a7d38	--------- Frame # %u ---------------------------------------\n\nImage:         %s\nRoutine name:  %s\nSource file:   %s\nLine number:   %s\n\n%s%s%8.8lX%s%4.4lX%s%s\n%s%8.8lX%s%4.4lX%s%s\n%s%8.8lX%s%4.4lX%s%s\n%s%8.8lX%s%4.4lX%s%s\n\n%s%8.8lX%s%8.8lX\n%s%8.8lX%s%8.8lX\n\n
+0060aed0	007a7e40	\nHex Dump Of Exception Record Context Information:\n\n
+0060aed0	007a7e40	\nHex Dump Of Exception Record Context Information:\n\n
+0060aed0	007a7e78	  EBP:  
+0060aed0	007a7e84	  ESP:  
+0060aed0	007a7e90	  SS:   
+0060aed0	007a7e9c	  EIP:  
+0060aed0	007a7ea8	CS:  
+0060aed0	007a7eb0	EFlags:  
+0060aed0	007a7ebc	Exception Context:  Processor Control and Status Registers.
+0060aed0	007a7ef8	%s\n\n%s%8.8lX\n%s%8.8lX%s%8.8lX%s%8.8lX%s%8.8lX%s%8.8lX\n\n
+0060aed0	007a7f30	  EDI:  
+0060aed0	007a7f3c	ESI: 
+0060aed0	007a7f44	  EDX:  
+0060aed0	007a7f50	  ECX:  
+0060aed0	007a7f5c	  EBX:  
+0060aed0	007a7f68	EAX: 
+0060aed0	007a7f70	Exception Context:  Processor Integer Registers.
+0060aed0	007a7fa4	%s\n\n%s%8.8lX%s%8.8lX%s%8.8lX%s%8.8lX\n%s%8.8lX%s%8.8lX\n\n
+0060aed0	007a7fdc	  GS:   
+0060aed0	007a7fe8	  FS:   
+0060aed0	007a7ff4	  ES:   
+0060aed0	007a8000	DS:  
+0060aed0	007a8008	Exception Context:  Processor Segment Registers.
+0060aed0	007a803c	%s\n\n%s%8.8lX%s%8.8lX%s%8.8lX%s%8.8lX\n\n
+0060aed0	007a8064	  RegisterArea[70]:  
+0060aed0	007a807c	RegisterArea[60]:  
+0060aed0	007a8090	  RegisterArea[50]:  
+0060aed0	007a80a8	RegisterArea[40]:  
+0060aed0	007a80bc	  RegisterArea[30]:  
+0060aed0	007a80d4	RegisterArea[20]:  
+0060aed0	007a80e8	  RegisterArea[10]:  
+0060aed0	007a8100	RegisterArea[00]:  
+0060aed0	007a8114	Exception Context:  Floating Point RegisterArea.
+0060aed0	007a8148	  Cr0NpxState:    
+0060aed0	007a815c	TagWord:      
+0060aed0	007a816c	  DataSelector:  
+0060aed0	007a8180	  ErrorSelector:  
+0060aed0	007a8194	StatusWord:   
+0060aed0	007a81a4	  DataOffset:    
+0060aed0	007a81b8	  ErrorOffset:    
+0060aed0	007a81cc	ControlWord:  
+0060aed0	007a81dc	Exception Context:  Floating Point Control and Status Registers.
+0060aed0	007a8220	%s\n\n%s%8.8lX%s%8.8lX%s%8.8lX\n%s%8.8lX%s%8.8lX%s%8.8lX\n%s%8.8lX%s%8.8lX\n\n%s\n\n%s%4.4hX%8.8lX%8.8lX%s%4.4hX%8.8lX%8.8lX\n%s%4.4hX%8.8lX%8.8lX%s%4.4hX%8.8lX%8.8lX\n%s%4.4hX%8.8lX%8.8lX%s%4.4hX%8.8lX%8.8lX\n%s%4.4hX%8.8lX%8.8lX%s%4.4hX%8.8lX%8.8lX\n
+0060b180	00785da8	Unknown
+0060b180	00785da8	Unknown
+0060b180	00785da8	Unknown
+0060b180	00785da8	Unknown
+0060b180	00785da8	Unknown
+0060b180	00785da8	Unknown
+0060b180	00785da8	Unknown
+0060b180	00785da8	Unknown
+0060b240	007a8318	.trace
+0060b240	007a8318	.trace
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b240	00785da8	Unknown
+0060b750	007a8334	FOR_DIAGNOSTIC_LOG_FILE
+0060b750	007a8354	FOR_DISABLE_DIAGNOSTIC_DISPLAY
+0060b750	00785db0	Visual Fortran run-time error 
+0060b750	00785dd0	run-time error 
+0060b750	007a8374	user32.dll
+0060b750	007a8328	MessageBoxA
+0060b750	00785db0	Visual Fortran run-time error 
+0060b750	00785dd0	run-time error 
+0060b750	00785dd0	run-time error 
+0060b750	00785db0	Visual Fortran run-time error 
+0060b8e0	007a3a84	ignored requested disposition\r\n
+0060b8e0	007a8390	Message not found\n
+0060ced0	007a83c4	E:\forrtl\build\for_lub_mgt.c
+0060d060	007a83e4	E:\forrtl\build\for_lub_mgt.c
+0060ea50	007a8404	E:\forrtl\build\for_intrp_fmt.c
+0060f1e0	007a8424	E:\forrtl\build\for_intrp_fmt.c
+0060f1e0	007a8444	E:\forrtl\build\for_intrp_fmt.c
+0060fc60	007a8468	UNKNOWN
+0060fc60	007a8470	NATIVE
+0060fc60	007a84b8	E:\forrtl\build\for_common_inquire.c
+0060fc60	007a84e0	UNKNOWN
+0060fc60	007a84e8	E:\forrtl\build\for_common_inquire.c
+0060fc60	007a8510	E:\forrtl\build\for_common_inquire.c
+0060fc60	007a8538	E:\forrtl\build\for_common_inquire.c
+0060fc60	007a8560	UNKNOWN
+0060fc60	007a8570	WRITE
+0060fc60	007a8578	READWRITE
+0060fc60	007a8584	UNKNOWN
+0060fc60	007a858c	UNKNOWN
+0060fc60	007a859c	UNKNOWN
+0060fc60	007a85a4	UNKNOWN
+0060fc60	007a85ac	COMPAT
+0060fc60	007a85b4	DENYNONE
+0060fc60	007a85c1	ENYRD
+0060fc60	007a85c9	ENYRW
+0060fc60	007a85d1	ENYWR
+0060fc60	007a85d8	UNKNOWN
+0060fc60	007a85e0	UNKNOWN
+0060fc60	007a85e8	E:\forrtl\build\for_common_inquire.c
+0060fc60	007a8610	E:\forrtl\build\for_common_inquire.c
+00612d20	007a8700	SCRATCH
+00612d20	007a8700	SCRATCH
+00612d20	007a86f0	FORT%d
+00612d20	007a86f8	fort.%d
+00612d20	007a8700	SCRATCH
+00612d20	007a8700	SCRATCH
+00612d20	007a8700	SCRATCH
+00613980	007a8758	Open: Select File for Unit 
+00613980	007a877c	File Open Error
+00613980	007a878c	A File Must be Selected\r\rTerminate Program?
+00613980	007a87b8	File name missing or blank - please enter file name\r\nUNIT %d? 
+00613980	007a864d	ONOUT$
+00613980	007a8645	ONIN$
+00613980	007a87f8	E:\forrtl\build\for_nt_open_proc.c
+006147c0	007a881c	%s && DEL %s
+006147c0	007a882c	FOR_DEFAULT_PRINT_DEVICE
+006147c0	007a884c	Command.com /C COPY "%s" %s
+006147c0	007a8868	Cmd.exe /C COPY "%s" %s
+00614a10	007a8880	E:\forrtl\build\for_get.c
+006155b0	007a88a0	E:\forrtl\build\for_put.c
+006158d0	007a88bc	E:\forrtl\build\for_put.c
+00617350	007a89d0	COTAN: 
+00617350	007a89e0	floating-point error: 
+00617350	007a89e0	floating-point error: 
+00617350	007a8aa0	 error
+00617840	007a8aa8	E:\forrtl\build\for_exit_handler.c
+00617840	007a8acc	E:\forrtl\build\for_exit_handler.c
+00618430	007a8b74	E:\forrtl\build\for_portlib.c
+00618430	007a8b94	E:\forrtl\build\for_portlib.c
+00618430	007a8bb4	E:\forrtl\build\for_portlib.c
+00618de0	007a8bd4	FOR_NOERROR_DIALOGS
+00619240	007a8c04	window-CLOSE
+00619240	007a8bf4	control-BREAK
+00619240	007a8be8	control-C
+00619240	007a8c04	window-CLOSE
+00619240	007a8bf4	control-BREAK
+00619240	007a8be8	control-C
+00619300	007a8c14	FOR_IGNORE_EXCEPTIONS
+00619300	007a8c2c	FOR__IS_DEBUGGER_PRESENT
+00619fd0	007a8c48	FOR_RUN_FLAWED_PENTIUM
+0061a4e0	007a8c60	0123456789ABCDEF
+0061a4e0	007a8c60	0123456789ABCDEF
+0061a7b0	007a8c74	0123456789ABCDEF
+0061a7b0	007a8c74	0123456789ABCDEF
+0061c500	007a8c88	0123456789ABCDEF
+0061c500	007a8c88	0123456789ABCDEF
+0061c720	007a8c9c	0123456789ABCDEF
+0061c720	007a8c9c	0123456789ABCDEF
+00622000	007a8cbc	CONIN$
+00622000	007a8cc4	CONOUT$
+00622000	007a8cc4	CONOUT$
+00622a90	007a8cd4	Infinity
+00622a90	007a8cd4	Infinity
+00622a90	007a8cd4	Infinity
+00626b80	007a8cf4	Infinity
+00626b80	007a8cf4	Infinity
+00626b80	007a8cf4	Infinity
+0062c6bd	007a8ea0	log10
+0062c6bd	007a8ea0	log10
+0062d82e	007879c0	COMSPEC
+0062d82e	007879b0	command.com
+0062d82e	007879a8	cmd.exe
+0062d82e	007879a8	cmd.exe
+0062d82e	007879b0	command.com
+0062d9f3	00787ac8	Sunday
+0062d9f3	00787ac0	Monday
+0062d9f3	00787ac8	Sunday
+0062da82	00787a54	January
+0062da82	00787a48	February
+0062da82	00787a54	January
+0062db17	00787ac8	Sunday
+0062db17	00787ac0	Monday
+0062db17	00787a54	January
+0062db17	00787a48	February
+0062db17	007879e4	M/d/yy
+0062db17	007879d0	dddd, MMMM dd, yyyy
+0062db17	007879c8	H:mm:ss
+0062db17	00787ac8	Sunday
+0062db17	00787a54	January
+0062db17	007879e4	M/d/yy
+0062db17	007879d0	dddd, MMMM dd, yyyy
+0062e2e1	00787af0	am/pm
+006320bb	00787f70	CONIN$
+006320da	00787f78	CONOUT$
+00633108	007a9c10	 \t-\r]
+00646860	007a06d4	C:\WS\ChildFrm.cpp
+00646890	007a06f0	C:\WS\CntrItem.cpp
+00646940	007a0a04	C:\WS\IpFrame.cpp
+00646aaf	007a0a68	C:\WS\MainFrm.cpp
+00646d10	007a14b0	C:\WS\WScore.cpp
+00646d2d	007a14b0	C:\WS\WScore.cpp
+00646da0	007a14c8	C:\WS\WScoreDoc.cpp
+00646df0	007a14c8	C:\WS\WScoreDoc.cpp
+00646e20	007a14c8	C:\WS\WScoreDoc.cpp
+00646e90	007a14e8	C:\WS\WScoreView.cpp
+00646ef8	007a14e8	C:\WS\WScoreView.cpp

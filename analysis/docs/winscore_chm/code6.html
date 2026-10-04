@@ -1,0 +1,526 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Beams</title>
+</head>
+
+<body>
+<table border = "1" cellpadding = "5"><tr><td>
+<H3 style="word-spacing: 0; margin-top: 0; margin-bottom: 0">Code 6 -- Beams -- parameter structure</H3>
+</td></table>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+
+<font size="4">
+
+<br>
+<b><font color="#008000">
+   P1</font></b>&nbsp; code number (6)<br>
+<font color="#008000"><b>
+   P2</b></font>&nbsp; <a href="structure.html">staff number</a><br>
+<b><font color="#008000">
+   P3</font></b>&nbsp; <a href="#6P3">horizontal position, left end</a><br>
+<font color="#008000"><b>
+   P4</b></font>&nbsp; <a href="#6P3">vertical position, left end</a><br>
+<b><font color="#008000">
+   P5</font></b>&nbsp; <a href="#6P3">vertical position, right end</a><br>
+<b><font color="#008000">
+   P6</font></b>&nbsp; <a href="#6P3">horizontal position, right end</a><br>
+<font color="#008000"><b>
+   P7</b></font>&nbsp; <a href="#6P7">note stem direction, number of beams</a><br>
+<b>
+   <font color="#008000">
+   P8</font></b>&nbsp; <a href="#6P8">set number over beam, split beams, type
+font</a><br>
+<b><font color="#008000">
+   P9</font></b>&nbsp; <a href="#6P9">displace endpoints</a><br>
+<b><font color="#008000">
+   P10</font></b>&nbsp; <a href="#6P10">tremolo beams, partial beams</a><br>
+<b><font color="#008000">
+   P11</font></b>&nbsp; <a href="#6P11">partial beams</a><br>
+<font color="#008000"><b>
+   P12</b></font>&nbsp; <a href="#6P11">partial beams</a><br>
+<font color="#008000"><b>
+   P13</b></font>&nbsp; <a href="#6P13">partial beams</a><br>
+<b><font color="#008000">
+   P14</font></b>&nbsp; <a href="#6P13">partial beams</a>, <a href="#6P14b">offsets</a><br>
+<b><font color="#008000">
+   P15</font></b>&nbsp; <a href="#6P13">partial beams</a><br>
+<font color="#008000"><b>
+   P16</b></font>&nbsp; <a href="#6P16">horizontal position of number over beam</a><br>
+<font color="#008000"><b>
+   P17</b></font>&nbsp; <a href="#6P17">beam thickness</a><br>
+<b><font color="#008000">
+   P18</font></b>&nbsp; <a href="#6P18">conform to note size factor (note's P15)</a><br>
+<b><font color="#008000">
+   P19</font></b>&nbsp; <a href="#6P19">vertical position of number over beam</a>
+</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#008000">P20</font></b>&nbsp;
+<a href="#6P20">conform
+to note width factor (note's P20)</a><br>
+<b><font color="#008000">
+   P21</font></b>&nbsp; <a href="#6P21">change space between beams</a><br>
+<font color="#008080"><b> P25</b></font>&nbsp; <jump=p20><a href="#P25">layer number
+(for Color/Gray)&nbsp;</a>
+</font>
+</p>
+
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008080"> P26</font></b>&nbsp; <jump=p20><a href="#P26">Color/Gray
+value&nbsp;</a> 
+</font> 
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+&nbsp;&nbsp;&nbsp; <font color="#008000">
+<a href="#6letters">Jump to Letter Edit Commands</a></font><br>
+&nbsp;&nbsp;&nbsp; <a href="#6fkeys">Jump to Function Key Setup</a><br>
+<br>
+To input a <b>Beam</b>, type one of the below mnemonics or click on the <b>New Item</b> button and then on one of the beam buttons. The item will appear on the highest staff currently on the screen. If there is no staff on the screen, the item will appear in a position relative to staff 1. The item name may be followed by a series of numbers (n2, n3... ) which will further specify its characteristics by setting P2, P3, etc.<br>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#008000">BEAM</font></b>&nbsp;
+=&nbsp; single beam (assumes note stems up)<br>
+<font color="#008000"><b>BEAM2</b></font>&nbsp; =&nbsp; double beam, etc.<br>
+<font color="#008000"><b>BEAMD</b></font>&nbsp; =&nbsp; single beam (assumes note stems
+down)<br>
+<font color="#008000"><b>TREM</b></font>&nbsp; =&nbsp; single tremolo beam (assumes note stems up)<br>
+<b><font color="#008000">TREM2&nbsp;</font></b> =&nbsp; double tremolo beam, etc.<br>
+<b><font color="#008000">TREMD&nbsp;</font></b> =&nbsp; single tremolo beam (assumes note stems
+down)<br>
+<br>
+When the item appears, it is directly in edit mode and may be moved, etc. with the various edit commands. Hitting &lt;enter> or
+<b> X</b> leaves edit mode.<br>
+<a name="6P3"></a>
+<br>
+<b><font color="#FF0000">P3, 4, 5, 6</font></b> line end points<br>
+&nbsp;&nbsp;&nbsp;&nbsp; Beams use four parameters to specify position.&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp; P3 = left end horizontal position.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; P4 = left end vertical position, based on normal note level below/above beam.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; P5 = right end vertical position.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; P6 = right end horizontal position.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><br>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp; <img border="0" src="CD6p3b.bmp" width="361" height="137">
+<br>
+<a name="6P7"></a>
+<br>
+<font color="#FF0000"><b>P7</b></font> note stem direction, number of beams.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; P7 is always a two-digit number, &lt;i>XY&lt;/i>, where &lt;i>X&lt;/i> indicates the stem direction<br>
+&nbsp;&nbsp;&nbsp;&nbsp; (1 = stems up, 2 = stems down) and &lt;i>Y&lt;/i> indicates the number of beams.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; See P10 regarding tremolo beams.&nbsp;<br>
+<br>
+&nbsp;&nbsp;&nbsp; <img border="0" src="CD6p7b.bmp" width="379" height="80">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="6P8"><font size="4"></font></a>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#FF0000"><b><a name="6P">P8</a></b></font> number over beam, split beams.&nbsp;<br>
+<br>
+&nbsp;&nbsp; <img border="0" src="CD6P8A.bmp" width="288" height="71">
+<br>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="CD6P8a2.bmp" width="288" height="72">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+As seen above, the <font color="#005000"><b> type font</b></font> can be changed by adding a font number
+<font color="#005000"><b> x 1000</b></font> to
+the tuplet number in P8. Use 34000 for font 00 (Times-Roman.)</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">Use the <b><font color="#FF0000"><a href="file://Hp6300/c/HLP/conditional_editing.html">IF</a></font></b>
+command to change all the tuplet numbers on beams on a page. For example, to change
+the tuplet number 3 to
+Palatino-Roman (font 12) type: IF P1=6 AND P8=3 THEN P8=12003.
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4"><br>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4" color="#008000">
+Split beam editing.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;
+<img border="0" src="cd6p8c.jpg" width="468" height="340">
+<br>
+<a name="6P9"></a>
+<br>
+<b><font color="#FF0000">P9</font></b>&nbsp;is used in complex situations where some of the note stems do not<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; go in the same direction (e.g. notes on staff above or staff below).&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P9 may have up to 3 digits, (using 0, 1, 2, 3 only).  Here these digits&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+will be labeled "abc".&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Digit "a" refers to P3 and P6 (left and right ends of the main beam).&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Digit "b" refers to P11 and P12 (left and right ends of first added&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+partial beam).&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Digit "c" refers to P14 and P15 (left and right ends of the second&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+partial beam).&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The role of these digits is as follows:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0=no offset, 1=left beam end is offset, 2=right end offset, 3=both offset<br>
+<br>
+    **** <b><font color="#FF0000"> When editing, set P9 to -1 to create the proper values automatically.</font></b><br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; This use of P9 insures that the beam end points will exactly meet the&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+note stems.<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Be sure to use the centering (CNX) and adjust (ADX) commands to make&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+sure that the beam ends and stem lengths are accurately placed.<br>
+<a name="6P10"></a>
+<br>
+<b><font color="#FF0000">P10</font></b> tremolo beams, partial beams.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tremolo Beams:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; For tremolo beams on note stems P7 should be negative (-10 = stems up,&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -20 = stems down). P10 = number of beams.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD6P10X.bmp" width="380" height="90">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; P12 can change width of
+tremolo beams.&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (P12 = 0 = default = 4)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (See also <a href="code1.html#P11X"> Code 1, P11</a> for tremolos attached to notes.)<br>
+<br>
+Next demonstrates floating tremolo beams combined with attached main beams. P7 creates the complete main beam in the usual way. (See above.) In this case P10 is a two-digit number,
+<i>XY</i>, where <i> X</i> indicates the number of complete beams and <i> Y</i> indicates how many additional floating beams are to be added.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD6P10CX.bmp" width="479" height="73">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">See below for
+tremolo beams added to individual notes combined</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">with main beams. P11
+must have the note's P3 value.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD6P11x.bmp" width="476" height="196">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="6P11"><font size="4"></font></a>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P11,&nbsp;P12
+</font></b>partial beams</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp; <img border="0" src="cd6p11a.bmp" width="507" height="233">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="FLR">The</a> next examples
+require two beam items to create the desired composite structure. In most cases
+the proper arrangement will be created during the normal input procedures.&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">In the first example
+below the partial beams appear in their default positions. The second example
+shows the desired arrangement. There is an editing shortcut for this:</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;
+Type <b><font color="#FF0000">FLR11</font></b> (flip P11, P12 to right) for the
+first partial.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;
+Type <b><font color="#FF0000">FLR14</font></b> (flip P14, P15 to right) for the
+second partial.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">If you type these
+commands again, the partials will return to their original positions.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD6P11DR.bmp" width="436" height="238">&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="6P13"></a><br>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P13,&nbsp;P14,
+P15 </font></b>added partial beams</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="CD6P11b.bmp" width="601" height="168">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<img border="0" src="cd6p11c.bmp" width="494" height="173">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+&nbsp;&nbsp;&nbsp; <img border="0" src="CD6P11DX.bmp" width="349" height="213">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="6P14b">&nbsp;&nbsp;</a></font>
+</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P1</font></b><font color="#FF0000"><b>4,
+P15 (P13=0) </b></font>can offset the ends of a beam. P14 = left end, P15 =
+right end.</font>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+Type <b>XOF</b> to remove offsets.</font></p>
+<p>&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P16
+</font></b>can change the horizontal position of a number over a beam.</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="6P17"></a>
+<br>
+<b><font color="#FF0000">P17 </font></b>beam thickness. The default is 1 ( =
+100%).<br>
+<a name="6P18"></a>
+<br>
+<font color="#FF0000"><b>P18 </b></font>If a note's size factor (P15) has been
+changed, the beam's P18 should usually be set to the same value.<br>
+<a name="6P19"></a>
+<br>
+<font color="#FF0000"><b>P19 </b></font>can change the vertical position of a
+number over a beam.<br>
+<a name="6P20"></a>
+<br>
+<font color="#FF0000"><b>P20 </b></font>If a note's width factor (P20) has been
+changed, the beam's P20 should usually be set to the same value. (However if the
+beam is centered on the group of notes using the CN command, there is automatic
+compensation for the note widths and P20 need not be set.)</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<a name="6P21"></a>
+<br>
+<font color="#FF0000"><b>P21 </b></font>can change the space between beams. The
+default is 1 ( = 100%).<br>
+</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P25</b></font></color> </a> layer number.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<a name="P26"><font size="4">&nbsp;</font></a><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P26</b></font></color> </a> color/gray
+value.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<a name="P27"><font size="4">&nbsp;</font></a><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="6letters"><font size="4"></font></a>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;___________________________________________________________________________<br>
+
+
+</font>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">----- <b><font color="#FF0000">Shortcut Letter Commands while editing Beams</font></b> --------------------------<br>
+<br>
+<b><font color="#FF0000">
+&gt;&gt;&gt; Stem Adjustments</font></b><br>
+<b><font color="#008000">
+<a name="ADJ">
+ADJ</a></font></b>&nbsp; =&nbsp; adjust the note stems to the beam.<br>
+<b><font color="#008000">
+ADJX</font></b>&nbsp; =&nbsp; adjust note stems when beam's implied stem direction is opposite.<br>
+<b><font color="#008000">
+ADF</font></b>&nbsp; =&nbsp; adjust note stems to beam (F = in the French manner).<br>
+<font color="#008000"><b>
+ADFX</b></font>&nbsp; =&nbsp; adjust note stems when beam's stem direction is opposite.<br>
+<font color="#008000"><b>
+FLI</b></font>&nbsp; =&nbsp; flip the beam's implied stem direction.</font>
+</p>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#008000"><b>
+FLR11, FLR14</b></font>&nbsp; =&nbsp; flip position of unattached partial beams.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#008000">AUTO&nbsp;
+</font></b>=&nbsp; create the proper beam configuration depending on the note
+rhythms within the beam's span.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#008000">AUTOX&nbsp;
+</font></b>=&nbsp; as above, but with some note stems going opposite directions.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#008000"><b>
+CN</b></font>&nbsp; =&nbsp; center the beam's endpoints on the nearest notes.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#008000"><b>
+CNX</b></font>&nbsp; =&nbsp; as above, but with some note stems going opposite
+directions.</font></p>
+
+<p style="margin-top: 0"><font size="4">
+<b><font color="#008000">LOFFM</font></b>&nbsp; =&nbsp; left end offset minus<br>
+<b><font color="#008000">LOFFP</font></b>&nbsp; =&nbsp; left end offset plus<br>
+<b><font color="#008000">ROFFM</font></b>&nbsp; =&nbsp; right end offset minus<br>
+<b><font color="#008000">RPOFF</font></b>&nbsp; =&nbsp; right end offset plus,<br>
+<b><font color="#008000">XOF</font></b>&nbsp; =&nbsp; zero offsets</font>
+<p style="margin-top: 0">&nbsp;
+<p>
+
+<b><font color="#FF0000" size="4"><a name="6fkeys">Function Key Setup for Code 6</a></font></b>
+<p style="margin-top: 0">
+ 
+<table border = "1" cellpadding = "5">
+<tr>
+<td><b>F1</b><br><font size="2">Help<br><br><br></font></td>
+<td><b>F2</b><br><font size="2">Back to<br>Previous Item<br><br></font></td>
+<td><b>F3</b><br><font size="2">Forward to<br>Next Item<br><br></font></td>
+<td><b>F4</b><br><font size="2">Back to<br>Previous Item,<br>Same Code #</font></td>
+<td><b>F5</b><br><font size="2">Forward to<br>Next Item,<br>Same Code #</font></td>
+<td><b>F6</b><br><font size="2">. . .<br><br><br></font></td>
+</tr>
+<tr>
+<td><b>F7</b><br><font size="2">Move Left<br>End Only<br><br></font></td>
+<td><b>F8</b><br><font size="2">Move Right<br>End Only<br><br></font></td>
+<td><b>F9</b><br><font size="2">Exit from<br>Edit Mode<br>( X )</font></td>
+<td><b>F10</b><br><font size="2">. . .<br><br><br></font></td>
+<td><b>F11</b><br><font size="2">Delete, Move<br>to Previous,<br>Same Code #</font></td>
+<td><b>F12</b><br><font size="2">Delete, Move<br>to Next,<br>Same Code #</font> </td>
+</tr>
+</table>	
+
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;</p>
+
+</body>
+
+</html>

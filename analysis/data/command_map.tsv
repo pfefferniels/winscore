@@ -1,0 +1,1623 @@
+id	handler	score_command	tooltip
+284	0x5bf990	HIST	
+292	0x5bf9e0	SCF	
+1000	0x5cb020		
+1000	0x591dd0		
+1000	0x5cad70		
+1000	0x5caac0		
+1000	0x591660		
+1000	0x5cb2d0		
+1001	0x591660		
+1001	0x5cb2d0		
+1001	0x591dd0		
+1002	0x5de2f0		
+1002	0x5d73e0		
+1002	0x5cc820		
+1002	0x59e770		
+1003	0x59e7e0		
+1003	0x5de370		
+1003	0x5cc900		
+1003	0x5d7500		
+1005	0x5cc9e0		
+1005	0x5d7270		
+1007	0x5cc7a0		
+1007	0x5ecf60		
+1007	0x58f1d0		
+1008	0x5cc7e0		
+1041	0x5c1a10		
+1045	0x5ec7d0		
+1045	0x58cb70		
+1046	0x5ec830		
+1046	0x58cbd0		
+1047	0x5cd6a0		
+1048	0x5cd6e0		
+1050	0x5cd600		
+1054	0x5cb930		
+1055	0x5cbd50		
+1056	0x5ca370		
+1056	0x5c9d00		
+1057	0x5c9e30		
+1057	0x5ca4a0		
+1058	0x5c9c20		
+1058	0x5ca290		
+1059	0x5ca3c0		
+1059	0x5c9d50		
+1060	0x5c9f20		
+1060	0x5ccac0		
+1060	0x5ca700		
+1061	0x5c9f70		
+1061	0x5ca750		
+1062	0x5cc720		
+1062	0x5ca7f0		
+1062	0x5c9fc0		
+1063	0x5cc760		
+1063	0x5ca7a0		
+1064	0x5ca540		
+1068	0x5e1420		
+1069	0x591380		
+1069	0x5e11e0		
+1070	0x5913c0		
+1070	0x5e1270		
+1071	0x591400		
+1071	0x5e1300		
+1072	0x5e1390		
+1072	0x591440		
+1073	0x5e14b0		
+1074	0x5e1540		
+1075	0x5e15d0		
+1076	0x5e1660		
+1077	0x5e16f0		
+1078	0x5e1780		
+1079	0x5c9e80		
+1079	0x5ca4f0		
+1079	0x5e1810		
+1080	0x5e18a0		
+1081	0x5d55c0		
+1081	0x5e1930		
+1081	0x5ca6b0		
+1081	0x5c9ed0		
+1082	0x5e19c0		
+1083	0x5e1a50		
+1090	0x5e1d00		
+1091	0x5e1d50		
+1092	0x5e1d90		
+1093	0x5e1dd0		
+1097	0x5d58b0		
+1098	0x5d59d0		
+1099	0x5d5af0		
+1101	0x5d5c50		
+1103	0x5d57d0		
+1104	0x5cd080		
+1105	0x5cd0d0		
+1106	0x5cd120		
+1107	0x5cd2b0		
+1108	0x5cd170		
+1109	0x5cd1c0		
+1110	0x5cd210		
+1110	0x5ecb90		
+1110	0x5ecf00		
+1111	0x5ecb30		
+1111	0x5ecea0		
+1115	0x5c98d0		
+1116	0x5c9870		
+1123	0x591660		
+1123	0x5cb2d0		
+1124	0x591660		
+1124	0x5cb2d0		
+1128	0x5cb0f0		
+1129	0x5cab90		
+1139	0x5d5d80		
+1140	0x5d69c0		
+1141	0x5d6e30		
+1143	0x5d6b60		
+1147	0x5defd0		
+1148	0x5df010		
+1155	0x5df050		
+1156	0x5df090		
+1157	0x5df0d0		
+1548	0x5d1a40		
+1549	0x5d1ab0		
+1550	0x5d1b50		
+1551	0x592200		
+1561	0x5d1bb0		
+1599	0x5c7480		
+1599	0x5d52e0		
+1600	0x5d5450		
+1600	0x5c7500		
+1601	0x5d2f60		
+1602	0x5d2fd0		
+1603	0x5d75d0		
+1604	0x5d7630		
+1604	0x5d35c0		
+1607	0x5e1cc0		
+1631	0x5d56d0		
+1636	0x5cd260		
+1658	0x5cae40		
+1659	0x5d5cb0		
+1667	0x59fa60		
+1668	0x59fc40		
+1669	0x59fe20		
+1670	0x5a0000		
+1673	0x5a01e0		
+1674	0x5a03e0		
+1677	0x59df70		
+1677	0x5a1200		
+1678	0x5c7580		
+1678	0x5d7690		
+1680	0x5ccf20		
+1681	0x5ccee0		
+1703	0x5c7990		
+1703	0x5d7c90		
+1704	0x5c78d0		
+1704	0x5d7a90		
+1705	0x5c7810		
+1705	0x5d78a0		
+1707	0x5d8040		
+1708	0x5d80b0		
+1711	0x5d7e70		
+1765	0x5d8120		
+1766	0x5d81b0		
+32682	0x5a5d50	METER 	 Code 18 Meter
+32686	0x5a5c60	BAR 	 Code 14 Bar line
+32688	0x5a5bb0	CIRCLE 	Create Circle  
+32690	0x5a5b60	BOX 	Create Code 12 Box  
+32692	0x5a5b10	NUMB 	Create Code 10 Number  
+32694	0x5abd80	CD9 	Code9
+32696	0x5a5a20	TRILL 	Create Code 7 Trill  
+32698	0x5a59d0	BEAM 	Create Code 6 Beam  
+32700	0x5a58e0	CLEF 	Create Code 3 Clef  
+32702	0x5a5890	REST 	Create Code 2 Rest 
+32704	0x5a7d10	DE 	Delete Item
+32706	0x5a7c20	;  	MiniMacro 1 ;
+32707	0x5a7c70	;; 	MiniMacro 2 ;;
+32708	0x5a7cc0	;;; 	MiniMacro 3 ;;;
+32714	0x5a7b80	U10 	Move item up 10 steps (U10)
+32715	0x5a7bd0	D10 	Move item down 10 steps (D10)
+32716	0x5a7900	L1 	Move item left 1 step (L1)
+32717	0x5a7950	R1 	Move item right 1 step (R1)
+32718	0x5a79a0	L10 	Move item left 10 steps (L10)
+32719	0x5a79f0	R10 	Move item right 10 steps (R10)
+32721	0x5a7a40	U1 	Move item up 1 step (U1)
+32722	0x5a7ae0	D1 	Move item down 1 step (D1)
+32729	0x5a7860	SC  	Put up spacing scale (SC)
+32730	0x5a78b0	SCX  	Remove spacing scale (SCX)
+32733	0x5a6820	H    	Height
+32734	0x5a6870	HS   	Height of staves only
+32737	0x5a6910	AB   	Abort the edit
+32738	0x5ac870	DSP0 	Dash Space Default  (P9 = 0)
+32744	0x5a66d0	X  	Exit from this mode  (F9)
+32745	0x5a6780	C    	Copy and exit from edit mode
+32746	0x5a67d0	CC   	Copy and continue in edit mode
+32747	0x5a68c0	CX   	Copy and move to next item
+32748	0x5a6960	Z$  	Zoom (refresh display)
+32752	0x5a6630	PR 	Print the page
+32753	0x5a6680	PRPS 	Print to PostScript EPS file
+32754	0x5a6360	SM 	Save with same name  (SM)
+32758	0x5a6540	RS  	Restart program
+32759	0x5a6590	RSM  	Restart program with same file
+32760	0x5a65e0	GP 	Get previous file
+32761	0x5a63b0	G \WINZ\MUS\0  	Get 0.mus
+32762	0x5a6450	OS 	Order by staff
+32763	0x5a64a0	OH 	Order by horizontal position
+32764	0x5a64f0	OT 	Order text
+32766	0x5a62c0	I  	Edit last item  (F4 - I)
+32767	0x5a6310	QQ165 	Move to item menu  (F5)
+32768	0x5c1d90		
+32768	0x5e7eb0		
+32769	0x5e8110		
+32770	0x5a6220	NB 	Next .MUS file back (F2 - NB)
+32771	0x5a30d0		Zoom
+32772	0x5a3160		Reduce
+32775	0x5a3210		Toggle Itembar
+32776	0x5a5ee0		Zoom plus
+32777	0x5a6090		Zoom minus
+32778	0x5a6270	NX 	Next .MUS file  (F3 - NX)
+32779	0x5a7ea0	UND 	Undelete
+32780	0x5bfaa0	EEX; FW 	Display full width (FW)
+32781	0x5a4d50		Create Code 1 Note 
+32782	0x5bfa30	EEX; FH 	Display full height (FH)
+32784	0x5a4f70		Rectangle Selection
+32786	0x5a6a00	B  	Edit previous item  (F2)
+32787	0x5a6a50	NEX	Edit next item  (F3)
+32788	0x5ad720	FCS 	
+32790	0x5a4fa0		Create Code 8 Staff
+32791	0x5a3300		Toggle toolbar2
+32792	0x5a33e0		Toggle Commandbar
+32793	0x5a3e80		Load Display Buffer
+32794	0x5e82b0		
+32795	0x5a51c0		 Code 16 Text
+32796	0x5a4d20		Erase
+32797	0x5a5930	LINE 	Create Code 4 Line  
+32798	0x5a4cf0		Curve
+32825	0x5bfd90		Create Code 5 Slur  
+32828	0x5bffd0	TAB 	TAB
+32829	0x5c0020		Items
+32830	0x5c0ec0		Show or hide the input tools bar/nToggle Input Tools
+32832	0x5c0fa0		Show or hide the file tools bar/nToggle FileTools
+32834	0x5ebd80		Set selection color
+32836	0x5ebf40		Set text color
+32837	0x5ebe60		Set fill color
+32838	0x5ec030		Set default color
+32839	0x5c1200		Show or hide the zoom bar/nToggle zoom bar
+32840	0x5ec110		Set background color/nSet Background
+32844	0x5ec1f0		
+32845	0x5ec270		
+32846	0x5ec230		
+32855	0x5a5840	NOTE 	 Create Code 1 Note
+32856	0x5a5980	SLUR 	 Create Code 5 Slur (SLU)
+32857	0x5a5a70	STAFF 	 Create Code 8 Staff
+32858	0x5a5c00	GUIT 	 Code 12 Guitar Grid
+32859	0x5a5d00	KSIG 	 Code 17 Key Sig.
+32860	0x5a5cb0	TZ 12 100 14 	 Code 16 Text
+32861	0x5a5e90		 Restore Basic Menu
+32863	0x5a7720	NTA 	No Tail (NTA)
+32864	0x5a6aa0	FLI 	 Flip the Item (FLI)
+32865	0x5a6af0	CN 	Center on nearest Note/Rest (CN)
+32868	0x5a6b40	BASS	Create Bass Clef (BASS)
+32869	0x5a6b90	TENOR	Create Tenor Clef (TEN)
+32870	0x5a6be0	ALTO	Create Alto Clef (ALT)
+32871	0x5a6c30	TREB	Create Treble Clef (TREB)
+32872	0x5a6e60	MINI 	Change to Mini Clef
+32874	0x5a6eb0	NORM 	Normal Size
+32875	0x5a6dc0	PERC	Create Percussion Clef (PER)
+32876	0x5a6e10	TAB 	Create Tab Clef (TAB)
+32877	0x5a6f00		Move to Rhythm Menu
+32878	0x5acf50		Move to Marks Menu
+32879	0x5a6f50		Move to Accidentals Menu
+32880	0x5a6fa0	10 20 	Left Offset 1 note width
+32881	0x5a6ff0	10 10 	Right Offset 1 note width
+32882	0x5a7220	RHD 	Double Whole Note/Rest (RHD)
+32883	0x5a7270	RHW 	Whole Note/Rest (RHW)
+32884	0x5a72c0	RHH 	Half Note/Rest (RHH)
+32885	0x5a7310	RHQ 	Quarter Note/Rest (RHQ)
+32886	0x5a7360	RHE 	Eighth Note/Rest (RHE)
+32887	0x5a73b0	RHS 	Sixteenth Note/Rest (RHS)
+32888	0x5a7400	RH32 	Thirty-Second (RH32)
+32889	0x5a7450	RH64 	Sixty-Fourth (RH64)
+32890	0x5a77c0		Return
+32891	0x5a74a0	RHG 	Grace Note (RHG)
+32892	0x5a74f0	TRP 	Convert to Triplet (TRP)
+32893	0x5a7540	RHU 	Convert to Quintuplet (RHU)
+32894	0x5a7590	DOT 	Add Dot to Note/Rest (DOT)
+32895	0x5a6720		Return
+32896	0x5a75e0	DDT 	Double Dot (DDT)
+32897	0x5a7630	SPD- 	Space Dot to Left (SPD-)
+32898	0x5a7680	SPD 	Space Dot to Right (SPD)
+32899	0x5a76d0	DUD 	Dot Up/Down (DUD)
+32900	0x5a7770	ADT 	Add Tail (ADT)
+32901	0x5a7040	STM 	Shorten Stem (STM)
+32902	0x5a7090	STP 	Lengthen Stem (STP)
+32903	0x5a70e0	NST 	No Stem (NST)
+32904	0x5a7130	STN 	Normal Stem (STN)
+32905	0x5a7180	CUE	Cue Size Note/Rest/Beam (CUE)
+32906	0x5a71d0	CUX 	Normal Size Note/Rest/Beam  (CUX)
+32908	0x5a7ef0	LFT 	Move Left End of Item (LFT)
+32909	0x5a7f40	RGT 	Move Right End of Item (RHT)
+32911	0x5a7f90	NRMV 	Normal Move
+32912	0x5a80d0	QQ163 	Go to TAB Notation Menu
+32913	0x5a7fe0	800 -1 	String Number -1
+32914	0x5a8030	800 1 	String Number +1
+32915	0x5a8080	8 0 	String Number = 0
+32916	0x5a81c0	NOFST  	Set Offset to 0
+32917	0x5a8170	OFP  	.5 Right Offset
+32918	0x5a8120	OFM  	.5 Left Offset
+32920	0x5a8210	NOTE RHW 	Whole Note (NOTE RHW)
+32921	0x5a8260	NOTE RHH 	Half Note (NOTE RHH)
+32922	0x5a82b0	NOTE RHE 	8th Note (NOTE RHE)
+32924	0x5a8300	NOTE RHS 	16th Note (NOTE RHS)
+32925	0x5a8350	REST RHW 	Whole Rest (REST RHW)
+32926	0x5a83a0	REST RHH 	Half Rest (REST RHH)
+32927	0x5a83f0	REST RHE 	8th Rest (REST RHE)
+32928	0x5a8440	REST RHS 	16th Rest (REST RHS)
+32929	0x5a8490	CRH 	Crescendo Hairpin (CRH)
+32930	0x5a84e0	DCH 	Decrescendo Hairpin (DCH)
+32932	0x5a8530	SOP 	Create Soprano Clef (SOP)
+32933	0x5a8580	MEZ 	Create Mezzo Soprano Clef (MEZ)
+32934	0x5a85d0	BAR 	Create Baritone Clef (BAR)
+32935	0x5a8620	SLUR3 	Triplet bracket
+32936	0x5a8670	END1 	First ending (END1)
+32937	0x5a86c0	END2 	Second ending (END2)
+32938	0x5a8710	CW 	Center Whole Rest  (CW)
+32939	0x5a8760	RF 	Add Fermata to Rest (RF)
+32940	0x5a87b0	QQ168 	Move to Rhythm Menus
+32941	0x5a8800	QQ168  	Multirest menu
+32942	0x5a8850	RP 	Repeat bar sign
+32943	0x5a88a0	RINV 	Make Rest Invisible (RI)
+32945	0x5a88f0	RHD 	Double Whole Rest
+32949	0x5a8940	WB1 	1 Bar Rest
+32950	0x5a8990	WB2 	2 Bars Rest
+32951	0x5a89e0	WB3 	3 Bars Rest
+32952	0x5a8a30	WB4 	4 Bars Rest
+32953	0x5a8a80	WB5 	5 Bars Rest
+32954	0x5a8ad0	WB6 	6 Bars Rest
+32955	0x5a8b20	WB7 	7 Bars Rest
+32956	0x5a8b70	WB8 	8 Bars Rest
+32957	0x5a8bc0	WB9 	9 Bars Rest
+32958	0x5a8ee0	800 -1 	Minus 1 Bar
+32959	0x5a8f30	800 1 	Plus 1 Bar
+32960	0x5a8c10	EU2 	European 2 Bar Rest
+32961	0x5a8c60	EU3 	European 3 Bar Rest
+32962	0x5a8cb0	EU4 	European 4 bar Rest
+32963	0x5a8d00	EU5 	European 5 Bar Rest
+32964	0x5a8d50	EU6 	European 6 Bar Rest
+32965	0x5a8da0	EU7 	European 7 Bar Rest
+32966	0x5a8df0	EU8 	European 8 Bar Rest
+32967	0x5a8e40	EU9 	European 9 Bar Rest
+32968	0x5a8f80	NON 	No Number on Rest
+32969	0x5a8e90	QQ158 	Return to Previous Menu
+32970	0x5a9020	DSH 	Dashes
+32971	0x5a9070	DTS4 	Dotted Line
+32972	0x5a90c0	WIG 	Wiggle Line
+32973	0x5a9110	ARP 	Arpeggio
+32975	0x5a8fd0	LIN 	Straight Line
+32976	0x5a9160	CRH 	Crescendo Hairpin 
+32977	0x5a91b0	DCH 	Decrescendo Hairpin
+32978	0x5a92a0	SPD- 	Minus Spread
+32980	0x5a92f0	SPD+1 	Plus Spread
+32981	0x5a9340	SPD0 	Default Spread
+32982	0x5a9390	ROT+ 	Rotate Clockwise (P9 or 13)
+32983	0x5a93e0	ROT- 	Rotate Counter-clockwise (P9 or 13)
+32984	0x5a9430	ROT0 	No Rotation (P9 or 13=0)
+32985	0x5a9480	VERT 	Vertical Line
+32987	0x5a94d0	HORZ 	Horizontal Line
+32995	0x5a9520	DSHL- 	Decrease Dash Length
+32996	0x5a9570	DSHL+ 	Increase Dash Length
+32997	0x5a95c0	DSHL0 	Default Dash Length
+32998	0x5a9610	DSHS- 	Decrease Dash Space
+32999	0x5a9660	DSHS+ 	Increase Dash Space
+33000	0x5a96b0	DSHS0 	Default Dash Space
+33001	0x5a9a20	QQ161 ; QQ223 ; QQ224 	Return to Lines Menu
+33002	0x5a9700	LBR 	Left Bracket On/Off
+33003	0x5a9750	LBR- 	Shorten Left Bracket
+33004	0x5a97a0	LBR+ 	Lengthen Left Bracket
+33005	0x5a97f0	RBR 	Right Bracket On/Off
+33006	0x5a9840	RBR- 	Right Bracket Minus
+33007	0x5a9890	RBR+ 	Right Bracket Plus
+33008	0x5a98e0	LAR 	Left Arrow On/Off
+33009	0x5a9930	RAR 	Right Arrow On/Off
+33010	0x5a9980	ARU 	Arpeggio Up Arrow On/Off
+33011	0x5a99d0	ARD 	Arpeggio Down Arrow On/Off
+33012	0x5a9ac0	QQ172 ; QQ268 ; QQ269 	Brackets etc.
+33013	0x5a9b60	LBRD 	Left Bracket Down
+33014	0x5a9bb0	RBRD 	Right Bracket Down
+33015	0x5a9c00	TB4 	4-line Tab Clef
+33016	0x5a9c50	TB5 	5-line Tab Clef
+33017	0x5a9cf0	700 -.5 	Decrease Curve
+33018	0x5a9ca0	700 .5 	Increase Curve
+33019	0x5a9d40	CR 	Default Curve
+33020	0x5a9d90	BEAM2 	2 Beams
+33021	0x5a9de0	OVA 	8va
+33022	0x5a9e30	OMA 	15ma
+33023	0x5a9ed0		Return to Main Menu
+33024	0x5ab5f0	PLA 	Play through MIDI
+33025	0x5a9f20	TIE 	Tie between Notes (TIE)
+33029	0x5aa010	MIDL 	Center to Left (CNLF)
+33030	0x5aa060	MIDR 	Split Beam after 2 Notes (SPL2)
+33031	0x5aa0b0	MID0 	Center Default (P10=0)
+33032	0x5aa1f0	SLDSH 	Slur Dashes (P11=1)
+33033	0x5aa240	SLDTS 	Slur Dots (P11=-1)
+33034	0x5aa150	SLHL 	Half Slur Left  (P12=1)
+33035	0x5aa1a0	SLHR 	Half Slur Right (P12=2)
+33036	0x5aa100	SUPDN 	Up/Down Slur (P12=-1)
+33037	0x5aa420		Next Menu
+33038	0x5aa470	12 0 	P12 = 0
+33039	0x5aa2e0	800 1 	Add 1 to P8
+33040	0x5aa290	800 -1 	Subtract 1 from P8
+33041	0x5aa330	800 -.05 	Subtract .05 from P8
+33042	0x5aa380	800 .05 	Add .05 to P8
+33043	0x5aa3d0		Main Slur Menu
+33044	0x5aa4c0	THK 	Add to Line Thickness (THK, P8 or P10)
+33045	0x5aa510	THK0 	Default Thickness (THK0)
+33046	0x5aa560	LLOFM 	Left End Minus Offset (LLOFM, P16, 17)
+33047	0x5aa5b0	LLOFP 	Left End Plus Offset (LLOFP, P16,17)
+33048	0x5aa6a0	LLOF0 	Zero Line End Offsets (LLOF0)
+33049	0x5aa650	LROFP 	End Right Plus Offset (LROFP, P16,18)
+33050	0x5aa6f0	VIB 	Vibrato Waves (VIB, P7 = -2)
+33051	0x5aa740	SAW 	Sawtooth (SAW  P7 = -3) 
+33052	0x5aa790	SAWX 	Sawtooth Heavy (SAWX  P7,11)
+33053	0x5aa600	LROFM 	End Right Minus Offset (LROFM, P16,18)
+33054	0x5aa8d0	ADJ 	Adjust Stems Under Beam (ADJ)
+33055	0x5aa920	ADX 	Adjust Stems going Up/Down (ADX)
+33056	0x5aa830	ADF 	Adjust Stems - French (ADF)
+33057	0x5aa880	ADFX 	French Stems Up/Down (ADFX)
+33058	0x5aa970	AUTO 	Auto Beam Config. (AUTO)
+33059	0x5aa9c0	AUTOX 	Auto Config. Stems Up/Down (AUTOX)
+33064	0x5aaa60	SPL1 	Split Beam after 1 Note (SPL1)
+33065	0x5aaab0	SPL2 	Split Beam after 2 Notes (SPL2)
+33066	0x5aab50	SPL3 	Split Beam after 3 Notes (SPL3)
+33067	0x5aaba0	SPL4 	Split Beam after 4 Notes (SPL4)
+33068	0x5aa7e0	ADOF 	Offsets for Stems Up/Down (ADOF)
+33069	0x5aac40		Next Menu
+33070	0x5ab0f0	PB10 	P10 1/0
+33071	0x5ab140	PB13 	P13 plus
+33072	0x5aaf10	LOFFM 	Left End Offset to Left 
+33073	0x5aaf60	LOFFP 	Left End Offset to Right 
+33074	0x5aafb0	LOFF0 	Zero Left End Offset
+33075	0x5ab0a0	ROFF0 	Zero Right End Offset
+33076	0x5ab000	ROFFM 	Right End Offset  to Left 
+33077	0x5ab050	ROFFP 	Right End Offset to Right
+33078	0x5ab230	TRM1 	1 Tremolo Beam (P7, P10)
+33079	0x5ab280	TRM2 	2 Tremolo Beams (P7, P10)
+33080	0x5ab2d0	TRM3 	3 Tremolo Beams (P7, P10)
+33081	0x5ab320	TRM4 	4 Tremolo Beams (P7, P10)
+33082	0x5aadd0	BNUMP 	Add Number over Beam (P8)
+33083	0x5aae20	BNUM0 	No Number over Beam
+33084	0x5ab3c0	NLRM 	Move Number .02 Left (P16)
+33085	0x5ab410	NLRP 	Move Number .02 Right (P16)
+33086	0x5ab370	NLR0 	Number Centered (p16=0)
+33087	0x5ab4b0	NUDP 	Move Number .2 Up (P19)
+33088	0x5ab500	NUDM 	Move Number .2 Down (P19)
+33089	0x5ab460	NUD0 	Number at Default Height (P19=0)
+33090	0x5aaa10	BEAM+ 	Add a Beam
+33091	0x5ab550	FLR11 	1st Partial Beam Horz. Flip (P11=999)
+33092	0x5ab5a0	FLR14 	2nd Partial Beam Horz. Flip (P14=999)
+33093	0x5aabf0		Return to previous menu
+33094	0x5ab690	M 	Group Move  (M)
+33095	0x5ab810	MS 	Move System  (MS)
+33096	0x5ab900	C 	Copy Group  (CO)
+33096	0x5bdc80	CO 	Copy Group  (CO)
+33097	0x5ab960	CS 	Copy System  (CS)
+33098	0x5ab9b0	DG 	Delete Group  (DG)
+33100	0x5abb50	CD2 	Code2
+33101	0x5abba0	CD3 	Code3
+33102	0x5abb00	CD1 	Code1
+33103	0x5abbf0	CD4 	Code4
+33104	0x5aba60	DRWB 	Draw a Box  (DRWB)
+33105	0x5abab0	TYPB 	Type Box Limits  (TYPB)
+33106	0x5abc40	CD5 	Code5
+33107	0x5abc90	CD6 	Code6
+33108	0x5abce0	CD7 	Code7
+33109	0x5abd30	CD8 	Code8
+33110	0x5abdd0	CD10 	Code10
+33111	0x5abe20	CD12 	Code12
+33112	0x5abe70	CD14 	Code14
+33113	0x5abec0	CD15 	Code15
+33114	0x5abf10	CD16 	Code16
+33115	0x5abf60	CD17 	Code17
+33116	0x5abfb0	CD18 	Code18
+33117	0x5a5ac0	MF 	Library
+33118	0x5ac0a0	BARD 	Double Bar  (P5 = 1)
+33119	0x5ac0f0	BARH 	Heavy Double Bar  (P5 = 2)
+33120	0x5ac140	BARL 	Repeat - Dots Left  (P5 = 3)
+33121	0x5ac190	BARR 	Repeat - Dots Right  (P5 = 4)
+33122	0x5ac1e0	BARRD 	Double Repeat  (P5 = 5)
+33123	0x5ac230	5 6 	Heavy Double Repeat  (P5 = 6)
+33124	0x5ac280	5 7 	Dash Bar  (P5 = 7)
+33125	0x5ac2d0	INV 	Invisible Bar  (P4 negative)
+33126	0x5ac4b0	BARBC 	Brace
+33127	0x5ac500	BARBK 	Bracket
+33128	0x5ac3c0	5 9 8 1 	Top Bracket
+33129	0x5ac410	5 9 8 2 	Bottom Bracket
+33130	0x5ac460	5 9 8 3 	Midsection of Bracket
+33131	0x5ac370	5 10 4 2 	Sub-bracket  (P5 = 10)
+33132	0x5a7810		Move to Next Bars Menu
+33133	0x5ac000	THM  	Thickness -.05 (P17 or P13)
+33134	0x5ac050	TH  	Default Thickness
+33135	0x5ac550	/2 1 	Staff Up  (P2)
+33136	0x5ac5a0	/2 -1 	Staff Down  ( ] = P2= p2-1)
+33139	0x5ac5f0	/2 1 	Staff Up  ( [ = P2= p2+1)
+33141	0x5ac730		Return to Previous Menu
+33142	0x5ac8c0	3 0 	Bar at Position 0 (P3 = 0)
+33143	0x5ac910	END 	Bar at Right End  (P3 = end)
+33144	0x5ac780	DSH+ 	Dash Size Plus  (P8 +.2)
+33145	0x5ac7d0	DSH0 	Dash Size Default  (P8 = 0)
+33146	0x5ac820	DSP+ 	Dash Space Plus  (P9 +.2)
+33147	0x5ac960	DTS+ 	Dot Space Plus (P14 +.2)
+33148	0x5b05b0		Next Pedal Menu
+33149	0x5aca00	DTLD 	Low Dot Down  (P16 = abb)
+33150	0x5aca50	DTLU 	Low Dot Up  (P16 = abb)
+33151	0x5ac9b0	DTS0 	Dot space default
+33152	0x5acaa0	DTHD 	High Dot Down  (P16 = abb)
+33155	0x5acaf0	DTHU 	High Dot Up  (P16 = abb)
+33156	0x5acbe0	DBRW+ 	Double Bar Width  (P17 +.05)
+33157	0x5acc30	DBRW0 	Double Bar Width Default  (P17 = 0)
+33158	0x5acb40	DBRS+ 	Double Bar Space  (P13 +.2)
+33159	0x5acb90	DBRS0 	Double Bar Space Default  (P13 = 0)
+33162	0x5acc80	BOTD 	Bottom Origin Down  (P10 -1)
+33164	0x5accd0	BOTU 	Bottom Origin Up  (P10 +1)
+33165	0x5acd20	TOPD 	Top Origin Down  (P11 -1)
+33166	0x5acd70	TOPU 	Top Origin Up  (P11 +1)
+33167	0x5ace10	PRN 	Add Parentheses  
+33170	0x5acdc0		Next Menu
+33171	0x5ace60	WID+ 	Increase Note Width  (P20 +.05)
+33172	0x5aceb0	WID- 	Decrease Note Width  (P20 -.05)
+33173	0x5acf00	WID0 	Default Note Width  (P20 = 0)
+33174	0x5acfa0	W  	Wedge  (P11 = 4)
+33175	0x5acff0	AC 	Accent
+33176	0x5ad040	TN 	Tenuto
+33177	0x5ad090	STA 	Staccato
+33178	0x5ad0e0	WST 	Wedge Staccato
+33179	0x5ad130	AST 	Accent Staccato
+33180	0x5ad180	TNS 	Tenuto Staccato
+33181	0x5ad1d0	DNB 	Down Bow
+33182	0x5ad220	UPB 	Up Bow
+33183	0x5ad270	HAR 	Harmonic
+33184	0x5ad2c0	FE 	Fermata
+33185	0x5ad310	ARS 	Arsis
+33186	0x5ad360	THE 	Thesis
+33187	0x5ad3b0	MO 	Mordant
+33188	0x5ad400	IMO 	Inverted Mordant
+33189	0x5ad450	HW 	Heavy Wedge
+33190	0x5ad4a0	TR 	Trill
+33192	0x5ad540	TRS 	Trill with Sharp
+33193	0x5ad590	TRN 	Trill with Natural
+33194	0x5ad5e0	PLU 	Plus Sign
+33195	0x5ad630	ACT 	Accent Tenuto
+33196	0x5ad4f0	TRF 	Trill with flat
+33197	0x5ad680	NOM  	No Mark  (P11 = 0)
+33198	0x5ad6d0	FCF 	Ficta Flat
+33200	0x5ad770	FCN 	
+33201	0x5b4360	FNG0 	Fingering 0
+33202	0x5b4450	FNG2 	Fingering 2
+33203	0x5b44a0	FNG3 	Fingering 3
+33204	0x5b44f0	FNG4 	Fingering 4
+33205	0x5bc8d0	FNG5 	Fingering 5
+33206	0x5ad7c0	FNG+ 	Fingering Plus
+33207	0x5ad810	FNG- 	Fingering Minus
+33209	0x5ad860	FLM 	Flip Mark  (P11 +/-)
+33210	0x5ad8b0	MKU 	Mark Up  (P14 +.5)
+33211	0x5ad900	MKD 	Mark Down  (P14 -.5)
+33212	0x5ad950	MKV 	Vertical Default  (P14 = 0)
+33213	0x5ad9a0	MKL 	Mark Left  ({13 -.5)
+33214	0x5ad9f0	MKR 	Mark Right  (P13 +.5)
+33215	0x5ada40	MKH 	Horizontal Default  (P13 = 0)
+33216	0x5ada90	5 51  	PPP
+33217	0x5adae0	5 52  	PP
+33218	0x5adb30	5 53  	P
+33219	0x5ade50	5 50 	PPPP
+33220	0x5adb80	5 54 	MP
+33221	0x5adbd0	5 55 	MF
+33222	0x5adc20	5 56 	F
+33223	0x5adc70	5 57 	FF
+33224	0x5adcc0	5 58 	FFF
+33225	0x5add10	5 59 	FFFF
+33226	0x5add60	5 60 	FP
+33227	0x5addb0	5 61 	SF
+33228	0x5ade00	5 62 	SFZ
+33229	0x5adea0	5 160 	SFF
+33230	0x5adef0	5 161 	SFFF
+33231	0x5adf40	SZ+ 	Size Plus
+33233	0x5ae120	SZ1 	Size Default
+33234	0x5adfe0	SZ- 	Size Minus
+33235	0x5ae5d0		Next Menu
+33236	0x5ae580		Previous Menu
+33237	0x5ae170	5 162 	SFPP
+33238	0x5ae1c0	5 163 	SFP
+33239	0x5ae210	5 164 	SFFP
+33240	0x5ae260	5 165 	MFPP
+33241	0x5ae2b0	5 166 	MFP
+33242	0x5ae300	5 167 	FPP
+33243	0x5ae350	5 168 	FFPP
+33244	0x5ae3a0	5 169 	FFP
+33246	0x5ae490	5 128 	RFZ
+33247	0x5ae4e0	5 129 	SFFZ
+33248	0x5ae6c0	1 9 5 70 6 0 7 0 8 0 9 0 	Pedal
+33249	0x5ae530	ADPR 	Add Parentheses to some
+33250	0x5aecb0	5 63 	Cresc
+33251	0x5ae710	1 9 5 71 6 0 7 0 8 0 	
+33252	0x5ae3f0	5 123 	FZ
+33253	0x5ae440	5 127 	RF
+33254	0x5ae850	FL 	Flat
+33255	0x5ae8a0	SHP 	Sharp
+33256	0x5ae8f0	NAT 	Natural
+33257	0x5ae940	DBF 	Double Flat
+33258	0x5ae990	DBS 	Double Sharp
+33259	0x5ae9e0	NAC 	No Accidental
+33260	0x5aea30	ENH-1 	Enharmonic Down
+33261	0x5aea80	ENH+1 	Enharmonic Up
+33262	0x5aead0	SPA- 	Decrease Space to Accidental
+33263	0x5aeb20	SPA+ 	Increase Space to Accidental
+33264	0x5aeb70	NOS 	Default Space to Accidental
+33265	0x5aebc0	ASP 	Space Accidental for Chord
+33266	0x5aec10	ACP 	Add/Remove Parentheses
+33269	0x5aec60	1 9 5 120 6 0 7 0 8 0 9 0	Pedal P
+33270	0x5aed00	5 111 	Decresc
+33271	0x5aed50	5 64 	Diminuendo
+33272	0x5aeda0	5 65 	Ritardando
+33273	0x5aedf0	5 113 	Rallantando
+33274	0x5aee40	5 68 	Accelerando
+33275	0x5aee90	5 66 	Pizzicato
+33276	0x5aeee0	5 67 	Arco
+33277	0x5aef30	/5 1 	P5 +1
+33278	0x5aef80	/5 -1 	P5 -1
+33279	0x5aefd0	/5 10 	P5 +10
+33280	0x5af020	/5 -10 	P5 -10
+33281	0x5af070	5 86 	Poco
+33282	0x5ae620		Next Menu
+33283	0x5af0c0	5 6 6 .25 	Code 9 Flat
+33284	0x5af110	5 7 6 .25 	Code 9 Sharp
+33285	0x5af160	5 8 6 .25 	Code 9 Natural
+33286	0x5af1b0	5 9 6 .25 	Code 9 Double Flat
+33287	0x5af200	5 10 6 .25 	Code 9 Double Sharp
+33288	0x5af570	5 73 	Molto
+33289	0x5af610	5 80 	Meno
+33290	0x5af6b0	5 81 	Piu
+33291	0x5af700	5 79 	Espr
+33292	0x5af750	5 78 	A Tempo
+33293	0x5af7a0	5 85 	Subito
+33294	0x5af5c0	5 114 	Mosso
+33295	0x5af390	5 118 	Comma
+33296	0x5af3e0	5 180 	Comma with Slash
+33297	0x5af250	5 600 6 0 	Percussion Library
+33298	0x5af2a0	5 1000 6 0 	Early Music Notation
+33299	0x5af2f0	5 900 6 0 	Lute Tablature
+33300	0x5af340	5 1060 6 0 	Chant Notation
+33301	0x5ae670		Next Menu
+33302	0x5af430	5 93 	Ornament1
+33303	0x5af480	5 94 	Ornament2
+33304	0x5af4d0	5 109 	Ornament3
+33305	0x5af520	5 76 	Double Slash
+33306	0x5af660	5 182 	Micro Tones
+33307	0x5af7f0	5 74 	Segno
+33308	0x5af840	5 75 	Turn
+33309	0x5af890	5 77 	Horizontal Slashes
+33310	0x5af8e0	5 131 	Guitar Notes
+33311	0x5af930	5 270 	Circle White
+33312	0x5af980	5 271 	Circle Black
+33313	0x5af9d0	5 272 	Circle Black/White
+33315	0x5afa70	5 231 	Roman Lower Case
+33316	0x5afac0	5 240 	Figured Bass
+33317	0x5afb10	5 250 	Figured Bass 2
+33318	0x5afb60	5 69 	Arrow
+33319	0x5afbb0	LJ 	Line Up and Justify
+33320	0x5b6900	CV 	Vertical Center over Notes
+33321	0x5b6950	CNL 	Slur to Left of 1st Note
+33322	0x5b69a0	CNR 	Slur to Right of last Note
+33325	0x5afc00	OVAU 	Ottava Dash Up
+33326	0x5afca0	OBA 	Ottava Bassa
+33327	0x5afc50	OVAD 	Ottava Dash Down
+33328	0x5b0330		Main Meter Menu
+33329	0x5b02e0		Next Meter Menu
+33330	0x5afcf0	5 2 6 4 8 0 9 0 	2/4
+33331	0x5afd40	5 3 6 4 8 0 9 0 	3/4
+33332	0x5afd90	5 4 6 4 8 0 9 0 	4/4
+33333	0x5afde0	5 5 6 4 8 0 9 0 	5/4
+33334	0x5afe30	5 6 6 4 8 0 9 0 	6/4
+33335	0x5afe80	5 2 6 8 8 0 9 0 	2/8
+33337	0x5afed0	5 3 6 8 8 0 9 0 	3/8
+33338	0x5b0290	5 4 6 8 8 0 9 0 	4/8
+33339	0x5aff20	5 5 6 8 8 0 9 0 	5/8
+33340	0x5aff70	5 6 6 8 8 0 9 0 	6/8
+33341	0x5affc0	5 9 6 8 8 0 9 0 	9/8
+33342	0x5b0010	5 12 6 8 8 0 9 0 	12/8
+33343	0x5b0060	5 3 6 16 8 0 9 0 	3/16
+33345	0x5b00b0	5 6 6 16 8 0 9 0 	6/16
+33346	0x5b0100	5 9 6 16 8 0 9 0 	9/16
+33347	0x5b01a0	/5 1 	Top Plus
+33348	0x5b01f0	/5 -1 	Top Minus
+33349	0x5b0240	BOTX 	Bottom X2
+33350	0x5b0380	CM 	Center on Bar 
+33351	0x5b03d0	14 0 	Justify Normal
+33352	0x5b0420	14 1 	Justify Off
+33353	0x5b0470	5 99 	Common Time
+33354	0x5b04c0	5 98 	Alla Breve
+33355	0x5b0510	HARP 	Harp Menu
+33356	0x5b0560	PED 	Pedal Menu
+33357	0x5b0650	PEDA0 	Ped000
+33358	0x5b06a0	PEDA1 	Ped001
+33359	0x5b0740	PEDA10 	Ped010
+33360	0x5b06f0	PEDA100 	Ped100
+33361	0x5b0790	PEDA101 	Ped101
+33362	0x5b07e0	PEDA011 	Ped011
+33363	0x5b0830	PEDA110 	Ped110
+33364	0x5b0880	H1 	H-D
+33365	0x5b08d0	H2 	H-C
+33366	0x5b0920	H3 	H-B
+33367	0x5b0970	H4 	H-E
+33368	0x5b09c0	H5 	H-F
+33369	0x5b0a10	H6 	H-G
+33370	0x5b0a60	H7 	H-A
+33371	0x5b0ab0	1 9 5 90 6 0 7 0 8 0 9 0 	Harp Circle 1
+33372	0x5b0b00	1 9 5 211 6 0 7 0 8 0 9 0 	Harp Circle 2
+33373	0x5b0b50	1 9 5 212 6 0 7 0 8 0 9 0 	Harp Circle 3
+33374	0x5b0ba0	1 9 5 112 6 0 7 0 8 0 9 0 	Harp Circle 4
+33375	0x5b0bf0	PDSZ+ 	Pedal Size +
+33376	0x5b0c40	PDSZ- 	Pedal Size -
+33377	0x5b0c90	PDSZ0 	Pedal Default
+33380	0x5b0e20	PEDB 	Ped21 (P7=21)
+33381	0x5b0e70	PEDC 	Ped22  (P7=22)
+33382	0x5b0ce0	PDLF- 	Pedal Left Minus  (P8)
+33383	0x5b0d30	PDLF+ 	Pedal Left Plus  (P8)
+33384	0x5b0d80	PDRF- 	Pedal Right Line Minus (P6)
+33385	0x5b0dd0	PDRF+ 	Pedal Right Line Plus (P6)
+33387	0x5b0ec0	PDL0 	Pedal Left Zero  (P8)
+33388	0x5b0f10	PDR0 	Pedal Right Zero  (P8)
+33389	0x5b0600	RTRN	Return to Pedal Menu
+33390	0x5b1000	PDM- 	Pedal Midpoint Minus
+33391	0x5b0fb0	PDM+ 	Pedal Midpoint Plus
+33392	0x5b0f60	PDM0 	Pedal Midpoint Zero
+33394	0x5b1050	SLIDER  	Change Parameter with Slider
+33395	0x5b11a0	QP2 	P2 (Turn on DRAG)
+33396	0x5b11f0	QP3 	P3
+33397	0x5b1240	QP4 	P4
+33398	0x5b1290	QP5 	P5
+33399	0x5b12e0	QP6 	P6
+33400	0x5b1330	QP7 	P7
+33401	0x5b1380	QP8 	P8
+33402	0x5b13d0	QP9 	P9
+33403	0x5b1420	QP10 	P10
+33404	0x5b1470	QP11 	P11
+33405	0x5b14c0	QP12 	P12
+33406	0x5b1510	QP13 	P13
+33407	0x5b1560	QP14 	P14
+33408	0x5b15b0	QP15 	P15
+33409	0x5b1600	QP16 	P16
+33410	0x5b1650	QP17 	P17
+33411	0x5b16a0	QP18 	P18
+33412	0x5b16f0	QP19 	P19
+33413	0x5b1740	QP20 	P20
+33414	0x5b17e0	RTRN 	Return to Previous Menu
+33415	0x5b1830	PLUS1 	Plus1
+33416	0x5b1920	MINUS1 	Minus 1
+33417	0x5b1880	PLUS10 	Plus10
+33418	0x5b1970	MINUS10 	Minus 10
+33419	0x5b18d0	PLUS100 	Plus 100
+33420	0x5b19c0	MINUS100 	Minus 100
+33421	0x5b1a10	SPREAD 	Spread the digits
+33422	0x5b1a60	SPRX 	No Spread
+33423	0x5b1ab0	UPR 	Upper Case Letters
+33424	0x5b1b00	LWR 	Lower Case Letters
+33425	0x5b1b50	BXCI 	Box/Circle  (P8)
+33426	0x5b1bf0		Next Numbers Menu
+33427	0x5b1ba0		Return to Main Numbers Menu
+33428	0x5b1c40	ALPTS 	Item in All Parts
+33429	0x5b1c90	NOPTS 	Item in No Parts
+33430	0x5b1ce0	NORM6 	Normal P6
+33432	0x5b1e70	DFLT 	Set Last Parameter to 0
+33433	0x5b1d30	BXVP 	Box vertical size plus
+33435	0x5b1ec0	FONT 	Font
+33436	0x5afa20	5 221 	Roman Numerals
+33437	0x5b1f10	ACCORD 	Accordion Menu  (P5 = 10)
+33438	0x5b1f60	LN2 	One Line
+33439	0x5b1fb0	LN3 	Two Line
+33440	0x5b2000	LN4 	Three Line
+33441	0x5b2050	TOPD 	Top Dot
+33442	0x5b20a0	BOTD 	Bottom Dot
+33443	0x5b20f0	MIDU 	Middle Dot Up
+33444	0x5b2140	MIDD 	Middle Dot Down
+33445	0x5b2190	LEFD 	Left Dot
+33446	0x5b21e0	RHTD 	Right Dot
+33452	0x5b2280	AGRD 	Auto Grid 
+33453	0x5b2230	GRID 	Guitar grid (P5)
+33454	0x5b22e0	BRL 	Barre Left (P12)
+33455	0x5b2330	BRR 	Barre Right (P12)
+33456	0x5b23d0	FRETZ 	No Fret Number
+33457	0x5b4810	FRND 	Fret Level  (P12)
+33458	0x5b2510	CHDF 	Fingering  (P9)
+33459	0x5b24c0	CHDT- 	Chord Type Minus (P8 )
+33460	0x5b2470	CHDT+ 	Chord Type Plus  (P8 = 1 to 20)
+33461	0x5b2420	CHDA 	Chord Accidental (P7 right digit = 0,1,2)
+33462	0x5b2830	CHRB 	Chord B  (P7 =7x)
+33463	0x5b27e0	CHRA 	Chord A  (P7 =6x)
+33464	0x5b2790	CHRG 	Chord G  (P7 =5x)
+33465	0x5b2740	CHRF 	Chord F  (P7 =4x)
+33466	0x5b26f0	CHRE 	Chord E  (P7 =3x)
+33467	0x5b26a0	CHRD 	Chord D  (P7 =2x)
+33468	0x5b2650	CHRC 	Chord C  (P7 =1x)
+33469	0x5b2600	5 -5  	Chord Only {P5 = -5)
+33470	0x5b2560	5 -4 	Grid all    (P5 = -4)
+33471	0x5b25b0	5 -6 	No chord  (P5 = -6)
+33473	0x5b2c40		Guitar Dots Menu
+33474	0x5b2880	DT1P 	String 1 Dot +  (P13)
+33475	0x5b28d0	DT2P 	String 2 Dot +  (P13)
+33476	0x5b2920	DT3P 	String 3 Dot +  (P13)
+33477	0x5b2970	DT4P 	String 4 Dot +  (P13)
+33478	0x5b29c0	DT5P 	String 5 Dot +  (P13)
+33479	0x5b2a10	DT6P 	String 6 Dot +  (P13)
+33480	0x5b2a60	DT1M 	String 1 Dot -  (P13)
+33481	0x5b2ab0	DT2M 	String 2 Dot -  (P13)
+33482	0x5b2b00	DT3M 	String 3 Dot -  (P13)
+33483	0x5b2b50	DT4M 	String 4 Dot -  (P13)
+33484	0x5b2ba0	DT5M 	String 5 Dot -  (P13)
+33485	0x5b2bf0	DT6M 	String 6 Dot -  (P13)
+33486	0x5b2c90		Barre/Fret Menu
+33489	0x5b2380	NOBR 	No Barre (P12)
+33490	0x5b4770	FRNP 	Fret Number Plus  (P12)
+33491	0x5b47c0	FRNM 	Fret Number Minus  (P12)
+33493	0x5b2d30	CTA 	C to A  (P7)
+33494	0x5b2d80	ADA 	Add Accidental (P7)
+33495	0x5b2dd0	CHNT 	Chord Type PLUS (P8)
+33496	0x5b2e20	SUS 	Sus/Add  (P10)
+33497	0x5b4270	ADMR 	Add to chord  (P11)
+33497	0x5b2e70	ADMR 	Add to chord  (P11)
+33498	0x5b2ec0	ADN 	Add number to chord name PLUS (P9)
+33499	0x5b2f60	STRS 	How many strings  (P14)
+33500	0x5b2fb0	FRTS 	How many frets  (P14)
+33501	0x5b2ce0		Chord Name  (P7 - P11)
+33502	0x5b3000	NMA 	Accidental for Number  (P9)
+33503	0x5b30a0	PCHNG0 	Zero the Parameter
+33504	0x5b3050	RE          	Read Macro File  (RE)
+33505	0x5b3230		Key Sig Menu
+33506	0x5b31e0		More Key Sigs
+33507	0x5b3280	KSFL 	Key Sig Flat
+33508	0x5b32d0	KSSH 	Key Sig Sharp
+33509	0x5b3320	KSNA 	Key Sig Natural
+33510	0x5b3370	KSTR 	Key Sig Treble
+33511	0x5b33c0	KSBA 	Key Sig Bass
+33512	0x5b3410	KSAL 	Key Sig Alto
+33513	0x5b3460	KSTN 	Key Sig Tenor
+33514	0x5b34b0	KSCU 	Key Sig Cue Size (P6)
+33515	0x5b3500	KSNO 	Key Sig Normal Size
+33516	0x5b3550	KSJU 	Key Sig Justify On (P14)
+33517	0x5b35a0	KSNJ 	Key Sig Justify Off (P14)
+33518	0x5b35f0	KSSP 	Key Sig Space + (P7)
+33519	0x5b3640	KSSM 	Key Sig Space - (P7)
+33520	0x5b3690	KSSZ 	Key Sig Space Default (P7)
+33521	0x5b36e0	KS1 	Key Sig 1st Acci (P8)
+33522	0x5b3730	KS2 	Key Sig 2nd Acci (P9)
+33523	0x5b3780	KS3 	Key Sig 3rd Acci (P10)
+33524	0x5b37d0	KS4 	Key Sig 4th Acci (P11)
+33525	0x5b3820	KS5 	Key Sig 5th Acci (P12)
+33526	0x5b3870	KS6 	Key Sig 6th Acci (P13)
+33527	0x5b38c0	KSDN 	Key Sig Accidental Down
+33528	0x5b3910	KSUP 	Key Sig Accidental Up
+33529	0x5b3960	KSZR 	Key Sig - Clear Special Accidentals (P8-13 - 0)
+33531	0x5b39b0	MTRS 	Single Number Meter (P5 = 0)
+33532	0x5b3a00	MTRSP 	Single Meter Number Plus  (P6)
+33535	0x5b3aa0	MTLM 	Composite Top Left Number -  (P5)
+33536	0x5b3b40	MTRM 	Composite Top Right Number -  (P8)
+33537	0x5b3be0	MBLM 	Composite Bottom Left Number -  (P6)
+33538	0x5b3b90	MBLP 	Composite Bottom Right Number +  (P9)
+33539	0x5b3c30	MBRP 	Composite Bottom Right Number +  (P9)
+33540	0x5b3a50	MTLP 	Composite Top Left Number +  (P5)
+33541	0x5b3af0	MTRP 	Composite Top Right Number +  (P8)
+33542	0x5b3c80	MBRM 	Composite Bottom Right Number -  (P9)
+33543	0x5b3cd0	/10 .1 	Increase Space to Plus (P10)
+33544	0x5b3d20	/10 -.1 	Reduce Space to Plus (P10)
+33545	0x5b3d70	/11 .1 	Increase Space to 2nd Number (P11)
+33546	0x5b3dc0	/11 -.1 	Reduce Space to 2nd Number (P11)
+33547	0x5b3e10	10 0 11 0 	Zero P10 - P11
+33548	0x5b3e60	MLAS 	Decrease Laser Thickness (P12 -1, -2, -3)
+33549	0x5b3eb0	PONF 	Plus Sign Off/On  (P12)
+33550	0x5b2f10	ADNM 	Add number to chord name MINUS (P9)
+33551	0x5b4090	TSZP 	Text Size Plus
+33552	0x5b3f00	/19 .5 	Text Up .5 (P19)
+33553	0x5b4910	GWP 	Grid Width Plus  (P17)
+33554	0x5b4310	QQ207 	Fingering
+33555	0x5b3f50	/19 -.5 	Text Down .5 (P19)
+33556	0x5b3fa0	/19 5 	Text Up Five (P19)
+33557	0x5b3ff0	/19 -5 	Text Down Five (P19)
+33558	0x5b4040	19 0 	Text Normal Level  (P19 = 0)
+33559	0x5b4180	QQ211  	Guitar Text Menu
+33560	0x5b40e0	TSZM 	
+33561	0x5b4130	TSZN 	
+33564	0x5b4220	ADMA 	Add Accidental after Slash (P11)
+33565	0x5b41d0	ADMN 	Add Number after Slash (P11)
+33566	0x5b42c0	14 0 	Normal Strings/Frets  (P14 = 0)
+33567	0x5b4590	SR1 	String 1
+33568	0x5b45e0	SR2 	String 2
+33569	0x5b4630	SR3 	String 3
+33570	0x5b4680	SR4 	String 4
+33571	0x5b46d0	SR5 	String 5
+33572	0x5b4400	FNG1 	Fingering 1   (P9)
+33573	0x5b4540	FNGB 	Fingering Blank   (P9)
+33575	0x5b43b0	FNGT 	Fingering T (P19)
+33576	0x5b4720	SR6 	String 6
+33579	0x5b4860	FRNU 	Fret Level Up  (P12)
+33580	0x5b48b0	5 2  6 2  7 2 8 0 9 0 10 0 11 0 12 0 13 0 	Go to Bends Menu
+33581	0x5b4960	GWM 	Grid Width Minus  (P17) 
+33582	0x5b49b0	GWN 	Grid width normal  (P17 = 0)
+33583	0x5b4a00	QQ209 	Next Guitar Menu
+33584	0x5b4ab0	FNT00 	Times-Roman  _00
+33585	0x5b4b00	FNT01 	Times-Bold  _01
+33586	0x5b4b50	FNT02 	Times-Italic  _02
+33587	0x5b4ba0	FNT03 	Times-BoldItalic  _03
+33588	0x5b4d30	FNT04 	Helvetica  _04
+33589	0x5b4d80	FNT05 	Helvetica-Bold  _05
+33590	0x5b4dd0	FNT06 	Helvetica-Oblique  _06
+33591	0x5b4e20	FNT07 	Helvetica-BoldOblique  _07
+33592	0x5b4f60	FNT11 	Helvetica-Narrow-BoldOblique  _11
+33593	0x5b4e70	FNT08 	Helvetica-Narrow  _08
+33594	0x5b4ec0	FNT09 	Helvetica-Narrow-Bold  _09
+33595	0x5b4f10	FNT10 	Helvetica-Narrow-Oblique  _10
+33596	0x5b4bf0	FNT12 	Palatino-Roman  _12
+33597	0x5b4c40	FNT13 	Palatino-Bold  _13
+33598	0x5b4c90	FNT14 	Palatino-Italic  _14
+33599	0x5b4ce0	FNT15 	Palatino-BoldItalic  _15
+33600	0x5b4a60	QQ213 	PostScript Fonts
+33601	0x5b5280	FNT16 	AvantGarde-Book  _16
+33602	0x5b5370	FNT19 	AvantGarde-DemiOblique  _19
+33603	0x5b5320	FNT18 	AvantGarde-Demi  _18
+33604	0x5b52d0	FNT17 	AvantGarde-BookOblique  _17
+33605	0x5b53c0	FNT20 	Bookman-Light  _20
+33606	0x5b5410	FNT21 	Bookman-LightItalic  _21
+33608	0x5b5460	FNT22 	Bookman-Demi  _22
+33609	0x5b54b0	FNT23 	Bookman-DemiItalic  _23
+33610	0x5b5500	FNT24 	NewCenturySchlbk-Roman  _24
+33611	0x5b5550	FNT25 	NewCenturySchlbk-Bold  _25
+33612	0x5b55a0	FNT26 	NewCenturySchlbk-Italic  _26
+33613	0x5b55f0	FNT27 	NewCenturySchlbk-BoldItalic  _27
+33614	0x5b5050	FNT36 	Font 36
+33615	0x5b5000	FNT35 	Font 35
+33616	0x5b5140	FNT29 	Courier _29
+33617	0x5b5190	FNT30 	Courier-Bold _30
+33618	0x5b51e0	FNT31 	Courier-Oblique _31
+33619	0x5b5230	FNT32 	Courier-BoldOblique _32
+33620	0x5b50f0	FNT33 	Symbol  _33
+33621	0x5b4fb0	QQ000 	Return to Previous Menu
+33622	0x5b50a0	FNT34 	ZapfDingbats  _34
+33623	0x5b5640	FNT28 	ZapfChancery-MediumItalic _28
+33624	0x5b5690	FNT94 	Music Font  _94
+33625	0x5b1d80	BXVM 	Box vertical size minus
+33627	0x5b1dd0	BXHP 	Box horizontal size plus
+33628	0x5b1e20	BXHM 	Box vertical size minus
+33630	0x5b56e0	CHSP 	Character space + (P5)
+33631	0x5b5730	CHSM 	Character space - (P5)
+33632	0x5b5780	CHSD 	Character space normal (P5 = 0)
+33633	0x5b57d0	SPSP 	Space character +  (P10)
+33635	0x5b5820	SPSM 	Space character -  (P10)
+33636	0x5b5870	SPSD 	Space character normal  (P10 = 0)
+33638	0x5b58c0	SUSA 	Sus/Add Accidental (P10)
+33639	0x5b5910	SUSN 	Sus/Add Number (P10)
+33640	0x5b5960	TX  	Edit Text  (TX)
+33641	0x5b5a00	CTN 	Center Text on Note  (CTN)
+33642	0x5b59b0	CT 	Center Text on Position X  (CT x)
+33643	0x5b5af0	QQ214 	
+33644	0x5b5b40	QQ194 	Return to previous menu
+33645	0x5b5a50	J 	Justify text between x and y  (J x y)
+33646	0x5b5aa0	JR 	Right justify text to position X  (JR x)
+33647	0x5b5b90	RIP 	Ripple 1 word down  (RIP 1)
+33648	0x5b5be0	RIP-1 	Ripple 1 word up  (RIP -1)
+33649	0x5b5c30	RIPX 	Ripple 1 word down to new line\mRipple 1 word down to new line (RIPX)
+33650	0x5b5c80	RIPX-1 	Ripple 1 word up to new line\mRipple 1 word up to new line (RIPX -1)
+33651	0x5b5d20	BXU 	Box up
+33652	0x5b5d70	BXD 	Box down
+33653	0x5b5dc0	BXR 	Box right
+33654	0x5b5e10	BXL 	Box left
+33655	0x5b5e60	BXN 	Box normal position
+33656	0x5b5cd0	BSD 	Box size default
+33658	0x5b5eb0	13 1 	Fill the object  (P13 = 1)
+33659	0x5b5f00	13 0 	No fill  (P13 = 0)
+33660	0x5b5f50	12 120 5 1 	Triangle (P14=120)
+33661	0x5b5fa0	12 72 5 1 	Pentagon (P14=72)
+33662	0x5b5ff0	12 60 5 1 	Hexagon (p14=60)
+33663	0x5b6040	QQ215 	Next menu
+33664	0x5b6090	QQ195 	Previous menu
+33665	0x5b60e0	ARCAP 	Arc A +5 (P10)
+33666	0x5b6130	ARCAM 	Arc A -5 (P10)
+33667	0x5b6220	10 0 11 0 	No arc (P10, 11 = 0)
+33668	0x5b6180	ARCBP 	Arc B +5 (P11)
+33669	0x5b61d0	ARCBM 	Arc B -5 (P11)
+33670	0x5b6270	CDSH 	Circle dashes  (P12 = -2)
+33671	0x5b62c0	SKWL 	Skew left (P10)
+33672	0x5b6310	SKWR 	Skew right (P10)
+33673	0x5b6360	SKW0 	No skew  (P10 = 0)
+33675	0x5b63b0	SLDB 	Slider big increments
+33676	0x5b6450	RNDF1 	Round off .1
+33677	0x5b64a0	RNDF0 	Round off 0
+33678	0x5b64f0	RNDF5 	
+33679	0x5b6400	SLDS 	Slider small increments
+33680	0x5b6590	PCHNG2 	Pchng -.5
+33681	0x5b65e0	PCHNG3 	Pchng -1
+33682	0x5b6630	PCHNG4 	Pchng -5
+33683	0x5b6680	PCHNG5 	Pchng -10
+33684	0x5b66d0	PCHNG6 	Pchng -20
+33685	0x5b6720	PCHNG7 	Pchng +.1
+33686	0x5b6770	PCHNG8 	Pchng +.5
+33687	0x5b67c0	PCHNG9 	Pchng +1
+33688	0x5b6810	PCHNG10 	
+33689	0x5b6540	PCHNG1 	Pchng -.1
+33690	0x5b6860	PCHNG11 	Pchng +10
+33691	0x5b68b0	PCHNG12 	Pchng +20
+33692	0x5b69f0	SLTRIP 	Triplet Slur (P16=3)
+33693	0x5b6a40	TRIA 	Triangle (P9=99)
+33694	0x5b6a90	12 0 	Zero P12
+33696	0x5b6ae0	NUMU 	Number Up
+33697	0x5b6cc0	NUMP 	Number Plus
+33698	0x5b6d10	NUMM 	Number Minus
+33699	0x5b6c20	NUML 	Number to Left
+33700	0x5b6c70	NUMR 	Number to Right
+33701	0x5b6bd0	NUMH0 	Number Horz. Default
+33702	0x5b6b80	NUMV0 	Number Vert. Default
+33703	0x5b6b30	NUMD 	Number Down
+33704	0x5b1100	QP0 	Drag Left end (P3, P4 only)
+33705	0x5b1150	QP1 	Drag Right end (P5, P6 only)
+33707	0x5b6d60	DRGOFF 	Drag Off
+33709	0x5b10b0	50000 4 	Level (P5=P4)
+33710	0x5b6db0	/4 1 	P4 + 1
+33711	0x5b6e00	/4 -1 	P4 -1
+33714	0x5b6e50	PSIXM 	P6 minus
+33715	0x5b6ea0	PSEVM 	P7 minus
+33716	0x5b6f40	PELVM 	
+33717	0x5b6f90	PTWLM 	
+33718	0x5b6fe0	PTHRZ 	
+33719	0x5b6ef0	PSEVZ 	
+33720	0x5b7030	PB6 	P6 plus
+33721	0x5b7080	PB7 	P7 plus
+33722	0x5b70d0	PB11 	P11 plus
+33723	0x5b7120	PB12 	P12 plus
+33729	0x5b7170	RS !000.mus 	G 000.mus
+33730	0x5b7210	PEDC 	Pedal line
+33732	0x5b7260	BOXOK 	Edit Box OK
+33734	0x5b72b0	1 	
+33735	0x5b7300	2 	
+33736	0x5b7350	3 	
+33737	0x5b73a0	4 	
+33738	0x5b73f0	5 	
+33739	0x5b7440	6 	
+33740	0x5b7490	7 	
+33741	0x5b74e0	8 	
+33742	0x5b7530	9 	
+33743	0x5b7580	10 	
+33744	0x5b75d0	12 	
+33745	0x5b7620	14 	
+33746	0x5b76c0	16 	
+33747	0x5b7710	17 	
+33748	0x5b7760	18 	
+33749	0x5b77b0	0 	
+33750	0x5b7670	15 	
+33751	0x5b7800	LI 	Lineup
+33752	0x5b7850	J 	Justify
+33753	0x5b78f0	FLU 	Flip stems up FLU
+33754	0x5b7940	FLD 	Flip stems down FLD
+33755	0x5b78a0	FL 	Flip stems to opposite directions FL
+33756	0x5b7a30		Return to Main Menu
+33757	0x5b7990	FLN 	Flip to normal stem directions FLN
+33758	0x5b7a80		Group Edit
+33759	0x5b7ae0	CNX 	Center Beams, stems opposite (P9=-1)
+33760	0x5b7b30	STUD 	Stems Up/Down (STUD)
+33761	0x5b7b80	STM 	Adjust Stem Length (STM)
+33762	0x5b7bd0	TR 	Transpose (TR)
+33763	0x5b7c80	TRM1 	Transpose -1
+33764	0x5b7cd0	TRM2 	Transpose -2
+33765	0x5b7d20	TRM3 	Transpose -3
+33766	0x5b7d70	TRM4 	Transpose -4
+33767	0x5b7dc0	TRM5 	Transpose -5
+33768	0x5b7e10	TRM6 	Transpose -6
+33769	0x5b7e60	TRM7 	Transpose -7
+33770	0x5b7eb0	TRM8 	Transpose -8
+33771	0x5b7f00	TRM9 	Transpose -9
+33772	0x5b7f50	TRM10 	Transpose -10
+33773	0x5b7fa0	TRM11 	Transpose -11
+33774	0x5b7ff0	TRM12 	Transpose -12
+33775	0x5b8040	TRP1 	Transpose +1
+33776	0x5b8090	TRP2 	Transpose +2
+33777	0x5b80e0	TRP3 	Transpose +3
+33778	0x5b8130	TRP4 	Transpose +4
+33779	0x5b8180	TRP5 	Transpose +5
+33780	0x5b81d0	TRP6 	Transpose +6
+33781	0x5b8220	TRP7 	Transpose +7
+33782	0x5b8270	TRP8 	Transpose +8
+33783	0x5b82c0	TRP9 	Transpose +9
+33784	0x5b8310	TRP10 	Transpose +10
+33785	0x5b8360	TRP11 	Transpose +11
+33786	0x5b83b0	TRP12 	Transpose +12
+33787	0x5b8400	TRI 	Transpose by Inst. Key
+33788	0x5b8450	TOP 	Top of Display
+33789	0x5b84a0	BOT 	Bottom of Display
+33790	0x5b84f0	0 200 	0 - 200
+33791	0x5b85e0	10 200 	10-200
+33792	0x5b8630	100 200 	100-200
+33793	0x5b8680	0 100 	0-100
+33794	0x5b86d0	999 	Previous Setting
+33795	0x5b87c0	TR/	Create Treble Clef (TR/  F2)
+33796	0x5b8810	BA/	Create Baaa Clef (BA/  F3)
+33797	0x5b8860	AL/	Create Alto Clef (AL/  F4)
+33798	0x5b88b0	TE/	Create Tenor Clef (TE/  F5)
+33799	0x5b8900	$01	N01
+33800	0x5b8950	$02	 
+33801	0x5b89a0	$03	 
+33802	0x5b89f0	$04	 
+33803	0x5b8a40	$05	 
+33804	0x5b8a90	$06	 
+33805	0x5b8ae0	$07	 
+33806	0x5b8b30	$08	 
+33807	0x5b8b80	BK 	Backspace
+33808	0x5b8bd0	$09 	 
+33809	0x5b8c20	$10 	 
+33810	0x5b8c70	$11 	 
+33811	0x5b8cc0	$12 	 
+33812	0x5b8d10	$13 	 
+33813	0x5b8d60	$14 	 
+33814	0x5b8db0	$15 	 
+33815	0x5b8e00	$16 	 
+33816	0x5b8e50	$17 	 
+33817	0x5b8ea0	$18 	 
+33818	0x5b8ef0	$19 	 
+33819	0x5b8f40	$20 	 
+33820	0x5b8fe0	$22 	 
+33821	0x5b9030	$23 	 
+33823	0x5b9080	$24 	 
+33824	0x5b90d0	$25 	 
+33825	0x5b8f90	$21 	 
+33826	0x5b9170	; 	Semicolon
+33827	0x5b9120	R/ 	Rest  (R or F7)
+33828	0x5b91c0	: 	Colon
+33829	0x5b9210	M/ 	Measure (Bar)
+33830	0x5b93f0	MD/ 	Double Bar
+33831	0x5b9440	MDH/ 	Heavy Double Bar
+33832	0x5b9490	INZ   	Input (INZ)
+33833	0x5b9530	PR/ 	Percussion Clef  (PR)
+33834	0x5b94e0	RW/ 	Whole Rest (RW or F8)
+33835	0x5b9580	$F 	Flat
+33836	0x5b95d0	$S 	Sharp
+33837	0x5b9620	$N 	Natural
+33838	0x5b9670	$FF 	Double Flat
+33839	0x5b96c0	$SS 	Double Sharp
+33840	0x5b9710		Return to 1st input menu
+33841	0x5b9760		Second Mode 1 Menu
+33842	0x5b97b0	ML/ 	Repeat Left
+33843	0x5b9800	MR/ 	Repeat Right
+33845	0x5b98a0	MS/ 	Bar Dashes
+33846	0x5b98f0	MI/ 	Bar Invisible
+33847	0x5b9850	MRD/ 	Double Repeat
+33848	0x5b9990	K1F/ 	1 flat
+33849	0x5b99e0	K2F/ 	
+33850	0x5b9a30	K3F/ 	
+33851	0x5b9a80	K4F/ 	
+33852	0x5b9ad0	K5F/ 	
+33853	0x5b9b20	K6F/ 	
+33854	0x5b9b70	K7F/ 	
+33855	0x5b9bc0	K1S/ 	
+33856	0x5b9c10	K2S/ 	
+33857	0x5b9c60	K3S/ 	
+33858	0x5b9cb0	K4S/ 	
+33859	0x5b9d00	K5S/ 	
+33860	0x5b9d50	K6S/ 	
+33861	0x5b9da0	K7S/ 	
+33862	0x5b9940	KSN 	
+33863	0x5b9df0		Ksig-Meter Menu
+33864	0x5b9e40	COM/ 	Input Common Time (COM/)
+33865	0x5b9e90	CUT/ 	Input Cut Time (CUT/)
+33866	0x5b9ee0	2 4/ 	2/4
+33867	0x5b9f30	3 4/ 	3/4
+33868	0x5b9f80	4 4/ 	4/4
+33869	0x5b9fd0	5 4/ 	5/4
+33870	0x5ba020	6 4/ 	6/4
+33871	0x5ba070	2 8/ 	2/8
+33872	0x5ba0c0	3 8/ 	3/8
+33873	0x5ba110	4 8/ 	4/8
+33874	0x5ba1b0	6 8/ 	6/8
+33875	0x5ba200	9 8/ 	9/8
+33876	0x5ba250	12 8/ 	12/8
+33877	0x5ba2a0	3 16/ 	3/16
+33878	0x5ba2f0	6 16/ 	6/16
+33879	0x5ba340	9 16/ 	9/16
+33880	0x5ba160	5 8/ 	5/8
+33881	0x5ba3e0	SU/ 	Stems Up
+33882	0x5ba430	SD/ 	Stems Down
+33883	0x5ba480	SO/ 	Stems Normal
+33884	0x5ba4d0	RU/ 	Rest Up
+33885	0x5ba520	RD/ 	Rest Down
+33886	0x5ba570	RO/ 	Normal Rest Position
+33887	0x5ba610	RWD/ 	Whole Rest Down
+33889	0x5ba5c0	RWU/ 	Whole Rest Up
+33890	0x5ba660	RP/ 	Whole Repeat
+33891	0x5ba6b0	/ 	Slash (repeat last item)
+33892	0x5ba840	E/ 	Eighth note\8th note  (E or F5)
+33893	0x5ba700	D/ 	
+33894	0x5ba750	W/ 	Whole note  (W or F2)
+33895	0x5ba7a0	H/ 	Half note  (H or F3)
+33896	0x5ba7f0	Q/ 	Quarter note  (Q or F4)
+33897	0x5ba890	S/ 	16thth  (S or F6)
+33898	0x5ba8e0	32/ 	
+33899	0x5ba930	64/ 	
+33900	0x5bb150	G/ 	Grace note
+33903	0x5ba980	D./ 	Dotted double whole
+33904	0x5ba9d0	W./ 	Dotted whole
+33905	0x5baa20	H./ 	Dotted half
+33906	0x5baa70	Q./ 	Dotted quarter
+33907	0x5baac0	E./ 	Dotted eighth
+33908	0x5bab10	S./ 	Dotted sixteenth
+33909	0x5bab60	32./ 	Dotted 32nd
+33910	0x5baf70	^ 	Back out of Input ( ^ or F9 )
+33911	0x5babb0	X3 2/ 	X3  2
+33912	0x5bac00	X3 3/ 	X 3   3
+33913	0x5bac50	X3 4/ 	X 3   4
+33914	0x5baca0	X4 2/ 	X 4   2
+33915	0x5bacf0	X4 3/ 	X 4   3
+33916	0x5bad40	X4 4/ 	X 4   4
+33917	0x5bafc0	G 	Go
+33918	0x5bb0b0	S 	
+33919	0x5bb060	E 	
+33920	0x5bb1a0	TH/ 	Triplet Half
+33921	0x5bb1f0	TQ/ 	Triplet Quarter
+33922	0x5bb240	TE/ 	Triplet Eighth
+33923	0x5bb290	TS/ 	Triplet Sixteenth
+33924	0x5bb2e0	5/ 	Quintuplet Quarter
+33925	0x5bb330	10/ 	Quintuplet Eighth
+33926	0x5bb380	20/ 	Quintuplet Sixteenth
+33930	0x5bb3d0		Next Menu
+33931	0x5bb420		Return to 1st Marks menu
+33932	0x5bb4d0	-A 	Minus Accent
+33933	0x5bb570	-W 	Minus Wedge
+33934	0x5bb5c0	-T 	Minus Tenuto
+33935	0x5bb610	-S 	Minus Staccato
+33936	0x5bb660	-WS  	Minus Wedge-Staccato
+33937	0x5bb6b0	-AS  	Minus Accent-Staccato
+33938	0x5bb700	-TS  	Minus Tenuto-Staccato
+33939	0x5bb750	-ACT 	Minus Accent-Tenuto
+33940	0x5bb7a0	-D 	Minus Downbow
+33941	0x5bb7f0	-U 	Minus Upbow
+33942	0x5bb840	-H 	Minus Harmonic
+33943	0x5bb890	-FE 	Minus Fermata
+33944	0x5bb8e0	-HW 	Heavy-Wedge
+33945	0x5bb930	-C  	Minus Crescendo
+33946	0x5bb980	-C- 	Minus Decrescendo
+33947	0x5bb9d0	1B; 	1 8th per beam
+33948	0x5bba70	2B; 	2 8ths per beam
+33949	0x5bbac0	3B; 	3 8ths per beam
+33950	0x5bbb10	4B; 	4 8ths per beam
+33951	0x5bbbb0	1PK 	1 Pickup
+33952	0x5bbc00	2PK 	2 Pickup
+33953	0x5bbc50	3PK 	3 Pickup
+33954	0x5bbca0	300 	3 over group
+33955	0x5bbcf0	400 	4 over group
+33956	0x5bbd40	500 	5 over group
+33957	0x5bbd90	600 	6 over group
+33958	0x5bbde0	UP 	Beam/Slur up  (+)
+33959	0x5bbe30	DOWN 	Beam/Slur down  (-)
+33960	0x5bbe80	99 1/ 	Slur in
+33961	0x5bbed0	## 99/ 	Slur out
+33962	0x5bbf20	0 1/ 	Tie in
+33963	0x5bbf70	%% %%/ 	Tie out
+33965	0x5bbfc0	MIDI 	Start MIDI  (F12)
+33966	0x5bc010	EDI 	Edit input  (EDI)
+33967	0x5bc060	RE TMP.TXT 	Move display up ( ]] )
+33970	0x5bc0b0	NOD 	No dot (P9)
+33971	0x5bc150	NO 	NO
+33972	0x5bc100	YES 	YES
+33973	0x5bb100	LJ 	Do LJ, exit.
+33974	0x5bc1f0	TRP21 	Transpose +21 (Bari Sax)
+33975	0x5bc1a0	TRP14 	Transpose +14 (Ten. Sax, Bass Cl.)
+33976	0x5bc240	LAST 	Get Last file read in.
+33977	0x5bc290	TRM0 	Clef change
+33978	0x5bc2e0	MID 	Middle of Display
+33979	0x5bc330	FREEZE 	Freeze/unfreeze display position
+33980	0x5bc380	BEATS 	How many beats in line?
+33981	0x5bc3d0	q 	Repeat last command (q)
+33984	0x5ab640	PLA 	Play through MIDI
+33985	0x5bc420	CD 	Center dash (CD)
+33986	0x5bc470	SCV 	Vertical Spacing scale - Inches (SCV)
+33987	0x5bc4c0	WYN 	Wiggle Yes/No  (P6)
+33988	0x5bc510	WUP 	Wiggle Up  (P11)
+33989	0x5bc560	WDN 	Wiggle Down  (P11)
+33990	0x5bc5b0	WZR 	Wiggle Default  (P11 = 0)
+33991	0x5bc600	TRZ 	No Acci  (P8 = 0)
+33992	0x5bc650	TRFW 	Trill Flat  (P8 = 1)
+33993	0x5bc6a0	TRS 	Trill Sharp  (P8 = 2)
+33994	0x5bc6f0	TRN 	Trill Natural  (P8 = 3)
+33995	0x5bc740	WSP 	Increase wiggle size  (P9)
+33996	0x5bc790	WSM 	Decrease wiggle size  (P9)
+33997	0x5bc7e0	WS0 	Normal wiggle size  (P9 = 0)
+33998	0x5bc830	CHF+ 	Chord fingering plus  (P9 = 0-4)
+33999	0x5bc880	CHF- 	Chord fingering minus  (P9 = 0-4)
+34000	0x5bca10	TRW 	Trill with wiggle
+34001	0x5bc970	TRFW 	Trill Flat  (P8 = 1)
+34002	0x5bc9c0	TRSW 	Trill Sharp  (P8 = 2)
+34003	0x5bc920	TRNW 	Trill Natural  (P8 = 3)
+34004	0x5bca60	VJ 	Vertical justify 
+34005	0x5bcac0	COM 	Combine files  (COM)
+34006	0x5bcb20	DEC 	Decombine files  (DEC)
+34007	0x5bcb80	XOFF 	Zero Offsets  (P16=0)
+34008	0x5bcbd0	LAY 	Page Layout
+34009	0x5bcc20	PTS 	Part Extraction
+34010	0x5bcc70		Play again.
+34011	0x5bccb0		Pause MIDI
+34012	0x5bccf0	MDSTOP 	Stop MIDI play.
+34013	0x5bcdf0	MDTRNSP 	MIDI track transpositions.
+34014	0x5bce40	MDINST 	MIDI instrument numbers.
+34015	0x5bce90	MDAMPLS 	MIDI track amplitudes.
+34016	0x5bcee0	MDTEMPO 	MIDI tempo.
+34017	0x5bcd50	MDAUTO 	Automatic setup.
+34018	0x5bcda0	MDTRKS 	Set up MIDI tracks.
+34020	0x5bcf30	MDEXIT 	Exit from MIDI play.
+34021	0x5bcf90	MDALL 	Set all MIDI parameters.
+34022	0x5bcfe0	MDLIST 	Read 'MIDILIST' file.
+34023	0x5bd080	PST 	Paste (PST)
+34024	0x5bd030	CT 	Cut-copy (CT)
+34025	0x5bd0d0	5 2 6 2 8 0 9 0 	2/2
+34026	0x5bd120	5 3 6 2 8 0 9 0 	3/2
+34027	0x5bd170	13 1 	See/change EPS name - P13=1
+34028	0x5bd210	DRW 	Draw
+34029	0x5bd260	EDR 	Edit drawing
+34030	0x5bd2b0	CLO 	Close space
+34031	0x5bd300	STP+ 	Step plus
+34032	0x5bd350	STP- 	Step minus
+34033	0x5bd530	INS 	Insert point
+34034	0x5bd440	CP1 	Capture start
+34035	0x5bd490	CP2 	Capture stop
+34036	0x5bd4e0	G 	Get drawing
+34037	0x5bd5e0	CRV2 	Curve stop
+34038	0x5bd580	CRV1 	Set Curve points.  (CR)
+34039	0x5bd680	JMP 	Jump
+34040	0x5bd6d0	JF 	Jump fill
+34041	0x5bd720	JFX 	Jump fill 2
+34042	0x5bd630	FILL 	Fill on/off
+34044	0x5bd770	SA 	
+34049	0x5bd7c0	ALL 	Move all points (ALL)
+34050	0x5bd810	ONE 	Move single point (ONE)
+34051	0x5bd860	DEL 	Erase point (DEL)
+34052	0x5a7e00	UNDO 	Undo (after Group Edit)
+34053	0x5bd8b0	SKIP 	Skip to jump (F7)
+34054	0x5bd950	SET 	Set drawing to zero position  (F5)
+34055	0x5bd9a0	GN 	Get next drawing (GN)
+34056	0x5bd9f0	GB 	Get next drawing back (GB)
+34057	0x5bda40	REX 	Read ASCII input file  (RE)
+34058	0x5bda90	SCX 	Save ASCII text file  (SC)
+34059	0x5bdae0	GM 	Get more  (GM)
+34060	0x5bdb30	H 	Home (H)
+34061	0x5bdc20	RO 	Rotate group. (RO)
+34062	0x5bdb80	SI 	Group Size (SI)
+34063	0x5bdbd0	A 	Alter point. (A)
+34064	0x5bdcd0	RED 	Redo (after UNDO)
+34065	0x5bdd70	DLD 	Delete Library Drawing  (DLD)
+34066	0x5bddc0	Q 	Straight line  (Q)
+34067	0x5bdfa0	~~040x	Move display down ( [[ )
+34068	0x5bde10	~~037x	Move display left  (--)
+34069	0x5bde60	~~039x	Move display right  (++)
+34070	0x5bdf00	~~0==	Display normal position (==)
+34071	0x5bdf50	~~038x	Move display up ( ]] )
+34072	0x5bdff0	~~===	Display normal vertical position  ( "" )
+34073	0x5be040	PA 	Paper size outline  (PA)
+34074	0x5a7e50	FONTX 	Undo Font change.
+34076	0x5be090	TH 	Thicken curve (slur)
+34077	0x5be0e0	SZ.9 	Staff size .9
+34078	0x5be130	SZ.8 	Staff size .8
+34079	0x5be180	SZ.7 	Staff size .7
+34080	0x5be1d0	SZ.6 	Staff size .6
+34081	0x5be220	SZ.5 	Staff size .5
+34082	0x5be270	SZ.4 	Staff size .4
+34083	0x5ba390	12 16/ 	12/16
+34085	0x5b0150	5 12 6 16 8 0 9 0 	
+34086	0x5b8540	1 200 	1 - 200
+34087	0x5b8590	2 200 	2 - 200
+34088	0x5be2c0		Change note head
+34089	0x5be310	6 0 	Standard note head (P6=0)
+34090	0x5be360	6 1 	Half note head (P6=1)
+34091	0x5be3b0	6 2 	Whole note head (P6=2)
+34092	0x5be400	6 3 	Double whole note head (P6=3)
+34093	0x5be450	6 4 	White harmonic (P6=4)
+34094	0x5be4a0	6 5 	Black harmonic (P6=5)
+34095	0x5be540	6 6 	X note (P6=6)
+34096	0x5be4f0	6 7 	Headless note (P6=7)
+34097	0x5be590	6 8 	Harmonic with X (p6=8)
+34098	0x5be5e0	6 9 	Round harmonic with X (P6=9)
+34099	0x5be630	6 10 	Standard note head with parentheses (P6=10)
+34100	0x5be680	6 11 	Half note head parentheses (P6=11)
+34101	0x5be6d0	6 12 	Whole note head with parentheses (P6=12)
+34102	0x5be720	6 13 	Double whole note head with parentheses (P6=13)
+34103	0x5be810	6 17 	Headless note parentheses (P6=17)
+34104	0x5be8b0	6 18 	Harmonic X with parentheses  (p6=18)
+34105	0x5be900	6 19 	Round harmonic with X with parentheses (P6=19)
+34106	0x5be770	6 14 	
+34107	0x5be7c0	6 15 	
+34108	0x5be860	6 16 	
+34121	0x5a9f70	8 -3	Tie between Notes after dot 
+34125	0x5be950	CPX 	Copy to several staves  (CPX)
+34126	0x5be9a0	LJA 	Line Up and Justify All (LJA)
+34134	0x5bea40	BZ 	Same code back (BZ)
+34135	0x5be9f0	NZ 	Same code next (NZ)
+34138	0x5bea90	RIP 	Ripple bars (RIP)
+34139	0x5a7d60	DEB 	Delete, back to same code# (DEB)
+34140	0x5a7db0	DEN 	Delete, next to same code# (DEN)
+34143	0x5bb520	-PL 	
+34144	0x5beae0	JT 	Justify text (Lyrics) 
+34147	0x5bedb0	SI 	Make Staff Invisible (SI)
+34150	0x5a9e80	OMAU 	15ma
+34151	0x5beb30	STSP 	Space between staves
+34152	0x5a5da0	METER24 	 Code 18 Meter
+34153	0x5a5df0	METER34 	 Code 18 Meter
+34154	0x5a5e40	METER68 	 Code 18 Meter
+34155	0x5beb80	PREF 	Set Preferences
+34156	0x5bebd0	H../ 	Double dotted half
+34157	0x5bec20	Q../ 	Double dotted quarter
+34158	0x5bec70	E../ 	Double dotted eighth
+34159	0x5becc0	S../ 	Double dotted sixteenth
+34160	0x5bed10	10./ 	Quintuplet Eighth dotted
+34161	0x5bed60	TE./ 	Triplet Eighth dotted
+34163	0x5aace0		Return to previous menu
+34164	0x5aac90		Return to previous menu
+34165	0x5aad30		Next Menu
+34166	0x5aad80		
+34167	0x5a9fc0	8 .5	Tie P8 = .5
+34168	0x5bee00	5 1001 18 100	AA (P5=1001, P18=100)
+34169	0x5bee50	5 1001 18 1	A1  (P5=1001, P18=1)
+34170	0x5a6d70	5 1.8	Bass 8 below (P5 = 1.8)
+34171	0x5a6c80	5 .8	Treble 8 below (P5 = .8)
+34172	0x5a6cd0	5 .88	Treble 8 above (P5 = .88)
+34173	0x5a6d20	5 .15	Treble 15 above (P5 = .15)
+34174	0x5aab00	SPL222 	Split Beam 2-2-2 (SPL222)
+34175	0x5b79e0	FLA 	Group stem adjustment.
+34176	0x5b71c0	Q 	rRepeat last command  (Q)
+34177	0x5beea0	CRV	Set default slur curve
+34178	0x5beef0	+ 	Plus upper octave
+34181	0x5aae70	BNUM3 	Beam number 3
+34182	0x5aaec0	BNUM5 	Beam number 5
+34187	0x5bef40	ED 	Edit vertically at this position  (ED)
+34198	0x5ac320	4 999 	Extend bar to top staff. (P4 = 999)
+34200	0x5ab8b0	MD 	Vertical move down  (MD)
+34201	0x5ab860	MU 	Vertical move up/down  (MUD)
+34202	0x5b7c30	ALL 	Choose all staves.
+34203	0x5a7a90	UU 	Move up 1/2 step  (UU)
+34204	0x5a7b30	DD 	Move down 1/2 step  (DD)
+34205	0x5ab1e0	TM+ 	2Add 1 Tremolo Beam  (TM+)
+34206	0x5ab190	TM1 	1 Tremolo Beam (TM1)
+34208	0x5bef90	900 .5	Flatten curve, P9=P9+.5
+34209	0x5befe0	9 0	Zero curve flattening. (P9 = 0)
+34210	0x5b1790	QP21 	P21
+34211	0x5b3190	PCHNG-9999 	Zero all higher parameters.  (-9999)
+34212	0x5b8720	=/	Repeat chord without accidentals
+34213	0x5b8770	==/	Repeat chord with accidentals
+34214	0x5bad90	Z3 2/ 	Z3 2
+34215	0x5bade0	Z3 3/ 	Z3 3
+34216	0x5bae30	Z3 4/ 	Z3 4
+34217	0x5bae80	Z4 2/ 	Z4 2
+34218	0x5baed0	Z4 3/ 	Z4 3
+34219	0x5baf20	Z4 4/ 	Z4 4
+34220	0x5bf030	MN 	Measure numbers (MN)
+34222	0x5bf080	IF 	IF command
+34224	0x5bf0d0	PGR 	Move page to right  (PGR)
+34225	0x5a6400	OSR 	Order by staff reversed (OSR)
+34227	0x5bf170	A  	Align to Set position  (A)
+34228	0x5bf120	S  	Set for alignment  (S)
+34231	0x5bf1c0	LIB  	Symbol Library (SYM)
+34232	0x5bf210	RGB 	Color Chooser (RGB)
+34233	0x5bf260	HALF 	Step 1/2, on-off.
+34234	0x5bf2b0	P 	Extended Parameters (P21-30)
+34237	0x5bf300	A 	Group alter. (A)
+34238	0x5bf350	GSV 	Get !SAVE.MUS
+34239	0x5bf3f0	NMO 	Staff number off/on  (P12)
+34242	0x5ae760	7 23 	Pedal
+34243	0x5ae7b0	7 24 	
+34244	0x5ae800	7 25 	Pedal
+34246	0x5bdd20	RESTO 	Restore Item after Edit.
+34247	0x5bf440	CLR 	Clear redundant points
+34249	0x5bf490	PS3 	Save P 3 (PS3)
+34251	0x5bf4e0	PG  	Get saved param.  (PG)
+34252	0x5bbb60	6B; 	6 8ths per beam
+34254	0x5bba20	9B; 	3 sixteenths per beam
+34255	0x5bf530	SUD  	Move to staff up/down
+34256	0x5ac690	S-/	Staff below (S-)
+34257	0x5ac640	S+/	Staff above  (S+)
+34258	0x5ac6e0	S0/	Normal staff  (S0)
+34259	0x5bf580	Q+/	Start Cue notes. (Q+)
+34260	0x5bf5d0	Q-/	Stop Cue notes. (Q-)
+34261	0x5ec5f0		
+34262	0x5c1e20	~a1	
+34263	0x5c1f10	~a4	
+34264	0x5c1fb0	~a6	
+34265	0x5c1e70	~a2	
+34266	0x5c1ec0	~a3	
+34267	0x5c1f60	~a5	
+34268	0x5c2000	~a7	
+34269	0x5c1dd0	~a0	
+34270	0x5c2050	~a8	
+34271	0x5c20a0	~a9	
+34272	0x5c2230	~az	
+34274	0x5c20f0	~ax	
+34276	0x5c2140	IN 	
+34277	0x5c2370	D	
+34278	0x5c2280	LJ	
+34279	0x5c22d0	RESTO	
+34280	0x5c2320	UND	
+34282	0x5c2190	HIST	
+34283	0x5a69b0	Z2  	Zoom to size 2
+34285	0x5ab750	M 	Move points (M)
+34286	0x5ab7b0	CO	Copy points (C)
+34287	0x5bd3a0	~~115	Set group point (F4)
+34288	0x5bd3f0	~~121	All Points (F4 x 2)
+34289	0x5c21e0	~~121	
+34290	0x5c23c0	$(	Accidental parentheses
+34291	0x5c2500	~F5	
+34292	0x5c24b0	~F4	
+34293	0x5c2550	~F6	
+34294	0x5c25a0	~F7	
+34295	0x5c25f0	~F8	
+34296	0x5c2460	~F3	
+34297	0x5c2410	~F2	
+34298	0x5c26e0	Q 	
+34299	0x5c2730	M 	
+34300	0x5c2780	TOP	
+34301	0x5c27d0	BOT	
+34302	0x5c2820	MID	
+34303	0x5c2870	AB   	
+34304	0x5c28c0	TR 	
+34305	0x5c2940	J 	
+34306	0x5c2990	E 	
+34307	0x5c29e0	RS  	
+34308	0x5c2a30	RSM  	
+34309	0x5c2a80	GP 	
+34310	0x5c2ad0	Z$ 	
+34311	0x5c2b20	LAST 	
+34312	0x5c2b70	H    	
+34313	0x5c2bc0	PA 	
+34314	0x5c2c10	LAY 	
+34315	0x5c2c60	SC$ 	
+34316	0x5c2cb0	PTS 	
+34317	0x5c2d00	DRW 	
+34319	0x5c2d50		
+34320	0x5c2d80		
+34321	0x5c2db0	~al	
+34322	0x5c2e00	~ar	
+34324	0x5adf90	VSZ+ 	Vertical Size Plus
+34325	0x5ae030	VSZ- 	Vertical Size Minus
+34326	0x5bb010	A 	Abandon Input
+34327	0x5bf620	RPR	Parentheses Rest on/off
+34329	0x5bf7b0	R4/	4=bar rest (R4)
+34330	0x5bf6c0	R1/	1=bar rest (R1)
+34331	0x5bf710	R2/	2=bar rest (R2)
+34332	0x5bf760	R3/	3=bar rest (R3)
+34333	0x5bf800	R5/	5=bar rest (R5)
+34334	0x5bf850	R6/	6=bar rest (R6)
+34335	0x5bf8a0	R7/	7=bar rest (R7)
+34336	0x5bf8f0	R8/	8=bar rest (R8)
+34337	0x5b8450	TOP 	
+34338	0x5b84a0	BOT 	
+34339	0x5bf940	SEP	Separate 2-voice orchestral parts
+34340	0x5c2fe0		
+34341	0x5c2e50		
+34342	0x5c2ea0		
+34343	0x5c2ef0		
+34344	0x5c2f40		
+34345	0x5c2f90		
+34346	0x5c3420	~~038x	
+34347	0x5c3b00	PATHX 2 	
+34349	0x5c3f80	PATHX 3 	
+34350	0x5c3470	8 -3)	
+34356	0x5b9260	M2/ 	M2
+34357	0x5b92b0	M3/ 	M3
+34358	0x5b9300	M4/ 	M4
+34359	0x5b9350	M5/ 	M5
+34360	0x5b93a0	M6/ 	M6
+34361	0x5a9250	DC- 	Decrescendo Dashes (P11=1)
+34362	0x5a9200	CR- 	Crescendo Dashes (P11=1)
+34365	0x5ae0d0	CTX 	Center tex on note (no punct.)
+34366	0x5ae080	CTN 	Center tex on note
+34370	0x5c34c0	MM60 	Quarter =54
+34371	0x5c3510	MM72 	Quarter = 72
+34372	0x5c3560	MM48 	Quarter =48
+34373	0x5c35b0	MM54 	Quarter =54
+34374	0x5c3600	MM84 	Quarter = 84
+34375	0x5c3650	MM96 	Quarter = 96
+34376	0x5c36a0	MM108	Quarter = 108
+34377	0x5c36f0	MM120	Quarter = 120
+34378	0x5c3740	MM132	Quarter = 132
+34379	0x5c37e0	MM144	Quarter = 144
+34380	0x5c3830	MM-12 	MM +12
+34382	0x5c3790	MM-6 	MM -6
+34383	0x5bd900	SKIPB 	Skip back to jump
+34384	0x5bdeb0	~~0>> 	Move to right end
+34385	0x5aba10	DG 	Group delete (DG)
+34386	0x5bb470	IN + 	Input next (IN)
+34387	0x5bfb10	PM 	Show upper parameters. (PM)
+34388	0x5bfbb0	P110 	Adjust accidental to offset (P110)
+34389	0x5ab6f0	MX 	Repeat Move (MX)
+34390	0x5c3880	PATHX 0 	
+34391	0x5c38d0	PATHX 1 	
+34392	0x5c3920	PATHX 4 	
+34393	0x5c3970	PATHX 5 	
+34394	0x5c39c0	PATHX 6 	
+34395	0x5c3a10	PATHX 7 	
+34396	0x5c3a60	PATHX 8 	
+34397	0x5c3ab0	PATHX 9 	
+34398	0x5bfd40	BB 	
+34399	0x5bf670	E 	Item Bar, Off/On (EE)
+34400	0x5bf3a0	G 	Get a file (G)
+34401	0x5bfc00	PATHX 	Path list (<ctrl>0)
+34409	0x5bfc50	X2 	Place Beam/Slur over 2 notes.
+34410	0x5bfca0	X3 	Place Beam/Slur over 3 notes.
+34411	0x5bfcf0	X4 	Place Beam/Slur over 4 notes.
+34412	0x5b30f0	PCHNG13 	
+34413	0x5b3140	PCHNG14 	
+34415	0x5bfb60	PM31	
+34418	0x5bd1c0	13 1 	See/change DRW name  (P13 = 1)
+57600	0x62ae94		New
+57601	0x62ae8e		Open
+57606	0x62ae88		Print Setup
+57607	0x62b00e		Print
+57607	0x5c2640	PRINT	Print
+57608	0x62b00e		
+57609	0x62b008		Print Preview
+57609	0x5ec2b0		Print Preview
+57634	0x5c2690	C 	Copy
+57664	0x5e42c0		About
+57667	0x62ad08		Help Topics
+57669	0x62ad38		Help
+57669	0x62b4ce		Help
+57670	0x62ad02		Help
+57671	0x62ad08		
+57696	0x5e5010		Choose a font
+57856	0x5e7ac0		New Object
+57857	0x62b630		Edit Links
+57858	0x62b63c		Convert Object

@@ -1,0 +1,840 @@
+Notes
+
+----- A -----
+
+"A"
+Group Alter
+
+Accidentals 
+(Code 1)
+
+Accordion
+symbols (Code 12)
+
+"AB"
+abort, cancel edit changes 
+
+"ADD"
+bar lines 
+
+Adjust
+note stems to beams
+
+"ADObe"
+(type fonts on screen)
+
+Align
+(after Set)
+
+<Alt>
+x commands
+
+Arrows
+(Code 4, Code 9)
+
+Arrow
+keys (Preference)
+
+----- B -----
+
+Bar
+lines (Code 14)
+
+Bar
+lines (input)
+
+"BB" see
+the bounding
+box
+
+Beams 
+(Code 6)
+
+Black,
+set color to black
+
+Box
+(Code 12)
+
+----- C -----
+
+"C",
+"CC", "CX" copy an item while editing
+
+"C"
+Group
+Copy
+
+"CD
+n" center lyrics dashes on staff n
+
+"CDA" 
+center lyrics dashes on all staves
+
+Centimeters
+
+Circle
+(Code 12)
+
+Clefs 
+(Code3)
+
+"CM (n)"
+center meter, number, or bar over nearest bar on staff n
+
+"CN
+(n)"
+Center item on note or rest
+
+Centering slurs and 1st and 2nd endings (Code 5, Edit
+Mode)
+
+ "CNL" center left end of slur at front of line
+
+ (Code
+5, Edit Mode) 
+
+"CNR" center right end of slur at end of line (Code
+5, Edit Mode) 
+
+"CNX"
+Center beams on notes with different stem directions (Code
+6, Edit Mode) 
+
+Color ("RGB")
+
+"COM" combine alphabetically ordered files
+
+"COMM (x y z)"
+common time - C, Code 18
+
+Combine
+files ("COMB")
+
+Comments,
+inserting (font 99, Code 16)
+
+Conditional
+Editing (IF .... THEN)
+
+Convert
+Code 11 Items to Code 9
+
+"CPX"
+Copy
+to mutliple staves
+
+"CR-"
+= dashed hairpin, Code 4
+
+"CRS" (x y z) = "cresc.", Code 9, P5 = 63
+
+"CRV" = group adjustment of slur curvature, Code 5,
+P7
+
+"CS"
+Copy System 
+
+"CT" 
+cut (copy) for future paste
+
+"CT,
+CTN, CTX" 
+center text (Code 16, Edit Mode) 
+
+"CTN,
+CTX" 
+center group of text items 
+
+<Ctrl>
+x commands
+
+Cue notes
+
+ Input
+mode (Q+/-) 
+
+ Altering
+a group of notes already present
+
+"CUT
+(x y z)" cut time (alla breve) - Code 18
+
+"CW"
+Center whole rests
+
+----- D -----
+
+"D" move
+item down (Edit Mode)
+
+"DE" 
+delete item (Edit Mode)
+
+"DE"
+Group Delete
+
+"DEC"
+decombine
+file
+
+"DEPL"
+delete left side (verso) complete page
+
+"DEPR"
+delete right side ( recto) complete page
+
+Dots
+with repeat bars (Code 14)
+
+Double
+Flat (Code 1, Code 9)
+
+Double
+Sharp (Code 1, Code 9)
+
+Drag
+screen
+
+Draw
+("DRAW")
+
+DRW
+- importing/converting old Code 11 files
+
+Dynamics
+(Code 9)
+
+----- E -----
+
+ED x,y,z = edit items found
+near position x, staff y, code number z
+
+EDI = edit recreated input mode
+
+Endings
+- 1st, 2nd (Code 5)
+
+ENH = enharmonic shift of notes,
+Code 1
+
+EPS files - importing (Code 15)
+
+EQA, EQS - Equalize
+Staff spacing
+
+ESP (x y z) =
+"espr.", Code 9, P5 = 79
+
+European
+style rests
+
+----- F -----
+
+FER (x y z) = fermata,
+Code 9, P5 = 31
+
+Flat
+(Code 1, Code 9)
+
+Flip
+
+FLR
+
+FH = display full height of image
+
+FW = display full width of image
+
+Full Width on Input
+
+Fonts
+
+ with
+Slurs Code 5
+
+ with Beams
+Code 6
+
+----- G -----
+
+"G"
+file = get a file
+
+"GM" = get
+more, add a file to current image
+
+"GML"
+file, get more and put file on left (verso) page
+
+"GMR"
+file, get more and put file on right (recto) page
+
+"GMB" get
+more, get next file BACK in sequence, put on verso position 
+
+"GMN" get
+more, get next file in sequence, put on recto position 
+
+"GP"
+= get the previous
+file
+
+G.P.
+(Grand Pause) over rest
+
+Gap
+in bar
+
+Gap
+in hairpin
+
+Gap
+in slur
+
+Grace
+notes (Code 1)
+
+Gray scale
+
+Guitar
+notation
+
+----- H -----
+
+"H" total
+height of page
+
+"HS" 
+height of staff lines
+
+Hairpins
+(cresc./decresc.)
+
+Hairpins
+- dashed
+
+Harp
+pedals (Code 7)
+
+"HO"
+when editing code 4, make horizontal line
+
+----- I -----
+
+"I" edit
+an item
+
+"II" 
+edit
+last item
+
+"IF
+.... THEN" (conditional editing)
+
+IF
+"Old Text" THEN "New Text"
+
+"IN" 
+note
+input
+
+Inches
+
+Invisible
+
+Bar lines
+
+Rests
+
+Staff lines
+
+----- J -----
+
+"J" justify notes/rests
+
+"J
+n1 n2" 
+justify text between n1 and n2 
+
+"JT" 
+justify text (usually for lyrics under notes) 
+
+----- K -----
+
+Key
+signatures (Code 17)
+
+----- L -----
+
+"L" move
+item to left (Edit Mode)
+
+"LAST" 
+get last file read in
+
+Layers
+(for color/gray printing, P25)
+
+LAYout
+(Page layout)
+
+Lines (Code 4) 
+
+"LI"
+Line up according to rhythm
+
+"LJ"
+Line up and
+Justify
+
+Line
+spacing (Code 16)
+
+Lyrics,
+inputting (Code 16)
+
+----- M -----
+
+"M"
+Group Move
+
+"MAC"
+create macro command file
+
+MEAS
+see measurement settings
+
+Meter
+numbers (Code 18)
+
+Meter
+number font (Code 16)
+
+Metric
+- centimeters
+
+MIDI
+note input
+
+clefs and key signatures
+
+meter
+
+rhythm (Pass 2)
+
+MIDI play back
+
+Motives
+- use in Input Mode
+
+Mouse
+usage
+
+Mini-macro
+commands (using ' and ;)
+
+"MN"
+Measure
+numbers 
+
+"MS,
+MSX"
+Move System 
+
+"MSEE"
+See motive list 
+
+"MT"
+= move a line of text (lyrics) and dashes up/down
+
+"MUD"
+Group Move Up/Down
+
+"MX"
+repeated moves
+
+----- N -----
+
+"NX" 
+get file with next alphabetical name
+"NB" 
+get file with next alphabetical name back
+Natural 
+(Code 1, Code 9)
+
+Network
+name
+ 
+Network printer
+Notes (Code 1) 
+ Note
+heads
+
+Numbers 
+(Code 10)
+
+----- O -----
+
+"OH" 
+reorder by horizontal position
+
+"ORN" 
+renumber by "layers"
+
+"OS" 
+reorder by staff, then horizontal position
+
+"OT" 
+reorder text from top staff down
+
+Ottava 
+(Code 7)
+
+Outline
+fonts (Code 16)
+
+----- P -----
+
+Page
+layout
+
+Parentheses
+
+ on Dynamics
+
+ on Notes
+
+ on Rests
+
+Part
+extraction
+
+"PATH" set
+the path to the proper folder (directory) 
+
+for using SCORE's Get and Save commands.
+
+"PATHX"
+get the Path List.
+
+"PGR"
+ move
+complete page from left (verso) to right (recto)
+
+If this command is repeated, the page returns to the left position.
+
+Piano
+pedals (Code 7)
+
+ Pedal
+arrows
+
+ Pedal
+brackets
+
+ Piano
+pedals (graphic)
+
+"PLA" 
+play (MIDI output)
+
+"PM" see
+parameter values
+
+"PMX"
+create file listing all parameters
+
+Points
+- text size
+
+PostScript
+commands, inserting (font 99, Code 16)
+
+importing .EPS files (Code 15)
+
+"PR" 
+print
+
+"PREF" 
+see the Preference
+file
+
+"PTS" 
+extract individual parts
+
+----- Q -----
+
+Quindicesima
+(Code 7, two octaves higher)
+
+----- R -----
+
+"R" move
+item to right (Edit Mode)
+
+"RE" 
+read a macro command file
+
+Redo after last Undo
+command
+
+"REP
+n" repeat reading a macro file n times
+
+Restore (after
+edit and no copy)
+
+Rests (Code 2) 
+
+"RI"
+input of invisible rests
+
+Right
+margin (Code 16)
+
+Ripple
+Text (Code 16)
+
+"RIP",
+"RIPX" ripple bars from one line to another
+
+"RS"
+= restart the program
+
+"RSM"
+= restart with same file name
+
+----- S -----
+
+"S"
+sixteenth note when inputting
+
+"S+"
+note on staff above when inputting (P12=1)
+
+"S-"
+note on staff below when inputting (P12=2)
+
+"S0"
+(S zero) note on primary staff when inputting (P12=0)
+
+"SA" 
+save the file
+
+"SC" 
+set horizontal scale in Score units
+
+"SCC" centimeters
+
+"SCI" inches
+
+"SCV" 
+set vertical scale in inches
+
+"SCVC" centimeters
+
+"SCX" 
+remove scale
+
+"SEP"
+separate two-voice extracted parts
+
+Set
+- Align
+
+"SD"
+stems down when inputting
+
+Slurs (Code 5)
+
+"SM" 
+save with the same name
+
+"SNX" 
+save with next alphabetical name
+
+"SNB" 
+save with next alphabetical name back
+
+"SO"
+stems ordinary (normal) direction when inputting
+
+"SP
+n" for input of 2nd polyphonic voice, set spacing to staff n
+
+"SPD+/-"
+increase/decrease spread of hairpins
+
+"SPL
+n1,n2 . . ." split beams into various groups
+
+"STUD"
+Stems up/down - group edit
+
+"ST" 
+edit on indicated staff
+
+"STA
+n" = create staff lines at vertical position n, Code 8
+
+"STX" 
+edit on all staves
+
+"STSP"
+set space between staves
+
+Staff
+lines (Code 8)
+
+"STM"
+= adjust length of stems which extend above or below staff
+
+"SU"
+stems up when inputting
+
+Symbol
+library (Code 9)
+
+SZ
+and PT size and points
+
+----- T -----
+
+Tabs
+in text (Code 16)
+
+Tabulature
+
+"TBX"
+(put box on text - Code 12)
+
+Text 
+(Code 16)
+
+ Text
+entry
+
+"T" (single line)
+
+"TC" (center syllables)
+
+"TCX" (center syllables, ignore
+punctuation)
+
+"TT" (several lines)
+
+"TTR" (read external file)
+
+Text division character for
+lyrics input
+
+ Text
+editing
+
+"TX" (Edit dialog box)
+
+ Text
+type fonts
+
+Thicken
+lines (Code 4)
+
+"TPL",
+"TPLN" Top Left display when page is read in, Top Left No.
+
+Transpose
+
+Transpose
+sound (Code 8)
+
+Trills 
+(Code 7)
+
+Triplets 
+(input rhythm mode)
+
+T, TE = eighth-note triplet
+
+TT = 32nd triplet
+
+TS = 16th triplet
+
+TQ = quarter-note triplet
+
+TH = half-note triplet
+
+TW = whole-note triplet
+
+Triplet
+bracket (Code 5)
+
+Two-bar
+repeat (Code 2, Code
+14)
+
+"TYPE"
+type and edit the contents of a text file, for macro commands 
+
+----- U -----
+
+"U" move
+item up (Edit Mode)
+
+Undelete last
+deleted item
+
+Undo last group edit
+
+----- V -----
+
+"VC" 
+vertical centering between staff and staff above
+
+"VCB" 
+vertical centering between staff and staff below
+
+"VCS" 
+vertical centering of text in front of staff
+
+"VE"
+when editing code 4, make vertical line
+
+"VER" 
+get
+WinScore version and serial number
+
+"VJ"
+vertical justify
+
+----- W -----
+
+"W"
+whole note when inputting
+
+White,
+set color to white (invisible when printing) 
+
+----- X -----
+
+"X" exit
+from edit mode or group edit
+
+"XX" 
+exit
+from edit and save item for paste (copy)
+
+----- Y -----
+
+----- Z -----
+
+"Z" refresh the display,
+size 2 on/off.
+
+Zoom
+while in Edit Mode
+
+8va,
+15ma (Code 7)
+
+/ 
+(Code 16)

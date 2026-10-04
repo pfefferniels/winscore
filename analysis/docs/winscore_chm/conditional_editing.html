@@ -1,0 +1,130 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>CONDITIONAL EDITING</title>
+</head>
+
+<body>
+
+<pre style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="5" color="#FF0000" face="Times New Roman"><b>CONDITIONAL EDITING.</b></font>
+</pre>
+<font size="4">
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">Many parametric changes may be made at once with this editing system whose syntax is similar to the BASIC programming language.  The main components of the SCORE edit language are
+<b>IF</b>, <b>AND</b>, <b> OR</b> and <b>THEN</b>. When a set of conditions are found to be true, then parameters may be changed, items may be deleted, or items may be selected to be &quot;cut&quot; for pasting elsewhere later. Color or gray scale parameters may
+also be set. <a href="color_control.html">(See Color Control.)</a></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">The editing statements are comprised of two main parts; the
+<b> IF</b> section and the <b> THEN</b> section. If the <b> IF</b> section is .TRUE. then the changes of the
+<b> THEN</b> section take place. The semicolon (<b><font color="#FF0000">;</font></b>)
+may be typed in place of <b>THEN</b>.&nbsp;
+</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">The legal elements of the <b> IF</b> section include:</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+<b>Pn</b> where n is any parameter number.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;
+equal.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;&gt; or ~ (tilde)&nbsp;&nbsp; not equal.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+less than.&nbsp;&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+greater than.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;= or {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+less than or equal.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+&gt;= or }&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+greater than or equal.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
++&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+plus.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+minus.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+multiply.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+divide.</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+     Numbers may have up to 4 digits to the left of the decimal point and up to 3 digits to the
+     right. Left and right parenthese may be used to define statements which include
+<b> AND</b> or <b>OR</b>. MOD(Pn,x) gives the remainder result of dividing the number &quot;x&quot; into the value in
+<b>Pn</b>. (see example)</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">The legal elements of the
+<b> THEN</b> section include:</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+<b>Pn</b>         where n is any parameter number.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+=&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+equal.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
++&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+plus.&nbsp;&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+minus.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+multiply.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+divide.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+, (comma)&nbsp; separates each parameter change after <b>THEN</b>.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+Any number (as above).&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+<b>DEL</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete the items.&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+<b>CUT</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cut the items for later pasting (they will not be deleted).&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+<b>RGB n</b> =&nbsp; the color number (up to 6 digits)&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+<b>GRA n</b> =&nbsp; the gray scale number (from 0 to .99)<u><u></u></u>
+&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;
+<b>BLA</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; changes color or gray items to normal black.</p>
+<pre style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</pre>
+
+<pre style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font face="Times New Roman" size="4">EXAMPLES:
+   <b>IF P3 &gt; 100 THEN P3=P3-20  (or IF P3 &gt; 100 ; P3=p3-20)</b>
+      This will move all items, on all staves, which are beyond position 100, 20 steps to the right.
+   <b>IF P3 &gt; 100 AND (P1=9 OR P1=18) THEN CUT</b>
+      This will &quot;cut&quot; items with code numbers 9 or 18 which are to right of position 100.
+   <b>IF (P1=1 AND P2&lt;4) OR (P1=2 AND P2&gt;=6) THEN DEL</b>
+      This will delete all notes on staves lower than 4 and all rests on staves greater than or equal to 6.
+   <b>IF(P1=1 AND P2&gt;3 AND MOD(P9,10) &lt;&gt; 0) OR (P1=1 AND P2=1 AND P3&gt;100) THEN P11=5, P6=6
+</b>      If either of the strings enclosed by parentheses are .TRUE., then the note will have an
+      accent (P11=5) and the note head will be an X (P6=6). The 1st conditional requires that the
+      code number be 1 and that the note is on a staff higher than 3. The MOD statement means
+      that the note must have a tail. (i.e. the remainder of P9/10 must not equal 0.) The 2nd
+      statement requires that the note must be on staff 1 and to the right of position 100.
+      Nested parentheses are not supported (aside from use with MOD).
+</font></pre>
+
+<pre style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font face="Times New Roman" size="4">      The current state of the screen is saved to <b>!SAVE.MUS</b> just before the IF command </font></pre>
+
+<pre style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font face="Times New Roman">        </font><font face="Times New Roman" size="4">is executed.</font></pre>
+
+</body>
+
+</html>

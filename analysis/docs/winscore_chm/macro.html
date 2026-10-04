@@ -1,0 +1,191 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>RE</title>
+</head>
+
+<body>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b><font color="#FF0000">MACRO
+Files</font></b></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">In
+WinScore you can create macro files which contain a series of commands that you
+may wish to use several times. If you type MAC, the following box will appear.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><img border="0" src="macro.JPG"></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">You
+may type in any descriptive name that you wish, such as
+&quot;ID-NUM.&quot;&nbsp; DO NOT hit &lt;enter&gt; yet, instead hit &lt;TAB&gt;
+to move the cursor down into the large text box. Now you may type in any normal
+Score commands that you wish to reuse. For example:</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#00FF00">&nbsp;</font></font><font color="#0000FF"><font size="4">&nbsp;&nbsp;
+"_05ID-9876" 1 2 -6&nbsp;&nbsp; </font><font size="4">% this will print, using
+the Helvetica font, 6 steps below staff 1.</font><font size="4"><br>
+&nbsp;&nbsp;&nbsp;
+X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+% you must exit from Edit Mode before giving the next command.<br>
+&nbsp;&nbsp;&nbsp; "_02San Andreas Press" 1 22 -6&nbsp;<br>
+&nbsp;&nbsp;&nbsp; X<br>
+&nbsp;&nbsp;&nbsp;
+I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+% edit the last Item entered<br>
+&nbsp;&nbsp;&nbsp; CT
+100&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+% center the text<br>
+&nbsp;&nbsp;&nbsp; X</font></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#000000">Note
+that any text following the percent sign (%) is considered as a comment.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#000000">When
+you have finished all your entries, click on OK. The macro will be saved in your
+current directory.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#000000">In
+order to invoke these commands, type READ ID-NUM. The result should be as
+follows:</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><img border="0" src="macro2.JPG"></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b><font color="#FF0000"><a name="READ">READ
+a macro command file</a></font></b></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">Type
+READ name, where name is the name of any macro file you have created with the
+MAC command or with an external text editor. The name you give will persist, so
+to run the macro again you can just type RE or click on the READ box on the tool
+bar. If you have left WinScore and then start the program later, typing RE will
+bring up the last macro name used.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">Macro
+commands may be &quot;chained&quot; by having the last line be a READ command
+calling up a different macro file.&nbsp;</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b><font color="#FF0000"><a name="REP">REP
+n - repeat reading a macro file n times</a></font></b></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">A
+macro file might end with SM (save with the same name) and then NX (open the
+next alphabetically named file). If the last line is REP n, this same macro file
+will be read n times. For example, if you wanted to add an instrument name and
+reduce the size of all staves in a series of files, VL2AA.MUS to VL2AE.MUS,
+first bring VL2AA to the screen and then create a macro called V2. This macro
+might contain the following commands:&nbsp;</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font color="#00FF00" size="4">&nbsp;</font><font color="#0000FF"><font size="4">&nbsp;&nbsp;
+IF P1=8 THEN
+P5=.7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % change
+all staves to size .7</font></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font color="#0000FF"><font size="4">&nbsp;&nbsp;&nbsp;
+&quot;_01Violin 2&quot; 12 33 24 0 1.2&nbsp; % put name at P4=24 above staff 12</font></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#0000FF">&nbsp;&nbsp;&nbsp;
+X</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#0000FF">&nbsp;&nbsp;&nbsp;
+I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % edit the
+last item</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#0000FF">&nbsp;&nbsp;&nbsp;
+CT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % center the text</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#0000FF">&nbsp;&nbsp;&nbsp;
+X</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#0000FF">&nbsp;&nbsp;&nbsp;
+SM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % save with same name</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#0000FF">&nbsp;&nbsp;&nbsp;
+NX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % move to next file</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#0000FF">&nbsp;&nbsp;&nbsp;
+REP 5&nbsp; % repeat this macro for 5 files</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font color="#000000" size="4">***
+<u>You must be very careful</u> with this command because if incorrectly used
+several files could be changed in unwanted ways. It is always a good idea of
+making backup copies before such editing.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b><font color="#FF0000"><a name="TYPE">The
+TYPE command</a></font></b></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font color="#000000" size="4">This
+is used to read and edit any external text file. Its primary use is to edit
+macro files.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4" color="#FF0000"><b><a name="MINIMAC">Mini-Macro Review.</a></b></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><br>
+The Mini-Macro feature is a very useful tool that is sometimes overlooked by SCORE users.  If one, two, or three apostrophes
+(<b>'</b>) are entered at the front of a SCORE command string, the entire string can be reactivated at a later time by
+typing one, two, or three semicolons (<b>;</b>).  For example, you have measure numbers at the beginning of each system, but there are also boxed rehearsal
+numbers which you want to appear in bold-face type:&nbsp;</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;
+<font face="Courier New">'STX 10&nbsp;&nbsp;</font> (<font face="Courier New"><b>'</b></font> sets Mini-Macro to look on all staves for numbers
+[Code 10])</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(hit &lt;enter> repeatedly until 1st item to edit is found)&nbsp;</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+''7 9&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (<b>''</b> sets second Mini-Macro to change type font to Times-Bold)&nbsp;</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">Now each time you type
+<b> ;;</b> parameter 7 will be changed to 10. You can later move on to another page and type just
+<b> ;</b> to repeat the command STX 10. Any time you use the apostrophe(s) again, that Mini-Macro will be re-initialized. Type
+<b> ;;;;</b> to see the current stored commands for all Mini-Macros.<br>
+</font></p>
+
+</body>
+
+</html>

@@ -1,0 +1,126 @@
+                                                                          1/5
+"A" commands: A = group alter, AD = adjust stem lengths,
+              In Edit Mode: A = align [after 'set'], AB = abort edit.
+              See page 4 for extended letter commands.
+
+A -- Group Alter ---  The first prompt is:
+         Type staff #, position 1, position 2, [code #, upper staff #]
+
+   At least 4 numbers must be typed.  If the staff number given is greater
+   than the total possible (32), then all staves will be affected.
+   Position 1 and 2 give the left and right horizontal limits for the group
+   alter. The proper code number for the kind of item to be altered must be
+   given.  If no 5th number is given items on only 1 staff will be altered.
+   If a 5th number is typed then all the staves between that indicated by the
+   1st number and that by the 5th number will be altered.  If a zero is given
+   for the 3rd number it will be taken to mean that you want the range to
+   extend out to position 220 on the right side.
+
+                  2 0 59 1   prepares for alteration all notes (code 1) on
+                             staff 2 between position 0 and 59.
+
+                  1 0 0 3 4  prepares for alteration all clefs (code 3) on
+                             staves 1 through 4 between positions 0 and 220.
+
+*
+                                                                          2/5
+      The second prompt is:
+        Type P#, chng, P#, chng, P#, chng, ...
+
+    Up to 12 pairs of numbers may be typed.  The 1st of each pair must be a
+    parameter number and the second is the new value of that parameter.
+    (The same format is used for relative changes and equivalences as that
+     used when in edit mode.)
+
+        4 15  300 10  6000 3  puts 15 into parameter 4, adds 10 to
+                              parameter 3 (relative change) and puts
+                              into parameter 6 whatever value was found
+                              in parameter 3 (equivalence).
+
+    These  changes then take place for all the items with the proper code
+    number found in the range given in response to the 1st prompt.
+
+    (To back up from either of the prompts, type "b.")
+
+
+
+
+
+
+*
+                                                                          3/5
+
+
+    A few letter commands may be used with Group Alter:
+
+       PT n  = n is absolute point size of text, regardless of staff size.
+       SZ n  = n is absolute size of text, regardless of staff size.
+
+       TP n  = tab fingering position, n = lowest fret number to be used.
+
+       ENH   = change notes to enharmonic equivalent.
+
+       RH n  = set rhythms to value n (8 = eighth note, etc.).
+
+       CU    = change notes/rests/beams to cue size.
+       CUX   = change cue size notes/rests/beams to normal size.
+
+       CN    = center items on nearest note/rest.
+       CTN   = center text items on nearest note/rest.
+
+
+
+
+
+*
+                                                                          4/5
+In Edit Mode only:
+
+A = Align after Set -- See under "S", Set and Align.
+
+AB = Abort edit.  Typing "AB" while in Edit Mode returns all parameters to
+                  their original values.
+
+
+AD [staff #, n] -- Adjust stem lengths of all notes to match beam's vertical
+   position when stems (implied by notes' P5 and beams' P7) are going the
+   same direction.  ADF = adjust stems in the "French" manner.
+
+   If a staff number greater than the total possible staves (i.e. >32)
+   is typed, then note stems on all staves will be adjusted.
+
+   If a 2nd number [n] is typed (non-zero) then stems of notes and beams
+   NEED NOT be going the same direction in order for adjustment to occur.
+
+   An "AD" should usually be done following the use of the "J" (justify) or
+   "LI" (line up) commands.
+   (In some complex situations it may be best to move certain beams to other
+    staves before doing an "AD" - then they must be moved back.)
+
+*
+                                                                          5/5
+
+
+Extended letter commands:
+
+     These commands are shortcuts for creating various items.  They should
+     normally be followed by 2 or 3 numbers (parameters 2, 3, 4).
+
+         arc 3 45 14   will put "arco" on staff 3 at position 45,
+                       vertical position 14.
+
+ACL  = accel.
+ACN  = accent
+ACNS = accent/staccato
+ACT  = accent/tenuto
+ALT  = alto clef (ALTOM = mini clef)
+ARC  = arco
+ARP  = vertical arpeggio wiggle
+AST  = asterix (*)
+ATM  = a tempo
+
+
+
+
+-------------------------------------------------------------------------end---
+~

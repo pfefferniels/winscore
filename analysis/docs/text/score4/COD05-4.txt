@@ -1,0 +1,175 @@
+                                                                            1/7
+Code 5 -- Slurs, brackets, 1st ending, etc. --
+
+                           ╔═══════════╦═══════════╗
+  parameter structure:     ║     p1    ║     p2    ║
+                           ║ code num. ║ staff num.║
+                           ╚═══════════╩═══════════╝
+            ┌──────────────────────────────────────────────────────┐
+            │                 ┌────────────────────┐               │
+ ╔══════════╧═════════╦═══════╧═══════════╦════════╧════════╦══════╧════════╗
+ ║         p3         ║       p4          ║        p5       ║      p6       ║
+ ║left horizontal pos.║ left vertical pos.║ right vert. pos.║ rt. horz. pos.║
+ ╚════════════════════╩═══════════════════╩═════════════════╩═══════════════╝
+
+ ╔═══════════╦════════╦════════════╦══════════════╦══════════╦══════════════╗
+ ║    p7     ║   p8   ║     p9     ║     p10      ║   p11    ║     p12      ║
+ ║ curvature ║ offset ║ flattening ║ curve center ║ dash/dot ║ change direc.║
+ ╚═══════════╩══(num)═╩═══(num)════╩══════════════╩══════════╩══════════════╝
+
+ ╔═══════════╦═══════╦══════╦════════╦═════════════╦══════════════╦═════════╗
+ ║    p13    ║  p14  ║  p15 ║  p16   ║    p17      ║    p18       ║   p19   ║
+ ║ thickness ║ start ║ stop ║ number ║ num. lft-rt ║ num. up-down ║fine tune║
+ ╚═══════════╩═══════╩══════╩════════╩═════════════╩══════════════╩═════════╝
+
+*
+                                                                            2/7
+  P7 = amount of curvature (in scale steps).  A positive number makes the
+       slur curve upwards, a negative number makes the slur curve downwards
+       (i.e. the center of the slur will be lower than the ends).
+
+  P8 = horizontal offset.
+
+     P8 =  0 or 10 = slur will begin exactly at P3 position and end at
+                     P6 position (i.e. at the left edge of notes).
+        = -1 or 11 = slur ends are centered over notes at positions of
+                     P3 and P6.
+        = -2 or 12 = slur falls between notes at pos. P3 and P6. (tied notes)
+        = -3 or 13 = same as -2, but extra space for 1st note being dotted.
+        = -4 or 14 = center slur ends on right edge of note.
+        = -5 or 15 = middle of 1st to end of last note.
+        = -6 or 16 = end of 1st note to middle of last note.
+        = -7 or 17 = middle of 1st note to start of last note.
+        = -8 or 18 = start of 1st note to middle of last note.
+        = -9 or 19 = start of 1st note to end of last note.
+        = .02 to .99 = places the left end of the slur a percentage of the
+                    distance from the front of the 1st note to 2 note widths
+                    to the right.  The right end of the slur is placed in the
+                    converse position in regard to the last note.
+
+*
+                                                                            3/7
+
+     P8 = 1 = 1st ending, P8 = 2 = 2nd ending.
+                 P7 sets height of bracket -- should usually = c.5 or 6.
+          
+          If P9 is positive, then P9 sets the ending number.
+                  For 1st ending with open bracket to right: P8=2, P9=1.
+          
+          P8=1, P9 = -1 = no number, bracket open to the left        
+                   = -2 = no number, complete bracket     
+          P8=2, P9 = -1 = no number, bracket open to the right       
+
+          The 'CN n' command (center) will move the ends of 1st and 2nd
+          endings to positions of nearest bar lines.  If the bar line
+          starts from a staff below, the staff number (n) must be given.
+
+             
+
+             * For PAGE program --with 1st-2nd ending:
+
+                 P5 = 100 =put ending in ALL parts, = 200 =in NO parts.
+
+
+
+*
+                                                                            4/7
+     
+     P8 = 3 = broken bracket with the number 3 in center. (P11=0)
+           P9  = set the number (if number other than 3 is needed.)
+           P10 = move the number to the left or right of center.
+             P10 =  0 = default (.5) = number is centered.
+                 = .3 = number is 30% distance from left to right.
+                 = .8 =   "    "  80%    "      "    "   "    "
+              P11 = 1 = continuous bracket with number inside.
+                  = 2 =      "        "     "     "    outside.
+                  = 3 = bracket with NO number. (P8 must = 3 for all these.) 
+              P17 and P18 can move the number left-right, up-down.
+
+      
+      P9 = slur flattening factor.  Longer slurs often should be flattened
+               in the middle.  By setting P9 to a positive value, a larger
+               portion of the slur will be flat.  Negative values will
+               decrease the flat area.
+
+      P9 with brackets and endings:
+          P8 = 1 and P9 = -1 = continuation of 1st ending.
+          P8 = 3 and P9 <= -2 = open space in bracket (for |--- 3:5 ---| etc.)
+
+
+*      
+                                                                            5/7
+      P10 = set center of curvature.  When P10 is left at zero the default
+              value of .5 is in effect.  If P10 is less than .5 the center
+              of curvature shifts to the left.  Values greater than .5 shift
+              the center to the right.  P10 also moves number in bracket.
+
+      P11 = 1 = slur is made up of dashes. (P8=0)
+              If P11 is greater than 1, then P11 = number of dashes in slur.
+
+      P11 =-1 = slur is made up of dots.
+              If P11 is less than -4, then P11 = number of dots in slur.
+                          (Even numbers only.)
+
+
+      P12 = half or reversed slurs.
+              P12 = 1 = the slur shape will be as if only the left half
+                      were being drawn.
+              P12 = 2 = only the right half shape appears.
+              P12 = -1 causes the slur to reverse direction at its midpoint
+                      (see P10).  If P7 is positive, the 1st part of the
+                      curve will be up.  If P7 is negative the 1st part of
+                      the curve will be down.  (The slur length must be
+                      visually adjusted when P12 = -1.)
+
+*
+                                                                            6/7
+      P13 = thickness control.  Zero = normal thickness (100%).
+              P13 = .6 = 60% of normal.  P13 = 1.3 = 130% of normal, etc.
+
+      P14 & P15 are used to break up slurs to avoid crossing over other items.
+              The slur first should be set up with its normal parameter values
+              in P3, P4, P5, and P6.  Then P14 can set where the visible
+              portion of the slur STARTS and P15 can set where the visible
+              portion ENDS.  P14 = .3 = visible part starts 30% of the way
+              through.  P15 = .65 = visible part ends 65% of the way through,
+              etc.  P14 and P15 can be used separately or together.
+
+      P16 = a number to be put in the middle of a broken slur.  (For triplets,
+              etc.) If the number is NEGATIVE, it will appear (positive) just
+              below an unbroken slur whose curve is up, or just above a slur
+              whose curve is down.
+
+      P17 = can move the number given in P16 left or right.
+      P18 = can move the number given in P16 up or down.
+              (These parameters must be used if the slur is quite steep.)
+  **************************************
+  Offsets:  P16=1, P17=absolute left offset, P18=absolute right offset.
+       P8 will be ignored - also then other uses of p16,17,18 are not valid.
+
+*
+                                                                            7/7
+
+      P19 = fine tune slur thickening. P19 may control the position through
+            the drawing of the first half of the slur where it reaches its
+            maximum thickness. The default is P19 = 0 = .85 = 85%. This
+            might be used (in conjunction with P13) for very short ties or
+            nearly vertical slurs. (Use the SHOW feature while editing.)
+
+
+════════════════════════════════════════════════════════════════════════════
+
+
+Guitar tremolo bar slides: P9 = 99
+       
+       All the parameters here work just like those for slurs except that 
+       only the upper 2 vectors of a triangle will appear instead of the 
+       curve of a slur.
+
+       If P7 = 0, only a straight line will appear.
+
+       For thicker lines, set P13 = 1, 2, or 3.
+
+
+-------------------------------------------------------------------------end---
+.

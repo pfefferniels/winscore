@@ -1,0 +1,50 @@
+                                                                            1/2
+Code 18 -- Meter (Time Signature)
+
+  parameter structure
+ษอออออออออหอออออออออออหออออออออออออหอออออออออออหอออออออออออออออหออออออออออออป
+บ   p1    บ    p2     บ    p3      บ     p4    บ       p5      บ     p6     บ
+บcode num.บ staff num.บ horiz. pos.บ vert. pos.บ top meter num.บ bottom num.บ
+ศอออ 18 ออสอออออออออออสออออออออออออสอออออออออออสอออออออออออออออสออออออออออออผ
+
+ษออออออหอออออออออออออออหออออออออออออหอออออออออออออหอออออออออออออออออออป
+บ  p7  บ      p8       บ     p9     บ     p10     บ        p11        บ
+บ size บ 2nd meter top บ 2nd bottom บ offset of + บoffset of 2nd meterบ
+ศออออออสอออออออออออออออสออออออออออออสอออออออออออออสอออออออออออออออออออผ
+
+ษออออออออออหออออออออออออออออหออออออออออออออหออออออออออออหอออออออออออป
+บ   p12    บ       p13      บ     p14      บ     p15    บ   p16     บ
+บsuppress +บchange type fontบignore justifyบhorz. offsetบlaser thickบ
+ศออออออออออสออออออออออออออออสออออออออออออออสออออออออออออสอออออออออออผ
+
+
+P5 = 99 = common time (C)
+   = 98 = alla breve  ()
+   =  0 = single meter number (found in P6) centered
+
+*
+                                                                            2/2
+Use P8 and P9 for double meters (e.g. 3/4+5/8).
+
+P10 alters the position of the "+" between double meters.
+
+P11 alters the distance between the meters.
+
+P12 = 1 = suppress the "+" between double meters.
+
+P13 = change type font by entering font number + 1000. (1004=Helvetica, etc.)
+
+P14 = 1 = lineup and justify will ignore this time signature. ( 0 = normal )
+
+P15 = horizontal offset from P3 position.  (Lineup/Justify will ignore item.)
+
+P16 = laser thickness. For small staff sizes, negative values make lighter
+                       face meter numbers with conventional music font.
+
+  ****************************
+  CM = CenterMeter (& numbers).  This sets P3 and P15 to center meter over a
+  ****************************   nearby bar line. (But not with double meters.)
+                                       (P9 = -1 does same as CM)
+
+-------------------------------------------------------------------------end---
+.

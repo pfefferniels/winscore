@@ -1,0 +1,50 @@
+Code 3 -- Clefs --                                                         1/2
+  parameter structure
+ษอออออออออหอออออออออออหออออออออออออหอออออออออออหอออออออออออหออออออหออออออออออป
+บ   p1    บ     p2    บ     p3     บ      p4   บ    p5     บ  p6  บ    p7    บ
+บcode num.บ staff num.บ horiz. pos.บ vert. pos.บ clef type บ size บvert. sizeบ
+ศอออ 3 อออสอออออออออออสออออออออออออสอออออออออออสอออออออออออสออออออสออออออออออผ
+
+For mini-clefs (used after 1st in staff) add 100 to P4 (or -100 if P4 is neg.)
+
+P5 clef types: 0 = treble        3 = tenor           .88 = octave up (8va)
+               1 = bass          4 = percussion      .15 = 2 octaves up (15ma)
+               2 = alto         .8 = choral tenor    1.8 = contrabass (8ba)
+   
+  TAB clefs:  44 = 4-string     55 = 5-string         66 = 6-string
+  
+  The normal vertical position is set with P4 = 0.  (P6 size 0 = size 1.)
+  For the other C clefs move the alto clef up or down with P4.
+
+  P6 is the horizontal size factor.  However if P7 is left at zero, the
+  horizontal and vertical sizes are both controled by P6.
+
+  P15 = horizontal offset from given p3 position.
+
+
+*
+                                                                           2/2
+___________________________________________________________________________
+------- Letter Commands while editing Clefs -------------------------------
+
+>>> Clefs 
+ TRE   = treble clef
+ BAS   = bass clef
+ ALT   = alto clef
+ TEN   = tenor clef
+ TDO   = treble clef with '8' below. (D=Down Octave) (P5 = .8)
+ TUO   = treble clef with '8' above. (U=Up Octave) (P5 = .88)
+ TUQ   = treble clef with '15' above. (2 octaves, quindicesima)  (P5 = .15)
+ BDO   = bass clef with '8' below.   (P5 = 1.8)
+ PER   = percussion clef
+ MIN   = make mini clef  (P4 +100)
+ TAB   = tablature clef (6 line staff)
+ TB4   = tablature clef (4 line staff)
+ TB5   = tablature clef (5 line staff)
+                       
+>>> Offsets
+ OFM   = offset minus, moves clef .5 step to left. (P15)
+ OFP   = offset plus, moves clef .5 step to right.
+ NOF   = no offset of clef - P15 = 0.
+-------------------------------------------------------------------------end---
+.

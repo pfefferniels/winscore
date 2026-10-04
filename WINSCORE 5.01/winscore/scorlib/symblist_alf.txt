@@ -1,0 +1,712 @@
+~~~~~~~~~~~~~~~~~~~ A ~~~~~~~~~~~~~~~~~~~
+0068   accel.
+0022   accent
+0092   parentheses accent {>}
+0026   accent/dot
+0119   accent/tenuto
+           Accidentals
+0006       flat 
+0007       sharp
+0008       natural
+0009       double flat
+0010       double sharp
+0265       natural/flat
+0266       natural/sharp
+0267       natural/double flat
+0268       natural/double sharp
+0097       parentheses flat
+0140       parentheses flat (2)
+0098       parentheses sharp
+0141       parentheses sharp (2)
+0099       parentheses natural
+0142       parentheses natural (2) 
+0143       parentheses double flat 
+0144       parentheses double sharp
+0145       quarter tone flat 
+0146       3 quarter tones flat
+0147       quarter tone sharp 
+0148       3 quarter tones sharp
+0182       quarter tone flat up
+0183       quarter tone sharp up
+0184       quarter tone natural up
+0185       quarter tone flat down
+0186       quarter tone sharp down
+0187       quarter tone natural down 
+0019   alla breve (cut time)
+           Animals
+1980       deer
+1981       tiger
+1982       fox
+1983       bird
+1984       tiger filler
+0067   arco 
+0069   arrow -->
+0032   arsis
+0071   asterisk *
+0078   a tempo
+
+~~~~~~~~~~~~~~~~~~~ B ~~~~~~~~~~~~~~~~~~~
+0005   Brace
+0096   left square bracket
+0014   breve note
+
+~~~~~~~~~~~~~~~~~~~ C ~~~~~~~~~~~~~~~~~~~
+0083   circle
+0270   circle 
+0271   black circle
+0089   black circle
+0272   half black circle
+0090   circle with cross
+0211   circle muffle (harp) 
+1973   circle muffle
+1972   double circle muffle
+0212   double circle muffle
+           Clefs
+0000       Treble 
+0001       Bass 
+0002       Alto 
+0003       Tab 
+0004       Percussion 
+0112   coda sign
+0122   coda sign (2)
+0118   comma
+0180   slashed comma 
+0181   (,)
+0018   common time (C)
+0285   common time (2) 
+0063   cresc.
+0019   cut time (alla breve)
+0286   cut time (2)
+
+~~~~~~~~~~~~~~~~~~~ D ~~~~~~~~~~~~~~~~~~~
+0111   decresc.
+0064   dim.
+0024   dot (staccato)
+0028   downbow
+           Dynamics
+0050       pppp 
+0051       ppp
+0052       pp 
+0053       p
+0054       mp 
+0055       mf 
+0056       f
+0057       ff 
+0058       fff
+0059       ffff 
+0060       fp 
+0061       sf 
+0062       sfz
+0123       fz 
+0124       s
+0125       r
+0126       z
+0210       n
+0127       rf 
+0128       rfz
+0129       sffz 
+0160       sff
+0161       sfff 
+0162       sfpp 
+0163       sfp
+0164       sffp 
+0165       mfpp 
+0166       mfp
+0167       fpp
+0168       ffpp 
+0169       ffp
+0150       (pppp)
+0151       (ppp)
+0152       (pp) 
+0153       (p)
+0154       (mp) 
+0155       (mf) 
+0156       (f)
+0157       (ff) 
+0158       (fff)
+0280       sfffz
+0281       sffffz
+0282       sfzp 
+0283       sffzp
+0284       sfffzp
+
+~~~~~~~~~~~~~~~~~~~ E ~~~~~~~~~~~~~~~~~~~
+5010   earthquake fault
+0079   espr. 
+
+~~~~~~~~~~~~~~~~~~~ F ~~~~~~~~~~~~~~~~~~~
+0031   fermata
+0213   square fermata
+0214   triangle fermata
+          for Figured Bass, see below
+          for French items, see below
+
+~~~~~~~~~~~~~~~~~~~ G ~~~~~~~~~~~~~~~~~~~
+0072   gliss.
+           Guitar notation
+0209       barre
+0087       guitar chord grid
+0088       circle for grid 
+0130       stemless guitar quarter
+0131       stemless guitar half
+0132       guitar quarter
+0133       guitar half
+0134       guitar eighth 
+0135       guitar sixteenth
+0136       guitar quarter dotted
+0137       guitar half dotted
+0138       guitar eighth dotted
+
+~~~~~~~~~~~~~~~~~~~ H ~~~~~~~~~~~~~~~~~~~
+0204   H-
+0030   harmonic
+
+~~~~~~~~~~~~~~~~~~~ I ~~~~~~~~~~~~~~~~~~~
+0269   input menu
+ 
+~~~~~~~~~~~~~~~~~~~ J ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~ K ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~ L ~~~~~~~~~~~~~~~~~~~
+0188   laissez vib. down
+0189   laissez vib. up
+0199   logo Score
+0298   logo WinScore filler
+0299   logo WinScore
+
+~~~~~~~~~~~~~~~~~~~ M ~~~~~~~~~~~~~~~~~~~
+0080   meno 
+0171   1/4 meter
+0172   1/2 meter
+0173   3/4 meter
+2000   meter number 0
+2001   meter number 1
+2002   meter number 2
+2003   meter number 3
+2004   meter number 4
+2005   meter number 5
+2006   meter number 6
+2007   meter number 7
+2008   meter number 8
+2009   meter number 9
+0073   molto
+0034   mordent 
+0035   inverted mordent
+0114   mosso
+
+~~~~~~~~~~~~~~~~~~~ N ~~~~~~~~~~~~~~~~~~~
+0205   N-
+           Notes
+0011       black
+0012       half 
+0013       whole 
+0207       |whole|
+0014       breve
+0015       white diamond 
+0095       diamond  + x
+0016       black diamond
+0017       X  
+0139       half note x
+0174       parentheses note 
+0175       parentheses note flat
+0176       parentheses note sharp
+0177       parentheses note natural
+1990       stretched black note
+1991       stretched black note
+1992       stretched black note
+1993       stretched black note
+1994       stretched black note
+1995       stretched half note
+1996       stretched half note
+1997       stretched half note
+1998       stretched half note
+1998       stretched half note
+           Numbers
+3046       1º 
+3047       2º 
+3048       3º 
+3049       4º 
+0273   black square note
+0274   white square note
+0275   square whole note
+0201   note vibrato up 
+0202   note vibrato down 
+0170   null
+           Thin line numbers
+4000       0 - all numbers
+4010       10   up to 109
+4020       20
+4030       30
+4040       40
+4050       50
+4060       60
+4070       70
+4080       80
+4090       90
+4100       100
+
+~~~~~~~~~~~~~~~~~~~ O ~~~~~~~~~~~~~~~~~~~
+
+0093   ornament 1
+0094   ornament 2
+0045   ottava 8va
+0046   ottava bassa 8ba
+
+~~~~~~~~~~~~~~~~~~~ P ~~~~~~~~~~~~~~~~~~~
+0091   parentheses ( )
+0159   parentheses ( ) italICS
+0208   left single parenthese (
+           Pedals 
+0084       old pedal line
+0120       P (pedal) 
+0070       Ped.
+0200       (ped)
+0048       graphic pedal symbol
+0049       graphic pedal filler
+0071       asterisk *
+        for Percussion Symbols, see below
+0038   plus 
+0066   pizz. 
+0081   piu
+0086   poco 
+
+~~~~~~~~~~~~~~~~~~~ Q ~~~~~~~~~~~~~~~~~~~
+0047   quindicesima 15ma 
+
+~~~~~~~~~~~~~~~~~~~ R ~~~~~~~~~~~~~~~~~~~
+0203   R-
+0206   right bracket(following R-,H-, etc.)
+0113   rall. 
+0039   repeat full bar ./.
+0115   2-bar repeat  .//.
+           Rests
+0040       breve whole rest
+0041       whole rest
+0042       half rest
+0043       quarter rest
+0044       eighth rest
+0116       2-bar rest
+0117       4-bar rest
+0065   rit.
+
+~~~~~~~~~~~~~~~~~~~ S ~~~~~~~~~~~~~~~~~~~
+0074   segno
+0121   bsgno
+0082   snap 
+0300   shapes - black sliced square
+0301   shapes - open sliced square
+0302   shapes - black circle
+0303   shapes - open circle
+0304   shapes - black square
+0305   shapes - square with X
+0306   shapes - black diamond
+0307   shapes - open diamond
+1110   spacing scale small
+1111   spacing inches small
+1112   spacing inches medium
+1113   spacing inches large
+1120   spacing medium
+1121   spacing large
+0024   staccato dot
+0036   staccato wedge
+0085   subito
+
+~~~~~~~~~~~~~~~~~~~ T ~~~~~~~~~~~~~~~~~~~
+0020   tail (flag)
+0023   tenuto
+0027   tenuto+dot
+0033   thesis
+0215   three dots ...
+0216   black triangle down
+0217   white triangle down 
+0218   black triangle up
+0219   white triangle up 
+0037   trill
+           Trumpet fingering
+0750       0-0-0
+0751       x-0-0
+0752       0-x-0
+0753       0-0-x
+0754       x-0-x
+0755       x-x-0
+0756       0-x-x
+0757       x-x-x
+0075   turn 
+
+~~~~~~~~~~~~~~~~~~~ U ~~~~~~~~~~~~~~~~~~~
+0029   upbow
+
+~~~~~~~~~~~~~~~~~~~ V ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~ W ~~~~~~~~~~~~~~~~~~~
+0021   wedge
+0025   wedge/dot
+
+~~~~~~~~~~~~~~~~~~ XYZ ~~~~~~~~~~~~~~~~~~~
+1974   heavy Z
+
+~~~~~~~~~~~ Early Music Notation ~~~~~~~~~~ 
+0100   maxima
+0101   longa
+0102   brevis
+0103   semibreve
+0104   minum
+0105   semiminum
+0106   old c clef
+0107   old f clef
+0108   coust
+0109   trill
+0110   old f clef
+0149   maxima stem up
+0178   longa stem up
+0179   longa black
+0190   minum stem down
+0191   mn stem down
+0192   congr
+0193   smblk stem down
+0194   semdn stem down
+0195   semdx stem down
+0196   smdnb stem down
+0197   smdbx stem down
+0198   mnblk stem up
+1000   maxima
+1001   maxima stem up
+1002   longa
+1003   longa stem up
+1004   brevis
+1005   brevis black
+1006   semibrevis
+1007   semibrevis black
+1008   minima
+1009   semiminima black
+1010   minima stem down
+1011   semiminima black stem down
+1012   fusa
+1013   fusa black
+1014   fusa stem down
+1015   fusa stem down <-
+1016   fusa black stem down
+1017   fusa black stem down <-
+1018   pllon
+1020   desse
+1021   desth
+1022   desfo
+1023   desfi
+1024   dese 
+1025   deth 
+1026   defo 
+1027   defi 
+1028   risse
+1029   risth
+1030   risth
+1031   risfo
+1032   risfi
+1033   ldese
+1034   rlong
+1035   bdsec
+1036   bdthr
+1037   -\-
+1038   bdfor
+1039   bdfif
+1060   punctus
+1061   pes (podatus)
+1062   torculus 
+1063   ruit (diamond)
+1064   podatus 2 
+1065   virga
+1066   virga 2
+1067   virga 3
+1068   clivis
+1069   torculus 2
+1070   scandicus
+1071   scandicus 2
+1072   porrectus
+1073   porrectus 2
+1074   quilisma 1
+1075   quilisma 2
+1076   quilisma 3
+1077   porrectus 3
+1078   C clef
+1079   F clef
+1080   molle (flat)
+1081   clivis 2
+1082   liquescent neume
+1083   liquescent neume 2
+1084   liquescent neume 3
+1085   liquescent neume 4
+
+~~~~~~~~~~~~~~ Figured bass ~~~~~~~~~~~~~~~ 
+0221   I
+0222   II 
+0223   III
+0224   IV 
+0225   V
+0226   VI 
+0227   VII
+0228   6-4 (figured bass)
+0229   6-5 (figured bass)
+0230   13 (figured bass) 
+0231   i
+0232   ii 
+0233   iii
+0234   iv 
+0235   v
+0236   vi 
+0237   vii
+0238   4-2 (figured bass)
+0239   4-3 (figured bass)
+0240   0
+0241   1
+0242   2
+0243   3
+0244   4
+0245   5
+0246   6
+0247   7
+0248   8
+0249   9
+0250   flat 1 (figured bass) 
+0251   flat 2 (figured bass) 
+0252   flat 3 (figured bass) 
+0253   flat 4 (figured bass) 
+0254   flat 5 (figured bass) 
+0255   #1 (figured bass) 
+0256   #2 (figured bass) 
+0257   #3 (figured bass) 
+0258   #4 (figured bass) 
+0259   #5 (figured bass) 
+0260   6 with slash
+0261   flat 7 (figured bass)
+0262   flat 
+0263   #
+0264   natural
+
+~~~~~ French items (for opera Carmen) ~~~~~ 
+3000   a2
+3001   Trgl. 
+3002   Cymb. 
+3003   seules 
+3004   léger 
+3005   divisés 
+3006   unis 
+3007   gr. Caisse/Cymb. 
+3008   silence 
+3009   legato 
+3010   changez en Ut 
+3011   changez en Ré 
+3012   changez en Mi 
+3013   changez en Mib
+3014   changez en Fa 
+3015   changez en Sol
+3016   changez en La 
+3017   changez en Si 
+3018   changez en Sib
+3019   ten. 
+3020   espress. 
+3021   changez en Mi nat.
+3022   sourdines 
+3023   mettez les sourdines 
+3024   ôtez les sourdines 
+3025   tres long 
+3026   tres léger 
+3027   colla voce 
+3028   colla parte 
+3029   un peu retenu 
+3030   solo 
+3031   cresc. molto 
+3032   dim. molto 
+3033   simile 
+3034   lant. 
+3035   rapide 
+3036   suivez 
+3037   rall. molto 
+3038   tous 
+3039   Prenez la Petite Flûte 
+3040   Prenez la Grande Flûte 
+3041   moins 
+3042   peu moins 
+3043   sempre 
+3044   laissez vibrer 
+3045   smorzando 
+
+~~~~~~~~~~~~ Lute Tablature ~~~~~~~~~~~~~~
+0900   a (lute)
+0901   b (lute)
+0902   c (lute)
+0903   d (lute)
+0904   e (lute)
+0905   f (lute)
+0906   g (lute)
+0907   h (lute)
+0908   i (lute)
+0909   k (lute)
+0910   l (lute)
+0911   m (lute)
+0912   n (lute)
+0913   4 (lute)
+0914   5 (lute)
+0915   6 (lute)
+0916   a1 (lute)
+0917   a2 (lute)
+0918   a3 (lute)
+0919   r (lute)
+0920   left parenthesis (lute) 
+0921   right parenthesis (lute) 
+0922   U   (lute) 
+0923   WAVE (lute)   
+0924   /   (lute) 
+0925   x (lute)
+0930   32 (lute)
+0931   16 (lute)
+0932   triplet (lute) 
+0933   16 DOT (lute)
+0934   8 (lute)
+0935   8 DOT (lute) 
+0936   4 (lute)
+0937   4 DOT (lute) 
+0938   2 (lute)
+0939   2 DOT (lute) 
+0940   B1 (lute)
+0941   B2 (lute)
+0942   B3 (lute)
+0943   Repeat 3 DOTS (lute)
+0944   5 DOTS (lute)
+0945   4 DOTS (lute)
+0950   3/8 meter (lute)
+0951   2/4 meter (lute)
+0952   3/4 meter (lute)
+0953   6/8 meter (lute)
+0954   9/8 meter (lute)
+0955   6/4 meter (lute)
+0956   C meter (lute)
+0960   C/ meter (lute)
+0961   2 meter (lute)
+0962   3 meter (lute)
+0963   quarter rest meter (lute)
+
+~~~~~~~~~~~ Percusion Symbols ~~~~~~~~~~~~
+0600   2 hard sticks
+0601   2 half hard sticks
+0602   stksm sticks
+0603   1 hard stick
+0604   1 half hard stick
+0605   2 soft sticks
+0606   1 soft stick
+0607   triangle/stick
+0608   2 cymbals
+0609   suspended cymbal
+0610   4 hard sticks
+0611   4 half hard sticks
+0612   2 half hard sticks
+0613   4 soft sticks
+0614   2 hard sticks
+0615   2 xhard sticks
+0616   2 soft sticks
+0617   2 triangle sticks
+0618   2 thin sticks
+0619   1 triangle stick
+0620   timpani soft sticks
+0621   timpani hard sticks
+0622   timpani half hard sticks
+0623   timpani xhard sticks
+0624   bass drum soft sticks
+0625   bass drum hard sticks
+0626   triangle
+0627   tamtam stick
+0628   tamtam/triangle sticks
+0629   snare drum stick
+0630   half hard sticks
+0631   1 half hard stick
+0632   timpani xhard sticks
+0633   3 hard sticks (1 to left)
+0634   2 brushes
+0635   1 brush
+0636   3 brushes
+0637   crotales
+0638   cowbell
+0639   handbell
+0640   soft sticks
+0641   snares on 
+0642   snares off
+0643   2 snares on
+0644   2 snares off
+0645   snare drum hard sticks
+0646   snare drum soft sticks
+0647   tamborine
+0648   sleigh bells
+0649   maracas
+0650   1 bass drum soft stick
+0651   1 bass drum hard stick
+0652   1 timpani hard stick
+0653   1 timpani soft stick
+0654   1 soft stick
+0655   1 hard stick
+0656   1 snare drum hard stick
+0657   1 snare drum soft stick
+0658   3 soft sticks (1 to left)
+0659   3 soft sticks (1 to right)
+0660   3 hard sticks (1 to right)
+0661   fingernail 
+0662   2 hands
+0663   3 half hard sticks (1 to right)
+0664   3 half hard sticks (1 to left)
+0665   1 timpani half hard stick
+0666   1 timpani xhard stick
+0667   1 bass drum soft stick
+0668   left hand
+0669   right hand
+0670   fingernail in box
+0671   2 fingernails in box 
+0672   chimes soft stick
+0673   2 chimes soft sticks
+0674   chimes hard stick
+0675   2 chimes hard sticks
+0676   yarn stick
+0677   claves
+0678   wood block
+0679   bass drum
+0680   chimes
+0681   open xylo box
+0682   xylophone 
+0683   vibraphone 
+0684   marimba 
+0685   glockenspiel
+0686   celeste
+0687   keyboard
+0688   gong 
+0689   tamtam
+0690   hihat
+0691   spiral
+
+~~~~~~~~~~~~~~~ Miscellaneous ~~~~~~~~~~~~~~~~
+0076   //
+0077   heavy horizontal //
+0220   <> 
+1975   >
+1976   <~~~~~
+1977   ~~~~~~
+2168   quarter note
+2169   half note
+2170   eighth note
+2171   sixteenth note
+2172   whole note
+2173   copyright (c)
+2174   small dot
+2175   large dot
+2176   slashed dot
+2177   \
+2178   delta (triangle)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

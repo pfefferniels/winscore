@@ -1,0 +1,76 @@
+                                                                         1/3
+"B" commands:
+
+Extended letter commands:
+
+     These commands are shortcuts for creating various items.  They should
+     normally be followed by 2 or 3 numbers (parameters 2, 3, 4).
+
+         box 3 45 14   will put a box on staff 3 at position 45,
+                       vertical position 14.
+BAR   = barline
+BARn  = barline, n = number of staves up
+BARBC = "curvy" brace
+BARBK = bracket
+BARD  = double bar
+BARH  = heavy double bar
+BARL  = repeat bar, dots to left
+BARR  = repeat bar, dots to right
+BARRD = double repeat bar, dots on both sides
+BAS   = bass clef (BASSM = mini clef)
+BEAM  = single beam
+BEAMn = beam, n = number of beams
+BOX   = box
+
+*
+                                                                         2/3
+************** GROUP EDIT BOXES ***************
+
+DRAWING BOXES TO SET COPY, MOVE, DELETE, ETC. AREAS:
+
+The main Command mode menu has a GROUP box. Clicking on this box brings
+up the Group Edit menu. Click on ? to get explanations of the various
+abbreviations in the boxes.
+
+The Group Edit commands lead to a prompt regarding setting the limits 
+of the material to be processed. The limits may be set by typing numbers
+defining the lower staff number, the left position, the right position,
+the upper staff number, and the type of item (Code number).
+
+If the mouse is used to define the limits, the following considerations
+should be made. The box is drawn by holding down the left button as the
+mouse is moved. You will see above the graphics window a text line which
+gives an account of the changing position of the cursor.
+
+    Lower Staff  n1  x1    Upper Staff  n2  x2
+
+
+
+
+*
+                                                                         3/3
+
+The specific heights of the horizontal box lines are important only in
+regard to the vertical staff positions. The vertical position numbers,
+n1 and n2, only refer to staff numbers. If a horizontal line is out of
+the range of any staff (i.e. between staves), the number will appear
+as ****. The horizontal numbers, x1 and x2, are based on the normal SCORE
+horizontal spacing steps. Clicking in the middle of the box allows you
+to move the entire box to a new position.
+
+VERY IMPORTANT: If the width of the box (x2-x1) is less than 5
+steps it is interpreted as including the entire width of a normal line,
+from position 0 to 200. Thus a single click on a staff can select that
+line for copying, moving, etc. To select the entire width of a group of
+staves, a thin vertical box should be drawn extending from the lowest
+staff to the highest to be included.
+
+After the box is created a list of code numbers will appear at the bottom
+of the screen. You may choose any single number or, you may choose zero,
+in which case all code numbers will be affected.
+
+
+
+-------------------------------------------------------------------------end---
+~
+

@@ -1,0 +1,175 @@
+                                                                          1/7
+T (TT, TTR) = text input.  TR = transpose.  TYPE = type a disk file.  TAB
+
+T p2 p3 p4 p5 p6 = enter text using the given parameters.
+                  (Type ?16 for parameter details.)
+  Then type text.
+
+TT allows entry of several lines of text.  To stop further prompts
+    for new text, type the backslash character (\) in column 1.
+
+TTR allows the read-in of an external file as text input.
+
+
+------------------ CHARACTERS AVAILABLE IN TEXT MODE --------------------
+0-9, A-Z, a-z, and = . - , ' * ( ) " ; : + ? ! @ # $ % & <>`
+  Special characters:
+ } = 1/16 note { =Eighth Note, [ =Quarter Note,  ] =Half Note,  | =whole note,
+ ?d = dot after note,   ?[ = [,  ?] = ],  \ = /,  ?c = cpyrt,  ?\ = \
+
+      (See the manual for available extended PostScript font characters.)
+
+  French accents (Precede the letter to be accented with a double sign.)
+   Acute= <<    Grave= >>    Circumflex= ^^    Umlaut= %%     Cedilla= ##
+
+*
+                                                                          2/7
+Type fonts are initialized by means of the use of the underbar character (_)
+followed by a two-digit number.  Any available PostScript font may be used.
+The standard font group in most PostScript printers includes the following:
+  _00 = Times-Roman                     _18 = AvantGarde-Demi (bold)
+  _01 = Times-Bold                      _19 = AvantGarde-Demi-Oblique
+  _02 = Times-Italic                    _20 = Bookman-Light
+  _03 = Times-BoldItalic                _21 = Bookman-LightItalic
+  _04 = Helvetica                       _22 = Bookman-Demi
+  _05 = Helvetica-Bold                  _23 = Bookman-DemiItalic
+  _06 = Helvetica-Oblique               _24 = NewCenturySchlbk-Roman
+  _07 = Helvetica-BoldOblique           _25 = NewCenturySchlbk-Bold
+  _08 = Helvetica-Narrow                _26 = NewCenturySchlbk-Italic
+  _09 = Helvetica-Narrow-Bold           _27 = NewCenturySchlbk-BoldItalic
+  _10 = Helvetica-Narrow-Oblique        _28 = ZaapfChancery-MediumItalic
+  _11 = Helvetica-Narrow-BoldOblique    _29 = Courier
+  _12 = Palatino-Roman                  _30 = Courier-Bold
+  _13 = Palatino-Bold                   _31 = Courier-Oblique
+  _14 = Palatino-Italic                 _32 = Courier-BoldOblique
+  _15 = Palatino-BoldItalic             _33 = Symbol
+  _16 = AvantGarde-Book                 _34 = ZapfDingbats
+  _17 = AvantGarde-BookOblique
+
+
+*
+                                                                          3/7
+The built-in SCORE type fonts are designed primarily for use with dot matrix
+printers.
+          _90 = Bodoni               _91 = Bodoni Bold
+          _92 = Bodoni Italic        _93 = Bodoni Bold Italic
+          _94 = Music Traditional    _98 = Primitive (stick letters)
+               (meter numbers, etc.)
+
+ A font initialization should begin each new string of text.
+
+ OUTLINE text (unfilled) may be used by typing TWO underbars before the
+ font number.     __05  will initialize Helvetica-Bold as an outline font.
+
+
+--- Placing vocal text under notes. ---
+
+To place text items (lyrics) in relation to already present notes, p3 MUST
+be set to ZERO in the first text input command.  e.g.  T 2 0 -4
+Then you must separate each word or syllable with lashes.  The slashes
+will not be drawn.  (But a line that ends with a ";" will print ;.)
+  e.g.  Tra/la/la.
+
+Use TC instead of T if syllables are to be CENTERED under note heads.
+        e.g.  TC 2 0 -4
+*
+                                                                          4/7
+Numbers will appear over the notes of that staff and you will be asked to type
+position numbers for each text item.  If 2 numbers are typed for an item, the
+first number of the pair will be the horizontal position, the second will be
+the vertical position.  The horizontal position numbers will be in terms of
+the numbers over the notes.  Thus 1.5, -3 would put text item 1 exactly half
+way between note 1 and note 2 and at the vertical position of note level -3.
+With 1.5, -3 the item would be as before.  With .7, 13, the item would be at
+.7 of the distance from the beginning of the line and the first note and at
+the vertical position 13.
+
+Normally, p4 will be set in the original text input line; e.g. T 5 0 -4
+would put all the text units at vertical position -4 (unless a pair of numbers
+were typed for any given text unit.)
+
+  If 99 is typed in response to the 1st position prompt, all the letter groups
+  (words or syllables) given will be distributed in order, 1 to a note.  If
+  more than 2 numbers are given on the line for the 1st position prompt, the
+  text units will be located under the various numbers given typed.
+
+
+
+
+
+*
+                                                                          5/7
+ ***** !! or ?? ******* for dashes between syllables *********
+
+The double exclamation (!!) is used to put dashes between syllables of text.
+For example, to get the short dashes in the string, Dis-or-der, you type:
+
+                           Dis!!or!!der/
+
+    The program will give separate position prompts for each syllable.  If
+    the space between the syllables is large, several dashes may appear.
+
+The double question (??) at the end of a text unit will add a long dash after
+the text unit.    Ah??/  produces Ah_____
+
+   The various dashes are created under Code 4.  When editing, they may be
+   recentered by using the 'CD' (center dash) command.
+
+     (Be careful when the syllables fall too close together. In this case,
+     the JT (justify text) or Move commands must be used to gain enough space
+     for a visible separation of the dash from the text units.)
+
+
+
+
+*
+                                                                          6/7
+
+ ******** Quick text input:  "_nnYour text . . . . " p2 p3 p4 p5 p6
+
+Text strings may be entered directly in the above format.  If no font number
+(_nn) is given, the last-entered font number will be repeated.  If no numbers
+for parameter 2, etc. are given, the text will usually appear in the lower left
+corner of the screen.  This item may then be edited with the normal procedures.
+
+ *************************************************************************
+TYPE name --  This will type the contents of disk file "name" to the screen.
+              <esc> will abort the typeout.
+
+ *************************************************************************
+TR n = transpose staff n.
+TRK n = same, but prompt re. key signature always given, even if redundant.
+        (This may be needed when doing transposition with MACRO files.)
+ 
+ *************************************************************************
+Guitar/Lute tablature.
+TAB staff, num. of strings, tunings 1, 2, 3, 4, 5, 6  (string 1 is highest)
+    The tunings should be + or - 1/2 steps from conventional guitar tuning.
+
+
+*
+                                                                          7/7
+
+
+Extended letter commands:
+
+     These commands are shortcuts for creating various items.  They should
+     normally be followed by 2 or 3 numbers (parameters 2, 3, 4).
+
+         tur 3 45 14   will put a turn (ornament) on staff 3 at position 45,
+                       vertical position 14.
+
+TEN   = tenor clef (TENORM = mini clef)
+TENS  = tenuto/staccato
+TIE   = tie, curve up
+TIED  = tie, curve down
+TREM  = tremolo beam, note stem up
+TREMD = termolo beam, note stem down
+TREMn, TREMDn = n = number of tremolo beams
+TUR   = turn
+
+
+
+
+-------------------------------------------------------------------------end---
+~

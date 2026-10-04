@@ -1,0 +1,25 @@
+
+RE name = READ in an ASCII text command file "name". i.e. Input or Macro file.
+
+RES = Same as "RE" except that you are not prompted to edit staves of input.
+      This command is useful for reading sequences of MACRO files.
+
+RS = ReStart, clear memory to begin work on a new file.
+     This clears all storage arrays and awaits new input commands.
+
+RS name = clear all storage and Get a file called "name."
+
+RIP = ripple - Use this to move a group of bars from one line of music to the
+      next or previous line.  Follow the prompts.
+
+RIT = rit., RA = rall., REST = quarter rest
+   These commands are shortcuts for typing various items. They should
+   normally be followed by 2 or 3 numbers (parameters 2, 3, 4).
+       rit 3 45 -2  will put "rit." at position 45 on staff 3,
+       vertical position -2.  (See Code 9 for details.)
+
+RNUM = Renumber an item's item number. RNUM 5 20 will change item 5 to item 20
+
+***** See "E" help re. Edit mode Left, Right, Up, Down commands.
+-------------------------------------------------------------------------end---
+~

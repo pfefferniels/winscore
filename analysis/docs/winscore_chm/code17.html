@@ -1,0 +1,269 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>New Page 1</title>
+</head>
+
+<body>
+
+<table border = "1" cellpadding = "5"><tr><td>
+<H3>Code 17 -- Key Signature -- parameter structure</H3>
+</td></table>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+
+<font size="4">
+
+<b><font color="#008000">
+
+   P1</font></b>&nbsp; code number (17)<br>
+<font color="#008000"><b>
+   P2</b></font>&nbsp; <a href="structure.html">staff number</a><br>
+<b><font color="#008000">
+   P3</font></b>&nbsp; <a href="structure.html">horizontal position</a><br>
+<b><font color="#008000">
+   P4</font></b>&nbsp; <a href="structure.html">vertical position </a>(generally,
+should not be altered).&nbsp;<br>
+<font color="#008000"><b>
+   P5</b></font>&nbsp; <a href="#CD17P5">number of accidentals in key
+signature</a><br>
+<font color="#008000"><b>
+   P6</b></font>&nbsp; <a href="#CD17P5">type of clef preceding the key
+signature</a><br>
+<b><font color="#008000">
+   P7</font></b>&nbsp; <a href="#CD17P7">amount of space between the accidentals</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P8-13,
+16, 17</b></font>&nbsp; <a href="#CD17P8">irregular key signatures</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008000">
+   P14</font></b>&nbsp; <a href="#CD17P8">ignore Lineup and Justify</a><br>
+<b><font color="#008000">
+   P15</font></b>&nbsp; <a href="#10P15">horizontal displacement</a><br>
+<b><font color="#008000">
+   P18</font></b>&nbsp; <a href="#10P18">extended numbers/letters</a>
+<br>
+<font color="#008080"><b> P25</b></font>&nbsp; <jump=p20><a href="#P25">layer number
+(for Color/Gray)&nbsp;</a>
+</font>
+</p>
+
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008080"> P26</font></b>&nbsp; <jump=p20><a href="#P26">Color/Gray
+value&nbsp;</a> 
+</font> 
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+   <a name="CD17P5"><font size="4"></font></a>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">P5</font></b>&nbsp;&nbsp; indicates
+   the number of accidentals in the key signature.</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+If P5 is a positive number, the key signature is sharps. If P5 is</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+negative, flats.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+Note: adding 100 to P5 changes the accidentals to naturals in the</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+pattern of sharps. Adding -100 to P5 changes the accidentals to</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+naturals in the pattern of flats.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">P6</font></b>&nbsp; indicates the
+   type of clef preceding the key signature. The</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+following clefs may be specified in P6:</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+P6= Clef Type</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 = Treble&nbsp;&nbsp;&nbsp; 1 = Bass&nbsp;&nbsp;&nbsp; 2 = Alto&nbsp;&nbsp; 3 = Tenor</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="cd17-1.jpg" width="650" height="272"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<table border="1" cellpadding="5"><tr><td>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">It is imperative that you use P6 correctly. SCORE's transpose feature will
+not function correctly unless the key signature's P6 is set properly. It is very easy (in the course of editing) to select a key signature and
+displace it vertically (altering P4). This will invalidate the key signature for any
+subsequent transpositions to the staff. Accordingly, we must stress the
+importance of setting P6 and avoiding alterations of P4.</font></p>
+      </td></tr></table>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+If you add 100 to P6, the accidentals in the key signature change to &quot;cue&quot;
+size.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="CD17-2.jpg" width="650" height="67"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b><font color="#008000" size="4">Toolbar
+buttons:</font></b></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toolflat.bmp" width="31" height="24">
+ = add a
+flat&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="tooltreble.bmp" width="27" height="20">
+ = based on treble clef&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="toolalto.bmp" width="27" height="20">
+= based on alto clef</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toolsharp.bmp" width="31" height="24">
+ = add a sharp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="toolbass.bmp" width="27" height="20">
+= based on bass clef&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="tooltenor.bmp" width="27" height="20">
+= based on tenor clef</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toolnatural.bmp" width="31" height="24">
+ = add a natural</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="CD17P7"><font size="4"></font></a></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+<b><font color="#FF0000">P7</font></b> indicates the amount of space between the
+accidentals in the key signature.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+The default value is 1. If P7 = .8, the accidentals are closer together;</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+P7 = 1.2, they are farther apart.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp; <img border="0" src="CD17-3.jpg" width="500" height="61"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b><font color="#008000" size="4">Toolbar
+buttons:</font></b></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toolspacep.bmp" width="27" height="20">
+ = add space&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="toolspacem.bmp" width="27" height="20">
+= reduce space&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="toolspacez.bmp" width="27" height="20">
+= normal space</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="CD17P8"><font size="4"></font></a></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b><font size="4" color="#008000">Creating
+Unorthodox Key Signatures</font></b></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+Be
+careful when creating unusual key signatures that you do not transpose
+the staff&nbsp;</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+with the TR command. The TR command examines the line
+for a key signature and&nbsp;</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+makes its adjustments accordingly</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+Also, if
+you alter P4 of a key signature, SCORE will not be able to transpose
+the staff correctly.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+   &nbsp;
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+   <font size="4">
+   &nbsp;<img border="0" src="cd17p8-13.jpg" width="640" height="504">
+   </font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b><font color="#008000" size="4">Toolbar
+buttons (2nd level):</font></b></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toolacc1.bmp" width="27" height="20">
+ = add 1st accidental&nbsp;&nbsp; <img border="0" src="toolacc2.bmp" width="27" height="20">
+= add 2nd, etc.&nbsp; <img border="0" src="toolaccdn.bmp" width="27" height="20">
+= move accidental down&nbsp;&nbsp; <img border="0" src="toolaccup.bmp" width="27" height="20">
+= move up</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toolaccz.bmp" width="27" height="20">
+= clear all added accidentals</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;<img border="0" src="cd17p14.jpg" width="640" height="349">
+</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b><font color="#008000" size="4">Toolbar
+buttons:</font></b></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="tooljustoff.bmp" width="28" height="20">
+ = turn off justifying (P14=1)&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="tooljuston.bmp" width="28" height="20">
+= restore justifying (P14=0)</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toolcenterbar.bmp" width="30" height="25">
+ = center on barline (CM)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="toolcenternt.bmp" width="28" height="25">
+= center on nearest note/rest (CN)</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P15</font></b>
+horizontal displacement&nbsp;</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b><font color="#008000" size="4">Toolbar
+buttons:</font></b></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+<img border="0" src="toolofflf.bmp" width="28" height="20">  = offset .5
+to left&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="tooloffrt.bmp" width="28" height="20">
+= offset .5 to right&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="tooloffz.bmp" width="28" height="20">
+= zero offset</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+&nbsp;
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P25</b></font></color> </a> layer number.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P26</b></font></color> </a> color/gray
+value.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+___________________________________________________________________________<br>
+----- Shortcut Letter Commands --------------------------<br>
+<b><font color="#FF0000">
+>>> Offsets</font></b><br>
+<b><font color="#008000">OFM</font></b>&nbsp; =&nbsp; offset minus, moves item .5 step to left.&nbsp; (P15)<br>
+<font color="#008000"><b>OFP</b></font>&nbsp; =&nbsp; offset plus, moves item .5 step to right.<br>
+<font color="#008000"><b>NOF</b></font>&nbsp; =&nbsp; no offset of item -- P15 = 0.
+<br>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+
+ <b><font color="#FF0000" size="4"><a name="10fkeys">Function Key Setup for Code 17</a></font></b></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+ 
+<table border = "1" cellpadding = "5">
+<tr>
+<td><b>F1</b><br><font size="2">Help<br><br><br></font></td>
+<td><b>F2</b><br><font size="2">Back to<br>Previous Item<br><br></font></td>
+<td><b>F3</b><br><font size="2">Forward to<br>Next Item<br><br></font></td>
+<td><b>F4</b><br><font size="2">Back to<br>Previous Item,<br>Same Code #</font></td>
+<td><b>F5</b><br><font size="2">Forward to<br>Next Item,<br>Same Code #</font></td>
+<td><b>F6</b><br><font size="2">. . .<br><br><br></font></td>
+</tr>
+<tr>
+<td><b>F7</b><br><font size="2">&nbsp;<br><br><br></font></td>
+<td><b>F8</b><br><font size="2">Center<br><br><br></font></td>
+<td><b>F9</b><br><font size="2">Exit from<br>Edit Mode<br>( X )</font></td>
+<td><b>F10</b><br><font size="2">. . .<br><br><br></font></td>
+<td><b>F11</b><br><font size="2">Delete, Move<br>to Previous,<br>Same Code #</font></td>
+<td><b>F12</b><br><font size="2">Delete, Move<br>to Next,<br>Same Code #</font> </td>
+</tr>
+</table>	
+
+
+
+
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<br>
+</p>
+
+</body>
+
+</html>

@@ -1,0 +1,760 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Code 14 - Bar Lines</title>
+</head>
+
+<body>
+
+<table border = "1" cellpadding = "5"><tr><td>
+<H3>Code 14 -- Barlines, Braces, Brackets -- parameter structure</H3>
+</td></table>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<br>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+
+<font size="4">
+
+<b><font color="#008000">
+
+   P1</font></b>&nbsp; code number (14)<br>
+<font color="#008000"><b>
+   P2</b></font>&nbsp; <a href="structure.html">staff number</a><br>
+<b><font color="#008000">
+   P3</font></b>&nbsp; <a href="structure.html">horizontal position</a><br>
+<b><font color="#008000">
+   P4</font></b>&nbsp; <a href="#CD14P4">number of staves connected by the barline</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P5</b></font>&nbsp;
+<a href="#CD14P5">type of barline</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P6</b></font>&nbsp;
+<a href="#CD14P6">thickness of barline</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008000">
+   P7</font></b>&nbsp; <a href="#CD14P7">horizontal displacement</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#008000"><b>
+   P8</b></font>&nbsp; <a href="#CD14P8">partial bracket (P5 = 9), size of dash (P5 = 7)</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008000">
+   P9</font></b>&nbsp; <a href="#CD14P9">size of space in dashed barlines (P5 = 7)</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#008000"><b>
+   P10&nbsp;</b></font>    <a href="#CD14P10">   partial barlines - bottom origin</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#008000"><b>
+   P11&nbsp;</b></font>     <a href="#CD14P10">    partial barlines - top extent</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008000">
+   P12</font></b>&nbsp;&nbsp;<a href="#CD14P13">sets size of dots with repeat bars</a></font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008000">
+   P13</font></b>&nbsp; <a href="#CD14P13">space between double or repeat bars</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#008000">P14</font></b>&nbsp;
+<a href="#CD14P14">space between dots and lines of repeat bars</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#008000">P15</font></b>&nbsp;
+. . . .<br>
+<b><font color="#008000">
+   P16</font></b>&nbsp; <a href="#CD14P16">vertical positions of repeat dots</a>
+<br>
+<b><font color="#008000">
+   P17</font></b>&nbsp; <a href="#CD14P17">special double bar spacings</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">
+<b><font color="#008000">
+   P18</font></b>&nbsp; <a href="#CD14P18">sets gap in bar</a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;&nbsp;
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#008080"><b> P25</b></font>&nbsp; <jump=p20><a href="#CD14P25">layer number
+(for Color/Gray)&nbsp;</a></font><p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008080"> P26</font></b>&nbsp; <jump=p20><a href="#CD14P25">Color/Gray
+value&nbsp;</a> 
+</font> 
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp; 
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#CD14LETTERS">Jump to Letter Edit Commands</a><ands</jump>
+</font>
+</p>
+<p style="margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#CD14fkeys">Jump to Function Key Setup</a><ands</jump>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000"><a name="CD14P4">P4&nbsp; </a></font></b><a name="CD14P4">number of staves connected by the barline</a>
+</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; All Code 14 items are generated from a given staff
+number (P2) upward.</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; P4 indicates how many staves are to be covered.</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="cd14p4.jpg">
+</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp; If P4 = 999, the bar will extend to the highest staff found.</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp; If <font color="#008080"> P4 is negative</font>, the barline will be invisible when
+printing. However, for reference, a dotted barline will appear on the screen.
+The Lineup and Justify commands will treat this as a normal line. This may be
+useful in situations involving unusual barring.</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="CD14P5"><font size="4"></font></a>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+P5&nbsp; </font></b>type of barline&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="cd14p5.jpg" width="536" height="190">
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+To get a barline combined with a two-bar repeat, set P5 to -44.&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The following example presumes you have entered invisible whole-rests</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+in each of the empty bars. To add the number, set P8 to 2.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The barline, the repeat symbol and the number are saved as a single
+item.&nbsp;&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See also <a href="code2.html#2P5">Code 2, Rests</a>.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD14P5-44.jpg" width="278" height="77">
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000"><a name="CD14P6">P6</a></font></b>&nbsp;
+thickness of barline</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd14p6.jpg" width="303" height="147">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; These different line thicknesses may not appear on your
+screen.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; Check the printed output before making final decisions.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; P6 can also control the width of the wavy brace.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD14P6b.jpg" width="384" height="157">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="CD14P7"><font size="4"></font></a>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+   P7</font></b>&nbsp; horizontal displacement</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; P7 is primarily used to adjust the position
+of braces and brackets at the beginning of a system.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (All the P3 values should be the same for
+the Lineup and Justify commands to work properly.)</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd14p7.jpg" width="528" height="188">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="CD14P8"><font size="4"></font></a>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b>
+   <font color="#FF0000">
+   P8</font></b>&nbsp; size of dash (P5 = 7)</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd14p8.jpg" width="284" height="156">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; If P5 = 9, P8 is used to create partial brackets.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp; <img border="0" src="cd14p8b.jpg" width="394" height="168">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="CD14P9"><font size="4"></font></a>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+   P9</font></b>&nbsp; size of space in dashed barlines (P5 = 7)</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd14p9.jpg" width="384" height="176">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="CD14P10"><font size="4"></font></a>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b>
+   <font color="#FF0000">
+   P10</font><font color="#008000">&nbsp;</font>   </b>   partial barlines - bottom origin</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b>
+   <font color="#FF0000">
+   P11</font><font color="#008000">&nbsp;</font>    </b>    partial barlines - top extent</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; The values in P10 and P11 are in scale steps.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="cd14p10.jpg" width="610" height="212">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; The spacing between the staves can vary greatly. Be
+careful to revise the</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; P10 and P11 values if any staves are moved up or down.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="CD14P13"><font size="4"></font></a>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">
+<b><font color="#FF0000">
+   P12</font></b>&nbsp; can set the size of the dots with the repeat bar</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd14p12.jpg" width="300" height="75">
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+   P13</font></b>&nbsp; sets the space between double or repeat bars</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp; <img border="0" src="CD14P13.jpg" width="152" height="121">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="CD14P14"><font size="4"></font></a>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+   P14</font></b>&nbsp; sets the space between the dots and lines of repeat bars</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp; <img border="0" src="cd14p14.jpg" width="150" height="120">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="CD14P16"><font size="4"></font></a>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+   P16</font></b>&nbsp; sets the vertical positions of repeat dots</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+P16 = 0 (normal) puts dots in the second and third spaces of the staff.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+These correspond to note levels 6 and 8.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+P16 can be a 3-digit number, xyz, where x is the vertical position of</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+the lower dot and yz is the position of the upper dot.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+P16 = 410 will put dots at note levels 4 and 10, etc.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp; <img border="0" src="cd14p16.jpg" width="148" height="57">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; Repeat bars with 4 dots (sometimes found in early
+music) can be</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; created by combining 2 repeat bars.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp; <img border="0" src="cd14p16b.jpg" width="360" height="71">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="CD14P17"><font size="4"></font></a>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+   P17</font></b>&nbsp; sets the double bar spacing, overriding the applicable
+staff size.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+In the example below, if P17 is set to 1, the double bar on staff 3</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+will appear with the same spacing as that attached to staff 1.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+This may be useful in chamber music scores involving piano</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+and other instruments.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp; <img border="0" src="cd14p17.jpg" width="358" height="189">
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#FF0000"><b><a name="CD14P18">P18
+</a></b></font>sets the position of the center of a gap in the bar. This number
+is the percentage of the distance from the bottom. The number may be in decimal
+form , or as a percent. In the following, P18 could alternatively equal 40 and
+57.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4"><font color="#FF0000"><b>P19</b></font> sets the size of the gap
+in scale steps.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; This feature is only
+available when P5 = 0 or 1.</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">&nbsp;</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd14p18.JPG" width="219" height="181">
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="CD14P25"><font size="4"></font></a>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P25</b></font></color>&nbsp;</a> layer number.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a><a name="P26">&nbsp;</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P26</b></font></color> </a> color/gray
+value.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+___________________________________________________________________<br>
+<a name="CD14LETTERS"></a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+&nbsp;
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+&nbsp;
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+-------------- <font color="#FF0000">Shortcut Letter Commands for creating or editing
+Barlines</font> -----------------<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br>
+<font color="#008000"><b>
+BARn</b></font>, where n indicates the number staves covered by the bar (no
+space before number).&nbsp;</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Note the
+following:&nbsp; BAR3 4 55 places a bar on staff 4, position 55, extending&nbsp;</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; through 3 staves.</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; This same format
+applies to all the &quot;BAR&quot; commands.</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; If this command is
+typed while in edit mode, any numbers beyond BARn will&nbsp;</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; be ignored.</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+&nbsp;
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; In the examples
+below: D = double bar;&nbsp; H = heavy (or final) double bar;</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+L = repeat, dots to left;&nbsp; R = repeat, dots to right;</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+RD = double repeat;&nbsp; BK = bracket;&nbsp; BC = brace.&nbsp;</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+&nbsp;
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<font size="4">           
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD14LET.jpg" width="180" height="561">
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+&nbsp;
+
+<p style="margin-top: 0">
+
+ <b><font color="#FF0000" size="4"><a name="CD14fkeys">Function Key Setup for Code 14</a></font></b>
+<p style="margin-top: 0">
+ 
+<table border = "1" cellpadding = "5">
+<tr>
+<td><b>F1</b><br><font size="2">Help</font>
+  <p>&nbsp;</p>
+</td>
+<td>
+  <p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><b>F2</b><br><font size="2">Back to<br>Previous Item</font></p>
+  <p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+</td>
+<td><b>F3</b><br><font size="2">Forward to<br>Next Item<br></font></td>
+<td><b>F4</b><br><font size="2">Back to<br>Previous Item,<br>Same Code #</font></td>
+<td><b>F5</b><br><font size="2">Forward to<br>Next Item,<br>Same Code #</font></td>
+<td><b>F6</b><br><font size="2">. . .<br><br></font></td>
+</tr>
+<tr>
+<td><b>F7</b><br><font size="2"><br><br></font></td>
+<td><b>F8</b><br><font size="2">Extend bar to<br>highest staff<br>(same as
+  P4=999)</font></td>
+<td><b>F9</b><br><font size="2">Exit from<br>Edit Mode<br>( X )</font></td>
+<td><b>F10</b><br><font size="2">. . .<br><br></font></td>
+<td><b>F11</b><br><font size="2">Delete, Move<br>to Previous,<br>Same Code #</font></td>
+<td><b>F12</b><br><font size="2">Delete, Move<br>to Next,<br>Same Code #</font> </td>
+</tr>
+</table>	
+
+
+
+
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<br>
+</p>
+
+</body>
+
+</html>

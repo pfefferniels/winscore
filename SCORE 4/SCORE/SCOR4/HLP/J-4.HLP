@@ -1,0 +1,75 @@
+                                                                         1/3
+
+"J" command: J = justify complete systems,  JT = justify text.
+
+The justify command automatically repositions notes, rests, bars, etc. so that
+each item gets its minimum required space.  This necessarily distorts the
+rhythmic spacing to some extent.  (Notes with accidentals attached need more
+room than those without, etc.)  The program give a messaage if there is not
+sufficient space for justification.  In this case all that can be done is to
+move some material to the next or previous line or decrease the size of the
+staff - thereby making all items a little smaller.
+
+The justify command begins with the prompt:
+
+         Type lowest staff # of system, how many staves in system
+
+The musical system may include 1 to 32 staves.  (For justifying large
+orchestral scores use the separate JUST program.)  The 2 numbers given
+for this prompt set the range of staff lines to be considered.  If the
+staff number given is greater than 32 then all staves will be justified.
+In this case no second number need be typed.
+
+
+
+*
+                                                                         2/3
+
+The second prompt is:
+
+         Left position, right position
+
+This sets the horizontal extent of the area to be justified.  If zeros are
+given (or just <enter>) the entire line will be justifed.
+
+ ***** Type the letter "B" to back up from either of these prompts. *****
+
+Examine the music carefully after justifying as some items may be moved to
+unexpected positions.  (For example, centered titles will have to be
+re-centered.  Also you may need to use the AD command to readjust the stem
+lengths of notes under beams.)
+
+
+
+
+
+
+
+
+
+*
+                                                                         3/3
+
+JT -- The justify text command has the same prompts as above but with one
+      more added:
+
+        Type text's staff # and P4 level of text (99=any level)
+
+      The P4 level of the text need be specified (i.e. not 99) only if text
+      appears on more than one level.  JT will check each text item (syllable
+      or word, etc.) to be sure that there is at least some observable
+      following space before the next word.  If some text must be moved, all
+      items attached to the designated staves will also be moved.  This will
+      usually cause some distortion of the original rhythmic spacing.  (This
+      is often unavoidable when adding text to notes.)  The best procedure is
+      to use first the LI command to get good rhythmic spacing; then use the
+      JT command; and finally use the J command to fix any crowding of notes.
+
+      When dealing with long words or syllables it is often advisable to shift
+      their positions in edit mode before using JT.  (This can avoid extreme
+      distortion of rhythmic position.)
+
+
+
+-------------------------------------------------------------------------end---
+~

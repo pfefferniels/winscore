@@ -1,0 +1,336 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<!-- Sitemap 1.0 -->
+</HEAD><BODY>
+<OBJECT type="text/site properties">
+	<param name="ExWindow Styles" value="0x800225">
+	<param name="Window Styles" value="0x800225">
+</OBJECT>
+<UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Contents">
+		<param name="Local" value="contents.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Index">
+		<param name="Local" value="index.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Letter Commands">
+		<param name="Local" value="letters.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Introduction">
+		<param name="Local" value="history.html">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="History">
+			<param name="Local" value="history.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Parameter structure">
+			<param name="Local" value="structure.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Format of Saved Files">
+			<param name="Local" value="save.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="First Screen">
+			<param name="Local" value="first.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Inputting Music">
+		<param name="Local" value="one_input.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="One Item at a Time">
+			<param name="Local" value="one_input.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Setting the Spacing Scale">
+			<param name="Local" value="spacing.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Computer Keyboard Input">
+			<param name="Local" value="compkybd.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Midi input - Notes/rests">
+			<param name="Local" value="midi.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Midi input - Clefs, Key Signature">
+			<param name="Local" value="midi_clef.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Midi input - Meter">
+			<param name="Local" value="midi_meter.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Midi input - Rhythm">
+			<param name="Local" value="midi_rhythm.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Editing the Music">
+		<param name="Local" value="edit.html">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Edit">
+			<param name="Local" value="edit.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Mouse Usage">
+			<param name="Local" value="mouse1.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Group Edit">
+			<param name="Local" value="groupedit.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Lineup and Justify">
+			<param name="Local" value="lj.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Macro command files">
+			<param name="Local" value="macro.html">
+			<param name="URL" value="macro.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Size and Points">
+			<param name="Local" value="sz-pts.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Conditional Editing">
+			<param name="Local" value="conditional_editing.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="The Item Code Numbers">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 1 -- Notes">
+			<param name="Local" value="code1.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 2 -- Rests">
+			<param name="Local" value="code2.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 3 -- Clefs">
+			<param name="Local" value="code3.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 4 -- Lines, Hairpins">
+			<param name="Local" value="code4.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 5 -- Slurs, Ties, Endings">
+			<param name="Local" value="code5.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 6 -- Beams">
+			<param name="Local" value="code6.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 7 -- Trills, Ottava, Pedals">
+			<param name="Local" value="code7.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 8 -- Staves ">
+			<param name="Local" value="Code8.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 9 -- Symbol Library">
+			<param name="Local" value="code9.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 10 -- Numbers, Rehearsal letters">
+			<param name="Local" value="code10.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 11 -- (convert to Code 9)">
+			<param name="Local" value="code11.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 12 -- Circles, Boxes, Guitar grids">
+			<param name="Local" value="code12.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 14 -- Bar Lines">
+			<param name="Local" value="code14.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 15 -- Import PostScriptFile">
+			<param name="Local" value="code15.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 16 -- Text">
+			<param name="Local" value="code16.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 17 -- Key Signature">
+			<param name="Local" value="code17.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Code 18 -- Meter Numbers">
+			<param name="Local" value="code18.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Guitar Notation">
+		<param name="Local" value="tab1.html">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Creating Guitar Tab Notation">
+			<param name="Local" value="tab1.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tab Notation 2">
+			<param name="Local" value="tab2.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tab Notation 3">
+			<param name="Local" value="tab3.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tab Notation 4">
+			<param name="Local" value="tab4.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tab Notation 5">
+			<param name="Local" value="tab5.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tab Notation 6">
+			<param name="Local" value="tab6.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Grids 1">
+			<param name="Local" value="grid1.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Grids 2">
+			<param name="Local" value="grid2.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Grids 3">
+			<param name="Local" value="grid3.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Grids 4">
+			<param name="Local" value="grid4.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Grids 5">
+			<param name="Local" value="grid5.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Bends, Tremolo, Slides">
+			<param name="Local" value="bends.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Vibrato">
+			<param name="Local" value="vibr.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 1">
+			<param name="Local" value="frames1.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 2">
+			<param name="Local" value="frames2.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 3">
+			<param name="Local" value="frames3.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 4">
+			<param name="Local" value="frames4.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 5">
+			<param name="Local" value="frames5.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 6">
+			<param name="Local" value="frames6.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 7">
+			<param name="Local" value="frames7.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 8">
+			<param name="Local" value="frames8.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 9">
+			<param name="Local" value="frames9.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 10">
+			<param name="Local" value="frames10.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 11">
+			<param name="Local" value="frames11.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Guitar Chord Setups 12">
+			<param name="Local" value="frames12.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Preferences and Printing">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Preferences">
+			<param name="Local" value="pref.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Printing">
+			<param name="Local" value="printing.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Accordion Symbols">
+		<param name="Local" value="accordion.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Color Control">
+		<param name="Local" value="color_control.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Using &lt;ctrl&gt; and &lt;alt&gt; keys">
+		<param name="Local" value="ctrl_alt.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Part Extraction">
+		<param name="Local" value="parts.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Page Layout">
+		<param name="Local" value="page.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Fonts">
+		<param name="Local" value="fonts.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Draw">
+		<param name="Local" value="draw.html">
+		</OBJECT>
+</UL>
+</BODY></HTML>

@@ -1,0 +1,8 @@
+TAB1
+
+ Guitar Vibrato
+
+All the other parameters work the same as with any other Code 4 line.
+
+(P13 - rotation, etc.). See Code 4 help for
+details.

@@ -1,0 +1,25 @@
+
+H = see and adjust page height (in inches/centimeters) of music on screen.
+
+    The program will prompt for a new height.  Then the program will ask
+    for the staff groups between which the space changes will take place.
+
+    If the new space is to be distributed evenly between all staves, the
+    number 1 should be given.  (i.e. Each staff group has only 1 staff.)
+
+    If the numbers 2, 4, 1 were given, an equal amount of space would be
+    added above the first 2 staves, then above the next group of 4 staves,
+    and then between each single staff up until no more remained.  etc.
+
+HS = as above, except that the height is measured only from the bottom line
+    of the bottom staff to the top line of the top staff. All text, notes, 
+    etc. found below or above these lines will be ignored. HS Assumes that
+    the lowest staff involved is in vertical position 0 (p4 = 0). (Use this 
+    to print all pages with exactly the same positions of staves at top 
+    and bottom of every page.)
+
+HAR = harmonic sign (small circle)
+HVW = heavy wedge accent
+
+-------------------------------------------------------------------------end---
+~

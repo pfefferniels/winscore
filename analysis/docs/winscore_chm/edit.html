@@ -1,0 +1,562 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<Title>edit</Title>
+<style type="text/css">
+p {text-indent: 5mm}
+</style>
+<style type="text/css">
+r {color:"red"}
+</style>
+<style type="text/css">
+blk{font color="black"}
+</style>
+</HEAD>
+<BODY>
+<H2>Editing the Music</H2>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0" align="left"><font size="4">The simplest way to enter Edit Mode is to point the cursor at a note or other item and click the left mouse button. When this is done the indicated item will turn red.
+See the section on <a href="mouse1.html">mouse usage</a> for more information. Below are listed the typed commands to enter Edit Mode:&nbsp;</font>
+
+<p style="word-spacing: 0; text-indent: 0; margin: 0" align="left">&nbsp;
+
+<p style="word-spacing: 0; text-indent: 0; margin: 0" align="left"><font size="4"><b><font color="#FF0000"><a name="I">I n</a></font></b><font color="black"> -- where <r><b>n</b></r> is any item number. (<red></font><b><font color="#FF0000">I<blk> </font></b></font><font color="black"> <font size="4"> = Item)</font>
+<ul>
+  <li>
+    <p style="word-spacing: 0; text-indent: 0; margin: 0"><font size="4">If no number is given, <color=12></font></font><font size="4"><b><font color="#FF0000">n</font></b><font color="black"></color> will be assumed to be the last item edited or entered on the page. Hitting <enter>&lt;Enter&gt; will step on
+to the next item. Typing X or clicking with the <u>right</u>  <a href="mouse1.html"> mouse</a> button or clicking on the
+X box in the bottom toolbar will terminate Edit Mode in all cases.
+
+<color=12>Typing </font><font color="#FF0000"><b>II</b></font><font color="black"></color>
+    will edit the object with highest Item number.&nbsp;</font>
+    </font>
+</li>
+</ul>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">     &nbsp;
+<p style="word-spacing: 0; text-indent: 0; margin: 0">     <font size="4">     <font color="#FF0000"><b>S<a name="ST">T x n1, n2, n3</a></b></color> </font><font color="black"> -- where <color=12><b>x</b></color> is any Staff number and <color=12></font><b><font color="#FF0000">n1, n2, n3</font></b><font color="black"></color> are any Code numbers. (<color=12></font><b><font color="#FF0000">ST</font></b></font><font color="black"><font size="4"></color> = Staff)</font>
+<ul>
+  <li>
+    <p style="word-spacing: 0; text-indent: 0; margin: 0"><font size="4">Editing will begin with the first item with any of the Code numbers <color=12></font></font><font size="4"><b><font color="#FF0000">n1, n2, or n3</font></b><font color="black"></color> found on Staff <color=12></font><b><font color="#FF0000">x</font></b><font color="black"></color>. Hitting
+    &lt;Enter&gt;<enter> will step through all items with those same Code numbers found on that Staff.&nbsp;If
+    </font><b><font color="#FF0000">x</font></b><font color="black"> is greater
+    then 256, then </font><font color="#000000"><i>all</i></font><font color="black">
+    staves are searched for the given code numbers. If a staff number is given
+    but no code numbers are given, then all code numbers on that staff may be
+    edited</font>.</font></li>
+<li>
+  <p style="word-spacing: 0; text-indent: 0; margin: 0"><font size="4"><font color="black">Add <b>1000</b>
+  to </font><b><font color="#FF0000">x</font></b><font color="black"> to edit on
+  all staves up from staff </font><b><font color="#FF0000">x</font></b><font color="black">.</font></font></li>
+</ul>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><font color="black" size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Example:&nbsp; <b>ST 1008 3 17</b></font></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><font color="black" size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+This will look at all Code 3 and Code 17&nbsp;</font></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><font color="black" size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+items found on staff 8 and above.</font></p>
+<font color="black">
+<ul>
+  <li>
+    <p style="word-spacing: 0; text-indent: 0; margin: 0">     
+
+<font size="4">     
+
+<color=12></font></font><font size="4"><font color="black"><b>&nbsp;</b>If<b> </b>
+    </font><font color="#FF0000"><b>ST</b></font><font color="black"><b> </b>
+    alone is typed, the </font><font color="#000000"><i>last</i></font><font color="black">
+    item edited or entered will determine the staff number and Code number for
+    editing.</font></font></li>
+</ul>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">     <font size="4">     <b><font color="red"><a name="STX">STX</a> n1, n2, n3</font></b><font color="red"></color>.&nbsp;</font></font>
+<ul>
+  <li>
+    <p style="word-spacing: 0; text-indent: 0; margin: 0">     <font size="4">     <font color="#000000">Editing will begin with the first item with any of the Code numbers <color=12></font><b><font color="#FF0000">n1, n2, or n3</font></b><font color="#000000"></color> found on
+    the lowest Staff. Hitting &lt;Enter&gt;&nbsp; will step through all items with those same Code numbers found on the entire page.&nbsp;</font>
+    </font>
+  </li>
+</ul>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">     <font size="4">     <b><font color="#FF0000"><a name="ED">ED</a>
+pos, x, n1, n2, n3</font></b><font color="#000000">&nbsp;</font>
+</font>
+<ul>
+  <li>
+    <p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">This allows you
+    to edit at position <b><font color="#FF0000">pos</font></b>, staff <font color="#FF0000"><b>x</b></font>, up to 3 different code numbers.
+    A vertical line of dots will appear at the position given and all items within 5 spaces of the line on that staff will come
+    up for editing.  To pass over an item type &lt;enter>.&nbsp;</font></li>
+  <li>
+    <p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;If <b> 1000</b> is added to
+    <b><font color="#FF0000">x</font></b>, editing will begin on staff <b><font color="#FF0000">x</font></b> and continue on up. If code numbers are given, the item
+    nearest the line with that number will come up. Following that, all other items with that code number near the vertical
+    line will come up for editing.<br>
+    </font>
+    </p>
+    <p style="word-spacing: 0; text-indent: 0; margin: 0"><font color="black" size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    Example:&nbsp; <b>ED 70 1008 3 17</b></font></p>
+    <p style="word-spacing: 0; text-indent: 0; margin: 0"><font color="black" size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    This will look at all Code 3 and Code 17 items</font></p>
+    <p style="word-spacing: 0; text-indent: 0; margin: 0"><font color="black" size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    found near position 70 on staff 8 and above.</font></p>
+    <p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;</li>
+  <li>
+    <p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">Typing <b><font color="#FF0000">ED</font></b> alone,
+    or with <b><font color="#FF0000">pos</font></b> as zero, assumes the
+    position of the <i>last</i> item edited or entered. If the staff number <b><font color="#FF0000">x</font></b>  = 0, items on all staves
+    are considered. If <b><font color="#FF0000">n1 </font></b>= 0, or omitted,
+    all Code numbers are considered.&nbsp;</font></li>
+</ul>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><b><font color="#FF0000" size="4"><a name="BB">BB</a>
+-- view the bounding box. (for PostScript applications.)</font></b></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+After typing <b>BB</b>, the following dialog box appears.</font></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;</p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><font size="4">&nbsp;&nbsp;&nbsp; <img border="0" src="bb.bmp"></font></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;</p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;</p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><b><font color="#FF0000" size="4"><a name="PATH">PATH
+</a>-- set the path to the proper folder (directory) for using SCORE's Get and
+Save commands.</font></b></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;</p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+For example, if you type <font face="Courier">PATH MUSDAT</font>, then &quot;\MUSDAT&quot;
+will appear in the large gray box and any Get or Save commands will refer to
+that folder.&nbsp;</font></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;</p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><b><font color="#FF0000" size="4"><a name="PATHX">PATHX
+-- get the Path List dialog.</a></font></b></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;</p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><font size="4"> It is easy to create a list of frequently-used directories for
+quick access. If you click on <img border="0" src="pathx2.jpg" width="30" height="22">&nbsp;,
+or type &quot;PATHX&quot;, or type <b>&lt;ctrl&gt;0</b> the
+following dialog box will appear. The current directory name will appear in the
+top space.</font></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;</p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="pathx.jpg" width="344" height="319"></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;</p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;You
+may type the various directory names you will be using into the numbered spaces.
+To access any of these paths, bring up this box again, with <img border="0" src="pathx2.jpg" width="30" height="22"><b>,
+&lt;ctrl&gt;0, </b>etc.,
+and click on the appropriate button. Or, without bringing up the dialog box, the
+path names in the list may be activated by typing <b>&lt;ctrl&gt;n</b>, where <b>n</b>
+is the appropriate list number. The path name should then appear at the top of
+the screen, to the left.</font></p>
+<p style="word-spacing: 0; text-indent: 0; margin: 0">&nbsp;</p>
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     <font size="4"><b>     <font color="#FF0000">Commands while in Edit Mode</font></b><br>
+</font>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <b><font color="#008000" size="4">Changing
+Parameters by Number</font></b>
+<ul>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">All SCORE Items are stored in a list of parameters. The location and appearance of any item is changed when the proper
+parameter values are changed.  When any Item is in Edit Mode, its current parameter list will appear at the top of the screen.
+Parameters are changed by typing pairs of numbers: <b><font color="#FF0000"> p v</font></b>, where
+<b><font color="#FF0000">p</font></b> is the parameter to be changed and <b><font color="#FF0000"> v
+</font></b> is the new value to be entered. Several pairs of numbers may be typed on a single line.</font>
+  </li>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">Typing <b><font color="#FF0000">-p</font></b>
+    alone will change the sign of parameter <b><font color="#FF0000">p</font></b>.&nbsp;
+    i.e. If P7 = 3.46, typing -7 will cause P7 = -3.46. Typing -7 again will
+    change it back to positive.</font>
+  </li>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">While editing, the
+    values of parameters 1 through 20 will appear in boxes at the top of the
+    screen. To see values of parameters 21 through 30, type <font color="#FF0000"><b>PM</b></font>.
+    If you have made several changes to a parameter, you may see its original
+    value by typing <font color="#FF0000"><b>PM</b></font> <b><font color="#FF0000">n</font></b>,
+    where n is the parameter number involved. The lower boxes will show the
+    current values and the upper boxes will show the original values.&nbsp;</font>
+  </li>
+</ul>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <b><font color="#008000" size="4">Relative
+Parameter Changes
+</font></b>
+<ul>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0">
+<font size="4">
+The process described above involves <b><font color="#FF0000"> absolute</font></b> parameter
+changes. <b><font color="#FF0000"> Relative</font></b> changes are made by adding
+<b><font color="#FF0000"> two zeros</font></b> to the parameter number (the
+first number of a pair). Thus, typing <b><font color="#FF0000">600 5</font></b> causes 5 to be
+<b><font color="#FF0000"> added</font></b> to the original value in P6. (This is equivalent to the programming statement, P6 = P6 + 5.)</font></li>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0">
+<font size="4">
+Typing <b><font color="#FF0000">/6 5</font></b> is the same as typing <b><font color="#FF0000">600
+5</font></b>.</font></li>
+</ul>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     
+<b><font color="#008000" size="4">Parameter Transfer
+</font></b>
+<ul>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0">
+<font size="4">
+Adding <b><font color="#FF0000">four zeros</font></b> to the parameter number (the
+first number of a pair) causes the parameter to pick up the value in the parameter indicated by the second
+number of the pair. Typing <b><font color="#FF0000">50000 4</font></b> causes the current value of P4 to be put into P5. (This
+is the same as saying P5 = P4.)</font>
+  </li>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0">
+<font size="4">
+Typing <b><font color="#FF0000">//5 4</font></b> is the same as typing <b><font color="#FF0000">50000
+4</font></b>.</font>
+  </li>
+</ul>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>Toolbar
+buttons:</b></font> <img border="0" src="getparam.bmp" width="63" height="26">
+ = clicking on the left box will store the current value of P3 for later
+use.&nbsp;</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Typing <b><font color="#FF0000">PS3</font></b> does the same thing.</font>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(Any other parameter number may be <u>typed</u> following PS.)</font>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0">
+&nbsp;
+    <p style="text-indent: 0; word-spacing: 0; margin: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Clicking on the right box will retrieve whatever parameter was&nbsp;</font>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+last saved&nbsp;with
+the PS command.</font>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <font size="4">     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Typing <b><font color="#FF0000">PG</font></b> does the same thing. By typing you
+may save&nbsp;</font>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <font size="4">     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+several parameters&nbsp;with PS.&nbsp;</font>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <font size="4">     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Typing <b><font color="#FF0000">PGn</font></b> will retrieve saved parameter <b><font color="#FF0000">n</font></b>.</font><p style="text-indent: 0; word-spacing: 0; margin: 0">     &nbsp;<p style="text-indent: 0; word-spacing: 0; margin: 0"><span LANG="EN"><b><font color="#008000" size="4"><a name="LRUD">L(eft)</a>,
+R(ight), U(p), D(own) - by Inches, Centimeters, Points, and with &lt;Ctrl&gt;</font></b>
+<ul>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0">
+<font size="4">
+These commands are used to move Items in terms of horizontal SCORE</font></span> <font size="4"> <span LANG="EN">spaces
+or vertical scale steps. <b><font color="#FF00FF">L</font></b> alone would move
+    an item one space to the left: <font color="#FF0000"><b>L 5</b> </font> would move an
+item 5 spaces to the left; <b><font color="#FF0000">U 7</font></b></span> <span LANG="EN">would
+move an item up 7 scale steps. After typing <b><font color="#FF0000">L</font></b>
+or <font color="#FF0000"><b>R</b></font> followed by a number, typing <font color="#FF0000"><b>L</b></font>
+or <font color="#FF0000"><b>R</b></font> alone will repeat moving the item by
+that number. The same applies to <b><font color="#FF0000">U</font></b> and <b><font color="#FF0000">D</font></b>.&nbsp;</span></font></li>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4"> <span LANG="EN">If
+    you hit the same letter twice, the increment will be .5; if you hit the same
+    letter three times, the increment will be .2.</span></font></li>
+</ul>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4"><span LANG="EN">Any
+of three other letters may be used after the</span> <span LANG="EN">first
+one.&nbsp;</span></font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><span LANG="EN"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<b><font color="#FF0000">I</font></b> = inches, <b><font color="#FF0000">C</font></b>
+= centimeters, <font color="#FF0000"><b>P</b></font> = points.</font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">RI
+5</font></b> = move to right, 5 inches. <b><font color="#FF0000">DI 5</font></b>
+= move down, 5 inches.</font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">RC
+5</font></b> = move to right, 5 centimeters. <font color="#FF0000"><b>DC 5</b></font>
+= move down, 5 centimeters</font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">RP
+5</font></b> = move to right, 5 points. <font color="#FF0000"><b>DP 5</b></font>
+= move down, 5 points</font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">There
+will be immediate response to these commands</font></span> <font size="4"> <span LANG="EN">when you hit
+<font color="#FF0000"><b>&lt;ctrl&gt;L</b></font>,&nbsp;</span>
+</font>
+</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"> <span LANG="EN"> <font size="4"> <b><font color="#FF0000">&lt;ctrl&gt;R</font></b>,
+<b><font color="#FF0000">&lt;ctrl&gt;U</font></b>, or <b><font color="#FF0000">&lt;ctrl&gt;D</font></b>.</font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">The
+<font color="#FF0000"><b>up arrow</b></font> and <b><font color="#FF0000">down
+arrow</font></b> keys will move an item <b><font color="#FF0000">up</font></b>
+or <b><font color="#FF0000">down</font></b> 1 scale step.</font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">The
+<font color="#FF0000"><b>left arrow</b></font> and <font color="#FF0000"><b>right
+arrow</b></font> keys will move an item <b><font color="#FF0000">left</font></b>
+or <b><font color="#FF0000">right</font></b> 1 horizontal step.</font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">The
+<b><font color="#FF0000">&lt;Page Up&gt;</font></b> and
+<b><font color="#FF0000">&lt;Page Down&gt;</font></b> keys will
+move an item <b><font color="#FF0000">up</font></b> or <b><font color="#FF0000">down</font></b>
+4 scale steps.</font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">The
+<b><font color="#FF0000">&lt;Home&gt;</font></b> and
+<b><font color="#FF0000">&lt;End&gt;</font></b> keys will
+move an item <b><font color="#FF0000">left</font></b> or <b><font color="#FF0000">right</font></b>
+10 horizontal steps.</font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><b><font color="#008000" size="4">&nbsp;</font></b></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <font color="#008000" size="4"><b><a name="CN">CN
+(n)</a></b></font><p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <font size="4">     &nbsp;&nbsp;&nbsp;
+This will center an item on the nearest note or rest on the current staff. If a
+number (n) is given, the item will center on the nearest note or rest on staff
+n.</font>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     &nbsp;<p style="text-indent: 0; word-spacing: 0; margin: 0">     <font color="#008000" size="4"><b><a name="CN">CM
+n</a></b></font><p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">&nbsp;&nbsp;&nbsp;
+This will center a meter or number on the nearest bar line on staff n.</font><p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <font color="#008000" size="4"><b><a name="FLIP">FLIP</a>
+</b></font>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     &nbsp;
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">Many
+items can be inverted with this command. (Codes 1, 5, 6 and 9.)</font>
+</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font color="#008000" size="4"><b><a name="SET-ALIGN">SET
+- ALIGN</a></b></font>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     &nbsp;
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">If,
+while editing an item, <b><font color="#FF0000">S</font></b> (set) is typed, a
+vertical, dashed line will appear at the P3 position of the item. All the items,
+on all staves, may successively be edited. If <b><font color="#FF0000">A</font></b>
+(align) is typed, the item will line up at the position of the dashed line.
+Hitting &lt;enter&gt; will step through all items near the vertical line.</font>
+</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;Select
+the upper 4/4.&nbsp;&nbsp; Type <b>S</b>. When the lower 4/4&nbsp; comes into
+edit mode, type <b>A</b>.&nbsp;</font>
+</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;
+<img border="0" src="set1b.JPG" width="99" height="120">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span LANG="EN">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="set2b.JPG" width="99" height="120">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="set3.jpg" width="93" height="120">
+</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <font size="4">     <font color="#008000"><b><a name="INC">S</a></b></font><b><a name="INC"><font color="#008000">pecial
+Editing With &lt;alt&gt;Parameter n</font></a></b>
+</font>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     &nbsp;
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">When
+in Edit Mode, typing <b><font color="#FF0000"> &lt;alt&gt;n</font></b>  (n = any
+parameter number, hold both keys</font></span>
+<font size="4">
+ <span LANG="EN">down&nbsp;at once) will allow you to increase or decrease the value of that parameter by</span>
+ <span LANG="EN">tapping&nbsp;on the <font color="#FF0000"><b>up arrow</b></font> or <b><font color="#FF0000">down
+arrow</font></b> cursor keys.</span>
+ <span LANG="EN">The
+increment value for the arrow keys&nbsp;is originally set to 1. The increment may</span>
+ <span LANG="EN">be
+reset at any time by typing <font color="#FF0000"><b> INC</b></font> followed&nbsp;by</span>
+ <span LANG="EN">a number.
+The parameter number and increment will appear in a box in the upper left</span>
+ <span LANG="EN">area
+of the screen. This value will determine</span>
+ <span LANG="EN">the
+action of all editing with the arrow keys.</span>
+</font>
+</p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+ <span LANG="EN"><p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">When
+using the <b><font color="#FF0000"> &lt;alt&gt;n</font></b> feature the increment may
+ also be changed by hitting the&nbsp;<font color="#FF0000"><b>left
+ arrow</b></font> key or the <b><font color="#FF0000">right arrow</font></b> key.</font></span>
+ <font size="4">
+ This will change <span LANG="EN">the increment by <font color="#FF0000"><b> +</b></font> or
+ <b><font color="#FF0000"> - 0.1</font></b>.
+</span>
+ </font>
+ <span LANG="EN"><font size="4">To
+regain the normal function of the arrow keys, type <b><font color="#FF0000">&lt;alt&gt;X</font></b>.</font></p>
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+</span>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <font color="#008000" size="4"><b>Special method to clear many parameters at once:
+</b></font>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     &nbsp;
+<p style="text-indent: 0; word-spacing: 0; margin: 0" align="left"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Type <font color="#FF0000">  <b>  a&nbsp; </b>-<b>9999&nbsp; b</b></font>, where <b><font color="#FF0000"> a</font></b> is the
+first parameter to be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set to zero and <b><font color="#FF0000"> b</font></b> is the last parameter. For example,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 7 -9999  12 would set all the parameters 7 through 12</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0" align="left"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+to zero at once. If <b><font color="#FF0000">b</font></b>
+is omitted, all parameters from&nbsp;</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0" align="left"> <font size="4"> <b><font color="#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+a </font></b>up will be zeroed.<br>
+</font>
+</p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <b><font color="#008000" size="4"><a name="ABORT">Canceling
+Edit Changes</a>
+</font></b>
+<ul>
+  <li>
+    <p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     <font size="4">     At
+    any time
+<b><font color="#FF0000"> after</font></b>  you have made changes to an Item and
+    before you move on to another Item or exit from Edit Mode, you may cancel
+    the changes by typing <font color="#FF0000"><b> AB</b></font>
+    or <b><font color="#FF0000">&lt;ctrl&gt;B</font></b> or clicking on the <img border="0" src="ab.bmp" width="28" height="20"> 
+    (abort) box.<font color="#000000">&nbsp;If you type </font>
+    <font color="#FF0000"><b>ABX</b></font><font color="#000000">, all changes
+    will be cancelled and the program will exit edit mode.&nbsp;</font>
+    </font>
+  </li>
+</ul>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">     <b><font color="#008000" size="4"><a name="DELE">Deleting
+an Item</a></font></b>
+<ul>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4"><font color="#000000">To
+delete an Item hit the &lt;Delete&gt; key, click on the DEL button, or type </font><b><font color="#FF0000">DE</font></b><font color="#000000">.
+After the Item is deleted, the next Item in order, either forward or backward, will come into Edit Mode.</font>
+    </font>
+  </li>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4"><font color="#000000">Hitting
+    either F11 or F12, or clicking on these buttons,&nbsp;</font> <img border="0" src="f11-12.bmp" width="59" height="28">,
+    will delete the Item and move back or forward to the next Item with the same
+    Code number.</font></li>
+  <li>
+    <p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">You can recover from
+    an erroneous deletion by typing &quot;UND&quot; or clicking on the undelete
+    button, <img border="0" src="undel.bmp" width="28" height="20">.&nbsp;</font></li>
+</ul>
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0"><b><font color="#008000" size="4"><a name="XEDIT">Ending
+the Edit</a></font></b>
+<ul>
+  <li>
+    <p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0"><font size="4">Type
+    <font color="#FF0000"><b>&lt;esc&gt;</b></font>, <b><font color="#FF0000">X</font></b>, or click on the X button, or click with
+the <b><font color="#FF0000"> right mouse button</font></b> to exit from any form of edit mode. If you type <font color="#FF0000"><b>X</b>
+<b>
+n</b></font>, item number <b><font color="#FF0000">n</font></b> comes into Edit Mode.<br>
+Clicking on these buttons, <img border="0" src="f2-f3.bmp" width="59" height="28">,
+will end the edit and move back or forward to the next item.</font></li>
+  <li>
+    <p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0"><font size="4">Clicking
+on these buttons, <img border="0" src="f5-6.bmp" width="59" height="28">, will
+end the edit and move back or forward to the next item with the <b><font color="#FF0000">same
+code number</font></b>. Typing BZ or NZ will do the same thing.</font></li>
+  <li>
+    <p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0"><font size="4">If
+    you type <b><font color="#FF0000"><a href="groupedit.html#CUT">XX</a></font></b>,
+    the edit will end in the normal way and the edited item will be saved in the
+    !!CUT0.TMP file. This item may be retrieved at a later date with the PST0
+    command.</font></li>
+  <li>
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     <font size="4">     Typing
+&lt;Enter&gt; will end the edit and move on the the next item.</font></li>
+  <li>
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     &nbsp;</li>
+  <li>
+    <p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0"><font size="4">If
+    after exiting from Edit you realize you meant to type <b><font color="#FF0000">C</font></b>
+    (copy) instead of <b><font color="#FF0000">X</font></b>, you may retain the
+    edited Item and restore its original form by clicking on the restore box. <img border="0" src="restore.bmp"></font></li>
+</ul>
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     &nbsp;
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     <b><font color="#008000" size="4"><a name="COPYX">Copy
+and Exit</a></font></b>
+<ul>
+  <li>
+    <p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     <font size="4">     &nbsp;
+<img border="0" src="copy.bmp" width="90" height="20"></font></li>
+  <li>
+    <p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0"><font size="4">When
+you move an Item in Edit Mode, the original form remains in place. If you exit
+from Edit Mode the original disappears. However typing <b><font color="#FF0000">C</font></b>
+or clicking on the COPY button will consider the Item in the new position as a
+copy, exiting from Edit Mode. The original Item will remain in place.&nbsp;</font></li>
+  <li>
+    <p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">&nbsp;</li>
+  <li>
+    <p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     <font size="4">     Typing
+<b><font color="#FF0000">CC</font></b> (copy, continue) or clicking on the CC
+button will conclude the copy but continue with the new Item in Edit Mode.
+Typing <b><font color="#FF0000">CX</font></b> or clicking on the CX button will
+conclude the copy and move to the next Item in order after the original Item. <font color="#008000">Clicking
+    the <u>middle</u> mouse button is the same as typing CC.</font></font></li>
+</ul>
+
+
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     <b><font color="#008000" size="4"><a name="VC">VC,
+VCB, VCS vertical centering</a></font></b>
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     &nbsp;
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">Type <b><font color="#FF0000">VC</font></b>
+to center an item between its home staff and the staff above.</font> </p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4"><b><font color="#FF0000">VCB</font></b>
+centers an item between its home staff and the staff below.</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4"><b><font color="#FF0000">VCS</font></b>
+centers an item on the midpoint of the staff.</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;</p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">These commands apply only
+to Code 4, Code 9, Code 10, Code 16 and Code 18.</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;</p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">Here the Code 4 item is
+attached to staff 3.</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">&nbsp;&nbsp;&nbsp; <img border="0" src="vc1.jpg" width="202" height="215">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="vc2.jpg" width="202" height="209"></font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">Here the Code 18 item is
+attached to staff 1.</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;</p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">&nbsp; <img border="0" src="vc7.jpg" width="219" height="224">&nbsp;&nbsp;
+<img border="0" src="vc8.jpg" width="221" height="223"></font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;</p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">Here the Code 9 item is
+attached to staff 6.</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="vc3.jpg" width="204" height="219">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="vc4.jpg" width="211" height="215">&nbsp;&nbsp;</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;</p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">Here the Code 16 item with
+P4=10 is to be centered on staff 9.</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4"><img border="0" src="vc5.jpg" width="312" height="139"><img border="0" src="vc6.jpg" width="324" height="141"></font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;</p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;</p>
+
+
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     <b><font color="#008000" size="4"><a name="ZOOM">ZOOM
+while in EDIT MODE</a></font></b>
+
+
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     &nbsp;
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">You may zoom (enlarge the
+display) in or out with the following commands:</font></p>
+
+
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     &nbsp;
+
+
+<p style="text-indent: 0; margin-left: 0; margin-right: 0; margin-top: 0">     <font size="4">     &nbsp;&nbsp;&nbsp;&nbsp;
+<b><font color="#FF0000">&lt;ctrl&gt;&lt;Page Up&gt;</font></b> = zoom up 12.5
+%</font>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp; <b><font color="#FF0000">&lt;ctrl&gt;&lt;Page
+Down&gt;</font></b> = zoom down 12.5 %</font></p>
+
+
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp; <font color="#FF0000"><b>&lt;ctrl&gt;2</b></font>
+= zoom to 200 %</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp; <font color="#FF0000"><b>&lt;ctrl&gt;3</b></font>
+= zoom to 300 %</font></p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;</p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">If either of the last two
+above is repeated,&nbsp; the display zooms back to 100 %.</font> </p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;</p>
+<p style="text-indent: 0; word-spacing: 0; margin: 0"><font size="4">Also if the screen image
+is larger than the physical screen size, it may be moved by holding the <b><font color="#FF0000">
+&lt;ctrl&gt;</font></b> key while hitting any of the <b><font color="#FF0000"> arrow</font></b> keys. This does the same thing
+as sliding the scroll bars by means of the mouse. (Some people like to use the
+mouse as little as possible.)</font></p>
+
+
+<p style="text-indent: 0; word-spacing: 0; margin: 0">&nbsp;</p>
+
+
+</BODY>
+</HTML>

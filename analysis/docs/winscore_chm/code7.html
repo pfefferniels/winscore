@@ -1,0 +1,451 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>New Page 1</title>
+</head>
+
+<body>
+<table border = "1" cellpadding = "5"><tr><td>
+<H3>Code 7 -- Trills, Ottava, Pedals -- parameter structure</H3>
+</td></table>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+
+<br>
+<font size="4">
+<b><font color="#008000">
+   P1</font></b>&nbsp; code number (1)<br>
+<font color="#008000"><b>
+   P2</b></font>&nbsp; <a href="structure.html">staff number</a><br>
+<font color="#008000">
+   P3</font>&nbsp; <a href="structure.html">horizontal position</a><br>
+<font color="#008000"><b>
+   P4</b></font>&nbsp; <a href="structure.html">vertical position</a><br>
+<b><font color="#008000">
+   P5</font></b>&nbsp; <a href="#7P5">size of symbol, piano pedal symbols</a><br>
+<b><font color="#008000">
+   P6</font></b>&nbsp; <a href="#7P6">right position of extension line</a><br>
+<b><font color="#008000">
+   P7</font></b>&nbsp; <a href="#7P7">type of symbol</a><br>
+<b><font color="#008000">
+   P8, 9</font></b>&nbsp; <a href="#7P8">various features</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#7trills">trills</a>
+</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#7ottava">ottava</a></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<font color="#000000"><a href="#7harp">graphic harp pedal symbol</a></font></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#7pfped">piano pedal line</a></font>&nbsp;</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008000">
+   P11, 12</font></b>&nbsp; <a href="#7P11">brackets, arrows</a><br>
+<b><font color="#008000">
+   P15, 16, 18</font></b>&nbsp; <a href="#7P15">offsets</a><br>
+<font color="#008080"><b> P25</b></font>&nbsp; <jump=p20><a href="#P25">layer number
+(for Color/Gray)&nbsp;</a></font></p>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008080"> P26</font></b>&nbsp; <jump=p20><a href="#P26">Color/Gray
+value&nbsp;</a> 
+</font> 
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+&nbsp;&nbsp;&nbsp;
+<a href="#7letters">Jump to Letter Commands</a><br>
+&nbsp;&nbsp;&nbsp; <a href="#7fkeys">Jump to Function Key Setup</a><br>
+<a name="7P5"></a>
+<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">P5</font></b> is the size factor for Trills, Ottavas, and Graphic Harp Symbols. The default size 0 is the same as 1. When creating Piano Pedal Lines, P5 must equal 0.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><br>
+&nbsp;&nbsp; <img border="0" src="cd7P5a.bmp" width="143" height="95"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<a name="7graphicpd"></a>
+<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+Graphic Piano Pedal Symbol. (P7 = 20)</font></b><br>
+<br>
+For SCORE's unique graphic piano pedal symbols, P5 is a three-digit number XYZ where each digit indicates which pedal is depressed. P9 can change the size factor with these symbols.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;<br>
+&nbsp;&nbsp; <img border="0" src="cd7p5.bmp" width="364" height="176"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+Any combination of digits XYZ are possible. A "1" in any of the digits creates a filled pedal symbol which indicates which pedal to depress. A "0" creates an open shape indicating the pedal is not depressed.&nbsp;</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<b><font color="#008000" size="4">Toolbar buttons</font></b></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="ped100.bmp" width="28" height="20">  = left pedal
+on/off&nbsp; <img border="0" src="ped010.bmp" width="28" height="20">
+ = middle pedal on/off&nbsp;&nbsp; <img border="0" src="ped001.bmp" width="28" height="20"> 
+= right pedal on/off&nbsp;&nbsp; <img border="0" src="ped000.bmp" width="28" height="20">
+= all off<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+ <font size="4">
+ P6 and P8 are used to extend lines to the right and left of the symbol. P11 and P12 can add brackets and arrows to the line ends.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp; <img border="0" src="cd7P5b.bmp" width="332" height="165">
+<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<b><font color="#008000" size="4">Toolbar buttons</font></b></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="pedlfm.bmp" width="28" height="20">   = end of left line to
+left&nbsp; <img border="0" src="pedlfp.bmp" width="28" height="20">
+ = end of left line to right&nbsp; <img border="0" src="PEDLFZ.BMP" width="28" height="20">
+= no left line&nbsp;&nbsp;</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="pedrtm.bmp" width="28" height="20">  = end of right line to
+left&nbsp; <img border="0" src="pedrtp.bmp" width="28" height="20">  = end of
+right line to right&nbsp; <img border="0" src="pedrtz.bmp" width="28" height="20">&nbsp;=
+no right line</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="pedarrowlf.bmp" width="28" height="20">  = add/remove arrow
+on left line&nbsp; <img border="0" src="pedarrowrt.bmp" width="28" height="20">
+= add/remove arrow on right line</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="pedbrklfup.bmp" width="28" height="20">   = add bracket up on left line&nbsp; <img border="0" src="pedbrklfdn.bmp" width="28" height="20">
+= add bracket down&nbsp;</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="pedbrklfupm.bmp" width="28" height="20">
+ = diminish vertical line&nbsp; <img border="0" src="pedbrklfupp.bmp" width="28" height="20"> 
+= extend vertical line</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="pedbrkrtup.bmp" width="28" height="20">   = add bracket up on right line&nbsp; <img border="0" src="pedbrkrtdn.bmp" width="28" height="20">
+= add bracket down</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="pedbrkrtupm.bmp" width="28" height="20">
+ = diminish vertical line&nbsp; <img border="0" src="pedbrkrtupp.bmp" width="28" height="20"> 
+= extend vertical line</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<a name="7P6"></a>
+<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+P6</font></b> right position of extension line.<br>
+<br>
+&nbsp;&nbsp; <img border="0" src="cd7P6.bmp" width="244" height="184">
+<br>
+<a name="7P7"></a>
+<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+P7</font></b> type of symbol.<br>
+<br>
+&nbsp;&nbsp; <img border="0" src="cd7p7.bmp" width="392" height="305">
+<br>
+<a name="7P8"></a>
+<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+P8, P9</font></b> various features depending on P7 value..
+<br>
+<a name="7trills"></a>
+<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+Trills.</font></b> (P7 = 0)
+<br>
+If P7 = 0, P8 indicates the type of accidental (if any) that will appear above the trill. Note: if you prefer to create ancillary notes to indicate what pitch is trilled to, see Code 9. See
+7p6&gt;P6 regarding extension line.<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="cd7P8f.bmp" width="384" height="110">
+<br>
+P9 indicates the size of the "wave" in the extension line.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><br>
+&nbsp;&nbsp; <img border="0" src="cd7P9.bmp" width="127" height="97">
+<br>
+<b><font color="#008000">Toolbar buttons</font></b>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="wigsizp.bmp" width="28" height="20">
+ = wave size + .1&nbsp; <img border="0" src="wigsizm.bmp" width="28" height="20">
+= wave size - .1&nbsp; <img border="0" src="wigsiz0.bmp" width="28" height="20">
+= normal size</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+P11 indicates the vertical position of the extension line.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><br>
+&nbsp;&nbsp; <img border="0" src="cd7P11.bmp" width="127" height="97"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<b><font color="#008000" size="4">Toolbar buttons</font></b>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="wigup.bmp" width="28" height="20">
+ = move wave up&nbsp; <img border="0" src="wigdn.bmp" width="28" height="20"> =
+move wave down&nbsp; <img border="0" src="wignorm.bmp" width="28" height="20"> =
+normal level</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="wigarrow.bmp" width="28" height="20">
+ = add/remove arrow at end of wave</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="7ottava"><font size="4"></font></a></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000"><a name="Ottava.">Ottava.</a></font></b> 
+(P1 = 7, P7 = 8, 88, -8, -88, 15, 155)
+<br>
+P8 indicates the width of the dash in the extension line. P12 will add a vertical line on the last dash.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><br>
+&nbsp;&nbsp; <img border="0" src="cd7P8d.bmp" width="325" height="177"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+P9 indicates the size of the space between the dashes.&nbsp;<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="cd7P8e.bmp" width="248" height="124"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="7harp"><font size="4"></font></a></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">
+Graphic Harp Pedal Symbol.</font></b> (P7 = 1)
+<br>
+For this symbol, P8 is a three-digit number XYZ indicating the positions of each pedal on the left side.<br>
+P9 is a four-digit number ABCD that indicates the pedal positions for the right side.<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="cd7P8a.bmp" width="176" height="183"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+Each symbol represents one of the seven pedals on the harp. From the left, they indicate the pitches: D C B
+| E F G A. The "digits" in P8 and P9 represent the position of the pedals, as shown above. These represent:<br>
+<br>
+&nbsp;&nbsp; <img border="0" src="cd7P8b.bmp" width="256" height="145"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+If you are unfamiliar with the use of this notation for harp pedaling, we suggest you consult a reference source such as any modern text on orchestration.<br>
+<a name="7pfped"></a></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+Piano Pedal Line.</font></b> (P7 = 21, 22)
+<br>
+For this symbol, P8 indicates the position of the "notch" signifying the point to lift and reset the pedal. (P9 should remain at 0.)<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="cd7P8c.bmp" width="261" height="193"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="7P11"><font size="4"></font></a></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">
+<a name="7P11b">
+P11, P12</a></font></b> <a name="7P11b"> brackets, arrows.</a>
+<br>
+P11 indicates a bracket line on the left end of a piano pedal line. P12 indicates a bracket line on the right end. (Please note that P11 and P12 may also be used with the graphic piano pedal symbol, P7 = 20. P12 may be used with the the various ottava symbols.)<br>
+<br>
+&nbsp;&nbsp; <img border="0" src="cd7P12.bmp" width="240" height="177"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+The value in P11 or P12 alters the size of the vertical line. Negative values make the line point downward. Adding 100 to either of these parameters will create an arrowhead.&nbsp;<br>
+<a name="7P15"></a>
+<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+P15, P16, P18</font></b> offsets<br>
+<br>
+P15 may be used to offset the left side of all Code 7 items. This is useful to lock an item to the position of a note so there is no change if the music is respaced. The right end extensions of trills, ottavas and graphic piano pedal symbols may be offset from the given P6 by setting P16 to 1 and P18 to the offset value.<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P25</b></font></color> </a> layer number.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<a name="P26"><font size="4">&nbsp;</font></a><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P26</b></font></color> </a> color/gray
+value.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<a name="P27"><font size="4">&nbsp;</font></a>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="7letters"></a>
+ ___________________________________________________________________________<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">----- <b><font color="#FF0000"> Shortcut Letter Commands while editing</font></b> --------------------------<br>
+<br>
+<b><font color="#008000">
+TRI</font></b>&nbsp; =&nbsp; trill.&nbsp;<br>
+<b><font color="#008000">
+TRILLF</font></b>&nbsp; =&nbsp; trill with added flat.<br>
+<b><font color="#008000">
+TRILLS&nbsp;</font></b> =&nbsp; trill with added sharp.<br>
+<font color="#008000"><b>
+TRILLN</b></font>&nbsp; =&nbsp; trill with added natural.<br>
+<br>
+<font color="#008000"><b>
+OVA</b></font>&nbsp; =&nbsp; ottava. (<a href="#7P7">P7</a> = 8)<br>
+<b><font color="#008000">
+OVAU</font></b>&nbsp; =&nbsp; ottava, dashes up. (<a href="#7P7">P7</a> = 88)<br>
+<b><font color="#008000">
+OVAD</font></b>&nbsp; =&nbsp; ottava, dashes down. (<a href="#7P7">P7</a> = -88)<br>
+<font color="#008000"><b>
+OMA</b></font>&nbsp; =&nbsp; quindicesima. (<a href="#7P7">P7</a> = 15)<br>
+<font color="#008000"><b>
+OMAU&nbsp;</b></font> =&nbsp; quindicesima, dashes up. (<a href="#7P7">P7</a> = 155)<br>
+<font color="#008000"><b>
+OBA&nbsp;</b></font> =&nbsp; ottava bassa. (<a href="#7P7">P7</a> = -8)<br>
+<br>
+<font color="#008000"><b>
+PEDA&nbsp;</b></font> =&nbsp; graphic piano pedal symbol. (<a href="#7P7">P7</a> = 20)<br>
+<font color="#008000"><b>
+PEDB</b></font>&nbsp; =&nbsp; piano pedal line. (<a href="#7P7">P7</a> = 21)<br>
+<b><font color="#008000">
+PEDC</font></b>&nbsp; =&nbsp; piano pedal line. (<a href="#7P7">P7</a> = 22)<br>
+<br>
+<font color="#008000"><b>
+HARP&nbsp;</b></font> =&nbsp; graphic harp pedal symbol. (<a href="#7P7">P7</a> = 1)<br>
+<br>
+<b><font color="#008000">
+SZP</font></b>&nbsp; =&nbsp; overall size plus .1 (<a href="#7P5">P5</a> + .1).<br>
+<font color="#008000"><b>
+SZM</b></font>&nbsp; =&nbsp; overall size minus .1 (<a href="#7P5">P5</a> - .1).<br>
+<b><font color="#008000">
+SZ x</font></b>&nbsp; =&nbsp; overall size = x (<a href="#7P5">P5</a> = x).<br>
+(PEDA,B,C use P9 for size.)<br>
+<br>
+<font color="#008000"><b>
+LOFF x&nbsp;</b> </font><font color="#000000">=&nbsp; left offset x steps. (<a href="#7P15">P15</a> = x)</font><font color="#008000"><br>
+<b>
+LOFFM&nbsp;</b>
+</font> =&nbsp; left offset minus .5. (<a href="#7P15">P15</a> - .5)<br>
+<font color="#008000"><b>
+LOFFP</b></font>&nbsp; =&nbsp; left offset plus .5. (<a href="#7P15">P15</a> + .5)<br>
+<b><font color="#008000">
+ROFF x</font></b>&nbsp; =&nbsp; right offset x steps. (<a href="#7P15">P16</a> = 1, P18 = x)<br>
+<b><font color="#008000">
+ROFFM</font></b>&nbsp; =&nbsp; right offset minus .5. (<a href="#7P15">P16</a> = 1, P18 - .5)<br>
+<font color="#008000"><b>
+ROFFP</b></font>&nbsp; =&nbsp; right offset plus .5. (<a href="#7P15">P16</a> = 1, P18 + .5)</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#008000">XOFF</font></b>&nbsp; =&nbsp; zero
+offsets
+<br>
+<b><font color="#FF0000">
+&gt;&gt;&gt; While editing TRILLS</font></b><br>
+<b><font color="#008000">
+TRF&nbsp;</font></b> =&nbsp; add flat.<br>
+<font color="#008000"><b>
+TRS</b></font>&nbsp; =&nbsp; add sharp.<br>
+<b><font color="#008000">
+TRN</font></b>&nbsp; =&nbsp; add natural.<br>
+<font color="#008000"><b>
+TR0</b></font>&nbsp; =&nbsp; remove accidental.<br>
+<font color="#008000"><b>
+WY</b></font>&nbsp; =&nbsp; yes, add wiggle (<a href="#7P6">P6</a>).<br>
+<b><font color="#008000">
+WN&nbsp;</font></b> =&nbsp; no wiggle (<a href="#7P6">P6</a> = 0).<br>
+<b><font color="#008000">
+WU&nbsp;</font></b> =&nbsp; wiggle up (<a href="#7P11">P11</a> + .2).<br>
+<b><font color="#008000">
+WD&nbsp;</font></b> =&nbsp; wiggle down (<a href="#7P11">P11</a> - .2).<br>
+<b><font color="#008000">
+WZ</font></b>&nbsp; =&nbsp; wiggle position normal (<a href="#7P11">P11</a> = 0).<br>
+<b><font color="#008000">
+WSP</font></b>&nbsp; =&nbsp; wiggle size plus (<a href="#7P8">P9</a> + .1).<br>
+<b><font color="#008000">
+WSM</font></b>&nbsp; =&nbsp; wiggle size minus (<a href="#7P8">P9</a> - .1).<br>
+<font color="#008000"><b>
+WSN</b></font>&nbsp; =&nbsp; wiggle size normal (<a href="#7P8">P9</a> = 0).</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="margin-top: 0">
+
+ <b><font color="#FF0000" size="4"><a name="7fkeys">Function Key Setup for Code 7</a></font></b>
+<p style="margin-top: 0">
+ 
+<table border = "1" cellpadding = "5">
+<tr>
+<td><b>F1</b><br><font size="2">Help<br><br><br></font></td>
+<td><b>F2</b><br><font size="2">Back to<br>Previous Item<br><br></font></td>
+<td><b>F3</b><br><font size="2">Forward to<br>Next Item<br><br></font></td>
+<td><b>F4</b><br><font size="2">Back to<br>Previous Item,<br>Same Code #</font></td>
+<td><b>F5</b><br><font size="2">Forward to<br>Next Item,<br>Same Code #</font></td>
+<td><b>F6</b><br><font size="2">. . .<br><br><br></font></td>
+</tr>
+<tr>
+<td><b>F7</b><br><font size="2">Flip<br><br><br></font></td>
+<td><b>F8</b><br><font size="2">Center<br><br><br></font></td>
+<td><b>F9</b><br><font size="2">Exit from<br>Edit Mode<br>( X )</font></td>
+<td><b>F10</b><br><font size="2">. . .<br><br><br></font></td>
+<td><b>F11</b><br><font size="2">Delete, Move<br>to Previous,<br>Same Code #</font></td>
+<td><b>F12</b><br><font size="2">Delete, Move<br>to Next,<br>Same Code #</font> </td>
+</tr>
+</table>	
+
+
+
+
+
+
+<p><br>
+<br>
+</p>
+
+</body>
+
+</html>

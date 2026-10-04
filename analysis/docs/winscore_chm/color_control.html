@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<Title>code1</Title>
+</HEAD>
+<BODY>
+<table border = "1" cellpadding = "5"><tr><td>
+<H3>Color/Gray Control -- P25, P26, P27</H3>
+</td></table>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P26
+</font></b><font color="#000000">controls the color or gray scale of any Score
+item.</font></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font color="#000000" size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Gray scale values are from 0 (black) to 1 (white). </font></p>
+
+<p><font size="4"><img border="0" src="gray1.jpg" width="523" height="266"></font></p>
+
+<p><font size="4">Typing GRA .4, etc. will set P26 values.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">Color is created by
+the PostScript &quot;setrgbcolor&quot; code. (rgb = red, green, blue)</font></p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">For
+color, <font color="#FF0000"> P26</font> must be a six-digit number, aabbcc, where aa = red, bb = green,</font> </p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">cc
+= blue. Thus if&nbsp; P26 = 669975, the color values are 66% red, 100% green,</font> </p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">75%
+blue and the generated PostScript code would be &quot;.66&nbsp; 1&nbsp;
+.75&nbsp; setrgbcolor.&quot;</font> </p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">Each
+component represents a color percentage. 99 is interpreted as 100%.</font></p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">Typing
+&quot;<font color="#FF0000">RGB</font> n&quot; is the same as typing &quot;26
+n.&quot;</font></p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">If
+RGB alone is typed, or the color button is clicked on, then the Windows
+&quot;Color</font></p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">Chooser&quot;
+will appear. After a color is chosen, the P26 value will appear at the</font></p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">top
+of the screen for reference.</font> </p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">Usually
+when an item (black) is being edited it will be changed to red.</font> </p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">However
+if P26 is not zero, the indicated color will remain.</font> </p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">This
+is so that any color changes that might be made will be immediately visible.</font></p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">Typing
+&quot;<font color="#FF0000">BLA</font>&quot; (black, p26 = 0) will return an
+item to normal.</font></p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">&quot;<font color="#FF0000">WHI</font>&quot;
+(white, p26 = 1) creates a white item. (However on the screen</font> </p>
+
+
+<p style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">it
+will show
+as very light gray, so that you will know of its presence.)</font></p>
+
+
+<p><font size="4"><img border="0" src="color1.jpg" width="710" height="322"></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000"><a name="P25">P25</a></font></b>
+<a name="P25"> </a>
+- PostScript applies items in &quot;layers,&quot; thus the order in which items
+are printed is very important.</font> <font size="4">For example, if
+colored or gray notes are to appear on black staff lines, it is essential that the staff&nbsp;lines be printed first. <font color="#000000">P25</font>
+can set a layer number. <u>After the essential items have their layer numbers,</u></font>
+<font size="4"> <u>&quot;<font color="#FF0000">ORN</font>&quot;
+must be typed</u>. ORN stands for Order and ReNumber. All items with P25 = 1
+will be</font> <font size="4">printed <b><font color="#008080">LAST</font></b>, items
+with P25 = 2 will be printed <b><font color="#008080">NEXT TO LAST</font></b>, etc.
+Up to 10 layer numbers</font> <font size="4">may be used. Items
+may have P25 set by individual editing. Or the alter command, &quot;A&quot;, or
+the &quot;IF&quot;</font> <font size="4">command may be used
+for groups of items. The following could be used to set all the notes on staff 2</font>
+<font size="4">to the color red and
+ensure they will print on top of staff lines. For gray notes, set P26=.65, etc.</font> </p>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<font face="Courier">IF P1=1 AND P2=2 THEN P25=1, P26=990000</font></font></p>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font face="Courier" size="4">&nbsp;
+ORN&nbsp;</font></p>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">Please note that some of SCORE's group
+edit commands
+automatically renumber all items (OS = order&nbsp;by staff number). If the layer
+feature is used, the ORN
+command should be given before printing.</font></p>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P27</font></b>
+is used with notes that require ledger lines. Normally (P27 = 0) the ledger
+lines take the same</font> <font size="4">color as the staff
+lines. If P27 = 1, the ledger lines will be the same color as the note.</font></p>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp; <img border="0" src="color2b.jpg" width="238" height="161"></font></p>
+
+
+</body>
+

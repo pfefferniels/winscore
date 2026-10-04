@@ -1,0 +1,550 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Code 4 - Lines</title>
+</head>
+
+<body>
+<table border = "1" cellpadding = "5"><tr><td>
+<H3><a name="code4"></a>Code 4 -- Lines, Hairpins -- parameter structure</H3>
+</td></table>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#008000">
+   P1</font></b>&nbsp; code number (4)<br>
+<b><font color="#008000">
+   P2</font></b>&nbsp; <a href="structure.html">staff number</a><br>
+<font color="#008000"><b>
+   P3</b></font>&nbsp; <a href="#4P3">horizontal position, left end</a><br>
+<b><font color="#008000">
+   P4</font></b>&nbsp; <a href="#4P3">vertical position, left end</a><br>
+<font color="#008000"><b>
+   P5</b></font>&nbsp; <a href="#4P3">vertical position, right end</a><br>
+<font color="#008000"><b>
+   P6</b></font>&nbsp; <a href="#4P3">horizontal position, right end</a><br>
+<font color="#008000"><b>
+   P7</b></font>&nbsp; <a href="#4P7">dashes, dots, wiggles</a><br>
+<font color="#008000"><b>
+   P8</b></font>&nbsp; <a href="#4P8">dash length, dot size, etc.</a><br>
+<font color="#008000"><b>
+   P9</b></font>&nbsp; <a href="#4P9">space between dashes, dots</a><br>
+<b><font color="#008000">
+   P10</font></b>&nbsp; <a href="#4P10">line thickness</a><br>
+<font color="#008000"><b>
+   P11</b></font>&nbsp; <a href="#4P11">vertical bracket, arrow, left end</a><br>
+<font color="#008000"><b>
+   P12</b></font>&nbsp; <a href="#4P11">vertical bracket, arrow, right end</a><br>
+<font color="#008000"><b>
+   P13</b></font>&nbsp; <a href="#4P13">rotation</a><br>
+<font color="#008000"><b>
+   P14,15</b></font>&nbsp; <a href="#4P14">partial crescendos</a><br>
+<font color="#008000"><b>
+   P15</b></font>&nbsp; <a href="#4P15">vertical line offsets</a><br>
+<font color="#008000"><b>P16,17,18</b></font>&nbsp; <a href="#4P16b">line end point offsets</a></font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<a href="#4multi">Multi-point Lines&nbsp;</a><br>
+<font color="#008000"><b>
+   P18,19</b></font>&nbsp; <a href="#4P18">Multi-point line size factors</a><br>
+<font color="#008000"><b>
+   P20</b></font>&nbsp; <a href="#4P20">Multi-point line rotation</a><br>
+<font color="#008000"><b>
+   P21</b></font>&nbsp; <a href="#4P21">Multi-point line thickening</a><br>
+P25&nbsp; <jump=p20><a href="#P25">layer number
+(for Color/Gray)&nbsp;</a></font><p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+P26&nbsp; <jump=p20><a href="#P26">Color/Gray
+value&nbsp;</a> 
+</font> 
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;
+<a href="#4letters">Jump to Letter Edit Commands</a><br>
+&nbsp;&nbsp;&nbsp; <a href="#4fkeys">Jump to Function Key Setup</a><br>
+&nbsp;&nbsp;&nbsp; <a href="#Multi-point Slurs">Jump to Multi-point Slurs</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+To input a <b>Line</b>, type any of the below mnemonics or click on the <b>New Item</b> button and then on one of the line buttons. The item will appear on the highest staff currently on the screen. If there is no staff on the screen, the item will appear in a position relative to staff 1. The item name may be followed by a series of numbers (n2, n3... ) which will further specify its characteristics by setting P2, P3, etc.</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><br>
+<font color="#008000"><b>
+LINE</b></font>&nbsp; =&nbsp; line<br>
+<b><font color="#008000">
+DASH</font></b>&nbsp; =&nbsp; dashes<br>
+<font color="#008000"><b>
+CRH</b></font>&nbsp; =&nbsp; crescendo "hairpin"<br>
+<b><font color="#008000">
+DCH</font></b>&nbsp; =&nbsp; decrescendo "hairpin"<br>
+<font color="#008000"><b>
+ARP</b></font>&nbsp; =&nbsp; vertical arpeggiation<br>
+<br>
+When the item appears it is directly in edit mode and may be moved, etc. with the various edit commands. Hitting &lt;enter> or
+<b> X</b> leaves edit mode.<br>
+<a name="4P3"></a>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+P3, 4, 5, 6</font></b> line end points<br>
+Lines use four parameters to specify position.&nbsp;<br>
+P3 = left end horizontal position.<br>
+P4 = left end vertical position.<br>
+P5 = right end vertical position.<br>
+P6 = right end horizontal position.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="4p3.bmp"><br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+Only normal and dashed lines may be tilted in this manner. For all other line types use P13 rotation.&nbsp;<br>
+<br>
+For vertical lines (except dotted lines) P6 must equal P3. P4 normally sets&nbsp;the bottom of the line and P5 the top. An alternative method is to rotate any&nbsp;horizontal line with P13 =
+-90.&nbsp;Lines may be change to vertical by typing <font face="Courier New">VER</font>;
+<font face="Courier New">HOR</font> makes horizontal.<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="4p3b.bmp"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="4P7"><font size="4"></font></a>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+P7</font></b> line types&nbsp;<br>
+</font>
+<br>
+<font size="4">
+&nbsp;&nbsp;&nbsp; <img border="0" src="cd4p7x.bmp">
+<br>
+<a name="4P7ARP"></a></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<img border="0" src="cd4p7arp.bmp" width="309" height="75"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<a name="4P11B"></a>
+The default spread of <b> hairpins</b> is 2.3 scale steps. In effect, P7 = 0 is the&nbsp;<br>
+same as P7 = 2.3 and P7 = -1 is the same as P7 = -2.3. This may be&nbsp;<br>
+changed by adding positive amounts to P7 (for crescendo hairpins) or&nbsp;<br>
+negative amounts (for decrescendo hairpins). In these instances, P7 will&nbsp;<br>
+not equal 0 or -1. The special number (999) in P5 tells SCORE this is a hairpin.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+P10 can thicken the lines.<br>
+<br>
+&nbsp; &nbsp; <img border="0" src="cd4p7bx.bmp"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+To get hairpins as dashed lines set P11 = 1. P8 can set the length of each dash,
+P9 sets the size of the spaces.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp; <img border="0" src="cd4p11b.bmp" width="261" height="17"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+Also vertical lines may be produced by setting P7 = -5. The height of the&nbsp;<br>
+line will depend on the settings of P4 and P5. Bracket endings and arrow&nbsp;<br>
+heads may be added with P11 and P12.<br>
+<br>
+&nbsp;&nbsp;
+<img border="0" src="cd4p7cx.bmp"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+In this case, if P6 is set to 0, the vertical line will be considered by the&nbsp;<br>
+Justify routine. Putting any number in P6 will cause the line to be ignored&nbsp;<br>
+by the Justify routine. (This is similar to, but not exactly the same as with&nbsp;<br>
+the vertical arpeggio wavy line where P6 must be 0 and P7 = -1. In this&nbsp;<br>
+case the item will be considered by the Justify routine. If you want a&nbsp;<br>
+vertical wavy line that is ignored by the Justifier, you must create a&nbsp;<br>
+horizontal wavy line -- setting the right extent with a number in P6 -- and&nbsp;<br>
+then rotate the item by setting P13 to -90.)<br>
+<br>
+When rotated, the vertical line (P7 = -5) may be used for portamento&nbsp;<br>
+lines between notes which then will be justified correctly.</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="cd4p7dx.bmp">
+<br>
+</font>
+Follow these steps:<br>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp; <font size="4"> <img border="0" src="cd4p7ex.bmp" width="509" height="252"></font></p>
+<p style="margin-top: 0">
+<a name="4P8"><font size="4"></font></a>
+<p style="margin-top: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+P8</font></b> sets the length of the dash, or the horizontal size of the wave&nbsp;<br>
+in a wavy line, or the size of the dot.</font>
+<p style="margin-top: 0; margin-bottom: 0"><font size="4"><br>
+<! <p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp; <img border="0" src="cd4p8x.bmp">
+<br>
+<a name="4P9"></a>
+</font>
+</p>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+P9</font></b> sets the size of the space between dashes or dots, or the height<br>
+of the wave in wavy lines. If P9 = 0, the space is the same as the&nbsp;<br>
+width of the dash. Default values are used for dots and wavy lines.<br>
+<br>
+&nbsp;&nbsp;
+<img border="0" src="cd4p9x.bmp"></font></p>
+<p style="margin-top: 0; margin-bottom: 0"><a name="4P10"><font size="4"></font></a>
+</p>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+P10</font></b> controls the thickness of the line.  (On PostScript printers only.)&nbsp;<br>
+<br>
+&nbsp;&nbsp; <img border="0" src="cd4p10.bmp"></font></p>
+<p style="margin-top: 0; margin-bottom: 0"><b><font color="#008000" size="4">Toolbar
+buttons:</font></b></p>
+<p style="margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toollinethickp.bmp" width="31" height="24">
+ = add thickness&nbsp;&nbsp; <img border="0" src="toollinethickz.bmp" width="31" height="24">
+= default thickness</font></p>
+<p style="margin-top: 0; margin-bottom: 0"><a name="4P11">&nbsp;</a>
+</p>
+<p style="margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;</font></p>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+P11</font></b> adds a bracket or arrow head to left end of the line.<br>
+<b><font color="#FF0000">
+P12</font></b> adds a bracket or arrow head to right end of the line.<br>
+      The number sets the length of the vertical line or the&nbsp;<br>
+       spread of the arrow head.</font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><br>
+&nbsp;&nbsp;
+<img border="0" src="cd4p11x.bmp">
+<br>
+<b><font color="#008000">Toolbar
+buttons:</font></b>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toollinelfbrkup.bmp" width="31" height="24">
+ = left bracket&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="toollinelfbrkupm.bmp" width="31" height="24">
+= decrease vertical line&nbsp;&nbsp; <img border="0" src="toollinelfbrkupp.bmp" width="31" height="24">
+= increase vertical line</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toollinertbrkup.bmp" width="31" height="24">
+ = right bracket&nbsp;&nbsp; <img border="0" src="toollinertbrkupm.bmp" width="31" height="24">
+= decrease vertical line&nbsp;&nbsp; <img border="0" src="toollinertbrkupp.bmp" width="31" height="24">
+= increase vertical line</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toollinerarrowlf.bmp" width="31" height="24">
+ = left arrow on/off&nbsp;&nbsp; <img border="0" src="toollinerarrowrt.bmp" width="31" height="24">
+= right arrow on/off</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="toolarrparrowup.bmp" width="31" height="24">
+ = arpeggio arrow up on/off&nbsp;&nbsp; <img border="0" src="toolarrparrowdn.bmp" width="31" height="24">
+= arpeggio arrow down on/off</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="4P13"><font size="4"></font></a>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+P13</font></b> rotation by degrees. A positive value rotates&nbsp;<br>
+clockwise, a negative value counter-clockwise.</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="cd4p13x.bmp">
+<br>
+<a name="4P14"></a>
+<br>
+<b><font color="#FF0000">
+P14, 15</font></b> partial hairpins.
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="margin-top: 0; margin-bottom: 0"><font size="4"><u>IMPORTANT NOTE</u>: The
+following examples presume that you have clicked on <b> YES</b> in the <font color="#008080">New
+Slur Features</font> box in the Preferences dialog. If you are editing older
+files and require no changes, you should click on <b>NO</b>.&nbsp;</font><p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">These parameters are used to create partial hairpins or create a gap
+in a hairpin.</font>  <font size="4">When creating these hairpins, P3 and P6 must always give&nbsp;its FULL length.
+For partial hairpins, only P14 is used. If P14 is <u>positive,</u> the number indicates the
+percentage of the hairpin which will be <u>visible</u>. In the following example
+you may type either .48 or 48 as the percent. If P14 is <u>negative,</u> the
+number indicates the percentage of the hairpin which will be <u>invisible</u>.</font>
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+A good method for creating such hairpins is to first input the full hairpin. Then move it up or down for easy visibility and adjust P14
+as needed.
+</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><img border="0" src="cd4p14part.jpg" width="450" height="241">
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">For
+a gap in a hairpin, set P14 to the position of the <u>center</u> of the gap (as a
+fraction of the entire length.) P15 must be a negative number, in horizontal
+steps, indicating the width of the gap. In the following, for P14 you may type
+either .455 or 45.5 (as a percentage.)</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;<img border="0" src="cd4p14gap2.jpg" width="498" height="296"></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">A &quot;floating&quot; partial
+hairpin is created as above, but with
+P15 as a positive number. In the following example two hairpinss are needed; one
+with a gap and another to make the inner partial.</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><img border="0" src="cd4p14gap3.jpg"><font size="4">
+<br>
+<a name="4P15"></a>
+<br>
+<b><font color="#FF0000">
+P15</font></b> When used with vertical wavy lines (arpeggiation, P7 = -1, -2, -3)&nbsp;<br>
+and vertical straight lines (P7 = -5), P15 is used to set an offset from&nbsp;<br>
+the given P3 position.<br>
+</font>
+</p>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<a name="4P16b"></a>
+</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+P16, 17, 18</font></b> end point offsets.
+</font>
+<p style="margin-top: 0"><font size="4">When P16 = 1, P17 and P18 can set offsets for the left and right ends of
+lines. The offsets&nbsp;are figured from the exact P3 and P6 values.
+</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">
+<a name="4multi"></a>
+<br>
+<b><font color="#FF0000">
+****** Multi-point lines: P7 = 100.</font></b><br>
+P8&nbsp; = added horizontal point 1,  P9  = vertical point 1.<br>
+P10 = added horizontal point 2,  P11 = vertical point 2.<br>
+P12 = added horizontal point 3,  P13 = vertical point 3.<br>
+P14 = added horizontal point 4,  P15 = vertical point 4.<br>
+P16 = added horizontal point 5,  P17 = vertical point 5.&nbsp;<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp; <img border="0" src="cd4xx.bmp"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<a name="4P18"></a>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P18</font></b> horizontal size factor.<br>
+<br>
+<b><font color="#FF0000">
+P19</font></b> vertical size factor.<br>
+If P19 = 0, P18 controls both horizontal and vertical factors.<br>
+(See Code 5 for using this feature to make irregular slur shapes.)<br>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;<font size="4">&nbsp; <img border="0" src="cd4yx.bmp"></font></p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">P18 multiplies the values in the horizontal parameters (P8, 10, 12, 14, 16).<br>
+P19 multiplies the values in the vertical parameters (P9, 11, 13, 15, 17).<br>
+<a name="4P20"></a>
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P20</font></b> rotation of multi-point line.<br>
+<a name="4P21"></a>
+<br>
+<b><font color="#FF0000">
+P21</font></b> thickening of multi-point line.</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<b><font color="#FF0000" size="4">
+<a name="Multi-point Slurs">
+****** Multi-point Slurs</a></font></b>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><img border="0" src="4multix.jpg" width="681" height="873">
+</font>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P25</b></font></color> </a> layer number.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<a name="P26"><font size="4">&nbsp;</font></a><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P26</b></font></color> </a> color/gray
+value.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<a name="P27"><font size="4">&nbsp;</font></a>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<a name="4letters"><font size="4"></font></a>
+</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">___________________________________________________________________________<br>
+</font>
+</p><font size="4"><br>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+----- <b><font color="#FF0000"> Shortcut Letter Commands while editing Lines</font></b> --------------------------<br>
+<br>
+<font color="#008000"><b>
+ARP</b></font>&nbsp; =&nbsp; arpeggio (<a href="#4P7">P7</a>)<br>
+<font color="#008000"><b>ARU</b></font>&nbsp; =&nbsp; arpeggio, arrow up<br>
+<font color="#008000"><b>ARD</b></font>&nbsp; =&nbsp; arpeggio, arrow down<br>
+<font color="#008000"><b>CRH</b></font>&nbsp; =&nbsp; crescendo hairpin<br>
+<font color="#008000"><b>DCH</b></font>&nbsp; =&nbsp; decrescendo hairpin<br>
+<font color="#008000"><b>DTS</b></font>&nbsp; =&nbsp; dotted line<br>
+<font color="#008000"><b>DSH</b></font>&nbsp; =&nbsp; dashes<br>
+<font color="#008000"><b>DSHL</b></font>&nbsp; =&nbsp; default dash length (or dot size) (<a href="#4P8">P8</a>)<br>
+<font color="#008000"><b>DSHL-</b></font>&nbsp; =&nbsp; shorten dashes<br>
+<font color="#008000"><b>DSHL+</b></font>&nbsp; =&nbsp; lengthen dashes<br>
+<font color="#008000"><b>DSHS</b></font>&nbsp; =&nbsp; default  dash space (<a href="#4P9">P9</a>)<br>
+<font color="#008000"><b>DSHS-</b></font>&nbsp; =&nbsp; shorten dash space<br>
+<font color="#008000"><b>DSHS+</b></font>&nbsp; =&nbsp; lengthen dash space<br>
+<font color="#008000"><b>HOR</b></font>&nbsp; =&nbsp; change to horizontal line<br>
+<font color="#008000"><b>VER</b></font>&nbsp; =&nbsp; change to vertical line<br>
+<font color="#008000"><b>LIN</b></font>&nbsp; =&nbsp; normal line<br>
+<font color="#008000"><b>LBR</b></font>&nbsp; =&nbsp; left bracket on/off (<a href="#4P11">P11</a>)<br>
+<font color="#008000"><b>LBR-</b></font>&nbsp; =&nbsp; shorten bracket (-.5)<br>
+<font color="#008000"><b>LBR+</b></font>&nbsp; =&nbsp; lengthen bracket (+.5)<br>
+<font color="#008000"><b>LBRD</b></font>&nbsp; =&nbsp; left bracket down<br>
+<font color="#008000"><b>RBR</b></font>&nbsp; =&nbsp; right bracket on/off (<a href="#4P12">P12</a>)<br>
+<font color="#008000"><b>RBR-</b></font>&nbsp; =&nbsp; shorten bracket (-.5)<br>
+<font color="#008000"><b>RBR+</b></font>&nbsp; =&nbsp; lengthen bracket (+.5)<br>
+<font color="#008000"><b>RBRD</b></font>&nbsp; =&nbsp; right bracket down<br>
+<font color="#008000"><b>LAR</b></font>&nbsp; =&nbsp; left arrow on/off (<a href="#4P11">P11</a>)<br>
+<font color="#008000"><b>RAR</b></font>&nbsp; =&nbsp; right arrow on/off (<a href="#4P12">P12</a>)<br>
+<font color="#008000"><b>ROT</b></font>&nbsp; =&nbsp; rotation zero (<a href="#4P13">P13</a>)<br>
+<font color="#008000"><b>ROT+</b></font>&nbsp; =&nbsp; rotation clockwise<br>
+<font color="#008000"><b>ROT-</b></font>&nbsp; =&nbsp; rotation counter-clockwise<br>
+<font color="#008000"><b>ROT n</b></font>&nbsp; =&nbsp; rotation n degrees (+/-)</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4"><font color="#008000"><b>WIG</b></font>&nbsp; =&nbsp; heavy wavy line (wiggle) (<a href="#4P7">P7</a>)<br>
+<font color="#008000"><b>VIB</b></font>&nbsp; =&nbsp; thin wavy line (vibrato)<br>
+<font color="#008000"><b>SAW</b></font>&nbsp; =&nbsp; saw tooth line<br>
+<font color="#008000"><b>SAWX</b></font>&nbsp; =&nbsp; heavy saw tooth line (<a href="#4P11">P11</a>)<br>
+<font color="#008000"><b>THK</b></font>&nbsp; =&nbsp; default thickness<br>
+<font color="#008000"><b>THK+</b></font>&nbsp; =&nbsp; thicken line (<a href="#4P10">P10</a>)<br>
+<font color="#008000"><b>SPD</b></font>&nbsp; =&nbsp; hairpin default spread (<a href="#4P7">P7</a>)<br>
+<font color="#008000"><b>SPD+</b></font>&nbsp; =&nbsp; hairpin spread plus<br>
+<font color="#008000"><b>SPD-</b></font>&nbsp; =&nbsp; hairpin spread minus<br>
+<font color="#008000"><b>LOFF n</b></font>&nbsp; =&nbsp; left end offset n&nbsp;
+(<a href="#4P15">P16, 17</a>)<br>
+<font color="#008000"><b>LOFFM</b></font>&nbsp; =&nbsp; left end offset -.5</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4"><font color="#008000"><b>LOFFP</b></font>&nbsp; =&nbsp; left end offset +.5<br>
+<font color="#008000"><b>LOFF</b></font>&nbsp; =&nbsp; left end offset 0<br>
+<font color="#008000"><b>ROFF n</b></font>&nbsp; =&nbsp; right end offset n (<a href="#4P18">P16, 18</a>)<br>
+<font color="#008000"><b>ROFFM</b></font>&nbsp; =&nbsp; right end offset -.5</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4"><font color="#008000"><b>ROFFP</b></font>&nbsp; =&nbsp; right end offset +.5<br>
+<font color="#008000"><b>ROFF</b></font>&nbsp; =&nbsp; right end offset 0</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>XOFF</b></font>&nbsp; =&nbsp;
+turn off all offsets</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+</p>
+
+<b><font color="#FF0000" size="4"><a name="4fkeys">Function Key Setup for Code 4</a></font></b>
+<p style="margin-top: 0">
+ 
+<table border = "1" cellpadding = "5">
+<tr>
+<td><b>F1</b><br><font size="2">Help<br><br><br></font></td>
+<td><b>F2</b><br><font size="2">Back to<br>Previous Item<br><br></font></td>
+<td><b>F3</b><br><font size="2">Forward to<br>Next Item<br><br></font></td>
+<td><b>F4</b><br><font size="2">Back to<br>Previous Item,<br>Same Code #</font></td>
+<td><b>F5</b><br><font size="2">Forward to<br>Next Item,<br>Same Code #</font></td>
+<td><b>F6</b><br><font size="2">. . .<br><br><br></font></td>
+</tr>
+<tr>
+<td><b>F7</b><br><font size="2">Move Left<br>End Only<br><br></font></td>
+<td><b>F8</b><br><font size="2">Move Right<br>End Only<br><br></font></td>
+<td><b>F9</b><br><font size="2">Exit from<br>Edit Mode<br>( X )</font></td>
+<td><b>F10</b><br><font size="2">. . .<br><br><br></font></td>
+<td><b>F11</b><br><font size="2">Delete, Move<br>to Previous,<br>Same Code #</font></td>
+<td><b>F12</b><br><font size="2">Delete, Move<br>to Next,<br>Same Code #</font> </td>
+</tr>
+</table>	
+
+
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<br>
+</p>
+
+</body>
+
+</html>

@@ -1,0 +1,25 @@
+
+
+UND = Undelete.
+
+  This command will bring back the last item that was deleted with the
+    EDIT MODE delete command.
+
+
+UNDO = Undo the results of the last COPY, PASTE, or GM(GetMore) command.
+
+              COPY, PASTE, and GM(GetMore) add a group of items to the end
+              of the item list. The UNDO command simply deletes these items
+              from the list. If any changes have been made since the
+              COPY, PASTE, or GM command, the group UNDO will not function.
+
+
+
+
+
+***** See "E" help re. Edit mode Left, Right, Up, Down commands.
+
+
+
+-------------------------------------------------------------------------end---
+~

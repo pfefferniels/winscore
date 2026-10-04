@@ -1,0 +1,300 @@
+                                                                          1/12
+
+SCORE code numbers:
+
+  Code 1. = Notes.               Code 10. = Numbers, rehearsal letters.
+       2. = Rests.                    11. = User-added symbol library.
+       3. = Clefs.                    12. = Circles, squares, guitar chords.
+       4. = Lines, crescendo.         13. = (Reserved for future use.)
+       5. = Slurs, brackets.          14. = Barlines.
+       6. = Beams.                    15. = Insert PostScript code.
+       7. = Trills, ottava, pedals.   16. = Text.
+       8. = Staff lines.              17. = Key signatures.
+       9. = Music symbol library.     18. = Meter.
+
+
+
+For help on various letter commands type ?A, ?B, ?C, etc.
+
+For help on code numbers type ?1, ?2, ?3, etc.
+
+For help on any menus found at bottom of screen type ?.
+   Information on some of the menus is found below.
+
+
+*
+The following keys are active in the Main Menu section of SCORE.          2/12
+
+First Command Mode Menu --
+Function Keys:
+       F1 - HELP section.       For help on commands, parameters or keystrokes.
+       F2 - File section.       Go to File Menu, get and save files, etc.
+       F3 - <File               Get next file back in SCORE file directory.
+       F4 - File>               Get next file forward in SCORE file directory.
+       F5 - INPUT section.      Input notes, rhythms, marks, beams and slurs.
+       F6 - PRINT section.      Print out music files. (PR)
+       F7 - PLAYback section.   Play music via speaker or MIDI. (PL)
+       F8 - EXIT.               Exit the SCORE program. (EX)
+       F9 - I.                  Edit last Item dealt with.
+       F10- Next menu.          Go to next command mode menu.
+  <alt>F1 - Full page.          See full page. (<alt>S)
+  <alt>F2 - Screen.             Go to Screen Menu.
+  <alt>F3 - Group.              Go to Group Edit Menu.
+  <alt>F4 - Edit Input.         Invoke EDI command.
+  <alt>F5 - Type.               Type out contents of text file.
+  <alt>F6 - Cut.                Cut section for later pasting. (CT)
+  <alt>F7 - Paste.              Paste in previously Cut section. (PST)
+  <alt>F8 - Undelete.           Restore last deleted item. (UND)
+  <alt>F9 - Items.              Go to Items shorcut menu. 
+  <alt>F10- User.               Go to user macro menu.
+*
+                                                                          3/12
+Second Command Mode Menu --
+
+Function Keys:
+       F1 - Set Spacing scale on Staff 1. (SC1)
+       F2 - Set Spacing scale on Staff 2.
+       F3 - Set Spacing scale on Staff 3.
+       F4 - Set Spacing scale on Staff 4.
+       F5 - Set Spacing scale on Staff nearest to bottom of screen. (SC)
+       F6 - Remove Spacing scale. (SCX)
+       F7 - Height of total image. (H)
+       F8 - Height from botton of lowest staff to top of highest staff. (HS)
+       F9 - Return to previous menu. (<esc>)
+       F10- Undo last Paste, Copy or GetMore command.
+  <alt>F1 - List all .DRW files in the current directory.
+  <alt>F2 -
+  <alt>F3 - List all .EPS files in the current directory.
+  <alt>F4 -
+  <alt>F5 - Order all items by staff number. (OS)
+  <alt>F6 - Order all items by horizontal position. (OH)
+  <alt>F7 - Order all text items. (OT)
+  <alt>F8 - Show the Preference file.
+  <alt>F9 - Delete file currently displayed. 
+  <alt>F10-
+*
+                                                                          4/12
+First File Menu --
+
+Function Keys:
+       F1 - Make directory of SCORE files. (DIRS)
+       F2 - Open directory of SCORE files. (OP)
+       F3 - Save the displayed file with the same name. (SM)
+       F4 - Save the displayed file. (SA)
+       F5 - Save with the next back alphanumeric name. (SNB)
+       F6 - Save with the next forward alphanumeric name. (SNX)
+       F7 - Reset the disk drive and directory path. (PA)
+       F8 - Get More. Append a file to the current display. (GM)
+       F9 - Return to previous menu. (<esc>)
+       F10- Next menu. Go to next file menu.
+  <alt>F1 - Get file with the next back alphanumeric name. (NB)
+  <alt>F2 - Get file with the next forward alphanumeric name. (NX)
+  <alt>F3 - Get previously displayed file. (GP)
+  <alt>F4 - Read in a command file (macro). (RE)
+  <alt>F5 - Restart the program. (RS)
+  <alt>F6 - Restart the program with the same file name. (RSM)
+  <alt>F7 - Combine several files. (COM)
+  <alt>F8 - Decombine. Make page into several different files. (DEC)
+  <alt>F9 - Delete a file. (DEL)
+  <alt>F10- Create a macro file. (MA)
+*
+                                                                          5/12
+Second File Menu --
+
+Function Keys:
+
+       F1 - Display the current parameter list. (PM)
+       F2 - Write the parameter list to an external file. (PMX)
+       F3 - Display the creation date of the current file and 
+                              program serial number.   (DATE or VER)
+       F9 - Return to previous menu.
+       F10- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+*
+                                                                          6/12
+Screen Menu --
+
+Function Keys:
+       F1 - Move to bottom of display. (<end>)
+       F2 - Move to top of display. (<home>)
+       F3 - Move display down.
+       F4 - Move display up.
+       F5 - Move display to left.
+       F6 - Move display to right.
+       F7 - Zoom to smaller image.
+       F8 - Zoom to larger image.
+       F9 - Return to previous menu. (<esc>)
+       F10- 
+  <alt>F1 - Drag screen image with mouse.
+  <alt>F2 -
+  <alt>F3 - Move top edge of window down. (<alt>D)
+  <alt>F4 - Move top edge of window up. (<alt>U)
+  <alt>F5 - Set window to normal size.
+  <alt>F6 - Zoom image to fit vertical size of window. (ZF)
+  <alt>F7 - Show all vectors (outlines) used for PostScript printing. (SH)
+  <alt>F8 - Turn off Show feature. (SHX)
+  <alt>F9 - Zoom to size 1. (Z1)
+
+*
+                                                                          7/12
+Group Edit Menu --
+
+Function Keys:
+       F1 - Invoke the Group Move command. (M)
+       F2 - Invoke the Move-System command. (MS)
+       F3 - Invoke the Group Copy command. (C)
+       F4 - Invoke the Copy-System command. (CS)
+       F5 - Invoke the Group Alter command. (A)
+       F6 - Invoke the Group Delete command. (DE)
+       F7 - Invoke the Transpose command. (TR)
+       F8 - Invoke the Tablature Notation command. (TAB)
+       F9 - Return to previous menu. (<esc>)
+       F10- Line up and Justify. (LJ)
+  <alt>F1 - Flip note stem directions. (FL)
+  <alt>F2 - Flip to all stems up. (FLU)
+  <alt>F3 - Flip to all stems down. (FLD)
+  <alt>F4 - Flip to normal stem directions. (FLN)
+  <alt>F5 - Center whole rests. (CW)
+  <alt>F6 - Shift notes and accidentals enharmonically. (ENH)
+  <alt>F7 - Vertical Justify. (VJ)
+  <alt>F8 - Justify Text. (lyrics under notes) (JT)
+  <alt>F9 - Center Dashes between lyrics' syllables. (CD)
+  <alt>F10- Adjust curves of slurs. (CR)
+*
+ EDIT mode commands:                                                      8/12
+
+    AB  = abort edit.                A = align after Set command.
+    CN  = center.                   CR = set slur default curvature.
+    CW  = center whole rests.       CX = copy and move to next.
+    C n = copy, go edit item n.     CC = copy and continue.
+    CD  = center dashes(in text). CM s = center nums., meter on barline.
+    CV  = center slurs vertically and horizontally.
+    DE  = delete.                  P n = show original value of parameter n.
+    SZ  = see absolute size factor.  SZ n = set absolute size. 
+    S   = set alignment position.    TP n = set tab fret position to >= n.
+    X n (<esc>, <end>) = exit from edit mode, go edit item n.
+    Z,ZZ = zoom 
+    UND = undelete last deleted item. (Only before any edit changes.)
+
+    L,R,U,D n = move item left, right, up, down.  (n is "sticky.")
+       Arrow keys are same as L1, R1, U1, D1.
+       <PgUp>=U4, <PgDn>=D4, <Tab>=R10, <shft><Tab>=L10.
+
+    Type "INC n" to change arrow increment to the value of "n".
+    <ctr>I returns increment to 1.
+
+    -, +, (f2) = change direction to next item to edit.
+    <alt>n = set parameter number for editing with up/down arrow keys.
+*
+ Text editing:                                                            9/12
+
+    To edit text string type TX or "[" (starts at front of line)
+    or "]" (starts at end of line).
+
+       <home> = move cursor to front of line, <end> = move to end.
+
+    CT n = center text at position n. (n is "sticky.")
+
+    J n1, n2 = justify text in space from n1 to n2. (n1 and n2 are "sticky.")
+    JR n = right justify to position n. (n is "sticky.")
+
+    LS n = set vertical line spacing by scale steps.
+            LSI = by inches, LSC = by centimeters, LSP = by points.
+
+    PT = see current point size.      PT n = reset point size to n.
+
+    RIP n = ripple n words (or -n) to line below (or above).
+    RIPX n = ripple to newly created text line.
+
+    RM n1,n2,n3 = set right margin to position n1 ("ragged right").
+         n2 = number of lines to justify. n3 = set new vertical line spacing.
+    RMJ = as above, but right side justified.
+
+*
+                                                                         10/12
+
+
+Alternate Keystrokes for windowing:   (Hold down <Alt> then press a key)
+
+    <alt>C - CLOSE. Close graphics window to minimun size (Text window max.)
+    <alt>D - DOWN.  Move bottom of text window DOWN 1 line (make it bigger).
+    <alt>F - FULL.  Toggle FULL screen graphics on/off.
+    <alt>M - MENU.  Toggle function key MENU on/off.
+    <alt>O - OPEN.  Open graphics window to maximum size (Text window min.)
+    <alt>S - SHOW.  Show entire page with current graphics window outlined.
+    <alt>U - UP.    Move bottom of text window UP 1 line (make it smaller).
+
+
+
+
+
+
+
+
+
+
+
+
+*
+Keystrokes for text window and line editing:                             11/12
+
+    <Home>      - Clear text window.
+    <Lft Arrow> - Move text cursor left for line editing.
+    <Rht Arrow> - Move text cursor right for line editing.
+    <Ins>       - Toggle insert mode on/off for line editing.
+    <Del>       - Delete character at current cursor location.
+    <BackSpace> - Backup one space and delete character.
+    <Ctrl>Q     - Regenerate last text line entered (must be first character).
+        While in Edit Mode, ` (the key above <Tab>) does the same thing
+        as <Ctrl>Q immediately.
+
+Keystrokes for graphics window:   (Zoom, Pan, Page up/down, etc.)
+
+    <End>        - Zoom to size 1 and display the bottom of the page. (Default)
+      `          - Zoom to size 1 and display level of screen last active.
+    <PgUp>       - Move 50% up the page.
+    <PgDn>       - Move 50% down the page.
+    <Up Arrow>   - Move 5% up the page.
+    <Dn Arrow>   - Move 5% down the page.
+    <Ctrl><PgUp> - Zoom in. Make graphics bigger. See less of the page.
+    <Ctrl><PgDn> - Zoom out. Make graphics smaller. See more of the page.
+    <Ctrl><Left> - Pan the page 10% left.
+    <Ctrl><Rght> - Pan the page 10% right.
+*
+                                                                         12/12
+
+
+
+Mouse:
+
+   Click any button on menu bar        - Activate normal function key.
+   Click lft or rht button on an item  - Select item for editing.*
+   Click middle button on screen edges - Shift screen image up/dn, lft/rht.**
+   Click all 3 buttons                 - Zoom to size 1 (same as the ` key).
+
+
+    * If item is moved while holding down right button or right button
+      is pressed after moving with left button, a copy is made.
+
+   ** After editing an item, the middle button may be used to directly
+      select a new item.
+
+
+
+
+
+
+----------------------------------------------------------------------end----
+.

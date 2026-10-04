@@ -1,0 +1,25 @@
+
+
+FL  = flip notes, beams, slurs.
+FLU = flip all up.
+FLD = flip all down.
+FLN = flip to normal postions.
+FER = fermata
+
+
+Other "F" commands: f = f (forte), ff = double forte, etc.
+
+f, ff, fff, fp
+
+     These commands are shortcuts for typing code 9 items.  They should
+     normally be followed by 2 or 3 numbers (parameters 2, 3, 4).
+
+         mf 3 45 -2   will put "mf" at position 45 on staff 3,
+                       vertical position -2.
+
+     (See Code 9 for details.)
+
+
+
+-------------------------------------------------------------------------end---
+~

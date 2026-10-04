@@ -1,0 +1,470 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Code 5 - Slurs</title>
+</head>
+
+<body>
+
+<table border = "1" cellpadding = "5"><tr><td>
+<H3><a name="code5"></a>Code <b>5 -- Slurs, Ties, Endings</b>
+ -- parameter structure</H3>
+</td></table>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<br>
+<font size="4">
+<b><font color="#008000">
+   P1</font></b>&nbsp; code number (5)<br>
+<b><font color="#008000">
+   P2</font></b>&nbsp; <a href="structure.html">staff number</a><br>
+<font color="#008000"><b>
+   P3</b></font>&nbsp; <a href="#5P3">horizontal position, left end</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#008000">P4</font></b>&nbsp;
+<a href="#5P3">vertical position, left end</a><br>
+<font color="#008000"><b>
+   P5</b></font>&nbsp; <a href="#5P3">vertical position, right end</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P6</b></font>&nbsp;
+<a href="#5P3">horizontal position, right end</a><br>
+<font color="#008000"><b>
+   P7</b></font>&nbsp; <a href="#5P7">curvature in scale steps</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P8</b></font>&nbsp;
+<a href="#5P8">slur/tie positions, bracket numbers, endings</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P9</b></font>&nbsp;
+<a href="#5P9">numbers for brackets and endings, slur flattening</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#008000">P10</font></b>&nbsp;
+<a href="#5P10">center point of slur</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P11</b></font>&nbsp;
+<a href="#5P11">slur dashes, dots</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P12</b></font>&nbsp;
+<a href="#5P12">half slurs, change of direction</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P13</b></font>&nbsp;
+<a href="#5P13">slur thickness</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P14,15</b></font>&nbsp;
+<a href="#5P14">partial slurs,</a> <a href="#5FONT"> type font</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P16</b></font>&nbsp;
+<a href="#5P16">number in slur</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P17,18</b></font>&nbsp;
+<a href="#5P17">vertical/horizontal position of number</a></font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P16,17,18</b></font>&nbsp;
+<a href="#5P16b">slur end point offsets</a>
+</font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#008080"><b> P19</b></font>&nbsp; <a href="#5P19">slur thickening
+factor</a></font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#008080"><b> P20</b></font>&nbsp; <a href="#5P20"><jump=p20>conform
+to note width&nbsp;</a></font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">
+<font color="#008080"><b> P21</b></font>&nbsp; <a href="#5P21">change the size
+of
+tuplet number</a></font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#008080">P23</font>&nbsp;
+</b><a href="#5P23">set open space</a></font>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#008080"><b>P25</b></font>&nbsp; <jump=p20><a href="#5P25">layer number
+(for Color/Gray)&nbsp;</a></font><p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008080"> P26</font></b>&nbsp; <jump=p20><a href="#5P26">Color/Gray
+value&nbsp;</a> 
+</font> 
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008080"> P27</font></b>&nbsp; <jump=p20><a href="#5P27">Set
+slash on slur&nbsp;</a> 
+</font> 
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;<p style="margin-top: 0; margin-bottom: 0"><font size="4"><br>
+&nbsp;&nbsp;&nbsp;
+<a href="#5letters">
+         Jump to Letter Edit Commands</a><br>
+&nbsp;&nbsp;&nbsp; <a href="#5fkeys">Jump to Function Key Setup</a><br>
+<br>
+To input a <b>Slur</b>, type any of the below mnemonics or click on the <b>New Item</b> button and then on one of the slur buttons. The item will appear on the highest staff currently on the screen. If there is no staff on the screen, the item will appear in a position relative to staff 1. The item name may be followed by a series of numbers (n2, n3... ) which will further specify its characteristics by setting P2, P3, etc.<br><br>
+<b><font color="#008000">SLUR</font></b>&nbsp; =&nbsp; slur, curve up<br>
+<b><font color="#008000">SLURD</font></b>&nbsp; =&nbsp; slur, curve down<br>
+<b><font color="#008000">TIE</font></b>&nbsp; =&nbsp; tie, curve up<br>
+<b><font color="#008000">TIED</font>&nbsp;</b> =&nbsp; tie, curve down<br>
+<b><font color="#008000">SLUR3</font>&nbsp;</b> =&nbsp; tuplet bracket up, with 3 (or other number)<br>
+<b><font color="#008000">SLURD3</font>&nbsp;</b> =&nbsp; tuplet bracket down, with 3<br>
+<b><font color="#008000">END</font>&nbsp;</b> =&nbsp; 1st ending<br>
+<b><font color="#008000">END2</font>&nbsp;</b> =&nbsp; 2nd ending (or 3rd, etc.)<br>
+<b><font color="#008000">CRV</font>&nbsp;</b> =&nbsp; set default slur curves on given staff.<br>
+<br>
+When the item appears, it is directly in edit mode and may be moved, etc. with the various edit commands. Hitting
+<font face="Courier New">Enter</font> or X leaves edit mode.<br>
+<a name="5P3"></a>
+<br>
+<b><font color="#FF0000">P3, 4, 5, 6</font></b> line end points<br>
+&nbsp;&nbsp;&nbsp;&nbsp; Lines use four parameters to specify position<br>
+&nbsp;&nbsp;&nbsp;&nbsp; P3 = left end horizontal position.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; P4 = left end vertical position.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; P5 = right end vertical position.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; P6 = right end horizontal position.<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD5P3x.jpg" width="300" height="150"></font><p style="margin-top: 0; margin-bottom: 0"><a name="5P7"></a><p style="margin-top: 0; margin-bottom: 0">&nbsp;<p style="margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P7</font></b> curve, bracket height.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD5P7x.jpg" width="194" height="350">
+</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<a name="5P8"><font size="4"></font></a><p style="margin-top: 0; margin-bottom: 0">&nbsp;<p style="margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">
+P8</font></b> end point positions, tuplets, endings.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;</font><p style="margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;
+&nbsp;
+<img border="0" src="CD5P8.jpg" width="550" height="375"><a name="5P8c">&nbsp;</a></font><p style="margin-top: 0; margin-bottom: 0">&nbsp;<a name="5P8b">&nbsp;</a>
+<img border="0" src="CD5CN2.JPG" width="508" height="562"><p style="margin-top: 0; margin-bottom: 0">&nbsp;<p style="margin-top: 0; margin-bottom: 0"><font size="4">Use
+<b>P13</b> to make open-ended tuplet brackets.</font><p style="margin-top: 0; margin-bottom: 0">&nbsp;<p style="margin-top: 0; margin-bottom: 0"><img border="0" src="CD5P13B.jpg" width="502" height="87"><p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;<p style="margin-top: 0; margin-bottom: 0"><a name="5P9"></a><p style="margin-top: 0; margin-bottom: 0">&nbsp;<p style="margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P9</font></b> used in conjunction with P8</font><p style="margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;<br>
+For the simpler situations, P9 = 0. (Triplet bracket, P8 = 3; first ending, P8=1; second ending<br>
+P8 = 2.)  For tuplet numbers greater than 3, P8 = 3, P9 = the tuplet number.<br>
+For endings greater than 2, P8 = 4, P9 = ending number. If more than two ending brackets are&nbsp;required, the second ending will have P8 = 1, P9 =2.<br>
+<br>
+P9 is used with slurs as a flattening factor.<br>
+This is useful mainly with long slurs.</font><p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD5P9x.jpg" width="378" height="99"></font><p style="margin-top: 0; margin-bottom: 0">&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+When negative, P9 sets the size of the open space in brackets.<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD5P9bx.jpg" width="386" height="134">
+</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<a name="5P9b"></a>
+P9 = 99 is used to create triangle slurs. This shape is often used in guitar notation. P10 can change the center point of the triangle. P13 can thicken the lines.</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD5P9-99x.jpg" width="371" height="204">
+</font>
+<p style="margin-top: 0; margin-bottom: 0"><a name="5P10"><font size="4"></font></a><p style="margin-top: 0; margin-bottom: 0">&nbsp;<p style="margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">
+P10</font></b> shift center of slur curve or position of number in bracket.<br>
+<br>
+P10 = 0 is the same as P10 = .5.</font><p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD5P10x.jpg" width="301" height="270">
+</font>
+<p style="margin-top: 0; margin-bottom: 0"><font size="4"><a name="5P11">&nbsp;</a></font><p style="margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">
+P11</font></b> dashes, dots.</font><p style="margin-top: 0; margin-bottom: 0"><font size="4"><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD5P11x.jpg" width="257" height="155">
+<br>
+</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+P11 = 1 or -1, sets a default number of dashes or dots, depending on&nbsp;the length of the slur. If the number is not 1, then there will be the given&nbsp;number of dashes/dots regardless of slur length.<br>
+<a name="5P12"></a>
+</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+P12</font></b> half slurs, change of direction.<br>
+</font>
+<p style="margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD5P12x.jpg" width="303" height="157">&nbsp;&nbsp;</font><p style="margin-top: 0; margin-bottom: 0"><font size="4"><u>IMPORTANT
+NOTE:</u> If you are running WinScore, version 5.01, and have clicked on <b> YES</b> in
+the <font color="#008080">New Slur</font> <font color="#008080">Features </font>box
+in the Preferences dialog, you may have to adjust the right end point of slurs
+entered in earlier versions. This applies only to P12 = -1 and P14 and 15. See
+below.&nbsp;</font><p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">
+P12</font></b>  adjust right end of tuplet bracket. This is useful where
+cross-stave note groups occur.
+</font>
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd5p12c.bmp" width="338" height="145">
+<font size="4">
+<br>
+<br>
+<font color="#FF0000"><b>
+<a name="P13">
+P13</a> </b></font>slur thickness.<br>
+</font>
+<p style="margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp; <img border="0" src="CD5P13x.jpg" width="275" height="94"></font>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<font color="#FF0000"><b>
+P13 </b></font>with 1st , 2nd ending. (P8 = 1 or 2)</font><p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;<font size="4">
+If P13 = 1 ending bracket is open at left, =2 = open at right, =3 = both ends
+open.</font><p style="margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;<font size="4">
+If P13 is in the range of .01 to .99, it moves the dot after the ending number
+to the right.&nbsp;</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+<a name="5P14">
+P14, 15</a></font></b> partial slurs, slurs with gaps</font><p style="margin-top: 0; margin-bottom: 0">&nbsp;
+<p style="margin-top: 0; margin-bottom: 0"><font size="4"><u>IMPORTANT NOTE</u>: The
+following examples presume that you have clicked on <b> YES</b> in the <font color="#008080">New
+Slur Features</font> box in the Preferences dialog. If you are editing older
+files and require no changes, you should click on <b>NO</b>. (See also re. P12 above.)</font><p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">These parameters are used to create partial slurs or create a gap
+in a slur.</font>  <font size="4">When creating these slurs, P3 and P6 must always give&nbsp;its FULL length.
+For partial slurs, only P14 is used. If P14 is <u>positive,</u> the number indicates the
+percentage of the slur which will be <u>visible</u>. In the following example
+you may type either .45 or 45 as the percent. If P14 is <u>negative,</u> the
+number indicates the percentage of the slur which will be <u>invisible</u>.</font>
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+A good method for creating such slurs is to first input the full slur. Then move it up or down for easy visibility and adjust P14
+as needed.
+</font>
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd5p14part.jpg" width="441" height="238">
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;<p style="margin-top: 0; margin-bottom: 0"><font size="4">For
+a gap in a slur, set P14 to the position of the <u>center</u> of the gap (as a
+fraction of the entire length.) P15 must be a negative number, in horizontal
+steps, indicating the width of the gap. In the following, for P14 you may type
+either .5 or 50 (as a percentage.)</font>
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd5p14gap.jpg" width="316" height="172">
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+<img border="0" src="cd5p14gap2.jpg" width="520" height="314">
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">A &quot;floating&quot; partial slur is created as above, but with
+P15 as a positive number. In the following example two slurs are needed; one
+with a gap and another to make the inner partial.</font>
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+<img border="0" src="cd5p14gap3.jpg" width="560" height="231">
+<p style="margin-top: 0; margin-bottom: 0">
+&nbsp;
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><a name="5P14b"></a></b> </font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008080"><a name="5FONT">P14 can change the Type font</a></font></b> for numbers in tuplet brackets or endings:</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The default font is
+Times-Italic. The <a href="code16.html#FONTS">font may be changed</a> by setting
+<b>P14</b> to a number greater than or equal to 1. P14 = 1 = Times-Bold, P14 =
+12 = Palatino-Roman, etc. Use P14 = 34 for Times-Roman (font 00).&nbsp;</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">&nbsp;&nbsp;&nbsp; Use the <b><font color="#FF0000"><a href="file://Hp6300/c/HLP/conditional_editing.html">IF</a></font></b>
+command to change all the tuplet numbers on a page. For example to change to
+Palatino-Roman type: IF P1=5 AND (P8&gt;2 OR P16&lt;&gt;0) THEN P14=12.<br>
+&nbsp;
+<br>
+<b><font color="#FF0000">
+P16</font></b> number in slur, vertical position.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; For the following, P16 may hold any
+number greater than 1.</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">&nbsp;
+<br>
+&nbsp;&nbsp; <img border="0" src="cd5p16.bmp">
+<br>
+<a name="5P17"></a>
+</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+P17, 18</font></b> move number left/right (P17), up/down (P18).<br>
+<br>
+&nbsp;&nbsp; <img border="0" src="cd5p17x.bmp">
+<br>
+<a name="5P16b"></a>
+</font>
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">
+P16, 17, 18</font></b> end point offsets.<br>
+</font>
+<p style="margin-top: 0"><font size="4">When P16 = 1, P17 and P18 can set offsets for the left and right ends of slurs. The offsets&nbsp;are figured from the exact P3 and P6 values. In this case the usual positionings of P8 are&nbsp;ignored. Most often both P17 and P18 will need to be set to get the desired end point positions.<br>
+</font>
+<p style="margin-top: 0"><font size="4">&nbsp;&nbsp;&nbsp; <img border="0" src="cd5p18x.bmp" width="328" height="257">
+<br>
+</font><p style="line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4"><a name="5P20"><font color="#FF0000"><b>P20</a>&nbsp;
+</b></font>if notes under a slur<font color="#FF0000"><b> </b></font></font><font size="4">have
+their widths changed by P20, the slur's P20 should be set to the same value.&nbsp;</font><p style="line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+This is necessary for centering the slur end points properly.</font><p style="line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;<p style="line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4"><a name="5P21">
+           <font color="#FF0000"><b>P21</b></font></a>  can
+change the size of a number in tuplet brackets. If left at 0, the default
+size&nbsp; is .875. </font><p style="line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If the number size is changed, its position must be adjusted with P17 and P18.<br>
+</font><p style="line-height: 100%; margin-top: 0; margin-bottom: 0">&nbsp;<p style="line-height: 100%; margin-top: 0; margin-bottom: 0"><font size="4"><a name="5P23" href="5P23">
+           <font color="#FF0000"><b>P23</b></font></a> can
+change the size of the open space for a number with a slur or bracket.&nbsp; </font><p style="margin-top: 0"><font size="4">
+<b><font color="#FF0000">
+&nbsp;&nbsp;</font></b></font><p style="margin-top: 0"><font size="4"><a name="5P25">
+           <font color="#FF0000"><b>P25</b></font></color>   </a> layer number.&nbsp;
+</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+&nbsp;<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><a name="5P26"><font color="#FF0000">P26</font></a></b><a name="5P26">&nbsp;</a>
+<jump=p20><a href="#P26">Color/Gray
+value&nbsp;</a>color/gray
+value.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="5P27">
+           <font color="#FF0000"><b>P27</b></font></color>  </a>set vertical
+slash on slur.</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P27 sets the height of the slash in scale steps.</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P28 can set the vertical position of the slash.</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P29 is the factor for the horizontal position. Use numbers from 0 to 1. The
+default is .5.</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+P30 is the factor for the width of the slash. Use numbers from 0 to 1. The
+default is 1.&nbsp;&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd5p27.jpg" width="162" height="155">
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+&nbsp;
+<p style="margin-top: 0">
+<font size="4">
+<b><font color="#FF0000">
+<a href="code4.html">
+****** Multi-point slurs -- see Code 4.</a></font></b><br>
+<a name="5letters"></a>
+</font>
+<p style="margin-top: 0"><font size="4">&nbsp;___________________________________________________________________________<br>
+</font>
+<p style="margin-top: 0">&nbsp;<p style="margin-top: 0">
+<font size="4">
+------ <font color="#FF0000"><b>Shortcut Letter Commands while editing Slurs</b> </font>
+---------------------<br>
+<br>
+<font color="#008000"><b>
+<a name="CN">
+CN</a></b></font><b>&nbsp;</b> =&nbsp; center both ends of item on nearest notes. (P3, P6)<br>
+</font>
+<p style="margin-top: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd5cnx.bmp">
+<br>
+</font>
+<p style="margin-top: 0">
+     <font size="4">
+     Ending brackets may be centered by typing <b> CN <i>x</i></b>, where<br>
+     <i><b>x</b></i> is the staff number where the bar lines originate.</font><p style="margin-top: 0">
+<font size="4">
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD5CN2x.jpg" width="440" height="156">
+<br>
+</font>
+<p style="margin-top: 0">
+<font size="4">
+<a name="5P7b">&nbsp;</a>
+</font>
+<p style="word-spacing: 0; margin: 0"><font size="4"><b><font color="#008080">CNL</font></b>
+= center left end of slur at front of line </font><a href="./"><font size="4"> (Code
+5, Edit Mode)&nbsp;</font></a><font size="4"><br>
+<b><font color="#008080">CNR</font></b> = center right end of slur at end of line<a href="./">
+</a></font><a href="./"><font size="4"> (Code 5, Edit Mode)&nbsp;</font></a></p>
+<p style="margin-top: 0">
+&nbsp;
+<p style="margin-top: 0">
+<font size="4">
+<b><font color="#008000">CR</font></b>&nbsp; =&nbsp; set default curvature. (P7)</font><p style="margin-top: 0"><font size="4"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd5crx.bmp">
+<br>
+<a name="5P7c">&nbsp;</a>
+<br>
+<b><font color="#008000">CRVM</font></b>&nbsp; =&nbsp; decrease curvature.  (M = minus)<br>
+<b><font color="#008000">CRVP&nbsp;</font></b> =&nbsp; increase curvature. (P = plus)<br>
+<b><font color="#008000">FLI</font></b>&nbsp; =&nbsp; flip slur. (change sign of P7)<br>
+&nbsp;
+<br>
+<b><font color="#008000">CV</font></b>&nbsp; =&nbsp; center the item and set default vertical position and curvature.</font><p style="margin-top: 0"><font size="4"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd5cvx.bmp">
+<br>
+</font>
+<p style="margin-top: 0"><font size="4">&nbsp;&nbsp;&nbsp; P7 of tuplet brackets is not altered.<br>
+<br>
+<b><font color="#008000">END1, END2, etc.&nbsp;</font></b> =&nbsp; set ending brackets. (P8 = 1,2)<br>
+<b><font color="#008000">TRP&nbsp;</font></b> =&nbsp; triplet bracket. (P8 = 3)<br>
+<b><font color="#008000">SLUR&nbsp;</font></b> =&nbsp; normal slur.<br>
+<b><font color="#008000">SLUR3, 4, etc.&nbsp;</font></b> =&nbsp; numbered tuplet brackets. (P8, P9)<br>
+<b><font color="#008000">SLDSH&nbsp;</font></b> =&nbsp; dashes. (P11 = 1)<br>
+<b><font color="#008000">SLDT</font></b>&nbsp; =&nbsp; dots. (P11 = -1)<br>
+<b><font color="#008000">SLTR&nbsp;</font></b> =&nbsp; triplet slur. (P16 = 3)<br>
+<b><font color="#008000">SLHL</font></b>&nbsp; =&nbsp; half slur left. (P12 = 1)<br>
+<b><font color="#008000">SLHR</font></b>&nbsp; =&nbsp; half slur right. (P12 = 2)<br>
+<b><font color="#008000">MID</font></b>&nbsp; =&nbsp; set midpoint of slur. (P10 = 0)<br>
+<b><font color="#008000">MIDL&nbsp;</font></b> =&nbsp; move midpoint to left.<br>
+<b><font color="#008000">MIDR</font></b>&nbsp; =&nbsp; move midpoint to right.<br>
+<b><font color="#008000">NUML&nbsp;</font></b> =&nbsp; move number in bracket to left. (P17)<br>
+<b><font color="#008000">NUMR</font></b>&nbsp; =&nbsp; move number in bracket to right.<br>
+<b><font color="#008000">NUMH0&nbsp;</font></b> =&nbsp; default horizontal number position. (P17 = 0)<br>
+<b><font color="#008000">NUMU</font></b>&nbsp; =&nbsp; move number in bracket up. (P18)<br>
+<b><font color="#008000">NUMD</font></b>&nbsp; =&nbsp; move number in bracket down.<br>
+<b><font color="#008000">NUMV0&nbsp;</font></b> =&nbsp; default vertical number position. (P18 = 0)<br>
+<br>
+<b><font color="#008000">THK</font></b>&nbsp; =&nbsp; default slur thickness. (set in Preference file, P13 = 0)<br>
+<b><font color="#008000">THKM&nbsp;</font></b> =&nbsp; decrease slur thickness. (P13)<br>
+<b><font color="#008000">THKP&nbsp;</font></b> =&nbsp; increase slur thickness. (P13)<br>
+<b><font color="#008000">TRI</font></b>&nbsp; =&nbsp; make triangle. (P9 = 99)<br>
+<b><font color="#008000">FLI</font></b>&nbsp; =&nbsp; flip the slur (change sign of P7).<br>
+<b><font color="#008000">FNT</font></b>&nbsp; =&nbsp; default type font for number. (2 = Times-Italic)<br>
+<b><font color="#008000">FNT n&nbsp;</font></b> =&nbsp; font number = n. (P14)<br>
+</font>
+<p style="margin-top: 0"><font size="4">
+<font color="#008000"><b>LOFF n</b></font>&nbsp; =&nbsp; left end offset n
+<br>
+<b><font color="#008000">LOFFM</font></b>&nbsp; =&nbsp; left end offset minus, (P16, P17)<br>
+<b><font color="#008000">LOFFP</font></b>&nbsp; =&nbsp; left end offset plus,<br>
+<font color="#008000"><b>ROFF n</b></font>&nbsp; =&nbsp; right end offset n</font>
+<p style="margin-top: 0"><font size="4">
+<b><font color="#008000">ROFFM</font></b>&nbsp; =&nbsp; right end offset minus, (P16, P18)<br>
+<b><font color="#008000">ROFFP</font></b>&nbsp; =&nbsp; right end offset plus,<br>
+<b><font color="#008000">XOFF</font></b>&nbsp; =&nbsp; zero offsets. (P16, 17, 18 = 0)</font>
+<p style="margin-top: 0">&nbsp;
+<p>
+
+<b><font color="#FF0000" size="4"><a name="5fkeys">Function Key Setup for Code 5</a></font></b>
+<p style="margin-top: 0">
+ 
+<table border = "1" cellpadding = "5">
+<tr>
+<td><b>F1</b><br><font size="2">Help<br><br><br></font></td>
+<td><b>F2</b><br><font size="2">Back to<br>Previous Item<br><br></font></td>
+<td><b>F3</b><br><font size="2">Forward to<br>Next Item<br><br></font></td>
+<td><b>F4</b><br><font size="2">Back to<br>Previous Item,<br>Same Code #</font></td>
+<td><b>F5</b><br><font size="2">Forward to<br>Next Item,<br>Same Code #</font></td>
+<td><b>F6</b><br><font size="2">. . .<br><br><br></font></td>
+</tr>
+<tr>
+<td><b>F7</b><br><font size="2">Move Left<br>End Only<br><br></font></td>
+<td><b>F8</b><br><font size="2">Move Right<br>End Only<br><br></font></td>
+<td><b>F9</b><br><font size="2">Exit from<br>Edit Mode<br>( X )</font></td>
+<td><b>F10</b><br><font size="2">. . .<br><br><br></font></td>
+<td><b>F11</b><br><font size="2">Delete, Move<br>to Previous,<br>Same Code #</font></td>
+<td><b>F12</b><br><font size="2">Delete, Move<br>to Next,<br>Same Code #</font> </td>
+</tr>
+</table>	
+
+
+
+<p style="margin-top: 0"><br>
+
+</body>
+
+</html>

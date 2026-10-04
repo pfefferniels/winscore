@@ -1,0 +1,8 @@
+[package]
+name = "score-format"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Readers and writers for Leland Smith's SCORE / WinScore file formats"
+
+[dependencies]

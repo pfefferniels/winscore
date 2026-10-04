@@ -1,0 +1,316 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<title>New Page 1</title>
+</head>
+
+<body>
+
+<table border="1" cellpadding="5">
+    <tr>
+        <td><h3>Code 12 -- Boxes, Circles, Guitar Grids,
+        Accordion -- parameter structure</h3>
+        </td>
+    </tr>
+</table>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><br>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;<font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="guitar.html">Jump for Guitar Symbols</a> </font> </p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="accordion.html">Jump for Accordion Symbols</a> </font> </p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font
+color="#008000"><b>P1</b></font>&nbsp; code number (12)<br>
+<font color="#008000"><b>P2</b></font>&nbsp; <a
+href="structure.html">staff number</a><br>
+<font color="#008000"><b>P3</b></font>&nbsp; <a
+href="structure.html">horizontal position</a><br>
+<font color="#008000"><b>P4</b></font>&nbsp; <a href="structure.html">vertical position</a><br>
+<font color="#008000"><b>P5</b></font>&nbsp; <a href="#12P5">box/circle</a><br>
+<font color="#008000"><b>P6</b></font>&nbsp; <a href="#12P6">horizontal
+size</a><br>
+<font color="#008000"><b>P7</b></font>&nbsp; <a href="#12P7">vertical
+size</a><br>
+<font color="#008000"><b>P8</b></font>&nbsp; <a href="#12P8">line
+thickness</a><br>
+<font color="#008000"><b>P9</b></font>&nbsp; <a href="#12P9">rotation</a><br>
+<font color="#008000"><b>P10 </b></font><a href="#12P10">skewed rectangles</a><br>
+<font color="#008000"><b>P10, P11&nbsp;</b></font>  <a href="#12P11">arcs</a><br>
+<font color="#008000"><b>P12</b></font>&nbsp; <a href="#12P12">selected
+polygons, dashes (circles only)</a><br>
+<font color="#008000"><b>P13</b></font>&nbsp; <a href="#12P13">fill/no
+fill</a><br>
+<font color="#008000"><b>P14</b></font>&nbsp; . . . .</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><font color="#008000"><b>P15</b></font>&nbsp; <a href="#12P15">horizontal
+displacement</a><br>
+<font color="#008080"><b> P25</b></font>&nbsp; <jump=p20><a href="#P25">layer number
+(for Color/Gray)&nbsp;</a>
+</font>
+</p>
+
+<p style="margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#008080"> P26</font></b>&nbsp; <jump=p20><a href="#P26">Color/Gray
+value&nbsp;</a> 
+</font> 
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+&nbsp;
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#12letters">Jump to Letter Commands</a> </font> </p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;
+&nbsp;&nbsp;&nbsp; <a href="#12fkeys">Jump to Function Key Setup</a><br>
+<a name="12P5"></a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<font color="#FF0000"><b>P5</b></font>&nbsp; box/circle.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD12P5.jpg"></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">For
+putting boxes on numbers see <a href="code10.html">Code 10</a> - P8.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">For
+putting boxes on text (<b>TBX</b>) see <a href="code16.html#tbx">Code 16</a>.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">For
+boxes with dashed lines P5 = 3.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">The
+number of dashes in each line will depend on the box size and the dash size.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="DASHBOX.jpg" width="165" height="194"></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">Please
+note that while the varying line thicknesses will print properly, they will
+display only as one added thickness.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="12P6"></a><br>
+<b><font color="#FF0000">P6</font></b>&nbsp; horizontal size in
+scale steps. (default P6 = 10)</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD12P6A.JPG"> <br>
+<a name="12P7"></a>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><b><font color="#FF0000">P7</font><font
+color="#008000">&nbsp; </font></b>vertical size in scale
+steps. (default P7 = 10)</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If P7 is left at zero it takes the value given in P6.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD12P7.JPG" width="195" height="152"><br>
+<a name="12P8"></a></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">P8</font><font color="#008000">&nbsp; </font></b>line thickness.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="cd12p8.JPG" width="140" height="108"><br>
+<a name="12P9"></a></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">P9</font><font color="#008000">&nbsp; </font></b>rotation.
+<font color="#008000"><b>&nbsp;&nbsp;</b></font></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD12P9.JPG" width="276" height="44"><br>
+<a name="12P10"></a></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">P10</font><font color="#008000">&nbsp; </font></b>skewed rectangles.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="CD12P10A.jpg" width="417" height="59"></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="12P11"><font size="4"></font></a></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<b><font color="#FF0000">P10, P11</font><font color="#008000">&nbsp; </font></b>partial circles (arcs).</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD12P10b.JPG" width="457" height="56"></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><a name="12P12"><font size="4"></font></a></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">P12</font><font color="#008000">&nbsp; </font></b>change circle into polygon,
+dashes.</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD12P12.JPG" width="456" height="55"><br>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;
+<img border="0" src="CD12P12b.JPG" width="350" height="57"><br>
+<a name="12P13"></a></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">P13</font><font color="#008000">&nbsp; </font></b>fill in shape.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <img border="0" src="cd12p13.JPG" width="211" height="81">
+<br>
+<a name="12P15"></a></font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+<b><font color="#FF0000">P15</font><font color="#008000">&nbsp; </font></b>horizontal displacement.
+<br>
+<br>
+</font>
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P25</b></font></color> </a> layer number.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<a name="P26"><font size="4">&nbsp;</font></a><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="accisize">
+           <font color="#FF0000"><b>P26</b></font></color> </a> color/gray
+value.&nbsp;</font><p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+See <a href="color_control.html"> Color Control.</a>
+
+</font>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">           
+
+<a name="P27"><font size="4">&nbsp;</font></a>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4">________________________________________________________________</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0"><font size="4"><a name="12letters"></a><br>
+-------------- <font color="#FF0000"><strong>Shortcut Letter
+Commands while editing Boxes/Circles</strong></font> ----------------</font></p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">
+<font size="4">
+<br>
+</font>
+ </p>
+
+<p style="margin-top: 0"><a name="10fkeys"><font color="#FF0000" size="4"><b>Function
+Key Setup for Code 12</b></font></a> </p>
+
+<table border="1" cellpadding="5">
+    <tr>
+        <td><b>F1</b><br>
+        <font size="2">Help<br>
+        <br>
+        <br>
+        </font></td>
+        <td><b>F2</b><br>
+        <font size="2">Back to<br>
+        Previous Item<br>
+        <br>
+        </font></td>
+        <td><b>F3</b><br>
+        <font size="2">Forward to<br>
+        Next Item<br>
+        <br>
+        </font></td>
+        <td><b>F4</b><br>
+        <font size="2">Back to<br>
+        Previous Item,<br>
+        Same Code #</font></td>
+        <td><b>F5</b><br>
+        <font size="2">Forward to<br>
+        Next Item,<br>
+        Same Code #</font></td>
+        <td><b>F6</b><br>
+        <font size="2">. . .<br>
+        <br>
+        <br>
+        </font></td>
+    </tr>
+    <tr>
+        <td><b>F7</b><br>
+        <font size="2">Flip<br>
+        <br>
+        <br>
+        </font></td>
+        <td><b>F8</b><br>
+        <font size="2">Center<br>
+        <br>
+        <br>
+        </font></td>
+        <td><b>F9</b><br>
+        <font size="2">Exit from<br>
+        Edit Mode<br>
+        ( X )</font></td>
+        <td><b>F10</b><br>
+        <font size="2">. . .<br>
+        <br>
+        <br>
+        </font></td>
+        <td><b>F11</b><br>
+        <font size="2">Delete, Move<br>
+        to Previous,<br>
+        Same Code #</font></td>
+        <td><b>F12</b><br>
+        <font size="2">Delete, Move<br>
+        to Next,<br>
+        Same Code #</font> </td>
+    </tr>
+</table>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="word-spacing: 0; margin-top: 0; margin-bottom: 0">&nbsp;</p>
+</body>
+</html>

@@ -1,0 +1,150 @@
+New Page 1
+
+Code 11 -- User-Added .DRW Items from SCORE 3/4
+
+Old files containing Code 11 items may be read into WinScore,
+however it is recommended that such items be converted to Code 9, as 
+explained further below. The file names are restricted to five characters
+plus the extension .DRW.
+
+ P1 code number (11)
+
+ P2 staff number
+
+ P3 horizontal position
+
+ P4 vertical position
+
+ P5 symbol number within the Code 11 .DRW file (0-9)
+
+ P6 size factor
+
+ P7 vertical size factor
+
+ P8 thickness
+
+ P9 rotation
+
+ P10 pixel thickness 
+
+P13 set DRW file
+name
+
+ P25 layer number
+(for Color/Gray) 
+
+ P26 Color/Gray
+value 
+
+ Jump to Letter Commands
+
+ P6 = size factor.
+
+P6 controls both the horizontal and vertical size factors so long as P7 remains at zero. P6 and P7 may have negative values if the item is to be reversed or inverted.
+
+*****
+If 100 is added to P6's size value, the part extractor
+feature
+
+ will put the item in all player's
+parts.
+
+***** P6+200 makes all parts ignore this item.
+
+***** P6+300 = use this item in all parts and change size to 1.
+
+ The size of
+Code 9 items is always dependent on the size of the staff to which
+the item is attached.
+
+P7 = vertical size factor.
+
+P8 = thickness.
+
+P8 is a three-digit number, X0Y, where X controls the vertical thickness and
+ Y controls the horizontal thickness. The middle digit is zero.
+
+If P8 = -1 the item will appear as an outline only. This parameter is rarely used.
+
+P9 = rotation.
+
+Rotation is clockwise in degrees. Negative numbers produce counterclockwise rotation. 
+
+P10 = pixel thickness.
+
+If P13 is set to 1, a
+new Draw file name will be requested. If no specific path is given, the user's
+current directory will be searched. If the the file is not found, then \WinScore\Scorlib\
+will be searched. If the file is in some other location, the complete path must
+be typed.
+
+ P25 layer number. 
+See Color Control.
+
+ P26 color/gray
+value. 
+See Color Control. 
+
+----- Shortcut Letter Commands --------------------------
+
+ROT+,
+ROT- = rotate number +/- 10 degrees. (P9)
+
+ROT0
+= no rotation. (P9 = 0)
+
+SZ+,
+SZ- = increase/decrease size. (P6)
+
+SZ0
+= basic size. (P6 = 0)
+
+CN
+n = center on nearest note/rest on staff n. (P3) 
+
+ ___________________________________________________________________________
+
+Converting old Code 11 items to Code 9.
+
+To replace Code 11 the capacity of the Code 9
+Symbol Library has been greatly expanded. This library can now hold 10,000
+different drawings. It is intended that numbers 0 to 4999 be reserved for
+permanent entries and numbers 5000 to 9989 be available for user-added items.
+(9990-9999 are reserved for program use.)
+
+Code 11 material from earlier versions of SCORE can be easily converted to the
+new Code 9 format. A separate external program, CNVTLIBE.EXE, is found in the \WINSCORE\SCORLIB\
+directory.
+
+The following
+example assumes you are converting a file called SCORE.DRW.
+
+Type .DRW name (no extension) > SCORE
+
+Type 4-digit library number (must end with 0) > 6990
+
+The program responds
+with the new file's statistics.
+
+LB6990.DRW
+
+0 211 492 772 982 
+1263 1549 1763 1977 2260 2473
+
+sff sfff sfpp sfp sffp mfpp mfp 
+fpp ffpp ffp
+
+6990 6991 6992 6993 6994 6995 6996 6997 
+6998 6999
+
+The middle line
+gives the name of each symbol and the bottom line lists the numbers to use in
+parameter 5 of Code 9. Your original .DRW file will remain unchanged.
+
+This program should
+be run within the \SCORLIB directory so the output will be accessible by
+WinScore.
+
+If you have created
+revised versions (clefs, accidentals, etc.) you should use CNVTLIBE to get them
+into the new format. (Be sure to keep backup copies of the original files.)

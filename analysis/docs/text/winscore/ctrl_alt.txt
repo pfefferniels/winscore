@@ -1,0 +1,130 @@
+edit
+
+Using the <ctrl> and <alt> shortcut keys
+
+Following
+shows the various keyboard shortcut commands available with the <ctrl> and
+<alt> keys.
+Equivalent
+typed commands are green.
+
+ ******
+The following only apply when NOT in Edit Mode ****** ***********
+<ctrl> *********** <ctrl>O --
+open a file. (G 
+= get a file.)<ctrl>S --
+"Save " a file. (SM = save the
+file with the same name.)<ctrl>F --
+get the last file read in the previous session. (LAST)<ctrl>P --
+go to PRINT menu. (PR) <ctrl>H --
+view and alter the page height. (H) <ctrl>C --
+indicate an area to copy. (C)<ctrl>M --
+indicate an area to move. (M)<ctrl>D --
+indicate an area to delete. (DE) <ctrl>L --
+indicate an area to line up and justify. (LJ)<ctrl>J --
+indicate an area to justify. (J) <ctrl>X --
+indicate an area to cut (copy.) (CT)<ctrl>V --
+indicate an area to paste the cut material. (PST) <ctrl>T --
+indicate an area to transpose. (TR) <ctrl>Z --
+undo the previous group edit command. (UNDO)<ctrl>A --
+redo the action that was undone by "undo." (REDO) <ctrl>U --
+undelete - restore the last deleted item. (UND) <ctrl>R --
+restore an item that was inadvertently lost due to edit changes. (RESTO) <ctrl>E --
+remove/restore parameter boxes. (E)
+
+ <ctrl>0 --
+bring up Path List dialog box.<ctrl>1
+. . . . <ctrl>9 --
+activate path from Path List. 
+
+ <ctrl><home>
+-- move to top of page. (TOP)<ctrl><end>
+-- move to bottom of page. (BOT)
+
+<ctrl><Page
+Up> -- increase the image size (Zoom).
+
+<ctrl><Page
+Down> -- decrease the image size.
+
+These commands also work while in Edit Mode.
+
+ ***********
+<alt> *********** <alt>T --
+top of page.. (TOP)
+
+<alt>M --
+middle of page. (MID)
+
+<alt>B --
+bottom of page. (BOT)
+
+ <alt>R --
+restart program, clear screen. (RS)
+
+<alt>N --
+restart program with same file. (RSM)
+
+<alt>G --
+get previous file. (GP)
+
+ <alt>Z --
+zoom to size 200% on/off. (Z2/Z1)
+
+ <alt>P --
+set Paper size outline. (PA)
+
+ <alt>C --
+set spacing scale on top staff, on/off. (SC/SCX)
+
+ <alt>A --
+start part extraction. (PTS)
+
+<alt>L --
+start page layout. (LAY)
+
+<alt>D --
+start drawing program. (DRW)
+
+ ******
+The following only apply when IN Edit Mode ****** ***********
+<ctrl> *********** <ctrl>C --
+copy edited item and exit from Edit Mode. (C) <ctrl>L --
+move item left previous number of steps. (L)<ctrl>R --
+ move item right previous
+number of steps. (R)<ctrl>U --
+move item up previous number of scale steps. (U)<ctrl>D --
+move item down previous number of scale steps. (D) <ctrl>B --
+abort the edit changes. (AB) <ctrl>T --
+edit a text string. (T, F7) <ctrl>I --
+restore Arrow increment steps 1. (INC
+1)
+
+ ZOOM
+while in EDIT MODE
+
+You may zoom (enlarge the
+display) in or out with the following commands:
+
+<ctrl><Page Up> = zoom up 12.5
+%
+ <ctrl><Page
+Down> = zoom down 12.5 %
+
+ <ctrl>2
+= zoom to 200 %
+
+ <ctrl>3
+= zoom to 300 %
+
+If either of the last two
+above is repeated, the display zooms back to 100 %. 
+
+Also if the screen image
+is larger than the physical screen size, it may be moved by holding the 
+<ctrl> key while hitting any of the arrow keys. This does the same thing
+as sliding the scroll bars by means of the mouse. (Some people like to use the
+mouse as little as possible.)
+
+ See
+also <alt>n, where n is a parameter number.
