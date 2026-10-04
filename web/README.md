@@ -34,9 +34,9 @@ Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT
 ## Conventions
 
 - Page coordinates are engine units of 1/4000 inch, origin at the paper's bottom-left corner, y up, as in `rust/fixtures/README.md`.
-- **Zoom**: 100 % shows the page at physical size on a 96-dpi screen (one CSS pixel = 1/96 in ≈ 41.7 engine units). This matches WinScore's own 100 % (zoom 64 of 256 in an `MM_HIENGLISH` view) on a 96-dpi display.
-- **Painting** follows `CWScoreView::OnDraw` (0x5E5910) as far as it is known: filled objects with the even-odd rule, polylines one device pixel wide, text drawn from the top-left of the character cell (the engine's y + 96 is already folded into the coordinates). Points are snapped to device pixels. Filled objects also get a one-pixel outline, which is how GDI's `PolyPolygon` behaves with a pen selected; whether WinScore selects one is still to be confirmed.
-- **Fonts**: see `fonts/README.md`. The engine positions every character itself, so the substitute faces only change glyph shapes, not positions. The baseline offset below the cell top uses the ascent of the Windows faces WinScore would get (an approximation, listed in `src/fonts.ts`).
+- **Zoom**: 100 % shows the page at physical size on a 96-dpi screen (one CSS pixel = 1/96 in ≈ 41.7 engine units). This matches WinScore's own 100 % (zoom 64 of 256 in an `MM_HIENGLISH` view) on a 96-dpi display. The preset list is WinScore's zoom bar (10 … 500 %) plus larger steps; − and + change the zoom by a quarter, as WinScore's Reduce and Zoom do.
+- **Painting** follows `CWScoreView::OnDraw` (0x5E5910) as `disasm-expert` read it (`analysis/engine/display.md`): polylines with a pen one device pixel wide; filled objects with the even-odd rule and outlined with the same pen; text on its baseline at the engine's y + 96 (folded into the fixture coordinates), stretched horizontally to the run's average width as `CreateFontA` does; a white window with the engine's green page frame. Points are snapped to device pixels.
+- **Fonts**: see `fonts/README.md`. The engine positions every character itself, so the substitute faces only change glyph shapes, not positions. The width stretch uses the average character width of the Windows face GDI would substitute (Times New Roman, Arial, Courier New); for the other families the glyphs are left unstretched.
 
 ## Layout
 
