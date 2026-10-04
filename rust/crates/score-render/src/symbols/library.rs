@@ -103,6 +103,9 @@ pub fn draw_library_symbol(
     } else {
         call.size_x
     };
+    if is_text_symbol(number) {
+        return;
+    }
     let Some(symbol) = doc.symbols().symbol(number) else {
         return;
     };
@@ -129,6 +132,42 @@ pub fn draw_library_symbol(
         t => t,
     };
     thicken(canvas.buffer_mut(), start, thickness);
+}
+
+/// Symbols draw_symbol writes as text (table 0x78EAAC; strings at 0x78EA10).
+const TEXT_SYMBOLS: [(i32, &str); 21] = [
+    (66, "pizz."),
+    (67, "arco"),
+    (78, "a tempo"),
+    (45, "8va"),
+    (46, "8ba"),
+    (47, "15ma"),
+    (63, "cresc."),
+    (64, "dim."),
+    (65, "rit."),
+    (68, "accel."),
+    (72, "gliss."),
+    (73, "molto"),
+    (79, "espr."),
+    (80, "meno"),
+    (81, "pi>>u"),
+    (85, "subito"),
+    (86, "poco"),
+    (111, "decresc."),
+    (113, "rall."),
+    (114, "mosso"),
+    (276, "G.P."),
+];
+
+/// Whether draw_symbol writes symbol `number` as text: these go through
+/// draw_text, which is not ported yet, so nothing is drawn for them.
+pub fn is_text_symbol(number: i32) -> bool {
+    TEXT_SYMBOLS.iter().any(|&(n, _)| n == number)
+}
+
+/// The text draw_symbol writes for symbol `number`, in SCORE's text coding.
+pub fn symbol_text(number: i32) -> Option<&'static str> {
+    TEXT_SYMBOLS.iter().find(|&&(n, _)| n == number).map(|&(_, text)| text)
 }
 
 /// Fortran AMOD (amod 0x54AABA): x - trunc(x / y) * y.
