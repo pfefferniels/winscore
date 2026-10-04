@@ -5,12 +5,14 @@
 //! or an empty string when it changed nothing; call [`Score::render`] to see
 //! the result.
 
+use score_edit::group::Region;
 use score_edit::{Change, EditError};
 use score_render::ItemId;
 use wasm_bindgen::prelude::*;
 
 use crate::hit::At;
 use crate::input::{line_items, InputLine};
+use crate::placing;
 use crate::Score;
 
 fn indices(items: &[ItemId]) -> Vec<u32> {
@@ -107,6 +109,60 @@ impl Score {
         } else {
             String::new()
         }
+    }
+
+    /// The question a group command (M, CO, DG, A, CPX …) is waiting to
+    /// have answered on the command bar, if any.
+    pub fn prompt(&self) -> Option<String> {
+        self.0.editor().prompt().map(str::to_owned)
+    }
+
+    /// Replaces the characters of text item `index` (WinScore's Edit Text).
+    #[wasm_bindgen(js_name = setText)]
+    pub fn set_text(&mut self, index: u32, text: &str) -> Result<String, JsError> {
+        let id = self.0.id(ItemId(index))?;
+        let result = self.0.editor_mut().set_text(id, text);
+        self.finish(result)
+    }
+
+    /// New text items as quick entry `"text" p2 p3 …` makes them; `params`
+    /// are P2, P3, … (0 keeps the default), `/` divides the text into items.
+    #[wasm_bindgen(js_name = insertText)]
+    pub fn insert_text(&mut self, text: &str, params: Vec<f32>) -> Result<String, JsError> {
+        let result = self.0.editor_mut().insert_text(text, &params);
+        self.finish(result)
+    }
+
+    /// A code-9 item showing library symbol `number` on `staff` at P3, P4, selected.
+    #[wasm_bindgen(js_name = insertSymbol)]
+    pub fn insert_symbol(&mut self, number: i32, staff: f32, p3: f32, p4: f32) -> Result<String, JsError> {
+        let result = self.0.editor_mut().insert_symbol(number, staff, p3, p4);
+        self.finish(result)
+    }
+
+    /// Staff, P3 and P4 of page point (`x`, `y`) on the nearest staff, for
+    /// placing new items (`Float32Array` of three, or `undefined` without staves).
+    #[wasm_bindgen(js_name = placeAt)]
+    pub fn place_at(&self, x: f64, y: f64) -> Option<Vec<f32>> {
+        placing::place_at(self.0.file(), x, y).map(|place| vec![place.staff as f32, place.p3, place.p4])
+    }
+
+    /// A box drawn on the page, read as WinScore reads a mouse-drawn area:
+    /// it answers a waiting group command's area question, or else selects
+    /// the items inside.
+    #[wasm_bindgen(js_name = drawBox)]
+    pub fn draw_box(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> Result<String, JsError> {
+        let Some(area) = placing::area_in_box(self.0.file(), x0, y0, x1, y1) else {
+            return Ok(String::new());
+        };
+        if self.0.editor().prompt().is_some() {
+            let answer = format!("{} {} {} {}", area.bottom, area.left, area.right, area.top);
+            let result = self.0.editor_mut().execute(&answer);
+            return self.finish(result);
+        }
+        let region = Region { bottom: area.bottom as f32, top: area.top as f32, left: area.left, right: area.right, codes: Vec::new() };
+        self.0.editor_mut().select_region(&region);
+        Ok(String::new())
     }
 
     /// The item a click at page point (`x`, `y`) means (decision D8): the one

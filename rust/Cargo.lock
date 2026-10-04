@@ -110,6 +110,7 @@ dependencies = [
  "score-input",
  "score-render",
  "score-testkit",
+ "serde_json",
  "wasm-bindgen",
 ]
 
