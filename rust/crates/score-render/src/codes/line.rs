@@ -217,7 +217,7 @@ fn straight(line: &Line<'_>, right: Pos, canvas: &mut Canvas<'_>) {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum End {
+pub(crate) enum End {
     Start,
     Finish,
 }
@@ -228,7 +228,7 @@ enum End {
 /// from 200: a bracket of P - 200 steps downward. `across`: the line is a
 /// P7 = -5 vertical line, and the marks lie horizontally (the last kind
 /// both ways). Returns the pen for the line's next point.
-fn end_mark(canvas: &mut Canvas<'_>, at: Pos, value: f32, end: End, across: bool, scale_step: f64) -> Pen {
+pub(crate) fn end_mark(canvas: &mut Canvas<'_>, at: Pos, value: f32, end: End, across: bool, scale_step: f64) -> Pen {
     let incoming = match end {
         End::Start => Pen::Stroke,
         End::Finish => Pen::Continue,
