@@ -100,7 +100,8 @@ impl BracketNumber {
     }
 
     /// 0x53BFC6: draw_number at `at`, moved left by the indent; `at.x` is
-    /// the caller's sum of two REAL*4 values, not yet stored.
+    /// the caller's sum of two REAL*4 values, not yet stored. `step` is
+    /// STEP, which draw_number uses as well (a beam's P18 scales it).
     pub(super) fn draw(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at: Pos, step: f64) {
         let at = Pos::new(real(at.x - step * constant(self.indent())), at.y);
         let call = NumberCall {
@@ -113,6 +114,7 @@ impl BracketNumber {
             p17: self.letter,
             p18: 0.0,
             rotation: self.rotation,
+            step: Some(step),
             ..NumberCall::of(item)
         };
         draw_number(doc, item, canvas, at, &call);

@@ -54,6 +54,7 @@ code06-p8-number-3
 code06-p8-number-5
 code06-p8-number-cue
 code06-p8-number-down
+code06-p8-number-p18
 code06-p8-number-p20
 code06-p8-number-sloped
 code06-p9-100-down
