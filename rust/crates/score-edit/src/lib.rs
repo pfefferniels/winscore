@@ -16,6 +16,7 @@ pub mod document;
 pub mod drag;
 pub mod editor;
 pub mod error;
+pub mod group;
 pub mod history;
 pub mod params;
 pub mod pick;

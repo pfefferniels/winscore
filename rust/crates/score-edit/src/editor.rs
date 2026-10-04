@@ -10,6 +10,7 @@ use crate::command::Run;
 use crate::document::{Document, Edit, ItemId, Transaction};
 use crate::drag::{self, Axes, Constraint, Ends, PagePoint};
 use crate::error::EditError;
+use crate::group::{Pending, Region};
 use crate::history::{History, Step};
 use crate::params::{Draft, MAX_PARAM};
 use crate::pick;
@@ -138,6 +139,20 @@ impl Editor {
     pub fn clear_selection(&mut self) {
         self.cancel_drag();
         self.session.clear();
+    }
+
+    /// Selects every item of an area (a box drawn on the page): staves
+    /// `region.bottom..=region.top`, P3 between `left` and `right`, the given codes.
+    pub fn select_region(&mut self, region: &Region) {
+        self.cancel_drag();
+        let mut tx = Transaction::new(&mut self.doc);
+        Run { session: &mut self.session, tx: &mut tx }.select_region(region);
+    }
+
+    /// The question a group command is waiting to have answered by the next
+    /// line given to [`Editor::execute`], if any.
+    pub fn prompt(&self) -> Option<&'static str> {
+        self.session.pending.as_ref().map(Pending::prompt)
     }
 
     /// The item WinScore's click at page point (`x`, `y`) would select: the

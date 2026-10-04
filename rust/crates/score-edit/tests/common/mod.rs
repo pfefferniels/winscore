@@ -11,9 +11,14 @@ use std::path::PathBuf;
 /// words by their first letters, so in edit mode DBRS+ acts as DBF, LOFF0 and
 /// ROT0 as offsets, PLUS1 as the plus mark, UND as U, and with nothing
 /// selected NUML creates a number, L1 a note, THE or TN a text through the
-/// text dialog; the editor knows these words only in their own sense.
+/// text dialog; the editor knows these words only in their own sense. The
+/// catalogue reads the engine's item store, which OS, OH and OT leave in
+/// place while reordering only its index (saving writes the new order).
 pub const DEVIATIONS: &[(&str, bool)] = &[
     ("16", false),
+    ("OS", false),
+    ("OH", false),
+    ("OT", false),
     ("BEAM+", false),
     ("DBRS+", true),
     ("DBRS0", true),

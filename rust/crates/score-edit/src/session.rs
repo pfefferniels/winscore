@@ -8,6 +8,7 @@ use score_format::Item;
 use crate::command::moves::Increments;
 use crate::document::{Document, ItemId};
 use crate::drag::Ends;
+use crate::group::Pending;
 
 /// The ids in their first-seen order, without repeats.
 fn unique(ids: impl Iterator<Item = ItemId>) -> Vec<ItemId> {
@@ -46,6 +47,8 @@ pub struct Session {
     pub right_at: Option<f32>,
     /// The positions J justified between last.
     pub justify_between: Option<(f32, f32)>,
+    /// A group command waiting for its next line.
+    pub pending: Option<Pending>,
 }
 
 impl Session {

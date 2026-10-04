@@ -72,6 +72,31 @@ fn divided_text_makes_one_item_per_part() {
 }
 
 #[test]
+fn group_commands_ask_line_by_line_and_undo_in_one_step() {
+    let mut e = small();
+    assert_eq!(e.prompt(), None);
+    e.execute("M").unwrap();
+    assert!(e.prompt().unwrap().starts_with("Enter staff"));
+    e.execute("1 90 130").unwrap();
+    assert!(e.prompt().unwrap().starts_with("Enter destination"));
+    let change = e.execute("1 5").unwrap();
+    assert_eq!(e.prompt(), None);
+    assert_eq!(change.modified.len(), 2);
+    assert_eq!(p(&e, e.id_at(1).unwrap(), 3), 105.0);
+    e.undo();
+    assert_eq!(p(&e, e.id_at(1).unwrap(), 3), 100.0);
+}
+
+#[test]
+fn a_box_selects_the_items_inside() {
+    let mut e = small();
+    e.select_region(&score_edit::group::Region::parse(&[1.0, 110.0, 130.0]).unwrap());
+    assert_eq!(e.selection(), [e.id_at(2).unwrap()]);
+    e.execute("U 1").unwrap();
+    assert_eq!(p(&e, e.id_at(2).unwrap(), 4), 8.0);
+}
+
+#[test]
 fn lft_drags_only_the_left_end() {
     let mut e = editor_with(&[&[8.0, 1.0, 0.0], &[4.0, 1.0, 50.0, 5.0, 10.0, 120.0]]);
     let line = e.id_at(1).unwrap();

@@ -2414,3 +2414,188 @@
 8 1 0
 16 1 20 10 1 1 0 0 0 153.989197 0 6 160.133804 "_00a b"
 16 1 20 12 1 1 0 0 0 153.901703 0 6 160.04631 "_00c d"
+== g1_delete_staff
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 2 0
+1 2 120 7 10 0 1
+== g1_delete_code
+# question: Source Box O.K.? - -> yes
+8 1 0
+8 2 0
+1 1 100 6 10 0 1
+1 2 120 7 10 0 1
+== g1_delete_two_codes
+# question: Source Box O.K.? - -> yes
+8 1 0
+9 1 130 13 22 0.25
+== g1_delete_range_two_staves
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 1 0
+8 2 0
+1 1 150 7 10 0 1
+== g1_delete_with_d
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x838abc', '0x4a262d', '0x7a0bfc']
+8 2 0
+1 2 120 7 10 0 1
+== g1_move_to_staff
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x0']
+8 2 0
+8 2 0
+1 2 100 6 10 0 1
+1 2 120 7 10 0 1
+== g1_move_left
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42a00000']
+8 1 0
+8 2 0
+1 1 90 6 10 0 1
+1 1 130 7 10 0 1
+== g1_move_scaled
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42480000']
+8 1 0
+8 2 0
+1 2 50 6 10 0 1
+1 2 90 7 10 0 1
+4 2 50 5 5 90
+== g1_move_staff_and_shift
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42be0000']
+8 1 0
+8 2 0
+1 2 105 6 10 0 1
+4 2 105 5 5 125
+== g1_move_right_end_outside
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42be0000']
+8 1 0
+8 2 0
+4 1 105 5 5 120
+== g1_move_two_staves_up
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x0']
+8 2 0
+8 3 0
+8 3 0
+1 2 100 6 10 0 1
+1 3 100 6 10 0 1
+== g1_copy_to_staff
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x0']
+8 1 0
+8 2 0
+1 1 100 6 10 0 1
+1 2 120 7 10 0 1
+8 2 0
+1 2 100 6 10 0 1
+== g1_copy_shifted
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x42dc0000']
+8 1 0
+1 1 100 6 10 0 1
+1 1 120 6 10 0 1
+== g1_alter_notes
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 100 6 10 0 0.5 0 1
+1 1 120 7 10 0 0.5 0 1
+2 1 110 0 0 0 1
+== g1_alter_relative
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 100 6 10 1 1
+1 1 120 7 10 1 1
+== g1_move_up_down
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x20b9374', '0x2']
+8 1 0
+1 1 100 9 10 0 1
+3 1 2
+14 1 120 1
+9 1 130 16 22 0.25
+== g1_move_up_down_lines
+# question: Source Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x2']
+8 1 0
+4 1 100 3 3 120
+4 1 130 -3 999 150
+5 1 100 11 12 120 3
+6 1 100 11 13 120 11
+17 1 100 0 2
+18 1 100 0 4 4
+2 1 110 -2 0 0 1
+== g1_copy_to_staves
+# question: Source Box O.K.? - -> yes
+# question: Destination Box O.K.? - -> yes
+# dialog: 0x59b4e0 args=['0x7f7e4c', '0x0', '0x0']
+8 1 0
+8 2 0
+8 3 0
+1 1 100 6 10 0 1
+8 2 0
+1 2 100 6 10 0 1
+8 3 0
+1 3 100 6 10 0 1
+== g1_order_by_staff
+8 1 0
+1 1 110 8 10 0 1
+1 1 120 7 10 0 1
+8 2 0
+1 2 100 6 10 0 1
+== g1_order_by_staff_mixed
+8 1 0
+3 1 2
+1 1 110 8 10 0 1
+1 1 120 7 10 0 1
+8 2 0
+1 2 100 6 10 0 1
+== g1_order_by_staff_equal_positions
+8 1 0
+1 1 90 7 10 0 1
+2 1 100 0 0 0 1
+1 1 100 6 10 0 1
+1 1 100 8 0 0 1
+== g1_order_by_staff_catalogue_base
+8 1 0 0 1
+3 1 2 0 0
+1 1 30 5 10 0 1
+2 1 50 0 0 0 1
+14 1 70 1
+8 2 0 0 1
+== g1_order_horizontal
+8 1 0
+8 2 0
+1 2 100 6 10 0 1
+1 1 110 8 10 0 1
+1 1 120 7 10 0 1
+== g1_order_horizontal_mixed
+8 1 0
+8 2 0
+3 1 2
+1 2 100 6 10 0 1
+1 1 110 8 10 0 1
+1 1 120 7 10 0 1
+== g1_order_text
+16 2 30 10 1 1 0 0 0 0 0 5 6.28870296 "_00Ho"
+16 1 50 10 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"
+8 1 0
+1 1 110 8 10 0 1
+8 2 0
+1 2 100 6 10 0 1
+== g1_cancelled
+# message: Leaving Group Edit.
+# message: ERROR -- unknown word in this context: R 1
+8 1 0
+1 1 100 6 10 0 1

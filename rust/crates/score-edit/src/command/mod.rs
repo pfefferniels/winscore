@@ -8,6 +8,7 @@
 
 pub mod beams;
 pub mod create;
+pub mod groups;
 pub mod item;
 pub mod line;
 pub mod moves;
@@ -21,6 +22,7 @@ use score_render::Document as RenderDocument;
 
 use crate::document::{ItemId, Transaction};
 use crate::drag::Ends;
+use crate::group::{GroupCommand, Order};
 use crate::error::EditError;
 use crate::params::Draft;
 use crate::session::{Deleted, Session};
@@ -148,6 +150,8 @@ pub fn is_supported(line: &str) -> bool {
         Some(Token::Word(w)) => {
             let word = w.to_ascii_uppercase();
             SessionWord::parse(&word).is_some()
+                || GroupCommand::word(&word).is_some()
+                || Order::word(&word).is_some()
                 || Move::parse(&word, first_number(&tokens[1..])).is_some_and(Move::is_complete)
                 || item::is_edit_word(&word)
                 || create::template(&word).is_some()
@@ -192,6 +196,9 @@ fn clamp_item(n: f32, len: usize) -> Option<usize> {
 impl Run<'_, '_> {
     /// Executes one command line.
     pub fn line(&mut self, line: &str) -> Result<(), EditError> {
+        if self.session.pending.is_some() {
+            return self.answer_group(line);
+        }
         if let Some(entry) = text::quick_entry(line) {
             let (characters, rest) = entry?;
             self.session.clear();
@@ -258,6 +265,12 @@ impl Run<'_, '_> {
         }
         let (word, args) = word_and_args(tokens)?;
         let number = first_number(args);
+        if let Some(command) = GroupCommand::word(&word) {
+            return self.start_group(command, args);
+        }
+        if let Some(order) = Order::word(&word) {
+            return self.reorder(order);
+        }
         match SessionWord::parse(&word) {
             Some(SessionWord::Leave) => self.leave(number),
             Some(SessionWord::Edit) => self.edit_item(number),

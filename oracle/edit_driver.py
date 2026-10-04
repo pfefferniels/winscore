@@ -52,7 +52,20 @@ MOUSE_ACTIONS = {"~v": ("~v", "~v"), "~s": ("~s", "~s"), "~x": ("~x", "|"), "~":
 ENGINE_DATA = ("scorlib", "fontlib")
 EDIT_MODE = -1
 TEXT_CODE, TEXT_LENGTH_PARAM = 16, 12
-REPORTED_EVENTS = ("message", "prompt-unanswered", "dialog")
+REPORTED_EVENTS = ("message", "prompt-unanswered", "dialog", "question")
+# "Source Box O.K.?" and similar yes/no questions of group edits (disasm-expert): answered yes.
+YES_NO_QUESTION = 0x595CD0
+YES = 1
+
+
+class EditEngine(Engine):
+    """The emulated engine, answering yes to the questions group edits ask."""
+
+    def _on_cpp(self, uc, address, size, user):
+        if address != YES_NO_QUESTION:
+            return super()._on_cpp(uc, address, size, user)
+        self.shell.record("question", f"{self.cstr(self.arg(0), 200).strip()} -> yes")
+        self.return_from_call(YES, 0)
 
 
 @dataclass(frozen=True)
@@ -150,7 +163,7 @@ def run_case(case: Case) -> Outcome:
     with tempfile.TemporaryDirectory(prefix="wscore-edit-") as tmp:
         root = lean_sandbox(Path(tmp))
         (root / "cwd" / "BASE.MUS").write_bytes(mus_bytes(list(case.base)))
-        engine = Engine(root)
+        engine = EditEngine(root)
         engine.initialize()
         engine.command("G base.mus")
         transcript, status = [], 0
