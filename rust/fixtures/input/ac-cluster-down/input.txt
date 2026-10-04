@@ -1,0 +1,7 @@
+IN 1
+;
+AF4:BF4:CS5:DS5/BF4:CN5:DF5:EF5/FS5:GS5:AS5:BS5;
+4/4/4;
+;
+;
+;

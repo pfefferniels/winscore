@@ -3,9 +3,11 @@
 
 use score_format::{Item, Word};
 
+use crate::chords::{accidental_offsets, dot_offsets, ChordHead};
 use crate::events::{Event, Head};
 use crate::notes::{Clef, KeySignature, Meter, RestKind, StaffShift, StemMode};
 use crate::rhythm::Rhythm;
+use crate::slurs::WorkEntry;
 use crate::spacing::{positions, Entry, GRACE_DURATION};
 
 /// Middle staff line: notes from here up take a down stem, and a stem reaches at least here.
@@ -99,6 +101,32 @@ impl Note {
         }
     }
 
+    fn work_entries(&self, number: usize) -> Vec<WorkEntry> {
+        self.ordered_heads()
+            .iter()
+            .enumerate()
+            .map(|(i, head)| {
+                let stem_head = i == 0;
+                WorkEntry {
+                    code: 1,
+                    x: self.x,
+                    level: head.level,
+                    stem: match (stem_head, self.down) {
+                        (false, _) => 0,
+                        (true, true) => STEM_DOWN,
+                        (true, false) => STEM_UP,
+                    },
+                    accidental: head.accidental.map_or(0, |a| a.code()),
+                    extension: if stem_head { self.extension % 100.0 } else { 0.0 },
+                    dotted: stem_head && self.rhythm.dots() > 0,
+                    mark: if stem_head { self.mark } else { 0.0 },
+                    grace: self.is_grace(),
+                    note: stem_head.then_some(number),
+                }
+            })
+            .collect()
+    }
+
     fn spacing_entries(&self) -> Vec<Entry> {
         let quarters = if self.is_grace() { GRACE_DURATION } else { self.rhythm.quarters() };
         self.ordered_heads()
@@ -111,18 +139,20 @@ impl Note {
     fn items(&self, staff: f32) -> Vec<Item> {
         let ordered = self.ordered_heads();
         let levels: Vec<i32> = ordered.iter().map(|h| h.level).collect();
-        let shifts = second_shifts(&levels, self.down);
+        let shifted = second_shifts(&levels);
+        let accidental_offsets = self.accidental_offsets(&ordered, &shifted);
+        let dot_offsets = if self.rhythm.dots() > 0 { dot_offsets(&levels, &shifted, self.down) } else { vec![0; levels.len()] };
         let dots = 10 * i32::from(self.rhythm.dots());
-        let shift = match self.shift {
+        let side = if self.down { SHIFT_LEFT } else { SHIFT_RIGHT };
+        let staff_shift = match self.shift {
             StaffShift::Main => 0.0,
             StaffShift::Above => 1.0,
             StaffShift::Below => 2.0,
         };
         ordered
             .iter()
-            .zip(shifts)
             .enumerate()
-            .map(|(i, (head, offset))| {
+            .map(|(i, head)| {
                 let stem_head = i == 0;
                 let accidental = head.accidental.map_or(0, |a| a.code());
                 let stem = match (stem_head, self.down) {
@@ -141,35 +171,56 @@ impl Note {
                     Some((stray, x)) if stray == head.level => x,
                     _ => self.x,
                 };
+                let p5 = accidental_offsets[i] as f32 / 1000.0 + (stem + accidental) as f32;
                 item(&[
                     1.0,
                     staff,
                     x,
                     level as f32,
-                    (stem + accidental) as f32,
+                    p5,
                     self.rhythm.head() as f32,
                     self.rhythm.quarters(),
                     extension,
-                    (dots + tails) as f32,
-                    offset,
+                    (dots + tails + dot_offsets[i]) as f32,
+                    if shifted[i] { side } else { 0.0 },
                     mark,
-                    shift,
+                    staff_shift,
                 ])
             })
             .collect()
     }
+
+    /// Accidental offsets (thousandths of P5) in item order; the layout works from the top.
+    fn accidental_offsets(&self, ordered: &[&Head], shifted: &[bool]) -> Vec<i32> {
+        let mut top_down: Vec<ChordHead> = ordered
+            .iter()
+            .zip(shifted)
+            .map(|(h, s)| ChordHead {
+                level: h.level,
+                accidental: h.accidental.map_or(0, |a| a.code()),
+                left_of_stem: *s && self.down,
+            })
+            .collect();
+        if !self.down {
+            top_down.reverse();
+        }
+        let mut offsets = accidental_offsets(&top_down);
+        if !self.down {
+            offsets.reverse();
+        }
+        offsets
+    }
 }
 
-/// P10 of each head (in the order given, stem end first): a head a second away from the
-/// previous unshifted head moves to the other side of the stem.
-fn second_shifts(levels: &[i32], down: bool) -> Vec<f32> {
-    let shift = if down { SHIFT_LEFT } else { SHIFT_RIGHT };
+/// Which heads (in item order, stem head first) sit on the other side of the stem: a head
+/// within a step of the previous head moves over unless that one moved (0x4EE442).
+fn second_shifts(levels: &[i32]) -> Vec<bool> {
     levels
         .iter()
         .scan(None::<(i32, bool)>, |previous, &level| {
-            let shifted = matches!(*previous, Some((p, false)) if (level - p).abs() == 1);
+            let shifted = matches!(*previous, Some((p, false)) if (level - p).abs() < 2);
             *previous = Some((level, shifted));
-            Some(if shifted { shift } else { 0.0 })
+            Some(shifted)
         })
         .collect()
 }
@@ -237,12 +288,16 @@ impl Element {
     }
 }
 
-fn rest_item(kind: RestKind, rhythm: Rhythm, x: f32, staff: f32) -> Item {
-    let level = match kind {
+fn rest_level(kind: RestKind) -> f32 {
+    match kind {
         RestKind::Up => 6.0,
         RestKind::Down => -6.0,
         _ => 0.0,
-    };
+    }
+}
+
+fn rest_item(kind: RestKind, rhythm: Rhythm, x: f32, staff: f32) -> Item {
+    let level = rest_level(kind);
     // P5: flags for short rests, 0 quarter, -1 half, -2 whole, -3 breve.
     let symbol = match (kind, rhythm.head()) {
         (RestKind::Whole, _) => -2.0,
@@ -342,6 +397,33 @@ impl Line {
 
     pub fn note_mut(&mut self, number: usize) -> Option<&mut Note> {
         number.checked_sub(1).and_then(|i| self.notes_mut().nth(i))
+    }
+
+    /// The engine's work table as passes 4 and 5 read it: one entry per chord member.
+    pub fn work_entries(&self) -> Vec<WorkEntry> {
+        let mut number = 0;
+        self.elements
+            .iter()
+            .flat_map(|element| match element {
+                Element::Note(note) => {
+                    number += 1;
+                    note.work_entries(number)
+                }
+                Element::Rest { x, kind, .. } => vec![WorkEntry::other(2, *x, rest_level(*kind) as i32)],
+                Element::Bar { x, .. } => vec![WorkEntry::other(14, *x, 0)],
+                Element::Clef { x, .. } => vec![WorkEntry::other(3, *x, 0)],
+                Element::Key { x, .. } => vec![WorkEntry::other(17, *x, 0)],
+                Element::Meter { x, .. } => vec![WorkEntry::other(18, *x, 0)],
+            })
+            .collect()
+    }
+
+    /// Takes over the marks of the notes from a work table (the slur pass can move them).
+    pub fn take_marks(&mut self, work: &[WorkEntry]) {
+        let marks = work.iter().filter(|e| e.note.is_some()).map(|e| e.mark);
+        for (note, mark) in self.notes_mut().zip(marks) {
+            note.mark = mark;
+        }
     }
 
     pub fn items(&self) -> Vec<Item> {

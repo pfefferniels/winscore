@@ -31,7 +31,9 @@ Not drawn as outlines:
 - **3000–3099**: text read once from a file opened at 0x4295B7 (unit 3) and cached; drawn with `draw_text` (not examined).
 - Symbols in a missing or compact ("KH") library: `load_symbol_library` 0x42AD97 shows the dialog "Not found" and nothing is drawn.
 
-Not yet modelled (all zero in the tests):
+Ported and matched against fixtures by impl-symbols (reported by them, not re-checked here): the rotation 0x42A5F4 (angle divisor f32 57.2957764; sin 0x5FF110, cos 0x5FF0F5, ANINT 0x5FF381), the thickening 0x42A8AE (2X vertical copies at ±14, ±28, ... then 2Y horizontal; negative values outline; a positive IP10 on screen means thickness 101 x pixels, one less from symbol 45 on), the clef routine including the small-clef lift table at 0x78F30C (0.35, 8.75, 5.6, 5.6, 5.6, 0.35), and `draw_box` with the circle table.
+
+Not yet modelled here (all zero in the tests):
 
 - p8 (IP8 for code 9) and p10 (IP10, or trunc(P16) for codes 10 and 18, minus 1 for numbers > 44): on screen, when p10 > 0 and p8 == 0, p8 = 101*p10; a non-zero p8 calls 0x42A8AE on the symbol's points (outline thickening, inferred).
 - p9 non-zero (IP9 for code 9) calls 0x42A5F4 (fill or pattern, inferred).
