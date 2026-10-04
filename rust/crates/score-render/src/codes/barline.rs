@@ -8,13 +8,13 @@
 //! `analysis/engine/barlines.md`; constants are REAL*4 as in the engine.
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
+use crate::codes::boxes::{draw_box, BoxCall, CIRCLE_SHAPE};
 use crate::codes::line::{self, Params};
 use crate::codes::rest;
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
-use crate::geometry::ellipse;
 use crate::symbols::{draw_clef, ItemContext};
 use crate::units::{constant, real, trunc, Pos};
 
@@ -307,31 +307,40 @@ impl Barline {
         };
         let rise = if rise == 0 { 2 } else { rise };
         let size = real(constant(0.58) * if item.p(12) == 0.0 { 1.0 } else { f64::from(item.p(12)) });
-        let size = if item.p(16) == 1.0 { real(constant(DOT_INCH_FLAG) * size) } else { size };
+        let call = dot_call(item, size, doc.screen());
         let last = (self.low.number + self.span - 1).min(LAST_STAFF);
         (self.low.number..=last).for_each(|number| {
             let staff = doc.staves.get(number);
             let first = real(f64::from(staff.level0) + staff.step * f64::from(lower) * UNITS_PER_SCALE_STEP);
             let second = real(staff.step * f64::from(rise) * UNITS_PER_SCALE_STEP + first);
-            [first, second].into_iter().for_each(|y| repeat_dot(canvas, Pos::new(x, y), size, staff.step));
+            [first, second].into_iter().for_each(|y| draw_box(canvas, Pos::new(x, y), staff.step, &call));
         });
         self.ip8 = 0;
     }
 }
 
-/// draw_box reads a barline's P16 = 1 as its own inch flag and scales the dots.
-const DOT_INCH_FLAG: f32 = 22.857;
+/// Degrees per side of a dot on the screen; in print draw_box's default of 1.
+const SCREEN_DOT_ANGLE: i32 = 60;
 
-/// Degrees between the points of a dot on the screen (draw_box's IP12).
-const DOT_ANGLE_STEP: usize = 60;
-
-/// One repeat dot: draw_box 0x433530 as an ellipse (IP5 = 1) with P6 = P7 =
-/// `size`, filled, from 0 to 360 degrees in steps of 60 on the screen.
-fn repeat_dot(canvas: &mut Canvas<'_>, centre: Pos, size: f64, step: f64) {
-    let k = real(step * constant(0.035));
-    let radius = real(k * size);
-    let points = ellipse(centre, radius, radius, (0..=360).step_by(DOT_ANGLE_STEP));
-    points.enumerate().for_each(|(i, at)| canvas.point(at, if i == 0 { Pen::Fill } else { Pen::Continue }));
+/// The draw_box call barline_dots makes: a filled circle of `size`, the
+/// integer parameters cleared, the barline's own P8, P9, P10 and P16 left in
+/// place (P16 = 1 is draw_box's inch flag, so it enlarges the dots).
+fn dot_call(item: ItemRef<'_>, size: f64, screen: bool) -> BoxCall {
+    BoxCall {
+        kind: CIRCLE_SHAPE,
+        width: size,
+        height: size,
+        p8: f64::from(item.p(8)),
+        ip8: 0,
+        p9: f64::from(item.p(9)),
+        ip9: 0,
+        p10: f64::from(item.p(10)),
+        ip10: 0,
+        ip11: 0,
+        ip12: if screen { SCREEN_DOT_ANGLE } else { 0 },
+        fill: true,
+        p16: f64::from(item.p(16)),
+    }
 }
 
 /// The bracket end outline, in 0.15 spacing units (f32 tables at 0x78B264 and 0x78B234).

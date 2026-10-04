@@ -16,22 +16,7 @@ use crate::colour;
 use crate::document::{Document, ItemRef};
 use crate::page::{self, P3_UNIT};
 use crate::staff::Staff;
-use crate::units::{real, trunc, Pos};
-
-/// A REAL*4 constant of the engine.
-fn c(value: f32) -> f64 {
-    f64::from(value)
-}
-
-/// trunc(Pn), the engine's IPn.
-fn ip(item: ItemRef<'_>, n: usize) -> i32 {
-    trunc(f64::from(item.p(n)))
-}
-
-/// Fortran AMOD: x - trunc(x / y) * y.
-fn amod(x: f64, y: f64) -> f64 {
-    x - f64::from(trunc(x / y)) * y
-}
+use crate::units::{amod, constant as c, real, trunc, Pos};
 
 const H_BAR: i32 = -5;
 const REPEAT: i32 = -4;
@@ -101,7 +86,7 @@ struct Rest {
 impl Rest {
     /// None for the types the engine does not draw.
     fn new(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64) -> Option<Self> {
-        let p5 = ip(item, 5);
+        let p5 = item.ip(5);
         let parenthesised = p5.abs() >= 100;
         let kind = if parenthesised { p5 % 100 } else { p5 };
         let two_bar_repeat = kind == TWO_BAR_REPEAT;
@@ -109,17 +94,17 @@ impl Rest {
         if kind < -7 && !(-19..=-11).contains(&kind) {
             return None;
         }
-        let staff = match ip(item, 17) {
+        let staff = match item.ip(17) {
             0 => doc.staff_of(item),
             2 => doc.staves.get(item.staff() - 1),
             _ => doc.staves.get(item.staff() + 1),
         };
-        let number_shift = if two_bar_repeat && ip(item, 8) != 0 {
+        let number_shift = if two_bar_repeat && item.ip(8) != 0 {
             real(-(staff.step * c(3.2) / 25.0))
         } else {
             f64::from(item.p(16))
         };
-        let dots = match ip(item, 6) {
+        let dots = match item.ip(6) {
             -1 if doc.screen() => 0,
             d if d > 0 && (-7..-3).contains(&kind) => 0,
             d => d,
@@ -128,7 +113,7 @@ impl Rest {
             0.0 => staff.step,
             p15 => real(f64::from(p15) * staff.step),
         };
-        let p4 = ip(item, 4);
+        let p4 = item.ip(4);
         let p4 = if item.p(15) != 0.0 { p4 % 100 } else { p4 };
         let grace = p4.abs() >= 100;
         let level = f64::from(item.p(4));
@@ -136,12 +121,12 @@ impl Rest {
             if grace { (real(step * c(GRACE_SIZE)), c(GRACE_SIZE), real(amod(level, 100.0))) } else { (step, 1.0, level) };
         Some(Self {
             staff,
-            x: if ip(item, 17) == 0 { x_pos } else { page::x(item.p(3)) },
+            x: if item.ip(17) == 0 { x_pos } else { page::x(item.p(3)) },
             kind,
             parenthesised,
             two_bar_repeat,
             dots,
-            number: ip(item, 8),
+            number: item.ip(8),
             step,
             unit,
             size,
@@ -165,7 +150,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 /// from P3; CW centring and the parentheses work from P3 too.
 pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64, canvas: &mut Canvas<'_>) {
     let Some(rest) = Rest::new(doc, item, x_pos) else { return };
-    if ip(item, 6) == -1 && doc.screen() {
+    if item.ip(6) == -1 && doc.screen() {
         canvas.colour = colour::from_p26(INVISIBLE_GREY, doc.options.medium);
     }
     let t = rest.kind + 8;
@@ -175,7 +160,7 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64, canvas: &mut Canv
     };
     let x = if shift == 0.0 { rest.x } else { real(shift * P3_UNIT + rest.x) };
     let p3 = if shift == 0.0 { f64::from(item.p(3)) } else { real(shift + f64::from(item.p(3))) };
-    let centred = ip(item, 9) == -1 && t <= T_WHOLE;
+    let centred = item.ip(9) == -1 && t <= T_WHOLE;
     let bars = if centred { neighbouring_bars(doc, item, p3, rest.unit) } else { None };
     let h_bar = match &bars {
         Some(bars) if t == T_H_BAR => (x, real(bars.h_bar_end(p3, rest.unit) * P3_UNIT)),
@@ -432,7 +417,7 @@ impl Drawing<'_, '_, '_> {
         let (sy, level) = if number == -2 { (-sx, 1.0) } else { (sx, 13.0) };
         let level = if item.p(4) > 0.0 { real(rest.level + level) } else { level };
         let y = rest.y(real(f64::from(item.p(11)) + level));
-        if ip(item, 8) == -3 {
+        if item.ip(8) == -3 {
             // Symbol 276 is drawn as text ("G.P."), which the shared symbol port does not do yet.
             let _ = FERMATA_M3_SYMBOL;
             return;
@@ -517,7 +502,7 @@ impl Drawing<'_, '_, '_> {
         if !(T_WHOLE..=T_HALF).contains(&t) || self.item.p(30) < 0.0 {
             return;
         }
-        let level = ip(self.item, 4) % 100;
+        let level = self.item.ip(4) % 100;
         let i = (t - T_WHOLE) as usize;
         if level < LEDGER_FROM_ABOVE[i] && level > LEDGER_FROM_BELOW[i] {
             return;
@@ -544,11 +529,11 @@ impl Drawing<'_, '_, '_> {
             p4 = real(p4 + 1.0);
         }
         let size = if k < 4 { 1.0 } else { c(1.9) };
-        let size = if ip(item, 4).abs() >= 100 { real(size * c(GRACE_SIZE)) } else { size };
+        let size = if item.ip(4).abs() >= 100 { real(size * c(GRACE_SIZE)) } else { size };
         let y = rest.staff.y(amod(p4, 100.0));
         let left = real(real(p3 - unit * c(PAREN_LEFT[k])) * P3_UNIT);
         library_symbol(self.canvas, self.doc.symbols(), PARENTHESIS_SYMBOL, Pos::new(left, y), size, size, rest.staff.step);
-        let right_units = if ip(item, 6) == 1 { real(c(PAREN_RIGHT[k]) + c(1.9)) } else { c(PAREN_RIGHT[k]) };
+        let right_units = if item.ip(6) == 1 { real(c(PAREN_RIGHT[k]) + c(1.9)) } else { c(PAREN_RIGHT[k]) };
         let right = real(real(unit * right_units + p3) * P3_UNIT);
         library_symbol(self.canvas, self.doc.symbols(), PARENTHESIS_SYMBOL, Pos::new(right, y), -size, size, rest.staff.step);
     }

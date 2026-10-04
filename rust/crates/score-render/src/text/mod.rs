@@ -24,7 +24,7 @@ use crate::display::{Colour, Point};
 use crate::document::{Document, ItemRef};
 use crate::page::RECTO_SHIFT;
 use crate::symbols::{draw_library_symbol, ItemContext, SymbolCall};
-use crate::units::{nint, real, trunc, Pos};
+use crate::units::{amod, nint, real, trunc, Pos};
 use glyphs::SPACE;
 use scan::{scan, Code, Entry, ScanSettings};
 
@@ -123,11 +123,6 @@ const SCREEN_WIDTH_FACTOR: f32 = 0.825;
 const SYMBOL_SCALE: f32 = 3.5714;
 /// Outline fonts appear in green on the screen.
 const OUTLINE_COLOUR: Colour = Colour { r: 0x18, g: 0xE4, b: 0x03 };
-
-/// Fortran AMOD (amod 0x54AABA): x - trunc(x / y) * y.
-fn amod(x: f64, y: f64) -> f64 {
-    x - f64::from(trunc(x / y)) * y
-}
 
 /// IP8 from 90 to 999 other than 94 is ignored.
 fn effective_override(font: i32) -> i32 {

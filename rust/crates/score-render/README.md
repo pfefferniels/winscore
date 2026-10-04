@@ -14,7 +14,7 @@ let list = score_render::render(&doc);             // every Shape/TextRun has so
 
 - **Display list**: page coordinates, 1/4000 inch, y up, origin at the bottom-left corner of the paper (the fixtures use the same frame).
 - **Modules** compute in the engine's **internal coordinates**: x = 150·P3 (P3 = 0 at x = 0), staff 1's bottom line at y = -24000. The canvas adds the page offset (`page::page_offset`, incl. +34050 for items on staves above 199).
-- The engine evaluates in x87 double precision, stores every assignment to a REAL*4 variable, and truncates toward zero when a point is added. Port each Fortran statement as one f64 expression wrapped in `units::real(..)`; use REAL*4 constants as `f64::from(13.8_f32)`, not `13.8`; let `Canvas::point` truncate. Text positions use `units::nint`. See `analysis/engine/numerics.md`.
+- The engine evaluates in x87 double precision, stores every assignment to a REAL*4 variable, and truncates toward zero when a point is added. Port each Fortran statement as one f64 expression wrapped in `units::real(..)`; use REAL*4 constants as `units::constant(13.8)`, not `13.8`; let `Canvas::point` truncate. Text positions use `units::nint` (the engine's 67 NINT sites; everything else truncates). See `analysis/engine/numerics.md`.
 
 ## Writing an item module
 
@@ -26,7 +26,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>)
 
 The dispatch table in `codes/mod.rs` already lists every module, so a new code touches no shared file.
 
-- `item.p(n)`: parameter n as stored (f32, 0 if absent); `item.code()`, `item.staff()`.
+- `item.p(n)`: parameter n as stored (f32, 0 if absent); `item.ip(n)` = trunc(Pn), the engine's IPn; `item.code()`, `item.staff()`.
 - `doc.position(item)`: the reference point from P3/P4 (and P15 for the codes that use it), as item_position 0x5479AB computes it for every code.
 - `doc.staff_of(item)` / `doc.staves.get(n)`: the staff table entry (`level0` = STAFF_Y, the y of P4 = 0; `step` = 25·size, one scale step is 7 steps; `y(p4)` = staff_level_y 0x547AA3).
 - `doc.screen()`: screen output (editing aids, grey invisible items) versus print.
@@ -40,10 +40,13 @@ Use these instead of writing local copies; ask render-core for anything else tha
 | Where | What |
 |---|---|
 | `units` | `real` (REAL*4 store), `constant` (REAL*4 constant), `trunc`, `nint`, `amod` (0x54AABA), `Pos` |
-| `geometry` | `rotate_points` (0x42A5F4), `thicken` (0x42A8AE), `ellipse` (draw_box's circle points) |
+| `geometry` | `rotate_points` (0x42A5F4, degrees clockwise), `rotate_points_radians` (its k0 <= 0 entry, radians counter-clockwise), `thicken` (0x42A8AE) |
 | `trig` | `CIRCLE`: the engine's table of 100·sin/100·cos per degree |
-| `symbols` | `SymbolLibrary` (`doc.symbols()`), `draw_symbol` (core), `draw_library_symbol` (draw_symbol 0x4293F0), `draw_clef` (0x431AE0) |
-| `codes::line` | `draw` (draw_line 0x439963) with a `Params` array, e.g. for dashed barlines |
+| `symbols` | `SymbolLibrary` (`doc.symbols()`), `draw_symbol` (core), `draw_library_symbol` (draw_symbol 0x4293F0), `draw_clef` (0x431AE0), `ItemContext` (the item globals these read) |
+| `codes::boxes` | `draw_box` (0x433530) with a `BoxCall` |
+| `codes::number` | `draw_number` (0x4F65A8) with a `NumberCall` |
+| `codes::line` | `draw` (draw_line 0x439963) with a `Params` array |
+| `codes::rest` | `draw` (draw_rest at an explicit X_POS) |
 | `document` | `ItemRef::with_params` / `changed`: call a shared routine with parameters overwritten, as the engine's routines overwrite the parameter globals |
 | `colour` | `from_p26` |
 

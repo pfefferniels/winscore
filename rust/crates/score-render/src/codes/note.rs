@@ -13,19 +13,9 @@ mod mark;
 
 use crate::canvas::{Canvas, Pen};
 use crate::document::{Document, ItemRef};
-use crate::units::{real, trunc, Pos};
+use crate::units::{constant as c, real, trunc, Pos};
 
 use glyph::clef_symbol;
-
-/// A REAL*4 constant of the engine.
-fn c(value: f32) -> f64 {
-    f64::from(value)
-}
-
-/// trunc(Pn), the engine's IPn.
-fn ip(item: ItemRef<'_>, n: usize) -> i32 {
-    trunc(f64::from(item.p(n)))
-}
 
 /// P4, P5, P9 and P12 keep further numbers in their hundreds.
 const HUNDREDS: i32 = 100;
@@ -121,13 +111,13 @@ pub(crate) struct Note {
 impl Note {
     /// None for tablature (P6 = -4 or below, outside -20 … -39), not drawn yet.
     fn new(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Self> {
-        let head = match ip(item, 6) {
+        let head = match item.ip(6) {
             -3 => BREVE,
             h if h <= -3 && h / 20 != -1 => return None,
             h => h,
         };
         let staff = doc.staff_of(item);
-        let p4 = ip(item, 4);
+        let p4 = item.ip(4);
         let grace = (p4 / HUNDREDS).abs() == 1 && item.p(15) == 0.0;
         let width = match item.p(20) {
             0.0 => 1.0,
@@ -142,13 +132,13 @@ impl Note {
         let head_width = real(unit * c(if wide { WIDE_HEAD_WIDTH } else { HEAD_WIDTH }) * width);
         let offset = match item.p(10) {
             0.0 => 0.0,
-            _ if ip(item, 10) == OFFSET_RIGHT_WITH_ACCIDENTAL => head_width,
+            _ if item.ip(10) == OFFSET_RIGHT_WITH_ACCIDENTAL => head_width,
             p10 if p10 == OFFSET_RIGHT => head_width,
             p10 if p10 == OFFSET_LEFT => -head_width,
             p10 => real(step * c(OFFSET_UNIT) * f64::from(p10)),
         };
         let position = doc.position(item);
-        let p12 = ip(item, 12);
+        let p12 = item.ip(12);
         let (ledger_start, borrowed_staff) =
             if p12.abs() >= HUNDREDS { (p12 / HUNDREDS, (p12 % HUNDREDS).abs()) } else { (0, p12) };
         let y = match item.staff() - 2 * borrowed_staff + 3 {
@@ -157,7 +147,7 @@ impl Note {
             }
             _ => position.y,
         };
-        let p5 = ip(item, 5) % HUNDREDS;
+        let p5 = item.ip(5) % HUNDREDS;
         Some(Self {
             origin: Pos::new(if offset == 0.0 { position.x } else { real(offset + position.x) }, y),
             level: p4 % HUNDREDS,
@@ -171,7 +161,7 @@ impl Note {
             head,
             stem: Stem::from_digit(p5 / 10),
             accidental: p5 % 10,
-            tails: ip(item, 9) % 10,
+            tails: item.ip(9) % 10,
             ledger_start,
             borrowed_staff,
         })
@@ -203,10 +193,10 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         accidental(doc, item, &note, canvas);
     }
     let stem_length = if note.stem == Stem::None { 0.0 } else { stem(doc, item, &note, canvas) };
-    if ip(item, 9) >= 10 {
+    if item.ip(9) >= 10 {
         dots(doc, item, &note, canvas);
     }
-    if ip(item, 11) != 0 {
+    if item.ip(11) != 0 {
         mark::draw(doc, item, &note, stem_length, canvas);
     }
 }
@@ -214,7 +204,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 /// P8 without the 100 that asks for a grace-note slash.
 fn stem_extension(item: ItemRef<'_>) -> f64 {
     let p8 = f64::from(item.p(8));
-    match ip(item, 8) {
+    match item.ip(8) {
         p if p.abs() < HUNDREDS => p8,
         p if p < 0 => real(p8 + 100.0),
         _ => real(p8 - 100.0),
@@ -255,7 +245,7 @@ fn tails(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas
 /// The accidental (0x4F2F31), left of the head's original position: P5's
 /// decimals move it left in units of 6 steps (.9x: right), P29 scales it.
 fn accidental(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
-    let p5 = ip(item, 5);
+    let p5 = item.ip(5);
     let digit = note.accidental;
     let symbol = if digit > 5 || p5 / HUNDREDS == 1 { digit + SPECIAL_ACCIDENTALS } else { digit } + ACCIDENTAL_SYMBOLS;
     let shift = real(f64::from(item.p(5)) - f64::from(p5));
@@ -264,7 +254,7 @@ fn accidental(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
         s if s > c(0.9) => real(real(c(0.9) - s) * 60.0 * note.unit),
         s => real(s * 60.0 * note.unit),
     };
-    let follows_head = ip(item, 10) == OFFSET_RIGHT_WITH_ACCIDENTAL;
+    let follows_head = item.ip(10) == OFFSET_RIGHT_WITH_ACCIDENTAL;
     let shift = if item.p(10) == OFFSET_RIGHT && !follows_head { real(note.offset + shift) } else { shift };
     let size = match item.p(29) {
         0.0 => 1.0,
@@ -280,11 +270,11 @@ fn accidental(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
 /// signed length (0 for heads without a stem), which marks build on.
 fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) -> f64 {
     let extension = stem_extension(item);
-    if ip(item, 8).abs() >= HUNDREDS && note.tails != 0 {
+    if item.ip(8).abs() >= HUNDREDS && note.tails != 0 {
         slash(doc, item, note, extension, canvas);
     }
     let length = real((tail_room(note) + c(STEPS) + extension) * note.unit * c(STEPS));
-    let head_type = head::unparenthesised(ip(item, 6));
+    let head_type = head::unparenthesised(item.ip(6));
     if !has_stem(head_type) {
         return 0.0;
     }
@@ -362,11 +352,11 @@ fn dots(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
     let lift = if on_line { note.scale_step } else { 0.0 };
     let shift = real(p9 - f64::from(trunc(p9)));
     let shift = if shift > c(0.9) { real(c(0.9) - shift) } else { shift };
-    let code = ip(item, 9);
+    let code = item.ip(9);
     let (shift, code) = if code >= 1000 { (real(shift + c(0.284)), code - 1000) } else { (shift, code) };
     let (lift, code) = if code >= HUNDREDS { (-lift, code - HUNDREDS) } else { (lift, code) };
     let stem = note.implied_stem();
-    let gap = if ip(item, 8) == 0 && note.tails != 0 && stem == Stem::Up { c(16.2) } else { c(18.0) };
+    let gap = if item.ip(8) == 0 && note.tails != 0 && stem == Stem::Up { c(16.2) } else { c(18.0) };
     let dx = real((shift * 60.0 + gap) * note.unit);
     let headless = note.head == HEADLESS || note.head == -1;
     let dx = if stem != Stem::Up && note.tails == 0 && headless { real(dx / 2.0) } else { dx };
