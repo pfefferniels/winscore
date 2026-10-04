@@ -16,6 +16,7 @@ Each code's cases live in `oracle/fixtures_codeNN.py` (a `cases()` function; `fi
 | 5, 6 | `fixtures_code05.py`, `fixtures_code06.py` | impl-beams |
 | 16 | `fixtures_code16.py` | impl-text (first 91 cases drafted by verifier) |
 | interactions across codes | `fixtures_code99.py` | verifier |
+| cuts from the samples (`codeNN-sample-*`) | `fixtures_code_samples.py` | verifier (see TRIAGE.md) |
 
 ## Done
 
