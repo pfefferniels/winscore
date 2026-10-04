@@ -13,8 +13,9 @@ use crate::display::Point;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
-use crate::symbols::{draw_symbol, Scale};
-use crate::units::{real, trunc, Pos};
+use crate::geometry::ellipse;
+use crate::symbols::draw_clef;
+use crate::units::{constant, real, trunc, Pos};
 
 /// The highest staff number a barline may reach.
 const LAST_STAFF: i32 = 256;
@@ -35,10 +36,6 @@ const SQUARE_BRACKET: i32 = 10;
 
 /// The brace in the symbol library (LB0000.DRW slot 5).
 const BRACE_SYMBOL: i32 = 5;
-
-fn constant(value: f32) -> f64 {
-    f64::from(value)
-}
 
 /// The state draw_barline works on: positions in internal coordinates and
 /// the parameters it changes while drawing.
@@ -127,9 +124,8 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 impl Barline {
     fn draw(&mut self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         let u = self.unit;
-        let six = real(u * 6.0);
-        let d13 = real(six * f64::from(item.p(13)));
-        let d14 = real(six * f64::from(item.p(14)));
+        let d13 = real(u * 6.0 * f64::from(item.p(13)));
+        let d14 = real(u * 6.0 * f64::from(item.p(14)));
         match self.kind {
             0 if item.p(6) != 0.0 => self.thick(canvas, self.xb, self.xb),
             0 => self.stroke(canvas, self.xb),
@@ -153,16 +149,16 @@ impl Barline {
                     self.dots(doc, item, canvas, constant(-25.5));
                     self.stroke(canvas, real(self.xb - u * constant(13.8) - d13));
                 }
-                self.thick(canvas, real(self.xb - six), self.xb);
+                self.heavy(canvas);
             }
             REPEAT_HEAVY => {
                 self.x_pos = real(self.x_pos - d14);
                 self.dots(doc, item, canvas, constant(-18.36));
                 self.x_pos = real(d13 + self.x_pos + d14 + d14);
                 self.dots(doc, item, canvas, constant(25.2));
-                self.thick(canvas, real(self.xb - six), self.xb);
+                self.heavy(canvas);
                 self.xb = real(u * 13.0 + self.xb + d13);
-                self.thick(canvas, real(self.xb - six), self.xb);
+                self.heavy(canvas);
             }
             BRACE => self.brace(doc, item, canvas),
             BRACKET => {
@@ -174,7 +170,7 @@ impl Barline {
             }
             SQUARE_BRACKET => self.square_bracket(canvas),
             k if k > REPEAT_HEAVY => self.dashed(item, canvas),
-            _ => self.thick(canvas, real(self.xb - six), self.xb),
+            _ => self.heavy(canvas),
         }
     }
 
@@ -210,7 +206,12 @@ impl Barline {
     fn final_bar(&self, canvas: &mut Canvas<'_>, d13: f64) {
         let u = self.unit;
         self.stroke(canvas, real(self.xb - u * constant(13.8) - d13));
-        self.thick(canvas, real(self.xb - real(u * 6.0)), self.xb);
+        self.heavy(canvas);
+    }
+
+    /// The thick bar of width 6 units ending at the bar's x.
+    fn heavy(&self, canvas: &mut Canvas<'_>) {
+        self.thick(canvas, real(self.xb - self.unit * 6.0), self.xb);
     }
 
     /// The thick bar between `a` and `b` (block 0x411FAD), emitted as the
@@ -233,23 +234,20 @@ impl Barline {
         }
     }
 
-    /// barline_brace 0x412B93: library symbol 5 stretched to the bar's height,
-    /// widened with it unless P6 gives the width factor. The symbol is placed
-    /// as draw_clef places it, fitted to the engine for size-1 staves.
+    /// barline_brace 0x412B93: draw_clef with symbol 5 at 21 steps below the
+    /// bar's bottom, stretched to its height and widened with it unless P6
+    /// gives the width factor.
     fn brace(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-        let Some(symbol) = doc.symbols().symbol(BRACE_SYMBOL) else {
-            return;
-        };
         let step = self.low.step;
         let height = real((self.top - self.bottom) * constant(0.0054945) / step);
         let width = match item.p(6) {
             0.0 => real((height - 1.0) / 2.0 + 1.0),
             p6 => f64::from(p6),
         };
-        let level0 = real(self.bottom - step * 21.0);
-        let origin = Pos::new(self.x_pos, real(level0 + 21.0 * step));
-        let scale = Scale { x: real(step / 4.0 * width), y: real(step / 4.0 * height) };
-        draw_symbol(canvas, symbol, origin, scale);
+        let at = Pos::new(self.x_pos, real(self.bottom - step * 21.0));
+        // draw_clef reads IP4 (mini clefs) and IP10 (pixels); the brace routine sets IP10 = 0.
+        let changed = item.with_params(&[(4, self.p4), (10, 0.0)]);
+        draw_clef(doc, item.changed(&changed), canvas, at, step, BRACE_SYMBOL, (width, height));
     }
 
     /// Type 10: an open bracket left of the bar on the middle lines.
@@ -302,6 +300,7 @@ impl Barline {
         };
         let rise = if rise == 0 { 2 } else { rise };
         let size = real(constant(0.58) * if item.p(12) == 0.0 { 1.0 } else { f64::from(item.p(12)) });
+        let size = if item.p(16) == 1.0 { real(constant(DOT_INCH_FLAG) * size) } else { size };
         let last = (self.low.number + self.span - 1).min(LAST_STAFF);
         (self.low.number..=last).for_each(|number| {
             let staff = doc.staves.get(number);
@@ -313,17 +312,19 @@ impl Barline {
     }
 }
 
-/// One repeat dot. The engine calls the code-12 box routine (draw_box
-/// 0x433530 with IP5 = 1, P6 = P7 = `size`), which on the screen draws a
-/// filled hexagon of radius `size` half-spaces, clockwise from the top. This
-/// model is fitted to the fixtures until draw_box is ported.
+/// draw_box reads a barline's P16 = 1 as its own inch flag and scales the dots.
+const DOT_INCH_FLAG: f32 = 22.857;
+
+/// Degrees between the points of a dot on the screen (draw_box's IP12).
+const DOT_ANGLE_STEP: usize = 60;
+
+/// One repeat dot: draw_box 0x433530 as an ellipse (IP5 = 1) with P6 = P7 =
+/// `size`, filled, from 0 to 360 degrees in steps of 60 on the screen.
 fn repeat_dot(canvas: &mut Canvas<'_>, centre: Pos, size: f64, step: f64) {
-    let radius = real(size * 3.5 * step);
-    (0..=6).for_each(|k| {
-        let angle = f64::from(k) * std::f64::consts::FRAC_PI_3;
-        let at = Pos::new(real(centre.x + radius * angle.sin()), real(centre.y + radius * angle.cos()));
-        canvas.point(at, if k == 0 { Pen::Fill } else { Pen::Continue });
-    });
+    let k = real(step * constant(0.035));
+    let radius = real(k * size);
+    let points = ellipse(centre, radius, radius, (0..=360).step_by(DOT_ANGLE_STEP));
+    points.enumerate().for_each(|(i, at)| canvas.point(at, if i == 0 { Pen::Fill } else { Pen::Continue }));
 }
 
 /// The bracket end outline, in 0.15 spacing units (f32 tables at 0x78B264 and 0x78B234).
