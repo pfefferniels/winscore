@@ -13,10 +13,12 @@
 
 pub mod command;
 pub mod document;
+pub mod drag;
 pub mod editor;
 pub mod error;
 pub mod history;
 pub mod params;
+pub mod pick;
 mod session;
 
 pub use document::{Document, Edit, ItemId};

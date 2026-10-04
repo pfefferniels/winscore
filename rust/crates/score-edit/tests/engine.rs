@@ -107,12 +107,53 @@ fn stored(editor: &Editor) -> Vec<Stored> {
         .collect()
 }
 
+/// A mouse line of the cases: `~v x y` (move with the button held), `~s x y`
+/// (with Shift), `~x x y` (button up), `~ x y` (click), in page coordinates.
+fn mouse(line: &str) -> Option<(&str, f64, f64)> {
+    let mut parts = line.split_whitespace();
+    let action = parts.next().filter(|a| matches!(*a, "~v" | "~s" | "~x" | "~"))?;
+    let x = parts.next()?.parse().ok()?;
+    let y = parts.next()?.parse().ok()?;
+    Some((action, x, y))
+}
+
+/// Plays a mouse line the way the browser shell drives the editor. The engine
+/// drags an item to the cursor; the cases start each drag at the item's own
+/// reference point, where that and keeping the grab offset agree.
+fn play_mouse(editor: &mut Editor, dragging: &mut bool, (action, x, y): (&str, f64, f64)) {
+    match action {
+        "~v" | "~s" => {
+            if !*dragging {
+                editor.drag_begin_at(x, y);
+                *dragging = true;
+            }
+            editor.drag_to_point(x, y, action == "~s");
+        }
+        "~x" => {
+            editor.drag_end(true);
+            *dragging = false;
+        }
+        _ if editor.selection().is_empty() => {
+            let picked = editor.pick_at(x, y, None);
+            editor.select(picked.as_slice());
+        }
+        _ => {}
+    }
+}
+
 fn replay(case: &Case) -> (Vec<Stored>, Vec<String>) {
     let mut editor = Editor::new(mus_file(&case.base));
+    let mut dragging = false;
     let errors = case
         .commands
         .iter()
-        .filter_map(|c| editor.execute(c).err().map(|e| format!("[{c}] {e}")))
+        .filter_map(|c| match mouse(c) {
+            Some(m) => {
+                play_mouse(&mut editor, &mut dragging, m);
+                None
+            }
+            None => editor.execute(c).err().map(|e| format!("[{c}] {e}")),
+        })
         .collect();
     (stored(&editor), errors)
 }

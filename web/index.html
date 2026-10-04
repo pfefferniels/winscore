@@ -18,7 +18,7 @@
         <button id="redo" title="Redo (⇧⌘Z / Ctrl+Y)">Redo</button>
         <button id="input" title="Enter a line of music in SCORE's five passes (IN)">Input…</button>
         <span class="sep"></span>
-        <button id="zoom-out" title="Zoom out (−)">−</button>
+        <button id="zoom-out" title="Zoom out (_)">−</button>
         <select id="zoom" title="Zoom"></select>
         <button id="zoom-in" title="Zoom in (+)">+</button>
         <button id="fit" title="Fit page width">Fit</button>
@@ -34,10 +34,11 @@
         <span class="spacer"></span>
         <span id="status" class="status"></span>
       </header>
+      <nav class="palette" id="palette" aria-label="Item and edit commands"></nav>
       <main class="main">
         <div class="stage" id="stage">
           <canvas id="canvas"></canvas>
-          <div class="viewport" id="viewport"><div class="content" id="content"></div></div>
+          <div class="viewport" id="viewport" tabindex="0" aria-label="Page"><div class="content" id="content"></div></div>
           <div class="drop-hint" id="drop-hint" hidden>Drop a .mus file or an engine.json</div>
         </div>
         <aside class="panel">
@@ -77,9 +78,10 @@
         </form>
       </dialog>
       <footer class="footer">
-        <input id="command" class="command" type="text" placeholder="Command for the selection, e.g. R 5, 600 5, DE" autocomplete="off" spellcheck="false" />
-        <span id="cursor" class="muted"></span>
+        <input id="command" class="command" type="text" placeholder="Type a SCORE command, e.g. R 5, 600 5, NOTE, DE" autocomplete="off" spellcheck="false" />
         <span id="message" class="message"></span>
+        <span class="spacer"></span>
+        <span id="cursor" class="muted cursor"></span>
       </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>

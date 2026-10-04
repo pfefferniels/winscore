@@ -10,6 +10,7 @@
 //! turned through the angle of P4–P5. A slur reads no other item.
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
+use crate::codes::number::{draw_number, NumberCall};
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
 use crate::geometry::rotate_points_radians;
@@ -47,6 +48,90 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 /// P8 = 3: a tuplet bracket; every other P8 from 1 to 9 is an ending.
 const TUPLET: i32 = 3;
 
+/// draw_number's font codes: 1000 + n is font n; P14 = 34 stands for font 0.
+const FIRST_FONT: i32 = 1000;
+const FONT_00: i32 = 34;
+/// IP7 of brackets, slur numbers and beams: Times-Italic.
+const TUPLET_FONT: i32 = 1;
+/// IP7 of endings: Times-Roman.
+const ENDING_FONT: i32 = 0;
+const TUPLET_SIZE: f32 = 0.875;
+/// draw_slur sets P19 to this before the curve; draw_number then turns the number by it.
+const DEFAULT_P19: f32 = 0.85;
+
+/// A number 0x53BFC6 draws for beams, tuplet brackets, endings and slurs.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(super) struct BracketNumber {
+    pub value: i32,
+    /// P6 for draw_number.
+    pub size: f32,
+    /// IP7 for draw_number unless `font_p14` is set.
+    pub font: i32,
+    /// IP14: a font as P14 gives it, 0 for none.
+    pub font_p14: i32,
+    /// IP17: a letter after the number.
+    pub letter: i32,
+    /// P19, which draw_number takes as its rotation.
+    pub rotation: f32,
+}
+
+impl BracketNumber {
+    fn font(&self) -> i32 {
+        match self.font_p14.abs() {
+            0 => self.font,
+            n => {
+                let n = if n >= FIRST_FONT { n - FIRST_FONT } else { n };
+                if n == FONT_00 {
+                    FIRST_FONT
+                } else {
+                    FIRST_FONT + n
+                }
+            }
+        }
+    }
+
+    /// Step units the number moves left of its point, by its digits.
+    fn indent(&self) -> f32 {
+        match self.value {
+            v if v < 10 => 7.1,
+            11 => 12.0,
+            v if v < 20 => 13.5,
+            _ => 14.5,
+        }
+    }
+
+    /// 0x53BFC6: draw_number at `at`, moved left by the indent; `at.x` is
+    /// the caller's sum of two REAL*4 values, not yet stored. `step` is
+    /// STEP, which draw_number uses as well (a beam's P18 scales it).
+    pub(super) fn draw(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at: Pos, step: f64) {
+        let at = Pos::new(real(at.x - step * constant(self.indent())), at.y);
+        let call = NumberCall {
+            value: self.value,
+            p5: self.value as f32,
+            size: self.size,
+            font: self.font(),
+            frame: 0,
+            p14: 0.0,
+            p17: self.letter,
+            p18: 0.0,
+            rotation: self.rotation,
+            step: Some(step),
+            ..NumberCall::of(item)
+        };
+        draw_number(doc, item, canvas, at, &call);
+    }
+}
+
+/// Moves a number by P17 (6 steps) and P18 (a scale step), as the
+/// brackets and slurs do (0x53B421); P16 = 1 has used them as end offsets.
+fn moved_by_p17_p18(item: ItemRef<'_>, at: Pos, step: f64) -> Pos {
+    let p = |n| f64::from(item.p(n));
+    if item.p(16) == 1.0 {
+        return at;
+    }
+    Pos::new(real(p(17) * constant(6.0) * step + at.x), real(p(18) * constant(7.0) * step + at.y))
+}
+
 /// The ending's number is followed by this library symbol, a full stop.
 const ENDING_DOT: i32 = 24;
 
@@ -61,6 +146,7 @@ struct Bracket {
     bottom: f64,
     /// P4 raised by the curvature P7.
     top: f64,
+    height: f64,
     dy: f64,
     /// The bracket's number: P9 when positive, else P8.
     number: i32,
@@ -76,7 +162,8 @@ impl Bracket {
         let staff = doc.staff_of(item);
         let step = staff.step;
         let bottom = doc.position(item).y;
-        let top = real(bottom + real(step * params.p7 * constant(7.0)));
+        let height = real(step * params.p7 * constant(7.0));
+        let top = real(bottom + height);
         let (ip9, ip13) = (trunc(p(9)), trunc(p(13)));
         let open = (ip9 == -1 && params.p8_int != 2) || ip13 == 1 || ip13 == 3;
         if open {
@@ -94,6 +181,7 @@ impl Bracket {
             right: real(params.p6 * P3_UNIT),
             bottom,
             top,
+            height,
             dy: real(staff.y(p(5)) - bottom),
             number,
             gap,
@@ -132,6 +220,17 @@ fn ending(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut C
     let stop_shift = if first { constant(2.0) } else { constant(5.0) };
     let at = Pos::new(real(after_number + bracket.left + step * stop_shift), real(lift + number_y));
     draw_clef(doc, &ItemContext::of(item), canvas, at, step, ENDING_DOT, (size, size));
+    // IP17 adds a letter, unless P16 = 1 has made P17 an end offset (0x53C1F1).
+    let letter = if item.p(16) == 1.0 { 0 } else { trunc(p(17)) };
+    let number = BracketNumber {
+        value: bracket.number,
+        size: 1.0,
+        font: ENDING_FONT,
+        font_p14: trunc(p(14)),
+        letter,
+        rotation: item.p(19),
+    };
+    number.draw(doc, item, canvas, Pos::new(bracket.left + number_x, number_y), step);
 }
 
 /// Tuplet brackets: a line at P4 + P7 with a gap for the number at P10
@@ -161,11 +260,13 @@ fn tuplet_bracket(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas
     let half_gap = real(step * p(23) * constant(6.0));
     let mut top = bracket.top;
     let mut bottom = bracket.bottom;
-    if bracket.dy == 0.0 {
+    // Where the number sits, at P10 along the bracket.
+    let level = if bracket.dy == 0.0 {
         if ip11 == 0 {
             canvas.point(Pos::new(real(middle - half_gap), top), Pen::Continue);
             canvas.point(Pos::new(real(half_gap + middle + gap + gap), top), Pen::Stroke);
         }
+        top
     } else {
         bottom = real(bracket.dy + bottom);
         let slope = real(bracket.dy / length);
@@ -176,7 +277,8 @@ fn tuplet_bracket(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas
             canvas.point(along(real(real(gap + middle + gap) - half_gap)), Pen::Stroke);
         }
         top = real(bracket.dy + top);
-    }
+        real((bracket.height + bottom) - (1.0 - centre) * bracket.dy)
+    };
     canvas.point(Pos::new(right, top), Pen::Continue);
     if p(12) != 0.0 {
         let extra = if params.p7 < 0.0 { -p(12).abs() } else { p(12).abs() };
@@ -185,6 +287,43 @@ fn tuplet_bracket(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas
     if ip13 < 2 {
         canvas.point(Pos::new(right, bottom), Pen::Continue);
     }
+    if ip9 < -1 || ip11 == NO_NUMBER {
+        return;
+    }
+    let y = real(number_level(ip11, ip7(item), level, step) - step * constant(9.0));
+    let base = moved_by_p17_p18(item, Pos::new(bracket.left, y), step);
+    let number = BracketNumber {
+        value: bracket.number,
+        size: tuplet_size(item),
+        font: TUPLET_FONT,
+        font_p14: trunc(p(14)),
+        letter: 0,
+        rotation: item.p(19),
+    };
+    number.draw(doc, item, canvas, Pos::new(base.x + real(centre * length), base.y), step);
+}
+
+/// P11 = 3 draws a bracket without its number.
+const NO_NUMBER: i32 = 3;
+
+/// The size of bracket and slur numbers: P21, default 0.875.
+fn tuplet_size(item: ItemRef<'_>) -> f32 {
+    match item.p(21) {
+        0.0 => TUPLET_SIZE,
+        p21 => p21,
+    }
+}
+
+/// P11 = 1 puts the number 14 steps inside the bracket (towards the
+/// notes), P11 = 2 as far outside.
+fn number_level(ip11: i32, ip7: i32, level: f64, step: f64) -> f64 {
+    if ip11 == 0 {
+        return level;
+    }
+    let ip7 = if ip11 == 2 { -ip7 } else { ip7 };
+    let away = real(-(step * constant(14.0)));
+    let away = if ip7 < 0 { -away } else { away };
+    real(away + level)
 }
 
 /// Slurs and ties: the curve and everything P9–P29 do to it.
@@ -206,6 +345,9 @@ fn slur(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Can
     }
     if buffer.len() < BUFFER_POINTS {
         canvas.buffer_mut().extend_from_slice(buffer.points());
+    }
+    if params.number() != 0 {
+        slur.number(doc, item, params, canvas);
     }
 }
 
@@ -313,6 +455,14 @@ impl Params {
             n if n < 1000 => n,
             _ => 0,
         }
+    }
+}
+
+/// IP11 as the curve leaves it: halved below -3, then without its sign.
+fn ip11_after_curve(item: ItemRef<'_>) -> i32 {
+    match trunc(f64::from(item.p(11))) {
+        n if n < -3 => (n / 2).abs(),
+        n => n.abs(),
     }
 }
 
@@ -607,6 +757,64 @@ impl Slur {
         if self.end != 0.0 {
             cut_after(buffer, trunc(self.end * self.length + self.xl - self.dx / 2.0), dashed);
         }
+    }
+
+    /// The number P16 (draw_slur from 0x53AA73): in the slur's gap, or for
+    /// negative P16 inside an unbroken slur; at P10 of a level slur, at the
+    /// middle of a sloped one, turned with it.
+    fn number(&self, doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Canvas<'_>) {
+        let value = params.number();
+        let triangle = trunc(f64::from(item.p(9))) == TRIANGLE;
+        let sloped = self.dy != 0.0;
+        let down = params.p7 < 0.0;
+        let drop: f32 = match (value < 0, sloped) {
+            (true, true) => {
+                if down {
+                    -5.0
+                } else {
+                    23.0
+                }
+            }
+            (true, false) => {
+                if down {
+                    -14.0
+                } else {
+                    14.0
+                }
+            }
+            (false, true) => 9.0,
+            (false, false) => 0.0,
+        };
+        let height = real(self.height - self.step * constant(drop));
+        let (at, along) = if sloped {
+            let angle = real(self.dy.atan2(self.length0));
+            let (sin, cos) = (real(angle.sin()), real(angle.cos()));
+            let half = real(self.length0 * constant(0.5));
+            let x = real((cos * half - sin * height) + self.xl);
+            let y = real((cos * height + sin * half) + self.y0);
+            (Pos::new(x, y), 0.0)
+        } else {
+            let ip11 = if triangle { trunc(f64::from(item.p(11))) } else { ip11_after_curve(item) };
+            if ip11 == NO_NUMBER {
+                return;
+            }
+            let level = number_level(ip11, ip7(item), real(self.y0 + height), self.step);
+            (Pos::new(self.xl, real(level - self.step * constant(9.0))), real(self.centre * self.length))
+        };
+        let rotation = match item.p(19) {
+            0.0 if !triangle => DEFAULT_P19,
+            p19 => p19,
+        };
+        let number = BracketNumber {
+            value: value.abs(),
+            size: tuplet_size(item),
+            font: TUPLET_FONT,
+            font_p14: trunc(f64::from(item.p(14))),
+            letter: 0,
+            rotation,
+        };
+        let base = moved_by_p17_p18(item, at, self.step);
+        number.draw(doc, item, canvas, Pos::new(base.x + along, base.y), self.step);
     }
 
     /// A gap in the middle for the number P16 (0x53BE1D). The engine also

@@ -20,7 +20,7 @@ pub mod text_symbol;
 
 pub use clef::draw_clef;
 pub use library::{draw_library_symbol, ItemContext, SymbolCall};
-pub use text_symbol::{draw_text_symbol, TextSymbolCall};
+pub use text_symbol::{draw_text_symbol, text_symbol_call, text_symbol_font_loaded, TextSymbolCall};
 
 include!(concat!(env!("OUT_DIR"), "/bundled_symbols.rs"));
 
@@ -51,11 +51,11 @@ impl SymbolLibrary {
         })
     }
 
-    /// Symbol `number`, if its file exists and its slot has a name.
+    /// Symbol `number`, if its file exists and its slot has points; the engine ignores names.
     pub fn symbol(&self, number: i32) -> Option<&Symbol> {
         let file = self.files.get(&(number - number.rem_euclid(SYMBOLS_PER_FILE)))?;
         let symbol = file.symbols.get(number.rem_euclid(SYMBOLS_PER_FILE) as usize)?;
-        (!symbol.name.is_empty()).then_some(symbol)
+        (!symbol.records.is_empty()).then_some(symbol)
     }
 }
 

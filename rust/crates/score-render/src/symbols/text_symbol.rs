@@ -10,7 +10,7 @@ use crate::codes::text::font_before;
 use crate::document::{Document, ItemRef};
 use crate::page;
 use crate::symbols::library::symbol_text;
-use crate::text::{draw_text, TextCall};
+use crate::text::{self, draw_text, Font, TextCall};
 use crate::units::{amod, real, Pos};
 
 /// What the text path of draw_symbol reads: its size arguments and the
@@ -81,9 +81,20 @@ const SIZE_FLAGS: f64 = 100.0;
 
 /// draw_symbol's text path (0x429E8B–0x42A16A) for a symbol in the text table.
 pub fn draw_text_symbol(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, call: &TextSymbolCall) {
-    let Some(text) = symbol_text(call.number) else {
-        return;
-    };
+    if let Some(text_call) = text_symbol_call(doc, call, font_before(doc, item)) {
+        draw_text(doc, item, canvas, &text_call);
+    }
+}
+
+/// The font a text symbol leaves loaded (see [`text::font_loaded`]).
+pub fn text_symbol_font_loaded(doc: &Document<'_>, call: &TextSymbolCall) -> Option<Font> {
+    text::font_loaded(doc, &text_symbol_call(doc, call, Font::TIMES)?)
+}
+
+/// The draw_text call of the text path, given the font current before it;
+/// `None` for symbols outside the text table.
+pub fn text_symbol_call(doc: &Document<'_>, call: &TextSymbolCall, current_font: Font) -> Option<TextCall<'static>> {
+    let text = symbol_text(call.number)?;
     let size_x = match real(amod(call.size_x, SIZE_FLAGS)) {
         0.0 => 1.0,
         s => s,
@@ -102,19 +113,17 @@ pub fn draw_text_symbol(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canv
         height: spread_size(size_y),
         font_override: font,
         rotation: call.p9,
-        space: 0.0,
-        shift: 0.0,
         colour: (call.p26 != 0.0).then_some(call.p26),
-        current_font: font_before(doc, item),
+        current_font,
+        ..TextCall::default()
     };
-    let text_call = match call.number {
+    Some(match call.number {
         n if n < FIRST_SPREAD_SYMBOL => {
             TextCall { spread: 0.0, width: call.p6, height: call.p7, space: OTTAVA_SPACE, ..base }
         }
         GENERAL_PAUSE => general_pause(doc, call, base),
         _ => base,
-    };
-    draw_text(doc, item, canvas, &text_call);
+    })
 }
 
 /// G.P.: font 1000 + IP14, x from P16 and P3 (P9 when positive on a rest)

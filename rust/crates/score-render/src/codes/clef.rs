@@ -9,12 +9,15 @@
 //! for code-3 items.
 
 use crate::canvas::Canvas;
-use crate::codes::number::{draw_number, NumberCall};
+use crate::codes::number::{draw_number, number_font_loaded, NumberCall};
 use crate::document::{Document, ItemRef};
 use crate::page;
 use crate::symbols::clef::{clef_placement, draw_clef_symbol, ClefPlacement};
 use crate::symbols::library::is_text_symbol;
-use crate::symbols::{draw_library_symbol, draw_text_symbol, ItemContext, SymbolCall, TextSymbolCall};
+use crate::symbols::{
+    draw_library_symbol, draw_text_symbol, text_symbol_font_loaded, ItemContext, SymbolCall, TextSymbolCall,
+};
+use crate::text::Font;
 use crate::units::{self, real, trunc, Pos};
 
 /// A tablature clef: its P5, size factor and lift in scale steps above P4.
@@ -34,28 +37,56 @@ const TABLATURE_SIZE: f32 = 0.1;
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let step = doc.staff_of(item).step;
-    let kind = trunc(f64::from(item.p(5)));
     let context = ItemContext::of(item);
-    let placement =
-        clef_placement(&context, doc.position(item), step, kind, f64::from(item.p(6)), f64::from(item.p(7)));
-    let placement = match Octave::of(item.p(5)) {
-        Some(octave) => {
-            draw_octave_number(doc, item, canvas, &octave, placement.size_x, step);
-            ClefPlacement { number: octave.clef, ..placement }
-        }
-        None => placement,
-    };
-    match TABLATURE.iter().find(|t| t.p5 == kind) {
-        Some(tablature) => draw_tablature(doc, item, canvas, &placement, tablature),
-        None if is_text_symbol(placement.number) => {
-            let call = TextSymbolCall {
-                size_x: placement.size_x,
-                size_y: placement.size_y,
-                ..TextSymbolCall::of(doc, item, placement.number)
-            };
-            draw_text_symbol(doc, item, canvas, &call);
-        }
-        None => draw_clef_symbol(doc, &context, canvas, &placement, step),
+    let clef = Clef::of(doc, item);
+    if let Some((at, call)) = clef.number {
+        draw_number(doc, item, canvas, at, &call);
+    }
+    match (clef.tablature, clef.text) {
+        (Some(tablature), _) => draw_tablature(doc, item, canvas, &clef.placement, tablature),
+        (None, Some(call)) => draw_text_symbol(doc, item, canvas, &call),
+        (None, None) => draw_clef_symbol(doc, &context, canvas, &clef.placement, step),
+    }
+}
+
+/// The font a clef leaves loaded: that of its octave number, or of a text
+/// symbol drawn in its place (see [`crate::text::font_loaded`]).
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    let clef = Clef::of(doc, item);
+    let number = clef.number.and_then(|(at, call)| number_font_loaded(doc, at, &call));
+    let text = clef.text.and_then(|call| text_symbol_font_loaded(doc, &call));
+    text.or(number)
+}
+
+/// What a code-3 item draws: the placed symbol, and the octave number,
+/// tablature form or text-symbol call that replace or accompany it.
+struct Clef {
+    placement: ClefPlacement,
+    number: Option<(Pos, NumberCall)>,
+    tablature: Option<&'static Tablature>,
+    text: Option<TextSymbolCall>,
+}
+
+impl Clef {
+    fn of(doc: &Document<'_>, item: ItemRef<'_>) -> Self {
+        let step = doc.staff_of(item).step;
+        let kind = trunc(f64::from(item.p(5)));
+        let context = ItemContext::of(item);
+        let placement =
+            clef_placement(&context, doc.position(item), step, kind, f64::from(item.p(6)), f64::from(item.p(7)));
+        let octave = Octave::of(item.p(5));
+        let number = octave.map(|octave| octave_number(doc, item, &octave, placement.size_x, step));
+        let placement = match octave {
+            Some(octave) => ClefPlacement { number: octave.clef, ..placement },
+            None => placement,
+        };
+        let tablature = TABLATURE.iter().find(|t| t.p5 == kind);
+        let text = (tablature.is_none() && is_text_symbol(placement.number)).then(|| TextSymbolCall {
+            size_x: placement.size_x,
+            size_y: placement.size_y,
+            ..TextSymbolCall::of(doc, item, placement.number)
+        });
+        Self { placement, number, tablature, text }
     }
 }
 
@@ -103,17 +134,10 @@ impl Octave {
     }
 }
 
-/// The octave number through draw_number, placed by item_position from
+/// The octave number's draw_number call, placed by item_position from
 /// P3' = P3 + P15 + STEP × shift × size and P4' = AMOD(P4, 100) + 3 +
 /// size × lift, at 0.7 of the clef's size.
-fn draw_octave_number(
-    doc: &Document<'_>,
-    item: ItemRef<'_>,
-    canvas: &mut Canvas<'_>,
-    octave: &Octave,
-    size: f64,
-    step: f64,
-) {
+fn octave_number(doc: &Document<'_>, item: ItemRef<'_>, octave: &Octave, size: f64, step: f64) -> (Pos, NumberCall) {
     let p3 = real(step * f64::from(octave.shift) * size + (f64::from(item.p(15)) + f64::from(item.p(3))));
     let p4 = real((units::amod(f64::from(item.p(4)), 100.0) + f64::from(OCTAVE_BASE_LEVEL)) + size * f64::from(octave.lift));
     let at = Pos::new(page::x(p3 as f32), doc.staff_of(item).y(units::amod(p4, 100.0)));
@@ -126,7 +150,7 @@ fn draw_octave_number(
         p4: p4 as f32,
         ..NumberCall::of(item)
     };
-    draw_number(doc, item, canvas, at, &call);
+    (at, call)
 }
 
 /// Tablature clefs: library symbol 3 at a tenth of the size (times the

@@ -16,6 +16,8 @@ use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
 use crate::symbols::{draw_clef, ItemContext};
+use crate::text::Font;
+use score_format::Item;
 use crate::units::{constant, real, trunc, Pos};
 
 /// The highest staff number a barline may reach.
@@ -61,10 +63,24 @@ struct Barline {
     dash: (f32, f32),
 }
 
+/// The rest item draw_barline draws after a two-bar-repeat bar (P5 = -44):
+/// the barline with P4 = 0 and P5 = -44, drawn by draw_rest at the bar's
+/// X_POS. Only a plain visible bar (P4 >= 0, P6 = 0) reaches that call.
+fn two_bar_sign(item: ItemRef<'_>) -> Option<Item> {
+    let plain = item.ip(5) == TWO_BAR_REPEAT && item.ip(4) >= 0 && item.p(6) == 0.0;
+    plain.then(|| item.with_params(&[(4, 0.0), (5, TWO_BAR_REPEAT as f32)]))
+}
+
+/// The font a barline leaves loaded for the next item: that of the number
+/// over a two-bar repeat (see [`crate::text::font_loaded`]).
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    let sign = two_bar_sign(item)?;
+    rest::font_loaded(doc, item.changed(&sign))
+}
+
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let mut kind = trunc(f64::from(item.p(5)));
-    let two_bar_repeat = kind == TWO_BAR_REPEAT;
-    if two_bar_repeat {
+    if kind == TWO_BAR_REPEAT {
         kind = 0;
     }
     let mut span = trunc(f64::from(item.p(4)));
@@ -118,9 +134,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         dash,
     };
     bar.draw(doc, item, canvas);
-    if two_bar_repeat && bar.kind == 0 && item.p(6) == 0.0 {
-        // The sign after a plain bar: draw_rest with P4 = 0, IP5 = -44 at the bar's X_POS.
-        let sign = item.with_params(&[(4, 0.0), (5, TWO_BAR_REPEAT as f32)]);
+    if let Some(sign) = two_bar_sign(item) {
         rest::draw(doc, item.changed(&sign), bar.x_pos, canvas);
     }
     if item.p(18) != 0.0 && gap_p5 < 2.0 {
@@ -313,7 +327,10 @@ impl Barline {
             let staff = doc.staves.get(number);
             let first = real(f64::from(staff.level0) + staff.step * f64::from(lower) * UNITS_PER_SCALE_STEP);
             let second = real(staff.step * f64::from(rise) * UNITS_PER_SCALE_STEP + first);
-            [first, second].into_iter().for_each(|y| draw_box(canvas, Pos::new(x, y), staff.step, &call));
+            // barline_dots sets IP12 afresh for every dot, so draw_box's doubled IP12 is not carried over.
+            [first, second].into_iter().for_each(|y| {
+                draw_box(canvas, Pos::new(x, y), staff.step, &call);
+            });
         });
         self.ip8 = 0;
     }

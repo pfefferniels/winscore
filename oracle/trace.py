@@ -175,6 +175,7 @@ class Tracer:
                         begin=TEXT_BUF_DIRECT, end=TEXT_BUF_DIRECT + TEXT_BYTES - 1),
             *(uc.hook_add(UC_HOOK_MEM_WRITE, self._on_watched, begin=r.start, end=r.stop - 1) for r in self.watches),
         ]
+        uc.ctl_flush_tb()          # hooks apply at translation time: retranslate code that already ran
         return self
 
     def __exit__(self, *_exc):
@@ -228,8 +229,8 @@ class Tracer:
             stack.pop()
         expected_return = self._previous_call_end
         self._previous_call_end = address + size if self._block_ends_with_call(address, size) else None
-        if not stack and expected_return is None:
-            expected_return = RETURN_SENTINEL      # the routine Engine.call started
+        if not stack and struct.unpack("<I", uc.mem_read(esp, 4))[0] == RETURN_SENTINEL:
+            expected_return = RETURN_SENTINEL      # the routine Engine.call started (also on later calls)
         if expected_return is not None and struct.unpack("<I", uc.mem_read(esp, 4))[0] == expected_return:
             self._unwind(esp, entering=True)
             entry = self._through_thunk(address)

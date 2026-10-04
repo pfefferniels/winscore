@@ -11,7 +11,8 @@ use crate::canvas::Canvas;
 use crate::codes;
 use crate::display::Colour;
 use crate::document::{Document, ItemRef};
-use crate::text::{draw_text, font_change, Font, TextCall};
+use crate::codes::{clef, meter, note, number, rest};
+use crate::text::{draw_text, font_loaded, Font, TextCall};
 use crate::units::trunc;
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
@@ -76,27 +77,34 @@ pub fn text_call<'a>(doc: &Document<'_>, item: ItemRef<'_>, text: &'a [u8], curr
         rotation: item.p(9),
         space: item.p(10),
         shift: item.p(11),
+        step: None,
         colour: (item.p(14) == -1.0).then(|| stored_word(item, 16)),
         current_font,
     }
 }
 
-/// The engine's current font when it reaches `item`. Items are drawn in
-/// file order, several passes in a row, so the font is that of the nearest
-/// item before it, or failing that after it, that changes the font.
+/// The engine's current font when it reaches `item`: draw_item sets it to
+/// the font whose metrics were loaded last (0x547358). Items are drawn in
+/// file order, several passes in a row, so that is the font loaded by the
+/// nearest item before it, or failing that after it, that loads one.
 pub fn font_before(doc: &Document<'_>, item: ItemRef<'_>) -> Font {
     let items: Vec<ItemRef<'_>> = doc.items().collect();
     let at = (item.id.0 as usize).min(items.len());
     let (before, after) = items.split_at(at);
     let after = after.get(1..).unwrap_or_default();
-    before.iter().rev().chain(after.iter().rev()).find_map(|&other| font_set_by(doc, other)).unwrap_or(Font::TIMES)
+    before.iter().rev().chain(after.iter().rev()).find_map(|&other| font_loaded_by(doc, other)).unwrap_or(Font::TIMES)
 }
 
-/// The font an item leaves current, if it changes it.
-fn font_set_by(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+/// The font an item leaves loaded, if it loads one.
+fn font_loaded_by(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     match item.code() {
-        codes::TEXT => font_change(doc, &text_call(doc, item, &characters(item), Font::TIMES)),
+        codes::TEXT => font_loaded(doc, &text_call(doc, item, &characters(item), Font::TIMES)),
         codes::STAFF if shows_staff_number(doc, item) => Some(Font::STAFF_NUMBER),
+        codes::METER => meter::font_loaded(doc, item),
+        codes::NUMBER => number::font_loaded(doc, item),
+        codes::NOTE => note::font_loaded(doc, item),
+        codes::REST => rest::font_loaded(doc, item),
+        codes::CLEF => clef::font_loaded(doc, item),
         _ => None,
     }
 }

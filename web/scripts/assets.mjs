@@ -1,5 +1,6 @@
 // Copies the bundled sample scores and their engine reference display lists
-// into public/, and writes public/samples/index.json describing them.
+// into public/, writes public/samples/index.json describing them, and
+// src/generated/commands.json from WinScore's command table.
 //
 // Samples are stored as base64 text (<file>.b64.txt) so that every file of
 // the built site has a type static hosts serve. References are read from
@@ -51,5 +52,16 @@ const index = sources.map((source) => {
 });
 
 fs.writeFileSync(path.join(publicDir, 'samples', 'index.json'), JSON.stringify(index, null, 2));
+
+// WinScore's menu and toolbar commands (analysis/data/command_map.tsv): id → SCORE command and tooltip.
+const commandRows = fs
+  .readFileSync(path.join(repo, 'analysis', 'data', 'command_map.tsv'), 'utf8')
+  .split('\n')
+  .slice(1)
+  .map((line) => line.split('\t'))
+  .filter(([id, , command]) => id && command?.trim());
+const commands = Object.fromEntries(commandRows.map(([id, , command, tooltip]) => [id, { command: command.trim(), tooltip: tooltip?.trim() ?? '' }]));
+fs.mkdirSync(path.join(web, 'src', 'generated'), { recursive: true });
+fs.writeFileSync(path.join(web, 'src', 'generated', 'commands.json'), JSON.stringify(commands));
 const withReference = index.filter((s) => s.reference).length;
 console.log(`assets: ${index.length} samples, ${withReference} with engine reference (from ${referenceDir})`);

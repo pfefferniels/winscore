@@ -1,13 +1,15 @@
 import './style.css';
-import init, { paramName, Reference as EngineList, Score, type EncodedList } from './wasm/score_web.js';
+import init, { commandSupported, paramName, Reference as EngineList, Score, type EncodedList } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
+import { bindCommandBar } from './command-bar';
 import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
-import { interimEditor, type Change, type Editor } from './editor';
+import { scoreEditor, type Change, type Editor } from './editor';
 import { loadFaces } from './fonts';
 import { createInputDialog } from './input-dialog';
 import { bindInteraction } from './interaction';
-import { markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
+import { formatParam, markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer } from './paint';
+import { createPalette } from './palette';
 import { stepZoom, ZOOM_LEVELS } from './view';
 
 type Mode = 'rust' | 'engine' | 'overlay';
@@ -48,6 +50,8 @@ interface State {
 
 const MARGIN = 1000;
 const CLICK_TOLERANCE_PX = 4;
+/** Without an outline under the pointer, WinScore's nearest-reference-point rule applies within this radius (D8). */
+const PICK_RADIUS_PX = 12;
 const ENGINE_TINT = '#06b6d4';
 const RUST_TINT = '#e11d74';
 
@@ -81,12 +85,14 @@ const ui = {
   itemCount: $<HTMLSpanElement>('item-count'),
   cursor: $<HTMLSpanElement>('cursor'),
   message: $<HTMLSpanElement>('message'),
+  palette: $<HTMLElement>('palette'),
 };
 
 const state: State = { score: null, editor: null, fileName: '', rust: EMPTY, reference: null, mode: 'rust', modified: false };
 
 const view = createPageView(ui, showZoom);
 const inputDialog = createInputDialog(ui.inputDialog);
+const palette = createPalette(ui.palette, { run: runCommand, supported: commandSupported });
 
 function showZoom(zoom: number) {
   const rounded = Math.round(zoom);
@@ -97,6 +103,23 @@ function showZoom(zoom: number) {
 function message(text: string, error = false) {
   ui.message.textContent = text;
   ui.message.classList.toggle('error', error);
+}
+
+/** The primary selected item as WinScore's edit mode lists it: number, kind and P1…Pn. */
+function itemLine(): string {
+  const index = primary();
+  const info = index === null ? undefined : state.score?.item(index);
+  if (!info) return '';
+  try {
+    return `Item ${index} ${info.name ?? ''}: ${Array.from(info.params, formatParam).join(' ')}`;
+  } finally {
+    info.free();
+  }
+}
+
+/** The command bar's answer: what just happened, then the item in edit mode. */
+function report(label: string | null) {
+  message([label, itemLine()].filter(Boolean).join(' · '));
 }
 
 function decodeAndFree(encoded: EncodedList): DisplayList {
@@ -157,10 +180,15 @@ function refreshStatus() {
   const items = state.score?.itemCount() ?? 0;
   ui.status.textContent = state.score ? `${state.fileName}${state.modified ? ' (modified)' : ''} · ${items} items` : '';
   ui.save.disabled = !state.score;
-  ui.undo.disabled = !state.editor?.canUndo();
-  ui.redo.disabled = !state.editor?.canRedo();
+  const undo = state.editor?.undoLabel() ?? null;
+  const redo = state.editor?.redoLabel() ?? null;
+  ui.undo.disabled = undo === null;
+  ui.redo.disabled = redo === null;
+  ui.undo.title = undo === null ? 'Nothing to undo' : `Undo ${undo} (⌘Z / Ctrl+Z)`;
+  ui.redo.title = redo === null ? 'Nothing to redo' : `Redo ${redo} (⇧⌘Z / Ctrl+Y)`;
   ui.command.disabled = !state.editor;
   ui.input.disabled = !state.editor;
+  palette.refresh(selection().length > 0);
   ui.mode.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
     const mode = button.dataset.mode as Mode;
     button.setAttribute('aria-checked', String(mode === state.mode));
@@ -211,10 +239,15 @@ function refreshItemList() {
   ui.itemCount.textContent = score ? `(${items.length})` : '';
 }
 
+/** Re-renders the parameter panel, keeping the keyboard in the field it was in. */
 function refreshPanel() {
   const shown = primary();
+  const focused = ui.item.contains(document.activeElement) ? document.activeElement?.id : undefined;
   renderItem(ui.item, state.score && shown !== null ? details(state.score, shown) : null, handlers);
   markSelected(ui.items, selection());
+  const field = focused ? ui.item.querySelector<HTMLInputElement>(`#${focused}`) : null;
+  field?.focus();
+  field?.select();
 }
 
 function redraw() {
@@ -237,13 +270,21 @@ function shownLists(): DisplayList[] {
 function selectionChanged() {
   refreshPanel();
   redraw();
+  report(null);
+}
+
+/** Scrolls the selected items into view unless they are visible. */
+function revealSelection() {
+  const box = selection()
+    .flatMap((item) => shownLists().map((list) => bounds(elementsOf(list, item))))
+    .reduce(union, null);
+  if (box) view.reveal(box);
 }
 
 function select(items: number[], reveal = false) {
   state.editor?.select(items);
   selectionChanged();
-  const box = reveal ? items.flatMap((item) => shownLists().map((list) => bounds(elementsOf(list, item)))).reduce(union, null) : null;
-  if (box) view.reveal(box);
+  if (reveal) revealSelection();
 }
 
 /** Re-renders after an edit; the panel and list follow once a drag is over. */
@@ -256,7 +297,7 @@ function edited(change: Change | null, live: boolean) {
     refreshItemList();
     refreshPanel();
     void loadFontsAndRepaint();
-    if (change) message(change.label);
+    report(change?.label ?? null);
   }
   redraw();
 }
@@ -275,6 +316,12 @@ function edit(action: (editor: Editor) => Change | null) {
   }
 }
 
+/** A SCORE command line from the command bar, the palette or a key; the result is scrolled into view. */
+function runCommand(line: string) {
+  edit((editor) => editor.execute(line));
+  revealSelection();
+}
+
 async function enterInput() {
   if (!state.score) return;
   const line = await inputDialog.ask(state.score);
@@ -284,7 +331,8 @@ async function enterInput() {
   } finally {
     line.free();
   }
-  select(selection(), true);
+  revealSelection();
+  ui.viewport.focus();
 }
 
 const handlers: PanelHandlers = {
@@ -312,7 +360,7 @@ function openScore(bytes: Uint8Array, name: string, reference: Reference | null)
   const score = new Score(bytes);
   state.score?.free();
   state.score = score;
-  state.editor = interimEditor(score);
+  state.editor = scoreEditor(score);
   state.fileName = name;
   state.rust = decodeAndFree(score.render());
   setReference(reference);
@@ -372,13 +420,14 @@ function setMode(mode: Mode) {
   redraw();
 }
 
-/** The item under the pointer in the Rust list, else in the engine list (when the fixture attributes items). */
+/** The item under the pointer: a drawn outline (Rust list, then the engine list's attribution), else the nearest reference point. */
 function itemAt(clientX: number, clientY: number): number | null {
   const p = view.pageAt(clientX, clientY);
   const tolerance = view.unitsPerCss(CLICK_TOLERANCE_PX);
-  const rust = state.mode !== 'engine' ? state.score?.hitTest(p.x, p.y, tolerance) : undefined;
+  const rust = state.mode !== 'engine' ? state.score?.itemAt(p.x, p.y, tolerance, 0) : undefined;
   const engine = state.mode !== 'rust' ? state.reference?.engine.hitTest(p.x, p.y, tolerance) : undefined;
-  return rust ?? engine ?? null;
+  const nearest = () => state.score?.itemAt(p.x, p.y, 0, view.unitsPerCss(PICK_RADIUS_PX));
+  return rust ?? engine ?? nearest() ?? null;
 }
 
 function bindPointer() {
@@ -389,6 +438,7 @@ function bindPointer() {
     selected: selectionChanged,
     edited,
     failed,
+    command: runCommand,
   });
   ui.viewport.addEventListener('pointermove', (e) => {
     const p = view.pageAt(e.clientX, e.clientY);
@@ -436,15 +486,12 @@ function bindControls(samples: Sample[]) {
   ui.undo.addEventListener('click', () => edit((editor) => editor.undo()));
   ui.input.addEventListener('click', () => void enterInput());
   ui.redo.addEventListener('click', () => edit((editor) => editor.redo()));
-  ui.command.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' || !ui.command.value.trim()) return;
-    edit((editor) => editor.execute(ui.command.value.trim()));
-    ui.command.select();
-  });
+  bindCommandBar(ui.command, { run: runCommand, page: ui.viewport });
+  ui.palette.addEventListener('click', () => ui.viewport.focus());
   window.addEventListener('keydown', (e) => {
     if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;
     if (e.key === '+' || e.key === '=') view.setZoom(stepZoom(view.zoom, 1));
-    if (e.key === '-') view.setZoom(stepZoom(view.zoom, -1));
+    if (e.key === '_') view.setZoom(stepZoom(view.zoom, -1));
   });
   bindPointer();
   bindDrop();

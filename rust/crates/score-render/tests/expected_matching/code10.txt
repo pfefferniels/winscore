@@ -56,3 +56,17 @@ code10-staff-recto-201
 code10-staff-size-0.75
 code10-staff-size-1.4
 code10-staff-size-m1
+code10-p10-thick-2-box
+code10-p10-thick-3-box
+code10-p11-circle
+code10-p11-p12-box
+code10-p12-circle
+code10-p13-p14-box
+code10-p26-red-box
+code10-p8-box
+code10-p8-box-letter
+code10-p8-box-wide
+code10-p8-circle
+code10-p8-circle-letter
+code10-p8-circle-wide
+code10-staff-size-0.75-box
