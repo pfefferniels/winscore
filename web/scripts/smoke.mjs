@@ -66,6 +66,19 @@ try {
   const original = fs.readFileSync('../WINSCORE 5.01/winscore/mozart.mus');
   assert.equal(saved.length, original.length);
   assert.notDeepEqual(saved, original);
+
+  // Five-pass input: errors are marked in their pass; a valid line adds a staff and four notes.
+  await page.click('#input');
+  assert.equal(await page.inputValue('#input-staff'), '9');
+  await page.fill('#pass-1', 'C4/D/E/F;');
+  await page.fill('#pass-2', '4/4;');
+  assert.match(await page.textContent('#pass-error-2'), /rhythm/);
+  assert.ok(await page.isDisabled('#input-insert'));
+  await page.fill('#pass-2', '4/4/4/4;');
+  assert.equal(await page.textContent('#input-status'), 'Adds 5 items');
+  await page.click('#input-insert');
+  await page.waitForFunction(() => document.getElementById('item-count').textContent === '(349)');
+  assert.match(await page.textContent('#item h2'), /^Item 348 · Note \(\+4 selected\)/);
   assert.deepEqual(errors, []);
 
   // Without the wasm module the page says so instead of staying blank.
