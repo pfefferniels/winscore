@@ -137,6 +137,18 @@ pub fn text_call<'t>(doc: &Document<'_>, item: ItemRef<'_>, text: &'t [u8]) -> T
     number_text_call(&NumberCall::of(item), doc.position(item), text, font_before(doc, item))
 }
 
+/// The font a code-10 item leaves loaded (see [`text::font_loaded`]).
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    number_font_loaded(doc, doc.position(item), &NumberCall::of(item))
+}
+
+/// The font draw_number leaves loaded for `call` at `at`; the frame's
+/// second drawing of the text loads the same.
+pub fn number_font_loaded(doc: &Document<'_>, at: Pos, call: &NumberCall) -> Option<Font> {
+    let text = number_text(call.value, call.p5, call.p17, call.p18);
+    text::font_loaded(doc, &number_text_call(call, at, &text, Font::TIMES))
+}
+
 fn number_text_call<'t>(call: &NumberCall, at: Pos, text: &'t [u8], current_font: Font) -> TextCall<'t> {
     let font_override = call.font_override();
     TextCall {
