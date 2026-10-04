@@ -172,6 +172,12 @@ fn plain_numbers(tokens: &[Token]) -> Option<Vec<f32>> {
     tokens.iter().map(Token::number).collect()
 }
 
+/// Codes an item can be typed in as numbers; 15 (EPS) and 16 (text) need a
+/// file name or characters.
+fn is_creatable_code(code: f32) -> bool {
+    code.fract() == 0.0 && matches!(code as i32, 1..=14 | 17 | 18)
+}
+
 /// Item number `n` (1-based) clamped to the last item, as `I 99` edits the last one.
 fn clamp_item(n: f32, len: usize) -> Option<usize> {
     (len > 0).then(|| (n.max(1.0) as usize).min(len) - 1)
@@ -236,6 +242,10 @@ impl Run<'_, '_> {
 
     fn outside_edit_mode(&mut self, tokens: &[Token]) -> Result<(), EditError> {
         if let Some(values) = plain_numbers(tokens) {
+            let code = values.first().copied().unwrap_or(0.0);
+            if !is_creatable_code(code) {
+                return Err(EditError::NotForCode { command: "new item".into(), code: code as i32 });
+            }
             return self.create_item(Draft::new(&values));
         }
         let (word, args) = word_and_args(tokens)?;
@@ -291,8 +301,18 @@ impl Run<'_, '_> {
         });
     }
 
+    /// Parameter changes; the engine ignores a line that would leave the item
+    /// without a valid code or staff.
     fn change_params(&mut self, ops: &[ParamOp]) -> Result<(), EditError> {
-        self.rewrite_selected(|draft| ops.iter().for_each(|op| op.apply(draft)));
+        self.rewrite_selected(|draft| {
+            let mut changed = draft.clone();
+            ops.iter().for_each(|op| op.apply(&mut changed));
+            let code_ok = changed.code() == draft.code() || is_creatable_code(changed.get(1));
+            let staff_ok = changed.get(2) == draft.get(2) || changed.get(2) >= 1.0;
+            if code_ok && staff_ok {
+                *draft = changed;
+            }
+        });
         Ok(())
     }
 
@@ -428,16 +448,17 @@ impl Run<'_, '_> {
         });
     }
 
+    /// C, CC, CX: an edited item becomes a copy and the original returns;
+    /// an item left unchanged is not copied.
     fn copy(&mut self, mode: CopyMode) -> Result<(), EditError> {
         let originals = self.selection();
         let copies: Vec<ItemId> = originals
             .iter()
             .filter_map(|&id| {
                 let edited = self.tx.doc().item(id)?.clone();
+                let original = self.session.original(id).cloned().filter(|o| *o != edited)?;
                 let copy = self.tx.append(edited);
-                if let Some(original) = self.session.original(id).cloned() {
-                    self.tx.replace(id, original);
-                }
+                self.tx.replace(id, original);
                 Some(copy)
             })
             .collect();
@@ -445,6 +466,7 @@ impl Run<'_, '_> {
         let after_original = originals.last().and_then(|&id| doc.index_of(id)).and_then(|i| doc.id_at(i + 1));
         let next: Vec<ItemId> = match mode {
             CopyMode::Exit => Vec::new(),
+            CopyMode::Continue if copies.is_empty() => originals.clone(),
             CopyMode::Continue => copies.clone(),
             CopyMode::NextItem => after_original.into_iter().collect(),
         };

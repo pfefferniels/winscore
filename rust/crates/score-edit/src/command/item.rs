@@ -447,6 +447,16 @@ const LINES: &[Entry] = &[
 ];
 
 const SIGNS: &[Entry] = &[
+    mark("TRFW", 21.0, "Trill with flat (P11 = 21)"),
+    mark("TRSW", 22.0, "Trill with sharp (P11 = 22)"),
+    mark("TRNW", 23.0, "Trill with natural (P11 = 23)"),
+    entry("SZ.4", N, Op::SetParam { n: 15, value: 0.4 }, "Note size .4 (P15)"),
+    entry("SZ.5", N, Op::SetParam { n: 15, value: 0.5 }, "Note size .5 (P15)"),
+    entry("SZ.6", N, Op::SetParam { n: 15, value: 0.6 }, "Note size .6 (P15)"),
+    entry("SZ.7", N, Op::SetParam { n: 15, value: 0.7 }, "Note size .7 (P15)"),
+    entry("SZ.8", N, Op::SetParam { n: 15, value: 0.8 }, "Note size .8 (P15)"),
+    entry("SZ.9", N, Op::SetParam { n: 15, value: 0.9 }, "Note size .9 (P15)"),
+    entry("SZ1", N, Op::SetParam { n: 15, value: 1.0 }, "Note size 1 (P15)"),
     entry("TRF", T, Op::SetParam { n: 8, value: 1.0 }, "Trill with flat (P8 = 1)"),
     entry("TRS", T, Op::SetParam { n: 8, value: 2.0 }, "Trill with sharp (P8 = 2)"),
     entry("TRN", T, Op::SetParam { n: 8, value: 3.0 }, "Trill with natural (P8 = 3)"),
