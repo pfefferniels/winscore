@@ -248,11 +248,6 @@ impl Editor {
         self.drag = Some(Drag { items, grab, ends: self.session.drag_ends(), constraint: Constraint::default() });
     }
 
-    /// Starts a drag for [`Editor::drag_to`], which counts from wherever it started.
-    pub fn drag_begin(&mut self) {
-        self.drag_begin_at(0.0, 0.0);
-    }
-
     /// Moves the selection with the cursor at page point (`x`, `y`), keeping
     /// the grab offset; P3 and P4 come out as the engine computes them (P4 in
     /// whole steps for notes, rests, clefs, keys and meters, right ends along).
@@ -274,12 +269,6 @@ impl Editor {
             .collect();
         self.doc.apply_all(&edits);
         Change::new(&edits, self.selection())
-    }
-
-    /// [`Editor::drag_to_point`] by an offset (`dx`, `dy`) from where the drag began.
-    pub fn drag_to(&mut self, dx: f64, dy: f64) -> Change {
-        let Some(grab) = self.drag.as_ref().map(|d| d.grab) else { return Change::default() };
-        self.drag_to_point(grab.x + dx, grab.y + dy, false)
     }
 
     /// Ends a drag: `commit` keeps the new positions as one undo step, otherwise

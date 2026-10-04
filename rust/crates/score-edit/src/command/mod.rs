@@ -13,6 +13,7 @@ pub mod moves;
 pub mod note;
 pub mod numeric;
 pub mod parse;
+pub mod signs;
 
 use score_render::Document as RenderDocument;
 
@@ -55,7 +56,7 @@ enum CopyMode {
 }
 
 /// Words about edit mode itself rather than about an item's parameters.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum SessionWord {
     /// X, or `X n` to go on with item n.
     Leave,
@@ -72,10 +73,19 @@ enum SessionWord {
     DragEnd(Ends),
     /// CN [staff]: P3 of the nearest note or rest.
     Center,
+    /// PSn: remember Pn of the item in edit mode.
+    SaveParam(Option<f32>),
+    /// PG, PGn: give the item the last remembered parameter (or the one remembered for Pn).
+    RecallParam(Option<f32>),
 }
 
 impl SessionWord {
     fn parse(word: &str) -> Option<Self> {
+        match parse::split_count(word) {
+            ("PS", n) => return Some(Self::SaveParam(n)),
+            ("PG", n) => return Some(Self::RecallParam(n)),
+            _ => {}
+        }
         let parsed = match word {
             "X" => Self::Leave,
             "AB" => Self::Abort { exit: false },
@@ -185,6 +195,8 @@ impl Run<'_, '_> {
                 Ok(())
             }
             Some(SessionWord::Center) => self.center(number),
+            Some(SessionWord::SaveParam(n)) => self.save_param(n.or(number)),
+            Some(SessionWord::RecallParam(n)) => self.recall_param(n.or(number)),
             None => self.edit_word(&word, args),
         }
     }
@@ -309,6 +321,24 @@ impl Run<'_, '_> {
                 }
             });
         });
+        Ok(())
+    }
+
+    /// PSn: remembers Pn of the first selected item.
+    fn save_param(&mut self, n: Option<f32>) -> Result<(), EditError> {
+        let n = numeric::param_number(n.ok_or_else(|| EditError::BadArgument("PS".into()))?)?;
+        let first = self.selection().first().and_then(|&id| self.tx.doc().item(id)).map(|item| item.param(n));
+        if let Some(value) = first {
+            self.session.save_param(n, value);
+        }
+        Ok(())
+    }
+
+    /// PG, PGn: sets the remembered parameter on the selection.
+    fn recall_param(&mut self, n: Option<f32>) -> Result<(), EditError> {
+        let wanted = n.map(numeric::param_number).transpose()?;
+        let Some((n, value)) = self.session.saved_param(wanted) else { return Ok(()) };
+        self.rewrite_selected(|draft| draft.set(n, value));
         Ok(())
     }
 

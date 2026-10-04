@@ -31,7 +31,8 @@ impl ParamOp {
     }
 }
 
-fn param_number(value: f32) -> Result<usize, EditError> {
+/// A parameter number as typed: whole and within 1..=MAX_PARAM.
+pub fn param_number(value: f32) -> Result<usize, EditError> {
     let n = value as usize;
     if value.fract() == 0.0 && (1..=MAX_PARAM).contains(&n) {
         Ok(n)

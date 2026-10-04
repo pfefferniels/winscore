@@ -1865,3 +1865,240 @@
 1 1 100 6 10 0 1
 1 1 120 6 10 0 1
 9 1 100 13 22 0.25
+== b6_trill_flat
+8 1 0
+7 1 50 15 0 120 0 1
+== b6_trill_sharp_over_flat
+8 1 0
+7 1 50 15 0 120 0 2
+== b6_trill_natural
+8 1 0
+7 1 50 15 0 120 0 3
+== b6_trill_flat_toggle
+8 1 0
+7 1 50 15 0 120 0 1
+== b6_trill_sharp_toggle
+8 1 0
+7 1 50 15 0 120 0 2
+== b6_trill_natural_toggle
+8 1 0
+7 1 50 15 0 120 0 3
+== b6_trill_no_accidental
+8 1 0
+7 1 50 15 0 120
+== b6_pedal_size
+8 1 0
+7 1 50 -1 0 140 20 0 1.20000005
+== b6_pedal_size_minus
+8 1 0
+7 1 50 -1 0.899999976 140 22
+== b6_pedal_midpoint
+8 1 0
+7 1 50 -1 0 140 21 51
+== b6_staff_size
+8 1 0 0 0.400000006 200
+== b6_staff_size_9
+8 1 0 0 0.899999976 200
+== b6_staff_size_plus
+8 1 0 0 1.01999998 200
+== b6_staff_size_minus
+8 1 0 0 0.99000001 200
+== b6_staff_number_toggle
+8 1 0 0 1 200 0 0 0 0 0 1
+== b6_staff_number_twice
+8 1 0 0 1 200
+== b6_staff_invisible
+8 1 0 0 1 200 -1
+== b6_staff_invisible_twice
+8 1 0 0 1 200
+== b6_symbol_flip
+8 1 0
+9 1 100 13 22 0.25 -0.25
+== b6_symbol_flip_twice
+8 1 0
+9 1 100 13 22 0.25 0.25
+== b6_symbol_flip_tall
+8 1 0
+9 1 100 13 22 0.25 -0.5
+== b6_symbol_rotate
+8 1 0
+9 1 100 13 22 0.25 0 0 10
+== b6_symbol_rotate_zero
+8 1 0
+9 1 100 13 22 0.25 1
+== b6_symbol_larger
+8 1 0
+9 1 100 13 22 0.350000024
+== b6_symbol_smaller_tall
+8 1 0
+9 1 100 13 22 0.150000006 0.600000024
+== b6_symbol_larger_tall
+8 1 0
+9 1 100 13 22 0.350000024 1.4000001
+== b6_symbol_larger_unsized
+8 1 0
+9 1 100 13 22 1.10000002
+== b6_symbol_cue
+8 1 0
+9 1 100 113 22 0.25
+== b6_number_plus
+8 1 0
+10 1 100 13 12
+== b6_number_minus
+8 1 0
+10 1 100 13 -9
+== b6_box_wider
+8 1 0
+12 1 50 12 0 10.3999996 10
+== b6_box_narrower_tall
+8 1 0
+12 1 50 12 1 9.60000038 1
+== b6_box_taller
+8 1 0
+12 1 50 12 0 10 10.3999996
+== b6_box_lower_tall
+8 1 0
+12 1 50 12 1 10 0.600000024
+== b6_box_fill
+8 1 0
+12 1 50 12 0 10 0 0 0 0 0 0 1
+== b6_box_dashes
+8 1 0
+12 1 50 12 0 10 0 0 0 0 0 -4
+== b6_box_skew
+8 1 0
+12 1 50 12 0 10 0 0 0 2
+== b6_box_skew_zero
+8 1 0
+12 1 50 12 0 10
+== b6_box_rotate
+8 1 0
+12 1 50 12 0 10 0 0 -10
+== b6_bar_double
+8 1 0
+14 1 100 1 1
+== b6_bar_double_clears_p16
+8 1 0
+14 1 100 1 1 1 1 1 1 1 1 1 1 1 1 0 1
+== b6_bar_heavy
+8 1 0
+14 1 100 1 2
+== b6_bar_repeats
+8 1 0
+14 1 100 1 3
+== b6_bar_repeat_right
+8 1 0
+14 1 100 1 4
+== b6_bar_double_repeat
+8 1 0
+14 1 100 1 5
+== b6_bar_brace
+8 1 0
+14 1 100 1 8
+== b6_bar_bracket
+8 1 0
+14 1 100 1 9
+== b6_bar_invisible
+8 1 0
+14 1 100 -1
+== b6_bar_invisible_twice
+8 1 0
+14 1 100 1
+== b6_bar_end
+8 1 0
+14 1 200 1
+== b6_bar_double_space
+8 1 0
+14 1 100 1 1 0 0 0 0 0 0 0 1.20000005
+== b6_bar_double_space_default
+8 1 0
+14 1 100 1 1
+== b6_bar_double_width
+8 1 0
+14 1 100 1 1 0 0 0 0 0 0 0 0 0 0 0 0.75
+== b6_bar_double_width_set
+8 1 0
+14 1 100 1 1
+== b6_key_clefs
+8 1 0
+17 1 100 0 2 2
+== b6_key_bass
+8 1 0
+17 1 100 0 2 1
+== b6_key_tenor
+8 1 0
+17 1 100 0 2 3
+== b6_key_treble
+8 1 0
+17 1 100 0 -3
+== b6_key_cue
+8 1 0
+17 1 100 0 2 100
+== b6_key_normal
+8 1 0
+17 1 100 0 2 1
+== b6_key_flat_from_sharps
+8 1 0
+17 1 100 0 -1
+== b6_key_flat_more
+8 1 0
+17 1 100 0 -3
+== b6_key_sharp_from_flats
+8 1 0
+17 1 100 0 1
+== b6_key_sharp_from_none
+8 1 0
+17 1 100 0 1
+== b6_key_naturals
+8 1 0
+17 1 100 0 -103
+== b6_key_naturals_twice
+8 1 0
+17 1 100 0 2
+== b6_key_justify
+8 1 0
+17 1 100 0 2
+== b6_key_no_justify
+8 1 0
+17 1 100 0 2 0 0 0 0 0 0 0 0 1
+== b6_key_spacing
+8 1 0
+17 1 100 0 2 0 0.899999976
+== b6_key_spacing_plus
+8 1 0
+17 1 100 0 2 0 1.25
+== b6_key_spacing_default
+8 1 0
+17 1 100 0 2
+== b6_key_clear_specials
+8 1 0
+17 1 100 0 2 0 0 0 0 0 0 0 0 1
+== b6_meter_top_right
+8 1 0
+18 1 100 0 4 4 0 1
+== b6_meter_top_right_minimum
+8 1 0
+18 1 100 0 4 4 0 1
+== b6_meter_bottom
+8 1 0
+18 1 100 0 6 1
+== b6_meter_bottom_double
+8 1 0
+18 1 100 0 6 16
+== b6_meter_bottom_right
+8 1 0
+18 1 100 0 4 4 0 0 1
+== b6_meter_single
+8 1 0
+18 1 100 0 0 2
+== b7_save_and_recall
+8 1 0
+1 1 100 6 10 0 1
+== b7_copy_position_to_another_item
+8 1 0
+1 1 100 6 10 0 1
+1 1 100 8 10 0 1
+== b7_recall_by_number
+8 1 0
+1 1 100 6 10 0 1
+1 1 100 8 10 0 1
