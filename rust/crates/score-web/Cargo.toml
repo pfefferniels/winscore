@@ -10,6 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 score-format = { path = "../score-format" }
+score-input = { path = "../score-input" }
 score-render = { path = "../score-render" }
 score-testkit = { path = "../score-testkit" }
 wasm-bindgen = "=0.2.129"

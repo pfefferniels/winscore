@@ -139,6 +139,17 @@ impl Document {
         Ok(())
     }
 
+    pub fn file(&self) -> &MusFile {
+        &self.file
+    }
+
+    /// Appends items to the file; returns their ids.
+    pub fn append(&mut self, items: Vec<Item>) -> Vec<ItemId> {
+        let first = self.file.items.len();
+        self.file.items.extend(items);
+        (first..self.file.items.len()).map(|i| ItemId(i as u32)).collect()
+    }
+
     pub fn hit(&self, at: At, tolerance: f64) -> Option<ItemId> {
         hit_test(&self.page, at, tolerance)
     }

@@ -4,6 +4,7 @@ import { createPageView, type Scene } from './canvas';
 import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
 import { interimEditor, type Change, type Editor } from './editor';
 import { loadFaces } from './fonts';
+import { createInputDialog } from './input-dialog';
 import { bindInteraction } from './interaction';
 import { markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer } from './paint';
@@ -60,6 +61,8 @@ const ui = {
   save: $<HTMLButtonElement>('save'),
   undo: $<HTMLButtonElement>('undo'),
   redo: $<HTMLButtonElement>('redo'),
+  input: $<HTMLButtonElement>('input'),
+  inputDialog: $<HTMLDialogElement>('input-dialog'),
   command: $<HTMLInputElement>('command'),
   zoomOut: $<HTMLButtonElement>('zoom-out'),
   zoomIn: $<HTMLButtonElement>('zoom-in'),
@@ -83,6 +86,7 @@ const ui = {
 const state: State = { score: null, editor: null, fileName: '', rust: EMPTY, reference: null, mode: 'rust', modified: false };
 
 const view = createPageView(ui, showZoom);
+const inputDialog = createInputDialog(ui.inputDialog);
 
 function showZoom(zoom: number) {
   const rounded = Math.round(zoom);
@@ -156,6 +160,7 @@ function refreshStatus() {
   ui.undo.disabled = !state.editor?.canUndo();
   ui.redo.disabled = !state.editor?.canRedo();
   ui.command.disabled = !state.editor;
+  ui.input.disabled = !state.editor;
   ui.mode.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
     const mode = button.dataset.mode as Mode;
     button.setAttribute('aria-checked', String(mode === state.mode));
@@ -268,6 +273,18 @@ function edit(action: (editor: Editor) => Change | null) {
   } catch (err) {
     failed(err);
   }
+}
+
+async function enterInput() {
+  if (!state.score) return;
+  const line = await inputDialog.ask(state.score);
+  if (!line) return;
+  try {
+    edit((editor) => editor.insertInput(line));
+  } finally {
+    line.free();
+  }
+  select(selection(), true);
 }
 
 const handlers: PanelHandlers = {
@@ -417,6 +434,7 @@ function bindControls(samples: Sample[]) {
     if (mode) setMode(mode);
   });
   ui.undo.addEventListener('click', () => edit((editor) => editor.undo()));
+  ui.input.addEventListener('click', () => void enterInput());
   ui.redo.addEventListener('click', () => edit((editor) => editor.redo()));
   ui.command.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || !ui.command.value.trim()) return;
