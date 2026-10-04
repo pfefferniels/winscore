@@ -75,8 +75,12 @@ impl Score {
     /// one undo step; the new items become the selection.
     #[wasm_bindgen(js_name = insertInput)]
     pub fn insert_input(&mut self, line: &InputLine) -> Result<String, JsError> {
-        let items = line_items(self.0.file(), &line.texts(), &line.options()).map_err(|err| JsError::new(&err.message))?;
+        let mut motives = self.0.motives().clone();
+        let items = line_items(self.0.file(), line, &mut motives).map_err(|err| JsError::new(&err.message))?;
         let result = self.0.editor_mut().insert_items(items);
+        if result.is_ok() {
+            self.0.set_motives(motives);
+        }
         self.finish(result)
     }
 

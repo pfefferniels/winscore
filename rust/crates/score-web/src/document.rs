@@ -5,6 +5,7 @@
 
 use score_edit::{Change, EditError, Editor};
 use score_format::{Item, MusError, MusFile};
+use score_input::Motives;
 use score_render::page::Paper;
 use score_render::{render, DisplayList, ItemId};
 
@@ -36,13 +37,15 @@ pub fn decode_text(bytes: &[u8]) -> String {
 pub struct Document {
     editor: Editor,
     page: DisplayList,
+    /// Motives of the music input, kept across lines as the engine keeps them.
+    motives: Motives,
 }
 
 impl Document {
     pub fn open(bytes: &[u8]) -> Result<Self, MusError> {
         let editor = Editor::open(bytes)?;
         let page = render_page(editor.file());
-        Ok(Self { editor, page })
+        Ok(Self { editor, page, motives: Motives::new() })
     }
 
     pub fn file(&self) -> &MusFile {
@@ -77,6 +80,14 @@ impl Document {
 
     pub fn save(&self) -> Vec<u8> {
         self.editor.save()
+    }
+
+    pub fn motives(&self) -> &Motives {
+        &self.motives
+    }
+
+    pub fn set_motives(&mut self, motives: Motives) {
+        self.motives = motives;
     }
 
     pub fn editor(&self) -> &Editor {
