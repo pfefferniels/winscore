@@ -75,17 +75,164 @@ impl BoxCall {
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let call = BoxCall::of(item);
-    if !matches!(call.kind, BOX | CIRCLE_SHAPE | DASHED_BOX) {
-        return;
-    }
-    let call = if trunc(f64::from(item.p(26))) == MARKED {
+    let marked = trunc(f64::from(item.p(26))) == MARKED;
+    let call = if marked {
         canvas.colour = colour::from_p26(MARKED_COLOUR, doc.options.medium);
         BoxCall { p8: f64::from(MARKED_THICKNESS), ip8: MARKED_THICKNESS, ..call }
     } else {
         call
     };
-    draw_box(canvas, doc.position(item), doc.staff_of(item).step, &call);
+    let (at, step) = (doc.position(item), doc.staff_of(item).step);
+    match call.kind {
+        BOX | CIRCLE_SHAPE | DASHED_BOX => draw_box(canvas, at, step, &call),
+        GUITAR_GRID => {}
+        k if k < 0 => {}
+        _ => draw_arrow(doc, item, canvas, at, &call, marked),
+    }
 }
+
+const GUITAR_GRID: i32 = 10;
+
+/// Arrows, draw_box_other 0x432E80: with P10 = 1 a straight arrow of P6
+/// times 5 scale steps with a head P13 (or P12) long and P12 wide; otherwise
+/// a circular arc from 90° to 180° − P11 whose end lies on the item's
+/// point, with a filled triangle as its head. P9 turns the whole arrow.
+fn draw_arrow(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at: Pos, call: &BoxCall, marked: bool) {
+    let staff = doc.staff_of(item);
+    let step = staff.step;
+    let start = canvas.buffer_mut().len();
+    let or_one = |v: f32| if v == 0.0 { 1.0 } else { f64::from(v) };
+    let width = or_one(item.p(6));
+    let height = if item.p(7) == 0.0 { width } else { f64::from(item.p(7)) };
+    let head_width = or_one(item.p(12));
+    let head_length = if item.p(13) == 0.0 { head_width } else { f64::from(item.p(13)) };
+    let p9 = item.p(9);
+    let centre = if call.ip10 == STRAIGHT {
+        draw_straight_arrow(canvas, at, step, call, (width, head_width, head_length));
+        if call.ip12 >= 0 {
+            if p9 != 0.0 {
+                rotate_points(&mut canvas.buffer_mut()[start..], at.to_point(), p9);
+            }
+            return;
+        }
+        at
+    } else {
+        let Some(centre) = draw_arc_arrow(doc, item, canvas, at, call, marked, (width, height, head_width, head_length))
+        else {
+            return;
+        };
+        centre
+    };
+    if doc.screen() && p9 != 0.0 {
+        rotate_points(&mut canvas.buffer_mut()[start..], centre.to_point(), p9);
+    }
+}
+
+const STRAIGHT: i32 = 1;
+const ARROW_UNIT: f32 = 6.9996;
+const STRAIGHT_UNIT: f32 = 6.0;
+const STRAIGHT_LENGTH: f32 = 35.0;
+const HEAD_HALF_WIDTH: f32 = 0.555;
+
+/// The shaft from the item's point to the right, then the head as a filled
+/// triangle (a negative IP12 leaves it out).
+fn draw_straight_arrow(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall, sizes: (f64, f64, f64)) {
+    let (width, head_width, head_length) = sizes;
+    let unit = real(step * f64::from(STRAIGHT_UNIT));
+    canvas.point(at, Pen::Stroke);
+    let end = real(step * f64::from(STRAIGHT_LENGTH) * width + at.x);
+    canvas.point(Pos::new(end, at.y), Pen::Continue);
+    if call.ip12 < 0 {
+        return;
+    }
+    let length = real(unit * head_length);
+    let length = if width < 0.0 { -length } else { length };
+    let half = real(head_width * f64::from(HEAD_HALF_WIDTH) * unit);
+    let tip = Pos::new(real(length + end), at.y);
+    canvas.point(tip, Pen::Fill);
+    canvas.point(Pos::new(end, real(half + at.y)), Pen::Continue);
+    canvas.point(Pos::new(end, real(at.y - half)), Pen::Continue);
+    canvas.point(tip, Pen::Continue);
+}
+
+const ARC_SCALE: f32 = 10.0;
+const ARC_TABLE_DIVISOR: f32 = 20.0;
+const ARC_START: i32 = 90;
+const LAST_ARC_P11: i32 = 360;
+const ARROWHEAD_SIZE: f32 = 1.2;
+const ARROWHEAD_LIFT: f32 = 0.28;
+const ARROWHEAD_REACH: f32 = 5.0;
+const ARROWHEAD_SIDES: i32 = 120;
+
+/// The arc and its head (both through draw_box); returns the arc's centre,
+/// or `None` where the engine would read outside its circle table.
+fn draw_arc_arrow(
+    doc: &Document<'_>,
+    item: ItemRef<'_>,
+    canvas: &mut Canvas<'_>,
+    at: Pos,
+    call: &BoxCall,
+    marked: bool,
+    sizes: (f64, f64, f64, f64),
+) -> Option<Pos> {
+    let (width, height, head_width, head_length) = sizes;
+    let staff = doc.staff_of(item);
+    let step = staff.step;
+    let unit = real(step * f64::from(ARROW_UNIT));
+    let end = HALF_TURN - call.ip11.min(LAST_ARC_P11);
+    let degree = usize::try_from(end % FULL_TURN).ok()?;
+    let (sin, cos) = CIRCLE[degree];
+    let a = real(width * f64::from(sin) / f64::from(ARC_TABLE_DIVISOR));
+    let b = real(height * f64::from(cos) / f64::from(ARC_TABLE_DIVISOR));
+    let (dx, dy) = if call.ip9 == 0 {
+        (a, b)
+    } else {
+        let radians = real(call.p9 / f64::from(DEGREES_PER_RADIAN));
+        let (s, c) = (real(radians.sin()), real(radians.cos()));
+        (real(b * s + a * c), real(b * c - a * s))
+    };
+    let level = real(f64::from(item.p(4)) - dy);
+    let centre = Pos::new(real(at.x - unit * dx), staff.y(level));
+    let scale = f64::from(ARC_SCALE);
+    let arc = BoxCall {
+        kind: CIRCLE_SHAPE,
+        width: real(width * scale),
+        height: real(height * scale),
+        ip9: 0,
+        ip10: ARC_START,
+        ip11: end,
+        ip12: 0,
+        fill: false,
+        ..*call
+    };
+    draw_box(canvas, centre, step, &arc);
+    if head_width >= 0.0 {
+        let head_length = if height < 0.0 { -head_length } else { head_length };
+        let size = f64::from(ARROWHEAD_SIZE);
+        let thickness = if marked { f64::from(MARKED_THICKNESS) } else { -1.0 };
+        let head = BoxCall {
+            kind: CIRCLE_SHAPE,
+            width: real(head_width * size),
+            height: real(head_length * size),
+            p8: thickness,
+            ip9: 0,
+            ip10: 0,
+            ip11: 0,
+            ip12: ARROWHEAD_SIDES,
+            fill: true,
+            ..*call
+        };
+        let lift = real(head_length * f64::from(ARROWHEAD_LIFT));
+        let head_at = Pos::new(
+            real(unit * f64::from(ARROWHEAD_REACH) * width + centre.x),
+            staff.y(real(lift + level)),
+        );
+        draw_box(canvas, head_at, step, &head);
+    }
+    Some(centre)
+}
+
+const DEGREES_PER_RADIAN: f32 = 57.295_776;
 
 /// IP26 = -1 marks a box: blue (P26 = 99) and three rings thick on the
 /// screen (in print it is not drawn; print is not modelled here).

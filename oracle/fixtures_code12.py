@@ -39,6 +39,28 @@ def cases() -> list[Case]:
         ("p26-marked-circle", "P26 = -1 circle", {"p5": 1, "p6": 3, "p26": -1}),
         *[(f"p5-other-{label(k)}", f"P5 = {k}", {"p5": k, "p6": 3}) for k in (2, 4, 5, 10, -1, -2, -5, -10)],
         ("p5-arrow-p10-1", "P5 = 2, P10 = 1 (straight arrow)", {"p5": 2, "p6": 3, "p10": 1}),
+        *[(f"arrow-straight-{name}", f"straight arrow, {desc}", {"p5": 2, "p10": 1} | params) for name, desc, params in (
+            ("default", "P6 = 0", {}),
+            ("long", "P6 = 2.5", {"p6": 2.5}),
+            ("left", "P6 = -2", {"p6": -2}),
+            ("head", "P12 = 2, P13 = 3", {"p6": 2, "p12": 2, "p13": 3}),
+            ("no-head", "P12 = -1", {"p6": 2, "p12": -1}),
+            ("rotated", "P9 = 30", {"p6": 2, "p9": 30}),
+            ("rotated-no-head", "P9 = -60, P12 = -1", {"p6": 2, "p9": -60, "p12": -1}),
+        )],
+        *[(f"arrow-arc-{name}", f"arc arrow, {desc}", {"p5": 2} | params) for name, desc, params in (
+            ("p11-90", "P11 = 90", {"p6": 2, "p11": 90}),
+            ("p11-30", "P11 = 30", {"p6": 2, "p11": 30}),
+            ("p11-150", "P11 = 150", {"p6": 2, "p11": 150}),
+            ("p6-p7", "P6 = 3, P7 = 1.5", {"p6": 3, "p7": 1.5}),
+            ("flipped", "P6 = -2, P7 = -2", {"p6": -2, "p7": -2}),
+            ("head", "P12 = 2, P13 = 3", {"p6": 2, "p12": 2, "p13": 3}),
+            ("no-head", "P12 = -1", {"p6": 2, "p12": -1}),
+            ("rotated", "P9 = 45", {"p6": 2, "p9": 45}),
+            ("rotated-0.5", "P9 = 0.5", {"p6": 2, "p9": 0.5}),
+            ("thick", "P8 = 2", {"p6": 2, "p8": 2}),
+            ("marked", "P26 = -1", {"p6": 2, "p26": -1}),
+        )],
     ]
     single = [built(f"code12-{name}", desc, [staff(), shape(**params)]) for name, desc, params in one]
     staves = [
