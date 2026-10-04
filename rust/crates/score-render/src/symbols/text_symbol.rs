@@ -105,6 +105,7 @@ pub fn draw_text_symbol(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canv
         space: 0.0,
         shift: 0.0,
         colour: (call.p26 != 0.0).then_some(call.p26),
+        step: None,
         current_font: font_before(doc, item),
     };
     let text_call = match call.number {
