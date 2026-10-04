@@ -186,20 +186,19 @@ impl Reader {
         found
     }
 
+    /// AND and OR from left to right, as the engine reads them:
+    /// `A OR B AND C` is `(A OR B) AND C`.
     fn condition(&mut self) -> Option<Condition> {
-        let mut left = self.conjunction()?;
-        while self.eat_word("OR") {
-            left = Condition::Or(Box::new(left), Box::new(self.conjunction()?));
-        }
-        Some(left)
-    }
-
-    fn conjunction(&mut self) -> Option<Condition> {
         let mut left = self.comparison()?;
-        while self.eat_word("AND") {
-            left = Condition::And(Box::new(left), Box::new(self.comparison()?));
+        loop {
+            left = if self.eat_word("AND") {
+                Condition::And(Box::new(left), Box::new(self.comparison()?))
+            } else if self.eat_word("OR") {
+                Condition::Or(Box::new(left), Box::new(self.comparison()?))
+            } else {
+                return Some(left);
+            };
         }
-        Some(left)
     }
 
     fn comparison(&mut self) -> Option<Condition> {
@@ -331,10 +330,10 @@ mod tests {
     }
 
     #[test]
-    fn and_binds_tighter_than_or() {
-        let s = parse("IF P1=2 AND P2=1 OR P3=120 THEN DEL").unwrap();
-        assert!(s.condition.holds(&note()));
-        let t = parse("IF P1=2 AND (P2=1 OR P3=120) THEN DEL").unwrap();
-        assert!(!t.condition.holds(&note()));
+    fn and_and_or_read_left_to_right() {
+        let s = parse("IF P3=120 OR P1=2 AND P2=5 THEN DEL").unwrap();
+        assert!(!s.condition.holds(&note()));
+        let t = parse("IF P3=120 OR (P1=2 AND P2=5) THEN DEL").unwrap();
+        assert!(t.condition.holds(&note()));
     }
 }

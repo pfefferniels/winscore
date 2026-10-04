@@ -2922,3 +2922,6 @@ IF P3 > 120 AND (P1=9 OR P1=18) THEN CUT
 == g2_if_negative_value
 base: 8 1; 1 1 100 6 10 0 1
 IF P1=1 THEN P4=-3
+== g2_if_or_then_and
+base: 8 1; 1 1 120 6 10 0 1; 1 1 100 6 10 0 1
+IF P3=120 OR P1=2 AND P2=5 THEN P4=9
