@@ -11,8 +11,7 @@ use crate::canvas::Canvas;
 use crate::codes;
 use crate::display::Colour;
 use crate::document::{Document, ItemRef};
-use crate::codes::number::{self, NumberCall};
-use crate::codes::meter;
+use crate::codes::{clef, meter, note, number, rest};
 use crate::text::{draw_text, font_loaded, Font, TextCall};
 use crate::units::trunc;
 
@@ -102,10 +101,10 @@ fn font_loaded_by(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
         codes::TEXT => font_loaded(doc, &text_call(doc, item, &characters(item), Font::TIMES)),
         codes::STAFF if shows_staff_number(doc, item) => Some(Font::STAFF_NUMBER),
         codes::METER => meter::font_loaded(doc, item),
-        codes::NUMBER => {
-            let text = number::item_text(item);
-            font_loaded(doc, &number::number_text_call(&NumberCall::of(item), doc.position(item), &text, Font::TIMES))
-        }
+        codes::NUMBER => number::font_loaded(doc, item),
+        codes::NOTE => note::font_loaded(doc, item),
+        codes::REST => rest::font_loaded(doc, item),
+        codes::CLEF => clef::font_loaded(doc, item),
         _ => None,
     }
 }
