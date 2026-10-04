@@ -51,11 +51,11 @@ impl SymbolLibrary {
         })
     }
 
-    /// Symbol `number`, if its file exists and its slot has a name.
+    /// Symbol `number`, if its file exists and its slot has points; the engine ignores names.
     pub fn symbol(&self, number: i32) -> Option<&Symbol> {
         let file = self.files.get(&(number - number.rem_euclid(SYMBOLS_PER_FILE)))?;
         let symbol = file.symbols.get(number.rem_euclid(SYMBOLS_PER_FILE) as usize)?;
-        (!symbol.name.is_empty()).then_some(symbol)
+        (!symbol.records.is_empty()).then_some(symbol)
     }
 }
 

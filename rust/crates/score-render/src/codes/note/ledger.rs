@@ -6,11 +6,11 @@
 //! and which way they go. They are flushed on their own, in the staff's
 //! colour unless P27 asks for the note's.
 
-use super::{c, Note};
+use super::Note;
 use crate::canvas::{Canvas, Pen};
 use crate::colour;
 use crate::document::{Document, ItemRef};
-use crate::units::{real, trunc, Pos};
+use crate::units::{constant, real, trunc, Pos};
 
 /// Ledger lines extend this many units beyond the head on each side.
 const OVERHANG: f32 = 5.0;
@@ -45,7 +45,7 @@ pub fn wanted(note: &Note, item: ItemRef<'_>) -> bool {
 
 pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
     let Some(run) = run(note, trunc(f64::from(item.p(30)))) else { return };
-    let overhang = real(note.unit * c(OVERHANG));
+    let overhang = real(note.unit * constant(OVERHANG));
     let left = real(note.origin.x - overhang);
     let right = real(note.head_width + note.origin.x + overhang);
     (0..run.count()).fold(run.y, |y, _| {
