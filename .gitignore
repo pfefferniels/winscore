@@ -8,3 +8,4 @@ rust/target*/
 web/node_modules/
 web/dist/
 *:Zone.Identifier*
+.claude/
