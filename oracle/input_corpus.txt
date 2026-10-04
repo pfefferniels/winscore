@@ -2238,3 +2238,115 @@ C5/D/E/F/G/A/B/C6;
 ;
 4B;
 1 4/5 8;
+== r-adda
+in 1
+;
+G3/G4/D4/B3/G3/G4/D4/B3/G3/G4/D4/BF3/G3/G4/D4/BF3;
+SX14/SX2;
+;
+2B;
+1+4/7+8/9+12/13+14;
+== r-start-tr-key-meter
+IN 1
+;
+TR/K2S/3 4/D4/E/F/M/G/A/B/M/C5/D/E/M;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== r-start-key-meter
+IN 1
+;
+K3F/4 4/C4/D/E/F/M/G/A/B/C5/M;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== r-start-ba-key
+IN 1
+;
+BA/K1S/COM/G2/A/B/C3/M/D/E/F/G/M;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== r-start-meter-only
+IN 1
+;
+6 8/C4/D/E/F/G/A/M;
+8/8/8/8/8/8;
+;
+2B;
+;
+== r-start-tr-meter
+IN 1
+;
+TR/COM/C4/D/E/F/M;
+4/4/4/4;
+;
+;
+;
+== r-start-key-only
+IN 1
+;
+K4S/C4/D/E/F;
+4/4/4/4;
+;
+;
+;
+== r-melody
+IN 1
+;
+TR/K1F/3 4/PF4/A/C5/M/BF4/A/G/M/F/E/F/M/G;
+4/8/8/4/4/4/4/4/4/2.;
+A 1/S 4:6/FE 10;
+2 3;
+1 3/7 9;
+== r-sixteenths
+IN 1
+;
+TR/4 4/C4/D/E/F/G/A/B/C5/M/D/C/B4/A/G/F/E/D/M;
+S/S/S/S/S/S/S/S/S/S/S/S/S/S/S/S;
+;
+4B;
+;
+== r-dotted-rhythm
+IN 1
+;
+TR/2 4/C4/D/E/F/M/G/A/B/C5/M;
+8./16/8./16/E/E/E/E;
+;
+1 2/3 4/5 6;
+;
+== r-triplets
+IN 1
+;
+TR/C4/D/E/F/G/A/M/B/C5/D/E/M;
+T/T/T/T/T/T/T/T/T/H;
+;
+301 3/304 6/307 9;
+;
+== r-rests
+IN 1
+;
+TR/3 4/C4/R/E/M/RW/M/F/G/R/M;
+4/4/4/2./4/4/4;
+;
+;
+;
+== r-grace
+IN 1
+;
+TR/C4/D/E/F/G/M;
+4/G/4/4/4;
+;
+;
+;
+== r-chords
+IN 1
+;
+BA/K2F/C3:E:G/F:A:C4/BF2:D3:F/M/EF3:G:BF/R/M;
+2/4/4/2/2;
+;
+;
+;
