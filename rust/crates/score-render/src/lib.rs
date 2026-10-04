@@ -41,6 +41,7 @@ pub mod page;
 pub mod staff;
 pub mod svg;
 pub mod symbols;
+pub mod text;
 pub mod trig;
 pub mod units;
 
