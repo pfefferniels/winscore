@@ -13,7 +13,8 @@ use crate::codes::number::{draw_number, NumberCall};
 use crate::document::{Document, ItemRef};
 use crate::page;
 use crate::symbols::clef::{clef_placement, draw_clef_symbol, ClefPlacement};
-use crate::symbols::{draw_library_symbol, ItemContext, SymbolCall};
+use crate::symbols::library::is_text_symbol;
+use crate::symbols::{draw_library_symbol, draw_text_symbol, ItemContext, SymbolCall, TextSymbolCall};
 use crate::units::{self, real, trunc, Pos};
 
 /// A tablature clef: its P5, size factor and lift in scale steps above P4.
@@ -46,6 +47,14 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     };
     match TABLATURE.iter().find(|t| t.p5 == kind) {
         Some(tablature) => draw_tablature(doc, item, canvas, &placement, tablature),
+        None if is_text_symbol(placement.number) => {
+            let call = TextSymbolCall {
+                size_x: placement.size_x,
+                size_y: placement.size_y,
+                ..TextSymbolCall::of(doc, item, placement.number)
+            };
+            draw_text_symbol(doc, item, canvas, &call);
+        }
         None => draw_clef_symbol(doc, &context, canvas, &placement, step),
     }
 }

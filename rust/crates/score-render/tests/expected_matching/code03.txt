@@ -94,3 +94,4 @@ code03-staff-recto-201
 code03-staff-size-0.75-treble-8va
 code03-staff-size-1.4-treble-8va
 code03-staff-size-m1-treble-8va
+code03-p5-symbol-45
