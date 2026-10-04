@@ -27,7 +27,8 @@ Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT
 - **Open** a `.mus` file with the button or by dropping it on the window; the bundled samples are in the drop-down (`WINSCORE 5.01/winscore/*.mus`, `SCORE 4/SCORE/NEWLINE.MUS`, `NEWLIB.MUS`). Dropping an `engine.json` loads it as the reference for the current score.
 - **Rust / Engine / Overlay**: the Rust renderer's page, the original engine's display list (`rust/fixtures/sample-*/engine.json`, produced from WScore.exe under emulation), or both, engine in cyan and Rust in magenta, multiplied, so that matching elements come out dark.
 - **Zoom**: −/+, the percent list, Fit, or ctrl/⌘ + wheel (pinch) around the pointer.
-- **Selection**: click an element (Rust and Overlay views) or a row of the item list. The panel shows P1…Pn; edit a value and press Enter to set it and re-render. **Save** downloads the edited `.mus`.
+- **Selection**: click an element or a row of the item list; Shift-click adds or removes; Escape clears. The Engine view selects through the fixture's item attribution. The panel shows P1…Pn of the last selected item with the help's label for each; edit a value and press Enter to set it and re-render.
+- **Editing**: drag selected items (Shift keeps one axis, Escape cancels), arrows move by one P3 space or scale step, Page Up/Down by 4 steps, Home/End by 10 spaces (WinScore's edit-mode keys), `[`/`]` one staff up/down, Delete, ⌘Z/Ctrl+Z undo, ⇧⌘Z/Ctrl+Y redo, and the command bar takes SCORE edit commands. Dragging empty paper pans. **Save** downloads the edited `.mus`. Until editor-core's `score-edit` crate is wired in, `src/editor.ts` stands in: moves change only P3/P4, drags assume staff size 1, and Delete and commands report that they are not available yet.
 - URL parameters for direct links: `?sample=mozart.mus&mode=overlay&zoom=200&select=12`.
 
 ## Conventions
@@ -42,6 +43,8 @@ Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT
 | Path | What |
 |---|---|
 | `src/main.ts` | app state, file handling, controls |
+| `src/editor.ts` | the editing operations the UI uses, with an interim implementation |
+| `src/interaction.ts` | pointer and keyboard gestures → editor calls |
 | `src/canvas.ts` | scrolling, zooming page view |
 | `src/paint.ts` | display-list painter |
 | `src/display.ts` | decoding of score-web's flat display-list encoding |
