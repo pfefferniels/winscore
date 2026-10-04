@@ -135,6 +135,8 @@ struct Beam {
     /// P9.
     flags: i32,
     main: Line,
+    /// Print output closes each beam with one more point (0x4A060D).
+    print: bool,
 }
 
 impl Beam {
@@ -202,7 +204,7 @@ impl Beam {
             p7 if p7 <= 0 => tremolo_edge(edge, item, unit, cue),
             _ => edge,
         });
-        Self { unit, stem_shift, flag_shift, spacing, thickness, left, right, flags, main }
+        Self { unit, stem_shift, flag_shift, spacing, thickness, left, right, flags, main, print: !doc.screen() }
     }
 
     fn plan(&self, item: ItemRef<'_>) -> Plan {
@@ -322,7 +324,8 @@ impl Beam {
     fn draw(&self, canvas: &mut Canvas<'_>, edge: Edge) {
         let inner = |p: Pos| Pos::new(p.x, real(self.thickness + p.y));
         let corners = [inner(edge.right), edge.right, edge.left, inner(edge.left), inner(edge.right)];
-        canvas.fill([corners]);
+        let closing = self.print.then_some(edge.right);
+        canvas.fill([corners.into_iter().chain(closing)]);
     }
 }
 

@@ -28,7 +28,7 @@
   56000
  ],
  "paper": "Legal",
- "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
+ "text_origin": "start of the baseline: engine (x, y + 96), then translated",
  "title": "C:\\WORK\\CASE.MUS   (saved -   12 Items)   <Legal>",
  "valid": true,
  "view_globals": [

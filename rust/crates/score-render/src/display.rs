@@ -59,7 +59,9 @@ pub struct Shape {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlacedText {
-    /// Top-left of the character cell, as WinScore passes it to TextOut.
+    /// The text baseline's start: the engine's y + 96. OnDraw passes it to
+    /// TextOut with TA_TOP after adding the font's ascent, which in the
+    /// view's y-up mapping puts the baseline here (analysis/engine/display.md).
     pub origin: Point,
     pub text: String,
 }

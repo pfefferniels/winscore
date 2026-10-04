@@ -11,9 +11,10 @@ Callers: static call sites (through the incremental-linking thunks) plus calls s
 | `412749` | `barline_dots` | repeat dots (code-12 boxes) on every spanned staff | draw_barline | read |
 | `412A20` | `barline_bracket` | curved bracket ends (type 9) | draw_barline | read |
 | `412B93` | `barline_brace` | brace (type 8) via the clef routine, symbol 5 | draw_barline | read |
-| `416168` | `draw_beam` | code 6 | 4f2279, draw_item | read |
-| `4293F0` | `draw_symbol` | codes 9, 11, 13 | draw_clef, draw_box_negative, draw_meter, 4f14b0, draw_rest, 53421b (+4) | read |
-| `431AE0` | `draw_clef` | code 3 | barline_brace, draw_keysig, draw_meter, draw_note, 4f06bb, 4f14b0 (+6) | read |
+| `416168` | `draw_beam` | code 6 | note_marks, draw_item | read |
+| `4293F0` | `draw_symbol` | codes 9, 11, 13 | draw_clef, draw_box_negative, draw_meter, note_head, draw_rest, 53421b (+4) | read |
+| `42AD97` | `load_symbol_library` | builds lbNNNN.drw and reads it; 'Not found' dialog if missing | 429178, draw_symbol, 44b928, 44f600 | read |
+| `431AE0` | `draw_clef` | code 3 | barline_brace, draw_keysig, draw_meter, draw_note, note_tails, note_head (+6) | read |
 | `432E80` | `draw_box_other` | code 12, other P5 |  | read |
 | `433530` | `draw_box` | code 12 with P5 in {0, 1, 3} | barline_dots, draw_box_other, 43464d, draw_box_negative, 4f1f69, draw_number (+3) | read |
 | `433EEE` | `draw_box_grid` | code 12 with P5 = 10 | draw_item | read |
@@ -24,14 +25,30 @@ Callers: static call sites (through the incremental-linking thunks) plus calls s
 | `494026` | `redraw` | fit_view then draw_items | 444745, 493e10, cmd_get | read |
 | `494C38` | `load_score` |  | cmd_get, 4ccf20, 4d6318, 54b1fc | inferred |
 | `49EAE0` | `draw_box_negative` | code 12 with P5 < 0 | draw_item | read |
+| `4A060D` | `box_outline` | closed rectangle polyline from the corner globals 0x1F93E60..0x1F93E7C (code-12 boxes, page frame) | draw_beam, draw_box, draw_box_negative, note_marks | read |
 | `4A3F10` | `cmd_get` | G command (load and display) | 444745, 45d278, interpret, 4b7ad8, 4e8adf, 522bd8 (+1) | inferred |
 | `4A6730` | `engine_init` | start-up: PREF.DAT, WSCORE.DAT, symbol library | 5a1db0 | verified |
+| `4AEFA0` | `input_pass` | IN: parse one pass text and dispatch on the pass number |  | read |
+| `4AFB68` | `cmd_input` | IN command handler | interpret | verified |
 | `4BF4F8` | `draw_keysig` | code 17 | draw_item | read |
 | `4BFA59` | `draw_meter` | code 18 | draw_item | read |
+| `4ECDF8` | `input_pitches` | IN pass 1: work table from pitches | 47c3e8, input_pass | verified |
 | `4EFEC0` | `draw_note` | code 1 | draw_item | read |
-| `4F65A8` | `draw_number` | code 10; also staff numbers | draw_clef, draw_meter, 4f2279, draw_rest, 53bfc6, draw_staff_number (+2) | read |
+| `4F06BB` | `note_tails` | tails (flags), IP9 % 10, via draw_clef/draw_symbol | draw_note | read |
+| `4F0871` | `note_ledger_lines` | ledger lines of a note (draw_note, when P4 < 2 or > 12, or P30) | draw_note, 525ae4 | read |
+| `4F0EB9` | `note_stem` | stem, when (IP5 % 100) / 10 != 0 | draw_note | read |
+| `4F14B0` | `note_head` | note head, via draw_clef/draw_symbol | draw_note | read |
+| `4F2279` | `note_marks` | marks (P11) | draw_note | read |
+| `4F2F31` | `note_accidental` | accidental, IP5 % 10 | draw_note | read |
+| `4F65A8` | `draw_number` | code 10; also staff numbers | draw_clef, draw_meter, note_marks, draw_rest, 53bfc6, draw_staff_number (+2) | read |
 | `50A650` | `draw_eps` | code 15 | draw_item | read |
 | `519C38` | `draw_rest` | code 2 | draw_barline, draw_item | read |
+| `51C64F` | `input_rhythm_value` | IN: decode one rhythm value (dur, type, dots, tails) | input_rhythm_spacing | read |
+| `51CF40` | `input_rhythm_spacing` | IN pass 2: rhythms and horizontal spacing (input.md) | 47c3e8 | read |
+| `5253FD` | `input_store_items` | IN: writes the work table into the item store | 524678, input_main, 52e0a3, 530dd8, 53174c | verified |
+| `52C6A0` | `input_main` | IN main routine | 473a90, interpret, cmd_input | verified |
+| `52F991` | `input_range_dialog` | IN range dialog: IP5 begin, IP6 end, IP7 spacing staff | input_main | read |
+| `52FC56` | `input_min_gap` | IN: minimum gap of 3 after pass 2 (input.md) | input_store_items | read |
 | `538550` | `draw_slur` | code 5 | draw_item | read |
 | `545140` | `draw_staff` | code 8 | 545752, draw_item, 575e58 | verified |
 | `545DE0` | `draw_staff_number` | screen-only staff number text left of the staff | draw_staff, 5459a2 | read |
@@ -41,13 +58,14 @@ Callers: static call sites (through the incremental-linking thunks) plus calls s
 | `547AA3` | `staff_level_y` | staff_level_y(&v) = f32(STAFF_Y(CUR_STAFF) + v*7*STAFF_STEP(CUR_STAFF)) | draw_barline, draw_beam, draw_clef, draw_box_other, 4345ee, 43464d (+13) | verified |
 | `547C32` | `load_item_header` | LOAD_I -> LOAD_W, LOAD_LEN, LOAD_CODE, LOAD_STAFF, LOAD_P3 | 40cde4, 40f003, 417738, 419498, 41ef66, 421651 (+82) | verified |
 | `547FC8` | `draw_items` | draws every item: page frame, then for each item copies its words into P(), calls draw_item, flushes points | 40cde4, 40f003, 413608, 41c3b8, 421651, 42c1ed (+86) | verified |
-| `548981` | `index_items` | rebuilds ITEM_PTR0 and the item count from the length words | 47330a, load_score, 4a3172, 51ffc0, 5253fd, 52b325 (+3) | read |
-| `54A497` | `flush_points` | COLOR from P26, then emit_points | 48f663, 48fd5c, 4a3172, 4ddb6e, 4f0871, 502f69 (+4) | verified |
-| `54A69C` | `emit_points` | point buffer -> vector output (x + VIEW_DX, y - VIEW_DY, colour &#124; pen << 24) | 4f0871, 4f1f69, 549b5b, flush_points, 559733 | verified |
+| `548981` | `index_items` | rebuilds ITEM_PTR0 and the item count from the length words | 47330a, load_score, 4a3172, 51ffc0, input_store_items, 52b325 (+3) | read |
+| `54A497` | `flush_points` | COLOR from P26, then emit_points | 48f663, 48fd5c, 4a3172, 4ddb6e, note_ledger_lines, 502f69 (+4) | verified |
+| `54A69C` | `emit_points` | point buffer -> vector output (x + VIEW_DX, y - VIEW_DY, colour &#124; pen << 24) | note_ledger_lines, 4f1f69, 549b5b, flush_points, 559733 | verified |
 | `54AABA` | `amod` | amod(&x, &y) = x - INT(x / y) * y (Fortran AMOD) | 40bc18, 40c1c0, 40cde4, 413ca8, 417738, 41a14c (+65) | verified |
 | `54CE39` | `draw_page_frame` | green page outline per PAPER, drawn as a code-12 box | interpret, 4a3172, draw_items | read |
 | `54DAF6` | `push_words` | push_words(&n, a): saves n words on an internal stack | 40bc18, 40cde4, 41b011, 421651, 422d98, draw_clef (+31) | read |
 | `54DB88` | `pop_words` | pop_words(&n, a): restores them | 40bc18, 40cde4, 41b011, 421651, 422d98, draw_clef (+30) | read |
 | `54ED0E` | `fit_view` | draws everything, takes the bounding box of the output, sets VIEW_DY = max y + 3000 | 493e65, redraw, 4ccf20, 4d6318, 52b325, 535d00 (+8) | read |
-| `55F340` | `draw_code7` | code 7: trills, ottava, pedal | 4f2279, draw_item | read |
-| `569AF0` | `draw_text` | code 16 | draw_symbol, draw_box_negative, draw_number, draw_item, 558a40 | read |
+| `558A40` | `note_special_head` | IP6 < -2 except -3 and -20..-39 | 46d088, draw_note, 557e05 | inferred |
+| `55F340` | `draw_code7` | code 7: trills, ottava, pedal | note_marks, draw_item | read |
+| `569AF0` | `draw_text` | code 16 | draw_symbol, draw_box_negative, draw_number, draw_item, note_special_head | read |

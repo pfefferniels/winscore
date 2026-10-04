@@ -14,6 +14,9 @@
         <select id="sample" title="Bundled samples"></select>
         <button id="save" title="Save the score as .mus">Save</button>
         <span class="sep"></span>
+        <button id="undo" title="Undo (⌘Z / Ctrl+Z)">Undo</button>
+        <button id="redo" title="Redo (⇧⌘Z / Ctrl+Y)">Redo</button>
+        <span class="sep"></span>
         <button id="zoom-out" title="Zoom out (−)">−</button>
         <select id="zoom" title="Zoom"></select>
         <button id="zoom-in" title="Zoom in (+)">+</button>
@@ -44,7 +47,11 @@
           </section>
         </aside>
       </main>
-      <footer class="footer"><span id="cursor" class="muted"></span><span id="message" class="message"></span></footer>
+      <footer class="footer">
+        <input id="command" class="command" type="text" placeholder="Command for the selection, e.g. R 5, 600 5, DE" autocomplete="off" spellcheck="false" />
+        <span id="cursor" class="muted"></span>
+        <span id="message" class="message"></span>
+      </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

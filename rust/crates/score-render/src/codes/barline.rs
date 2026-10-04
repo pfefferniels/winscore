@@ -8,6 +8,7 @@
 //! `analysis/engine/barlines.md`; constants are REAL*4 as in the engine.
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
+use crate::codes::line::{self, Params};
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
@@ -56,6 +57,10 @@ struct Barline {
     low: Staff,
     /// trunc(P8), which the dot and bracket routines overwrite.
     ip8: i32,
+    /// P4 as draw_line later reads it: the span, recomputed for 999.
+    p4: f32,
+    /// Dash and space length (P8, P9); an invisible bar sets 0.3 and 1.5.
+    dash: (f32, f32),
 }
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
@@ -64,12 +69,15 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         kind = 0;
     }
     let mut span = trunc(f64::from(item.p(4)));
+    let mut p4 = item.p(4);
     let (mut p10, mut p11) = (item.p(10), item.p(11));
     if span == 999 {
         span = doc.staves.highest().unwrap_or(item.staff()) - item.staff() + 1;
+        p4 = span as f32;
         (p10, p11) = (0.0, 0.0);
     }
     let mut gap_p5 = item.p(5);
+    let mut dash = (item.p(8), item.p(9));
     if span < 0 {
         if !doc.screen() {
             return;
@@ -77,6 +85,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         span = -span;
         kind = DASHED;
         gap_p5 = DASHED as f32;
+        dash = (0.3, 1.5);
     }
     let low = doc.staff_of(item);
     span = span.min(LAST_STAFF - low.number + 1).max(1);
@@ -106,6 +115,8 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         span,
         low,
         ip8: trunc(f64::from(item.p(8))),
+        p4,
+        dash,
     };
     bar.draw(doc, item, canvas);
     if item.p(18) != 0.0 && gap_p5 < 2.0 {
@@ -162,9 +173,33 @@ impl Barline {
                 self.thick(canvas, a, real(a - u * constant(4.5)));
             }
             SQUARE_BRACKET => self.square_bracket(canvas),
-            k if k > REPEAT_HEAVY => {}
+            k if k > REPEAT_HEAVY => self.dashed(item, canvas),
             _ => self.thick(canvas, real(self.xb - six), self.xb),
         }
+    }
+
+    /// Types 7 and above other than 8–10, and invisible bars on the screen:
+    /// a vertical dashed line drawn by the code-4 routine (draw_line
+    /// 0x439963) with P5 = the top as a level of staff P2, P6 = P3, IP7 = 1,
+    /// IP10 = IP6 or (OUTPUT_MODE != 0), which is 1 on the screen and in
+    /// print, P8 dash (default 1), P9 space (default 2).
+    fn dashed(&self, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+        let staff = &self.low;
+        let top_level = real((self.top - f64::from(staff.level0)) / (staff.step * 7.0));
+        let default = |p: f32, value: f32| if p == 0.0 { value } else { p };
+        let thickness = match trunc(f64::from(item.p(6))) {
+            0 => 1,
+            ip6 => ip6,
+        };
+        let params = Params::of(item)
+            .with(4, self.p4)
+            .with(5, top_level as f32)
+            .with(6, item.p(3))
+            .with(7, 1.0)
+            .with(8, default(self.dash.0, 1.0))
+            .with(9, default(self.dash.1, 2.0))
+            .with(10, thickness as f32);
+        line::draw(&params, Pos::new(self.x_pos, self.bottom), staff, canvas);
     }
 
     /// barline_stroke 0x412699 (on screen: one segment).
