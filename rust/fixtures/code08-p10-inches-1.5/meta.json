@@ -9,7 +9,7 @@
    "vector_words": 75
   }
  ],
- "coordinates": "page: origin at the bottom-left paper corner, y up; view = page + view_offset",
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
  "description": "staff 2 placed 1.5 in above staff 1 with P10 (P4 = 4 ignored)",
  "events": [],
  "invalid_reasons": [],
@@ -30,6 +30,10 @@
  "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
  "title": "C:\\WORK\\CASE.MUS   (saved -    1 Items)   <Legal>",
  "valid": true,
+ "view_globals": [
+  2400,
+  -13600
+ ],
  "view_offset": [
   400,
   -13348

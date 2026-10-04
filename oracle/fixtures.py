@@ -34,6 +34,8 @@ SANDBOX_NAME = "case.mus"   # "G I..." drops the I: the engine reads "G input.mu
 
 TEXT_TOP_OFFSET = 96            # OnDraw (0x5E5910) draws strings at (x, y + 0x60)
 TEXT_RUN_Y_OFFSETS = 0x1576570  # per-run y offset OnDraw adds after scaling
+VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4   # emit_points: x_out = x + VIEW_DX, y_out = y - VIEW_DY
+PAGE_FROM_INTERNAL = (2000, 26948)        # paper bottom-left at internal (-2000, -26947.7); analysis/engine/coordinates.md
 DOCUMENTED_VECTOR_WORDS, DOCUMENTED_TEXT_BYTES = 100_000, 20_000   # ARCHITECTURE.md; carmen exceeds the first
 INVALIDATING_EVENTS = {"message", "dialog", "prompt-unanswered"}
 QUIET_EVENTS = {"service", "redraw", "document"}
@@ -69,7 +71,14 @@ class Run:
     events: list[Event] = field(default_factory=list)
     final: EngineResult | None = None
     text_run_y_offsets: list[int] = field(default_factory=list)
+    view_dx: int = 0
+    view_dy: int = 0
     error: str = ""
+
+    @property
+    def offset(self) -> tuple[int, int]:
+        """view = page + offset, from the engine's view globals."""
+        return self.view_dx - PAGE_FROM_INTERNAL[0], -self.view_dy - PAGE_FROM_INTERNAL[1]
 
 
 def fresh_sandbox(root: Path, case: Case) -> None:
@@ -98,6 +107,7 @@ def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     except RuntimeError as err:
         run.error = str(err)
     run.events = list(engine.shell.events)
+    run.view_dx, run.view_dy = engine.i32(VIEW_DX), engine.i32(VIEW_DY)
     if run.final is not None:
         runs = len(text_runs(run.final.text))
         run.text_run_y_offsets = [engine.i32(TEXT_RUN_Y_OFFSETS + 4 * i) for i in range(runs)]
@@ -157,18 +167,19 @@ class PageView:
     content: list[Shape]
     texts: list[TextRun]
     frames: list[PageFrame]
+    offset: tuple[int, int]
 
     @classmethod
-    def of(cls, result: EngineResult) -> "PageView":
-        all_shapes = shapes(result.vector)
+    def of(cls, run: Run) -> "PageView":
+        all_shapes = shapes(run.final.vector)
         frames = [PageFrame.of(s) for s in all_shapes if is_page_frame(s)]
         content = [s for s in all_shapes if not is_page_frame(s)]
-        return cls(content, text_runs(result.text), frames)
+        return cls(content, text_runs(run.final.text), frames, run.offset)
 
     @property
-    def offset(self) -> tuple[int, int] | None:
-        """view = page + offset, taken from the first (leftmost) frame."""
-        return min(f.origin for f in self.frames) if self.frames else None
+    def frame_agrees(self) -> bool:
+        """The leftmost frame sits where the view globals put the paper."""
+        return not self.frames or min(f.origin for f in self.frames) == self.offset
 
 
 # -- engine.json -------------------------------------------------------------
@@ -214,7 +225,7 @@ def text_json(run: TextRun, dx: int, dy: int) -> dict:
 
 
 def display_json(view: PageView) -> dict:
-    dx, dy = view.offset or (0, 0)
+    dx, dy = view.offset
     return {
         "shapes": [shape_json(s, dx, dy) for s in view.content],
         "texts": [text_json(r, dx, dy) for r in view.texts],
@@ -255,19 +266,19 @@ def counted(lines) -> list[str]:
 def invalid_reasons(run: Run, zoom_run: Run | None, view: PageView | None) -> list[str]:
     reasons = [f"emulation: {run.error}"] if run.error else []
     reasons += counted(f"{e.kind}: {e.detail}" for e in run.events if e.kind in INVALIDATING_EVENTS)
-    if view is not None and not view.frames:
-        reasons.append("no page frame in the output, page coordinates unknown")
+    if view is not None and not view.frame_agrees:
+        reasons.append(f"page frame at {[f.origin for f in view.frames]}, view globals say {view.offset}")
     if zoom_run is not None and zoom_run.final is not None and run.final is not None:
         if (zoom_run.final.vector, zoom_run.final.text) != (run.final.vector, run.final.text):
             reasons.append(f"output differs between zoom {BASE_ZOOM:#x} and {CHECK_ZOOM:#x}")
     return reasons
 
 
-def warnings(run: Run) -> list[str]:
+def warnings(run: Run, view: PageView | None) -> list[str]:
     """Doubts that do not invalidate a case; the engine's real buffer limits are unconfirmed."""
     if run.final is None:
         return []
-    notes = []
+    notes = [] if view is None or view.frames else ["no page frame in the output"]
     if 3 * len(run.final.vector) > DOCUMENTED_VECTOR_WORDS:
         notes.append(f"vector stream longer than the documented {DOCUMENTED_VECTOR_WORDS} words")
     if len(run.final.text) > DOCUMENTED_TEXT_BYTES - 64:
@@ -294,14 +305,15 @@ def meta_json(case: Case, run: Run, zoom_run: Run | None, view: PageView | None)
         "paper": paper.group(1) if paper else None,
         "page_size": list(frames[0].size) if frames else None,
         "page_frames": [[f.left, f.bottom, f.right, f.top] for f in frames],
-        "view_offset": list(view.offset) if view is not None and view.offset else None,
+        "view_offset": list(view.offset) if view is not None else None,
+        "view_globals": [run.view_dx, run.view_dy],
         "title": title,
         "events": [{"kind": e.kind, "detail": e.detail} for e in run.events if e.kind not in QUIET_EVENTS],
         "zoom_checked": zoom_run is not None,
         "valid": not reasons,
         "invalid_reasons": reasons,
-        "warnings": warnings(run),
-        "coordinates": "page: origin at the bottom-left paper corner, y up; view = page + view_offset",
+        "warnings": warnings(run, view),
+        "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
         "text_origin": "top-left of the character cell: engine (x, y + 96), then translated",
     }
 
@@ -328,7 +340,7 @@ def write_fixture(case: Case, out: Path, zoom_check: bool) -> Written:
     target = out / case.name
     target.mkdir(parents=True, exist_ok=True)
     (target / INPUT).write_bytes(case.mus)
-    view = PageView.of(run.final) if run.final is not None else None
+    view = PageView.of(run) if run.final is not None else None
     meta = meta_json(case, run, zoom_run, view)
     (target / "meta.json").write_text(json.dumps(meta, sort_keys=True, indent=1, ensure_ascii=False) + "\n")
     display = display_json(view) if view is not None else {"shapes": [], "texts": []}
