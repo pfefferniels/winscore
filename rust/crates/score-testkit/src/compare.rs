@@ -8,10 +8,14 @@
 use std::collections::HashMap;
 use std::fmt;
 
-use score_render::{Colour, DisplayList, PlacedText, Point, Shape, ShapeKind, TextRun};
+use score_render::{Colour, DisplayList, ItemId, PlacedText, Point, Shape, ShapeKind, TextRun};
 
 /// Colour of the staff numbers WinScore shows at the left edge (screen aid).
-pub const STAFF_NUMBER_COLOUR: Colour = Colour { r: 0, g: 0x73, b: 0x33 };
+pub const STAFF_NUMBER_COLOUR: Colour = Colour {
+    r: 0,
+    g: 0x73,
+    b: 0x33,
+};
 
 pub fn is_staff_number(run: &TextRun) -> bool {
     run.font == "Helvetica-Narrow" && run.colour == STAFF_NUMBER_COLOUR
@@ -85,6 +89,25 @@ impl Report {
 
     pub fn max_deviation(&self) -> i32 {
         self.shapes.max_deviation.max(self.texts.max_deviation)
+    }
+}
+
+/// The elements drawn by items for which `keep` holds; elements without a source are left out.
+pub fn restrict(list: &DisplayList, keep: impl Fn(ItemId) -> bool) -> DisplayList {
+    let kept = |source: Option<ItemId>| source.is_some_and(&keep);
+    DisplayList {
+        shapes: list
+            .shapes
+            .iter()
+            .filter(|s| kept(s.source))
+            .cloned()
+            .collect(),
+        texts: list
+            .texts
+            .iter()
+            .filter(|t| kept(t.source))
+            .cloned()
+            .collect(),
     }
 }
 
@@ -170,8 +193,14 @@ fn point_deviation(a: &Point, b: &Point) -> i32 {
     (a.x - b.x).abs().max((a.y - b.y).abs())
 }
 
-fn sequence_deviation<'a>(a: impl Iterator<Item = &'a Point>, b: impl Iterator<Item = &'a Point>) -> i32 {
-    a.zip(b).map(|(p, q)| point_deviation(p, q)).max().unwrap_or(0)
+fn sequence_deviation<'a>(
+    a: impl Iterator<Item = &'a Point>,
+    b: impl Iterator<Item = &'a Point>,
+) -> i32 {
+    a.zip(b)
+        .map(|(p, q)| point_deviation(p, q))
+        .max()
+        .unwrap_or(0)
 }
 
 fn is_closed(path: &[Point]) -> bool {
@@ -199,7 +228,10 @@ fn path_deviation(expected: &[Point], actual: &[Point], options: &CompareOptions
 }
 
 fn shape_deviation(expected: &Shape, actual: &Shape, options: &CompareOptions) -> Option<i32> {
-    if expected.kind != actual.kind || expected.colour != actual.colour || expected.paths.len() != actual.paths.len() {
+    if expected.kind != actual.kind
+        || expected.colour != actual.colour
+        || expected.paths.len() != actual.paths.len()
+    {
         return None;
     }
     expected
@@ -239,16 +271,22 @@ struct ShapeIndex {
 impl ShapeIndex {
     fn new(shapes: &[Shape]) -> Self {
         let mut buckets: HashMap<ShapeKey, Vec<(i32, usize)>> = HashMap::new();
-        shapes
-            .iter()
-            .enumerate()
-            .for_each(|(i, s)| buckets.entry(ShapeKey::of(s)).or_default().push((min_x(s), i)));
-        buckets.values_mut().for_each(|bucket| bucket.sort_unstable());
+        shapes.iter().enumerate().for_each(|(i, s)| {
+            buckets
+                .entry(ShapeKey::of(s))
+                .or_default()
+                .push((min_x(s), i))
+        });
+        buckets
+            .values_mut()
+            .for_each(|bucket| bucket.sort_unstable());
         ShapeIndex { buckets }
     }
 
     fn same_structure(&self, shape: &Shape) -> &[(i32, usize)] {
-        self.buckets.get(&ShapeKey::of(shape)).map_or(&[], Vec::as_slice)
+        self.buckets
+            .get(&ShapeKey::of(shape))
+            .map_or(&[], Vec::as_slice)
     }
 
     fn near(&self, shape: &Shape, tolerance: i32) -> Vec<usize> {
@@ -296,7 +334,12 @@ fn compare_shapes(expected: &[Shape], actual: &[Shape], options: &CompareOptions
             .same_structure(&expected[e])
             .iter()
             .filter(|&&(_, a)| !taken[a])
-            .filter_map(|&(_, a)| deviation(e, a).map(|d| Nearest { index: a, deviation: d }))
+            .filter_map(|&(_, a)| {
+                deviation(e, a).map(|d| Nearest {
+                    index: a,
+                    deviation: d,
+                })
+            })
             .min_by_key(|n| (n.deviation, n.index))
     };
     section(
@@ -338,8 +381,9 @@ fn same_style(a: &TextRun, b: &TextRun, tolerance: f32) -> bool {
 }
 
 fn text_deviation(expected: &Placed, actual: &Placed, options: &CompareOptions) -> Option<i32> {
-    (expected.string.text == actual.string.text && same_style(expected.run, actual.run, options.tolerance as f32))
-        .then(|| point_deviation(&expected.string.origin, &actual.string.origin))
+    (expected.string.text == actual.string.text
+        && same_style(expected.run, actual.run, options.tolerance as f32))
+    .then(|| point_deviation(&expected.string.origin, &actual.string.origin))
 }
 
 fn text_summary(placed: &Placed) -> String {
@@ -363,12 +407,23 @@ fn compare_texts(expected: &[Placed], actual: &[Placed], options: &CompareOption
             .unwrap_or_default()
     };
     let deviation = |e: usize, a: usize| text_deviation(&expected[e], &actual[a], options);
-    let (pairs, taken) = match_elements(expected.len(), actual.len(), candidates, deviation, options.tolerance);
+    let (pairs, taken) = match_elements(
+        expected.len(),
+        actual.len(),
+        candidates,
+        deviation,
+        options.tolerance,
+    );
     let nearest = |e: usize| {
         candidates(e)
             .into_iter()
             .filter(|&a| !taken[a])
-            .filter_map(|a| deviation(e, a).map(|d| Nearest { index: a, deviation: d }))
+            .filter_map(|a| {
+                deviation(e, a).map(|d| Nearest {
+                    index: a,
+                    deviation: d,
+                })
+            })
             .min_by_key(|n| (n.deviation, n.index))
     };
     section(
@@ -438,7 +493,10 @@ mod tests {
     }
 
     fn list(shapes: Vec<Shape>) -> DisplayList {
-        DisplayList { shapes, texts: vec![] }
+        DisplayList {
+            shapes,
+            texts: vec![],
+        }
     }
 
     fn text(s: &str, x: i32, y: i32) -> TextRun {
@@ -483,7 +541,10 @@ mod tests {
         assert!(!report.is_match());
         assert_eq!(
             report.shapes.missing[0].nearest,
-            Some(Nearest { index: 0, deviation: 2 })
+            Some(Nearest {
+                index: 0,
+                deviation: 2
+            })
         );
         assert_eq!(report.shapes.extra.len(), 1);
     }
@@ -557,6 +618,11 @@ mod tests {
             ..CompareOptions::default()
         };
         assert!(compare(&expected, &DisplayList::default(), &options).is_match());
-        assert!(!compare(&expected, &DisplayList::default(), &CompareOptions::default()).is_match());
+        assert!(!compare(
+            &expected,
+            &DisplayList::default(),
+            &CompareOptions::default()
+        )
+        .is_match());
     }
 }
