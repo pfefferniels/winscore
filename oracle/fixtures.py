@@ -26,6 +26,7 @@ from unicorn import UC_HOOK_MEM_WRITE
 from callbacks import Event
 from displaylist import POLYLINE, FILLED, Shape, TextRun, shapes, text_runs
 from emu import LINE_BUF, TEXT_OUT, VECTOR_BUF, Engine, EngineResult, ZOOM
+from musbuild import param, read_items
 from sandbox import make_sandbox
 
 REPO = Path(__file__).resolve().parents[1]
@@ -38,7 +39,16 @@ TEXT_BASELINE_OFFSET = 96       # OnDraw (0x5E5910): the baseline of a string is
 VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4   # emit_points: x_out = x + VIEW_DX, y_out = y - VIEW_DY
 PAGE_FROM_INTERNAL = (2000, 26948)        # paper bottom-left at internal (-2000, -26947.7); analysis/engine/coordinates.md
 ITEM_COUNT = 0x20B8E24          # number of items, and the 1-based loop index while drawing
-PEN_RESET = -99                 # 0x4D4F3F: (0, 0, -99) "reset pen width", print metadata that also reaches the screen
+# Pen-width records (tag = colour + pen << 24), print metadata that also reaches the screen (impl-notes):
+# 0x4D4F3F writes (0, 0, pen -99) "reset width", 0x4D4ED2 writes (999, w, pen 99) "set width".
+PEN_RESET_KIND, PEN_SET_KIND, PEN_SET_X = 0x9D, 0x63, 999
+
+
+def is_pen_record(triple: tuple[int, int, int], view_dx: int, view_dy: int) -> bool:
+    """The record's point passes through emit_points like any other, so it is checked in internal coordinates."""
+    x, y, tag = triple[0] - view_dx, triple[1] + view_dy, triple[2]
+    kind = (tag & 0xFFFFFFFF) >> 24
+    return (kind == PEN_RESET_KIND and x == y == 0) or (kind == PEN_SET_KIND and x == PEN_SET_X)
 NOT_FOUND_DIALOG = 0x59B090     # "Not found": missing symbol library or instrument; changes no geometry
 # The engine never checks its output buffers; these are the shell's room (disasm-expert).
 SHELL_VECTOR_WORDS, SHELL_OBJECTS, SHELL_TEXT_BYTES = 1_000_000, 10_000, 440_000
@@ -77,6 +87,7 @@ class Run:
     final: EngineResult | None = None
     vector_writers: dict[int, int] = field(default_factory=dict)
     text_writers: dict[int, int] = field(default_factory=dict)
+    excluded: dict[int, str] = field(default_factory=dict)   # 0-based item -> reason
     view_dx: int = 0
     view_dy: int = 0
     error: str = ""
@@ -110,6 +121,7 @@ class FixtureEngine(Engine):
         super().__post_init__()
         self.vector_writers: dict[int, int] = {}
         self.text_writers: dict[int, int] = {}
+        self.missing_library: dict[int, str] = {}
         self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_vector_write, begin=VECTOR_BUF, end=VECTOR_BUF + 4 * SHELL_VECTOR_WORDS)
         self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_text_write, begin=TEXT_OUT, end=TEXT_OUT + SHELL_TEXT_BYTES)
 
@@ -123,7 +135,10 @@ class FixtureEngine(Engine):
     def _on_cpp(self, uc, address, size, _user):
         if address != NOT_FOUND_DIALOG:
             return super()._on_cpp(uc, address, size, _user)
-        self.shell.record("not-found", self.cstr(LINE_BUF, 0x200).strip())
+        notice = self.cstr(LINE_BUF, 0x200).strip()
+        self.shell.record("not-found", notice)
+        if notice.lower().endswith(".drw"):
+            self.missing_library[self.i32(ITEM_COUNT) - 1] = notice
         self.return_from_call(0, 0)
 
     def command(self, text: str) -> EngineResult:
@@ -149,6 +164,7 @@ def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     run.view_dx, run.view_dy = engine.i32(VIEW_DX), engine.i32(VIEW_DY)
     run.vector_writers = dict(engine.vector_writers)
     run.text_writers = dict(engine.text_writers)
+    run.excluded = stale_symbol_items(read_items(case.mus), engine.missing_library)
     if run.final is not None:
         try:
             text_runs(run.final.text)
@@ -156,6 +172,19 @@ def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
             run.error = f"text stream does not decode: {err}"
             run.final = None
     return run
+
+
+def stale_symbol_items(items: list[bytes], missing: dict[int, str]) -> dict[int, str]:
+    """Items that draw a symbol from a library the engine could not load.
+
+    The loader (0x42AD97) does not mark the failed load, so draw_symbol copies whatever the
+    previous library left in its buffers and caches that for the session (disasm-expert,
+    analysis/engine/symbols.md). The shape depends on the draw history, so these items are
+    excluded. Later items asking for the same symbol get the cached result without a notice.
+    """
+    symbols = {(param(items[i], 1), param(items[i], 5)): notice for i, notice in missing.items() if i < len(items)}
+    return {i: f"symbol library not found ({symbols[key]}); the engine draws stale buffers"
+            for i, packed in enumerate(items) if (key := (param(packed, 1), param(packed, 5))) in symbols}
 
 
 # -- page frame and coordinates ----------------------------------------------
@@ -222,17 +251,19 @@ class PageView:
 
     @classmethod
     def of(cls, run: Run) -> "PageView":
-        kept = [k for k, (_, _, tag) in enumerate(run.final.vector) if tag != PEN_RESET]
+        kept = [k for k, t in enumerate(run.final.vector) if not is_pen_record(t, run.view_dx, run.view_dy)]
         all_shapes = shapes([run.final.vector[k] for k in kept])
         frames = [PageFrame.of(s) for s in all_shapes if is_page_frame(s)]
-        content = [(s, shape_writer(s, kept, run.vector_writers)) for s in all_shapes if not is_page_frame(s)]
-        resets = len(run.final.vector) - len(kept)
-        # The shell would start an object at the record and give the next shape its tag (kind 0xFF, colour 0xFFFF9D).
-        notes = [f"{resets} pen-width reset record(s) left out"] if resets else []
+        content = [(s, item) for s in all_shapes if not is_page_frame(s)
+                   if (item := shape_writer(s, kept, run.vector_writers)) not in run.excluded]
+        records = len(run.final.vector) - len(kept)
+        # The shell would draw each record as a one-point object of its own kind.
+        notes = [f"{records} pen-width record(s) left out"] if records else []
         if any(i is None for _, i in content):
             notes.append("shapes without a single writing item; not attributed")
-        runs = text_runs(run.final.text)
-        text_items = [run_writer(r, run.text_writers) for r in runs]
+        attributed = [(r, run_writer(r, run.text_writers)) for r in text_runs(run.final.text)]
+        runs = [r for r, item in attributed if item not in run.excluded]
+        text_items = [item for _, item in attributed if item not in run.excluded]
         if None in text_items:
             notes.append("text runs without a single writing item; not attributed")
         return cls([s for s, _ in content], [item for _, item in content], runs, text_items, frames, run.offset,
@@ -391,6 +422,7 @@ def meta_json(case: Case, run: Run, zoom_run: Run | None, view: PageView | None)
         "title": title,
         "events": [{"kind": e.kind, "detail": e.detail} for e in run.events if e.kind not in QUIET_EVENTS],
         "not_found": counted(e.detail for e in run.events if e.kind == "not-found"),
+        "excluded_items": [{"item": i, "reason": reason} for i, reason in sorted(run.excluded.items())],
         "zoom_checked": zoom_run is not None,
         "valid": not reasons,
         "invalid_reasons": reasons,

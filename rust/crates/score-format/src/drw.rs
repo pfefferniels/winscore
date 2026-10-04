@@ -4,8 +4,9 @@
 //! * 11 little-endian i16 offsets, 1-based (FORTRAN) point indices: symbol k
 //!   uses points `off[k] ..< off[k+1]`, with `off[0] = 0` read as 1;
 //!   `off[10] - 1` is the point count;
-//! * 10 names of 24 blank-padded characters; a blank name marks an unused
-//!   slot, whose offsets are leftovers and are ignored;
+//! * 10 names of 24 blank-padded characters. The engine ignores the names:
+//!   a slot with a blank name is drawn from its offsets like any other (e.g.
+//!   LB1300 slot 0); only offsets outside the point table leave it empty;
 //! * N x-coordinates (f32), N y-coordinates (f32), N pen codes (i16), with
 //!   N = `off[10] - 1`. Pen 1 starts a stroked line, 2 a filled polygon,
 //!   3 a further path of the same filled object, 0 continues the current
@@ -135,11 +136,11 @@ impl DrwLibrary {
         };
         let symbol = |k: usize| -> Result<Symbol, DrwError> {
             let name = name(k);
-            if name.is_empty() {
-                return Ok(Symbol { name, paths: Vec::new(), records: Vec::new() });
-            }
             let (start, end) = (offsets[k], offsets[k + 1]);
             if start > end || end > n {
+                if name.is_empty() {
+                    return Ok(Symbol { name, paths: Vec::new(), records: Vec::new() });
+                }
                 return Err(DrwError::BadOffsets);
             }
             let records = (start..end).map(point).map(|((x, y), pen)| DrwRecord { x, y, pen }).collect();

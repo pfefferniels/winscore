@@ -45,6 +45,40 @@
    "kind": "not-found"
   }
  ],
+ "excluded_items": [
+  {
+   "item": 5,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 7,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 9,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 11,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 13,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 15,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 17,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0990.drw); the engine draws stale buffers"
+  },
+  {
+   "item": 43,
+   "reason": "symbol library not found (C:\\WINSCORE\\SCORLIB\\lb0710.drw); the engine draws stale buffers"
+  }
+ ],
  "invalid_reasons": [],
  "items": 59,
  "not_found": [

@@ -13,7 +13,18 @@ const DEGREES_PER_RADIAN: f32 = 57.295_776;
 /// truncated again after the turn. Called by draw_symbol, boxes, lines,
 /// slurs, EPS and text with the points added since a given buffer index.
 pub fn rotate_points(points: &mut [BufferPoint], centre: Point, degrees: f32) {
-    let angle = real(f64::from(degrees) / f64::from(DEGREES_PER_RADIAN));
+    turn(points, centre, real(f64::from(degrees) / f64::from(DEGREES_PER_RADIAN)));
+}
+
+/// rotate_points 0x42A5F4 called with a start index of 0 or below (as
+/// draw_slur does): the angle is taken in radians and negated, so the points
+/// turn counter-clockwise by `radians` (0x42A62B).
+pub fn rotate_points_radians(points: &mut [BufferPoint], centre: Point, radians: f32) {
+    turn(points, centre, f64::from(-radians));
+}
+
+/// The turn itself: clockwise by `angle` radians, a REAL*4 value.
+fn turn(points: &mut [BufferPoint], centre: Point, angle: f64) {
     let (sin, cos) = (real(angle.sin()), real(angle.cos()));
     let (cx, cy) = (f64::from(centre.x), f64::from(centre.y));
     points.iter_mut().for_each(|p| {
@@ -106,6 +117,13 @@ mod tests {
 
     /// The REAL*4 angle lies just past π/2, so the cosine is -4.4e-8 and
     /// truncation moves x from 100 to 99, as in the engine.
+    #[test]
+    fn radians_turn_counter_clockwise() {
+        let mut points = [BufferPoint { at: Point::new(110, 100), pen: Pen::Stroke }];
+        rotate_points_radians(&mut points, Point::new(100, 100), std::f32::consts::FRAC_PI_2);
+        assert_eq!(points[0].at, Point::new(99, 110));
+    }
+
     #[test]
     fn quarter_turn_is_clockwise() {
         let mut points = [BufferPoint { at: Point::new(110, 100), pen: Pen::Stroke }];
