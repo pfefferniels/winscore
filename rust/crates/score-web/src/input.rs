@@ -75,7 +75,7 @@ impl InputLine {
     }
 
     pub fn options(&self) -> Options {
-        Options { staff: self.staff, begin: self.begin, end: self.end }
+        Options { staff: self.staff, begin: self.begin, end: self.end, ..Options::default() }
     }
 }
 

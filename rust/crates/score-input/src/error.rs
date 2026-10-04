@@ -63,6 +63,8 @@ pub enum ErrorKind {
     RhythmCount { found: usize, needed: usize },
     /// Pass 3-5 refers to a note number that does not exist.
     NoSuchNote(f32),
+    /// Something the engine can do that score-input does not do yet.
+    Unsupported(String),
 }
 
 impl fmt::Display for ErrorKind {
@@ -78,6 +80,7 @@ impl fmt::Display for ErrorKind {
                 write!(f, "{found} rhythms, {needed} needed")
             }
             ErrorKind::NoSuchNote(n) => write!(f, "there is no note {n}"),
+            ErrorKind::Unsupported(what) => write!(f, "not supported yet: {what}"),
         }
     }
 }
