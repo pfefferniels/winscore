@@ -21,9 +21,11 @@ from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from unicorn import UC_HOOK_MEM_WRITE
+
 from callbacks import Event
 from displaylist import POLYLINE, FILLED, Shape, TextRun, shapes, text_runs
-from emu import Engine, EngineResult, ZOOM
+from emu import LINE_BUF, TEXT_OUT, VECTOR_BUF, Engine, EngineResult, ZOOM
 from sandbox import make_sandbox
 
 REPO = Path(__file__).resolve().parents[1]
@@ -36,7 +38,10 @@ TEXT_TOP_OFFSET = 96            # OnDraw (0x5E5910) draws strings at (x, y + 0x6
 TEXT_RUN_Y_OFFSETS = 0x1576570  # per-run y offset OnDraw adds after scaling
 VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4   # emit_points: x_out = x + VIEW_DX, y_out = y - VIEW_DY
 PAGE_FROM_INTERNAL = (2000, 26948)        # paper bottom-left at internal (-2000, -26947.7); analysis/engine/coordinates.md
-DOCUMENTED_VECTOR_WORDS, DOCUMENTED_TEXT_BYTES = 100_000, 20_000   # ARCHITECTURE.md; carmen exceeds the first
+ITEM_COUNT = 0x20B8E24          # number of items, and the 1-based loop index while drawing
+NOT_FOUND_DIALOG = 0x59B090     # "Not found": missing symbol library or instrument; changes no geometry
+# The engine never checks its output buffers; these are the shell's room (disasm-expert).
+SHELL_VECTOR_WORDS, SHELL_OBJECTS, SHELL_TEXT_BYTES = 1_000_000, 10_000, 440_000
 INVALIDATING_EVENTS = {"message", "dialog", "prompt-unanswered"}
 QUIET_EVENTS = {"service", "redraw", "document"}
 BASE_ZOOM, CHECK_ZOOM = 0x40, 0x80
@@ -71,6 +76,8 @@ class Run:
     events: list[Event] = field(default_factory=list)
     final: EngineResult | None = None
     text_run_y_offsets: list[int] = field(default_factory=list)
+    vector_writers: dict[int, int] = field(default_factory=dict)
+    text_writers: dict[int, int] = field(default_factory=dict)
     view_dx: int = 0
     view_dy: int = 0
     error: str = ""
@@ -93,9 +100,42 @@ def fresh_sandbox(root: Path, case: Case) -> None:
         shutil.copy2(extra, root / "cwd" / extra.name)
 
 
+class FixtureEngine(Engine):
+    """The oracle engine, recording which item writes each output word or byte, and the "Not found" notices.
+
+    The item is the draw loop's index at the time of the write. The engine's own per-item
+    word ranges (0x20359FC) are not used: after some text items they start one triple late.
+    """
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.vector_writers: dict[int, int] = {}
+        self.text_writers: dict[int, int] = {}
+        self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_vector_write, begin=VECTOR_BUF, end=VECTOR_BUF + 4 * SHELL_VECTOR_WORDS)
+        self.uc.hook_add(UC_HOOK_MEM_WRITE, self._on_text_write, begin=TEXT_OUT, end=TEXT_OUT + SHELL_TEXT_BYTES)
+
+    def _on_vector_write(self, uc, access, address, size, value, _user):
+        self.vector_writers[(address - VECTOR_BUF) // 4] = self.i32(ITEM_COUNT)
+
+    def _on_text_write(self, uc, access, address, size, value, _user):
+        item = self.i32(ITEM_COUNT)
+        self.text_writers.update((a - TEXT_OUT, item) for a in range(address, address + size))
+
+    def _on_cpp(self, uc, address, size, _user):
+        if address != NOT_FOUND_DIALOG:
+            return super()._on_cpp(uc, address, size, _user)
+        self.shell.record("not-found", self.cstr(LINE_BUF, 0x200).strip())
+        self.return_from_call(0, 0)
+
+    def command(self, text: str) -> EngineResult:
+        self.vector_writers.clear()
+        self.text_writers.clear()
+        return super().command(text)
+
+
 def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     fresh_sandbox(root, case)
-    engine = Engine(root)
+    engine = FixtureEngine(root)
     engine.initialize()
     engine.put32(ZOOM, zoom)
     run = Run()
@@ -108,6 +148,8 @@ def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
         run.error = str(err)
     run.events = list(engine.shell.events)
     run.view_dx, run.view_dy = engine.i32(VIEW_DX), engine.i32(VIEW_DY)
+    run.vector_writers = dict(engine.vector_writers)
+    run.text_writers = dict(engine.text_writers)
     if run.final is not None:
         runs = len(text_runs(run.final.text))
         run.text_run_y_offsets = [engine.i32(TEXT_RUN_Y_OFFSETS + 4 * i) for i in range(runs)]
@@ -163,23 +205,52 @@ class PageFrame:
 
 @dataclass(frozen=True)
 class PageView:
-    """The engine output split into page content and the view's paper frames."""
+    """The engine output split into page content and the view's paper frames.
+
+    `shape_items` and `text_items` give the 0-based index of the item that drew
+    each element, or None where the attribution failed (see `warnings`).
+    """
     content: list[Shape]
+    shape_items: list[int | None]
     texts: list[TextRun]
+    text_items: list[int | None]
     frames: list[PageFrame]
     offset: tuple[int, int]
+    warnings: tuple[str, ...]
 
     @classmethod
     def of(cls, run: Run) -> "PageView":
         all_shapes = shapes(run.final.vector)
         frames = [PageFrame.of(s) for s in all_shapes if is_page_frame(s)]
-        content = [s for s in all_shapes if not is_page_frame(s)]
-        return cls(content, text_runs(run.final.text), frames, run.offset)
+        content = [(s, shape_writer(s, run.vector_writers)) for s in all_shapes if not is_page_frame(s)]
+        notes = ["shapes without a single writing item; not attributed"] if any(i is None for _, i in content) else []
+        runs = text_runs(run.final.text)
+        text_items = [run_writer(r, run.text_writers) for r in runs]
+        if None in text_items:
+            notes.append("text runs without a single writing item; not attributed")
+        return cls([s for s, _ in content], [item for _, item in content], runs, text_items, frames, run.offset,
+                   tuple(notes))
 
     @property
     def frame_agrees(self) -> bool:
         """The leftmost frame sits where the view globals put the paper."""
         return not self.frames or min(f.origin for f in self.frames) == self.offset
+
+
+def single_writer(span: range, writers: dict[int, int]) -> int | None:
+    """0-based index of the one item that wrote every word (or byte) of the span, else None."""
+    items = {writers.get(i) for i in span}
+    (item,) = items if len(items) == 1 else (None,)
+    return item - 1 if item else None
+
+
+def shape_writer(shape: Shape, writers: dict[int, int]) -> int | None:
+    start, end = shape.span
+    return single_writer(range(3 * start, 3 * end), writers)
+
+
+def run_writer(run: TextRun, writers: dict[int, int]) -> int | None:
+    return single_writer(range(*run.span), writers)
 
 
 # -- engine.json -------------------------------------------------------------
@@ -224,11 +295,15 @@ def text_json(run: TextRun, dx: int, dy: int) -> dict:
     }
 
 
+def with_item(element: dict, item: int | None) -> dict:
+    return element | {"item": item} if item is not None else element
+
+
 def display_json(view: PageView) -> dict:
     dx, dy = view.offset
     return {
-        "shapes": [shape_json(s, dx, dy) for s in view.content],
-        "texts": [text_json(r, dx, dy) for r in view.texts],
+        "shapes": [with_item(shape_json(s, dx, dy), i) for s, i in zip(view.content, view.shape_items)],
+        "texts": [with_item(text_json(r, dx, dy), i) for r, i in zip(view.texts, view.text_items)],
     }
 
 
@@ -275,14 +350,14 @@ def invalid_reasons(run: Run, zoom_run: Run | None, view: PageView | None) -> li
 
 
 def warnings(run: Run, view: PageView | None) -> list[str]:
-    """Doubts that do not invalidate a case; the engine's real buffer limits are unconfirmed."""
-    if run.final is None:
+    """Doubts that do not invalidate a case."""
+    if run.final is None or view is None:
         return []
-    notes = [] if view is None or view.frames else ["no page frame in the output"]
-    if 3 * len(run.final.vector) > DOCUMENTED_VECTOR_WORDS:
-        notes.append(f"vector stream longer than the documented {DOCUMENTED_VECTOR_WORDS} words")
-    if len(run.final.text) > DOCUMENTED_TEXT_BYTES - 64:
-        notes.append(f"text stream near the documented {DOCUMENTED_TEXT_BYTES} bytes")
+    notes = list(view.warnings) + ([] if view.frames else ["no page frame in the output"])
+    if 3 * len(run.final.vector) > SHELL_VECTOR_WORDS or len(view.content) > SHELL_OBJECTS:
+        notes.append("more vector output than the shell's display list holds")
+    if len(run.final.text) > SHELL_TEXT_BYTES:
+        notes.append("more text than the engine's text buffer holds")
     if any(run.text_run_y_offsets):
         notes.append(f"OnDraw per-run y offsets are nonzero: {run.text_run_y_offsets}")
     return notes
@@ -309,6 +384,7 @@ def meta_json(case: Case, run: Run, zoom_run: Run | None, view: PageView | None)
         "view_globals": [run.view_dx, run.view_dy],
         "title": title,
         "events": [{"kind": e.kind, "detail": e.detail} for e in run.events if e.kind not in QUIET_EVENTS],
+        "not_found": counted(e.detail for e in run.events if e.kind == "not-found"),
         "zoom_checked": zoom_run is not None,
         "valid": not reasons,
         "invalid_reasons": reasons,

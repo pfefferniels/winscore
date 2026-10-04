@@ -4,7 +4,7 @@
 //! Fields are declared in alphabetical order so that serialisation matches the
 //! sorted keys `oracle/fixtures.py` writes.
 
-use score_render::{Colour, DisplayList, PlacedText, Point, Shape, ShapeKind, TextRun};
+use score_render::{Colour, DisplayList, ItemId, PlacedText, Point, Shape, ShapeKind, TextRun};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -17,6 +17,8 @@ enum KindJson {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct ShapeJson {
     colour: [u8; 3],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    item: Option<u32>,
     kind: KindJson,
     paths: Vec<Vec<[i32; 2]>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -37,6 +39,8 @@ struct TextJson {
     font: String,
     height: f32,
     italic: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    item: Option<u32>,
     strings: Vec<StringJson>,
     underline: bool,
     weight: i32,
@@ -74,7 +78,7 @@ impl From<ShapeJson> for Shape {
                 .into_iter()
                 .map(|path| path.into_iter().map(|[x, y]| Point::new(x, y)).collect())
                 .collect(),
-            source: None,
+            source: s.item.map(ItemId),
         }
     }
 }
@@ -83,6 +87,7 @@ impl From<&Shape> for ShapeJson {
     fn from(s: &Shape) -> Self {
         ShapeJson {
             colour: rgb_of(s.colour),
+            item: s.source.map(|ItemId(i)| i),
             kind: match s.kind {
                 ShapeKind::Stroke => KindJson::Stroke,
                 ShapeKind::Fill => KindJson::Fill,
@@ -116,7 +121,7 @@ impl From<TextJson> for TextRun {
                     text: s.text,
                 })
                 .collect(),
-            source: None,
+            source: t.item.map(ItemId),
         }
     }
 }
@@ -129,6 +134,7 @@ impl From<&TextRun> for TextJson {
             font: t.font.clone(),
             height: t.height,
             italic: t.italic,
+            item: t.source.map(|ItemId(i)| i),
             strings: t
                 .strings
                 .iter()
@@ -169,7 +175,11 @@ pub fn display_to_json(list: &DisplayList) -> String {
     }
     let shapes: Vec<ShapeJson> = list.shapes.iter().map(ShapeJson::from).collect();
     let texts: Vec<TextJson> = list.texts.iter().map(TextJson::from).collect();
-    format!("{{{},\n{}}}\n", section("shapes", &shapes), section("texts", &texts))
+    format!(
+        "{{{},\n{}}}\n",
+        section("shapes", &shapes),
+        section("texts", &texts)
+    )
 }
 
 #[cfg(test)]
@@ -177,11 +187,11 @@ mod tests {
     use super::*;
 
     const SAMPLE: &str = r#"{"shapes":[
-{"colour":[0,0,0],"kind":"stroke","paths":[[[2000,2948],[32000,2948]]]},
+{"colour":[0,0,0],"item":0,"kind":"stroke","paths":[[[2000,2948],[32000,2948]]]},
 {"colour":[0,0,253],"kind":"fill","paths":[[[1,2],[3,4],[1,2]],[[5,6],[7,8],[5,6]]]}
 ],
 "texts":[
-{"colour":[0,115,51],"escapement":0,"font":"Helvetica-Narrow","height":774.8,"italic":false,"strings":[{"text":"1","x":800,"y":3469}],"underline":false,"weight":400,"width":319.605}
+{"colour":[0,115,51],"escapement":0,"font":"Helvetica-Narrow","height":774.8,"italic":false,"item":0,"strings":[{"text":"1","x":800,"y":3469}],"underline":false,"weight":400,"width":319.605}
 ]}
 "#;
 
@@ -190,6 +200,9 @@ mod tests {
         let list = display_from_json(SAMPLE).unwrap();
         assert_eq!(list.shapes.len(), 2);
         assert_eq!(list.shapes[0].kind, ShapeKind::Stroke);
+        assert_eq!(list.shapes[0].source, Some(ItemId(0)));
+        assert_eq!(list.shapes[1].source, None);
+        assert_eq!(list.texts[0].source, Some(ItemId(0)));
         assert_eq!(list.shapes[1].colour, Colour { r: 0, g: 0, b: 253 });
         assert_eq!(list.shapes[1].paths[1][2], Point::new(5, 6));
         assert_eq!(list.texts[0].strings[0].origin, Point::new(800, 3469));
