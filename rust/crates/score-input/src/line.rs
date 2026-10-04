@@ -38,6 +38,9 @@ pub(crate) struct Note {
     pub heads: Vec<Head>,
     pub rhythm: Rhythm,
     pub down: bool,
+    /// The stem direction the heads are laid out for (seconds, accidentals, dots); differs
+    /// from `down` only after `turn_heads`.
+    pub heads_down: bool,
     /// P8 of the head that carries the stem.
     pub extension: f32,
     /// P8 as the engine's work table keeps it for pass 5: the pass-2 value, not updated when a
@@ -48,9 +51,16 @@ pub(crate) struct Note {
     /// P11 of the head that carries the stem (marks from pass 3).
     pub mark: f32,
     pub shift: StaffShift,
-    /// A head left at another x than the chord (level, x): the minimum-gap pass never moves
-    /// the last entry of the line, which can be the last member of a chord.
-    pub stray_head: Option<(i32, f32)>,
+    /// SU/SD/SO in force when the note was typed.
+    pub stem_mode: StemMode,
+    /// Heads whose dots were laid out again after a beam turned the chord.
+    pub redotted: Option<usize>,
+    /// Heads, from the stem head on, that the accidental layout (0x4EE442) covers.
+    pub accidental_heads: usize,
+    /// An entry left at another x than the chord (position in item order, x): the
+    /// minimum-gap pass never moves the last entry of the line, which can be the last
+    /// member of a chord. Positions stay when a beam reverses the heads.
+    pub stray_head: Option<(usize, f32)>,
 }
 
 impl Note {
@@ -60,24 +70,40 @@ impl Note {
             heads,
             rhythm,
             down: false,
+            heads_down: false,
             extension: 0.0,
             table_extension: 0.0,
             tails: rhythm.tails(),
             mark: 0.0,
             shift,
+            stem_mode: stems,
+            redotted: None,
+            accidental_heads: 0,
             stray_head: None,
         };
+        note.accidental_heads = note.heads.len();
         let down = match stems {
             StemMode::Up => false,
             StemMode::Down => true,
             StemMode::Ordinary => note.lowest() + note.highest() >= 2 * MIDDLE_LINE,
         };
-        if down && !note.is_grace() {
+        // Pass 2 turns grace stems up unless SD fixed them.
+        if down && (!note.is_grace() || stems == StemMode::Down) {
             // From the top, but heads on the same level keep the order they were typed in.
             note.heads = note.heads.chunk_by(|a, b| a.level == b.level).rev().flatten().copied().collect();
             note.down = true;
+            note.heads_down = true;
         }
         note.fit_stem();
+        // 0x4ECDF8 settles a chord's stem by comparing its last head with the stem head,
+        // taking the stem direction from the head before the last when they are level. With
+        // three or more heads on one level that head has no stem, so the stem turns up, and
+        // the accidental layout is handed only the first two heads.
+        if note.heads.len() >= 3 && note.lowest() == note.highest() {
+            note.down = false;
+            note.heads_down = false;
+            note.accidental_heads = 2;
+        }
         if note.is_grace() {
             note.extension = note.grace_extension(down);
         }
@@ -126,8 +152,25 @@ impl Note {
         if self.down != down {
             self.heads.reverse();
             self.down = down;
+            self.heads_down = down;
+            self.accidental_heads = self.heads.len();
         }
         self.fit_stem();
+    }
+
+    /// 0x413CA8 reverses the heads of every chord in a beam group that goes the other way,
+    /// also when SU/SD or an earlier beam fixed its stem. Such a chord keeps its stem
+    /// direction and flags but lays out its heads for the beam's direction and loses its
+    /// stem extension. Grace chords are left alone.
+    pub fn turn_heads(&mut self, down: bool, first_entry: usize) {
+        if self.heads.len() > 1 && !self.is_grace() && self.heads_down != down {
+            self.heads.reverse();
+            self.heads_down = down;
+            self.accidental_heads = self.heads.len();
+            self.extension = 0.0;
+            self.table_extension = 0.0;
+            self.redot_after_turn(first_entry);
+        }
     }
 
     /// P8 that spans the chord and reaches the middle line.
@@ -177,14 +220,37 @@ impl Note {
             .collect()
     }
 
+    /// P5 of each head in item order: the stem on the stem head, the accidental, and the
+    /// accidental's offset to the left in thousandths.
+    pub fn p5s(&self) -> Vec<f32> {
+        let ordered = self.ordered_heads();
+        let levels: Vec<i32> = ordered.iter().map(|h| h.level).collect();
+        let covered = self.accidental_heads.min(ordered.len());
+        let mut offsets = self.accidental_offsets(&ordered[..covered], &second_shifts(&levels[..covered]));
+        offsets.resize(ordered.len(), 0);
+        ordered
+            .iter()
+            .zip(offsets)
+            .enumerate()
+            .map(|(i, (head, offset))| {
+                let stem = match (i == 0, self.down) {
+                    (false, _) => 0,
+                    (true, true) => STEM_DOWN,
+                    (true, false) => STEM_UP,
+                };
+                offset as f32 / 1000.0 + (stem + head.accidental.map_or(0, |a| a.code())) as f32
+            })
+            .collect()
+    }
+
     fn items(&self, staff: f32) -> Vec<Item> {
         let ordered = self.ordered_heads();
         let levels: Vec<i32> = ordered.iter().map(|h| h.level).collect();
         let shifted = second_shifts(&levels);
-        let accidental_offsets = self.accidental_offsets(&ordered, &shifted);
-        let dot_offsets = if self.rhythm.dots() > 0 { dot_offsets(&levels, &shifted, self.down) } else { vec![0; levels.len()] };
+        let p5s = self.p5s();
+        let dot_offsets = self.dot_offsets(&levels, &shifted);
         let dots = 10 * i32::from(self.rhythm.dots());
-        let side = if self.down { SHIFT_LEFT } else { SHIFT_RIGHT };
+        let side = if self.heads_down { SHIFT_LEFT } else { SHIFT_RIGHT };
         let staff_shift = match self.shift {
             StaffShift::Main => 0.0,
             StaffShift::Above => 1.0,
@@ -195,12 +261,6 @@ impl Note {
             .enumerate()
             .map(|(i, head)| {
                 let stem_head = i == 0;
-                let accidental = head.accidental.map_or(0, |a| a.code());
-                let stem = match (stem_head, self.down) {
-                    (false, _) => 0,
-                    (true, true) => STEM_DOWN,
-                    (true, false) => STEM_UP,
-                };
                 let level = match (self.is_grace(), head.level < 0) {
                     (false, _) => head.level,
                     (true, false) => head.level + GRACE_LEVEL,
@@ -209,16 +269,15 @@ impl Note {
                 let (extension, tails, mark) =
                     if stem_head { (self.extension, self.tails, self.mark) } else { (0.0, 0, 0.0) };
                 let x = match self.stray_head {
-                    Some((stray, x)) if stray == head.level => x,
+                    Some((stray, x)) if stray == i => x,
                     _ => self.x,
                 };
-                let p5 = accidental_offsets[i] as f32 / 1000.0 + (stem + accidental) as f32;
                 item(&[
                     1.0,
                     staff,
                     x,
                     level as f32,
-                    p5,
+                    p5s[i],
                     self.rhythm.head() as f32,
                     if self.is_grace() && !stem_head { GRACE_CHORD_MEMBER } else { self.rhythm.quarters() },
                     extension,
@@ -231,6 +290,27 @@ impl Note {
             .collect()
     }
 
+    /// P9 additions for the dots; after a beam turned the chord only its first
+    /// `redotted` heads are laid out again.
+    fn dot_offsets(&self, levels: &[i32], shifted: &[bool]) -> Vec<i32> {
+        if self.rhythm.dots() == 0 {
+            return vec![0; levels.len()];
+        }
+        let laid_out = self.redotted.unwrap_or(levels.len()).min(levels.len());
+        let lower_voice = self.stem_mode == StemMode::Down && self.redotted.is_none();
+        let mut add = dot_offsets(&levels[..laid_out], &shifted[..laid_out], self.heads_down, lower_voice);
+        add.resize(levels.len(), 0);
+        add
+    }
+
+    /// 0x413CA8 turns a chord for its beam and has 0x51C824 lay out the dots again, but
+    /// passes an end index that 0x4EE442 has overwritten with the head count + 1, so a chord
+    /// whose first work-table entry is `first_entry` gets only this many heads laid out.
+    pub fn redot_after_turn(&mut self, first_entry: usize) {
+        let heads = self.heads.len();
+        self.redotted = Some((heads + 2).saturating_sub(first_entry).clamp(2, heads.max(2)));
+    }
+
     /// Accidental offsets (thousandths of P5) in item order; the layout works from the top.
     fn accidental_offsets(&self, ordered: &[&Head], shifted: &[bool]) -> Vec<i32> {
         let mut top_down: Vec<ChordHead> = ordered
@@ -239,14 +319,14 @@ impl Note {
             .map(|(h, s)| ChordHead {
                 level: h.level,
                 accidental: h.accidental.map_or(0, |a| a.code()),
-                left_of_stem: *s && self.down,
+                left_of_stem: *s && self.heads_down,
             })
             .collect();
-        if !self.down {
+        if !self.heads_down {
             top_down.reverse();
         }
         let mut offsets = accidental_offsets(&top_down);
-        if !self.down {
+        if !self.heads_down {
             offsets.reverse();
         }
         offsets
@@ -295,8 +375,7 @@ impl Element {
         match self {
             Element::Note(note) => {
                 note.x = first;
-                let ordered_levels: Vec<i32> = note.ordered_heads().iter().map(|h| h.level).collect();
-                note.stray_head = ordered_levels.iter().zip(member_xs).find(|(_, x)| **x != first).map(|(l, x)| (*l, *x));
+                note.stray_head = member_xs.iter().copied().enumerate().find(|(_, x)| *x != first);
             }
             Element::Rest { x, .. } | Element::Bar { x, .. } | Element::Clef { x, .. } | Element::Key { x, .. } | Element::Meter { x, .. } => {
                 *x = first;
@@ -460,6 +539,24 @@ impl Line {
 
     pub fn note_mut(&mut self, number: usize) -> Option<&mut Note> {
         number.checked_sub(1).and_then(|i| self.notes_mut().nth(i))
+    }
+
+    /// 1-based work-table index of the first entry of note `number`.
+    pub fn first_entry(&self, number: usize) -> Option<usize> {
+        let mut notes = 0;
+        let mut entries = 0;
+        self.elements.iter().find_map(|element| {
+            if let Element::Note(note) = element {
+                notes += 1;
+                if notes == number {
+                    return Some(entries + 1);
+                }
+                entries += note.heads.len();
+            } else {
+                entries += 1;
+            }
+            None
+        })
     }
 
     /// The engine's work table as passes 4 and 5 read it: one entry per chord member.

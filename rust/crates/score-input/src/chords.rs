@@ -139,25 +139,41 @@ pub fn accidental_offsets(heads: &[ChordHead]) -> Vec<i32> {
     offset.iter().zip(&base).map(|(o, b)| (o - b).clamp(0, MAX_OFFSET)).collect()
 }
 
-/// P9 additions for the dots of a dotted chord with seconds (0x51C824): 100 puts a dot
-/// below its line, 1000 one head width to the right. Heads in item order (stem head first),
-/// with `shifted` telling which heads sit on the other side of the stem.
-pub fn dot_offsets(levels: &[i32], shifted: &[bool], down: bool) -> Vec<i32> {
-    let n = levels.len();
-    let mut add = vec![0; n];
-    if n < 2 || !shifted.iter().any(|s| *s) {
-        return add;
+/// P9 addition that puts a dot below its line.
+pub const DOT_BELOW: i32 = 100;
+/// P9 addition that moves a dot one head width to the right.
+const DOT_RIGHT: i32 = 1000;
+
+fn below(add: i32) -> i32 {
+    if add >= DOT_BELOW {
+        add
+    } else {
+        add + DOT_BELOW
     }
+}
+
+/// P9 additions for the dots of a dotted chord (0x51C824). Heads in item order (stem head
+/// first), with `shifted` telling which heads sit on the other side of the stem; a lower
+/// voice (SD) starts with every dot below its line. Only chords with seconds are laid out.
+pub fn dot_offsets(levels: &[i32], shifted: &[bool], down: bool, lower_voice: bool) -> Vec<i32> {
+    let n = levels.len();
+    let mut add = vec![if lower_voice { DOT_BELOW } else { 0 }; n];
+    let Some(first_shifted) = shifted.iter().position(|s| *s).filter(|_| n >= 2) else {
+        return add;
+    };
     let mut stacked = false;
     if down {
+        if first_shifted > 0 {
+            add[first_shifted - 1] = 0;
+        }
         for k in 1..n {
             if shifted[k] {
-                add[k] = 1100;
+                add[k] = below(add[k]) + DOT_RIGHT;
                 stacked = true;
             } else if levels[k - 1] - levels[k] > 2 {
                 stacked = false;
             } else if stacked {
-                add[k] = 100;
+                add[k] = below(add[k]);
             }
         }
     } else {
@@ -166,17 +182,15 @@ pub fn dot_offsets(levels: &[i32], shifted: &[bool], down: bool) -> Vec<i32> {
                 stacked = true;
                 continue;
             }
-            let mut below = 0;
+            let mut lowered = false;
             if k != n - 1 {
                 if levels[k + 1] - levels[k] <= 2 {
-                    if stacked {
-                        below = 100;
-                    }
+                    lowered = stacked;
                 } else {
                     stacked = false;
                 }
             }
-            add[k] = below + 1000;
+            add[k] = if lowered { below(add[k]) } else { add[k] } + DOT_RIGHT;
         }
     }
     add
@@ -201,8 +215,10 @@ mod tests {
     #[test]
     fn dots_next_to_seconds() {
         // C4:D:E up: C4 1110 (dot below, right), D 10, E 1010.
-        assert_eq!(dot_offsets(&[1, 2, 3], &[false, true, false], false), [1100, 0, 1000]);
+        assert_eq!(dot_offsets(&[1, 2, 3], &[false, true, false], false, false), [1100, 0, 1000]);
         // E5:D5:C5 down: E5 10, D5 1110, C5 110.
-        assert_eq!(dot_offsets(&[10, 9, 8], &[false, true, false], true), [0, 1100, 100]);
+        assert_eq!(dot_offsets(&[10, 9, 8], &[false, true, false], true, false), [0, 1100, 100]);
+        // SD/C4:F:G:A: the head after the gap keeps the lower voice's dot.
+        assert_eq!(dot_offsets(&[6, 5, 4, 1], &[false, true, false, false], true, true), [0, 1100, 100, 100]);
     }
 }

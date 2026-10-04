@@ -5,39 +5,115 @@
 
 use crate::connect::{ConnectEntry, Connection, Side};
 use crate::error::InputError;
-use crate::line::{item, Line, Note};
+use crate::line::{item, Element, Line, Note};
 use crate::marks::recompute_clearance;
+use crate::notes::StemMode;
 
 const UP: i32 = 10;
 const DOWN: i32 = 20;
 /// Steepest beam slope in steps per P3 unit (0x78B470, a preference, 0.1 by default).
 const MAX_SLOPE: f32 = 0.1;
 
-/// The notes of `xB`/`xBy` groups: after `pickup` notes, windows of `eighths` eighth notes,
-/// each beaming its runs of two or more notes shorter than a quarter.
-fn every_eighths(line: &Line, eighths: u32, pickup: u32) -> Vec<Connection> {
-    #[derive(Clone, Copy)]
-    struct Slot {
-        number: usize,
-        window: i64,
-        beamable: bool,
-    }
-    let window = eighths as f32 * 0.5;
-    let slots: Vec<Slot> = line
-        .notes()
-        .enumerate()
-        .skip(pickup as usize)
-        .scan(0.0f32, |time, (i, note)| {
-            let window_index = (*time / window).floor() as i64;
-            *time += note.rhythm.quarters();
-            Some(Slot { number: i + 1, window: window_index, beamable: note.rhythm.tails() > 0 && !note.is_grace() })
+/// A note, chord or rest as the automatic beaming sees it.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Slot {
+    Note { quarters: f32, flagged: bool, grace: bool },
+    Rest { quarters: f32 },
+}
+
+fn slots(line: &Line) -> Vec<Slot> {
+    line.elements
+        .iter()
+        .filter_map(|e| match e {
+            Element::Note(n) => Some(Slot::Note { quarters: n.rhythm.quarters(), flagged: n.rhythm.tails() > 0, grace: n.is_grace() }),
+            Element::Rest { rhythm, .. } => Some(Slot::Rest { quarters: rhythm.quarters() }),
+            _ => None,
+        })
+        .collect()
+}
+
+fn is_grace(slot: &Slot) -> bool {
+    matches!(slot, Slot::Note { grace: true, .. })
+}
+
+/// Runs of two or more grace notes, with note numbers counted over the whole line.
+fn grace_runs(slots: &[Slot]) -> Vec<Connection> {
+    let numbered: Vec<(usize, bool)> = slots
+        .iter()
+        .scan(0, |number, slot| {
+            if matches!(slot, Slot::Note { .. }) {
+                *number += 1;
+            }
+            Some((*number, is_grace(slot)))
         })
         .collect();
-    slots
-        .chunk_by(|a, b| a.window == b.window && a.beamable && b.beamable)
-        .filter(|run| run.len() >= 2)
-        .map(|run| Connection::new(run[0].number, run[run.len() - 1].number))
+    numbered
+        .chunk_by(|a, b| a.1 == b.1)
+        .filter(|run| run[0].1 && run.len() >= 2)
+        .map(|run| Connection::new(run[0].0, run[run.len() - 1].0))
         .collect()
+}
+
+/// 0x410FD8: the groups of `xB`/`xBy`. Grace-note runs are beamed first. Then, after
+/// `pickup` notes or rests, flagged notes are collected until a note without flags, or
+/// until the time reaches the next multiple of `eighths` eighths; a rest after a flagged
+/// note does not end a group. Grace notes in the pickup are skipped without being counted,
+/// which shifts the note numbers after it, as in the engine.
+fn every_eighths(line: &Line, eighths: u32, pickup: u32) -> Vec<Connection> {
+    let slots = slots(line);
+    let pickup = pickup as usize;
+    let counted: Vec<usize> = slots.iter().enumerate().filter(|(_, s)| !is_grace(s)).map(|(i, _)| i).collect();
+    let start = match pickup {
+        0 => 0,
+        n if n > counted.len() => return Vec::new(),
+        n => counted[n - 1] + 1,
+    };
+    let numbered_in_pickup = slots[..start].iter().filter(|s| matches!(s, Slot::Note { grace: false, .. })).count();
+
+    // The engine treats 9 as a dotted quarter.
+    let window = if eighths == 9 { 1.5f32 } else { eighths as f32 } / 2.0;
+    let full = window - 0.001;
+    let mut groups = grace_runs(&slots);
+    let mut close = |group: &mut Option<(usize, usize)>| {
+        if let Some((first, last)) = group.take().filter(|(first, last)| first < last) {
+            groups.push(Connection::new(first, last));
+        }
+    };
+    let mut number = numbered_in_pickup;
+    let mut flagged = true;
+    let mut time = 0.0f32;
+    let mut group = None;
+    for slot in &slots[start..] {
+        match *slot {
+            Slot::Note { grace: true, .. } => {
+                number += 1;
+                continue;
+            }
+            Slot::Note { quarters, flagged: f, .. } => {
+                number += 1;
+                flagged = f;
+                if f {
+                    group = Some((group.map_or(number, |(first, _)| first), number));
+                }
+                time += quarters;
+            }
+            Slot::Rest { quarters } => time += quarters,
+        }
+        if !flagged || time >= full {
+            close(&mut group);
+        }
+        if time >= full {
+            time -= window;
+            while full < time {
+                time -= window;
+            }
+            if time.abs() <= 0.001 {
+                time = 0.0;
+            }
+        }
+    }
+    close(&mut group);
+    groups
 }
 
 /// Level of the head a beam is measured from: the head nearest the beam.
@@ -308,12 +384,14 @@ struct Beamer<'a> {
 
 impl Beamer<'_> {
     fn set_direction(&mut self, number: usize, direction: i32) {
+        let first_entry = self.line.first_entry(number).unwrap_or(1);
         if let Some(note) = self.line.note_mut(number) {
             let down = direction == DOWN;
             if note.down != down {
                 note.set_stem(down);
                 if note.heads.len() > 1 {
                     note.table_extension = 0.0;
+                    note.redot_after_turn(first_entry);
                 }
                 recompute_clearance(note);
             }
@@ -359,6 +437,11 @@ impl Beamer<'_> {
                 if self.beamed[n] == 0 {
                     self.beamed[n] = direction;
                     self.set_direction(n, direction);
+                } else {
+                    let first_entry = self.line.first_entry(n).unwrap_or(1);
+                    if let Some(note) = self.line.note_mut(n) {
+                        note.turn_heads(direction == DOWN, first_entry);
+                    }
                 }
             }
         }
@@ -439,7 +522,7 @@ impl Beamer<'_> {
                 continue;
             };
             let mut q = p.clone();
-            q.resize(11, 0.0);
+            q.resize(q.len().max(11), 0.0);
             q[2..6].copy_from_slice(&beam[2..6]);
             q[6] = -(direction as f32);
             q[9] = (tails * 10) as f32 + q[9] - 10.0;
@@ -479,6 +562,16 @@ fn fit_stems(line: &mut Line, beams: &[score_format::Item]) {
     }
 }
 
+/// A stem direction no beam can change: SU/SD fix the stems of the notes typed under them,
+/// and pass 2 fixes the other grace stems upward (0x51CF40).
+fn fixed_direction(note: &Note) -> i32 {
+    match (note.stem_mode, note.is_grace()) {
+        (StemMode::Up, _) | (StemMode::Ordinary, true) => UP,
+        (StemMode::Down, _) => DOWN,
+        (StemMode::Ordinary, false) => 0,
+    }
+}
+
 pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry]) -> Result<(), InputError> {
     let groups: Vec<Connection> = entries
         .iter()
@@ -487,11 +580,7 @@ pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry]) -> Result<(), Inp
             ConnectEntry::EveryEighths { eighths, pickup } => every_eighths(line, eighths, pickup),
         })
         .collect();
-    // Grace notes come out of pass 2 with their stems fixed upward (0x51CF40).
-    let beamed: Vec<i32> = std::iter::once(0)
-        .chain(line.notes().map(|n| if n.is_grace() { UP } else { 0 }))
-        .chain(std::iter::once(0))
-        .collect();
+    let beamed: Vec<i32> = std::iter::once(0).chain(line.notes().map(fixed_direction)).chain(std::iter::once(0)).collect();
     let mut beamer = Beamer { line, beamed };
     let made: Vec<score_format::Item> = groups.into_iter().flat_map(|g| beamer.beam(g)).collect();
     fit_stems(line, &made);
