@@ -105,6 +105,7 @@ dependencies = [
 name = "score-web"
 version = "0.1.0"
 dependencies = [
+ "score-edit",
  "score-format",
  "score-input",
  "score-render",

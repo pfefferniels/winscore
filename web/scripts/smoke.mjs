@@ -56,6 +56,28 @@ try {
   assert.ok(draggedP3 > 3 && draggedP3 < 5, `P3 after drag: ${draggedP3}`);
   await page.keyboard.press('Control+z');
   assert.equal(await page.inputValue('#p3'), '0');
+
+  // SCORE commands from the command bar act on the selection.
+  await page.fill('#command', 'R 5');
+  await page.press('#command', 'Enter');
+  assert.equal(await page.inputValue('#p3'), '5');
+  assert.equal(await page.textContent('#message'), 'R 5');
+  await page.fill('#command', 'XYZZY');
+  await page.press('#command', 'Enter');
+  assert.match(await page.textContent('#message'), /unknown word/);
+  await page.click('#undo');
+  assert.equal(await page.inputValue('#p3'), '0');
+
+  // Delete and undo it.
+  await page.click('#items li[data-index="3"]');
+  assert.equal(await page.textContent('#item h2'), 'Item 3 · Clef');
+  await page.keyboard.press('Delete');
+  assert.equal(await page.textContent('#item-count'), '(343)');
+  await page.keyboard.press('Control+z');
+  assert.equal(await page.textContent('#item-count'), '(344)');
+  assert.equal(await page.textContent('#item h2'), 'Item 3 · Clef');
+
+  await page.click('#items li[data-index="2"]');
   await page.fill('#p5', '1.2');
   await page.press('#p5', 'Enter');
   assert.match(await page.textContent('#status'), /modified/);
@@ -79,6 +101,8 @@ try {
   await page.click('#input-insert');
   await page.waitForFunction(() => document.getElementById('item-count').textContent === '(349)');
   assert.match(await page.textContent('#item h2'), /^Item 348 · Note \(\+4 selected\)/);
+  await page.click('#undo');
+  assert.equal(await page.textContent('#item-count'), '(344)');
   assert.deepEqual(errors, []);
 
   // Without the wasm module the page says so instead of staying blank.
