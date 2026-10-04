@@ -49,6 +49,8 @@ pub struct Session {
     pub justify_between: Option<(f32, f32)>,
     /// A group command waiting for its next line.
     pub pending: Option<Pending>,
+    /// Items cut for pasting (IF … THEN CUT), pasted by PST.
+    pub clipboard: Vec<Item>,
 }
 
 impl Session {

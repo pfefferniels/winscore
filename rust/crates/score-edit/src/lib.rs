@@ -12,6 +12,7 @@
 //! in `tests/engine_cases.txt`); `COMMANDS.md` lists what is covered.
 
 pub mod command;
+pub mod conditional;
 pub mod document;
 pub mod drag;
 pub mod editor;

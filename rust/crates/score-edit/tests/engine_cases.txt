@@ -2877,3 +2877,48 @@ base: 8 1; 1 1 100 6 10 0 1
 DE
 X
 R 1
+
+# -- conditional editing (IF … THEN …) and paste ------------------------------------------
+
+== g2_if_move_right_part
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 9 1 150 13 22 .25
+IF P3 > 100 THEN P3=P3-20
+== g2_if_semicolon
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 9 1 150 13 22 .25
+IF P3 > 100 ; P3=p3-20
+== g2_if_delete_codes
+base: 8 1; 8 6; 1 1 100 6 10 0 1; 1 6 120 7 10 0 1; 2 1 110 0 0 0 1; 2 6 130 0 0 0 1
+IF (P1=1 AND P2<4) OR (P1=2 AND P2>=6) THEN DEL
+== g2_if_mod_and_two_changes
+base: 8 1; 8 4; 1 4 100 6 10 0 0.5 0 1; 1 4 110 6 10 0 1; 1 1 120 6 10 0 1; 1 1 90 7 10 0 1
+IF(P1=1 AND P2>3 AND MOD(P9,10) <> 0) OR (P1=1 AND P2=1 AND P3>100) THEN P11=5, P6=6
+== g2_if_not_equal_tilde
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 12 0 1
+IF P1=1 AND P5~10 THEN P5=20
+== g2_if_less_equal_brace
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+IF P3{100 THEN P4=P4+2
+== g2_if_greater_equal_brace
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+IF P3}120 THEN P4=P4*2
+== g2_if_arithmetic
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+IF P1=1 THEN P3=P3+P4*2
+== g2_if_divide
+base: 8 1; 1 1 100 6 10 0 1
+IF P1=1 THEN P7=P7/3
+== g2_if_colour
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1
+IF P1=1 THEN RGB 990000
+== g2_if_grey
+base: 8 1; 1 1 100 6 10 0 1
+IF P1=1 THEN GRA .5
+== g2_if_black
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5
+IF P1=1 THEN BLA
+== g2_if_cut_keeps_items
+base: 8 1; 1 1 100 6 10 0 1; 9 1 130 13 22 .25
+IF P3 > 120 AND (P1=9 OR P1=18) THEN CUT
+== g2_if_negative_value
+base: 8 1; 1 1 100 6 10 0 1
+IF P1=1 THEN P4=-3

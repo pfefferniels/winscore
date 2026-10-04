@@ -5,6 +5,7 @@ use crate::command::moves::{shift, Axis};
 use crate::command::numeric;
 use crate::command::parse::{self, Token};
 use crate::command::Run;
+use crate::conditional::Statement;
 use crate::document::ItemId;
 use crate::error::EditError;
 use crate::group::{Destination, GroupCommand, Order, Pending, Region, FIXED_BY_MUD};
@@ -138,6 +139,40 @@ impl Run<'_, '_> {
         });
         self.session.clear();
         Ok(())
+    }
+
+    /// IF … THEN …: every item for which the condition holds is changed,
+    /// deleted (UND brings them back) or cut for pasting.
+    pub fn conditional(&mut self, statement: &Statement) -> Result<(), EditError> {
+        let matching: Vec<(ItemId, Draft)> = self
+            .tx
+            .doc()
+            .entries()
+            .map(|(id, item)| (id, Draft::of(item)))
+            .filter(|(_, draft)| statement.condition.holds(draft))
+            .collect();
+        if statement.cuts() {
+            self.session.clipboard = matching.iter().map(|(_, d)| d.to_item()).collect();
+        }
+        if statement.deletes() {
+            let removed: Vec<Deleted> = matching
+                .into_iter()
+                .filter_map(|(id, _)| self.tx.remove(id).map(|(index, item)| Deleted { index, id, item }))
+                .collect();
+            self.session.remember_deleted(removed);
+            return Ok(());
+        }
+        matching.into_iter().for_each(|(id, mut draft)| {
+            statement.apply(&mut draft);
+            self.tx.replace(id, draft.to_item());
+        });
+        Ok(())
+    }
+
+    /// PST: the items cut last, added again and selected.
+    pub fn paste(&mut self) -> Result<(), EditError> {
+        let items = self.session.clipboard.clone();
+        self.append_items(items)
     }
 
     /// OS, OH, OT: the items put in a new order, ids kept.

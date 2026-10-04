@@ -20,6 +20,7 @@ pub mod text;
 
 use score_render::Document as RenderDocument;
 
+use crate::conditional;
 use crate::document::{ItemId, Transaction};
 use crate::drag::Ends;
 use crate::group::{GroupCommand, Order};
@@ -95,6 +96,8 @@ enum SessionWord {
     AdjustStems,
     /// CH [value]: one duration for the whole chord.
     ChordRhythm,
+    /// PST: the items cut last, added again.
+    Paste,
 }
 
 impl SessionWord {
@@ -132,6 +135,7 @@ impl SessionWord {
             "J" => Self::Justify,
             "ADJ" => Self::AdjustStems,
             "CH" => Self::ChordRhythm,
+            "PST" => Self::Paste,
             _ => return None,
         };
         Some(parsed)
@@ -141,6 +145,9 @@ impl SessionWord {
 /// Whether the editor knows the command of `line` in some context; menus
 /// can grey out the entries it does not.
 pub fn is_supported(line: &str) -> bool {
+    if conditional::parse(line).is_some() {
+        return true;
+    }
     if let Some(entry) = text::quick_entry(line) {
         return entry.is_ok();
     }
@@ -199,6 +206,10 @@ impl Run<'_, '_> {
         if self.session.pending.is_some() {
             return self.answer_group(line);
         }
+        if let Some(statement) = conditional::parse(line) {
+            self.session.clear();
+            return self.conditional(&statement);
+        }
         if let Some(entry) = text::quick_entry(line) {
             let (characters, rest) = entry?;
             self.session.clear();
@@ -234,7 +245,7 @@ impl Run<'_, '_> {
             Some(SessionWord::Step(next)) => self.step(next),
             Some(SessionWord::Edit) => self.edit_item(number),
             Some(SessionWord::EditLast) => self.edit_last(),
-            Some(SessionWord::Undelete) => Err(EditError::InEditMode(word)),
+            Some(SessionWord::Undelete | SessionWord::Paste) => Err(EditError::InEditMode(word)),
             Some(SessionWord::DragEnd(end)) => {
                 self.session.toggle_drag_end(end);
                 Ok(())
@@ -276,6 +287,7 @@ impl Run<'_, '_> {
             Some(SessionWord::Edit) => self.edit_item(number),
             Some(SessionWord::EditLast) => self.edit_last(),
             Some(SessionWord::Undelete) => self.undelete(),
+            Some(SessionWord::Paste) => self.paste(),
             Some(_) => Err(EditError::NoSelection(word)),
             None => match create::template(&word) {
                 Some(template) => self.create(&template, args),
