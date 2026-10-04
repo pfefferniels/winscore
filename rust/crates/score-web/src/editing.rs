@@ -9,6 +9,7 @@ use score_edit::{Change, EditError};
 use score_render::ItemId;
 use wasm_bindgen::prelude::*;
 
+use crate::hit::At;
 use crate::input::{line_items, InputLine};
 use crate::Score;
 
@@ -79,17 +80,18 @@ impl Score {
         self.finish(result)
     }
 
-    /// Starts dragging the selection.
-    #[wasm_bindgen(js_name = dragBegin)]
-    pub fn drag_begin(&mut self) {
-        self.0.editor_mut().drag_begin();
+    /// Starts dragging the selection, taken hold of at page point (`x`, `y`).
+    #[wasm_bindgen(js_name = dragBeginAt)]
+    pub fn drag_begin_at(&mut self, x: f64, y: f64) {
+        self.0.editor_mut().drag_begin_at(x, y);
     }
 
-    /// Shows the selection moved by (`dx`, `dy`) page units since
-    /// [`Score::drag_begin`], without an undo step.
-    #[wasm_bindgen(js_name = dragTo)]
-    pub fn drag_to(&mut self, dx: f64, dy: f64) {
-        self.0.editor_mut().drag_to(dx, dy);
+    /// Moves the dragged selection with the cursor at page point (`x`, `y`),
+    /// keeping the grab offset, without an undo step. `constrain` is
+    /// WinScore's Shift rule: the move locks to the first dominant axis.
+    #[wasm_bindgen(js_name = dragToPoint)]
+    pub fn drag_to_point(&mut self, x: f64, y: f64, constrain: bool) {
+        self.0.editor_mut().drag_to_point(x, y, constrain);
     }
 
     /// Ends a drag; `commit` keeps the new positions as one undo step.
@@ -101,6 +103,19 @@ impl Score {
         } else {
             String::new()
         }
+    }
+
+    /// The item a click at page point (`x`, `y`) means (decision D8): the one
+    /// whose drawn outline lies within `tolerance` units, else the one whose
+    /// reference point WinScore would pick within `radius` units.
+    #[wasm_bindgen(js_name = itemAt)]
+    pub fn item_at(&self, x: f64, y: f64, tolerance: f64, radius: f64) -> Option<u32> {
+        let outline = self.0.hit(At::new(x, y), tolerance);
+        let nearest = || {
+            let editor = self.0.editor();
+            editor.pick_at(x, y, Some(radius)).and_then(|id| editor.index_of(id)).map(|i| ItemId(i as u32))
+        };
+        outline.or_else(nearest).map(|id| id.0)
     }
 
     /// Reverts the last step; returns its name, or `None` if there is none.
@@ -129,4 +144,37 @@ impl Score {
 #[wasm_bindgen(js_name = commandSupported)]
 pub fn command_supported(line: &str) -> bool {
     score_edit::command::is_supported(line)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn mozart() -> Score {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore/mozart.mus");
+        Score::new(&std::fs::read(path).unwrap()).unwrap_or_else(|_| panic!("mozart.mus opens"))
+    }
+
+    #[test]
+    fn clicks_fall_back_to_the_nearest_reference_point() {
+        let score = mozart();
+        let far_from_ink = (33500.0, 28000.0);
+        assert_eq!(score.item_at(far_from_ink.0, far_from_ink.1, 10.0, 100.0), None);
+        assert!(score.item_at(far_from_ink.0, far_from_ink.1, 10.0, 60000.0).is_some());
+    }
+
+    #[test]
+    fn drags_follow_the_cursor_and_undo_in_one_step() {
+        let mut score = mozart();
+        score.select(vec![12]);
+        let p3 = score.0.item(ItemId(12)).unwrap().param(3);
+        score.drag_begin_at(5000.0, 5000.0);
+        score.drag_to_point(5150.0, 5000.0, false);
+        score.drag_to_point(5300.0, 5000.0, false);
+        assert_eq!(score.drag_end(true), "Drag");
+        assert!((score.0.item(ItemId(12)).unwrap().param(3) - (p3 + 2.0)).abs() < 0.01);
+        assert_eq!(score.undo().as_deref(), Some("Drag"));
+        assert_eq!(score.0.item(ItemId(12)).unwrap().param(3), p3);
+    }
 }

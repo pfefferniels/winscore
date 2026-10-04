@@ -2,6 +2,7 @@
 // score-edit through score-web. Items are named by file index; every action
 // returns the name of the undo step it made.
 import type { InputLine, Score } from './wasm/score_web.js';
+import type { Point } from './view';
 
 /** One finished action, as the UI names it; null when nothing changed. */
 export interface Change {
@@ -22,9 +23,10 @@ export interface Editor {
   execute(command: string): Change | null;
   /** Adds one line of five-pass input; the new items become the selection. */
   insertInput(line: InputLine): Change | null;
-  dragBegin(): void;
-  /** Total pointer travel since `dragBegin`, in page units; `constrain` (Shift) keeps the first dominant axis. */
-  dragTo(dx: number, dy: number, constrain: boolean): void;
+  /** Takes hold of the selection at a page point. */
+  dragBegin(at: Point): void;
+  /** Moves it with the cursor, keeping the grab offset; `constrain` is WinScore's Shift rule. */
+  dragTo(at: Point, constrain: boolean): void;
   dragEnd(commit: boolean): Change | null;
   undo(): Change | null;
   redo(): Change | null;
@@ -34,18 +36,7 @@ export interface Editor {
 
 const change = (label: string | undefined): Change | null => (label ? { label } : null);
 
-/** WinScore locks a Shift-drag to the first axis whose travel exceeds this many engine units (analysis/engine/editing.md). */
-const AXIS_LOCK_UNITS = 50;
-
-type Axis = 'x' | 'y';
-
-function lockedAxis(dx: number, dy: number): Axis | null {
-  if (Math.max(Math.abs(dx), Math.abs(dy)) <= AXIS_LOCK_UNITS) return null;
-  return Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
-}
-
 export function scoreEditor(score: Score): Editor {
-  let axis: Axis | null = null;
   return {
     selection: () => Array.from(score.selection()),
     select: (items) => score.select(Uint32Array.from(items)),
@@ -55,15 +46,8 @@ export function scoreEditor(score: Score): Editor {
     deleteSelection: () => change(score.deleteSelection()),
     execute: (command) => change(score.execute(command)),
     insertInput: (line) => change(score.insertInput(line)),
-    dragBegin() {
-      axis = null;
-      score.dragBegin();
-    },
-    dragTo(dx, dy, constrain) {
-      axis ??= lockedAxis(dx, dy);
-      const keep = (a: Axis) => !constrain || axis === null || axis === a;
-      score.dragTo(keep('x') ? dx : 0, keep('y') ? dy : 0);
-    },
+    dragBegin: (at) => score.dragBeginAt(at.x, at.y),
+    dragTo: (at, constrain) => score.dragToPoint(at.x, at.y, constrain),
     dragEnd: (commit) => change(score.dragEnd(commit)),
     undo: () => change(score.undo() && `Undo ${score.redoLabel()}`),
     redo: () => change(score.redo() && `Redo ${score.undoLabel()}`),

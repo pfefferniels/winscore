@@ -128,13 +128,6 @@ impl Score {
         })
     }
 
-    /// The item drawn nearest to page point (`x`, `y`) within `tolerance`
-    /// engine units, as rendered by the last [`Score::render`].
-    #[wasm_bindgen(js_name = hitTest)]
-    pub fn hit_test(&self, x: f64, y: f64, tolerance: f64) -> Option<u32> {
-        self.0.hit(At::new(x, y), tolerance).map(|id| id.0)
-    }
-
     /// The `.mus` file bytes.
     pub fn save(&self) -> Vec<u8> {
         self.0.save()
@@ -164,7 +157,8 @@ impl Reference {
         EncodedList::from(&self.0)
     }
 
-    /// As [`Score::hit_test`], for elements the fixture attributes to an item.
+    /// The item whose elements the fixture attributes lie nearest to page
+    /// point (`x`, `y`), within `tolerance` engine units.
     #[wasm_bindgen(js_name = hitTest)]
     pub fn hit_test(&self, x: f64, y: f64, tolerance: f64) -> Option<u32> {
         hit::hit_test(&self.0, At::new(x, y), tolerance).map(|id| id.0)

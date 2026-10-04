@@ -50,6 +50,8 @@ interface State {
 
 const MARGIN = 1000;
 const CLICK_TOLERANCE_PX = 4;
+/** Without an outline under the pointer, WinScore's nearest-reference-point rule applies within this radius (D8). */
+const PICK_RADIUS_PX = 12;
 const ENGINE_TINT = '#06b6d4';
 const RUST_TINT = '#e11d74';
 
@@ -418,13 +420,14 @@ function setMode(mode: Mode) {
   redraw();
 }
 
-/** The item under the pointer in the Rust list, else in the engine list (when the fixture attributes items). */
+/** The item under the pointer: a drawn outline (Rust list, then the engine list's attribution), else the nearest reference point. */
 function itemAt(clientX: number, clientY: number): number | null {
   const p = view.pageAt(clientX, clientY);
   const tolerance = view.unitsPerCss(CLICK_TOLERANCE_PX);
-  const rust = state.mode !== 'engine' ? state.score?.hitTest(p.x, p.y, tolerance) : undefined;
+  const rust = state.mode !== 'engine' ? state.score?.itemAt(p.x, p.y, tolerance, 0) : undefined;
   const engine = state.mode !== 'rust' ? state.reference?.engine.hitTest(p.x, p.y, tolerance) : undefined;
-  return rust ?? engine ?? null;
+  const nearest = () => state.score?.itemAt(p.x, p.y, 0, view.unitsPerCss(PICK_RADIUS_PX));
+  return rust ?? engine ?? nearest() ?? null;
 }
 
 function bindPointer() {
