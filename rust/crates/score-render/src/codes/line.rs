@@ -16,12 +16,11 @@
 use std::iter::{once, successors};
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
-use crate::display::Point;
 use crate::document::{Document, ItemRef};
-use crate::geometry::rotate_points;
+use crate::geometry::{self, rotate_points};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, UNITS_PER_SCALE_STEP};
-use crate::units::{real, trunc, Pos};
+use crate::units::{constant, real, trunc, Pos};
 
 const PARAMS: usize = 50;
 
@@ -257,7 +256,7 @@ pub(crate) fn end_mark(canvas: &mut Canvas<'_>, at: Pos, value: f32, end: End, a
     if value < 200.0 {
         let length = real((v - 100.0) * scale_step);
         let length = if end == End::Finish { -length } else { length };
-        let spread = real(length * f64::from(0.375_f32));
+        let spread = real(length * constant(0.375));
         let barbs = if across {
             let y = real(length + at.y);
             [Pos::new(real(at.x - spread), y), Pos::new(real(spread + at.x), y)]
@@ -278,35 +277,9 @@ pub(crate) fn end_mark(canvas: &mut Canvas<'_>, at: Pos, value: f32, end: End, a
     }
 }
 
-/// Distance between the copies thicken adds.
-const THICKEN_STEP: i32 = 14;
-
-/// thicken 0x42A8AE: n = 100·h + v. On screen, 2h copies of the points
-/// from `start` moved up and down by 14, 28, … units, then 2v copies of the
-/// same points moved right and left. n <= 0 turns filled objects into
-/// polylines.
+/// thicken 0x42A8AE on the line's points from `start` (screen output).
 fn thicken(canvas: &mut Canvas<'_>, start: usize, n: i32) {
-    let buffer = canvas.buffer_mut();
-    if n <= 0 {
-        buffer[start..]
-            .iter_mut()
-            .filter(|p| matches!(p.pen, Pen::Fill | Pen::SubPath))
-            .for_each(|p| p.pen = Pen::Stroke);
-        return;
-    }
-    let original = buffer[start..].to_vec();
-    let moved = |dx: i32, dy: i32| {
-        original.iter().map(move |p| BufferPoint { at: Point::new(p.at.x + dx, p.at.y + dy), pen: p.pen })
-    };
-    let vertical: Vec<BufferPoint> = copy_offsets(2 * (n / 100)).flat_map(|d| moved(0, d)).collect();
-    let horizontal: Vec<BufferPoint> = copy_offsets(2 * (n % 100)).flat_map(|d| moved(d, 0)).collect();
-    buffer.extend(vertical);
-    buffer.extend(horizontal);
-}
-
-/// 14, -14, 28, -28, … (`count` of them).
-fn copy_offsets(count: i32) -> impl Iterator<Item = i32> {
-    (0..count).map(|i| THICKEN_STEP * (i / 2 + 1) * if i % 2 == 0 { 1 } else { -1 })
+    geometry::thicken(canvas.buffer_mut(), start, n);
 }
 
 /// The engine's do-while loops never stop when the step does not advance;
@@ -412,7 +385,7 @@ const DOT_OUTLINE: [(f32, f32); 12] = [
 
 /// dot 0x43C415: a filled 13-point dot of size `r` at `at`.
 fn dot(canvas: &mut Canvas<'_>, at: Pos, r: f64) {
-    canvas.point(Pos::new(at.x, real(r * f64::from(55.3_f32) + at.y)), Pen::Fill);
+    canvas.point(Pos::new(at.x, real(r * constant(55.3) + at.y)), Pen::Fill);
     DOT_OUTLINE.iter().for_each(|&(dx, dy)| {
         canvas.point(Pos::new(real(f64::from(dx) * r + at.x), real(f64::from(dy) * r + at.y)), Pen::Continue);
     });
@@ -512,7 +485,7 @@ fn wavy(line: &mut Line<'_>, canvas: &mut Canvas<'_>) {
     let p = line.p.clone();
     let p8 = if p.p(8) <= 0.0 { 1.0 } else { f64::from(p.p(8)) };
     let p9 = if p.p(9) == 0.0 { p8 } else { f64::from(p.p(9)) };
-    let unit = real(line.step() * f64::from(0.0825_f32));
+    let unit = real(line.step() * constant(0.0825));
     let size = Pos::new(real(unit * p8), real(unit * p9));
     let heavy = line.ip7 == HEAVY_WAVE;
     let arrow = p.ip(12) != 0;
@@ -541,7 +514,7 @@ fn upright(line: &mut Line<'_>, heavy: bool) -> f32 {
     let step = line.step();
     line.left.x = line.offset_by_p15(line.left.x);
     if heavy {
-        line.left.y = real(line.left.y - step * f64::from(0.8_f32));
+        line.left.y = real(line.left.y - step * constant(0.8));
     }
     let mut levels = real(f64::from(line.p.p(5)) - f64::from(line.p.p(4)));
     if line.p.ip(12) < 0 {
@@ -573,7 +546,7 @@ fn heavy_wave(line: &Line<'_>, size: Pos, arrow: bool, canvas: &mut Canvas<'_>) 
 /// P7 = -2: one polyline of units 146 table units apart; the last unit ends
 /// the line (with an arrow head for P12).
 fn thin_wave(line: &Line<'_>, size: Pos, arrow: bool, canvas: &mut Canvas<'_>) {
-    let advance = real(size.x * 160.0 * f64::from(0.9125_f32));
+    let advance = real(size.x * 160.0 * constant(0.9125));
     let y = line.left.y;
     let until = line.right_x;
     let units = repeated(line.left.x, |x| real(advance + x), |x| x < until);
@@ -755,7 +728,7 @@ fn dashed_hairpin(line: &Line<'_>, canvas: &mut Canvas<'_>) {
     let scale_step = line.scale_step();
     let (dash, space) = dash_lengths(p, scale_step);
     let p7 = p.p(7);
-    let spread = if p7 != 0.0 && p7 != -1.0 { real(f64::from(p7.abs()) / 2.0) } else { f64::from(1.1_f32) };
+    let spread = if p7 != 0.0 && p7 != -1.0 { real(f64::from(p7.abs()) / 2.0) } else { constant(1.1) };
     [spread, -spread].into_iter().for_each(|spread| {
         let first = canvas.buffer_mut().len();
         let end = dash_row(canvas, line.left, line.right_x, dash, space);
@@ -773,12 +746,6 @@ fn dashed_hairpin(line: &Line<'_>, canvas: &mut Canvas<'_>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn copies_alternate_outward() {
-        assert_eq!(copy_offsets(5).collect::<Vec<_>>(), vec![14, -14, 28, -28, 42]);
-        assert_eq!(copy_offsets(0).count(), 0);
-    }
 
     #[test]
     fn repeated_counts_the_first_and_tests_after() {

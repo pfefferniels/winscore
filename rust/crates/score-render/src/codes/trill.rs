@@ -19,7 +19,7 @@ use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
 use crate::symbols::{self, draw_library_symbol, ItemContext, SymbolCall};
-use crate::units::{real, trunc, Pos};
+use crate::units::{constant, real, trunc, Pos};
 
 const TRILL: i32 = 0;
 const HARP: i32 = 1;
@@ -125,7 +125,7 @@ impl<'a, 'd> Mark<'a, 'd> {
 
     /// The symbol size factor P5 × 1.1.
     fn symbol_size(&self) -> f64 {
-        real(self.size * f64::from(1.1_f32))
+        real(self.size * constant(1.1))
     }
 
     /// `width` step units of the mark's size right of X_POS.
@@ -174,7 +174,7 @@ fn extend(mark: &Mark<'_, '_>, style: Extension, level: f64, x: f64, (p8, p9): (
     }
     let level = match style {
         Extension::Line => level,
-        _ => real(level + f64::from(0.4_f32)),
+        _ => real(level + constant(0.4)),
     };
     let params = mark.params.clone().with(5, level as f32).with(7, style as i32 as f32).with(8, p8).with(9, p9);
     line::draw_with_step(&params, Pos::new(x, mark.staff.y(level)), &mark.staff, mark.step, canvas);
@@ -197,21 +197,21 @@ fn trill(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
     if accidental != 0 && accidental <= 5 {
         trill_accidental(mark, &context, accidental, y, canvas);
     }
-    let level = real(f64::from(mark.p(4)) + f64::from(2.2_f32) + f64::from(mark.p(11)) - wave_size);
+    let level = real(f64::from(mark.p(4)) + constant(2.2) + f64::from(mark.p(11)) - wave_size);
     let wave = (real(mark.size * wave_size) as f32, 0.0);
     extend(mark, Extension::Wave, level, mark.after(22.85), wave, canvas);
 }
 
 /// Accidental `kind` (1 flat … 5 double sharp) above and right of the trill.
 fn trill_accidental(mark: &Mark<'_, '_>, context: &ItemContext, kind: i32, y: f64, canvas: &mut Canvas<'_>) {
-    let size = real(mark.size * f64::from(0.65_f32));
+    let size = real(mark.size * constant(0.65));
     let dx = real(mark.size * 23.0 * mark.step());
     let dx = match kind {
-        4 => real(dx * f64::from(1.3_f32)),
-        5 => real(dx * f64::from(1.11_f32)),
+        4 => real(dx * constant(1.3)),
+        5 => real(dx * constant(1.11)),
         _ => dx,
     };
-    let lift = if kind == 2 || kind == 3 { f64::from(3.6_f32) } else { 3.0 };
+    let lift = if kind == 2 || kind == 3 { constant(3.6) } else { 3.0 };
     let lift = real(mark.scale_step() * mark.size * lift);
     let at = Pos::new(real(dx + mark.at.x), real(lift + y));
     mark.clef_symbol(canvas, context, at, FIRST_ACCIDENTAL_SYMBOL + kind, size);
@@ -225,7 +225,7 @@ fn ottava_symbol(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
         OTTAVA_BASSA => (46, 43.0),
         _ => (47, 62.0),
     };
-    let size = real(mark.symbol_size() * f64::from(0.75_f32));
+    let size = real(mark.symbol_size() * constant(0.75));
     mark.library_symbol(canvas, &mark.with_pixels(0), mark.at, number, size);
     extend(mark, Extension::Dashes, f64::from(mark.p(4)), mark.after(width), dashes, canvas);
 }
@@ -247,8 +247,8 @@ fn ottava_number(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
 /// and right pedal; P9 is the size (0.4 per unit); a line runs at P4 from
 /// P8 (or the symbol) to P6.
 fn piano_pedal(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
-    let size = match real(f64::from(mark.p(9)) * f64::from(0.4_f32)) {
-        0.0 => f64::from(0.4_f32),
+    let size = match real(f64::from(mark.p(9)) * constant(0.4)) {
+        0.0 => constant(0.4),
         s => s,
     };
     let pedals = mark.ip(5);
