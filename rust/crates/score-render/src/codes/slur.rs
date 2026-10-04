@@ -13,6 +13,7 @@ use crate::canvas::{BufferPoint, Canvas, Pen};
 use crate::codes::number::{draw_number, NumberCall};
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
+use crate::geometry::rotate_points_radians;
 use crate::page::P3_UNIT;
 use crate::symbols::{draw_clef, ItemContext};
 use crate::units::{constant, nint, real, trunc, Pos};
@@ -340,7 +341,7 @@ fn slur(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Can
     }
     if slur.dy != 0.0 {
         let angle = real(slur.dy.atan2(slur.length0));
-        rotate(buffer.points_mut(), Pos::new(slur.xl, slur.y0).to_point(), -angle);
+        rotate_points_radians(buffer.points_mut(), Pos::new(slur.xl, slur.y0).to_point(), angle as f32);
     }
     if buffer.len() < BUFFER_POINTS {
         canvas.buffer_mut().extend_from_slice(buffer.points());
@@ -998,19 +999,6 @@ fn number_gap(buffer: &mut Buffer, item: ItemRef<'_>, step: f64, dx: f64) {
     arranged.iter().enumerate().for_each(|(k, &at)| buffer.set_at(k, at));
     buffer.slots[2 * g].pen = Pen::Fill;
     buffer.npt = arranged.len() as isize + 1;
-}
-
-/// 0x42A5F4: turns the points about `centre` through `angle` radians,
-/// clockwise for positive angles (the engine's convention).
-fn rotate(points: &mut [BufferPoint], centre: Point, angle: f64) {
-    let angle = real(angle);
-    let (sin, cos) = (real(angle.sin()), real(angle.cos()));
-    let (cx, cy) = (f64::from(centre.x), f64::from(centre.y));
-    points.iter_mut().for_each(|p| {
-        let dx = f64::from(p.at.x - centre.x);
-        let dy = f64::from(p.at.y - centre.y);
-        p.at = Point::new(trunc(cx + (cos * dx + sin * dy)), trunc(cy + (cos * dy - sin * dx)));
-    });
 }
 
 #[cfg(test)]
