@@ -1,9 +1,9 @@
-// FUN_0056f920 @ 0056f920 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// text_rotate @ 0056f920 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_0056f920(undefined4 param_1,int param_2,int param_3,float *param_4)
+void text_rotate(undefined4 param_1,int param_2,int param_3,float *param_4)
 
 {
   int iVar1;
@@ -37,11 +37,11 @@ void FUN_0056f920(undefined4 param_1,int param_2,int param_3,float *param_4)
   _DAT_009a8320 = _DAT_009a832c * f_3_95;
   DAT_009a831c = _DAT_009a8320 * _DAT_009a8324 + _DAT_009a8320;
   ffree(extraout_ST1_01);
-  fVar4 = (float10)FUN_005ff381(puVar2,0x56fa50);
+  fVar4 = (float10)anint(puVar2,0x56fa50);
   *(int *)(puVar2 + -0x34) = (int)ROUND(fVar4);
   DAT_009a8318 = *(int *)(puVar2 + -0x34);
   ffree(extraout_ST1_02);
-  fVar4 = (float10)FUN_005ff381(puVar2,0x56fa78);
+  fVar4 = (float10)anint(puVar2,0x56fa78);
   *(int *)(puVar2 + -0x34) = (int)ROUND(fVar4);
   DAT_009a8314 = *(int *)(puVar2 + -0x34);
   DAT_009a8310 = 1;
@@ -61,7 +61,7 @@ void FUN_0056f920(undefined4 param_1,int param_2,int param_3,float *param_4)
         *(int *)(puVar2 + -0x34) = *(int *)(param_3 + -4 + DAT_009a8310 * 4) - DAT_009a8314;
         _DAT_009a8320 = (float)*(int *)(puVar2 + -0x34);
         ffree((float10)_DAT_009a8330 * (float10)iVar1);
-        fVar4 = (float10)FUN_005ff381(puVar2,0x56fb7b);
+        fVar4 = (float10)anint(puVar2,0x56fb7b);
         *(int *)(puVar2 + -0x34) = (int)ROUND(fVar4);
         DAT_009a8304 = DAT_009a8318 + *(int *)(puVar2 + -0x34);
         *(undefined2 *)(puVar2 + -0x38) = in_FPUControlWord;
@@ -70,7 +70,7 @@ void FUN_0056f920(undefined4 param_1,int param_2,int param_3,float *param_4)
         uVar3 = *(undefined2 *)(puVar2 + -0x38);
         *(undefined4 *)(param_2 + -4 + DAT_009a8310 * 4) = *(undefined4 *)(puVar2 + -0x34);
         ffree((float10)_DAT_009a8330 * (float10)_DAT_009a8320);
-        fVar4 = (float10)FUN_005ff381(puVar2,0x56fbf4);
+        fVar4 = (float10)anint(puVar2,0x56fbf4);
         *(int *)(puVar2 + -0x34) = (int)ROUND(fVar4);
         DAT_009a8304 = DAT_009a8314 + *(int *)(puVar2 + -0x34);
         *(undefined2 *)(puVar2 + -0x38) = uVar3;

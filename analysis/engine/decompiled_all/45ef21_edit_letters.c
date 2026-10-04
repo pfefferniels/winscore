@@ -1,4 +1,4 @@
-// FUN_0045ef21 @ 0045ef21 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// edit_letters @ 0045ef21 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING (jumptable): Unable to track spacebase fully for stack */
@@ -6,7 +6,7 @@
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 /* WARNING: Restarted to delay deadcode elimination for space: ram */
 
-void FUN_0045ef21(void)
+void edit_letters(void)
 
 {
   float fVar1;
@@ -128,7 +128,7 @@ LAB_00467c1e:
           P5 = f_1;
         }
         ffree(fVar9);
-        thunk_FUN_0042fa58(&ITEM_LEN + DAT_008244a8,4,&IP12);
+        text_parse(&ITEM_LEN + DAT_008244a8,4,&IP12);
         P2 = DAT_01caf68c;
         DAT_008244ec = (&DAT_01caea3c)[DAT_01cb1068];
         DAT_00824474 = DAT_01caea44;

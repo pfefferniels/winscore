@@ -392,7 +392,7 @@ LAB_0047b0ae:
   }
 LAB_0047b2be:
   ffree(Var2);
-  Var2 = thunk_FUN_004b80b7(&DAT_01c2cc20,&DAT_01c2cc24,&P1,&P2);
+  Var2 = lineup_pass(&DAT_01c2cc20,&DAT_01c2cc24,&P1,&P2);
   ffree(Var2);
   Var2 = FUN_0047b668();
   DAT_01ba0d38 = (float)DAT_01ba0d34;

@@ -130,7 +130,7 @@ void draw_text(void)
     }
     DAT_009a7f9c = (&ITEM_PTR0)[DAT_009a7f9c] + DAT_01cadce0;
     ffree(extraout_ST1_00);
-    fVar5 = (float10)thunk_FUN_0042fa58(&ITEM_LEN + DAT_009a7f9c,4,&IP12);
+    fVar5 = (float10)text_parse(&ITEM_LEN + DAT_009a7f9c,4,&IP12);
     if (P13 == f_0) {
       FUN_005f33c9(&stack0xfffffffc,0x569e9a);
       Var6 = FUN_005f34d1(puVar7,0x569eb5);
@@ -213,7 +213,7 @@ LAB_0056ae13:
   }
   else {
     ffree(extraout_ST1_00);
-    fVar5 = (float10)thunk_FUN_0042fa58(&DAT_020b8ea0,1,&DAT_01cb1068);
+    fVar5 = (float10)text_parse(&DAT_020b8ea0,1,&DAT_01cb1068);
     local_cc = 0;
   }
 LAB_0056a290:
@@ -305,7 +305,7 @@ LAB_0056a290:
           local_74 = 0;
         }
         ffree(fVar5);
-        fVar5 = (float10)FUN_0056b845();
+        fVar5 = (float10)load_font_metrics();
       }
       else {
         local_78 = 0;
@@ -344,7 +344,7 @@ LAB_0056a67e:
   DAT_01c6da38 = P6;
   _DAT_009a7f70 = X_POS;
   ffree(fVar5);
-  fVar5 = (float10)FUN_005ff381(&stack0xfffffffc,0x56a750);
+  fVar5 = (float10)anint(&stack0xfffffffc,0x56a750);
   *(int *)(puVar3 + -0xf8) = (int)ROUND(fVar5);
   iVar4 = DAT_01cb1068;
   DAT_01a27708 = *(undefined4 *)(puVar3 + -0xf8);
@@ -374,7 +374,7 @@ LAB_0056a67e:
       _DAT_009a7f68 = *(float *)(&DAT_01cadd3c + DAT_009a7f6c * 4);
       iVar4 = DAT_009a7f6c * 4;
       ffree(in_ST0);
-      fVar5 = (float10)FUN_005ff381(puVar3,0x56a7d6);
+      fVar5 = (float10)anint(puVar3,0x56a7d6);
       *(int *)(puVar3 + -0xf8) = (int)ROUND(fVar5);
       *(int *)(&DAT_01cafabc + iVar4) = *(int *)(puVar3 + -0xf8) + 20000;
       _DAT_009a7f70 = _DAT_009a7f68 * f_150 + _DAT_009a7f70;
@@ -416,7 +416,7 @@ LAB_0056a67e:
       iVar4 = *(int *)(puVar3 + -0x40);
     }
     ffree(in_ST0);
-    in_ST0 = thunk_FUN_0056f920(&DAT_01cb1068,&DAT_01cafac0,&DAT_01cb02c0,&P9);
+    in_ST0 = text_rotate(&DAT_01cb1068,&DAT_01cafac0,&DAT_01cb02c0,&P9);
     *(int *)(puVar3 + -0x3c) = DAT_01cb1068;
     DAT_009a7f6c = 1;
     iVar4 = DAT_01cb1068;
@@ -477,7 +477,7 @@ LAB_0056ac18:
              *(int *)(&DAT_01cafabc + DAT_01cadce0 * 4) + 20000;
       }
       ffree(in_ST0);
-      in_ST0 = thunk_FUN_00532ec0(&DAT_0076a148);
+      in_ST0 = text_emit_char(&DAT_0076a148);
     }
     else {
       if (999999 < DAT_01cadce4) {
@@ -489,7 +489,7 @@ LAB_0056ac18:
       }
       else {
         ffree(in_ST0);
-        in_ST0 = thunk_FUN_0056caf0(&DAT_009a7f64);
+        in_ST0 = text_record_header(&DAT_009a7f64);
         if ((DAT_01caea44 == 0) || (DAT_01caea44 == 100)) {
           _DAT_009a7f8c = 0;
         }

@@ -47,7 +47,7 @@ void FUN_004f7808(void)
         while (0 < iVar3) {
           DAT_01c585dc = (&ITEM_PTR0)[DAT_01c585d4];
           ffree(in_ST0);
-          fVar5 = (float10)FUN_005ff381(puVar4,0x4f799b);
+          fVar5 = (float10)anint(puVar4,0x4f799b);
           *(int *)(puVar4 + -0xd0) = (int)ROUND(fVar5);
           DAT_01c585d8 = *(int *)(puVar4 + -0xd0);
           DAT_008d2078 = (float)DAT_01c585d8;
@@ -69,7 +69,7 @@ void FUN_004f7808(void)
           while (0 < iVar3) {
             DAT_01c585dc = (&ITEM_PTR0)[DAT_01c585d4];
             ffree(fVar5);
-            fVar5 = (float10)FUN_005ff381(puVar4,0x4f7ac0);
+            fVar5 = (float10)anint(puVar4,0x4f7ac0);
             *(int *)(puVar4 + -0xd0) = (int)ROUND(fVar5);
             DAT_008d2064 = *(int *)(puVar4 + -0xd0);
             *(int *)(puVar4 + -0xd0) = DAT_008d2064 * 1000;

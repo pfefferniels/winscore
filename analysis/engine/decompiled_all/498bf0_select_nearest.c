@@ -1,9 +1,9 @@
-// FUN_00498bf0 @ 00498bf0 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// select_nearest @ 00498bf0 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_00498bf0(void)
+void select_nearest(void)
 
 {
   float fVar1;
@@ -213,7 +213,7 @@ LAB_00499289:
       P3 = (float)DAT_01a14950 / f_150;
       *(int *)(puVar8 + -100) = (&STAFF_MID0)[DAT_00838810] - DAT_01a1494c;
       ffree((float10)*(int *)(puVar8 + -100));
-      fVar6 = (float10)FUN_005ff381(puVar8,0x498d87);
+      fVar6 = (float10)anint(puVar8,0x498d87);
       *(int *)(puVar8 + -100) = (int)ROUND(fVar6);
       P4 = f_7 - (float)*(int *)(puVar8 + -100);
       ffree(extraout_ST1);

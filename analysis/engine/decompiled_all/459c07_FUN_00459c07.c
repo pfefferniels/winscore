@@ -50,7 +50,7 @@ LAB_00459db2:
     _DAT_007fedcc = (float)DAT_007fedd4 * _DAT_007fedcc;
     ffree(extraout_ST0);
     puVar2 = &stack0xfffffffc;
-    fVar3 = (float10)FUN_005ff381(&stack0xfffffffc,0x459d7f);
+    fVar3 = (float10)anint(&stack0xfffffffc,0x459d7f);
     *(int *)(puVar2 + -0x9c) = (int)ROUND(fVar3);
     iVar1 = *(int *)(puVar2 + -0x9c);
     if (iVar1 < 0) {
@@ -166,11 +166,11 @@ LAB_00459db2:
       }
     }
     ffree(fVar3);
-    fVar3 = (float10)FUN_005ff381(puVar2,0x45a239);
+    fVar3 = (float10)anint(puVar2,0x45a239);
     *(int *)(puVar2 + -0x9c) = (int)ROUND(fVar3);
     DAT_007fed6c = *(int *)(puVar2 + -0x9c);
     ffree(extraout_ST1_00);
-    fVar3 = (float10)FUN_005ff381(puVar2,0x45a267);
+    fVar3 = (float10)anint(puVar2,0x45a267);
     *(int *)(puVar2 + -0x9c) = (int)ROUND(fVar3);
     DAT_007fed68 = *(int *)(puVar2 + -0x9c);
     DAT_007fedb0 = DAT_007feda8;
@@ -225,12 +225,12 @@ LAB_00459db2:
     DAT_007fedc8 = DAT_007fedc8 + 1;
     iVar1 = DAT_007fedc8 * 0xc;
     ffree(Var4);
-    fVar3 = (float10)FUN_005ff381(puVar2,0x45a46f);
+    fVar3 = (float10)anint(puVar2,0x45a46f);
     *(int *)(puVar2 + -0x9c) = (int)ROUND(fVar3);
     *(undefined4 *)(iVar1 + 0x1bf49d4) = *(undefined4 *)(puVar2 + -0x9c);
     iVar1 = DAT_007fedc8 * 0xc;
     ffree(extraout_ST1_02);
-    fVar3 = (float10)FUN_005ff381(puVar2,0x45a4a4);
+    fVar3 = (float10)anint(puVar2,0x45a4a4);
     *(int *)(puVar2 + -0x9c) = (int)ROUND(fVar3);
     *(undefined4 *)(iVar1 + 0x1bf49d8) = *(undefined4 *)(puVar2 + -0x9c);
     Var4 = extraout_ST1_03;

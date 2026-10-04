@@ -1,9 +1,9 @@
-// FUN_0048f663 @ 0048f663 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// drag_move @ 0048f663 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_0048f663(void)
+void drag_move(void)
 
 {
   undefined1 *puVar1;
@@ -130,7 +130,7 @@ LAB_0048fab3:
       }
       else {
         if ((DAT_020b8e50 < 4) || (0x10 < DAT_020b8e50)) {
-          fVar3 = (float10)FUN_005ff381(puVar1,0x48fb5e);
+          fVar3 = (float10)anint(puVar1,0x48fb5e);
           *(int *)(puVar1 + -0x60) = (int)ROUND(fVar3);
           DAT_00829830 = (float)*(int *)(puVar1 + -0x60);
         }

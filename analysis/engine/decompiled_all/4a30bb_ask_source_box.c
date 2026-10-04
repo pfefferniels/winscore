@@ -1,7 +1,7 @@
-// FUN_004a30bb @ 004a30bb (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// ask_source_box @ 004a30bb (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
-void FUN_004a30bb(void)
+void ask_source_box(void)
 
 {
   undefined4 uVar1;

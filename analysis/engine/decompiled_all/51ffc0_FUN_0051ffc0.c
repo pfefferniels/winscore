@@ -178,7 +178,7 @@ LAB_00520200:
                   }
                   else {
                     ffree(Var8);
-                    fVar7 = (float10)FUN_005ff381(puVar6,0x5205e8);
+                    fVar7 = (float10)anint(puVar6,0x5205e8);
                     *(int *)(puVar6 + -0xf0) = (int)ROUND(fVar7);
                     DAT_01aad7f0 = *(int *)(puVar6 + -0xf0);
                     Var8 = extraout_ST1;
@@ -340,11 +340,11 @@ LAB_00520200:
           DAT_0078b4e4 = 0x4a;
           DAT_0078b4ec = 0;
           ffree(Var8);
-          Var8 = thunk_FUN_004b80b7(&DAT_01aad7c8,&DAT_01aad7d4,&DAT_01f95c8c,&DAT_01f95c90);
+          Var8 = lineup_pass(&DAT_01aad7c8,&DAT_01aad7d4,&DAT_01f95c8c,&DAT_01f95c90);
           DAT_0078b4e0 = 0x4c;
           DAT_0078b4e4 = 0x4a;
           ffree(Var8);
-          Var8 = thunk_FUN_004b80b7(&DAT_01aad7cc,&DAT_01aad7d8,&DAT_01f95c8c,&DAT_01f95c90);
+          Var8 = lineup_pass(&DAT_01aad7cc,&DAT_01aad7d8,&DAT_01f95c8c,&DAT_01f95c90);
           iVar4 = DAT_01aad7c0 + 1;
           *(int *)(puVar6 + -0x3c) = iVar4;
           DAT_01a1feb0 = 1;

@@ -39,7 +39,7 @@ void FUN_00580738(undefined4 param_1,int *param_2)
     DAT_0078b6a0 = DAT_009a8f60 * 10 + (uint)DAT_009a8fa2 + -0x30;
     FUN_005f33c9(puVar1,0x5808eb);
     FUN_005f34d1(puVar1,0x580906);
-    thunk_FUN_0056b845();
+    load_font_metrics();
     FUN_005f33c9(puVar1,0x580934);
     FUN_005f34d1(puVar1,0x58094f);
     thunk_FUN_0056ae1c();

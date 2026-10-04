@@ -1,9 +1,9 @@
-// cmd_input @ 004afb68 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// cmd_I @ 004afb68 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void cmd_input(void)
+void cmd_I(void)
 
 {
   int iVar1;
@@ -26,7 +26,7 @@ LAB_004aff8e:
     if (0 < ITEM_I) {
       if (DAT_0078b4e4 != 0x46) {
         ffree(fVar5);
-        fVar5 = (float10)thunk_FUN_0045ef21();
+        fVar5 = (float10)edit_letters();
         goto LAB_004b0232;
       }
       if (DAT_020b8ea2 == 'X') {

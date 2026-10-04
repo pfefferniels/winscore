@@ -10,7 +10,7 @@ void FUN_00571655(int param_1)
   DAT_0078b6a0 = DAT_01cadce4 % 1000;
   DAT_01cadce4 = DAT_01cadce4 % 100;
   if (DAT_01cadce4 < 0x5a) {
-    thunk_FUN_0056b845();
+    load_font_metrics();
   }
   else if (DAT_01cadce4 != 99) {
     param_1 = DAT_01cadce4 * 5 + param_1;

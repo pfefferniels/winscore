@@ -16,8 +16,8 @@ void FUN_00510430(void)
     FUN_005f34d1(&stack0xfffffffc,0x51046d);
     if (((char)DAT_020b8ea0 == '|') || ((char)DAT_020b8ea0 == '~')) {
       DAT_01fbb7e0 = VEC_N;
-      thunk_FUN_0041b011();
-      thunk_FUN_004a30bb(&DAT_00941928,&DAT_00767504);
+      region_select();
+      ask_source_box(&DAT_00941928,&DAT_00767504);
       if (DAT_00941928 != -2) {
         if (DAT_00941928 != 0) goto LAB_0051055c;
         VEC_N = DAT_01fbb7e0;
@@ -31,7 +31,7 @@ void FUN_00510430(void)
       thunk_FUN_00518448();
       DAT_01fbb7e0 = VEC_N;
       thunk_FUN_0041aa88();
-      thunk_FUN_004a30bb(&DAT_00941928,&DAT_00767504);
+      ask_source_box(&DAT_00941928,&DAT_00767504);
       if (DAT_00941928 == -2) {
         *(undefined4 *)(puVar2 + -0x30) = 0;
       }

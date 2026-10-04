@@ -582,7 +582,7 @@ LAB_0053a118:
           iVar3 = DAT_01c585c0;
           ffree(in_ST2);
           ffree(fVar7);
-          fVar7 = (float10)FUN_005ff381(puVar1,0x539892);
+          fVar7 = (float10)anint(puVar1,0x539892);
           *(int *)(puVar1 + -0x1c8) = (int)ROUND(fVar7);
           (&DAT_01caea3c)[iVar3] = *(undefined4 *)(puVar1 + -0x1c8);
           DAT_01c585c0 = DAT_01c585c0 + 1;

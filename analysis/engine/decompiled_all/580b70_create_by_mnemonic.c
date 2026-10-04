@@ -1,10 +1,10 @@
-// FUN_00580b70 @ 00580b70 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// create_by_mnemonic @ 00580b70 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Removing unreachable block (ram,0x00581640) */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_00580b70(int *param_1)
+void create_by_mnemonic(int *param_1)
 
 {
   byte bVar1;

@@ -89,14 +89,14 @@ LAB_005059e2:
                    *(float *)(&DAT_00909f14 + DAT_00909ef4 * 4) -
                    *(float *)(&DAT_00909f10 + DAT_00909ef4 * 4);
               iVar2 = DAT_00909ef4 * 4;
-              fVar7 = (float10)FUN_005ff381(puVar6,0x505b29);
+              fVar7 = (float10)anint(puVar6,0x505b29);
               *(int *)(puVar6 + -0x54) = (int)ROUND(fVar7);
               *(undefined4 *)(&DAT_00909f14 + iVar2) = *(undefined4 *)(puVar6 + -0x54);
               DAT_00909ef4 = DAT_00909ef4 + -1;
               *(int *)(puVar6 + -0x10) = *(int *)(puVar6 + -0x10) + -1;
               iVar2 = *(int *)(puVar6 + -0x10);
             }
-            fVar7 = (float10)FUN_005ff381(puVar6,0x505b77);
+            fVar7 = (float10)anint(puVar6,0x505b77);
             *(int *)(puVar6 + -0x54) = (int)ROUND(fVar7);
             DAT_00909f18 = *(undefined4 *)(puVar6 + -0x54);
             *(undefined1 *)(DAT_00909ee8 + 0x92c1f7) = *(undefined1 *)(DAT_01b34580 * 4 + 0x1b12e9c)

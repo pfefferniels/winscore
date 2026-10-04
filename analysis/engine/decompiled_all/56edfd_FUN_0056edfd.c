@@ -89,7 +89,7 @@ void FUN_0056edfd(void)
     DAT_00791444 = 0xffffffff;
     DAT_009a8234 = DAT_01cadcfc;
     if (DAT_0078b6a0 < 100) {
-      thunk_FUN_0056b845();
+      load_font_metrics();
     }
     DAT_01cadcfc = DAT_009a8234;
     *(undefined4 *)(puVar3 + -4) = 0;

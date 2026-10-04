@@ -83,10 +83,10 @@ void FUN_0045a8d7(void)
       _DAT_007fee78 = DAT_007feea0 * *(float *)(&DAT_0078fb74 + DAT_007fee90 * 4) + _DAT_007fee88;
       _DAT_007fee74 = _DAT_007fee9c * (float)(&DAT_0078fb78)[DAT_007fee90] + _DAT_007fee84;
       **(int **)(puVar2 + 8) = **(int **)(puVar2 + 8) + 1;
-      fVar5 = (float10)FUN_005ff381(puVar2,0x45ac8f);
+      fVar5 = (float10)anint(puVar2,0x45ac8f);
       *(int *)(puVar2 + -0x34) = (int)ROUND(fVar5);
       DAT_007fee70 = *(int *)(puVar2 + -0x34);
-      fVar5 = (float10)FUN_005ff381(puVar2,0x45acb5);
+      fVar5 = (float10)anint(puVar2,0x45acb5);
       *(int *)(puVar2 + -0x34) = (int)ROUND(fVar5);
       DAT_007fee6c = *(int *)(puVar2 + -0x34);
       if ((DAT_007fee80 == DAT_007fee70) && (DAT_007fee7c == DAT_007fee6c)) {

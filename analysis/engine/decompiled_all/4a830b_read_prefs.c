@@ -1,10 +1,10 @@
-// FUN_004a830b @ 004a830b (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// read_prefs @ 004a830b (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING (jumptable): Unable to track spacebase fully for stack */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_004a830b(void)
+void read_prefs(void)
 
 {
   undefined4 uVar1;

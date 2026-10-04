@@ -1,7 +1,7 @@
-// FUN_004b906d @ 004b906d (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// lineup_answer @ 004b906d (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
-void FUN_004b906d(void)
+void lineup_answer(void)
 
 {
   float fVar1;
@@ -21,14 +21,14 @@ void FUN_004b906d(void)
   if (DAT_02052740 == 0) {
     DAT_0089f5b4 = VEC_N;
     if (((char)DAT_020b8ea0 == '|') || ((char)DAT_020b8ea0 == '~')) {
-      thunk_FUN_0041b011();
+      region_select();
     }
     else {
       thunk_FUN_00518448();
       if (((char)DAT_020b8ea0 == 'B') || (P1 == f_0 && P3 == f_0)) goto LAB_004b93ae;
       thunk_FUN_0041aa88();
     }
-    thunk_FUN_004a30bb(&DAT_0089f5b0,&DAT_00764974);
+    ask_source_box(&DAT_0089f5b0,&DAT_00764974);
     if (DAT_0089f5b0 != -2) {
       if (DAT_0089f5b0 == 0) {
         VEC_N = DAT_0089f5b4;
@@ -77,7 +77,7 @@ LAB_004b91cb:
       FUN_004b8b97();
     }
     else {
-      FUN_004b80b7(&DAT_01ade8a8,&DAT_01ade8ac,&P1,&P2);
+      lineup_pass(&DAT_01ade8a8,&DAT_01ade8ac,&P1,&P2);
     }
   }
   thunk_FUN_00549422();

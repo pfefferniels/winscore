@@ -1,10 +1,10 @@
-// FUN_0042fa58 @ 0042fa58 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// text_parse @ 0042fa58 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING (jumptable): Unable to track spacebase fully for stack */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_0042fa58(char *param_1,undefined4 param_2,int *param_3)
+void text_parse(char *param_1,undefined4 param_2,int *param_3)
 
 {
   undefined4 uVar1;
@@ -39,7 +39,7 @@ void FUN_0042fa58(char *param_1,undefined4 param_2,int *param_3)
   if (((DAT_0078d8a0 < 0) && (puVar3 = &stack0xfffffffc, DAT_0078b6a0 < 0x5a)) &&
      (puVar3 = &stack0xfffffffc, *param_1 != '_')) {
     DAT_0078b6a0 = 0;
-    thunk_FUN_0056b845();
+    load_font_metrics();
     puVar3 = &stack0xfffffffc;
   }
   do {

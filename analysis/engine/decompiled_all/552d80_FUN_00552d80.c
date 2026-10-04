@@ -222,10 +222,10 @@ void FUN_00552d80(void)
             _DAT_009a367c = (float)*(int *)(puVar3 + -0xb0);
             *(int *)(puVar3 + -0xb0) = iVar6 - _DAT_009a369c;
             _DAT_009a366c = (float)*(int *)(puVar3 + -0xb0);
-            fVar8 = (float10)FUN_005ff381(puVar3,0x553568);
+            fVar8 = (float10)anint(puVar3,0x553568);
             *(int *)(puVar3 + -0xb0) = (int)ROUND(fVar8);
             DAT_009a36b4 = *(int *)(puVar3 + -0xb0);
-            fVar8 = (float10)FUN_005ff381(puVar3,0x55359a);
+            fVar8 = (float10)anint(puVar3,0x55359a);
             *(int *)(puVar3 + -0xb0) = (int)ROUND(fVar8);
             DAT_009a36b0 = *(int *)(puVar3 + -0xb0);
           }

@@ -1,4 +1,4 @@
-// FUN_0056caf0 @ 0056caf0 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// text_record_header @ 0056caf0 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Removing unreachable block (ram,0x0056cd6e) */
@@ -10,7 +10,7 @@
 /* WARNING: Removing unreachable block (ram,0x0056cbf2) */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_0056caf0(void)
+void text_record_header(void)
 
 {
   undefined2 uVar1;

@@ -1,10 +1,10 @@
-// FUN_00532ec0 @ 00532ec0 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// text_emit_char @ 00532ec0 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING (jumptable): Unable to track spacebase fully for stack */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_00532ec0(void)
+void text_emit_char(void)
 
 {
   undefined1 uVar1;

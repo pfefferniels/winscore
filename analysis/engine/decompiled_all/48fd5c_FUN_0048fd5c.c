@@ -75,7 +75,7 @@ void FUN_0048fd5c(int *param_1)
       }
       else {
         if (DAT_020b8e50 < 4) {
-          fVar5 = (float10)FUN_005ff381(puVar3,0x490101);
+          fVar5 = (float10)anint(puVar3,0x490101);
           *(int *)(puVar3 + -0xe0) = (int)ROUND(fVar5);
           DAT_00829874 = (float)*(int *)(puVar3 + -0xe0);
         }
@@ -103,7 +103,7 @@ void FUN_0048fd5c(int *param_1)
   _DAT_00829894 = (float)DAT_00829898 / _DAT_01be6d64;
   DAT_00829890 = _DAT_00829894 + _DAT_008298a4;
   puVar3 = &stack0xfffffffc;
-  fVar5 = (float10)FUN_005ff381(&stack0xfffffffc,0x490200);
+  fVar5 = (float10)anint(&stack0xfffffffc,0x490200);
   *(int *)(puVar3 + -0xe0) = (int)ROUND(fVar5);
   _DAT_0082988c = *(int *)(puVar3 + -0xe0);
   fVar2 = (float)_DAT_0082988c / f_10;
@@ -226,7 +226,7 @@ LAB_00490643:
     }
 LAB_00490670:
     iVar4 = DAT_01be6d60 * 4;
-    fVar5 = (float10)FUN_005ff381(puVar3,0x49068a);
+    fVar5 = (float10)anint(puVar3,0x49068a);
     *(int *)(puVar3 + -0xe0) = (int)ROUND(fVar5);
     *(float *)(&DAT_020b943c + iVar4) = (float)*(int *)(puVar3 + -0xe0);
   }

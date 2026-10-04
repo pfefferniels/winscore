@@ -40,7 +40,7 @@ void FUN_004a2c81(undefined4 *param_1,int param_2)
       DAT_01fbb864 = (int)ROUND((P2 + P1) - f_1);
       DAT_0078b378 = 1;
       DAT_01fbb8a4 = DAT_00838b3c;
-      thunk_FUN_004b7ad8();
+      cmd_lineup();
       DAT_0078b378 = 0;
       return;
     }

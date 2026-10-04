@@ -20,7 +20,7 @@ void FUN_00469da7(int *param_1,int *param_2)
     if (P5 == f_0) {
       P5 = f_1;
     }
-    thunk_FUN_0042fa58(&ITEM_LEN + DAT_00824b68,4,&IP12);
+    text_parse(&ITEM_LEN + DAT_00824b68,4,&IP12);
     *param_2 = (&DAT_01caea3c)[DAT_00824b5c];
     DAT_00824b58 = DAT_01caea44;
     _DAT_00824b54 = f_0;

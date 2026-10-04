@@ -123,7 +123,7 @@ void FUN_005077a2(void)
 LAB_00507bf6:
                   ffree(in_ST1);
                   ffree(in_ST0);
-                  fVar7 = (float10)FUN_005ff381(puVar4,0x507c1a);
+                  fVar7 = (float10)anint(puVar4,0x507c1a);
                   *(int *)(puVar4 + -0xac) = (int)ROUND(fVar7);
                   *(int *)(puVar4 + -0xac) = DAT_00940370 + *(int *)(puVar4 + -0xac);
                   DAT_00940364 = (float)*(int *)(puVar4 + -0xac);
@@ -375,7 +375,7 @@ LAB_005082e3:
           iVar3 = DAT_01b34584 * 4;
           ffree(in_ST1);
           ffree(in_ST0);
-          fVar7 = (float10)FUN_005ff381(puVar4,0x50835f);
+          fVar7 = (float10)anint(puVar4,0x50835f);
           *(int *)(puVar4 + -0xac) = (int)ROUND(fVar7);
           *(int *)(&DAT_01b36c98 + iVar3) = DAT_00940370 + *(int *)(puVar4 + -0xac);
           in_ST0 = extraout_ST1_11;

@@ -1,9 +1,9 @@
-// FUN_004b7ad8 @ 004b7ad8 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// cmd_lineup @ 004b7ad8 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_004b7ad8(void)
+void cmd_lineup(void)
 
 {
   undefined4 uVar1;
@@ -68,7 +68,7 @@ LAB_004b7d05:
       thunk_FUN_0041b68a();
       if ((_DAT_020b8ea0 >> 0x10 & 0xff) == 0x41) {
         FUN_004b93f2();
-        FUN_004b906d();
+        lineup_answer();
         _DAT_009c6ad4 = f_0;
         thunk_FUN_00597b60(0xffffffff);
         return;
@@ -141,7 +141,7 @@ LAB_004b7d05:
   DAT_01fbb8a0 = 0;
   DAT_01fbb8a4 = 0;
   if (DAT_01ade8a4 != 0x4e) {
-    FUN_004b80b7(&DAT_01ade8a8,&DAT_01ade8ac,&P1,&P2);
+    lineup_pass(&DAT_01ade8a8,&DAT_01ade8ac,&P1,&P2);
     DAT_0078b4ec = 1;
   }
 LAB_004b8036:

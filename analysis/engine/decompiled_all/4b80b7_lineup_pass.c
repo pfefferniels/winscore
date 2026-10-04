@@ -1,9 +1,9 @@
-// FUN_004b80b7 @ 004b80b7 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// lineup_pass @ 004b80b7 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_004b80b7(int *param_1,int *param_2,float *param_3,float *param_4)
+void lineup_pass(int *param_1,int *param_2,float *param_3,float *param_4)
 
 {
   int iVar1;

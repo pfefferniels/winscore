@@ -20,7 +20,7 @@ LAB_0052fbe5:
     }
     else if (((DAT_020527e4 != LOAD_P3) && (LOAD_CODE == 1)) && (LOAD_STAFF == *param_1)) {
       if ((DAT_0099a110 == 1) && (LOAD_P3 - DAT_020527e4 < f_3)) {
-        thunk_FUN_004b80b7(param_1,param_1,param_2,param_3);
+        lineup_pass(param_1,param_1,param_2,param_3);
         return;
       }
       goto LAB_0052fbe5;

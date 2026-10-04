@@ -1,9 +1,9 @@
-// FUN_0056b845 @ 0056b845 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// load_font_metrics @ 0056b845 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_0056b845(void)
+void load_font_metrics(void)
 
 {
   undefined1 *puVar1;

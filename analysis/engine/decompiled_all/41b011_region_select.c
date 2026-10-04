@@ -1,9 +1,9 @@
-// FUN_0041b011 @ 0041b011 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// region_select @ 0041b011 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_0041b011(void)
+void region_select(void)
 
 {
   int iVar1;

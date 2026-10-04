@@ -1,9 +1,9 @@
-// FUN_0046d088 @ 0046d088 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
+// edit_params @ 0046d088 (Ghidra decompilation, names from analysis/engine/names.tsv and globals.tsv)
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-void FUN_0046d088(void)
+void edit_params(void)
 
 {
   int iVar1;

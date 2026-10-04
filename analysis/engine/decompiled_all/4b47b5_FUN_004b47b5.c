@@ -40,7 +40,7 @@ void FUN_004b47b5(void)
         }
         EDIT_ITEM = DAT_0089f3d8;
         DAT_0089f3cc = LOAD_W;
-        thunk_FUN_0045ef21();
+        edit_letters();
         DAT_020b9448 = P2;
         DAT_020b9468 = P4;
         EDIT_ITEM = 0;

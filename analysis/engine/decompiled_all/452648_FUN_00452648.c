@@ -953,13 +953,13 @@ LAB_0045456e:
       *(int *)(puVar10 + -0x198) = (DAT_007feaa0 + -8000) / 100;
       _DAT_007feab4 = P2 * (float)*(int *)(puVar10 + -0x198);
       ffree(Var20);
-      fVar21 = (float10)FUN_005ff381(puVar10,0x454814);
+      fVar21 = (float10)anint(puVar10,0x454814);
       *(int *)(puVar10 + -0x198) = (int)ROUND(fVar21);
       DAT_007feaa0 = (*(int *)(puVar10 + -0x198) * 100 - DAT_007feaa0) + 8000;
       *(int *)(puVar10 + -0x198) = (DAT_007fea9c + 19000) / 100;
       _DAT_007feab4 = P3 * (float)*(int *)(puVar10 + -0x198);
       ffree(extraout_ST1);
-      fVar21 = (float10)FUN_005ff381(puVar10,0x454889);
+      fVar21 = (float10)anint(puVar10,0x454889);
       *(int *)(puVar10 + -0x198) = (int)ROUND(fVar21);
       DAT_007fea9c = (*(int *)(puVar10 + -0x198) * 100 - DAT_007fea9c) + -19000;
       VEC_N = 0x19;
@@ -976,7 +976,7 @@ LAB_0045456e:
           *(int *)(puVar10 + -0x198) = ((&PT_X0)[iVar7] + -8000) / 100;
           _DAT_007feab4 = P2 * (float)*(int *)(puVar10 + -0x198);
           ffree(Var20);
-          fVar21 = (float10)FUN_005ff381(puVar10,0x454959);
+          fVar21 = (float10)anint(puVar10,0x454959);
           *(int *)(puVar10 + -0x198) = (int)ROUND(fVar21);
           (&PT_X0)[iVar7] = (*(int *)(puVar10 + -0x198) * 100 - DAT_007feaa0) + 8000;
           *(int *)((VEC_BASE - VEC_STRIDE * VEC_LBOUND) + VEC_N * VEC_STRIDE) =
@@ -985,7 +985,7 @@ LAB_0045456e:
           *(int *)(puVar10 + -0x198) = ((&PT_Y0)[(int)DAT_007feadc] + 19000) / 100;
           _DAT_007feab4 = P3 * (float)*(int *)(puVar10 + -0x198);
           ffree(extraout_ST1_01);
-          fVar21 = (float10)FUN_005ff381(puVar10,0x454a14);
+          fVar21 = (float10)anint(puVar10,0x454a14);
           *(int *)(puVar10 + -0x198) = (int)ROUND(fVar21);
           (&PT_Y0)[iVar6] = (*(int *)(puVar10 + -0x198) * 100 - DAT_007fea9c) + -19000;
           *(int *)((VEC_BASE - VEC_STRIDE * VEC_LBOUND) + (VEC_N + 1) * VEC_STRIDE) =

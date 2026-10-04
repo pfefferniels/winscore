@@ -80,11 +80,11 @@ void FUN_004d6318(int param_1,int param_2)
   _DAT_008a0484 = *(undefined4 *)(*(int *)(puVar3 + 0xc) + 0xc);
   _DAT_008a0480 = *(undefined4 *)(*(int *)(puVar3 + 0xc) + 0x10);
   ffree(in_ST0);
-  fVar6 = (float10)FUN_005ff381(puVar3,0x4d6429);
+  fVar6 = (float10)anint(puVar3,0x4d6429);
   *(int *)(puVar3 + -0x104) = (int)ROUND(fVar6);
   DAT_01aae2d0 = *(int *)(puVar3 + -0x104) + 0x318;
   ffree(extraout_ST1);
-  fVar6 = (float10)FUN_005ff381(puVar3,0x4d6463);
+  fVar6 = (float10)anint(puVar3,0x4d6463);
   *(int *)(puVar3 + -0x104) = (int)ROUND(fVar6);
   DAT_01aae2d4 = *(int *)(puVar3 + -0x104) + 0xd;
   Var7 = extraout_ST1_00;
