@@ -86,6 +86,50 @@ pub fn width(doc: &Document<'_>, call: &TextCall<'_>) -> f32 {
     Text::new(doc, call).length
 }
 
+/// What right-justification (JR, 0x471190) subtracts from P13 for the last
+/// glyph, in P3 units: the PostScript width less the second width of the
+/// metric file, over 638, times 3.2833 and the size (fonts from 90 on: a
+/// tenth of the symbol width). `None` if the string has no glyph or ends in
+/// font 99, which JR leaves alone.
+pub fn right_bearing(doc: &Document<'_>, call: &TextCall<'_>) -> Option<f32> {
+    let text = Text::new(doc, call);
+    let placed = text.place();
+    let last = placed.iter().rposition(|p| matches!(p.code, Code::Glyph(_)))?;
+    let Code::Glyph(glyph) = placed[last].code else { return None };
+    let font = placed[..last]
+        .iter()
+        .rev()
+        .find_map(|p| match p.code {
+            Code::Font(font) => Some(font.number()),
+            _ => None,
+        })
+        .unwrap_or(text.scan_font.number());
+    let index = glyph + 1;
+    let units = match font {
+        LEFT_ALONE_FONT => return None,
+        f if f < SYMBOL_WIDTH_FONTS => {
+            let metrics = text.fonts.metrics(f)?;
+            let entry = usize::try_from(index - 1).ok()?;
+            let printed = f64::from(metrics.width(entry)?) / f64::from(METRIC_UNITS);
+            let second = f64::from(*metrics.screen_widths.get(entry)?) / f64::from(METRIC_UNITS);
+            real(f64::from(printed as f32) - second)
+        }
+        _ => {
+            let index = if matches!(index, 0x88 | 0x96) { glyph - 0x37 } else { index };
+            real(f64::from(glyphs::symbol_width(index)) * f64::from(0.1_f32))
+        }
+    };
+    let size = real(text.step * f64::from(text.width) / 25.0);
+    Some(real(units * f64::from(ADVANCE_SCALE) * size) as f32)
+}
+
+/// Font 99 (PostScript commands) is not right-justified.
+const LEFT_ALONE_FONT: i32 = 99;
+/// Fonts from this number on take their widths from the symbol table.
+const SYMBOL_WIDTH_FONTS: i32 = 90;
+const METRIC_UNITS: f32 = 638.0;
+const ADVANCE_SCALE: f32 = 3.2833;
+
 /// The font whose metrics the string leaves loaded (0x791444), if it loads
 /// one other than the font current before it. draw_item makes the loaded
 /// font the current font of every item (0x547358), so this is what an item
@@ -459,6 +503,32 @@ fn char_from_cp1252(byte: u8) -> char {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use score_format::MusFile;
+
+    /// A file without items: every staff is a size-1 staff.
+    fn empty_file() -> MusFile {
+        let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
+        let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
+        bytes.extend(trailer.iter().flat_map(|w| w.to_le_bytes()));
+        MusFile::parse(&bytes).expect("an empty file parses")
+    }
+
+    /// JR offsets measured in the emulated engine by editor-core (Times, P3 units).
+    #[test]
+    fn right_bearings_match_the_engine() {
+        let file = empty_file();
+        let doc = Document::new(&file);
+        let bearing = |text: &[u8], width: f32| {
+            let call = TextCall { text, staff: 1, width, ..TextCall::default() };
+            right_bearing(&doc, &call).expect("a glyph")
+        };
+        let close = |a: f32, b: f32| (a - b).abs() < 5e-5;
+        assert!(close(bearing(b"_00Halo", 1.0), 0.15439));
+        assert!(close(bearing(b"_00Hold", 1.0), 0.04631));
+        assert!(close(bearing(b"_00HALA", 1.0), 0.08234));
+        assert!(close(bearing(b"_00Halo", 2.0), 2.0 * 0.15439));
+        assert_eq!(right_bearing(&doc, &TextCall { text: b"_00", staff: 1, ..TextCall::default() }), None);
+    }
 
     #[test]
     fn record_colours_match_the_engine() {
