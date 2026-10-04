@@ -83,8 +83,7 @@ version = "0.1.0"
 dependencies = [
  "score-format",
  "score-render",
- "serde",
- "serde_json",
+ "score-testkit",
  "wasm-bindgen",
 ]
 
