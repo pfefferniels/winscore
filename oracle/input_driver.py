@@ -44,6 +44,7 @@ KEY_PRESSED, KEY_CODE, MOUSE_EVENT = 0x9C6C5D, 0x9C48F4, 0x9A9488
 ENTER = 13
 PASS_COUNT = 5
 INSTRUCTION_LIMIT = 300_000_000       # a normal IN takes well under a tenth of this
+PARALLEL_JOBS = 4                     # team limit for concurrent oracle runs
 
 # Fields of the range dialog's record (0x2091C40), as far as established.
 RANGE_BEGIN, RANGE_END = 4, 5
@@ -243,6 +244,6 @@ def report(case_dir: Path) -> str:
 if __name__ == "__main__":
     args = sys.argv[1:]
     dirs = write_corpus(Path(args[1]), Path(args[2]), *args[3:4]) if args[:1] == ["--corpus"] else [Path(a) for a in args]
-    with ProcessPoolExecutor(max_workers=6) as pool:
+    with ProcessPoolExecutor(max_workers=PARALLEL_JOBS) as pool:
         for text in pool.map(report, dirs):
             print(text)

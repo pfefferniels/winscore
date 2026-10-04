@@ -184,22 +184,24 @@ fn clearance(note: &Note, clearance: Clearance) -> f32 {
     }
 }
 
-/// Highest point of a note: the stem end for an up stem, else the top head.
-fn top(note: &Note) -> f32 {
-    if note.down {
-        note.highest() as f32
-    } else {
-        (note.lowest() + STEM) as f32 + note.extension
-    }
+/// Highest point of a note as line marks see it: the stem head, an octave higher for an
+/// up stem (stem extensions are not counted).
+fn top(note: &Note) -> i32 {
+    note.stem_level() + if note.down { 0 } else { STEM }
 }
 
-/// Lowest point of a note: the stem end for a down stem, else the bottom head.
-fn bottom(note: &Note) -> f32 {
-    if note.down {
-        (note.highest() - STEM) as f32 - note.extension
-    } else {
-        note.lowest() as f32
-    }
+/// Lowest point of a note as line marks see it, the counterpart of `top`.
+fn bottom(note: &Note) -> i32 {
+    note.stem_level() - if note.down { STEM } else { 0 }
+}
+
+/// The notes a line mark keeps clear of (0x4D8460): from the start rounded to the nearest
+/// note number up to the end cut down to one.
+fn covered(line: &Line, start: f32, end: f32) -> Vec<&Note> {
+    let count = line.note_count() as i64;
+    let first = (start.round() as i64).min(count).max(1);
+    let last = (end.trunc() as i64).min(count);
+    (first..=last).filter_map(|n| line.note(n as usize)).collect()
 }
 
 /// P3 of a position given in note numbers; fractions interpolate to the next note.
@@ -221,22 +223,26 @@ fn no_such_note(at: f32) -> InputError {
 /// Code-7 lines end this far right of the note they end on.
 const LINE_END_OVERHANG: f32 = 25.0 / 6.0;
 
-fn line_item(line: &Line, kind: MarkKind, start: f32, end: f32) -> Result<score_format::Item, InputError> {
+fn line_item(line: &Line, kind: MarkKind, flipped: bool, start: f32, end: f32) -> Result<score_format::Item, InputError> {
     let x1 = position(line, start).ok_or_else(|| no_such_note(start))?;
     let x2 = position(line, end).ok_or_else(|| no_such_note(end))?;
-    let covered: Vec<&Note> = line.notes().filter(|n| n.x >= x1 && n.x <= x2).collect();
-    let highest = covered.iter().map(|n| top(n)).fold(f32::MIN, f32::max);
-    let lowest = covered.iter().map(|n| bottom(n)).fold(f32::MAX, f32::min);
+    let covered = covered(line, start, end);
+    let highest = covered.iter().map(|n| top(n)).max();
+    let lowest = covered.iter().map(|n| bottom(n)).min();
+    // Above the staff a line clears notes reaching above the top line, below it notes
+    // reaching under the bottom line.
+    let above = |clear: f32, default: f32| highest.filter(|h| *h > 10).map_or(default, |h| h as f32 + clear);
+    let below = |clear: f32, default: f32| lowest.filter(|l| *l < 4).map_or(default, |l| l as f32 - clear);
     let staff = line.staff;
     Ok(match kind {
         MarkKind::Trill { accidental } => {
-            item(&[7.0, staff, x1, (highest + 2.0).max(12.5), 1.0, x2 + LINE_END_OVERHANG, 0.0, accidental as f32])
+            item(&[7.0, staff, x1, above(2.0, 12.5), 1.0, x2 + LINE_END_OVERHANG, 0.0, accidental as f32])
         }
         MarkKind::Ottava { below: false } => item(&[
             7.0,
             staff,
             x1,
-            (highest + 2.0).max(12.5),
+            above(2.0, 12.5),
             1.0,
             x2 + LINE_END_OVERHANG,
             8.0,
@@ -250,7 +256,7 @@ fn line_item(line: &Line, kind: MarkKind, start: f32, end: f32) -> Result<score_
             7.0,
             staff,
             x1,
-            (lowest - 5.0).min(-1.5),
+            below(5.0, -1.5),
             1.0,
             x2 + LINE_END_OVERHANG,
             -8.0,
@@ -261,7 +267,8 @@ fn line_item(line: &Line, kind: MarkKind, start: f32, end: f32) -> Result<score_
             1.0,
         ]),
         MarkKind::Hairpin { closing } => {
-            item(&[4.0, staff, x1, (lowest - 3.5).min(0.0), 999.0, x2, if closing { -1.0 } else { 0.0 }])
+            let level = if flipped { above(3.5, 14.0) } else { below(3.5, 0.0) };
+            item(&[4.0, staff, x1, level, 999.0, x2, if closing { -1.0 } else { 0.0 }])
         }
         _ => unreachable!("not a line mark"),
     })
@@ -280,21 +287,36 @@ fn symbol_item(note: &Note, staff: f32, library: i32, above: bool) -> score_form
     item(&params)
 }
 
-fn tremolo_item(note: &Note, staff: f32, beams: i32, offset: i32) -> score_format::Item {
+/// 0x4D8460: P7 is the negated P5 of the stem head (stem plus accidental), and a flagged
+/// note gets half a step more stem with the tremolo moved clear of the flags.
+fn tremolo_item(note: &mut Note, staff: f32, beams: i32, offset: i32) -> score_format::Item {
+    let stem = note.p5s()[0] % 100.0;
+    let up = stem < 20.0;
+    let flagged = note.tails > 0;
+    let reach = offset as f32 - note.extension + if flagged && up { 1.0 } else { 0.0 };
+    if flagged {
+        note.extension += 0.5;
+        note.table_extension += 0.5;
+    }
     let level = note.stem_level() as f32;
-    let (position, direction) = if note.down {
-        (level + offset as f32 - note.extension, -20.0)
-    } else {
-        (level - offset as f32 + note.extension, -10.0)
+    let position = if up { level - reach } else { level + reach };
+    let whole_or_breve = matches!(note.rhythm.head(), 2 | 3);
+    let shift = match (whole_or_breve, stem <= 10.0) {
+        (false, _) => 0.0,
+        (true, true) => -1.23,
+        (true, false) => 1.6,
     };
-    item(&[6.0, staff, note.x, position, 0.0, 0.0, direction, 0.0, 0.0, (10 + beams) as f32])
+    let mut params = [0.0; 14];
+    params[..10].copy_from_slice(&[6.0, staff, note.x, position, 0.0, 0.0, -stem, 0.0, 0.0, (10 + beams) as f32]);
+    params[13] = shift;
+    item(&params)
 }
 
 pub(crate) fn apply(line: &mut Line, marks: &[Mark]) -> Result<(), InputError> {
     for mark in marks {
         match (mark.kind, mark.target) {
             (kind, Target::Span { start, end }) => {
-                let made = line_item(line, kind, start, end)?;
+                let made = line_item(line, kind, mark.flipped, start, end)?;
                 line.attachments.push(made);
             }
             (kind, Target::Notes { first, last }) => {
