@@ -98,6 +98,7 @@ name = "score-web"
 version = "0.1.0"
 dependencies = [
  "score-format",
+ "score-input",
  "score-render",
  "score-testkit",
  "wasm-bindgen",

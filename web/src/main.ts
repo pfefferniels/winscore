@@ -1,8 +1,11 @@
 import './style.css';
-import init, { parseReference, Score, type EncodedList } from './wasm/score_web.js';
+import init, { paramName, Reference as EngineList, Score, type EncodedList } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
 import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
+import { interimEditor, type Change, type Editor } from './editor';
 import { loadFaces } from './fonts';
+import { createInputDialog } from './input-dialog';
+import { bindInteraction } from './interaction';
 import { markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer } from './paint';
 import { stepZoom, ZOOM_LEVELS } from './view';
@@ -26,6 +29,8 @@ interface Sample {
 }
 
 interface Reference {
+  /** Owns the list on the wasm side, for hit-testing. */
+  engine: EngineList;
   list: DisplayList;
   pageSize: [number, number] | null;
   note: string | null;
@@ -33,11 +38,11 @@ interface Reference {
 
 interface State {
   score: Score | null;
+  editor: Editor | null;
   fileName: string;
   rust: DisplayList;
   reference: Reference | null;
   mode: Mode;
-  selected: number | null;
   modified: boolean;
 }
 
@@ -54,6 +59,11 @@ const ui = {
   file: $<HTMLInputElement>('file'),
   sample: $<HTMLSelectElement>('sample'),
   save: $<HTMLButtonElement>('save'),
+  undo: $<HTMLButtonElement>('undo'),
+  redo: $<HTMLButtonElement>('redo'),
+  input: $<HTMLButtonElement>('input'),
+  inputDialog: $<HTMLDialogElement>('input-dialog'),
+  command: $<HTMLInputElement>('command'),
   zoomOut: $<HTMLButtonElement>('zoom-out'),
   zoomIn: $<HTMLButtonElement>('zoom-in'),
   zoom: $<HTMLSelectElement>('zoom'),
@@ -73,9 +83,10 @@ const ui = {
   message: $<HTMLSpanElement>('message'),
 };
 
-const state: State = { score: null, fileName: '', rust: EMPTY, reference: null, mode: 'rust', selected: null, modified: false };
+const state: State = { score: null, editor: null, fileName: '', rust: EMPTY, reference: null, mode: 'rust', modified: false };
 
 const view = createPageView(ui, showZoom);
+const inputDialog = createInputDialog(ui.inputDialog);
 
 function showZoom(zoom: number) {
   const rounded = Math.round(zoom);
@@ -123,14 +134,22 @@ function layers(): Layer[] {
   }
 }
 
+function selection(): number[] {
+  return state.editor?.selection() ?? [];
+}
+
+/** The item whose parameters the panel shows: the last one selected. */
+function primary(): number | null {
+  return selection().at(-1) ?? null;
+}
+
 function scene(): Scene {
   const paper = paperBox();
-  const showsRust = state.mode !== 'engine';
   return {
     layers: layers(),
     paper,
     extent: extent(paper),
-    highlight: showsRust && state.selected !== null ? { list: state.rust, item: state.selected } : null,
+    highlights: selection().flatMap((item) => shownLists().map((list) => ({ list, item }))),
   };
 }
 
@@ -138,6 +157,10 @@ function refreshStatus() {
   const items = state.score?.itemCount() ?? 0;
   ui.status.textContent = state.score ? `${state.fileName}${state.modified ? ' (modified)' : ''} · ${items} items` : '';
   ui.save.disabled = !state.score;
+  ui.undo.disabled = !state.editor?.canUndo();
+  ui.redo.disabled = !state.editor?.canRedo();
+  ui.command.disabled = !state.editor;
+  ui.input.disabled = !state.editor;
   ui.mode.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
     const mode = button.dataset.mode as Mode;
     button.setAttribute('aria-checked', String(mode === state.mode));
@@ -169,8 +192,10 @@ function details(score: Score, index: number): ItemDetails | null {
       staff: params[1] ?? 0,
       p3: params[2] ?? 0,
       params,
+      paramNames: Array.from(params, (_, i) => paramName(info.code, i + 1) ?? null),
       text: info.text ?? null,
       drawn: bounds(elementsOf(state.rust, index)) !== null,
+      others: selection().filter((i) => i !== index).length,
     };
   } finally {
     info.free();
@@ -187,8 +212,9 @@ function refreshItemList() {
 }
 
 function refreshPanel() {
-  renderItem(ui.item, state.score && state.selected !== null ? details(state.score, state.selected) : null, handlers);
-  markSelected(ui.items, state.selected);
+  const shown = primary();
+  renderItem(ui.item, state.score && shown !== null ? details(state.score, shown) : null, handlers);
+  markSelected(ui.items, selection());
 }
 
 function redraw() {
@@ -202,48 +228,94 @@ async function loadFontsAndRepaint() {
   view.repaint();
 }
 
-function select(index: number | null, reveal = false) {
-  state.selected = index;
+/** The display lists on screen in the current mode. */
+function shownLists(): DisplayList[] {
+  const engine = state.reference ? [state.reference.list] : [];
+  return { rust: [state.rust], engine, overlay: [state.rust, ...engine] }[state.mode];
+}
+
+function selectionChanged() {
   refreshPanel();
   redraw();
-  const box = index !== null && reveal ? bounds(elementsOf(state.rust, index)) : null;
+}
+
+function select(items: number[], reveal = false) {
+  state.editor?.select(items);
+  selectionChanged();
+  const box = reveal ? items.flatMap((item) => shownLists().map((list) => bounds(elementsOf(list, item)))).reduce(union, null) : null;
   if (box) view.reveal(box);
 }
 
-function setParam(index: number, n: number, value: number) {
+/** Re-renders after an edit; the panel and list follow once a drag is over. */
+function edited(change: Change | null, live: boolean) {
   const score = state.score;
   if (!score) return;
-  try {
-    score.setParam(index, n, value);
-  } catch (err) {
-    message(String(err), true);
-    return;
-  }
   state.rust = decodeAndFree(score.render());
-  state.modified = true;
-  refreshItemList();
-  refreshPanel();
+  if (!live) {
+    state.modified ||= change !== null;
+    refreshItemList();
+    refreshPanel();
+    void loadFontsAndRepaint();
+    if (change) message(change.label);
+  }
   redraw();
-  void loadFontsAndRepaint();
-  message(`Item ${index}: P${n} = ${value}`);
 }
 
-const handlers: PanelHandlers = { select: (index) => select(index, true), setParam };
+function failed(err: unknown) {
+  message(err instanceof Error ? err.message : String(err), true);
+}
+
+function edit(action: (editor: Editor) => Change | null) {
+  const editor = state.editor;
+  if (!editor) return;
+  try {
+    edited(action(editor), false);
+  } catch (err) {
+    failed(err);
+  }
+}
+
+async function enterInput() {
+  if (!state.score) return;
+  const line = await inputDialog.ask(state.score);
+  if (!line) return;
+  try {
+    edit((editor) => editor.insertInput(line));
+  } finally {
+    line.free();
+  }
+  select(selection(), true);
+}
+
+const handlers: PanelHandlers = {
+  select: (index) => select([index], true),
+  setParam: (index, n, value) => edit((editor) => editor.setParam(index, n, value)),
+};
+
+function readReference(json: string, pageSize: [number, number] | null, note: string | null): Reference {
+  const engine = new EngineList(json);
+  return { engine, list: decodeAndFree(engine.list()), pageSize, note };
+}
+
+function setReference(reference: Reference | null) {
+  state.reference?.engine.free();
+  state.reference = reference;
+}
 
 async function fetchReference(info: ReferenceInfo): Promise<Reference> {
   const json = await (await fetch(info.url)).text();
   const note = info.valid ? null : `engine reference marked invalid: ${info.invalidReasons.join('; ')}`;
-  return { list: decodeAndFree(parseReference(json)), pageSize: info.pageSize, note };
+  return readReference(json, info.pageSize, note);
 }
 
 function openScore(bytes: Uint8Array, name: string, reference: Reference | null) {
   const score = new Score(bytes);
   state.score?.free();
   state.score = score;
+  state.editor = interimEditor(score);
   state.fileName = name;
   state.rust = decodeAndFree(score.render());
-  state.reference = reference;
-  state.selected = null;
+  setReference(reference);
   state.modified = false;
   const rustDraws = state.rust.shapes.length > 0;
   state.mode = rustDraws || !reference ? 'rust' : 'engine';
@@ -271,8 +343,7 @@ async function openSample(sample: Sample) {
 async function openFile(file: File) {
   try {
     if (file.name.toLowerCase().endsWith('.json')) {
-      const list = decodeAndFree(parseReference(await file.text()));
-      state.reference = { list, pageSize: null, note: null };
+      setReference(readReference(await file.text(), null, null));
       state.mode = 'overlay';
       redraw();
       void loadFontsAndRepaint();
@@ -301,21 +372,23 @@ function setMode(mode: Mode) {
   redraw();
 }
 
-function clickTarget(e: MouseEvent): number | null {
-  if (!state.score || state.mode === 'engine') return null;
-  const p = view.pageAt(e.clientX, e.clientY);
-  return state.score.hitTest(p.x, p.y, view.unitsPerCss(CLICK_TOLERANCE_PX)) ?? null;
+/** The item under the pointer in the Rust list, else in the engine list (when the fixture attributes items). */
+function itemAt(clientX: number, clientY: number): number | null {
+  const p = view.pageAt(clientX, clientY);
+  const tolerance = view.unitsPerCss(CLICK_TOLERANCE_PX);
+  const rust = state.mode !== 'engine' ? state.score?.hitTest(p.x, p.y, tolerance) : undefined;
+  const engine = state.mode !== 'rust' ? state.reference?.engine.hitTest(p.x, p.y, tolerance) : undefined;
+  return rust ?? engine ?? null;
 }
 
 function bindPointer() {
-  let down: { x: number; y: number } | null = null;
-  ui.viewport.addEventListener('pointerdown', (e) => {
-    down = { x: e.clientX, y: e.clientY };
-  });
-  ui.viewport.addEventListener('pointerup', (e) => {
-    const moved = down ? Math.hypot(e.clientX - down.x, e.clientY - down.y) : Infinity;
-    down = null;
-    if (moved <= 4 && e.button === 0) select(clickTarget(e));
+  bindInteraction(ui.viewport, {
+    editor: () => state.editor,
+    itemAt,
+    pageAt: (x, y) => view.pageAt(x, y),
+    selected: selectionChanged,
+    edited,
+    failed,
   });
   ui.viewport.addEventListener('pointermove', (e) => {
     const p = view.pageAt(e.clientX, e.clientY);
@@ -360,11 +433,18 @@ function bindControls(samples: Sample[]) {
     const mode = (e.target as HTMLElement).closest<HTMLButtonElement>('button')?.dataset.mode as Mode | undefined;
     if (mode) setMode(mode);
   });
+  ui.undo.addEventListener('click', () => edit((editor) => editor.undo()));
+  ui.input.addEventListener('click', () => void enterInput());
+  ui.redo.addEventListener('click', () => edit((editor) => editor.redo()));
+  ui.command.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || !ui.command.value.trim()) return;
+    edit((editor) => editor.execute(ui.command.value.trim()));
+    ui.command.select();
+  });
   window.addEventListener('keydown', (e) => {
-    if (e.target instanceof HTMLInputElement) return;
+    if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;
     if (e.key === '+' || e.key === '=') view.setZoom(stepZoom(view.zoom, 1));
     if (e.key === '-') view.setZoom(stepZoom(view.zoom, -1));
-    if (e.key === 'Escape') select(null);
   });
   bindPointer();
   bindDrop();
@@ -384,15 +464,40 @@ async function applyQuery(samples: Sample[]) {
   const zoom = Number(query.get('zoom'));
   if (zoom > 0) view.setZoom(zoom);
   const selected = query.get('select');
-  if (selected !== null) select(Number(selected), true);
+  if (selected !== null) select(selected.split(',').map(Number), true);
   await loadFontsAndRepaint();
   ui.app.dataset.ready = 'true';
 }
 
+/** A failure that leaves the app unusable, shown over the page area. */
+function fatal(title: string, err: unknown) {
+  const box = document.createElement('div');
+  box.className = 'fatal';
+  const heading = Object.assign(document.createElement('strong'), { textContent: title });
+  const detail = Object.assign(document.createElement('p'), { textContent: String(err) });
+  box.append(heading, detail);
+  ui.stage.append(box);
+  message(`${title}: ${String(err)}`, true);
+}
+
+async function loadSamples(): Promise<Sample[]> {
+  try {
+    return (await (await fetch('samples/index.json')).json()) as Sample[];
+  } catch (err) {
+    message(`Samples are not available: ${String(err)}`, true);
+    return [];
+  }
+}
+
 async function main() {
-  await init();
+  try {
+    await init();
+  } catch (err) {
+    fatal('The WebAssembly module could not be loaded, so scores cannot be opened. The browser or the hosting page may block WebAssembly.', err);
+    return;
+  }
   showZoom(view.zoom);
-  const samples = (await (await fetch('samples/index.json')).json()) as Sample[];
+  const samples = await loadSamples();
   ui.sample.replaceChildren(new Option('Samples…', ''), ...samples.map((s) => new Option(s.title, s.url)));
   bindControls(samples);
   refreshStatus();
@@ -400,4 +505,4 @@ async function main() {
   await applyQuery(samples);
 }
 
-main().catch((err) => message(String(err), true));
+main().catch((err) => fatal('The app failed to start.', err));

@@ -10,6 +10,8 @@ pub mod codes;
 pub mod document;
 pub mod encode;
 pub mod hit;
+pub mod input;
+pub mod param_names;
 
 use score_render::{DisplayList, ItemId};
 use wasm_bindgen::prelude::*;
@@ -41,12 +43,6 @@ impl EncodedList {
     #[wasm_bindgen(getter)]
     pub fn texts(&self) -> String {
         self.0.texts.clone()
-    }
-
-    /// Source item index + 1 of each text run, 0 = none (`Uint32Array`).
-    #[wasm_bindgen(getter, js_name = textSources)]
-    pub fn text_sources(&self) -> Vec<u32> {
-        self.0.text_sources.clone()
     }
 }
 
@@ -147,10 +143,107 @@ impl Score {
     pub fn save(&self) -> Vec<u8> {
         self.0.save()
     }
+
+    /// The highest staff number with a staff item; WinScore's Input box
+    /// proposes the staff above it.
+    #[wasm_bindgen(js_name = highestStaff)]
+    pub fn highest_staff(&self) -> Option<i32> {
+        score_render::Document::new(self.0.file()).staves.highest()
+    }
+
+    /// Checks one line of five-pass input against this score without
+    /// changing it; see [`InputCheck`].
+    #[wasm_bindgen(js_name = checkInput)]
+    pub fn check_input(&self, line: &InputLine) -> InputCheck {
+        InputCheck::from(input::line_items(self.0.file(), &line.texts(), &line.options()).map(|items| items.len()))
+    }
+
+    /// Appends the items of one line of input (and its staff, when missing);
+    /// returns the indices of the new items.
+    #[wasm_bindgen(js_name = insertInput)]
+    pub fn insert_input(&mut self, line: &InputLine) -> Result<Vec<u32>, JsError> {
+        let items = input::line_items(self.0.file(), &line.texts(), &line.options()).map_err(|err| JsError::new(&err.message))?;
+        Ok(self.0.append(items).into_iter().map(|id| id.0).collect())
+    }
 }
 
-/// Reads an `engine.json` reference display list (`rust/fixtures/README.md`).
-#[wasm_bindgen(js_name = parseReference)]
-pub fn parse_reference(json: &str) -> Result<EncodedList, JsError> {
-    Ok(EncodedList::from(&score_testkit::display_from_json(json)?))
+/// One line of WinScore's five-pass input: the texts of the passes (notes,
+/// rhythms, marks, beams, slurs, each ending with `;`) and where it goes.
+#[wasm_bindgen]
+pub struct InputLine {
+    passes: [String; 5],
+    staff: u8,
+    begin: f32,
+    end: f32,
+}
+
+#[wasm_bindgen]
+impl InputLine {
+    /// `passes` must hold five strings.
+    #[wasm_bindgen(constructor)]
+    pub fn new(passes: Vec<String>, staff: u8, begin: f32, end: f32) -> Result<InputLine, JsError> {
+        let passes: [String; 5] = passes.try_into().map_err(|_| JsError::new("five input passes expected"))?;
+        Ok(InputLine { passes, staff, begin, end })
+    }
+}
+
+impl InputLine {
+    fn texts(&self) -> [&str; 5] {
+        self.passes.each_ref().map(String::as_str)
+    }
+
+    fn options(&self) -> score_input::Options {
+        score_input::Options { staff: self.staff, begin: self.begin, end: self.end }
+    }
+}
+
+/// The outcome of [`Score::check_input`]: the number of items the line
+/// would add, or the failing pass with the error's UTF-16 range in its text.
+#[wasm_bindgen(getter_with_clone)]
+pub struct InputCheck {
+    pub items: usize,
+    /// 1 = notes … 5 = slurs; 0 = no error.
+    pub pass: usize,
+    pub start: usize,
+    pub end: usize,
+    pub message: String,
+}
+
+impl From<Result<usize, input::PassError>> for InputCheck {
+    fn from(result: Result<usize, input::PassError>) -> Self {
+        match result {
+            Ok(items) => InputCheck { items, pass: 0, start: 0, end: 0, message: String::new() },
+            Err(err) => InputCheck { items: 0, pass: err.pass, start: err.start, end: err.end, message: err.message },
+        }
+    }
+}
+
+/// What parameter `n` of items with code `code` means, in the words of the
+/// WinScore help.
+#[wasm_bindgen(js_name = paramName)]
+pub fn param_name(code: i32, n: usize) -> Option<String> {
+    param_names::param_name(code, n).map(str::to_owned)
+}
+
+/// An engine reference display list, read from `engine.json`
+/// (`rust/fixtures/README.md`).
+#[wasm_bindgen]
+pub struct Reference(DisplayList);
+
+#[wasm_bindgen]
+impl Reference {
+    #[wasm_bindgen(constructor)]
+    pub fn new(json: &str) -> Result<Reference, JsError> {
+        Ok(Reference(score_testkit::display_from_json(json)?))
+    }
+
+    pub fn list(&self) -> EncodedList {
+        EncodedList::from(&self.0)
+    }
+
+    /// As [`Score::hit_test`], for elements the fixture attributes to an item.
+    #[wasm_bindgen(js_name = hitTest)]
+    pub fn hit_test(&self, x: f64, y: f64, tolerance: f64) -> Option<u32> {
+        hit::hit_test(&self.0, At::new(x, y), tolerance).map(|id| id.0)
+    }
 }

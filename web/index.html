@@ -14,6 +14,10 @@
         <select id="sample" title="Bundled samples"></select>
         <button id="save" title="Save the score as .mus">Save</button>
         <span class="sep"></span>
+        <button id="undo" title="Undo (⌘Z / Ctrl+Z)">Undo</button>
+        <button id="redo" title="Redo (⇧⌘Z / Ctrl+Y)">Redo</button>
+        <button id="input" title="Enter a line of music in SCORE's five passes (IN)">Input…</button>
+        <span class="sep"></span>
         <button id="zoom-out" title="Zoom out (−)">−</button>
         <select id="zoom" title="Zoom"></select>
         <button id="zoom-in" title="Zoom in (+)">+</button>
@@ -44,7 +48,39 @@
           </section>
         </aside>
       </main>
-      <footer class="footer"><span id="cursor" class="muted"></span><span id="message" class="message"></span></footer>
+      <dialog id="input-dialog" class="input-dialog">
+        <form method="dialog" id="input-form">
+          <h2>Score input</h2>
+          <div class="input-range">
+            <label>Staff <input id="input-staff" type="number" min="1" max="255" step="1" value="1" /></label>
+            <label>Input range <input id="input-begin" type="number" min="0" max="200" step="any" value="2" /></label>
+            <label>to <input id="input-end" type="number" min="0" max="200" step="any" value="200" /></label>
+          </div>
+          <div class="passes" id="input-passes">
+            <label for="pass-1">1 Notes</label>
+            <div><input id="pass-1" data-pass="1" type="text" value=";" placeholder="C4/D/E:G/R/M/BA/K2S/3 4;" spellcheck="false" autocomplete="off" /><small class="pass-error" id="pass-error-1"></small></div>
+            <label for="pass-2">2 Rhythms</label>
+            <div><input id="pass-2" data-pass="2" type="text" value=";" placeholder="4/8/8./12;" spellcheck="false" autocomplete="off" /><small class="pass-error" id="pass-error-2"></small></div>
+            <label for="pass-3">3 Marks</label>
+            <div><input id="pass-3" data-pass="3" type="text" value=";" placeholder="A 1/S 2:4;" spellcheck="false" autocomplete="off" /><small class="pass-error" id="pass-error-3"></small></div>
+            <label for="pass-4">4 Beams</label>
+            <div><input id="pass-4" data-pass="4" type="text" value=";" placeholder="1 2/3 6;" spellcheck="false" autocomplete="off" /><small class="pass-error" id="pass-error-4"></small></div>
+            <label for="pass-5">5 Slurs</label>
+            <div><input id="pass-5" data-pass="5" type="text" value=";" placeholder="1 4;" spellcheck="false" autocomplete="off" /><small class="pass-error" id="pass-error-5"></small></div>
+          </div>
+          <div class="dialog-actions">
+            <span id="input-status" class="muted"></span>
+            <span class="spacer"></span>
+            <button value="cancel" formnovalidate>Cancel</button>
+            <button id="input-insert" value="insert">Insert</button>
+          </div>
+        </form>
+      </dialog>
+      <footer class="footer">
+        <input id="command" class="command" type="text" placeholder="Command for the selection, e.g. R 5, 600 5, DE" autocomplete="off" spellcheck="false" />
+        <span id="cursor" class="muted"></span>
+        <span id="message" class="message"></span>
+      </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

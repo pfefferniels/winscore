@@ -9,6 +9,30 @@ use crate::hit::{hit_test, At};
 /// P1 of text items, whose characters follow the parameters.
 pub const TEXT_CODE: i32 = 16;
 
+/// The engine loads at most P1…P50 of an item (draw_items 0x547FC8).
+const MAX_PARAMS: usize = 50;
+
+/// Text items load P1…P12, or P1…P18 when P14 = -1 (colour/gray settings
+/// in P15, P16); their characters follow (analysis/engine/display.md).
+fn text_params(p14: f32) -> usize {
+    if p14 == -1.0 {
+        18
+    } else {
+        12
+    }
+}
+
+/// The highest parameter `item` can hold once parameter `n` is `value`.
+fn param_limit(item: &Item, n: usize, value: f32) -> usize {
+    let code = if n == 1 { value as i32 } else { item.code() };
+    let p14 = if n == 14 { value } else { item.param(14) };
+    if code == TEXT_CODE {
+        text_params(p14)
+    } else {
+        MAX_PARAMS
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditError {
     NoSuchItem(ItemId),
@@ -107,12 +131,23 @@ impl Document {
     /// Sets parameter `n` (1-based) of an item. The page is re-rendered on
     /// the next call to [`Document::render`].
     pub fn set_param(&mut self, id: ItemId, n: usize, value: f32) -> Result<(), EditError> {
-        if n == 0 {
+        let item = self.file.items.get_mut(id.0 as usize).ok_or(EditError::NoSuchItem(id))?;
+        if n == 0 || n > param_limit(item, n, value) {
             return Err(EditError::NoSuchParam(n));
         }
-        let item = self.file.items.get_mut(id.0 as usize).ok_or(EditError::NoSuchItem(id))?;
         *item = with_param(item, n, value);
         Ok(())
+    }
+
+    pub fn file(&self) -> &MusFile {
+        &self.file
+    }
+
+    /// Appends items to the file; returns their ids.
+    pub fn append(&mut self, items: Vec<Item>) -> Vec<ItemId> {
+        let first = self.file.items.len();
+        self.file.items.extend(items);
+        (first..self.file.items.len()).map(|i| ItemId(i as u32)).collect()
     }
 
     pub fn hit(&self, at: At, tolerance: f64) -> Option<ItemId> {
@@ -187,8 +222,22 @@ mod tests {
     fn rejects_bad_targets() {
         let mut doc = Document::open(&sample("mozart.mus")).unwrap();
         assert_eq!(doc.set_param(ItemId(0), 0, 1.0), Err(EditError::NoSuchParam(0)));
+        assert_eq!(doc.set_param(ItemId(0), 51, 1.0), Err(EditError::NoSuchParam(51)));
         let missing = ItemId(doc.items().len() as u32);
         assert_eq!(doc.set_param(missing, 1, 1.0), Err(EditError::NoSuchItem(missing)));
+    }
+
+    #[test]
+    fn text_items_take_colour_params_only_after_p14() {
+        let mut doc = Document::open(&sample("carmen.mus")).unwrap();
+        let index = doc.items().iter().position(|item| item.code() == TEXT_CODE).unwrap();
+        let id = ItemId(index as u32);
+        assert_eq!(doc.set_param(id, 15, 1.0), Err(EditError::NoSuchParam(15)));
+        doc.set_param(id, 14, -1.0).unwrap();
+        doc.set_param(id, 16, 0.5).unwrap();
+        let reopened = Document::open(&doc.save()).unwrap();
+        assert_eq!(reopened.item(id).unwrap().param(16), 0.5);
+        assert_eq!(reopened.item(id).unwrap().text(), doc.item(id).unwrap().text());
     }
 
     #[test]

@@ -57,7 +57,7 @@ def mark_empty_starts(tags: list[int]) -> list[int]:
 
 def shapes(vector: list[tuple[int, int, int]]) -> list[Shape]:
     """0x5A4900: split (x, y, tag) triples into objects and sub-paths."""
-    tags = mark_empty_starts([t for _, _, t in vector])
+    tags = mark_empty_starts([t & 0xFFFFFFFF for _, _, t in vector])   # the shell reads tags as unsigned
     triples = [(x, y, t) for (x, y, _), t in zip(vector, tags)]
     out: list[Shape] = []
     i, n = 0, len(triples)

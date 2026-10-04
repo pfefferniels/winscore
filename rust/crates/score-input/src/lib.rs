@@ -20,13 +20,17 @@
 //! assert_eq!(items[1].param(3), 51.5);
 //! ```
 
-mod build;
+mod beams;
+pub mod connect;
 mod error;
 mod events;
 pub mod file;
+mod line;
+pub mod marks;
 pub mod notes;
 pub mod rhythm;
 mod scan;
+mod slurs;
 mod spacing;
 
 use score_format::Item;
@@ -74,10 +78,18 @@ pub fn run(passes: &Passes, options: &Options) -> Result<Vec<Item>, InputError> 
         let kind = ErrorKind::RhythmCount { found: rhythms.len(), needed };
         return Err(InputError::new(Pass::Rhythms, Span::at(0), kind));
     }
+    let marks = marks::parse(passes.marks)?;
+    let beams = connect::parse(passes.beams, Pass::Beams)?;
+    let slurs = connect::parse(passes.slurs, Pass::Slurs)?;
+
     let mut rhythm_iter = rhythms.into_iter();
-    let timed: Vec<build::Timed> = events
+    let timed: Vec<line::Timed> = events
         .iter()
-        .map(|event| build::Timed { event, rhythm: if event.is_rhythmic() { rhythm_iter.next() } else { None } })
+        .map(|event| line::Timed { event, rhythm: if event.is_rhythmic() { rhythm_iter.next() } else { None } })
         .collect();
-    Ok(build::line_items(&timed, options.staff, options.begin, options.end))
+    let mut line = line::Line::new(&timed, options.staff, options.begin, options.end);
+    marks::apply(&mut line, &marks)?;
+    beams::apply(&mut line, &beams)?;
+    slurs::apply(&mut line, &slurs)?;
+    Ok(line.items())
 }
