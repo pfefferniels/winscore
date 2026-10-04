@@ -10,11 +10,13 @@
 //! turned through the angle of P4–P5. A slur reads no other item.
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
-use crate::codes::number::{draw_number, NumberCall};
+use crate::codes::number::{draw_number, number_font_loaded, NumberCall};
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
+use crate::geometry::rotate_points_radians;
 use crate::page::P3_UNIT;
 use crate::symbols::{draw_clef, ItemContext};
+use crate::text::Font;
 use crate::units::{constant, nint, real, trunc, Pos};
 
 /// The engine's point buffer holds this many points; longer slurs are not drawn.
@@ -104,7 +106,17 @@ impl BracketNumber {
     /// STEP, which draw_number uses as well (a beam's P18 scales it).
     pub(super) fn draw(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at: Pos, step: f64) {
         let at = Pos::new(real(at.x - step * constant(self.indent())), at.y);
-        let call = NumberCall {
+        draw_number(doc, item, canvas, at, &self.call(item, step));
+    }
+
+    /// The font draw_number leaves loaded for this number.
+    pub(super) fn font_loaded(&self, doc: &Document<'_>, item: ItemRef<'_>, step: f64) -> Option<Font> {
+        number_font_loaded(doc, Pos::default(), &self.call(item, step))
+    }
+
+    /// The parameters 0x53BFC6 sets before calling draw_number.
+    fn call(&self, item: ItemRef<'_>, step: f64) -> NumberCall {
+        NumberCall {
             value: self.value,
             p5: self.value as f32,
             size: self.size,
@@ -116,9 +128,79 @@ impl BracketNumber {
             rotation: self.rotation,
             step: Some(step),
             ..NumberCall::of(item)
-        };
-        draw_number(doc, item, canvas, at, &call);
+        }
     }
+}
+
+/// The font an item of code 5 leaves loaded: that of its number, if it
+/// draws one (see [`crate::text::font_loaded`]).
+pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
+    let params = Params::new(doc, item);
+    let number = match params.p8_int {
+        TUPLET => tuplet_number(item, &params),
+        1..=9 => ending_number(item, &params),
+        _ if params.number() == 0 => None,
+        _ => slur_number(item, &params, Slur::new(doc, item, &params).dy != 0.0),
+    };
+    number?.font_loaded(doc, item, doc.staff_of(item).step)
+}
+
+/// The number of a tuplet bracket: P9 when positive, else P8, in
+/// Times-Italic or the font P14; P9 <= -2 or P11 = 3 leave it out.
+fn tuplet_number(item: ItemRef<'_>, params: &Params) -> Option<BracketNumber> {
+    let (ip9, ip11) = (trunc(f64::from(item.p(9))), trunc(f64::from(item.p(11))));
+    (ip9 >= -1 && ip11 != NO_NUMBER).then(|| BracketNumber {
+        value: bracket_value(item, params),
+        size: tuplet_size(item),
+        font: TUPLET_FONT,
+        font_p14: trunc(f64::from(item.p(14))),
+        letter: 0,
+        rotation: item.p(19),
+    })
+}
+
+/// The number of an ending in Times-Roman (or P14), with the letter IP17
+/// unless P16 = 1 has made P17 an end offset (0x53C1F1); P9 < 0 or P12 < 0
+/// leave it out.
+fn ending_number(item: ItemRef<'_>, params: &Params) -> Option<BracketNumber> {
+    let letter = if item.p(16) == 1.0 { 0 } else { trunc(f64::from(item.p(17))) };
+    (trunc(f64::from(item.p(9))) >= 0 && trunc(f64::from(item.p(12))) >= 0).then(|| BracketNumber {
+        value: bracket_value(item, params),
+        size: 1.0,
+        font: ENDING_FONT,
+        font_p14: trunc(f64::from(item.p(14))),
+        letter,
+        rotation: item.p(19),
+    })
+}
+
+fn bracket_value(item: ItemRef<'_>, params: &Params) -> i32 {
+    match trunc(f64::from(item.p(9))) {
+        ip9 if ip9 > 0 => ip9,
+        _ => params.p8_int,
+    }
+}
+
+/// The number P16 of a slur, turned by P19 (default 0.85, but 0 on
+/// triangles); on a level slur P11 = 3 leaves it out.
+fn slur_number(item: ItemRef<'_>, params: &Params, sloped: bool) -> Option<BracketNumber> {
+    let triangle = trunc(f64::from(item.p(9))) == TRIANGLE;
+    let ip11 = if triangle { trunc(f64::from(item.p(11))) } else { ip11_after_curve(item) };
+    if !sloped && ip11 == NO_NUMBER {
+        return None;
+    }
+    let rotation = match item.p(19) {
+        0.0 if !triangle => DEFAULT_P19,
+        p19 => p19,
+    };
+    Some(BracketNumber {
+        value: params.number().abs(),
+        size: tuplet_size(item),
+        font: TUPLET_FONT,
+        font_p14: trunc(f64::from(item.p(14))),
+        letter: 0,
+        rotation,
+    })
 }
 
 /// Moves a number by P17 (6 steps) and P18 (a scale step), as the
@@ -147,8 +229,6 @@ struct Bracket {
     top: f64,
     height: f64,
     dy: f64,
-    /// The bracket's number: P9 when positive, else P8.
-    number: i32,
     /// Room left in the line for the number.
     gap: f64,
 }
@@ -171,9 +251,8 @@ impl Bracket {
             canvas.point(Pos::new(params.x, bottom), Pen::Stroke);
             canvas.point(Pos::new(params.x, top), Pen::Continue);
         }
-        let number = if ip9 > 0 { ip9 } else { params.p8_int };
         let gap = real(step * constant(13.0));
-        let gap = if number > 9 { real(gap * constant(1.5)) } else { gap };
+        let gap = if bracket_value(item, params) > 9 { real(gap * constant(1.5)) } else { gap };
         Self {
             step,
             left: params.x,
@@ -182,7 +261,6 @@ impl Bracket {
             top,
             height,
             dy: real(staff.y(p(5)) - bottom),
-            number,
             gap,
         }
     }
@@ -193,15 +271,15 @@ impl Bracket {
 fn ending(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Canvas<'_>) {
     let p = |n| f64::from(item.p(n));
     let bracket = Bracket::new(doc, item, params, canvas);
-    let (ip9, ip13) = (trunc(p(9)), trunc(p(13)));
+    let ip13 = trunc(p(13));
     let first = params.p8_int == 1;
     canvas.point(Pos::new(bracket.right, bracket.top), Pen::Continue);
     if ip13 < 2 && first {
         canvas.point(Pos::new(bracket.right, bracket.bottom), Pen::Continue);
     }
-    if ip9 < 0 || trunc(p(12)) < 0 {
+    let Some(number) = ending_number(item, params) else {
         return;
-    }
+    };
     let step = bracket.step;
     let number_y = real(bracket.top - step * constant(28.0));
     let number_x = real(step * if doc.screen() { constant(14.5) } else { constant(13.5) });
@@ -219,16 +297,6 @@ fn ending(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut C
     let stop_shift = if first { constant(2.0) } else { constant(5.0) };
     let at = Pos::new(real(after_number + bracket.left + step * stop_shift), real(lift + number_y));
     draw_clef(doc, &ItemContext::of(item), canvas, at, step, ENDING_DOT, (size, size));
-    // IP17 adds a letter, unless P16 = 1 has made P17 an end offset (0x53C1F1).
-    let letter = if item.p(16) == 1.0 { 0 } else { trunc(p(17)) };
-    let number = BracketNumber {
-        value: bracket.number,
-        size: 1.0,
-        font: ENDING_FONT,
-        font_p14: trunc(p(14)),
-        letter,
-        rotation: item.p(19),
-    };
     number.draw(doc, item, canvas, Pos::new(bracket.left + number_x, number_y), step);
 }
 
@@ -286,19 +354,11 @@ fn tuplet_bracket(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas
     if ip13 < 2 {
         canvas.point(Pos::new(right, bottom), Pen::Continue);
     }
-    if ip9 < -1 || ip11 == NO_NUMBER {
+    let Some(number) = tuplet_number(item, params) else {
         return;
-    }
+    };
     let y = real(number_level(ip11, ip7(item), level, step) - step * constant(9.0));
     let base = moved_by_p17_p18(item, Pos::new(bracket.left, y), step);
-    let number = BracketNumber {
-        value: bracket.number,
-        size: tuplet_size(item),
-        font: TUPLET_FONT,
-        font_p14: trunc(p(14)),
-        letter: 0,
-        rotation: item.p(19),
-    };
     number.draw(doc, item, canvas, Pos::new(base.x + real(centre * length), base.y), step);
 }
 
@@ -340,13 +400,15 @@ fn slur(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Can
     }
     if slur.dy != 0.0 {
         let angle = real(slur.dy.atan2(slur.length0));
-        rotate(buffer.points_mut(), Pos::new(slur.xl, slur.y0).to_point(), -angle);
+        rotate_points_radians(buffer.points_mut(), Pos::new(slur.xl, slur.y0).to_point(), angle as f32);
     }
     if buffer.len() < BUFFER_POINTS {
         canvas.buffer_mut().extend_from_slice(buffer.points());
     }
     if params.number() != 0 {
-        slur.number(doc, item, params, canvas);
+        if let Some(number) = slur_number(item, params, slur.dy != 0.0) {
+            slur.draw_number(doc, item, params, canvas, &number);
+        }
     }
 }
 
@@ -758,15 +820,20 @@ impl Slur {
         }
     }
 
-    /// The number P16 (draw_slur from 0x53AA73): in the slur's gap, or for
-    /// negative P16 inside an unbroken slur; at P10 of a level slur, at the
-    /// middle of a sloped one, turned with it.
-    fn number(&self, doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Canvas<'_>) {
-        let value = params.number();
-        let triangle = trunc(f64::from(item.p(9))) == TRIANGLE;
+    /// Draws the number P16 (draw_slur from 0x53AA73): in the slur's gap, or
+    /// for negative P16 inside an unbroken slur; at P10 of a level slur, at
+    /// the middle of a sloped one, turned with it.
+    fn draw_number(
+        &self,
+        doc: &Document<'_>,
+        item: ItemRef<'_>,
+        params: &Params,
+        canvas: &mut Canvas<'_>,
+        number: &BracketNumber,
+    ) {
         let sloped = self.dy != 0.0;
         let down = params.p7 < 0.0;
-        let drop: f32 = match (value < 0, sloped) {
+        let drop: f32 = match (params.number() < 0, sloped) {
             (true, true) => {
                 if down {
                     -5.0
@@ -793,24 +860,10 @@ impl Slur {
             let y = real((cos * height + sin * half) + self.y0);
             (Pos::new(x, y), 0.0)
         } else {
+            let triangle = trunc(f64::from(item.p(9))) == TRIANGLE;
             let ip11 = if triangle { trunc(f64::from(item.p(11))) } else { ip11_after_curve(item) };
-            if ip11 == NO_NUMBER {
-                return;
-            }
             let level = number_level(ip11, ip7(item), real(self.y0 + height), self.step);
             (Pos::new(self.xl, real(level - self.step * constant(9.0))), real(self.centre * self.length))
-        };
-        let rotation = match item.p(19) {
-            0.0 if !triangle => DEFAULT_P19,
-            p19 => p19,
-        };
-        let number = BracketNumber {
-            value: value.abs(),
-            size: tuplet_size(item),
-            font: TUPLET_FONT,
-            font_p14: trunc(f64::from(item.p(14))),
-            letter: 0,
-            rotation,
         };
         let base = moved_by_p17_p18(item, at, self.step);
         number.draw(doc, item, canvas, Pos::new(base.x + along, base.y), self.step);
@@ -1000,22 +1053,43 @@ fn number_gap(buffer: &mut Buffer, item: ItemRef<'_>, step: f64, dx: f64) {
     buffer.npt = arranged.len() as isize + 1;
 }
 
-/// 0x42A5F4: turns the points about `centre` through `angle` radians,
-/// clockwise for positive angles (the engine's convention).
-fn rotate(points: &mut [BufferPoint], centre: Point, angle: f64) {
-    let angle = real(angle);
-    let (sin, cos) = (real(angle.sin()), real(angle.cos()));
-    let (cx, cy) = (f64::from(centre.x), f64::from(centre.y));
-    points.iter_mut().for_each(|p| {
-        let dx = f64::from(p.at.x - centre.x);
-        let dy = f64::from(p.at.y - centre.y);
-        p.at = Point::new(trunc(cx + (cos * dx + sin * dy)), trunc(cy + (cos * dy - sin * dx)));
-    });
-}
-
 #[cfg(test)]
 mod tests {
+    use score_format::{Item, MusFile, Word};
+
     use super::*;
+    use crate::codes::beam;
+    use crate::display::ItemId;
+
+    /// A file of a size-1 staff 1 and `item`.
+    fn file(item: &[f32]) -> MusFile {
+        let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
+        let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
+        bytes.extend(trailer.iter().flat_map(|w| w.to_le_bytes()));
+        let mut file = MusFile::parse(&bytes).expect("an empty file parses");
+        let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
+        file.items = vec![words(&[8.0, 1.0, 0.0, 0.0, 1.0]), words(item)];
+        file
+    }
+
+    fn loaded(font_loaded: fn(&Document<'_>, ItemRef<'_>) -> Option<Font>, item: &[f32]) -> Option<Font> {
+        let file = file(item);
+        let doc = Document::new(&file);
+        font_loaded(&doc, doc.item(ItemId(1)).expect("the item exists"))
+    }
+
+    #[test]
+    fn only_items_with_numbers_load_a_font() {
+        let times_italic = loaded(beam::font_loaded, &[6.0, 1.0, 100.0, 9.0, 9.0, 130.0, 11.0, 3.0]);
+        assert!(times_italic.is_some());
+        assert_eq!(loaded(beam::font_loaded, &[6.0, 1.0, 100.0, 9.0, 9.0, 130.0, 11.0]), None);
+        assert_eq!(loaded(font_loaded, &[5.0, 1.0, 100.0, 9.0, 9.0, 130.0, 5.0, 3.0]), times_italic);
+        assert_eq!(loaded(font_loaded, &[5.0, 1.0, 100.0, 9.0, 9.0, 130.0, 5.0, 3.0, 0.0, 0.0, 3.0]), None);
+        assert_eq!(loaded(font_loaded, &[5.0, 1.0, 100.0, 10.0, 10.0, 130.0, 5.0, 1.0]), Some(Font::TIMES));
+        assert_eq!(loaded(font_loaded, &[5.0, 1.0, 100.0, 9.0, 9.0, 130.0, 3.0]), None);
+        let p16 = [5.0, 1.0, 100.0, 9.0, 9.0, 130.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0];
+        assert_eq!(loaded(font_loaded, &p16), times_italic);
+    }
 
     #[test]
     fn p8_end_rows() {
