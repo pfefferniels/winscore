@@ -77,13 +77,14 @@ fn list_points(list: &DisplayList) -> Vec<Point> {
     shape_points.chain(text_points).collect()
 }
 
+/// Rough extent of a string around its baseline origin: descender below, ascender above.
 fn string_points(placed: &Placed) -> [Point; 2] {
     let height = placed.run.height;
     let advance = (placed.string.text.chars().count() as f32 * height * 0.5) as i32;
     let origin = placed.string.origin;
     [
-        origin,
-        Point::new(origin.x + advance, origin.y - height as i32),
+        Point::new(origin.x, origin.y - (0.25 * height) as i32),
+        Point::new(origin.x + advance, origin.y + (0.8 * height) as i32),
     ]
 }
 
@@ -190,16 +191,8 @@ fn escape(text: &str) -> String {
         .replace('>', "&gt;")
 }
 
-/// Strings are placed by the top-left of their cell; the baseline sits about 0.9 em lower.
-fn text_element(
-    out: &mut String,
-    panel: &Panel,
-    run: &TextRun,
-    origin: Point,
-    text: &str,
-    colour: &str,
-) {
-    let baseline = origin.y - (0.9 * run.height) as i32;
+/// Strings are placed by the start of their baseline.
+fn text_element(out: &mut String, panel: &Panel, run: &TextRun, origin: Point, text: &str, colour: &str) {
     let style = format!(
         r#"font-family="{}" font-size="{:.0}"{}{}"#,
         font_family(&run.font),
@@ -229,7 +222,7 @@ fn text_element(
         out,
         r#"<text x="{}" y="{}" {style} fill="{colour}"{rotate}>{}</text>"#,
         panel.x(origin.x),
-        panel.y(baseline),
+        panel.y(origin.y),
         escape(text)
     );
 }

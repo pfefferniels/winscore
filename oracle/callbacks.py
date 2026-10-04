@@ -79,11 +79,15 @@ def prompt_line(e: "Engine") -> int:
 
 
 def wait_key(e: "Engine") -> int:
+    """0x597120, typed-string path: copies the answer to arg0, blanks COMMAND, returns arg2 (input-lang)."""
     buf = e.arg(0)
     answer = _feed_answer(e, "key")
+    e.put32(0x9A9488, 0)
     e.uc.mem_write(buf, answer.encode("latin-1") + b"\0")
     e.uc.mem_write(COMMAND, b" \0")
-    return 0
+    e.uc.mem_write(0x9C6C5D, b"\0")
+    e.put32(0x9C48F4, 0)
+    return e.arg(2)
 
 
 def request_redraw(e: "Engine") -> int:
