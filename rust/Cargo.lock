@@ -49,6 +49,7 @@ name = "score-render"
 version = "0.1.0"
 dependencies = [
  "score-format",
+ "score-testkit",
 ]
 
 [[package]]
