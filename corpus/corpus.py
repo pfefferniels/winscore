@@ -27,16 +27,27 @@ FILES = CORPUS / "files"
 FIXTURES = CORPUS / "fixtures"
 BINARY_SUFFIXES = {".mus", ".pag"}
 TEXT_SUFFIXES = {".pmx", ".txt"}
+MAX_JOBS = 4   # the machine is shared with the other agents' builds and runs
 
 
 def slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
+def source_name(path: Path) -> str:
+    """The source directory without the hosting prefixes, which only lengthen case names."""
+    name = slug(path.relative_to(FILES).parts[0])
+    return name.removeprefix("github-").removeprefix("craigsapp-")
+
+
 def case_name(path: Path) -> str:
-    source = path.relative_to(FILES).parts[0]
     suffix = "" if path.suffix.lower() == ".mus" else f"-{path.suffix.lower()[1:]}"
-    return f"corpus-{slug(source)}-{slug(path.stem)}{suffix}"
+    return f"corpus-{source_name(path)}-{slug(path.stem)}{suffix}"
+
+
+def has_binary_twin(path: Path) -> bool:
+    """A PMX listing next to the binary file it was printed from."""
+    return any(path.with_suffix(s).exists() for s in BINARY_SUFFIXES)
 
 
 def case_of(path: Path) -> Case | None:
@@ -48,8 +59,14 @@ def case_of(path: Path) -> Case | None:
     return Case(case_name(path), f"{description} (PMX converted)", mus) if mus else None
 
 
+def is_case_file(path: Path) -> bool:
+    suffix = path.suffix.lower()
+    return path.is_file() and (suffix in BINARY_SUFFIXES or (suffix in TEXT_SUFFIXES and not has_binary_twin(path)))
+
+
 def corpus_files() -> list[Path]:
-    return sorted(p for p in FILES.rglob("*") if p.is_file() and p.suffix.lower() in BINARY_SUFFIXES | TEXT_SUFFIXES)
+    """Multi-page .ppmx files are left out: `python corpus/pmx.py` splits them into pages first."""
+    return sorted(filter(is_case_file, FILES.rglob("*")))
 
 
 def corpus_cases() -> list[Case]:
@@ -65,7 +82,7 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("patterns", nargs="*")
     parser.add_argument("--out", type=Path, default=FIXTURES)
-    parser.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
+    parser.add_argument("--jobs", type=int, default=min(MAX_JOBS, max(1, (os.cpu_count() or 2) // 2)))
     parser.add_argument("--list", action="store_true")
     args = parser.parse_args(argv)
 
@@ -74,7 +91,7 @@ def main(argv: list[str]) -> int:
         print("\n".join(f"{c.name}\t{c.description}" for c in cases))
         return 0
     try:
-        with ProcessPoolExecutor(max_workers=args.jobs) as pool:
+        with ProcessPoolExecutor(max_workers=min(args.jobs, MAX_JOBS)) as pool:
             written = list(pool.map(write_fixture, cases, [args.out] * len(cases), [True] * len(cases)))
     finally:
         shutil.rmtree(SANDBOXES, ignore_errors=True)
