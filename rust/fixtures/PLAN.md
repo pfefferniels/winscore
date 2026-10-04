@@ -35,6 +35,10 @@ Observed P5 types (from the engine output, not from the help text, whose type ta
 
 - **Code 16, text** (91 cases, drafted by verifier, continued by impl-text): P5, P6 (with part flags 101–301), P7, P8 font overrides (90–98, 1000–1034, outlines 193, 1105), P9 rotation, P10, P11, P14–P16 colour; fonts `_00`–`_34`, `_90`–`_94`, `_98`, `_99%`; font switches, spaces, tabs, `?c`, `%%`, `[ ]`, backslash, Latin-1; staff sizes, recto. The engine reads characters after P13 whatever the item length, so P13 is always stored; an unclosed `~` or `~~` crashes the emulated engine (impl-text).
 
+- **Interactions** (`code99-*`, 17 cases): measures with clef, key signature and meter in treble and bass, beams up/down/double/triplet/partial with their notes, a tie, a slur, chords (with a second, stem down with accidentals, tied), a slashed grace note slurred to its note, notes and rests with a centred whole rest, a two-staff system with brace, a melody with dynamics, hairpin, tempo text and final bar.
+- Codes 3, 4, 6 (cases written by impl-symbols, impl-lines, impl-beams) are in; codes 1, 2, 5, 7, 9–12, 15, 17, 18 follow from their owners' branches.
+
 ## Next (verifier)
 
-- Interactions across codes (`code99-*`): a note on a key-signature staff after a clef, stems with beams, ties between chords, a full measure with clef, key, meter, notes, rests and barlines.
+- More interaction cases as implementers report gaps (cross-staff beams, notes on staves above/below with beams, multi-voice staves).
+- Check whether the print-only set-width record `(999, w, 99)` ever reaches the screen; it would be a stray continuation point.
