@@ -207,6 +207,7 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, step: f64, canvas: &mut Canva
         origin: Pos::new(x, y),
         p3: item.p(3),
         item_code: item.code(),
+        step: Some(step),
         staff: item.staff(),
         spread: SPREAD,
         width: size as f32,
