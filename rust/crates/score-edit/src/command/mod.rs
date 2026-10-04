@@ -6,6 +6,7 @@
 //! (`NOTE`, `TREB`, `METER34`) create one with the engine's defaults; the new
 //! item is selected, as the engine puts new items straight into edit mode.
 
+pub mod beams;
 pub mod create;
 pub mod item;
 pub mod line;
@@ -84,6 +85,10 @@ enum SessionWord {
     CentreText,
     /// CTN, CTX [staff]: centre text on the nearest note, CTX without punctuation.
     CentreTextOnNote { skip_punctuation: bool },
+    /// ADJ: stems reach their beam.
+    AdjustStems,
+    /// CH [value]: one duration for the whole chord.
+    ChordRhythm,
 }
 
 impl SessionWord {
@@ -117,6 +122,8 @@ impl SessionWord {
             "CT" => Self::CentreText,
             "CTN" => Self::CentreTextOnNote { skip_punctuation: false },
             "CTX" => Self::CentreTextOnNote { skip_punctuation: true },
+            "ADJ" => Self::AdjustStems,
+            "CH" => Self::ChordRhythm,
             _ => return None,
         };
         Some(parsed)
@@ -221,6 +228,8 @@ impl Run<'_, '_> {
             Some(SessionWord::CentreTextOnNote { skip_punctuation }) => {
                 self.centre_text_on_note(&word, number, skip_punctuation)
             }
+            Some(SessionWord::AdjustStems) => self.adjust_stems(),
+            Some(SessionWord::ChordRhythm) => self.chord_rhythm(number),
             None => self.edit_word(&word, args),
         }
     }
