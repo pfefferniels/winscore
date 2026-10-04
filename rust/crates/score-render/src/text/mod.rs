@@ -23,7 +23,7 @@ use crate::colour;
 use crate::display::{Colour, Point};
 use crate::document::{Document, ItemRef};
 use crate::page::RECTO_SHIFT;
-use crate::symbols::{draw_library_symbol, SymbolCall};
+use crate::symbols::{draw_library_symbol, ItemContext, SymbolCall};
 use crate::units::{nint, real, trunc, Pos};
 use glyphs::SPACE;
 use scan::{scan, Code, Entry, ScanSettings};
@@ -336,15 +336,10 @@ impl<'c> Text<'c> {
         };
         let recto = if self.call.staff > LAST_VERSO_STAFF { RECTO_SHIFT } else { 0 };
         let origin = Pos::new(f64::from(at.x - recto), self.call.origin.y);
-        let call = SymbolCall {
-            number,
-            size_x,
-            size_y,
-            thickness: 0,
-            rotation: f64::from(self.call.rotation),
-            pixels: 0,
-        };
-        draw_library_symbol(doc, item, canvas, origin, self.step, &call);
+        let call = SymbolCall { number, size_x, size_y, thickness: 0, rotation: f64::from(self.call.rotation) };
+        // 0x56B529 sets IP1 = 16; draw_text has cleared IP10.
+        let context = ItemContext { code: TEXT_ITEM, pixels: 0, ..ItemContext::of(item) };
+        draw_library_symbol(doc, &context, canvas, origin, self.step, &call);
     }
 
     /// The record header (0x56CAF0) for font `font`.
