@@ -45,3 +45,21 @@ address	name	confidence	role
 00494026	redraw	read	fit_view then draw_items
 004a3f10	cmd_get	inferred	G command (load and display)
 00494c38	load_score	inferred	
+004a060d	box_outline	read	closed rectangle polyline from the corner globals 0x1F93E60..0x1F93E7C (code-12 boxes, page frame)
+004f0871	note_ledger_lines	read	ledger lines of a note (draw_note, when P4 < 2 or > 12, or P30)
+004f14b0	note_head	read	note head, via draw_clef/draw_symbol
+004f06bb	note_tails	read	tails (flags), IP9 % 10, via draw_clef/draw_symbol
+004f2f31	note_accidental	read	accidental, IP5 % 10
+004f0eb9	note_stem	read	stem, when (IP5 % 100) / 10 != 0
+004f2279	note_marks	read	marks (P11)
+00558a40	note_special_head	inferred	IP6 < -2 except -3 and -20..-39
+0042ad97	load_symbol_library	read	builds lbNNNN.drw and reads it; 'Not found' dialog if missing
+0051cf40	input_rhythm_spacing	read	IN pass 2: rhythms and horizontal spacing (input.md)
+0052fc56	input_min_gap	read	IN: minimum gap of 3 after pass 2 (input.md)
+005253fd	input_store_items	verified	IN: writes the work table into the item store
+004aefa0	input_pass	read	IN: parse one pass text and dispatch on the pass number
+0051c64f	input_rhythm_value	read	IN: decode one rhythm value (dur, type, dots, tails)
+004ecdf8	input_pitches	verified	IN pass 1: work table from pitches
+0052c6a0	input_main	verified	IN main routine
+0052f991	input_range_dialog	read	IN range dialog: IP5 begin, IP6 end, IP7 spacing staff
+004afb68	cmd_input	verified	IN command handler

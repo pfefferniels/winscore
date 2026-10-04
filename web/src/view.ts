@@ -9,7 +9,11 @@ import type { Box } from './display';
 
 export const UNITS_PER_INCH = 4000;
 export const CSS_PX_PER_INCH = 96;
-export const ZOOM_LEVELS = [10, 25, 33, 50, 67, 75, 100, 125, 150, 200, 300, 400, 600, 800, 1200, 1600];
+/** WinScore's zoom bar, then larger steps for inspecting details. */
+export const ZOOM_LEVELS = [10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 800, 1200, 1600];
+
+/** WinScore keeps zoom as an integer with 64 = 100 %. */
+const ZOOM_UNIT = 64;
 
 export function cssPerUnit(zoom: number): number {
   return ((zoom / 100) * CSS_PX_PER_INCH) / UNITS_PER_INCH;
@@ -62,8 +66,12 @@ export function contentSize(zoom: number, extent: Box): { width: number; height:
   return { width: Math.ceil((extent.x1 - extent.x0) * s), height: Math.ceil((extent.y1 - extent.y0) * s) };
 }
 
-/** The zoom level after `zoom` in direction `step` (+1 in, −1 out). */
+/**
+ * WinScore's Zoom and Reduce: ± max(1, zoom/4) in its integer zoom units,
+ * Reduce stopping at 1 (analysis/engine/display.md).
+ */
 export function stepZoom(zoom: number, step: 1 | -1): number {
-  const next = step > 0 ? ZOOM_LEVELS.find((z) => z > zoom) : [...ZOOM_LEVELS].reverse().find((z) => z < zoom);
-  return next ?? zoom;
+  const units = Math.round((zoom * ZOOM_UNIT) / 100);
+  const next = Math.max(1, units + step * Math.max(1, Math.trunc(units / 4)));
+  return (next * 100) / ZOOM_UNIT;
 }

@@ -26,24 +26,43 @@ pub struct SymbolCall {
     pub thickness: i32,
     /// Clockwise rotation in degrees (P9), applied when its integer part is not zero.
     pub rotation: f64,
-    /// Pixel thickness, see [`pixels`].
-    pub pixels: i32,
 }
 
 impl SymbolCall {
     /// Symbol `number` at a size, neither rotated nor thickened, as the
     /// routines drawing symbols for other codes call draw_symbol.
-    pub fn sized(number: i32, size_x: f64, size_y: f64, item: ItemRef<'_>) -> Self {
-        Self { number, size_x, size_y, thickness: 0, rotation: 0.0, pixels: pixels(item) }
+    pub fn sized(number: i32, size_x: f64, size_y: f64) -> Self {
+        Self { number, size_x, size_y, thickness: 0, rotation: 0.0 }
     }
 }
 
-/// The pixel thickness draw_symbol reads from the current item: IP10, or
-/// trunc(P16) for numbers and meters.
-pub fn pixels(item: ItemRef<'_>) -> i32 {
-    match item.code() {
-        codes::NUMBER | codes::METER => trunc(f64::from(item.p(16))),
-        _ => trunc(f64::from(item.p(10))),
+/// What draw_symbol and draw_clef read from the engine's current-item
+/// globals rather than from their arguments. [`ItemContext::of`] gives the
+/// item's own values; callers that rewrite those globals before drawing
+/// change the fields accordingly.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ItemContext {
+    /// IP1.
+    pub code: i32,
+    /// IP2.
+    pub staff: i32,
+    /// IP4: |IP4| >= 100 makes clef types 0-5 mini clefs.
+    pub ip4: i32,
+    /// IP10, or trunc(P16) for numbers and meters: a positive pixel
+    /// thickness thickens on the screen.
+    pub pixels: i32,
+    /// IP11: hides symbols 1300-1304 in print.
+    pub ip11: i32,
+}
+
+impl ItemContext {
+    pub fn of(item: ItemRef<'_>) -> Self {
+        let ip = |n: usize| trunc(f64::from(item.p(n)));
+        let pixels = match item.code() {
+            codes::NUMBER | codes::METER => ip(16),
+            _ => ip(10),
+        };
+        Self { code: item.code(), staff: item.staff(), ip4: ip(4), pixels, ip11: ip(11) }
     }
 }
 
@@ -65,7 +84,7 @@ const PIXELS_TO_THICKNESS: i32 = 101;
 /// rotation centre code 16 uses.
 pub fn draw_library_symbol(
     doc: &Document<'_>,
-    item: ItemRef<'_>,
+    context: &ItemContext,
     canvas: &mut Canvas<'_>,
     at: Pos,
     step: f64,
@@ -73,11 +92,11 @@ pub fn draw_library_symbol(
 ) {
     let number = call.number.max(0);
     let size_x = if STAFF_INDEPENDENT_SYMBOLS.contains(&number) {
-        let hidden = item.code() == codes::NOTE || (item.p(11) as i32 != 0 && !doc.screen());
+        let hidden = context.code == codes::NOTE || (context.ip11 != 0 && !doc.screen());
         if hidden {
             return;
         }
-        match item.staff() {
+        match context.staff {
             0 => call.size_x,
             staff => real(STEP_UNIT / doc.staves.get(staff).step),
         }
@@ -98,7 +117,7 @@ pub fn draw_library_symbol(
     } else {
         (size_x, size_y)
     };
-    let pixels = if number >= FIRST_THIN_SYMBOL { call.pixels - 1 } else { call.pixels };
+    let pixels = if number >= FIRST_THIN_SYMBOL { context.pixels - 1 } else { context.pixels };
 
     let start = canvas.buffer_mut().len();
     draw_symbol(canvas, symbol, at, Scale { x: real(step * size_x), y: real(step * size_y) });
