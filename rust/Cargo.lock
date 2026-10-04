@@ -33,6 +33,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "score-cli"
+version = "0.1.0"
+dependencies = [
+ "score-format",
+ "score-render",
+]
+
+[[package]]
 name = "score-format"
 version = "0.1.0"
 
@@ -41,6 +49,7 @@ name = "score-render"
 version = "0.1.0"
 dependencies = [
  "score-format",
+ "score-testkit",
 ]
 
 [[package]]
