@@ -39,6 +39,8 @@
   400,
   -29948
  ],
- "warnings": [],
+ "warnings": [
+  "1 pen-width record(s) left out"
+ ],
  "zoom_checked": true
 }

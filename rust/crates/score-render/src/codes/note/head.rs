@@ -14,6 +14,7 @@ use crate::document::{Document, ItemRef};
 use crate::units::{real, trunc, Pos};
 
 const FIRST_HEAD_SYMBOL: i32 = 11;
+const BLACK: i32 = 0;
 const HEADLESS: i32 = 7;
 const DIAMOND_X: i32 = 8;
 const OVAL_X: i32 = 9;
@@ -79,6 +80,7 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Can
     };
     match unparenthesised(p6) {
         HEADLESS => {}
+        BLACK if doc.screen() => cached_black_head(doc, item, note, canvas),
         -3 => clef_head(canvas, super::BREVE),
         h if h < HEADLESS => clef_head(canvas, h),
         DIAMOND_X => library_head(canvas, DIAMOND_X_SYMBOL),
@@ -88,6 +90,48 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Can
     if super::PARENTHESISED.contains(&p6) {
         parentheses(doc, item, note, canvas);
     }
+}
+
+/// A black head on the screen comes from a one-entry cache (0x4F14B0): it
+/// keeps the last freshly drawn black head as integer offsets from
+/// (trunc X, trunc Y), keyed by the f32 scale P20 × unit, and a head of
+/// the same scale is pasted from it instead of being computed. The cache
+/// lives across items and redraws, and the engine draws a score more than
+/// once before showing it, so the head whose offsets a note gets is found
+/// by walking back cyclically through the black heads of the score to the
+/// last one whose predecessor had another scale.
+fn cached_black_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
+    let heads: Vec<(ItemRef<'_>, Note)> = doc
+        .items()
+        .filter(|other| other.code() == crate::codes::NOTE)
+        .filter_map(|other| Some((other, Note::new(doc, other)?)))
+        .filter(|(other, other_note)| drawn(other_note) && unparenthesised(trunc(f64::from(other.p(6)))) == BLACK)
+        .collect();
+    let source = heads
+        .iter()
+        .position(|(other, _)| other.id == item.id)
+        .map(|at| cache_source(&heads, at))
+        .map_or(*note, |at| heads[at].1);
+    let start = canvas.buffer_mut().len();
+    clef_symbol(canvas, doc.symbols(), FIRST_HEAD_SYMBOL, source.origin, source.width, 1.0, source.unit);
+    let shift = |own: f64, theirs: f64| trunc(own) - trunc(theirs);
+    let (dx, dy) = (shift(note.origin.x, source.origin.x), shift(note.origin.y, source.origin.y));
+    canvas.buffer_mut()[start..].iter_mut().for_each(|p| {
+        p.at.x += dx;
+        p.at.y += dy;
+    });
+}
+
+/// The black head whose drawing head `at` is pasted from: itself when the
+/// cache misses (its scale is not exact in f32, or differs from what the
+/// previous head left), else the source of the previous head.
+fn cache_source(heads: &[(ItemRef<'_>, Note)], at: usize) -> usize {
+    let key = |i: usize| heads[i].1.width * heads[i].1.unit;
+    let previous = |i: usize| if i == 0 { heads.len() - 1 } else { i - 1 };
+    let hits = |i: usize| real(key(i)) == key(i) && real(key(previous(i))) == key(i);
+    // A full circle of hits means one scale throughout: only the first head
+    // of the first drawing missed.
+    std::iter::successors(Some(at), |&i| Some(previous(i))).take(heads.len()).find(|&i| !hits(i)).unwrap_or(0)
 }
 
 /// An AlphaNote head: for a hollow head on a line first a white box that

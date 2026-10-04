@@ -9,8 +9,7 @@
 {"colour":[0,0,0],"item":1,"kind":"stroke","paths":[[[4781,2923],[4781,3748]]]},
 {"colour":[0,0,0],"item":1,"kind":"fill","paths":[[[4875,3511],[4875,3561],[4550,3461],[4550,3380],[4875,3480],[4875,3511]]]},
 {"colour":[0,0,0],"item":1,"kind":"fill","paths":[[[4875,3205],[4875,3242],[4550,3142],[4550,3061],[4875,3161],[4875,3205]]]},
-{"colour":[0,0,0],"item":1,"kind":"stroke","paths":[[[5425,3351],[5425,4523]]]},
-{"colour":[0,0,0],"item":1,"kind":"fill","paths":[[[2000,26948]]],"raw_kind":157}
+{"colour":[0,0,0],"item":1,"kind":"stroke","paths":[[[5425,3351],[5425,4523]]]}
 ],
 "texts":[
 {"colour":[0,115,51],"escapement":0,"font":"Helvetica-Narrow","height":774.8,"italic":false,"item":0,"strings":[{"text":"1","x":800,"y":3469}],"underline":false,"weight":400,"width":319.605}
