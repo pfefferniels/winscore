@@ -4,6 +4,7 @@
 
 use crate::command::line::{self, End};
 use crate::command::note::{self, Accidental, Rhythm, Spelling};
+use crate::command::signs;
 use crate::params::Draft;
 
 const NOTE: i32 = 1;
@@ -46,6 +47,7 @@ pub enum Op {
     SetParams(&'static [(usize, f32)]),
     /// P(n) = the number after the word, 0 without one (THK n on beams).
     ParamFromArg { n: usize },
+    Negate(usize),
     CopyParam { to: usize, from: usize },
     /// P(n) = value, or 0 if it already is (LAR: arrow on/off).
     Toggle { n: usize, value: f32 },
@@ -74,6 +76,19 @@ pub enum Op {
     /// Code 7's right end offset: moved by the delta, or set to the typed number (ROFF n).
     TrillRight(Option<f32>),
     HairpinSpread(f32),
+    /// 100 in or out of P(n), away from zero (cue size, KSCU/KSNO).
+    Hundred { n: usize, on: bool },
+    /// P(n) + delta, not below `min`.
+    AddAtLeast { n: usize, delta: f32, min: f32 },
+    PedalSize(f32),
+    FlipSymbol,
+    SymbolSize(f32),
+    BoxWidth(f32),
+    BoxHeight(f32),
+    KeyFlat,
+    KeySharp,
+    KeyNaturals,
+    Denominator(f32),
 }
 
 impl Op {
@@ -81,6 +96,7 @@ impl Op {
     pub fn apply(self, draft: &mut Draft, arg: Option<f32>) {
         match self {
             Op::ParamFromArg { n } => draft.set(n, arg.unwrap_or(0.0)),
+            Op::Negate(n) => draft.set(n, -draft.get(n)),
             Op::FlipStem => note::flip_stem(draft),
             Op::RemoveStem => note::remove_stem(draft),
             Op::StemLength(steps) => note::lengthen_stem(draft, steps),
@@ -142,6 +158,17 @@ impl Op {
                 line::offset_trill_right(draft, to);
             }
             Op::HairpinSpread(delta) => line::spread_hairpin(draft, delta),
+            Op::Hundred { n, on } => note::set_hundred(draft, n, on),
+            Op::AddAtLeast { n, delta, min } => draft.set(n, (draft.get(n) + delta).max(min)),
+            Op::PedalSize(delta) => signs::resize_pedal(draft, delta),
+            Op::FlipSymbol => signs::flip_symbol(draft),
+            Op::SymbolSize(delta) => signs::resize_symbol(draft, delta),
+            Op::BoxWidth(delta) => signs::resize_box_width(draft, delta),
+            Op::BoxHeight(delta) => signs::resize_box_height(draft, delta),
+            Op::KeyFlat => signs::add_flat(draft),
+            Op::KeySharp => signs::add_sharp(draft),
+            Op::KeyNaturals => signs::toggle_naturals(draft),
+            Op::Denominator(factor) => signs::scale_denominator(draft, factor),
         }
     }
 }
@@ -167,6 +194,14 @@ const S: &[i32] = &[SLUR];
 const LS: &[i32] = &[LINE, SLUR];
 const B: &[i32] = &[BEAM];
 const T: &[i32] = &[TRILL];
+const ST: &[i32] = &[8];
+const SY: &[i32] = &[9];
+const NU: &[i32] = &[10];
+const BX: &[i32] = &[12];
+const SB: &[i32] = &[9, 12];
+const BA: &[i32] = &[14];
+const K: &[i32] = &[17];
+const M: &[i32] = &[18];
 
 const fn mark(word: &'static str, value: f32, meaning: &'static str) -> Entry {
     entry(word, N, Op::Mark(value), meaning)
@@ -410,9 +445,93 @@ const LINES: &[Entry] = &[
     entry("THK0", B, Op::SetParam { n: 17, value: 0.0 }, "Default beam thickness (P17 = 0)"),
 ];
 
+const SIGNS: &[Entry] = &[
+    entry("TRF", T, Op::SetParam { n: 8, value: 1.0 }, "Trill with flat (P8 = 1)"),
+    entry("TRS", T, Op::SetParam { n: 8, value: 2.0 }, "Trill with sharp (P8 = 2)"),
+    entry("TRN", T, Op::SetParam { n: 8, value: 3.0 }, "Trill with natural (P8 = 3)"),
+    entry("TRFW", T, Op::SetParam { n: 8, value: 1.0 }, "Trill flat (P8 = 1)"),
+    entry("TRSW", T, Op::SetParam { n: 8, value: 2.0 }, "Trill sharp (P8 = 2)"),
+    entry("TRNW", T, Op::SetParam { n: 8, value: 3.0 }, "Trill natural (P8 = 3)"),
+    entry("TRZ", T, Op::SetParam { n: 8, value: 0.0 }, "No accidental on the trill (P8 = 0)"),
+    entry("PDSZ+", T, Op::PedalSize(0.1), "Larger pedal (P9 + .1)"),
+    entry("PDSZ-", T, Op::PedalSize(-0.1), "Smaller pedal (P9 - .1)"),
+    entry("PDM+", T, Op::Nudge { n: 8, default: 50.0, delta: 1.0 }, "Pedal midpoint right (P8)"),
+    entry("PDM-", T, Op::Nudge { n: 8, default: 50.0, delta: -1.0 }, "Pedal midpoint left (P8)"),
+    entry("SZ.4", ST, Op::SetParam { n: 5, value: 0.4 }, "Staff size .4 (P5)"),
+    entry("SZ.5", ST, Op::SetParam { n: 5, value: 0.5 }, "Staff size .5 (P5)"),
+    entry("SZ.6", ST, Op::SetParam { n: 5, value: 0.6 }, "Staff size .6 (P5)"),
+    entry("SZ.7", ST, Op::SetParam { n: 5, value: 0.7 }, "Staff size .7 (P5)"),
+    entry("SZ.8", ST, Op::SetParam { n: 5, value: 0.8 }, "Staff size .8 (P5)"),
+    entry("SZ.9", ST, Op::SetParam { n: 5, value: 0.9 }, "Staff size .9 (P5)"),
+    entry("SZ1", ST, Op::SetParam { n: 5, value: 1.0 }, "Staff size 1 (P5)"),
+    entry("SZ+", ST, Op::Nudge { n: 5, default: 1.0, delta: 0.01 }, "Staff size plus (P5 + .01)"),
+    entry("SZ-", ST, Op::Nudge { n: 5, default: 1.0, delta: -0.01 }, "Staff size minus (P5 - .01)"),
+    entry("NMO", ST, Op::Toggle { n: 12, value: 1.0 }, "Staff number off/on (P12)"),
+    entry("SI", ST, Op::Toggle { n: 7, value: -1.0 }, "Invisible staff on/off (P7 = -1)"),
+    entry("FLI", SY, Op::FlipSymbol, "Flip the symbol (P7)"),
+    entry("SZ+", SY, Op::SymbolSize(signs::SYMBOL_GROWTH), "Larger symbol (P6 + .1)"),
+    entry("SZ-", SY, Op::SymbolSize(-0.1), "Smaller symbol (P6 - .1)"),
+    entry("CUE", SY, Op::Hundred { n: 4, on: true }, "Cue size (P4 + 100)"),
+    entry("CUX", SY, Op::Hundred { n: 4, on: false }, "Normal size (P4 - 100)"),
+    entry("ROT+", SB, Op::AddParam { n: 9, delta: 10.0 }, "Rotate clockwise (P9 + 10)"),
+    entry("ROT-", SB, Op::AddParam { n: 9, delta: -10.0 }, "Rotate counter-clockwise (P9 - 10)"),
+    entry("ROT0", SB, Op::SetParam { n: 9, value: 0.0 }, "No rotation (P9 = 0)"),
+    entry("PLUS1", NU, Op::AddParam { n: 5, delta: 1.0 }, "Number plus 1 (P5)"),
+    entry("PLUS10", NU, Op::AddParam { n: 5, delta: 10.0 }, "Number plus 10 (P5)"),
+    entry("PLUS100", NU, Op::AddParam { n: 5, delta: 100.0 }, "Number plus 100 (P5)"),
+    entry("MINUS1", NU, Op::AddParam { n: 5, delta: -1.0 }, "Number minus 1 (P5)"),
+    entry("MINUS10", NU, Op::AddParam { n: 5, delta: -10.0 }, "Number minus 10 (P5)"),
+    entry("MINUS100", NU, Op::AddParam { n: 5, delta: -100.0 }, "Number minus 100 (P5)"),
+    entry("BXHP", BX, Op::BoxWidth(0.4), "Box wider (P6 + .4)"),
+    entry("BXHM", BX, Op::BoxWidth(-0.4), "Box narrower (P6 - .4)"),
+    entry("BXVP", BX, Op::BoxHeight(0.4), "Box taller (P7 + .4)"),
+    entry("BXVM", BX, Op::BoxHeight(-0.4), "Box lower (P7 - .4)"),
+    entry("FILL", BX, Op::SetParam { n: 13, value: 1.0 }, "Fill the box (P13 = 1)"),
+    entry("CDSH", BX, Op::AddParam { n: 12, delta: -2.0 }, "Circle dashes (P12 - 2)"),
+    entry("SKWL", BX, Op::AddParam { n: 10, delta: -2.0 }, "Skew left (P10 - 2)"),
+    entry("SKWR", BX, Op::AddParam { n: 10, delta: 2.0 }, "Skew right (P10 + 2)"),
+    entry("SKW0", BX, Op::SetParam { n: 10, value: 0.0 }, "No skew (P10 = 0)"),
+    entry("BARD", BA, Op::SetParams(&[(5, 1.0), (16, 0.0)]), "Double bar (P5 = 1)"),
+    entry("BARH", BA, Op::SetParams(&[(5, 2.0), (16, 0.0)]), "Heavy double bar (P5 = 2)"),
+    entry("BARL", BA, Op::SetParams(&[(5, 3.0), (16, 0.0)]), "Repeat, dots left (P5 = 3)"),
+    entry("BARR", BA, Op::SetParams(&[(5, 4.0), (16, 0.0)]), "Repeat, dots right (P5 = 4)"),
+    entry("BARRD", BA, Op::SetParams(&[(5, 5.0), (16, 0.0)]), "Double repeat (P5 = 5)"),
+    entry("BARBC", BA, Op::SetParams(&[(5, 8.0), (16, 0.0)]), "Brace (P5 = 8)"),
+    entry("BARBK", BA, Op::SetParams(&[(5, 9.0), (16, 0.0)]), "Bracket (P5 = 9)"),
+    entry("INV", BA, Op::Negate(4), "Invisible bar on/off (P4 negative)"),
+    entry("END", BA, Op::SetParam { n: 3, value: 200.0 }, "Bar at the right end (P3 = 200)"),
+    entry("DBRS+", BA, Op::AddParam { n: 13, delta: 0.2 }, "Double bar space plus (P13 + .2)"),
+    entry("DBRS0", BA, Op::SetParam { n: 13, value: 0.0 }, "Double bar space default (P13 = 0)"),
+    entry("DBRW+", BA, Op::Nudge { n: 17, default: 0.7, delta: 0.05 }, "Double bar width plus (P17 + .05)"),
+    entry("DBRW0", BA, Op::SetParam { n: 17, value: 0.0 }, "Double bar width default (P17 = 0)"),
+    entry("KSTR", K, Op::SetParam { n: 6, value: 0.0 }, "Key signature for treble clef (P6 = 0)"),
+    entry("KSBA", K, Op::SetParam { n: 6, value: 1.0 }, "Key signature for bass clef (P6 = 1)"),
+    entry("KSAL", K, Op::SetParam { n: 6, value: 2.0 }, "Key signature for alto clef (P6 = 2)"),
+    entry("KSTN", K, Op::SetParam { n: 6, value: 3.0 }, "Key signature for tenor clef (P6 = 3)"),
+    entry("KSCU", K, Op::Hundred { n: 6, on: true }, "Cue-size key signature (P6 + 100)"),
+    entry("KSNO", K, Op::Hundred { n: 6, on: false }, "Normal-size key signature (P6 - 100)"),
+    entry("KSFL", K, Op::KeyFlat, "One more flat (P5)"),
+    entry("KSSH", K, Op::KeySharp, "One more sharp (P5)"),
+    entry("KSNA", K, Op::KeyNaturals, "Naturals on/off (P5 ± 100)"),
+    entry("KSJU", K, Op::SetParam { n: 14, value: 0.0 }, "Justify the key signature (P14 = 0)"),
+    entry("KSNJ", K, Op::SetParam { n: 14, value: 1.0 }, "Do not justify the key signature (P14 = 1)"),
+    entry("KSSM", K, Op::Nudge { n: 7, default: 1.0, delta: -0.05 }, "Narrower accidental spacing (P7 - .05)"),
+    entry("KSSP", K, Op::Nudge { n: 7, default: 1.0, delta: 0.05 }, "Wider accidental spacing (P7 + .05)"),
+    entry("KSSZ", K, Op::SetParam { n: 7, value: 0.0 }, "Default accidental spacing (P7 = 0)"),
+    entry("KSZR", K, Op::SetParams(&[(8, 0.0), (9, 0.0), (10, 0.0), (11, 0.0), (12, 0.0), (13, 0.0)]), "Clear special accidentals (P8-13)"),
+    entry("MTRM", M, Op::AddAtLeast { n: 8, delta: -1.0, min: 1.0 }, "Composite top right number minus (P8)"),
+    entry("MTRP", M, Op::AddParam { n: 8, delta: 1.0 }, "Composite top right number plus (P8)"),
+    entry("MBLM", M, Op::Denominator(0.5), "Bottom number halved (P6)"),
+    entry("MBLP", M, Op::Denominator(2.0), "Bottom number doubled (P6)"),
+    entry("MBRM", M, Op::AddAtLeast { n: 9, delta: -1.0, min: 0.0 }, "Composite bottom right number minus (P9)"),
+    entry("MBRP", M, Op::AddParam { n: 9, delta: 1.0 }, "Composite bottom right number plus (P9)"),
+    entry("MTRS", M, Op::SetParams(&[(5, 0.0), (6, 1.0)]), "Single number meter (P5 = 0)"),
+    entry("MTRSP", M, Op::AddParam { n: 6, delta: 1.0 }, "Single meter number plus (P6)"),
+];
+
 /// Every word, in lookup order.
 pub fn entries() -> impl Iterator<Item = &'static Entry> {
-    MARKS.iter().chain(RHYTHMS.iter().flatten()).chain(OTHERS).chain(LINES)
+    MARKS.iter().chain(RHYTHMS.iter().flatten()).chain(OTHERS).chain(LINES).chain(SIGNS)
 }
 
 /// The rewrite `word` stands for on an item of `code`.

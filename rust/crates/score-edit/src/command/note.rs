@@ -292,13 +292,19 @@ pub fn remove_tails(draft: &mut Draft) {
 
 /// CUE, CUX: 100 added to or taken from P4 (away from zero for negative levels).
 pub fn set_cue(draft: &mut Draft, cue: bool) {
-    let level = draft.get(LEVEL);
-    if (level.abs() >= CUE) == cue {
+    set_hundred(draft, LEVEL, cue);
+}
+
+/// Puts 100 into parameter `n` or takes it out, away from zero, unless it is
+/// already so (cue size in P4, KSCU/KSNO in a key signature's P6).
+pub fn set_hundred(draft: &mut Draft, n: usize, on: bool) {
+    let value = draft.get(n);
+    if (value.abs() >= CUE) == on {
         return;
     }
-    let direction = if level < 0.0 { -1.0 } else { 1.0 };
-    let change = if cue { CUE } else { -CUE };
-    draft.set(LEVEL, level + change * direction);
+    let direction = if value < 0.0 { -1.0 } else { 1.0 };
+    let change = if on { CUE } else { -CUE };
+    draft.set(n, value + change * direction);
 }
 
 /// RHG: a grace note of the engine's default shape.

@@ -14,7 +14,7 @@ use crate::canvas::Canvas;
 use crate::codes::note::glyph;
 use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
 use crate::text::{font_loaded as text_font_loaded, Font};
-use crate::symbols::text_symbol::{draw_text_symbol, TextSymbolCall};
+use crate::symbols::text_symbol::{draw_text_symbol, text_symbol_font_loaded, TextSymbolCall};
 use crate::colour;
 use crate::document::{Document, ItemRef};
 use crate::page::{self, P3_UNIT};
@@ -58,6 +58,8 @@ const DOT_SYMBOL: i32 = 24;
 const FERMATA_SYMBOL: i32 = 31;
 /// P8 = -3: "G.P.", a symbol draw_symbol writes as text.
 const GENERAL_PAUSE_SYMBOL: i32 = 276;
+/// The P8 that asks for it.
+const GENERAL_PAUSE: i32 = -3;
 const TWO_BAR_REPEAT_SYMBOL: i32 = 115;
 /// Symbol 118 - t for t = 1, 2: the four- and two-bar rests.
 const BAR_SYMBOLS: i32 = 118;
@@ -344,12 +346,36 @@ fn number_call(doc: &Document<'_>, item: ItemRef<'_>, rest: &Rest, number: i32, 
 /// that of its number. The number's position does not matter for it.
 pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     let rest = Rest::new(doc, item, page::x(item.p(3)))?;
-    if rest.number <= 0 {
+    if rest.dots < 0 || rest.kind == H_BAR {
         return None;
     }
-    let call = number_call(doc, item, &rest, rest.number, rest.size);
-    let text = number_text(call.value, call.p5, call.p17, call.p18);
-    text_font_loaded(doc, &number_text_call(&call, Pos::default(), &text, Font::TIMES))
+    match rest.number {
+        GENERAL_PAUSE => text_symbol_font_loaded(doc, &general_pause_call(doc, item, &rest, rest.size)),
+        n if n > 0 => {
+            let call = number_call(doc, item, &rest, n, rest.size);
+            let text = number_text(call.value, call.p5, call.p17, call.p18);
+            text_font_loaded(doc, &number_text_call(&call, Pos::default(), &text, Font::TIMES))
+        }
+        _ => None,
+    }
+}
+
+/// P8 = -3: "G.P.", which draw_symbol writes as text from the rest's
+/// globals: P3 with the P10 shift, P16 as draw_rest moved it, at the
+/// fermata's size P12 (× 0.7 grace).
+fn general_pause_call(doc: &Document<'_>, item: ItemRef<'_>, rest: &Rest, size: f64) -> TextSymbolCall {
+    let shift = match item.p(10) {
+        0.0 => 0.0,
+        p10 => real(rest.unit * f64::from(p10) / 25.0),
+    };
+    let sx = real(size * number_scale(item));
+    TextSymbolCall {
+        size_x: sx,
+        size_y: sx,
+        p3: real(shift + f64::from(item.p(3))) as f32,
+        p16: rest.number_shift as f32,
+        ..TextSymbolCall::of(doc, item, GENERAL_PAUSE_SYMBOL)
+    }
 }
 
 /// The drawing state draw_rest carries between its stages.
@@ -516,19 +542,8 @@ impl Drawing<'_, '_, '_> {
         let (sy, level) = if number == -2 { (-sx, 1.0) } else { (sx, 13.0) };
         let level = if item.p(4) > 0.0 { real(rest.level + level) } else { level };
         let y = rest.y(real(f64::from(item.p(11)) + level));
-        if ip(item, 8) == -3 {
-            let shift = match item.p(10) {
-                0.0 => 0.0,
-                p10 => real(rest.unit * f64::from(p10) / 25.0),
-            };
-            let call = TextSymbolCall {
-                size_x: sx,
-                size_y: sy,
-                p3: real(shift + f64::from(item.p(3))) as f32,
-                p16: rest.number_shift as f32,
-                ..TextSymbolCall::of(self.doc, item, GENERAL_PAUSE_SYMBOL)
-            };
-            draw_text_symbol(self.doc, item, self.canvas, &call);
+        if ip(item, 8) == GENERAL_PAUSE {
+            draw_text_symbol(self.doc, item, self.canvas, &general_pause_call(self.doc, item, &rest, size));
             return;
         }
         glyph::clef(self.doc, self.item, self.canvas, FERMATA_SYMBOL, Pos::new(x, y), (sx, sy), rest.step);

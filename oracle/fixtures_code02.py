@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from fixtures import Case
 from fixtures_cases import Item, built, item, label, staff
+from fixtures_code16 import text
 
 TYPES = {0: "quarter", 1: "eighth", 2: "sixteenth", 3: "32nd", 4: "64th", 5: "128th", 6: "256th",
          -1: "half", -2: "whole", -3: "multi-bar", -4: "repeat", -5: "h-bar", -6: "two-bar", -7: "four-bar"}
@@ -131,6 +132,18 @@ def others() -> list[Case]:
     ]
 
 
+def font_chain() -> list[Case]:
+    """draw_item makes the font a rest loads last current for the next text item (0x547358)."""
+    first, second = text("_02first", p3=10, p4=14), text("second", p3=60, p4=14)
+    rests = [
+        ("font-after-gp", "plain text after _02 text and a G.P. rest (font 1000)", rest(p3=35, p8=-3)),
+        ("font-after-gp-p14", "plain text after _02 text and a G.P. rest in font P14 = 4", rest(p3=35, p8=-3, p14=4)),
+        ("font-after-number", "plain text after _02 text and a rest number (meter font, loads none)", rest(p3=35, p5=-3, p8=4)),
+        ("font-after-number-p14", "plain text after _02 text and a rest number in font P14 = 2", rest(p3=35, p5=-3, p8=4, p14=2)),
+    ]
+    return [built(f"code02-{name}", desc, [staff(), first, r, second]) for name, desc, r in rests]
+
+
 def mixed() -> list[Case]:
     rests = [rest(p3=12 + 14 * i, p5=t) for i, t in enumerate((0, 1, 2, 3, 4, -1, -2, -3, -4))]
     rests += [rest(p3=150, p5=1, p6=1), rest(p3=165, p5=-2, p4=4), rest(p3=180, p8=-1)]
@@ -138,4 +151,4 @@ def mixed() -> list[Case]:
 
 
 def cases() -> list[Case]:
-    return types() + positions() + dots() + numbers() + centring() + others() + mixed()
+    return types() + positions() + dots() + numbers() + centring() + others() + font_chain() + mixed()

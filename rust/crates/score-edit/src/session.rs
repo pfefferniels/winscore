@@ -36,6 +36,8 @@ pub struct Session {
     deleted: Vec<Vec<Deleted>>,
     /// What a drag moves (LFT, RGT); back to the whole item when edit mode ends.
     drag_ends: Ends,
+    /// Parameters remembered by PS, latest last.
+    saved: Vec<(usize, f32)>,
 }
 
 impl Session {
@@ -86,6 +88,16 @@ impl Session {
 
     pub fn set_current(&mut self, id: ItemId) {
         self.current = Some(id);
+    }
+
+    pub fn save_param(&mut self, n: usize, value: f32) {
+        self.saved.retain(|&(m, _)| m != n);
+        self.saved.push((n, value));
+    }
+
+    /// The parameter PS remembered last, or the one remembered for `n`.
+    pub fn saved_param(&self, n: Option<usize>) -> Option<(usize, f32)> {
+        self.saved.iter().rev().find(|&&(m, _)| n.is_none_or(|n| n == m)).copied()
     }
 
     pub fn remember_deleted(&mut self, batch: Vec<Deleted>) {

@@ -324,3 +324,8 @@ code01-staff-1.3-down
 code01-staff-1.3-full
 code01-staff-p4-offset
 code01-staff-recto
+code01-font-after-alpha
+code01-font-after-alpha-p21
+code01-font-after-fingering
+code01-font-after-plain-note
+code01-font-after-tab

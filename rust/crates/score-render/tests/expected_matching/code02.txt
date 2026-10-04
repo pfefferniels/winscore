@@ -147,3 +147,7 @@ code02-staff-1.3-quarter
 code02-staff-1.3-sixteenth-dot
 code02-staff-1.3-whole-number
 code02-staff-recto
+code02-font-after-gp
+code02-font-after-gp-p14
+code02-font-after-number
+code02-font-after-number-p14
