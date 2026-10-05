@@ -1,16 +1,19 @@
 //! What WinScore's redraw after every command writes back into the items:
-//! the measured length of text items (P13) and, while no item is in edit
-//! mode, the centre of centred whole-bar rests (P9, draw_rest 0x519C38).
+//! the measured length of text items (P13) and the position of centred
+//! whole-bar rests (P9, draw_rest 0x519C38). A rest in edit mode gets the
+//! values draw_rest writes into the edit buffer (which leaving edit mode
+//! stores); while no item is in edit mode, every centred rest gets its centre.
 
 use score_format::Item;
 use score_render::codes::rest;
-use score_render::Document as RenderDocument;
+use score_render::{Document as RenderDocument, ItemRef};
 
 use crate::command::Run;
 use crate::document::ItemId;
 use crate::params::Draft;
 
 const REST: i32 = 2;
+const SPACING: usize = 6;
 const CENTRE: usize = 9;
 /// P9 asking the redraw to centre a rest (CW).
 const CENTRED: f32 = -1.0;
@@ -51,27 +54,39 @@ impl Run<'_, '_> {
     /// Brings the items up to date with what drawing them would store.
     pub fn refresh_drawn(&mut self) {
         self.refresh_text_lengths();
-        if !self.session.in_edit_mode() {
-            self.centre_rests();
+        if self.session.in_edit_mode() {
+            self.place_rests(|render, item, draft| {
+                let p9 = rest::edit_p9(render, item);
+                let p6 = rest::edit_spacing(render, item);
+                p9.iter().for_each(|&v| draft.set(CENTRE, v));
+                p6.iter().for_each(|&v| draft.set(SPACING, v));
+                p9.is_some() || p6.is_some()
+            });
+        } else {
+            self.place_rests(|render, item, draft| {
+                rest::centre(render, item).map(|v| draft.set(CENTRE, v)).is_some()
+            });
         }
     }
 
-    fn centre_rests(&mut self) {
+    /// Rewrites the rests `place` changes: those in edit mode while there
+    /// is one, otherwise all.
+    fn place_rests(&mut self, place: impl Fn(&RenderDocument<'_>, ItemRef<'_>, &mut Draft) -> bool) {
         let doc = self.tx.doc();
         let render = RenderDocument::new(doc.file());
-        let centred: Vec<(ItemId, Item)> = render
+        let selected = self.session.selection();
+        let placed: Vec<(ItemId, Item)> = render
             .items()
             .filter(|item| item.code() == REST)
             .filter_map(|item| {
-                let centre = rest::centre(&render, item)?;
                 let id = doc.id_at(item.id.0 as usize)?;
                 let mut draft = Draft::of(item.item);
-                draft.set(CENTRE, centre);
-                Some((id, draft.to_item()))
+                let in_reach = selected.is_empty() || selected.contains(&id);
+                (in_reach && place(&render, item, &mut draft)).then(|| (id, draft.to_item()))
             })
             .filter(|(id, item)| doc.item(*id) != Some(item))
             .collect();
-        centred.into_iter().for_each(|(id, item)| {
+        placed.into_iter().for_each(|(id, item)| {
             self.tx.replace(id, item);
         });
     }
