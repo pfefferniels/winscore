@@ -251,6 +251,7 @@ class Result:
     outcome: str = ""                     # match, differs, failed, invalid
     findings: list[dict] = field(default_factory=list)
     reason: str = ""
+    engine_points: dict[int, int] = field(default_factory=dict)   # file item -> points the engine drew for it
 
     def codes(self) -> set[int]:
         return {f["code"] for f in self.findings if f.get("code") is not None}
@@ -288,9 +289,18 @@ def evaluate(cases: list[FuzzCase], directory: Path) -> list[Result]:
         if not w.valid:
             results.append(Result(c, False, "invalid", reason="; ".join(w.reasons)))
             continue
-        results.append(Result(c, True, row.get("result", "failed"), row.get("findings", []), row.get("reason", "")))
+        results.append(Result(c, True, row.get("result", "failed"), row.get("findings", []), row.get("reason", ""),
+                              points_per_item(directory / c.name / "engine.json")))
     shutil.rmtree(directory, ignore_errors=True)
     return results
+
+
+def points_per_item(engine_json: Path) -> dict[int, int]:
+    counts: Counter = Counter()
+    for shape in json.loads(engine_json.read_text())["shapes"]:
+        if shape.get("item") is not None:
+            counts[shape["item"]] += sum(len(path) for path in shape["paths"])
+    return dict(counts)
 
 
 def evaluate_batch(cases: list[FuzzCase]) -> list[Result]:
@@ -313,6 +323,8 @@ def deviation(item: Item) -> str | None:
         (c == 6 and item.p(10) == 0 and item.p(8) <= 0 and item.p(13) != 0, "second partial with stale line (impl-beams)"),
         (c == 6 and item.p(8) != 0 and int(item.p(17)) >= 1, "beam number letter from P17 (impl-beams, by design)"),
         (c == 12 and item.p(16) == 1, "box P16 = 1 cm scaling (impl-lines, not imitated)"),
+        (c == 7 and item.p(7) == 1 and (item.p(16) == 1 or item.p(18) != 0),
+         "harp diagram boxes read P16 as the box cm flag (impl-lines, not imitated)"),
         (c == 9 and item.p(5) in (949, 959, 1128), "library slot with start offset <= 0 (impl-symbols)"),
         (c == 8 and item.p(2) == 1 and item.p(10) != 0,
          "staff 1 placed by its own P10 moves on every draw (engine; analysis/engine/coordinates.md)"),
@@ -320,8 +332,13 @@ def deviation(item: Item) -> str | None:
     return next((reason for applies, reason in rules if applies), None)
 
 
+POINT_BUFFER = 50_000   # add_point has no bound; beyond this the engine overwrites earlier coordinates (impl-symbols)
+
+
 def known_deviation(result: Result) -> str | None:
     codes = result.codes()
+    if any(points > POINT_BUFFER for points in result.engine_points.values()):
+        return "item with more than 50,000 points overflows the engine's point buffer (impl-symbols, not imitated)"
     return next((r for i in result.case.items if i.code in codes and (r := deviation(i))), None)
 
 
@@ -445,6 +462,7 @@ def main(argv: list[str]) -> int:
                 ROUNDS_FILE.write_text(json.dumps(rounds, indent=1) + "\n")
     finally:
         shutil.rmtree(SANDBOXES, ignore_errors=True)
+    prune_deviations(rechecked)
     REPORT.write_text(render_report(load_rounds(), {c["name"]: c for c in load_saved()}, rechecked))
     print(REPORT.read_text().split("\n## Saved")[0])
     return 0
@@ -466,6 +484,20 @@ def fuzz_round(args, pool) -> dict:
     return {"seed": args.seed, "per_code": args.per_code, "pages": args.pages,
             "counts": {label: dict(c) for label, c in sorted(per_code.items())},
             "deviations": dict(deviations.most_common()), "new_cases": new}
+
+
+def prune_deviations(rechecked: dict[str, "Result"]) -> None:
+    """Saved cases that a deviation rule now covers are no longer open bugs: drop them and their fixtures."""
+    keep = []
+    for entry in load_saved():
+        result = rechecked.get(entry["name"])
+        reason = known_deviation(result) if result is not None and result.outcome != "match" else None
+        if reason:
+            print(f"dropped {entry['name']}: {reason}")
+            shutil.rmtree(FIXTURES / entry["name"], ignore_errors=True)
+        else:
+            keep.append(entry)
+    CASES_FILE.write_text(json.dumps(keep, indent=1) + "\n")
 
 
 def load_rounds() -> list[dict]:
