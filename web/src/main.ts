@@ -142,9 +142,10 @@ function itemLine(): string {
   }
 }
 
-/** The command bar's answer: what just happened, then the item in edit mode. */
-function report(label: string | null) {
-  message([label, itemLine()].filter(Boolean).join(' · '));
+/** The command bar's answer: what just happened, then the item in edit mode; the engine's own message instead when it has one. */
+function report(change: Change | null) {
+  if (change?.message) message(change.message, true);
+  else message([change?.label, itemLine()].filter(Boolean).join(' · '));
   showPrompt();
 }
 
@@ -331,7 +332,7 @@ function edited(change: Change | null, live: boolean) {
     refreshItemList();
     refreshPanel();
     void loadFontsAndRepaint();
-    report(change?.label ?? null);
+    report(change);
   }
   redraw(live);
 }
