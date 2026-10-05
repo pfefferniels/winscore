@@ -28,6 +28,7 @@ use crate::group::{GroupCommand, LayoutCommand, Order};
 use crate::error::EditError;
 use crate::params::Draft;
 use crate::session::{Deleted, Session};
+use beams::StemFit;
 use create::{StaffChoice, Template};
 use moves::{Axis, Move};
 use numeric::ParamOp;
@@ -93,8 +94,8 @@ enum SessionWord {
     JustifyRight,
     /// J [left right]: text justified between two positions.
     Justify,
-    /// ADJ: stems reach their beam.
-    AdjustStems,
+    /// ADJ, ADJX, ADX, ADF, ADFX: stems reach their beam.
+    AdjustStems(StemFit),
     /// CH [value]: one duration for the whole chord.
     ChordRhythm,
     /// PST: the items cut last, added again.
@@ -179,7 +180,10 @@ impl SessionWord {
             "CTX" => Self::CentreTextOnNote { skip_punctuation: true },
             "JR" => Self::JustifyRight,
             "J" => Self::Justify,
-            "ADJ" => Self::AdjustStems,
+            "ADJ" => Self::AdjustStems(StemFit { opposite: false, french: false }),
+            "ADJX" | "ADX" => Self::AdjustStems(StemFit { opposite: true, french: false }),
+            "ADF" => Self::AdjustStems(StemFit { opposite: false, french: true }),
+            "ADFX" => Self::AdjustStems(StemFit { opposite: true, french: true }),
             "CH" => Self::ChordRhythm,
             "PST" => Self::Paste,
             "PGR" => Self::PageRight,
@@ -328,7 +332,7 @@ impl Run<'_, '_> {
             }
             Some(SessionWord::JustifyRight) => self.justify_right(number),
             Some(SessionWord::Justify) => self.justify(number, args.get(1).and_then(Token::number)),
-            Some(SessionWord::AdjustStems) => self.adjust_stems(),
+            Some(SessionWord::AdjustStems(fit)) => self.adjust_stems(fit, number),
             Some(SessionWord::ChordRhythm) => self.chord_rhythm(number),
             None => self.edit_word(&word, args),
         }
