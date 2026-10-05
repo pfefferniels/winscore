@@ -56,7 +56,7 @@ The master list gets new positions from x_left to x_right:
 size  = f32(STAFF_STEP(lo) / 25)             # 1 for a P5 = 1 staff
 w(d)  = f32(d ** f32(0.5849624872207642))    # d in sixteenths; f32 at 0x7926DC = log2(1.5)
 fixed = sum of marker widths (table below), the last entry gets none
-unit  = f32(((x_right - x_left) - size*fixed) / sum of w)
+unit  = f32((f32(x_right - x_left) - size*fixed) / sum of w)
 x_1   = x_left,   x_{k+1} = f32(f32(width_k * (unit for durations | size for markers)) + x_k)
 ```
 
@@ -115,7 +115,7 @@ So slurs, ties, beams, lines, text, numbers and library symbols follow the notes
 
 ## 8. After the lineup
 
-Rests (code 2) with P5 <= -2 between x_left and the right end of the answer's x range get P9 = -1 (the item is extended to 9 parameters). Then the page is redrawn.
+Rests (code 2) with P5 <= -2 between x_left and the right end of the answer's x range get P9 = -1 (the item is extended to 9 parameters). Then the page is redrawn, and the redraw changes items too: `draw_rest` 0x519C38 replaces P9 = -1 of such a rest by its computed centre between the surrounding barlines (in the item, when it has more than 8 parameters). That step belongs to the rest's rendering and is not part of the models here.
 
 ## 9. Grace notes (0x4C5AD8)
 
@@ -157,8 +157,8 @@ What J leaves alone: values outside the box or of other staves, vertical paramet
 - The literal 200.05 / 200 in §3 ignores other page widths.
 - If no note, rest or clef lies in the system, 0x4C8290 returns early and the staff items keep their negated P2.
 - In 0x4C9510 the virtual anchors take their item reference from whatever the previous run left in the table; the model assumes a fresh engine, as in the oracle.
-- J keeps several values in globals from one staff (and one run) to the next: the ledger-line state, the small-clef flag, the previous chord's P4, P5, P9 and P12 (justify.py `JustifyState`). The grace pass keeps the last right width for keys (0x4C7374 sets none). Again the model starts from zero.
-- Ghidra's decompilation hides some f32 stores to scratch globals; in 0x4B63CD the stretch numerator is rounded to f32 before the division, which only the disassembly shows.
+- J keeps several values in globals from one staff (and one run) to the next: the ledger-line state, the small-clef flag, the previous chord's P4, P5, P9 and P12 (justify.py `JustifyState`). The grace pass keeps the last right width for keys (0x4C7374 sets none). Again the model starts from zero; LJ run twice in one engine still matched the model run twice (13/13 dense systems), so the carried values rarely matter.
+- Ghidra's decompilation hides some f32 stores to scratch globals, which only the disassembly shows: in 0x4CC470 x_right - x_left is rounded to f32 before the unit is computed, and in 0x4B63CD the stretch numerator before the division. Both were found as one-ulp differences (the first only on a real file).
 
 ## Verification
 

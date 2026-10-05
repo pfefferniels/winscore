@@ -451,7 +451,7 @@ def spacing(entries: list[float], size: float, left: float, right: float) -> lis
             w = marker_width(e, entries[k + 1])
             fixed = F(w + fixed)
         widths.append(w)
-    unit = F(((right - left) - size * fixed) / total)
+    unit = F((F(right - left) - size * fixed) / total)      # the difference is stored first (0x89FCDC)
     out, x = [], left
     for e, w in zip(entries, widths):
         out.append(x)
