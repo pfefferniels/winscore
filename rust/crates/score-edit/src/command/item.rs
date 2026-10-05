@@ -62,6 +62,8 @@ pub enum Op {
     /// Clef type (P5) with its vertical placement (P4).
     Clef { level: f32, kind: f32 },
     FlipSlur,
+    /// CR: the curvature 0x42C51C gives a slur of its length and slope.
+    DefaultCurve,
     SpaceAccidental(f32),
     UnspaceAccidental,
     RemoveDots,
@@ -146,6 +148,7 @@ impl Op {
                 draft.set(5, kind);
             }
             Op::FlipSlur => draft.set(SLUR_CURVE, -draft.get(SLUR_CURVE)),
+            Op::DefaultCurve => line::default_curve(draft),
             Op::SpaceAccidental(delta) => note::space_accidental(draft, delta),
             Op::UnspaceAccidental => note::unspace_accidental(draft),
             Op::RemoveDots => note::remove_dots(draft),
@@ -354,6 +357,7 @@ const OTHERS: &[Entry] = &[
     entry("RF", R, Op::Toggle { n: 8, value: -1.0 }, "Fermata on the rest on/off (P8 = -1)"),
     entry("RPR", R, Op::ToggleDigit { n: 5, unit: 100.0 }, "Rest in parentheses on/off (P5 ± 100)"),
     entry("CW", R, Op::Toggle { n: 9, value: -1.0 }, "Centre whole rest (P9 = -1)"),
+    entry("NON", R, Op::SetParam { n: 8, value: 0.0 }, "No number on the rest (P8 = 0)"),
     entry("RF-", R, Op::Toggle { n: 8, value: -2.0 }, "Inverted fermata below the rest on/off (P8 = -2)"),
     entry("RP", R, Op::SetParams(&[(5, -4.0), (9, -1.0)]), "Repeat-bar sign, centred (P5 = -4, P9 = -1)"),
     entry("WB", R, Op::WholeBarRest { european: false }, "Whole rest numbered n (P5 = -2, or -5 from 4; P8 = n, P9 = -1)"),
@@ -441,6 +445,8 @@ const LINES: &[Entry] = &[
     entry("SLTRIP", S, Op::ToggleTriplet, "Triplet number on/off (P16 = 3)"),
     entry("THM", S, Op::Nudge { n: 13, default: 1.0, delta: -0.05 }, "Thinner slur (P13 - .05)"),
     entry("THK", S, Op::SetParam { n: 13, value: 0.0 }, "Default slur thickness (P13 = 0)"),
+    entry("CR", S, Op::DefaultCurve, "Default curve for the slur's length and slope (P7)"),
+    entry("CRV", S, Op::DefaultCurve, "Default curve (P7), as CR"),
     entry("CRVP", S, Op::AddParam { n: 7, delta: 0.2 }, "More curve (P7 + .2)"),
     entry("CRVM", S, Op::AddParam { n: 7, delta: -0.2 }, "Less curve (P7 - .2)"),
     entry("MID", S, Op::SetParam { n: 10, value: 0.0 }, "Midpoint at the centre (P10 = 0)"),

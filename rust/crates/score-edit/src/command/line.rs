@@ -107,6 +107,23 @@ pub fn beam_tremolo(draft: &mut Draft, strokes: f32) {
     draft.set(10, 10.0 + strokes);
 }
 
+/// Slurs whose P8 is 1 or more (endings, tuplet brackets) keep their P7 under CR.
+const BRACKETS_FROM: f32 = 1.0;
+
+/// CR on a slur (0x42C51C): 0.9 plus a twentieth of its length (ties a
+/// little shorter) plus a tenth of its rise, downwards for a slur below.
+pub fn default_curve(draft: &mut Draft) {
+    let e = |k: usize| draft.get(k);
+    if e(8) >= BRACKETS_FROM {
+        return;
+    }
+    let length = e(6) - e(3);
+    let length = if -4.0 < e(8) && e(8) < -1.0 { e(8) * 2.0 + length } else { length };
+    let base = f64::from(length) / 20.0 + f64::from(0.9_f32);
+    let curve = (f64::from((e(5) - e(4)).abs()) * f64::from(0.1_f32) + base) as f32;
+    draft.set(7, if e(7) < 0.0 { -curve } else { curve });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
