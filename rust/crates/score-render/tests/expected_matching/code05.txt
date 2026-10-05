@@ -105,4 +105,5 @@ code05-tuplet-p9-open
 code05-tuplet-sloped
 code05-two-slurs
 fuzz-code05-p11-p16-2701e0
+fuzz-code05-p11-p16-41830b
 fuzz-code05-p11-p16-cf241b
