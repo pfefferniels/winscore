@@ -3,9 +3,10 @@
 A code-16 item starts with "t" in place of 16 and lists P2 to P11; its characters follow
 on the next line. P12 is their count. Some listings (Sapp's 1999 files) stop at P11, so
 P13, the string length SCORE computes, stays 0; others (Sapp's "SCORE 4 PMX" of 2014) also
-list P12 and P13. A text item without characters is left out: the engine deletes it as an
-unknown code. Lines starting with "#" or with code 99 are comments, lines starting with
-"@" are scorelib's named parameters, and two-letter SCORE commands (RS, SM) are skipped.
+list P12 and P13. A text item without characters, or with nothing but font codes, is left
+out: the engine deletes it (as an unknown code, or with "No text found"). Lines starting with "#" or with code 99 are comments, lines starting with
+"@" are scorelib's named parameters, and two-letter SCORE commands (RS, SM) are skipped,
+as are "T" items with their following line (SVG markup).
 Trailing zero parameters are dropped as SCORE does when saving.
 """
 from __future__ import annotations
@@ -20,7 +21,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "oracle"))
 from musbuild import mus_bytes, text_item  # noqa: E402
 
 TEXT_CODE = 16
+TEXT = "t"
+MARKUP_TEXT = "T"     # Sapp's SVG markup in a text item (font _99), not SCORE content
 COMMENT_CODE = "99"   # a line of free text; the engine deletes a code-99 item as unknown
+FONT_CODES_ONLY = re.compile(r"(?:_+\d\d)*\s*")   # "No text found": the engine deletes the item
 
 
 def numbers(line: str) -> list[float] | None:
@@ -52,27 +56,33 @@ def is_item_code(value: float) -> bool:
     return value == int(value) and 1 <= value <= 99
 
 
+def is_skipped(code: str) -> bool:
+    return not code or code.startswith(("#", "@")) or is_command(code) or code.rstrip(".") == COMMENT_CODE
+
+
 def pmx_items(source: str) -> list | None:
-    """The items as parameter lists or packed text items, or None if this is not SCORE PMX."""
-    items = []
+    """The items as parameter lists or packed text items, or None if this is not SCORE PMX.
+    Lines that are not items may follow the listing (bol.sapp.org files end with three)."""
+    items, ended = [], False
     lines = iter(source.splitlines())
     for line in lines:
         code, _, rest = line.strip().partition(" ")
-        if not code or code.startswith(("#", "@")) or is_command(code):
+        if is_skipped(code):
             continue
-        if code == "t":
+        if code in (TEXT, MARKUP_TEXT):
             head, text = numbers(rest), next(lines, None)
-            if head is None or text is None:
+            if head is None or text is None or ended:
                 return None
-            if text:
+            if code == TEXT and not FONT_CODES_ONLY.fullmatch(text):
                 items.append(text_item(text_params(head, text.encode("latin-1")), text.encode("latin-1")))
-            continue
-        if code.rstrip(".") == COMMENT_CODE:
             continue
         params = numbers(line)
         if not params or not is_item_code(params[0]):
+            ended = True
+        elif ended:
             return None
-        items.append(without_trailing_zeros(params))
+        else:
+            items.append(without_trailing_zeros(params))
     return items or None
 
 
