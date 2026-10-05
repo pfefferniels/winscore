@@ -82,3 +82,19 @@ address	name	confidence	role
 005ff381	anint	read	Fortran ANINT: x +/- 0.5 in f64, chopped (numerics.md)
 00432998	read_user_symbols	read	code 11: reads KH (Fortran unformatted) symbol files (impl-symbols)
 00430ec0	load_guitar_dat	read	reads scorlib/GUITAR.DAT chord dictionary (impl-symbols)
+004f7808	sort_items	verified	sort: P3 to 1/100, order by staff, P3, code > 2, P4 (layout.md §2)
+00534c40	staff_events	verified	lineup: events (x, duration or -code) of one staff (layout.md §3)
+0053572c	shortest_open_value	verified	lineup: event duration = smallest open value, the rest carried over
+004c9510	lineup	verified	LI core: anchors, events per staff, merges, spacing, apply (layout.md §4)
+004cb78b	merge_durations	verified	lineup: split master durations at a new staff's onsets
+004cc470	lineup_spacing	verified	lineup: d**log2(1.5) spacing and marker widths (layout.md §5)
+004c8290	lineup_apply	verified	lineup: per-staff segment mapping with +1000 parking, clefs placed (layout.md §6)
+004cc8a9	lineup_align	verified	lineup: one staff's events against the master list
+0049b1d8	select_items	verified	selects item parameters in an x and staff range (globals 0x1FBB860..87C) into the list at 0x20492A4
+0049bb13	move_selected	verified	moves the selected parameters: shift, or linear map (mode < 0)
+004cb010	lineup_others	verified	lineup: interpolates x parameters of codes 4-7, 9-13, 15, 16 between anchors (layout.md §7)
+004cb2ea	interpolate_x	verified	lineup: one parameter between its two anchors
+004c5ad8	place_grace_notes	read	lineup: grace notes (P7 >= 64) before their main notes
+004b6f4a	justify	read	J: columns per staff, merge, redistribution (layout.md §9)
+004bcd68	justify_columns	read	J: left/right space needs of the columns of one staff
+004b5db0	justify_distribute	read	J: takes the needed space from the free space
