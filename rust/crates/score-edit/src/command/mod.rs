@@ -8,6 +8,7 @@
 
 pub mod beams;
 pub mod create;
+mod drawn;
 pub mod groups;
 pub mod item;
 pub mod line;
@@ -209,6 +210,7 @@ pub fn is_supported(line: &str) -> bool {
                 || Move::parse(&word, first_number(&tokens[1..])).is_some_and(Move::is_complete)
                 || item::is_edit_word(&word)
                 || create::template(&word).is_some()
+                || drawn::centred_staves(&word, &numbers_after(&tokens)).is_some()
         }
         Some(_) => numeric::param_ops(&tokens).is_some_and(|ops| ops.is_ok()),
     }
@@ -225,6 +227,10 @@ fn word_and_args(tokens: &[Token]) -> Result<(String, &[Token]), EditError> {
         Some((other, _)) => Err(EditError::UnknownCommand(format!("{other:?}"))),
         None => Err(EditError::UnknownCommand(String::new())),
     }
+}
+
+fn numbers_after(tokens: &[Token]) -> Vec<f32> {
+    tokens.iter().skip(1).filter_map(Token::number).collect()
 }
 
 fn first_number(args: &[Token]) -> Option<f32> {
@@ -343,6 +349,11 @@ impl Run<'_, '_> {
         }
         if let Some(command) = LayoutCommand::word(&word) {
             return self.start_layout(command, args);
+        }
+        let numbers: Vec<f32> = args.iter().filter_map(Token::number).collect();
+        if let Some(staff) = drawn::centred_staves(&word, &numbers) {
+            self.centre_whole_rests(staff);
+            return Ok(());
         }
         if let Some(order) = Order::word(&word) {
             return self.reorder(order);

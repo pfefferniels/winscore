@@ -58,6 +58,8 @@ pub struct Session {
     pub transposition: Leftover,
     /// A message the engine would show for the last action.
     pub message: Option<String>,
+    /// What was said so far in a pending command's dialogue.
+    pub dialogue: Option<String>,
 }
 
 /// The slider changes P2 until QPn chooses another parameter.
@@ -82,6 +84,7 @@ impl Default for Session {
             slider_param: DEFAULT_SLIDER_PARAM,
             transposition: Leftover::default(),
             message: None,
+            dialogue: None,
         }
     }
 }
