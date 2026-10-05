@@ -194,12 +194,22 @@ try {
     const r = document.getElementById('viewport').getBoundingClientRect();
     return { x0: r.left + 6, y0: r.top + 6, x1: r.left + r.width * 0.6, y1: r.top + r.height * 0.95 };
   });
-  await page.mouse.move(area.x0, area.y0);
-  await page.mouse.down();
-  await page.mouse.move(area.x1, area.y1, { steps: 5 });
-  await page.mouse.up();
+  const drawBox = async () => {
+    await page.mouse.move(area.x0, area.y0);
+    await page.mouse.down();
+    await page.mouse.move(area.x1, area.y1, { steps: 5 });
+    await page.mouse.up();
+  };
+  await drawBox();
   assert.match(await page.textContent('#item h2'), /\(\+\d+ selected\)/);
   await page.keyboard.press('Escape');
+
+  // While a group command waits for its area, the box answers it (editor-core's draw_box).
+  await page.click('#palette button:text-is("Move area")');
+  await drawBox();
+  assert.match(await page.textContent('#prompt'), /^Enter destination staff/);
+  await page.click('#prompt-cancel');
+  assert.ok(await page.isHidden('#prompt'));
 
   assert.deepEqual(errors, []);
 
