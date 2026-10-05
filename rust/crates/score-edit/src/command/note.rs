@@ -237,6 +237,17 @@ pub fn space_accidental(draft: &mut Draft, delta: f32) {
     }
 }
 
+/// ASP: a note with an accidental gets the fraction .22 in P5 (.26 for
+/// digit 2), moving the accidental 2.2 (2.6) steps left; without one P13 + .5.
+pub fn space_chord_accidental(draft: &mut Draft) {
+    let p5 = draft.get(STEM);
+    match StemDigits::of(p5).accidental {
+        0 => draft.add(13, 0.5),
+        2 => draft.set(STEM, p5.trunc() + 0.26),
+        _ => draft.set(STEM, p5.trunc() + 0.22),
+    }
+}
+
 /// NOS: the accidental back at its normal place.
 pub fn unspace_accidental(draft: &mut Draft) {
     let p5 = draft.get(STEM);
