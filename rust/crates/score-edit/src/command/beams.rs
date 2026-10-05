@@ -289,6 +289,24 @@ impl Run<'_, '_> {
         Ok(())
     }
 
+    /// ADOF: each selected beam's P9 marks where notes with stems against
+    /// it sit (0x419498); CNX centres the beams first.
+    pub fn stem_offsets(&mut self) -> Result<(), EditError> {
+        let all: Vec<Draft> = self.tx.doc().file().items.iter().map(Draft::of).collect();
+        let beams: Vec<(ItemId, Draft)> = self
+            .session
+            .selection()
+            .iter()
+            .filter_map(|&id| Some((id, Draft::of(self.tx.doc().item(id)?))))
+            .filter(|(_, d)| d.code() == BEAM)
+            .collect();
+        beams.into_iter().for_each(|(id, mut beam)| {
+            beam.set(DOTS_TAILS, auto_beam::stem_side_flags(&beam, &all));
+            self.tx.replace(id, beam.to_item());
+        });
+        Ok(())
+    }
+
     fn drafts(&self) -> Vec<(ItemId, Draft)> {
         self.tx.doc().entries().map(|(id, item)| (id, Draft::of(item))).collect()
     }

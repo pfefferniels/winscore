@@ -352,7 +352,7 @@ impl AutoBeam {
     fn finish(&mut self, all_stems: bool, target: Target) -> Draft {
         let mut length = self.item(target).len();
         if all_stems {
-            let p9 = self.stem_side_flags(&Draft::new(&self.e[1..=length]));
+            let p9 = stem_side_flags(&Draft::new(&self.e[1..=length]), &self.items);
             if p9 != 0.0 {
                 self.e[9] = p9;
                 if length < 9 {
@@ -365,33 +365,33 @@ impl AutoBeam {
         }
         Draft::new(&self.e[1..=length])
     }
+}
 
-    /// Digits of P9 for the beam's ends (hundreds), second beam (tens) and
-    /// third beam (units) where a note with the opposite stem sits: 1 at the
-    /// start, 2 at the end, 3 when marked twice.
-    fn stem_side_flags(&self, beam: &Draft) -> f32 {
-        let e = |k: usize| beam.get(k);
-        let staff = e(2).trunc();
-        let direction = (e(7).trunc() as i32 / 10).abs();
-        let or_end = |v: f32, end: f32| if v == -1.0 { end } else { v };
-        let starts = [e(3), or_end(e(11), e(3)), or_end(e(14), e(3))];
-        let ends = [e(6), or_end(e(12), e(6)), or_end(e(15), e(6))];
-        let mut digits = [0u32; 3];
-        let mut last = -9999.0;
-        for note in &self.items {
-            let x = note.get(3);
-            let candidate = note.get(2).trunc() == staff && note.code() == NOTE && x <= e(6) && last != x && e(3) <= x && note.len() > 4;
-            let stem = stem_digit(note);
-            if !candidate || stem == 0 || stem == direction {
-                continue;
-            }
-            let mut mark = |slot: usize, side: u32| digits[slot] = if digits[slot] != 0 { 3 } else { side };
-            (0..3).filter(|&s| starts[s] == x).for_each(|s| mark(s, 1));
-            (0..3).filter(|&s| ends[s] == x).for_each(|s| mark(s, 2));
-            last = x;
+/// 0x419498: digits of P9 for the beam's ends (hundreds), second beam (tens)
+/// and third beam (units) where a note with the opposite stem sits: 1 at the
+/// start, 2 at the end, 3 when marked twice.
+pub fn stem_side_flags(beam: &Draft, items: &[Draft]) -> f32 {
+    let e = |k: usize| beam.get(k);
+    let staff = e(2).trunc();
+    let direction = (e(7).trunc() as i32 / 10).abs();
+    let or_end = |v: f32, end: f32| if v == -1.0 { end } else { v };
+    let starts = [e(3), or_end(e(11), e(3)), or_end(e(14), e(3))];
+    let ends = [e(6), or_end(e(12), e(6)), or_end(e(15), e(6))];
+    let mut digits = [0u32; 3];
+    let mut last = -9999.0;
+    for note in items {
+        let x = note.get(3);
+        let candidate = note.get(2).trunc() == staff && note.code() == NOTE && x <= e(6) && last != x && e(3) <= x && note.len() > 4;
+        let stem = stem_digit(note);
+        if !candidate || stem == 0 || stem == direction {
+            continue;
         }
-        (digits[0] * 100 + digits[1] * 10 + digits[2]) as f32
+        let mut mark = |slot: usize, side: u32| digits[slot] = if digits[slot] != 0 { 3 } else { side };
+        (0..3).filter(|&s| starts[s] == x).for_each(|s| mark(s, 1));
+        (0..3).filter(|&s| ends[s] == x).for_each(|s| mark(s, 2));
+        last = x;
     }
+    (digits[0] * 100 + digits[1] * 10 + digits[2]) as f32
 }
 
 #[cfg(test)]

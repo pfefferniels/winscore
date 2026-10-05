@@ -216,6 +216,7 @@ pub fn is_supported(line: &str) -> bool {
                 || GroupCommand::word(&word).is_some()
                 || LayoutCommand::word(&word).is_some()
                 || auto_beam::Word::parse(&word).is_some()
+                || matches!(word.as_str(), "ADOF" | "CNX")
                 || Order::word(&word).is_some()
                 || Move::parse(&word, first_number(&tokens[1..])).is_some_and(Move::is_complete)
                 || item::is_edit_word(&word)
@@ -297,6 +298,14 @@ impl Run<'_, '_> {
         let number = first_number(args);
         if let Some(auto) = auto_beam::Word::parse(&word).filter(|_| self.selected_codes().contains(&6)) {
             return self.auto_beam(auto);
+        }
+        match word.as_str() {
+            "ADOF" => return self.stem_offsets(),
+            "CNX" => {
+                self.center(number)?;
+                return self.stem_offsets();
+            }
+            _ => {}
         }
         match SessionWord::parse(&word) {
             Some(SessionWord::Leave) => self.leave(number),
