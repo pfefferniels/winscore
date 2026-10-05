@@ -30,16 +30,20 @@ mod line;
 pub mod marks;
 mod motives;
 pub mod notes;
+mod num;
+mod refit;
 pub mod rhythm;
 mod scan;
 mod slurs;
 mod spacing;
+mod stems;
 
 use score_format::Item;
 
 pub use error::{ErrorKind, InputError, Pass, Span};
 pub use file::{InputFile, InputLine, StaffArgs, Step};
 pub use motives::Motives;
+pub use refit::{refit, refit_staves, RefitError, RefitErrorKind, RefitMode, StavesRefit};
 
 /// The texts of the five passes, each ending with `;`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -103,6 +107,7 @@ pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motive
     let mut line = line::Line::new(&timed, options);
     marks::apply(&mut line, &marks)?;
     beams::apply(&mut line, &beams)?;
-    slurs::apply(&mut line, &slurs, (options.begin, options.end))?;
-    Ok(line.items())
+    slurs::apply(&mut line, &slurs, (options.begin, options.end), slurs::STAFF_END)?;
+    // 0x5253FD stores the line, then fits the stems to the beams in the item store.
+    Ok(stems::fit_items(&line.items(), i32::from(options.staff), 25.0 * options.size))
 }

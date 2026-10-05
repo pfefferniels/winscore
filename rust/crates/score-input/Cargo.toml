@@ -7,3 +7,6 @@ description = "SCORE's staged music input (the IN command's five passes), conver
 
 [dependencies]
 score-format = { path = "../score-format" }
+
+[dev-dependencies]
+score-layout = { path = "../score-layout" }

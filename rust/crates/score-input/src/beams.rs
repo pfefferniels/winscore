@@ -1,7 +1,7 @@
 //! Pass 4: beams as code-6 items, and the stems of the beamed notes.
 //!
-//! Ported from the engine's beam routine 0x413CA8, its beam-line routine 0x559F38 and the
-//! stem adjustment 0x40CDE4/0x40C1C0 that runs when the work table is written back.
+//! Ported from the engine's beam routine 0x413CA8 and its beam-line routine 0x559F38; the
+//! stems reach the beams later, on the stored items (stems.rs).
 
 use crate::connect::{ConnectEntry, Connection, Side};
 use crate::error::InputError;
@@ -409,6 +409,8 @@ impl Beamer<'_> {
             return Vec::new();
         }
         let first_grace = grace(first);
+        // 0x413CA8 encodes the beam for small notes (|P4| >= 100) when the first note is one.
+        let small_first = self.line.note(first).is_some_and(Note::is_small);
         // 0x41A4F9: a note that already has a beam direction keeps it, whatever the sign says.
         let typed = |side: Option<Side>| match side {
             Some(Side::Above) => UP,
@@ -424,7 +426,7 @@ impl Beamer<'_> {
         if self.beamed[first] == 0 {
             let stem_levels: Vec<i32> = (first..=last)
                 .filter_map(|n| self.line.note(n))
-                .filter(|n| !n.is_grace())
+                .filter(|n| !n.is_small())
                 .map(|n| n.stem_level())
                 .collect();
             let lowest = stem_levels.iter().copied().min().unwrap_or(99);
@@ -476,14 +478,14 @@ impl Beamer<'_> {
         let note_xs: Vec<f32> = (first..=last).filter_map(|n| self.line.note(n)).map(|n| n.x).collect();
         let (start, end, direction) = beam_line(&levels, &xs, (note_xs[0], note_xs[note_xs.len() - 1]), direction);
 
-        let (y1, y2, fewest) = if first_grace {
+        let (y1, y2, fewest) = if first_grace || small_first {
             let size = if (start as i32) < 0 { -100.0 } else { 100.0 };
             let offset = if direction >= DOWN { -0.8 } else { 0.8 };
             let mut y1 = offset + start + size;
-            if y1 > 90.0 && y1 < 100.0 {
+            if small_first && y1 > 90.0 && y1 < 100.0 {
                 y1 = -100.0 - (100.0 - y1);
             }
-            (y1, offset + end, 2)
+            (y1, offset + end, if first_grace { 2 } else { fewest })
         } else {
             let offset = end_offset(direction, start, end, most);
             (offset + start, offset + end, fewest)
@@ -542,36 +544,6 @@ impl Beamer<'_> {
     }
 }
 
-/// 0x40CDE4 with 0x40C1C0: every note under a beam whose stem goes the beam's way gets
-/// the stem length that reaches the beam, and loses its flags.
-fn fit_stems(line: &mut Line, beams: &[score_format::Item]) {
-    for beam in beams {
-        let (x1, y1, y2, x2) = (beam.param(3), beam.param(4), beam.param(5), beam.param(6));
-        let down = beam.param(7) as i32 / 10 == 2;
-        let grace_beam = (y1 / 100.0) as i32 != 0;
-        // Grace-note stems are drawn at 0.6 of the normal length.
-        let scale = if grace_beam { 0.6f32 } else { 1.0 };
-        let span = x2 - x1;
-        let start = y1 % 100.0;
-        for note in line.notes_mut() {
-            let in_range = note.x >= x1 - 0.1 && note.x <= x2 + 0.1;
-            if !in_range || note.down != down || note.rhythm.head() == 1 || note.is_grace() != grace_beam {
-                continue;
-            }
-            let level = note.stem_level() as f32;
-            let (mut a, mut b) = (start - level, y2 - level);
-            if down {
-                a = -a;
-                b = -b;
-            }
-            let fraction = (note.x - x1) as f64 / span as f64;
-            let reach = (fraction * (b as f64 - a as f64) + a as f64) as f32;
-            note.extension = reach / scale;
-            note.tails = 0;
-        }
-    }
-}
-
 /// A stem direction no beam can change: SU/SD fix the stems of the notes typed under them,
 /// and pass 2 fixes the other grace stems upward (0x51CF40).
 fn fixed_direction(note: &Note) -> i32 {
@@ -593,7 +565,6 @@ pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry]) -> Result<(), Inp
     let beamed: Vec<i32> = std::iter::once(0).chain(line.notes().map(fixed_direction)).chain(std::iter::once(0)).collect();
     let mut beamer = Beamer { line, beamed };
     let made: Vec<score_format::Item> = groups.into_iter().flat_map(|g| beamer.beam(g)).collect();
-    fit_stems(line, &made);
     line.attachments.extend(made);
     Ok(())
 }

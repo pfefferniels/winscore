@@ -165,6 +165,13 @@ fn clearance_of(code: i32) -> Clearance {
     }
 }
 
+/// The P11 mark `code` (negative: on the other side) on note `number`, as the refit
+/// (0x47C3E8) sends a note's stored mark to the marks pass.
+pub(crate) fn stored(code: i32, number: u32) -> Mark {
+    let kind = MarkKind::Head { code: code.abs(), clearance: clearance_of(code.abs()) };
+    Mark { kind, flipped: code < 0, target: Target::Notes { first: number, last: number } }
+}
+
 /// 0x4D9475 as the beam pass uses it: a note whose stem was turned by a beam gets the
 /// clearance of its mark computed again for the new stem side.
 pub(crate) fn recompute_clearance(note: &mut Note) {

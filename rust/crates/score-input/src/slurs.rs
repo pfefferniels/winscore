@@ -15,8 +15,8 @@ const PAST_LAST: usize = 99;
 /// Marks a slur end has to clear (0x797454): wedge, accent, tenuto, staccato, their
 /// combinations, heavy wedge, fingerings 0-5.
 const MARKS_TO_CLEAR: [i32; 14] = [4, 5, 6, 7, 8, 9, 10, 19, 30, 31, 32, 33, 34, 35];
-/// Right end of the staff, where a slur "to after the last note" ends (0x1FBB8B8).
-const STAFF_END: f32 = 200.0;
+/// The page's right limit (0x1FBB8B8), where a staff without P6 ends.
+pub(crate) const STAFF_END: f32 = 200.0;
 
 /// One entry of the engine's work table as the slur routine reads it.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -221,6 +221,9 @@ struct SlurInput<'a> {
     /// The input range, where slurs from before the first or past the last note end.
     begin: f32,
     end: f32,
+    /// The staff's right end (0x547AE0: P6 of the staff item, else the page's limit), where
+    /// a slur to after the last note ends.
+    staff_end: f32,
 }
 
 impl SlurInput<'_> {
@@ -319,7 +322,7 @@ impl SlurInput<'_> {
         }
 
         if count <= typed_second {
-            x2 = STAFF_END;
+            x2 = self.staff_end;
         }
         let try_tie = if typed_first == BEFORE_FIRST {
             x1 = self.entries[a].x - 8.0;
@@ -353,8 +356,10 @@ impl SlurInput<'_> {
             if shape.kind < -1.0 && shape.kind > -4.0 {
                 length += shape.kind * 2.0;
             }
-            let base = (length as f64 / 20.0 + 0.9) as f32;
-            shape.bend = (((shape.y2 - shape.y1).abs() as f64) * 0.1 + base as f64) as f32;
+            // One extended-precision expression with the engine's f32 constants (0x53D1E0).
+            let base = f64::from(length) / f64::from(20.0f32) + f64::from(0.9f32);
+            let rise = (f64::from(shape.y2) - f64::from(shape.y1)).abs();
+            shape.bend = (rise * f64::from(0.1f32) + base) as f32;
         }
         if direction == BELOW {
             shape.bend = -shape.bend;
@@ -395,11 +400,11 @@ impl SlurInput<'_> {
     }
 }
 
-pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry], (begin, end): (f32, f32)) -> Result<(), InputError> {
+pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry], (begin, end): (f32, f32), staff_end: f32) -> Result<(), InputError> {
     let mut work = line.work_entries();
     let note_entry: Vec<usize> = work.iter().enumerate().filter(|(_, e)| e.note.is_some()).map(|(i, _)| i).collect();
     let staff = line.staff;
-    let mut input = SlurInput { entries: &mut work, note_entry, staff, begin, end };
+    let mut input = SlurInput { entries: &mut work, note_entry, staff, begin, end, staff_end };
     let made: Vec<score_format::Item> = entries
         .iter()
         .filter_map(|entry| match entry {

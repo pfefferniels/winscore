@@ -25,6 +25,9 @@ pub enum Event {
     Meter(Meter),
     Stems(StemMode),
     Staff(StaffShift),
+    /// Cue-size notes from here on (true) or normal ones again (false); pass 1 codes 8001
+    /// and 8000, which the refit (0x47C3E8) sends for notes with |P4| >= 100.
+    Cue(bool),
 }
 
 impl Event {
