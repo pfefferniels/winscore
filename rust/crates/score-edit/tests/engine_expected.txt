@@ -8794,3 +8794,79 @@
 1 3 20 6 10 0 0.5 0 1
 1 3 30 8 10 0 0.5 0 1
 6 3 20 13 15 30 11
+== fl_fli
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 20 3 20 0 1 0 0 0 0
+1 1 30 9 10 0 1 0 0 0 0
+1 1 40 6 20 0 0.5 0 0 0 0
+6 1 40 6 7 50 21
+1 1 50 7 20 0 0.5 0 0 0 0
+== fl_fln
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 20 3 10 0 1 0 0 0 0
+1 1 30 9 20 0 1 0 0 0 0
+1 1 40 6 10 0 0.5 0 0 0 0
+6 1 40 6 7 50 11
+1 1 50 7 10 0 0.5 0 0 0 0
+== fl_flu_partial
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 20 3 20 0 1
+1 1 30 9 10 0 1 0 0 0 0
+1 1 40 6 10 0 1 0 0 0 0
+1 1 50 7 20 0 1
+== fl_fld_slur
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 20 3 20 0 1 0 0 0 0
+5 1 20 6 8 30 1.60000002
+1 1 30 5 20 0 1 0 0 0 0
+== fl_fln_unsorted
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 20 9 20 0 1 0 0 0 0
+1 1 30 6 10 0 1 0 0 0 0
+1 1 40 3 10 0 1 0 0 0 0
+== fl_two_staves
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 20 3 10 0 1 0 0 0 0
+1 1 30 9 20 0 1 0 0 0 0
+8 2 0 0 0 200
+1 2 20 3 10 0 1 0 0 0 0
+1 2 30 9 20 0 1 0 0 0 0
+== fl_tremolo_refused
+# question: Source Box O.K.? - -> yes
+# message: *** end of beam out of range, or tremolo, or P7 rhythm >= 1. - Can't flip Item     3
+8 1 0
+1 1 20 6 10 0 1
+6 1 20 13 14 30 -12
+1 1 30 8 10 0 1
+1 1 40 3 20 0 1
+== fl_box
+# question: Source Box O.K.? - -> yes
+8 1 0
+1 1 100 3 10 0 1 0 0 0 0
+1 1 120 9 20 0 1 0 0 0 0
+== fl_tr_stems_dialog
+# question: Source Box O.K.? - -> yes
+# dialog: transpose {13: -1, 10: 2, 11: 1}
+8 1 0
+17 1 9.99413395 0 3
+1 1 20.0941353 6 10 0 1 0 0 0 0
+1 1 30.0917892 9 20 0 1 0 0 0 0
+1 1 40.088562 7 20 0 0.5 0 0 0 0
+6 1 40.088562 7 8 50.0853348 21
+1 1 50.0853348 8 20 0 0.5 0 0 0 0
+== fl_tr_stems_typed
+8 1 0
+3 1 5 0 0
+1 1 20 7 22 0 1 0 0 0 0
+1 1 30 4 12 0 1 0 0 0 0
+== fl_tr_stems_slur
+8 1 0
+1 1 20 7 21 0 1 0 0 0 0
+5 1 20 10 12 40 3
+1 1 40 10 21 0 1 0 0 0 0

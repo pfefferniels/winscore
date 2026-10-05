@@ -224,6 +224,8 @@ pub enum GroupCommand {
     MoveUpDown,
     CopyToStaves,
     Transpose,
+    /// FLI, FLN, FLU, FLD: the staves' stems, beams and slurs refitted.
+    Refit(score_input::RefitMode),
 }
 
 impl GroupCommand {
@@ -236,6 +238,10 @@ impl GroupCommand {
             "MUD" | "MU" => Self::MoveUpDown,
             "CPX" => Self::CopyToStaves,
             "TR" => Self::Transpose,
+            "FLI" => Self::Refit(score_input::RefitMode::Invert),
+            "FLN" => Self::Refit(score_input::RefitMode::Normal),
+            "FLU" => Self::Refit(score_input::RefitMode::Up),
+            "FLD" => Self::Refit(score_input::RefitMode::Down),
             _ => return None,
         };
         Some(command)

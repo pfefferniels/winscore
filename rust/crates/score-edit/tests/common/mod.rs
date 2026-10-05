@@ -10,7 +10,7 @@ use std::path::PathBuf;
 /// engine create a text item without characters. The engine matches some
 /// words by their first letters, so in edit mode DBRS+ acts as DBF, LOFF0 and
 /// ROT0 as offsets, PLUS1 as the plus mark, UND as U, LJ and LJA as L, SPLn on a note
-/// as SPA- (P13), NON on a note as NOS, and with nothing
+/// as SPA- (P13), NON on a note as NOS, FLD/FLN/FLU on a note as FL, and with nothing
 /// selected NUML creates a number, L1 a note, THE or TN a text through the
 /// text dialog; the editor knows these words only in their own sense. The
 /// catalogue reads the engine's item store, which OS, OH and OT leave in
@@ -40,6 +40,9 @@ pub const DEVIATIONS: &[(&str, bool)] = &[
     ("NUMR", false),
     ("NUMU", false),
     ("NUMV0", false),
+    ("FLD", true),
+    ("FLN", true),
+    ("FLU", true),
     ("L1", false),
     ("LJ", true),
     ("LJA", false),

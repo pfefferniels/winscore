@@ -110,6 +110,10 @@ impl Run<'_, '_> {
             Pending::Area(GroupCommand::MoveUpDown) => self.wait(Pending::Steps(region(numbers)?)),
             Pending::Area(GroupCommand::CopyToStaves) => self.wait(Pending::Staves(region(numbers)?)),
             Pending::Area(GroupCommand::Transpose) => self.wait(Pending::Transposition(region(numbers)?)),
+            Pending::Area(GroupCommand::Refit(mode)) => {
+                self.refit(&region(numbers)?, mode);
+                Ok(())
+            }
             Pending::Transposition(_) => Ok(()),
             Pending::System(command) => {
                 let range = StaffRange::from_answer(numbers[0] as i32, numbers.get(1).map_or(0, |&n| n as i32));
@@ -303,6 +307,20 @@ impl Run<'_, '_> {
         let items = self.tx.doc().file().items.clone();
         self.rearrange(wanted.into_iter().map(|(i, _)| (Some(i), items[i].clone())).collect());
         Ok(())
+    }
+
+    /// FLI/FLN/FLU/FLD on `region` (0x494302): the file sorted, then each
+    /// staff's notes refitted (score-input); staves the engine gives up on
+    /// stay as it leaves them and are reported.
+    fn refit(&mut self, region: &Region, mode: score_input::RefitMode) {
+        let items = &self.tx.doc().file().items;
+        let sorted = layout::sort(items).unwrap_or_else(|error| error.layout);
+        let staves = (region.bottom as i32, region.top as i32);
+        let outcome = score_input::refit_staves(&sorted.items, staves, (region.left, region.right), mode);
+        self.rearrange(sorted.source.into_iter().map(Some).zip(outcome.items).collect());
+        let problems: Vec<String> = outcome.problems.iter().map(|(staff, kind)| format!("staff {staff}: {kind}")).collect();
+        self.session.message = (!problems.is_empty()).then(|| problems.join("; "));
+        self.session.clear();
     }
 
     /// TR on `region` with the dialog's values `how`, as one change of the file.

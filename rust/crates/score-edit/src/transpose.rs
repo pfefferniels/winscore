@@ -10,12 +10,15 @@
 //! guitar chords, moves the beams, and refits the slurs to the moved notes
 //! (0x55C373 and 0x55CB57). Key signatures left without accidentals are removed.
 //!
-//! Last, it justifies every staff of the area (J, score-layout). Not yet done
-//! here: normalizing stems (0x47C3E8) and the enharmonic change (±99 half steps).
+//! With the stem option the notes go through the refit (0x47C3E8,
+//! score-input) before the slurs are refitted. Last, it justifies every
+//! staff of the area (J, score-layout). Not done here: the enharmonic
+//! change (±99 half steps).
 
 use std::cmp::Ordering;
 
 use score_format::Item;
+use score_input::RefitMode;
 use score_layout::{self as layout, Layout, LayoutErrorKind, Options, StaffRange};
 
 use crate::group::Region;
@@ -121,7 +124,6 @@ impl Transposition {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Unsupported {
     Enharmonic,
-    StemNormalization,
     /// Beyond the ±30 half steps the engine's key table covers.
     Interval(i32),
     /// The engine's sort would garble the file.
@@ -132,7 +134,6 @@ impl std::fmt::Display for Unsupported {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Unsupported::Enharmonic => write!(f, "the enharmonic change is not implemented"),
-            Unsupported::StemNormalization => write!(f, "normalizing stems is not implemented yet"),
             Unsupported::Interval(h) => write!(f, "{h} half steps is beyond ±{MAX_HALF_STEPS}"),
             Unsupported::Layout(kind) => kind.fmt(f),
         }
@@ -170,9 +171,6 @@ pub fn transpose(
     }
     if how.half_steps.abs() > MAX_HALF_STEPS {
         return Err(Unsupported::Interval(how.half_steps));
-    }
-    if how.normalize_stems {
-        return Err(Unsupported::StemNormalization);
     }
     let mut rows = sorted(items)?;
     let area = Area { left: region.left, right: region.right };
@@ -557,8 +555,21 @@ fn transpose_staff(rows: &mut Vec<Row>, staff: i32, area: Area, how: &Transposit
     if found.beams || !found.ties.is_empty() {
         move_beams(rows, staff, area, beam_steps);
     }
+    if how.normalize_stems {
+        refit_stems(rows, staff, area);
+    }
     let after = note_shapes(rows, &found.entries);
     refit(rows, &slurs, &before, &after);
+}
+
+/// The stem option: the staff's notes in the area through the refit
+/// (0x47C3E8 in mode 2, score-input), which the engine runs between moving
+/// the beams and refitting the slurs. Where the refit gives up, the items
+/// stay as it leaves them.
+fn refit_stems(rows: &mut [Row], staff: i32, area: Area) {
+    let items: Vec<Item> = rows.iter().map(|row| row.draft.to_item()).collect();
+    let refitted = score_input::refit(&items, staff, (area.left, area.right), RefitMode::Normal).unwrap_or_else(|error| error.items);
+    rows.iter_mut().zip(refitted).for_each(|(row, item)| row.draft = Draft::of(&item));
 }
 
 /// Changes the clef of every entry to `new` (0x5611DA): notes keep their

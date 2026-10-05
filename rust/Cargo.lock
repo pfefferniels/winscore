@@ -69,6 +69,7 @@ name = "score-edit"
 version = "0.1.0"
 dependencies = [
  "score-format",
+ "score-input",
  "score-layout",
  "score-render",
 ]

@@ -303,8 +303,8 @@ fn transposition_keeps_ids_and_undoes_in_one_step() {
     assert_eq!(e.undo_label(), Some("Transpose"));
     e.undo();
     assert_eq!((e.index_of(note), p(&e, note, 4), p(&e, key, 5)), (Some(1), 6.0, 1.0));
-    let stems = Transposition { normalize_stems: true, ..up_a_tone };
-    assert!(matches!(e.transpose(&area, &stems), Err(EditError::NotImplemented(_))));
+    let enharmonic = Transposition { half_steps: 99, ..up_a_tone };
+    assert!(matches!(e.transpose(&area, &enharmonic), Err(EditError::NotImplemented(_))));
 }
 
 #[test]
