@@ -170,10 +170,6 @@ fn dialog_values(line: &str) -> Option<&str> {
     line.strip_prefix("!transpose").map(str::trim)
 }
 
-/// `!skip-lineup` makes the engine leave out the justification TR ends
-/// with, which score-edit does not do yet either.
-const SKIP_LINEUP: &str = "!skip-lineup";
-
 fn replay(case: &Case) -> (Vec<Stored>, Vec<String>) {
     let mut editor = Editor::new(mus_file(&case.base));
     let mut dragging = false;
@@ -184,9 +180,6 @@ fn replay(case: &Case) -> (Vec<Stored>, Vec<String>) {
         .filter_map(|c| {
             if let Some(values) = dialog_values(c) {
                 dialog = Some(values);
-                return None;
-            }
-            if c == SKIP_LINEUP {
                 return None;
             }
             let error = match mouse(c) {

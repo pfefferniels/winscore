@@ -179,6 +179,40 @@ pub enum Pending {
     Staves(Region),
     /// The values of WinScore's Transpose Setup dialog, for TR.
     Transposition(Region),
+    /// The system a layout command works on.
+    System(score_layout::Command),
+}
+
+/// The layout commands of score-layout, which work on a system of staves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LayoutCommand {
+    /// LI, J or LJ on the system the next answer names.
+    System(score_layout::Command),
+    /// LJA: LJ on every staff with notes, without asking.
+    All,
+}
+
+impl LayoutCommand {
+    pub fn word(word: &str) -> Option<Self> {
+        use score_layout::Command;
+        match word {
+            "LI" => Some(Self::System(Command::LineUp)),
+            "J" => Some(Self::System(Command::Justify)),
+            "LJ" => Some(Self::System(Command::LineUpAndJustify)),
+            "LJA" => Some(Self::All),
+            _ => None,
+        }
+    }
+
+    /// The word typed for a system command.
+    pub fn system_word(command: score_layout::Command) -> &'static str {
+        use score_layout::Command;
+        match command {
+            Command::LineUp => "LI",
+            Command::Justify => "J",
+            Command::LineUpAndJustify => "LJ",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -219,6 +253,7 @@ impl Pending {
             Pending::Steps(_) => "Enter the number of steps to move, plus or minus",
             Pending::Staves(_) => "Enter the staff numbers to copy to",
             Pending::Transposition(_) => TRANSPOSITION_PROMPT,
+            Pending::System(_) => "Enter Lowest Staff# of system and how many staves in system - or Draw Box.",
         }
     }
 }

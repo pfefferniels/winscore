@@ -23,7 +23,7 @@ use score_render::Document as RenderDocument;
 use crate::conditional;
 use crate::document::{ItemId, Transaction};
 use crate::drag::Ends;
-use crate::group::{GroupCommand, Order};
+use crate::group::{GroupCommand, LayoutCommand, Order};
 use crate::error::EditError;
 use crate::params::Draft;
 use crate::session::{Deleted, Session};
@@ -204,6 +204,7 @@ pub fn is_supported(line: &str) -> bool {
             let word = w.to_ascii_uppercase();
             SessionWord::parse(&word).is_some()
                 || GroupCommand::word(&word).is_some()
+                || LayoutCommand::word(&word).is_some()
                 || Order::word(&word).is_some()
                 || Move::parse(&word, first_number(&tokens[1..])).is_some_and(Move::is_complete)
                 || item::is_edit_word(&word)
@@ -339,6 +340,9 @@ impl Run<'_, '_> {
         let number = first_number(args);
         if let Some(command) = GroupCommand::word(&word) {
             return self.start_group(command, args);
+        }
+        if let Some(command) = LayoutCommand::word(&word) {
+            return self.start_layout(command, args);
         }
         if let Some(order) = Order::word(&word) {
             return self.reorder(order);

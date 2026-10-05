@@ -51,6 +51,7 @@ from musbuild import mus_bytes, text_item
 from sandbox import INSTALL
 
 DEFAULT_BASE = "8 1; 1 1 100 6 10 0 1"
+WORKERS = 4
 MOUSE_X, MOUSE_Y = 0x1A14950, 0x1A1494C
 MOUSE_UP_X, MOUSE_UP_Y = 0x1A14948, 0x1A14944
 VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4
@@ -263,7 +264,7 @@ def blocks(text: str) -> dict[str, str]:
 def update(cases_path: Path, expected_path: Path, pattern: str = "") -> None:
     cases = [c for c in parse_cases(cases_path.read_text(encoding="latin-1")) if re.search(pattern, c.name)]
     old = blocks(expected_path.read_text(encoding="latin-1")) if expected_path.exists() else {}
-    with ProcessPoolExecutor() as pool:
+    with ProcessPoolExecutor(WORKERS) as pool:
         fresh = dict(zip((c.name for c in cases), pool.map(report, cases)))
     order = [c.name for c in parse_cases(cases_path.read_text(encoding="latin-1"))]
     merged = [fresh.get(name) or old.get(name) for name in order]

@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use score_edit::group::{Region, TRANSPOSITION_PROMPT};
+use score_edit::score_layout::{Command as LayoutCommand, Options, StaffRange};
 use score_edit::transpose::Transposition;
 use score_edit::{EditError, Editor, ItemId};
 
@@ -315,4 +316,19 @@ fn tr_asks_for_its_area_and_then_the_dialog_values() {
     e.execute("half=-1").unwrap();
     assert_eq!(e.prompt(), None);
     assert_eq!(p(&e, e.id_at(1).unwrap(), 4), 5.0);
+}
+
+#[test]
+fn layout_commands_report_where_the_engine_gives_up() {
+    let mut e = editor_with(&[
+        &[8.0, 1.0, 0.0],
+        &[8.0, 2.0, 0.0, 0.0, 0.0, 200.0],
+        &[1.0, 1.0, 20.0, 6.0, 10.0, 0.0, 2.0],
+        &[1.0, 2.0, 20.0, 6.0, 10.0, 0.0, 1.0],
+    ]);
+    let system = StaffRange::from_answer(1, 2);
+    let change = e.lay_out(LayoutCommand::LineUp, system, &Options::default()).unwrap();
+    assert!(change.message.is_some_and(|m| m.contains("beats")));
+    e.execute("LI").unwrap();
+    assert!(e.prompt().is_some_and(|p| p.starts_with("Enter Lowest Staff#")));
 }
