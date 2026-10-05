@@ -1,4 +1,8 @@
 # Code 1 fixtures that must match the engine (tests/fixtures.rs). Add cases as they start to match.
+code01-corpus-mark-m29
+code01-corpus-mark29
+code01-corpus-mark29-down
+code01-corpus-mark29-p14
 code01-font-after-alpha
 code01-font-after-alpha-p21
 code01-font-after-fingering
