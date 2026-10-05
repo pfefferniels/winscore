@@ -161,6 +161,14 @@ On a slur (code 5) in edit mode these words reach 0x42C9B0 (second letter V or N
 - **CNL**: P3 = first note x of the staff - 0.2 * STEP (0.38 * STEP, at least 6, when P8 < -1); P6 = x of the note nearest to P6 (the last of equal distances; 0x42E82D).
 - **CNR**: P6 = x of the last barline of the staff (or of a barline spanning it with P4), minus 0.6 + 0.056 * STEP when P8 = -1; P3 = x of the note nearest to P3. Without a barline nothing happens (editor-core's observation).
 
+### Rests with numbers: WB, EU (verified in the oracle, read in 0x4359D0)
+
+On a rest in edit mode: `WBn` sets P5 = -2 (-5 when n >= 4), `EUn` sets P5 = -10 - n; both set P8 = n, P9 = -1 and P6 = 0. `...M n` / `...P n` subtract or add n to P8, `NON` sets P8 = 0. The values that then appear in P9 (and P6 for European rests other than -6) are written by the redraw (draw_rest 0x519C38, layout.md §8); score-render already computes them (`codes/rest.rs`: `centre`, `edit_p9`, and the edit-buffer P6).
+
+### ASP and the spacing words on a note (read in 0x4359D0, checked in the oracle)
+
+0x4359D0 matches note and rest words by their first two letters (table at 0x78F3DE: PR WI EN MK RH TR DO DD CU SP AS NO ST FL SH NA DB AC AD NT DU LO RO NS CH OF TM FC) and a set of three-letter words (0x78F415: FCF FCS FCN W AC TN STA WST AST TNS DNB UPB HAR FE ARS THE MO IMO HW TR TRF TRS TRN PLU ACT SO2 SO3 SO4 FNG FG1..FG6), most of which set the mark code P11. `ASP` (prefix AS): if the note has an accidental (P5 mod 10 != 0), P5 = trunc(P5) + 0.22 (0.26 for a flat, P5 mod 10 = 2), i.e. the accidental moves 2.2 (2.6) steps left; without an accidental P13 += 0.5. Observed: chord `1 1 30 5 13 0 1` + `1 1 30 7 1 0 1`, ASP on the first gives P5 = 13.22; a single `1 1 30 5 10 0 1` gives P13 = 0.5.
+
 ### Group re-input: FLU, FLD, FLI, FLN, FLA, FLV (read; modes checked in the oracle)
 
 `FL?` without an edit item goes 0x493E10 -> 0x494302: area answer, sort, then for every staff P1..P4 of the area 0x47C3E8(mode) on the x range P2..P3 (P3 = 0 means 200). Third letter: `I` 1 (invert every stemmed note), `N` 2 (no stem codes: automatic stems; the slur pass is skipped), `D` 3 (all stems down, pass-1 code 5020), `U` 4 (all up, 5010), `A` 5 (only the stem pass 0x40CDE4 with P2..P5 = the answer), `V` 6 (0x443B70, the CV routine). TR uses mode 2.
