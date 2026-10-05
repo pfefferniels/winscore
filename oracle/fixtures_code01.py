@@ -160,12 +160,14 @@ def offsets() -> list[Case]:
 
 
 def marks() -> list[Case]:
-    numbers = [single(f"p11-mark-{m}", f"mark P11 = {m}", p11=m) for m in range(1, 37) if m != 29]
+    numbers = [single(f"p11-mark-{m}", f"mark P11 = {m}", p11=m) for m in range(1, 41)]
     return numbers + [
-        *[single(f"p11-mark-{m}-down", f"mark P11 = {m}, stem down", p11=m, p5=20) for m in (5, 7, 14, 32)],
-        *[single(f"p11-mark-{label(m)}", f"mark P11 = {m} on the stem side", p11=m) for m in (-5, -7, -14, -32)],
+        *[single(f"p11-mark-{m}-down", f"mark P11 = {m}, stem down", p11=m, p5=20) for m in (5, 7, 14, 29, 32)],
+        *[single(f"p11-mark-{label(m)}", f"mark P11 = {m} on the stem side", p11=m) for m in (-5, -7, -14, -29, -32)],
         single("p11-mark-m32-down", "P11 = -32, stem down", p11=-32, p5=20),
         single("p11-mark-5.13", "P11 = 5.13: accent pushed 1.3 steps", p11=5.13),
+        single("p11-mark-29-p14", "P11 = 29 moved by P14 = -2", p11=29, p14=-2),
+        single("p11-mark-29-tails", "P11 = 29 on a note with two tails", p11=29, p9=2),
         single("p11-mark-m34.2-down", "P11 = -34.2, stem down", p11=-34.2, p5=20),
         single("p11-mark-7-high", "staccato on P4 = 12", p11=7, p4=12),
         single("p11-mark-7-low", "staccato on P4 = -2", p11=7, p4=-2),
