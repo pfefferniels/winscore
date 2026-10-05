@@ -7,6 +7,7 @@
 //! item is selected, as the engine puts new items straight into edit mode.
 
 pub mod beams;
+mod centre;
 pub mod create;
 mod drawn;
 pub mod groups;
@@ -473,11 +474,24 @@ impl Run<'_, '_> {
             .into_iter()
             .filter_map(|id| Some((id, Draft::of(self.tx.doc().item(id)?))))
             .collect();
+        let staves = RenderDocument::new(self.tx.doc().file()).staves;
         targets.into_iter().for_each(|(id, mut draft)| {
             let on = staff.unwrap_or(draft.get(2));
+            if (4..=7).contains(&draft.code()) {
+                let targets: Vec<centre::Target> = self
+                    .tx
+                    .doc()
+                    .entries()
+                    .map(|(other, item)| (other, Draft::of(item)))
+                    .filter(|(other, d)| *other != id && centre::is_target(&draft, d) && d.get(2) as i32 == on as i32)
+                    .map(|(_, d)| centre::Target(d))
+                    .collect();
+                centre::centred(&draft, &targets, &staves).into_iter().for_each(|(n, value)| draft.set(n, value));
+                self.tx.replace(id, draft.to_item());
+                return;
+            }
             let ends: &[usize] = match draft.code() {
-                6 => &[3, 6],
-                4 | 5 | 7 | 8 | 14 => &[],
+                8 | 14 => &[],
                 _ => &[3],
             };
             ends.iter().for_each(|&n| {
