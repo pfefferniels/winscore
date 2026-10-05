@@ -70,12 +70,21 @@ fn params(item: &Item) -> Vec<f32> {
     item.params().iter().map(|w| w.as_f32()).collect()
 }
 
+/// P9 of a whole-measure rest marked -1 for centring: the engine's draw_rest replaces it
+/// with the centre when it draws the score after the command, which is not part of the
+/// layout command itself.
+fn drawn_centre(item: &Item, k: usize) -> bool {
+    item.code() == 2 && k == 8 && item.param(9) == -1.0
+}
+
 /// The first parameter that differs by more than the tolerance (missing ones count as 0).
 fn difference(ours: &Item, engine: &Item) -> Option<String> {
     let (a, b) = (params(ours), params(engine));
     let n = a.len().max(b.len());
     let get = |v: &[f32], k: usize| v.get(k).copied().unwrap_or(0.0);
-    (0..n).find(|&k| (get(&a, k) - get(&b, k)).abs() > TOLERANCE).map(|k| format!("P{}: ours {:?} engine {:?}", k + 1, a, b))
+    (0..n)
+        .find(|&k| (get(&a, k) - get(&b, k)).abs() > TOLERANCE && !drawn_centre(ours, k))
+        .map(|k| format!("P{}: ours {:?} engine {:?}", k + 1, a, b))
 }
 
 #[test]
