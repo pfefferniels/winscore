@@ -32,6 +32,8 @@ Callers: static call sites (through the incremental-linking thunks) plus calls s
 | `494026` | `redraw` | fit_view then draw_items | 444745, 493e10, cmd_get | read |
 | `494C38` | `load_score` |  | cmd_get, 4ccf20, 4d6318, 54b1fc | inferred |
 | `498BF0` | `select_nearest` | click selection: nearest item anchor (editing.md) | interpret | read |
+| `49B1D8` | `select_items` | selects item parameters in an x and staff range (globals 0x1FBB860..87C) into the list at 0x20492A4 | 442800, 443b70, 445143, 44586d, 4a217d, justify (+7) | verified |
+| `49BB13` | `move_selected` | moves the selected parameters: shift, or linear map (mode < 0) | 442800, 445fff, lineup_apply, 510430, 5770d8 | verified |
 | `49EAE0` | `draw_box_guitar` | code 12 with P5 < 0: guitar chord grid from GUITAR.DAT (loader 0x430EC0, lookup 0x4A07B1; impl-symbols) | draw_item | read |
 | `4A060D` | `box_outline` | closed rectangle polyline from the corner globals 0x1F93E60..0x1F93E7C (code-12 boxes, page frame) | draw_beam, draw_box, draw_box_guitar, note_marks | read |
 | `4A30BB` | `ask_source_box` | asks 'Source Box O.K.?' through the yes/no callback 0x595CD0 | 40f003, 445fff, 494302, 4a217d, 4b041d, lineup_answer (+3) | verified |
@@ -40,11 +42,32 @@ Callers: static call sites (through the incremental-linking thunks) plus calls s
 | `4A830B` | `read_prefs` | parses scorlib/PREF.DAT (prefs.md) | 4a7440, 4aac7d | verified |
 | `4AEFA0` | `input_pass` | IN: parse one pass text and dispatch on the pass number |  | read |
 | `4AFB68` | `cmd_I` | commands starting with I: I n (edit item n), II, IN (staged input); also entered after item creation | interpret | read |
+| `4B5DB0` | `justify_distribute` | J: takes the needed space from the free space | justify, 4b8b97 | verified |
+| `4B63CD` | `justify_stretch` | J: stretches the selected values inside one gap | justify_distribute | verified |
+| `4B6593` | `justify_shift` | J: shifts the selected values at or right of x | justify_distribute | verified |
+| `4B6657` | `rest_widths` | J: left/right needs of a rest | justify_columns, 50e830 | verified |
+| `4B6818` | `barline_widths` | J: left/right needs of a barline by P5 | justify_columns, 50e830 | verified |
+| `4B6A52` | `meter_widths` | J: left/right needs of a meter | justify_columns, 50e830 | verified |
+| `4B6C51` | `key_widths` | J: left/right needs of a key signature | justify_columns, 50e830 | verified |
+| `4B6CED` | `load_p_array` | J: copies P3..P14 of an item into the P array at 0x1C58924 | justify_columns, 50e830 | verified |
+| `4B6F4A` | `justify` | J: columns per staff, merge, redistribution (layout.md §10) | lineup_pass | verified |
+| `4B7468` | `justify_split_gap` | J: proportional share of a gap's need when another staff splits it | justify | verified |
 | `4B7AD8` | `cmd_lineup` | LJ/LI/J: prompts for the system | 4a2c81 | read |
 | `4B80B7` | `lineup_pass` | LJ/LI/J main pass | 47a4a8, cmd_lineup, lineup_answer, 51ffc0, input_main, 52fb54 (+2) | read |
 | `4B906D` | `lineup_answer` | LJ/LI/J: takes the staff answer or box, confirms, runs | interpret, cmd_lineup | read |
+| `4BCD68` | `justify_columns` | J: left/right space needs of the columns of one staff | justify | verified |
 | `4BF4F8` | `draw_keysig` | code 17 | draw_item | read |
 | `4BFA59` | `draw_meter` | code 18 | draw_item | read |
+| `4C5AD8` | `place_grace_notes` | lineup: grace notes (P7 >= 64) placed before their main notes (layout.md §9) | lineup | verified |
+| `4C7374` | `grace_widths` | lineup: left/right widths of grace notes and their anchors | place_grace_notes | verified |
+| `4C795B` | `grace_fit` | lineup: how much of its width a grace group may keep | place_grace_notes | verified |
+| `4C8290` | `lineup_apply` | lineup: per-staff segment mapping with +1000 parking, clefs placed (layout.md §6) | lineup | verified |
+| `4C9510` | `lineup` | LI core: anchors, events per staff, merges, spacing, apply (layout.md §4) | lineup_pass, 54aaf8 | verified |
+| `4CB010` | `lineup_others` | lineup: interpolates x parameters of codes 4-7, 9-13, 15, 16 between anchors (layout.md §7) | lineup | verified |
+| `4CB2EA` | `interpolate_x` | lineup: one parameter between its two anchors | lineup_others | verified |
+| `4CB78B` | `merge_durations` | lineup: split master durations at a new staff's onsets | lineup | verified |
+| `4CC470` | `lineup_spacing` | lineup: d**log2(1.5) spacing and marker widths (layout.md §5) | lineup | verified |
+| `4CC8A9` | `lineup_align` | lineup: one staff's events against the master list | lineup_apply | verified |
 | `4ECDF8` | `input_pitches` | IN pass 1: work table from pitches | 47c3e8, input_pass | verified |
 | `4EFEC0` | `draw_note` | code 1 | draw_item | read |
 | `4F06BB` | `note_tails` | tails (flags), IP9 % 10, via draw_clef/draw_symbol | draw_note | read |
@@ -54,6 +77,7 @@ Callers: static call sites (through the incremental-linking thunks) plus calls s
 | `4F2279` | `note_marks` | marks (P11) | draw_note | read |
 | `4F2F31` | `note_accidental` | accidental, IP5 % 10 | draw_note | read |
 | `4F65A8` | `draw_number` | code 10; also staff numbers | draw_clef, draw_meter, note_marks, draw_rest, 53bfc6, draw_staff_number (+2) | read |
+| `4F7808` | `sort_items` | sort: P3 to 1/100, order by staff, P3, code > 2, P4 (layout.md §2) | 40f003, 444745, 4479a8, 473d22, 494302, lineup_pass (+15) | verified |
 | `50A650` | `draw_eps` | code 15 | draw_item | read |
 | `519C38` | `draw_rest` | code 2 | draw_barline, draw_item | read |
 | `51C64F` | `input_rhythm_value` | IN: decode one rhythm value (dur, type, dots, tails) | input_rhythm_spacing | read |
@@ -63,6 +87,8 @@ Callers: static call sites (through the incremental-linking thunks) plus calls s
 | `52F991` | `input_range_dialog` | IN range dialog: IP5 begin, IP6 end, IP7 spacing staff | input_main | read |
 | `52FC56` | `input_min_gap` | IN: minimum gap of 3 after pass 2 (input.md) | input_store_items | read |
 | `532EC0` | `text_emit_char` | writes one text record string (text.md) | draw_text | read |
+| `534C40` | `staff_events` | lineup: events (x, duration or -code) of one staff (layout.md §3) | lineup, 50e830, 51c338 | verified |
+| `53572C` | `shortest_open_value` | lineup: event duration = smallest open value, the rest carried over | staff_events | verified |
 | `538550` | `draw_slur` | code 5 | draw_item | read |
 | `545140` | `draw_staff` | code 8 | 545752, draw_item, 575e58 | verified |
 | `545DE0` | `draw_staff_number` | screen-only staff number text left of the staff | draw_staff, 5459a2 | read |

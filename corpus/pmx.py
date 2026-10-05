@@ -4,8 +4,9 @@ A code-16 item starts with "t" in place of 16 and lists P2 to P11; its character
 on the next line. P12 is their count. Some listings (Sapp's 1999 files) stop at P11, so
 P13, the string length SCORE computes, stays 0; others (Sapp's "SCORE 4 PMX" of 2014) also
 list P12 and P13. A text item without characters is left out: the engine deletes it as an
-unknown code. Lines starting with "#" or with code 99 are comments, two-letter SCORE
-commands (RS, SM) are skipped. Trailing zero parameters are dropped as SCORE does when saving.
+unknown code. Lines starting with "#" or with code 99 are comments, lines starting with
+"@" are scorelib's named parameters, and two-letter SCORE commands (RS, SM) are skipped.
+Trailing zero parameters are dropped as SCORE does when saving.
 """
 from __future__ import annotations
 
@@ -57,7 +58,7 @@ def pmx_items(source: str) -> list | None:
     lines = iter(source.splitlines())
     for line in lines:
         code, _, rest = line.strip().partition(" ")
-        if not code or code.startswith("#") or is_command(code):
+        if not code or code.startswith(("#", "@")) or is_command(code):
             continue
         if code == "t":
             head, text = numbers(rest), next(lines, None)

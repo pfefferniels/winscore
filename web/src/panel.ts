@@ -1,4 +1,5 @@
 // The side panel: the item list and the parameters of the selected item.
+import { fillFontMenu } from './text-dialog';
 
 export interface ItemSummary {
   index: number;
@@ -22,6 +23,10 @@ export interface ItemDetails extends ItemSummary {
 export interface PanelHandlers {
   select(index: number): void;
   setParam(index: number, n: number, value: number): void;
+  /** Replaces a text item's characters. */
+  setText(index: number, text: string): void;
+  /** Gives a text item one of WinScore's fonts (`_NN`). */
+  setFont(index: number, code: number): void;
 }
 
 /** A float parameter as SCORE shows it: up to seven significant digits. */
@@ -99,6 +104,21 @@ function addParamRow(item: ItemDetails, handlers: PanelHandlers): HTMLElement {
   return element('div', { className: 'add-param' }, [number, value, set]);
 }
 
+/** The characters of a text item, editable, and a font menu for it. */
+function textEditor(item: ItemDetails, text: string, handlers: PanelHandlers): HTMLElement {
+  const input = element('input', { type: 'text', value: text, id: 'item-text', spellcheck: false, title: 'Text (P12 characters); Enter sets it' });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && input.value !== text) handlers.setText(item.index, input.value);
+    if (e.key === 'Escape') input.value = text;
+  });
+  const font = element('select', { id: 'item-font', title: "WinScore's font menu (FNTnn)" });
+  fillFontMenu(font, 'Font…');
+  font.addEventListener('change', () => {
+    if (Number(font.value) >= 0) handlers.setFont(item.index, Number(font.value));
+  });
+  return element('div', { className: 'text-editor' }, [input, font]);
+}
+
 export function renderItem(section: HTMLElement, item: ItemDetails | null, handlers: PanelHandlers) {
   if (!item) {
     section.replaceChildren(
@@ -115,14 +135,9 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
   };
   const grid = element('div', { className: 'params' }, Array.from(item.params, row).flat());
   const notes: HTMLElement[] = [
-    ...(item.text !== null ? [element('div', { className: 'text-value', title: 'Text (P12 characters)' }, [item.text])] : []),
+    ...(item.text !== null ? [textEditor(item, item.text, handlers)] : []),
     ...(item.drawn ? [] : [element('p', { className: 'muted' }, ['The Rust renderer does not draw this item yet.'])]),
   ];
   const others = item.others > 0 ? [element('span', { className: 'muted' }, [` (+${item.others} selected)`])] : [];
-  section.replaceChildren(
-    element('h2', {}, [`Item ${item.index} · ${item.name}`, ...others]),
-    grid,
-    ...notes,
-    addParamRow(item, handlers),
-  );
+  section.replaceChildren(element('h2', {}, [`Item ${item.index} · ${item.name}`, ...others]), ...notes, grid, addParamRow(item, handlers));
 }

@@ -40,6 +40,7 @@
           <canvas id="canvas"></canvas>
           <div class="viewport" id="viewport" tabindex="0" aria-label="Page"><div class="content" id="content"></div></div>
           <div class="drop-hint" id="drop-hint" hidden>Drop a .mus file or an engine.json</div>
+          <div class="band" id="band" hidden></div>
         </div>
         <aside class="panel">
           <section class="item" id="item"></section>
@@ -77,8 +78,48 @@
           </div>
         </form>
       </dialog>
+      <dialog id="symbol-dialog" class="symbol-dialog">
+        <form method="dialog">
+          <h2>Symbol library</h2>
+          <div class="symbol-search">
+            <input id="symbol-search" type="search" placeholder="Search by number or name" autocomplete="off" spellcheck="false" />
+            <span id="symbol-count" class="muted"></span>
+          </div>
+          <div id="symbol-grid" class="symbol-grid"></div>
+          <div class="dialog-actions">
+            <span class="muted">Inserted at the selection, the last click on the paper, or the top staff at P3 100.</span>
+            <span class="spacer"></span>
+            <button value="cancel" formnovalidate>Cancel</button>
+          </div>
+        </form>
+      </dialog>
+      <dialog id="text-dialog" class="text-dialog">
+        <form method="dialog">
+          <h2>Text</h2>
+          <div class="text-fields">
+            <label for="text-value">Text</label>
+            <input id="text-value" type="text" placeholder="e.g. Allegro, or several items divided by /" autocomplete="off" spellcheck="false" />
+            <label for="text-font">Font</label>
+            <select id="text-font"></select>
+            <label>Place</label>
+            <div class="input-range">
+              <label>Staff <input id="text-staff" type="number" min="1" max="255" step="1" /></label>
+              <label>P3 <input id="text-p3" type="number" step="any" /></label>
+              <label>P4 <input id="text-p4" type="number" step="any" /></label>
+            </div>
+          </div>
+          <div class="dialog-actions">
+            <span class="muted">0 keeps WinScore's default for P3 and P4.</span>
+            <span class="spacer"></span>
+            <button value="cancel" formnovalidate>Cancel</button>
+            <button id="text-insert" class="primary" value="insert">Insert</button>
+          </div>
+        </form>
+      </dialog>
       <footer class="footer">
+        <span id="prompt" class="prompt" hidden></span>
         <input id="command" class="command" type="text" placeholder="Type a SCORE command, e.g. R 5, 600 5, NOTE, DE" autocomplete="off" spellcheck="false" />
+        <button id="prompt-cancel" type="button" hidden title="End the group edit without a change">Cancel</button>
         <span id="message" class="message"></span>
         <span class="spacer"></span>
         <span id="cursor" class="muted cursor"></span>

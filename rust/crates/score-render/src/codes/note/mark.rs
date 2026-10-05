@@ -35,6 +35,8 @@ const LAST_FICTA: i32 = 3;
 /// 26–28: two, three, four staccato dots side by side.
 const MULTIPLE_STACCATO: std::ops::RangeInclusive<i32> = 26..=28;
 const FIRST_TRILL: i32 = 20;
+/// Marks draw_code7 draws as a trill with IP8 = mark - 20 (24–28 are other marks).
+const TRILLS: [i32; 5] = [20, 21, 22, 23, 29];
 const FIRST_FINGERING: i32 = 30;
 /// 41–44: tremolo beams across the stem, drawn by draw_beam.
 const TREMOLO: std::ops::RangeInclusive<i32> = 41..=44;
@@ -92,7 +94,7 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, stem_length: f64
         return;
     }
     let Some(placed) = place(doc, item, note, p11, stem_length) else { return };
-    if (FIRST_TRILL..FIRST_TRILL + 4).contains(&mark) {
+    if TRILLS.contains(&mark) {
         trill(doc, item, note, &placed, mark - FIRST_TRILL, canvas);
         return;
     }
@@ -215,7 +217,7 @@ fn place(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, p11: i32, stem_leng
         m if m < FIRST_TRILL => m,
         ACCENT_TENUTO => ACCENT_TENUTO_SYMBOL - MARK_SYMBOLS,
         PLUS => PLUS_AS_MARK,
-        m if m < FIRST_TRILL + 4 || (m >= FIRST_FINGERING && !TREMOLO.contains(&m)) => {
+        m if TRILLS.contains(&m) || (m >= FIRST_FINGERING && !TREMOLO.contains(&m)) => {
             return Some(Placed { symbol: m, at: Pos::new(x, y), size, size_y, repeats })
         }
         _ => return None,
@@ -229,8 +231,8 @@ fn place(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, p11: i32, stem_leng
     Some(Placed { symbol, at: Pos::new(x, y), size, size_y, repeats })
 }
 
-/// Marks 20–23: draw_code7's trill with the note's parameters, except
-/// IP7 = 0 (trill), IP8 = the accidental 0–3, IP6 = 0 (no wave) and
+/// Marks 20–23 and 29: draw_code7's trill with the note's parameters, except
+/// IP7 = 0 (trill), IP8 = mark - 20 (accidental 0–3, or 9), IP6 = 0 (no wave) and
 /// P5 = the mark size; Y_POS is the mark's level less a staff scale step,
 /// STEP the note's unit (0x4F2279).
 fn trill(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, placed: &Placed, accidental: i32, canvas: &mut Canvas<'_>) {
