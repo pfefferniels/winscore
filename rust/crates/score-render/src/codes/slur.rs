@@ -822,7 +822,9 @@ impl Slur {
 
     /// Draws the number P16 (draw_slur from 0x53AA73): in the slur's gap, or
     /// for negative P16 inside an unbroken slur; at P10 of a level slur, at
-    /// the middle of a sloped one, turned with it.
+    /// the middle of a sloped one, turned with it. A sloped slur of dashes
+    /// or dots has no gap, so its number goes inside as for negative P16
+    /// (0x538D0B).
     fn draw_number(
         &self,
         doc: &Document<'_>,
@@ -833,7 +835,9 @@ impl Slur {
     ) {
         let sloped = self.dy != 0.0;
         let down = params.p7 < 0.0;
-        let drop: f32 = match (params.number() < 0, sloped) {
+        let broken = trunc(f64::from(item.p(11))) != 0 && trunc(f64::from(item.p(9))) != TRIANGLE;
+        let inside = params.number() < 0 || (sloped && broken);
+        let drop: f32 = match (inside, sloped) {
             (true, true) => {
                 if down {
                     -5.0

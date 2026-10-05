@@ -41,9 +41,9 @@ Every case in `oracle/fuzz_cases.json` (fixtures `rust/fixtures/<name>/`), shrun
 | fuzz-code02-p8-p17-c92312 | impl-notes | fixed | text offset | `8 2 0; 2 2 43 4 0 0 0 -3 0 0 0 0 0 0 0 0 1` | "G" shifted by (0, -3150) |
 | fuzz-code03-p5-p10-e6050f | impl-symbols | fixed | extra | `8 1 0; 3 1 88.48 0 0.1 0 0 0 0 1` | fill #000000, 1 path(s), 62 points from (15678, 4037) |
 | fuzz-code03-p5-p10-e66eab | impl-symbols | fixed | extra | `8 1 0; 3 1 60.13 6 0.9 0 0 0 0 2` | fill #000000, 1 path(s), 62 points from (11425, 5087) |
-| fuzz-code05-p11-p16-2701e0 | impl-beams | open | text offset | `8 1 0; 5 1 26.49 5 0 0 0 0 0 0 2 0 0 0 0 12` | "1" shifted by (98, 336) |
-| fuzz-code05-p11-p16-cf241b | impl-beams | open | text offset | `8 1 0; 5 1 121.01 13 0 0 0 0 0 0 3 0 0 0 0 3` | "3" shifted by (211, 279) |
-| fuzz-code06-p8-p17-f76ce8 | impl-beams | open | text missing | `8 1 0; 6 1 84.49 4.5 0 0 0 34003 0 0 0 0 0 0 0 0 -1` | "?" in Times 678.0/279.7 at (15334, 1369) |
+| fuzz-code05-p11-p16-2701e0 | impl-beams | fixed, ratcheted | text offset | `8 1 0; 5 1 26.49 5 0 0 0 0 0 0 2 0 0 0 0 12` | "1" shifted by (98, 336) |
+| fuzz-code05-p11-p16-cf241b | impl-beams | fixed, ratcheted | text offset | `8 1 0; 5 1 121.01 13 0 0 0 0 0 0 3 0 0 0 0 3` | "3" shifted by (211, 279) |
+| fuzz-code06-p8-p17-f76ce8 | impl-beams | deviation (by design: the beam thickness P17 read as the number's letter, any non-zero trunc(P17)) | text missing | `8 1 0; 6 1 84.49 4.5 0 0 0 34003 0 0 0 0 0 0 0 0 -1` | "?" in Times 678.0/279.7 at (15334, 1369) |
 | fuzz-code12-p5-ffbe10 | impl-symbols | fixed | absent | `8 1 0; 12 1 133.74 7 -2` | stroke #000000, 1 path(s), 2 points from (22061, 3648) |
 | fuzz-code12-p5-p11-cbf4b8 | impl-symbols | fixed | absent | `8 1 0; 12 1 16.39 0.5 5 0 0 0 0 0 270` | stroke #000000, 1 path(s), 181 points from (5333, 2511) |
 | fuzz-code12-p5-p11-ec0e0d | impl-symbols | fixed | absent | `8 1 0; 12 1 32.9 8 5 0 0 0 0 0 405` | stroke #000000, 1 path(s), 91 points from (7810, 3823) |
