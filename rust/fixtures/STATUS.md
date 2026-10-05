@@ -25,7 +25,7 @@ Written by `score-compare` (crate `score-testkit`). Compared: the engine's `engi
 | code18 | 47 | 47 | 47 | 47 | 400/400 | 55/55 |
 | code99 | 17 | 17 | 17 | 17 | 291/291 | 26/26 |
 | corpus | 3 | 3 | 3 | 3 | 3777/3777 | 552/552 |
-| fuzz | 16 | 16 | 16 | 13 | 154/154 | 44/48 +3 |
+| fuzz | 17 | 17 | 17 | 17 | 167/167 | 50/50 |
 | layout | 3 | 3 | 3 | 3 | 134/134 | 5/5 |
 | sample | 6 | 6 | 6 | 6 | 7952/7952 | 2143/2143 |
 
@@ -39,14 +39,14 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | 2 | rests | 161 | 161 | 1394/1394 | 26/26 |
 | 3 | clefs | 110 | 110 | 1148/1148 | 27/27 |
 | 4 | lines, hairpins | 121 | 121 | 1536/1536 | 0/0 |
-| 5 | slurs, brackets | 121 | 119 | 469/469 | 50/53 +3 |
-| 6 | beams | 89 | 88 | 747/747 | 21/22 |
+| 5 | slurs, brackets | 122 | 122 | 472/472 | 55/55 |
+| 6 | beams | 88 | 88 | 746/746 | 20/20 |
 | 7 | trills, ottava, pedal | 72 | 72 | 1152/1152 | 48/48 |
-| 8 | staves | 1772 | 1772 | 10934/10934 | 2279/2279 |
+| 8 | staves | 1773 | 1773 | 10944/10944 | 2281/2281 |
 | 9 | library symbols | 116 | 116 | 1455/1455 | 97/97 |
 | 10 | numbers | 77 | 77 | 41/41 | 337/337 |
 | 11 | user symbols | 29 | 29 | 341/341 | 0/0 |
-| 12 | boxes, grids | 176 | 176 | 1520/1520 | 198/198 |
+| 12 | boxes, grids | 177 | 177 | 1521/1521 | 198/198 |
 | 14 | barlines | 115 | 115 | 1043/1043 | 0/0 |
 | 15 | EPS | 21 | 21 | 42/42 | 0/0 |
 | 16 | text | 158 | 158 | 135/135 | 4368/4368 |
@@ -1816,10 +1816,11 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | fuzz-code02-p8-p17-c92312 | match | 9/9 | 5/5 | 0 | fuzz, impl-notes: text offset; "G" shifted by (0, -3150) |
 | fuzz-code03-p5-p10-e6050f | match | 10/10 | 3/3 | 0 | fuzz, impl-symbols: extra; fill #000000, 1 path(s), 62 points from (15678, 4037) |
 | fuzz-code03-p5-p10-e66eab | match | 10/10 | 2/2 | 0 | fuzz, impl-symbols: extra; fill #000000, 1 path(s), 62 points from (11425, 5087) |
-| fuzz-code05-p11-p16-2701e0 | differs | 8/8 | 1/3 +2 | 0 | fuzz, impl-beams: text offset; "1" shifted by (98, 336) |
-| fuzz-code05-p11-p16-cf241b | differs | 8/8 | 1/2 +1 | 0 | fuzz, impl-beams: text offset; "3" shifted by (211, 279) |
-| fuzz-code06-p8-p17-f76ce8 | differs | 6/6 | 2/3 | 0 | fuzz, impl-beams: text missing; "?" in Times 678.0/279.7 at (15334, 1369) |
+| fuzz-code05-p11-p16-2701e0 | match | 8/8 | 3/3 | 0 | fuzz, impl-beams: text offset; "1" shifted by (98, 336) |
+| fuzz-code05-p11-p16-41830b | match | 13/13 | 4/4 | 0 | fuzz, impl-beams: text offset; "1" shifted by (30, 349) |
+| fuzz-code05-p11-p16-cf241b | match | 8/8 | 2/2 | 0 | fuzz, impl-beams: text offset; "3" shifted by (211, 279) |
 | fuzz-code12-p5-ffbe10 | match | 17/17 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 2 points from (22061, 3648) |
+| fuzz-code12-p5-p10-b1ef17 | match | 6/6 | 1/1 | 0 | fuzz, impl-symbols: failed; render panicked: index out of bounds: the len is 361 but the index is 3009 |
 | fuzz-code12-p5-p11-cbf4b8 | match | 7/7 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 181 points from (5333, 2511) |
 | fuzz-code12-p5-p11-ec0e0d | match | 7/7 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 91 points from (7810, 3823) |
 | fuzz-code16-p8-p9-b70d9e | match | 19/19 | 1/1 | 0 | fuzz, impl-text: offset; shifted by (688, 688), residual 0 |
