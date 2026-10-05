@@ -1,7 +1,7 @@
 // What the UI asks of the editing model, and its implementation by
 // score-edit through score-web. Items are named by file index; every action
 // returns the name of the undo step it made.
-import type { InputLine, Score } from './wasm/score_web.js';
+import type { InputLine, Outcome, Score } from './wasm/score_web.js';
 import type { Point } from './view';
 
 /** Where an item goes in SCORE's terms. */
@@ -11,9 +11,10 @@ export interface Place {
   p4: number;
 }
 
-/** One finished action, as the UI names it; null when nothing changed. */
+/** One finished action, as the UI names it, and what the engine would have reported. */
 export interface Change {
   label: string;
+  message: string | null;
 }
 
 export interface Editor {
@@ -53,7 +54,14 @@ export interface Editor {
   redoLabel(): string | null;
 }
 
-const change = (label: string | undefined): Change | null => (label ? { label } : null);
+/** The UI's view of an outcome; null when nothing changed and nothing was reported. */
+function change(outcome: Outcome): Change | null {
+  const result = outcome.label || outcome.message ? { label: outcome.label, message: outcome.message ?? null } : null;
+  outcome.free();
+  return result;
+}
+
+const stepped = (label: string | null): Change | null => (label ? { label, message: null } : null);
 
 export function scoreEditor(score: Score): Editor {
   return {
@@ -77,8 +85,8 @@ export function scoreEditor(score: Score): Editor {
     dragBegin: (at) => score.dragBeginAt(at.x, at.y),
     dragTo: (at, constrain) => score.dragToPoint(at.x, at.y, constrain),
     dragEnd: (commit) => change(score.dragEnd(commit)),
-    undo: () => change(score.undo() && `Undo ${score.redoLabel()}`),
-    redo: () => change(score.redo() && `Redo ${score.undoLabel()}`),
+    undo: () => stepped(score.undo() ? `Undo ${score.redoLabel()}` : null),
+    redo: () => stepped(score.redo() ? `Redo ${score.undoLabel()}` : null),
     undoLabel: () => score.undoLabel() ?? null,
     redoLabel: () => score.redoLabel() ?? null,
   };

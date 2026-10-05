@@ -78,7 +78,7 @@ Accumulations happen in f32: the staff routine adds the line spacing to an f32 y
 
 ## AMOD
 
-`amod(&x, &y)` (0x54AABA) = `x - INT(x/y)*y`, with the quotient truncated. The difference is computed on the x87 stack and returned in ST0 (not stored to f32 inside the routine).
+`amod(&x, &y)` (0x54AABA) = `f32(x - INT(x/y)*y)`: the quotient x/y is formed in extended precision and truncated by `fistp dword` (huge or NaN quotients give the integer indefinite 0x80000000), and the difference is stored to a REAL*4 local before it is returned in ST0 (`fsubr dword [ecx]; fstp dword [ebp-4]; fld dword [ebp-4]`). (render-core read the epilogue.) The runtime AMOD 0x5FF874 (used for rests in justify) is a separate routine.
 
 ## Inches
 
