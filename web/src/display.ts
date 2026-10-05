@@ -114,9 +114,20 @@ function pathBounds(path: Int32Array): Box | null {
   return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
 }
 
+/** Ascent and descent of a character cell in em (roughly Times New Roman), as score-web's hit test uses. */
+const CELL_ASCENT = 0.8;
+const CELL_DESCENT = 0.25;
+
+/** Boxes around a run's strings, whose y is the baseline. */
 function textBounds(run: TextRun): Box | null {
+  const advance = run.width > 0 ? run.width : run.height / 2;
   return run.strings
-    .map((s) => ({ x0: s.x, y0: s.y - run.height, x1: s.x + run.height * s.text.length, y1: s.y }))
+    .map((s) => ({
+      x0: s.x,
+      y0: s.y - CELL_DESCENT * run.height,
+      x1: s.x + advance * Math.max(1, s.text.length),
+      y1: s.y + CELL_ASCENT * run.height,
+    }))
     .reduce<Box | null>(union, null);
 }
 

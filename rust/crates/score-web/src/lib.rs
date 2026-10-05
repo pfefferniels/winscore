@@ -13,6 +13,8 @@ pub mod encode;
 pub mod hit;
 pub mod input;
 pub mod param_names;
+pub mod placing;
+pub mod symbols;
 
 use score_render::{DisplayList, ItemId};
 use wasm_bindgen::prelude::*;

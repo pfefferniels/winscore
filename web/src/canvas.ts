@@ -3,7 +3,7 @@
 // repaint the canvas; nothing is drawn outside the visible area.
 import type { Box } from './display';
 import { paint, type Highlight, type Layer } from './paint';
-import { contentSize, cssPerUnit, toPage, transform, type Point, type Transform } from './view';
+import { contentSize, cssPerUnit, toDevice, toPage, transform, type Point, type Transform } from './view';
 
 export interface Scene {
   layers: Layer[];
@@ -31,6 +31,8 @@ export interface PageView {
   reveal(box: Box): void;
   /** Page coordinates under a client (mouse) position. */
   pageAt(clientX: number, clientY: number): Point;
+  /** Where a box of the page lies in client coordinates. */
+  clientRect(box: Box): DOMRect;
   /** Engine units spanned by `px` CSS pixels at the current zoom. */
   unitsPerCss(px: number): number;
   repaint(): void;
@@ -108,6 +110,15 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
     return toPage(currentTransform(), p.x * ratio, p.y * ratio);
   };
 
+  const clientRect = (box: Box): DOMRect => {
+    const t = currentTransform();
+    const ratio = dpr();
+    const origin = el.viewport.getBoundingClientRect();
+    const a = toDevice(t, box.x0, box.y1);
+    const b = toDevice(t, box.x1, box.y0);
+    return new DOMRect(origin.left + a.x / ratio, origin.top + a.y / ratio, (b.x - a.x) / ratio, (b.y - a.y) / ratio);
+  };
+
   const setZoom = (next: number, anchor?: { clientX: number; clientY: number }) => {
     const rect = el.viewport.getBoundingClientRect();
     const client = anchor ?? { clientX: rect.left + el.viewport.clientWidth / 2, clientY: rect.top + el.viewport.clientHeight / 2 };
@@ -172,6 +183,7 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
       repaint();
     },
     pageAt,
+    clientRect,
     unitsPerCss: (px: number) => px / cssPerUnit(zoom),
     repaint,
   };

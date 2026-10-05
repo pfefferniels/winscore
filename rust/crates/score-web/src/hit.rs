@@ -109,14 +109,23 @@ fn shape_candidate(p: At, shape: &Shape) -> Option<Candidate> {
     Some(Candidate { item, distance, area: bounds.area() })
 }
 
-/// The cell box of a placed string: from its top-left origin, one height
-/// down and one average width per character across. Rotation is ignored.
+/// Ascent and descent of a character cell in em, roughly those of Times New
+/// Roman, for boxes around text.
+const CELL_ASCENT: f64 = 0.8;
+const CELL_DESCENT: f64 = 0.25;
+
+/// The box of a placed string: from its origin on the baseline (the engine's
+/// y + 96, analysis/engine/display.md), one cell ascent up, one descent down,
+/// and one average width per character across. Rotation is ignored.
 fn text_bounds(run: &TextRun, origin: Point, text: &str) -> Bounds {
     let height = f64::from(run.height);
     let advance = if run.width > 0.0 { f64::from(run.width) } else { height / 2.0 };
-    let top_left = At::from(origin);
+    let baseline = At::from(origin);
     let width = advance * text.chars().count().max(1) as f64;
-    Bounds { min: At::new(top_left.x, top_left.y - height), max: At::new(top_left.x + width, top_left.y) }
+    Bounds {
+        min: At::new(baseline.x, baseline.y - CELL_DESCENT * height),
+        max: At::new(baseline.x + width, baseline.y + CELL_ASCENT * height),
+    }
 }
 
 fn text_candidates(p: At, run: &TextRun) -> impl Iterator<Item = Candidate> + '_ {
@@ -197,8 +206,9 @@ mod tests {
             source: Some(ItemId(9)),
         };
         let list = DisplayList { shapes: vec![], texts: vec![run] };
-        assert_eq!(hit_test(&list, At::new(1400.0, 1800.0), 0.0), Some(ItemId(9)));
-        assert_eq!(hit_test(&list, At::new(1600.0, 1800.0), 0.0), None);
+        assert_eq!(hit_test(&list, At::new(1400.0, 2200.0), 0.0), Some(ItemId(9)));
+        assert_eq!(hit_test(&list, At::new(1400.0, 1800.0), 0.0), None);
+        assert_eq!(hit_test(&list, At::new(1600.0, 2200.0), 0.0), None);
     }
 
     #[test]
