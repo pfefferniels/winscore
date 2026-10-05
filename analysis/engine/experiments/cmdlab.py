@@ -79,7 +79,7 @@ class CommandLab:
         self.root = make_sandbox(Path(self._tmp.name))
         (self.root / "cwd" / "base.mus").write_bytes(mus_bytes(base))
 
-    def run(self, commands: list[str], traced: int | None = None) -> Run:
+    def run(self, commands: list[str], traced: int | None = None, digits: int | None = 4) -> Run:
         """Run commands after loading the base score; trace the command at index `traced`, if given."""
         engine = TimedEngine(self.root)
         engine.initialize()
@@ -100,4 +100,4 @@ class CommandLab:
                 if tracer:
                     handlers = sorted({tracer.name(callee) for (caller, callee) in tracer.edges if caller == INTERPRETER})
                     tracer.__exit__(None, None, None)
-        return Run(steps, item_list(engine), handlers)
+        return Run(steps, item_list(engine, digits), handlers)
