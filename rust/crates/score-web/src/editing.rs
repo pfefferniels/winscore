@@ -1,9 +1,9 @@
 //! Selection, edits, drags and undo through `score-edit`.
 //!
 //! Items are named by their index in file order on this side of the API.
-//! Every action returns the name of the undo step it made ("Move", "R 5"),
-//! or an empty string when it changed nothing; call [`Score::render`] to see
-//! the result.
+//! Every action returns an [`Outcome`]: the name of the undo step it made
+//! ("Move", "R 5"), empty when it changed nothing, and what the engine would
+//! have reported, if anything. Call [`Score::render`] to see the result.
 
 use score_edit::{Change, EditError};
 use score_render::ItemId;
@@ -18,10 +18,23 @@ fn indices(items: &[ItemId]) -> Vec<u32> {
     items.iter().map(|id| id.0).collect()
 }
 
+/// What an action did.
+#[wasm_bindgen(getter_with_clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Outcome {
+    /// The undo step's name; empty when nothing changed.
+    pub label: String,
+    /// What the engine would have reported, such as a line-up it gave up on.
+    pub message: Option<String>,
+}
+
 impl Score {
-    fn finish(&self, result: Result<Change, EditError>) -> Result<String, JsError> {
-        let change = result?;
-        Ok(self.0.label(&change).unwrap_or_default())
+    fn outcome(&self, change: &Change) -> Outcome {
+        Outcome { label: self.0.label(change).unwrap_or_default(), message: change.message.clone() }
+    }
+
+    fn finish(&self, result: Result<Change, EditError>) -> Result<Outcome, JsError> {
+        Ok(self.outcome(&result?))
     }
 }
 
@@ -40,7 +53,7 @@ impl Score {
 
     /// Sets parameter `n` (1-based) of item `index`, selected or not.
     #[wasm_bindgen(js_name = setParam)]
-    pub fn set_param(&mut self, index: u32, n: usize, value: f32) -> Result<String, JsError> {
+    pub fn set_param(&mut self, index: u32, n: usize, value: f32) -> Result<Outcome, JsError> {
         let id = self.0.id(ItemId(index))?;
         let result = self.0.editor_mut().set_param(id, n, value);
         self.finish(result)
@@ -48,26 +61,26 @@ impl Score {
 
     /// Moves the selection by `dp3` P3 spaces and `dp4` scale steps.
     #[wasm_bindgen(js_name = moveSelection)]
-    pub fn move_selection(&mut self, dp3: f32, dp4: f32) -> Result<String, JsError> {
+    pub fn move_selection(&mut self, dp3: f32, dp4: f32) -> Result<Outcome, JsError> {
         let result = self.0.editor_mut().move_selection(dp3, dp4);
         self.finish(result)
     }
 
     /// Moves the selection `delta` staves up (WinScore's `[` and `]`).
     #[wasm_bindgen(js_name = moveStaff)]
-    pub fn move_staff(&mut self, delta: i32) -> Result<String, JsError> {
+    pub fn move_staff(&mut self, delta: i32) -> Result<Outcome, JsError> {
         let result = self.0.editor_mut().move_staff(delta);
         self.finish(result)
     }
 
     #[wasm_bindgen(js_name = deleteSelection)]
-    pub fn delete_selection(&mut self) -> Result<String, JsError> {
+    pub fn delete_selection(&mut self) -> Result<Outcome, JsError> {
         let result = self.0.editor_mut().delete_selection();
         self.finish(result)
     }
 
     /// A SCORE command line as typed in WinScore, e.g. `R 5`, `600 5`, `DE`, `TREB`.
-    pub fn execute(&mut self, line: &str) -> Result<String, JsError> {
+    pub fn execute(&mut self, line: &str) -> Result<Outcome, JsError> {
         let result = self.0.editor_mut().execute(line);
         self.finish(result)
     }
@@ -75,7 +88,7 @@ impl Score {
     /// Appends one line of five-pass input (and its staff, when missing) as
     /// one undo step; the new items become the selection.
     #[wasm_bindgen(js_name = insertInput)]
-    pub fn insert_input(&mut self, line: &InputLine) -> Result<String, JsError> {
+    pub fn insert_input(&mut self, line: &InputLine) -> Result<Outcome, JsError> {
         let mut motives = self.0.motives().clone();
         let items = line_items(self.0.file(), line, &mut motives).map_err(|err| JsError::new(&err.message))?;
         let result = self.0.editor_mut().insert_items(items);
@@ -101,12 +114,12 @@ impl Score {
 
     /// Ends a drag; `commit` keeps the new positions as one undo step.
     #[wasm_bindgen(js_name = dragEnd)]
-    pub fn drag_end(&mut self, commit: bool) -> String {
+    pub fn drag_end(&mut self, commit: bool) -> Outcome {
         let change = self.0.editor_mut().drag_end(commit);
         if commit {
-            self.0.label(&change).unwrap_or_default()
+            self.outcome(&change)
         } else {
-            String::new()
+            Outcome::default()
         }
     }
 
@@ -118,7 +131,7 @@ impl Score {
 
     /// Replaces the characters of text item `index` (WinScore's Edit Text).
     #[wasm_bindgen(js_name = setText)]
-    pub fn set_text(&mut self, index: u32, text: &str) -> Result<String, JsError> {
+    pub fn set_text(&mut self, index: u32, text: &str) -> Result<Outcome, JsError> {
         let id = self.0.id(ItemId(index))?;
         let result = self.0.editor_mut().set_text(id, text);
         self.finish(result)
@@ -127,14 +140,14 @@ impl Score {
     /// New text items as quick entry `"text" p2 p3 …` makes them; `params`
     /// are P2, P3, … (0 keeps the default), `/` divides the text into items.
     #[wasm_bindgen(js_name = insertText)]
-    pub fn insert_text(&mut self, text: &str, params: Vec<f32>) -> Result<String, JsError> {
+    pub fn insert_text(&mut self, text: &str, params: Vec<f32>) -> Result<Outcome, JsError> {
         let result = self.0.editor_mut().insert_text(text, &params);
         self.finish(result)
     }
 
     /// A code-9 item showing library symbol `number` on `staff` at P3, P4, selected.
     #[wasm_bindgen(js_name = insertSymbol)]
-    pub fn insert_symbol(&mut self, number: i32, staff: f32, p3: f32, p4: f32) -> Result<String, JsError> {
+    pub fn insert_symbol(&mut self, number: i32, staff: f32, p3: f32, p4: f32) -> Result<Outcome, JsError> {
         let result = self.0.editor_mut().insert_symbol(number, staff, p3, p4);
         self.finish(result)
     }
@@ -150,7 +163,7 @@ impl Score {
     /// WinScore reads a mouse-drawn area: it answers a group command waiting
     /// for its area or destination, and otherwise selects the items inside.
     #[wasm_bindgen(js_name = drawBox)]
-    pub fn draw_box(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> Result<String, JsError> {
+    pub fn draw_box(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> Result<Outcome, JsError> {
         let result = self.0.editor_mut().draw_box(x0, y0, x1, y1);
         self.finish(result)
     }
@@ -234,7 +247,7 @@ mod tests {
         score.drag_begin_at(5000.0, 5000.0);
         score.drag_to_point(5150.0, 5000.0, false);
         score.drag_to_point(5300.0, 5000.0, false);
-        assert_eq!(score.drag_end(true), "Drag");
+        assert_eq!(score.drag_end(true).label, "Drag");
         assert!((score.0.item(ItemId(12)).unwrap().param(3) - (p3 + 2.0)).abs() < 0.01);
         assert_eq!(score.undo().as_deref(), Some("Drag"));
         assert_eq!(score.0.item(ItemId(12)).unwrap().param(3), p3);
