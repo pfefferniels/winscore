@@ -629,7 +629,8 @@ fn trace_arc(
     dash: Option<i32>,
     pen: Pen,
 ) {
-    let table = |i: i32| CIRCLE[(i - 1) as usize / 2];
+    // Past the table the engine reads whatever static data follows it; the port draws zeros there.
+    let table = |i: i32| usize::try_from((i - 1) / 2).ok().and_then(|k| CIRCLE.get(k)).copied().unwrap_or((0.0, 0.0));
     let mut index = 2 * from + 1;
     let mut end = 2 * to + 1 - i32::from(dash.is_some());
     let advance = if dash.is_some() { 2 } else { 2 * sides };
