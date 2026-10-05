@@ -1,0 +1,7 @@
+IN 1
+30 200
+TE/CS4/M/D4:D:BF:DF/M/A:B:DS/AL/G:G:A/R/D/AF3/M/E/AF:GS:DF/M/DN/EN/EN/SU;
+T/1/G/T/4/16/2/8./8../G/8./2;
+;
+;
+;

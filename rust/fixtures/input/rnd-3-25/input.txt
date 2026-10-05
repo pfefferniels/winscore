@@ -1,0 +1,7 @@
+IN 1
+;
+2 2/D4:CN:DS/TR/D4:CN:DS/FF/SD/FF/RU/RU/B/M/C/AS3;
+T/4./8/S/4/4./H/Q/8..;
+C 3.5 7/HW 2:5/RI 6;
+;
+2 7;

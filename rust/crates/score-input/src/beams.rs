@@ -290,32 +290,34 @@ fn end_offset(direction: i32, start: f32, end: f32, most_tails: i32) -> f32 {
 }
 
 /// Which way a one-note secondary beam points: -1 left, 1 right, 0 by position (0x413CA8).
+/// Grace notes (no tails counted) are passed over when looking at the neighbours.
 fn stub_directions(tails: &[i32], fewest: i32) -> Vec<i32> {
     let n = tails.len();
-    (0..n)
-        .map(|i| {
-            let here = tails[i];
-            let before = if i == 0 { 0 } else { tails[i - 1] };
-            let after = tails.get(i + 1).copied().unwrap_or(0);
-            if here == fewest {
-                0
-            } else if i == n - 1 {
-                if before < here {
-                    -1
-                } else {
-                    0
-                }
-            } else if after != here && after < here && before < here {
-                if before < after {
-                    1
-                } else {
-                    -1
-                }
+    let flagged: Vec<usize> = (0..n).filter(|&i| tails[i] != 0).collect();
+    let mut directions = vec![0; n];
+    for (k, &i) in flagged.iter().enumerate() {
+        let here = tails[i];
+        let before = k.checked_sub(1).map_or(0, |p| tails[flagged[p]]);
+        let after = flagged.get(k + 1).map_or(0, |&j| tails[j]);
+        directions[i] = if here == fewest {
+            0
+        } else if i == n - 1 {
+            if before < here {
+                -1
             } else {
                 0
             }
-        })
-        .collect()
+        } else if after != here && after < here && before < here {
+            if before < after {
+                1
+            } else {
+                -1
+            }
+        } else {
+            0
+        };
+    }
+    directions
 }
 
 /// Secondary beams in slots of three parameters (code, left x, right x; 0 marks the open

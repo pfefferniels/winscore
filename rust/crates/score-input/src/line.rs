@@ -61,6 +61,19 @@ pub(crate) struct Note {
     /// minimum-gap pass never moves the last entry of the line, which can be the last
     /// member of a chord. Positions stay when a beam reverses the heads.
     pub stray_head: Option<(usize, f32)>,
+    /// The layout a stray head kept when a beam turned the rest of the chord.
+    kept_layout: Option<HeadLayout>,
+    /// A grace chord that pass 1 sorted from the top and pass 2 spaced in that order.
+    spaced_from_top: bool,
+}
+
+/// What the chord layout gives a head: P5 with the accidental's offset, P10, and the dot
+/// additions to P9.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct HeadLayout {
+    p5: f32,
+    shift: f32,
+    dots: i32,
 }
 
 impl Note {
@@ -80,6 +93,8 @@ impl Note {
             redotted: None,
             laid_out_heads: 0,
             stray_head: None,
+            kept_layout: None,
+            spaced_from_top: false,
         };
         note.laid_out_heads = note.heads.len();
         let down = match stems {
@@ -87,7 +102,9 @@ impl Note {
             StemMode::Down => true,
             StemMode::Ordinary => note.lowest() + note.highest() >= 2 * MIDDLE_LINE,
         };
-        // Pass 2 turns grace stems up unless SD fixed them.
+        // Pass 2 turns grace stems up unless SD fixed them, after spacing the heads in the
+        // order pass 1 sorted them.
+        note.spaced_from_top = down && note.is_grace() && stems != StemMode::Down;
         if down && (!note.is_grace() || stems == StemMode::Down) {
             // From the top, but heads on the same level keep the order they were typed in.
             note.heads = note.heads.chunk_by(|a, b| a.level == b.level).rev().flatten().copied().collect();
@@ -142,14 +159,33 @@ impl Note {
         self.rhythm == Rhythm::Grace
     }
 
+    /// The heads 0x413CA8 turns with the chord: those at the chord's x, which leaves out a
+    /// stray last head.
+    fn run_len(&self) -> usize {
+        match self.stray_head {
+            Some((i, _)) if i + 1 == self.heads.len() => i,
+            _ => self.heads.len(),
+        }
+    }
+
+    /// Reverses the heads at the chord's x and lays them out for `down`; a stray head
+    /// keeps the layout it had.
+    fn reverse_run(&mut self, down: bool) {
+        let run = self.run_len();
+        if run < self.heads.len() {
+            self.kept_layout = self.head_layouts().get(run).copied();
+        }
+        self.heads[..run].reverse();
+        self.heads_down = down;
+        self.laid_out_heads = run;
+    }
+
     /// Turns the stem; the engine reverses the chord's heads (0x413CA8), so the head that
     /// carried the stem ends up last.
     pub fn set_stem(&mut self, down: bool) {
         if self.down != down {
-            self.heads.reverse();
+            self.reverse_run(down);
             self.down = down;
-            self.heads_down = down;
-            self.laid_out_heads = self.heads.len();
         }
         self.fit_stem();
     }
@@ -160,9 +196,7 @@ impl Note {
     /// stem extension. Grace chords are left alone.
     pub fn turn_heads(&mut self, down: bool, first_entry: usize) {
         if self.heads.len() > 1 && !self.is_grace() && self.heads_down != down {
-            self.heads.reverse();
-            self.heads_down = down;
-            self.laid_out_heads = self.heads.len();
+            self.reverse_run(down);
             self.extension = 0.0;
             self.table_extension = 0.0;
             self.redot_after_turn(first_entry);
@@ -209,7 +243,11 @@ impl Note {
 
     fn spacing_entries(&self) -> Vec<Entry> {
         let quarters = if self.is_grace() { GRACE_DURATION } else { self.rhythm.quarters() };
-        self.ordered_heads()
+        let mut heads = self.ordered_heads();
+        if self.spaced_from_top {
+            heads.reverse();
+        }
+        heads
             .iter()
             .enumerate()
             .map(|(i, head)| Entry::Note { quarters, accidental: head.accidental.is_some(), first: i == 0 })
@@ -219,23 +257,7 @@ impl Note {
     /// P5 of each head in item order: the stem on the stem head, the accidental, and the
     /// accidental's offset to the left in thousandths.
     pub fn p5s(&self) -> Vec<f32> {
-        let ordered = self.ordered_heads();
-        let covered = self.laid_out_heads.min(ordered.len());
-        let mut offsets = self.accidental_offsets(&ordered[..covered], &self.shifted()[..covered]);
-        offsets.resize(ordered.len(), 0);
-        ordered
-            .iter()
-            .zip(offsets)
-            .enumerate()
-            .map(|(i, (head, offset))| {
-                let stem = match (i == 0, self.down) {
-                    (false, _) => 0,
-                    (true, true) => STEM_DOWN,
-                    (true, false) => STEM_UP,
-                };
-                offset as f32 / 1000.0 + (stem + head.accidental.map_or(0, |a| a.code())) as f32
-            })
-            .collect()
+        self.head_layouts().iter().map(|layout| layout.p5).collect()
     }
 
     /// Which heads, in item order, sit on the other side of the stem.
@@ -247,14 +269,42 @@ impl Note {
         shifted
     }
 
-    fn items(&self, staff: f32) -> Vec<Item> {
+    /// P5, P10 and the dot additions to P9 of each head in item order.
+    fn head_layouts(&self) -> Vec<HeadLayout> {
         let ordered = self.ordered_heads();
         let levels: Vec<i32> = ordered.iter().map(|h| h.level).collect();
         let shifted = self.shifted();
-        let p5s = self.p5s();
-        let dot_offsets = self.dot_offsets(&levels, &shifted);
-        let dots = 10 * i32::from(self.rhythm.dots());
+        let covered = self.laid_out_heads.min(ordered.len());
+        let mut offsets = self.accidental_offsets(&ordered[..covered], &shifted[..covered]);
+        offsets.resize(ordered.len(), 0);
+        let dots = self.dot_offsets(&levels, &shifted);
         let side = if self.heads_down { SHIFT_LEFT } else { SHIFT_RIGHT };
+        let mut layouts: Vec<HeadLayout> = ordered
+            .iter()
+            .enumerate()
+            .map(|(i, head)| {
+                let stem = match (i == 0, self.down) {
+                    (false, _) => 0,
+                    (true, true) => STEM_DOWN,
+                    (true, false) => STEM_UP,
+                };
+                HeadLayout {
+                    p5: offsets[i] as f32 / 1000.0 + (stem + head.accidental.map_or(0, |a| a.code())) as f32,
+                    shift: if shifted[i] { side } else { 0.0 },
+                    dots: dots[i],
+                }
+            })
+            .collect();
+        if let (Some(kept), Some(last)) = (self.kept_layout, layouts.last_mut()) {
+            *last = kept;
+        }
+        layouts
+    }
+
+    fn items(&self, staff: f32) -> Vec<Item> {
+        let ordered = self.ordered_heads();
+        let layouts = self.head_layouts();
+        let dots = 10 * i32::from(self.rhythm.dots());
         let staff_shift = match self.shift {
             StaffShift::Main => 0.0,
             StaffShift::Above => 1.0,
@@ -281,12 +331,12 @@ impl Note {
                     staff,
                     x,
                     level as f32,
-                    p5s[i],
+                    layouts[i].p5,
                     self.rhythm.head() as f32,
                     if self.is_grace() && !stem_head { GRACE_CHORD_MEMBER } else { self.rhythm.quarters() },
                     extension,
-                    (dots + tails + dot_offsets[i]) as f32,
-                    if shifted[i] { side } else { 0.0 },
+                    (dots + tails + layouts[i].dots) as f32,
+                    layouts[i].shift,
                     mark,
                     staff_shift,
                 ])
@@ -311,7 +361,7 @@ impl Note {
     /// passes an end index that 0x4EE442 has overwritten with the head count + 1, so a chord
     /// whose first work-table entry is `first_entry` gets only this many heads laid out.
     pub fn redot_after_turn(&mut self, first_entry: usize) {
-        let heads = self.heads.len();
+        let heads = self.run_len();
         self.redotted = Some((heads + 2).saturating_sub(first_entry).clamp(2, heads.max(2)));
     }
 

@@ -1,0 +1,7 @@
+IN 1
+;
+BA/K1F/COM/FN3/B:DN:GN/D/R/SO/C/AL/C3/GN/G;
+32/4./T/4./Q/4./Q/4.;
+AO 1/ACT 5/D 6:7/ACT 2:4;
+;
+2 6/-2 6;

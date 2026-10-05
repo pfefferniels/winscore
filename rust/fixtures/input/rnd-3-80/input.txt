@@ -1,0 +1,7 @@
+IN 1 0 0 1.2
+30 200
+A4/M2/E:DS:E/RD/CF:F:F:AS/EF/GS:BF:F/FF5:DS/FF5:DS/D/A:B:D:F/EF/M/CN:G/SO;
+Q/S/8/H/T/T/8./8./4/8../8./S;
+M 10:11;
+;
+7 10;
