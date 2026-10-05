@@ -6,6 +6,7 @@
 //! (`NOTE`, `TREB`, `METER34`) create one with the engine's defaults; the new
 //! item is selected, as the engine puts new items straight into edit mode.
 
+mod auto_beam;
 pub mod beams;
 mod centre;
 pub mod create;
@@ -214,6 +215,7 @@ pub fn is_supported(line: &str) -> bool {
             SessionWord::parse(&word).is_some()
                 || GroupCommand::word(&word).is_some()
                 || LayoutCommand::word(&word).is_some()
+                || auto_beam::Word::parse(&word).is_some()
                 || Order::word(&word).is_some()
                 || Move::parse(&word, first_number(&tokens[1..])).is_some_and(Move::is_complete)
                 || item::is_edit_word(&word)
@@ -293,6 +295,9 @@ impl Run<'_, '_> {
         }
         let (word, args) = word_and_args(tokens)?;
         let number = first_number(args);
+        if let Some(auto) = auto_beam::Word::parse(&word).filter(|_| self.selected_codes().contains(&6)) {
+            return self.auto_beam(auto);
+        }
         match SessionWord::parse(&word) {
             Some(SessionWord::Leave) => self.leave(number),
             Some(SessionWord::Abort { exit }) => {

@@ -4,7 +4,7 @@
 use score_render::staff::StaffTable;
 use score_render::Document as RenderDocument;
 
-use crate::command::Run;
+use crate::command::{auto_beam, Run};
 use crate::document::ItemId;
 use crate::error::EditError;
 use crate::params::Draft;
@@ -253,7 +253,42 @@ fn note_fitted(note: &Draft, beams: &[&Draft], on: f32, fit: StemFit, staves: &S
     Ok(with_stem(note, f(offset + longest)))
 }
 
+/// The stem pass over `items` for `beam` (0x40CDE4), as AUTO and SPL end.
+fn fit_under(items: &mut [Draft], beam: &Draft, fit: StemFit, staves: &StaffTable) {
+    if !is_fitting_beam(beam) {
+        return;
+    }
+    items.iter_mut().filter(|d| under_beam(beam, d, fit.opposite)).for_each(|note| *note = fitted(beam, note, fit, staves));
+}
+
 impl Run<'_, '_> {
+    /// AUTO, AUTOX, SPLn: the selected beams get their secondary beams from
+    /// their notes' durations, and the notes' stems are fitted to them.
+    pub fn auto_beam(&mut self, word: auto_beam::Word) -> Result<(), EditError> {
+        let beams: Vec<ItemId> = self.session.selection().iter().copied().filter(|&id| self.tx.doc().item(id).is_some_and(|i| i.code() == BEAM)).collect();
+        if beams.is_empty() {
+            return Err(EditError::NotForCode { command: format!("{word:?}"), code: self.first_selected_code() });
+        }
+        let staves = RenderDocument::new(self.tx.doc().file()).staves;
+        beams.into_iter().for_each(|id| {
+            let ids: Vec<ItemId> = self.tx.doc().ids().to_vec();
+            let before: Vec<Draft> = self.tx.doc().file().items.iter().map(Draft::of).collect();
+            let Some(edit) = self.tx.doc().index_of(id) else { return };
+            let Some(outcome) = auto_beam::run(&before, edit, word) else { return };
+            let mut items = outcome.items;
+            if let Some(beam) = &outcome.stem_beam {
+                fit_under(&mut items, beam, StemFit { opposite: word == auto_beam::Word::AutoX, french: false }, &staves);
+            }
+            ids.iter().zip(&before).zip(&items).filter(|((_, old), new)| !new.describes(&old.to_item())).for_each(|((&id, _), new)| {
+                self.tx.replace(id, new.to_item());
+            });
+            outcome.inserted.iter().enumerate().for_each(|(k, copy)| {
+                self.tx.insert(edit + 1 + k, copy.to_item());
+            });
+        });
+        Ok(())
+    }
+
     fn drafts(&self) -> Vec<(ItemId, Draft)> {
         self.tx.doc().entries().map(|(id, item)| (id, Draft::of(item))).collect()
     }
