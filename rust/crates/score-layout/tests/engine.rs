@@ -7,7 +7,7 @@ use std::fs;
 use std::path::Path;
 
 use score_format::{Item, Word};
-use score_layout::{line_up, Options, StaffRange};
+use score_layout::{layout, line_up_and_justify_all, Command, Options, StaffRange};
 
 const TOLERANCE: f32 = 1e-4;
 
@@ -55,14 +55,23 @@ fn cases(text: &str) -> Vec<Case> {
 }
 
 fn run(case: &Case) -> Vec<Item> {
-    let answer: Vec<i32> = case.commands[1].split_whitespace().map(|v| v.parse().expect("staff number")).collect();
-    let range = StaffRange::from_answer(answer[0], answer.get(1).copied().unwrap_or(1));
-    match case.commands[0].as_str() {
-        "LI" => match line_up(&case.base, range, &Options::default()) {
-            Ok(layout) => layout.items,
-            Err(err) => err.layout.items,
-        },
-        other => panic!("{}: command {other} is not supported yet", case.name),
+    let options = Options::default();
+    let outcome = if case.commands[0] == "LJA" {
+        line_up_and_justify_all(&case.base, &options)
+    } else {
+        let answer: Vec<i32> = case.commands[1].split_whitespace().map(|v| v.parse().expect("staff number")).collect();
+        let range = StaffRange::from_answer(answer[0], answer.get(1).copied().unwrap_or(1));
+        let command = match case.commands[0].as_str() {
+            "LI" => Command::LineUp,
+            "J" => Command::Justify,
+            "LJ" => Command::LineUpAndJustify,
+            other => panic!("{}: unknown command {other}", case.name),
+        };
+        layout(&case.base, command, range, &options)
+    };
+    match outcome {
+        Ok(layout) => layout.items,
+        Err(err) => err.layout.items,
     }
 }
 
@@ -70,19 +79,29 @@ fn params(item: &Item) -> Vec<f32> {
     item.params().iter().map(|w| w.as_f32()).collect()
 }
 
+/// P9 of a whole-measure rest marked -1 for centring: the engine's draw_rest replaces it
+/// with the centre when it draws the score after the command, which is not part of the
+/// layout command itself.
+fn drawn_centre(item: &Item, k: usize) -> bool {
+    item.code() == 2 && k == 8 && item.param(9) == -1.0
+}
+
 /// The first parameter that differs by more than the tolerance (missing ones count as 0).
 fn difference(ours: &Item, engine: &Item) -> Option<String> {
     let (a, b) = (params(ours), params(engine));
     let n = a.len().max(b.len());
     let get = |v: &[f32], k: usize| v.get(k).copied().unwrap_or(0.0);
-    (0..n).find(|&k| (get(&a, k) - get(&b, k)).abs() > TOLERANCE).map(|k| format!("P{}: ours {:?} engine {:?}", k + 1, a, b))
+    (0..n)
+        .find(|&k| (get(&a, k) - get(&b, k)).abs() > TOLERANCE && !drawn_centre(ours, k))
+        .map(|k| format!("P{}: ours {:?} engine {:?}", k + 1, a, b))
 }
 
-#[test]
-fn layout_matches_the_engine() {
+/// Replays `cases` and compares with `expected`; returns the failures outside the known
+/// mismatches.
+fn compare(cases_file: &str, expected_file: &str) -> Vec<String> {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
-    let cases = cases(&fs::read_to_string(dir.join("engine_cases.txt")).expect("cases"));
-    let expected_text = fs::read_to_string(dir.join("engine_expected.txt")).expect("expected");
+    let cases = cases(&fs::read_to_string(dir.join(cases_file)).expect("cases"));
+    let expected_text = fs::read_to_string(dir.join(expected_file)).expect("expected");
     let expected: BTreeMap<String, Vec<Item>> =
         blocks(&format!("\n{expected_text}")).into_iter().map(|(name, lines)| (name, lines.into_iter().map(item).collect())).collect();
     let known = fs::read_to_string(dir.join("known_mismatches.txt")).unwrap_or_default();
@@ -106,6 +125,18 @@ fn layout_matches_the_engine() {
             Some(_) => {}
         }
     }
-    println!("{matched} of {} layout cases match the engine", expected.len());
+    println!("{matched} of {} cases in {cases_file} match the engine", expected.len());
+    failures
+}
+
+#[test]
+fn line_up_matches_the_engine() {
+    let failures = compare("engine_cases.txt", "engine_expected.txt");
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn justify_matches_the_engine() {
+    let failures = compare("justify_cases.txt", "justify_expected.txt");
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
