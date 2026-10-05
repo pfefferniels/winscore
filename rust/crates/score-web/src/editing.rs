@@ -240,6 +240,18 @@ mod tests {
     }
 
     #[test]
+    fn layout_commands_ask_for_the_system_and_report_engine_messages() {
+        let mut score = mozart();
+        score.execute("LJ").unwrap_or_else(|_| panic!("LJ"));
+        assert!(score.prompt().unwrap().contains("Lowest Staff"));
+        let lj = score.execute("1 2").unwrap_or_else(|_| panic!("answer"));
+        assert_eq!(score.prompt(), None);
+        assert!(!lj.label.is_empty() || lj.message.is_some(), "{lj:?}");
+        let lja = score.execute("LJA").unwrap_or_else(|_| panic!("LJA"));
+        assert!(lja.label.is_empty() || lja.label == "LJA", "{lja:?}");
+    }
+
+    #[test]
     fn drags_follow_the_cursor_and_undo_in_one_step() {
         let mut score = mozart();
         score.select(vec![12]);

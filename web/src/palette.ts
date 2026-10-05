@@ -93,6 +93,18 @@ const GROUPS: Group[] = [
     ],
   },
   {
+    name: 'Layout',
+    needsSelection: false,
+    area: true,
+    entries: [
+      { id: 33751, label: 'Line up' },
+      { id: 33752, label: 'Justify' },
+      { id: 33319, label: 'LJ' },
+      { id: 34126, label: 'LJ all' },
+      { id: 33762, label: 'Transpose' },
+    ],
+  },
+  {
     name: 'Area',
     needsSelection: false,
     area: true,

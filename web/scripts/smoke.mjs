@@ -187,6 +187,20 @@ try {
   assert.ok(await page.isHidden('#prompt'));
   assert.equal(await page.textContent('#item-count'), '(344)');
 
+  // Layout: LJ asks for the system, answered on the command bar; the result is one undo step.
+  await page.click('#palette button:text-is("LJ")');
+  assert.match(await page.textContent('#prompt'), /Lowest Staff/);
+  await page.keyboard.type('1 2');
+  await page.keyboard.press('Enter');
+  assert.ok(await page.isHidden('#prompt'));
+  assert.ok(await page.isEnabled('#undo'));
+  await page.click('#undo');
+  await page.focus('#viewport');
+  await page.keyboard.type('LJA');
+  await page.keyboard.press('Enter');
+  assert.ok(await page.isHidden('#prompt'));
+  await page.click('#undo');
+
   // A box drawn over empty paper selects the items inside it (fresh view: scrolled to the music).
   await page.goto('http://localhost:4178/?sample=mozart.mus&mode=rust');
   await page.waitForSelector('#app[data-ready="true"]');
