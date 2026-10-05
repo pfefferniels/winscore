@@ -110,6 +110,9 @@ enum SessionWord {
     PageRight,
 }
 
+/// Edit words that take their number attached as well as after a blank (WB3, EU5).
+const NUMBERED_WORDS: [&str; 2] = ["WB", "EU"];
+
 /// PCHNG0 … PCHNG14: what each slider button adds (PCHNG0 zeroes).
 const SLIDER_STEPS: [Option<f32>; 15] = [
     None,
@@ -391,7 +394,10 @@ impl Run<'_, '_> {
                 self.create(&template, args)
             }
             _ if item::is_edit_word(word) => self.rewrite(word, first_number(args)),
-            _ => Err(EditError::UnknownCommand(word.to_owned())),
+            _ => match parse::split_count(word) {
+                (stem, Some(n)) if NUMBERED_WORDS.contains(&stem) => self.rewrite(stem, Some(n)),
+                _ => Err(EditError::UnknownCommand(word.to_owned())),
+            },
         }
     }
 

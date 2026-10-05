@@ -307,6 +307,22 @@ pub fn set_hundred(draft: &mut Draft, n: usize, on: bool) {
     draft.set(n, value + change * direction);
 }
 
+/// WB n, EU n on a rest: a whole rest (a bar rest from 4 on, its P6 spacing
+/// cleared) or a European composite rest, with n written over it, centred.
+pub fn whole_bar_rest(draft: &mut Draft, european: bool, number: f32) {
+    let kind = match (european, number < 4.0) {
+        (true, _) => -10.0 - number,
+        (false, true) => -2.0,
+        (false, false) => -5.0,
+    };
+    if !european {
+        draft.set(6, 0.0);
+    }
+    draft.set(5, kind);
+    draft.set(8, number);
+    draft.set(9, -1.0);
+}
+
 /// RHG: a grace note of the engine's default shape.
 pub fn make_grace(draft: &mut Draft) {
     set_cue(draft, true);

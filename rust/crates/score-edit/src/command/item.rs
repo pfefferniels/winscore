@@ -83,6 +83,8 @@ pub enum Op {
     /// P(n) + delta, not below `min`.
     AddAtLeast { n: usize, delta: f32, min: f32 },
     PedalSize(f32),
+    /// WB n, EU n: a whole-bar rest numbered n, centred (0x4359D0).
+    WholeBarRest { european: bool },
     FlipSymbol,
     SymbolSize(f32),
     BoxWidth(f32),
@@ -167,6 +169,7 @@ impl Op {
             }
             Op::AddAtLeast { n, delta, min } => draft.set(n, (draft.get(n) + delta).max(min)),
             Op::PedalSize(delta) => signs::resize_pedal(draft, delta),
+            Op::WholeBarRest { european } => note::whole_bar_rest(draft, european, arg.unwrap_or(0.0)),
             Op::FlipSymbol => signs::flip_symbol(draft),
             Op::SymbolSize(delta) => signs::resize_symbol(draft, delta),
             Op::BoxWidth(delta) => signs::resize_box_width(draft, delta),
@@ -351,6 +354,10 @@ const OTHERS: &[Entry] = &[
     entry("RF", R, Op::Toggle { n: 8, value: -1.0 }, "Fermata on the rest on/off (P8 = -1)"),
     entry("RPR", R, Op::ToggleDigit { n: 5, unit: 100.0 }, "Rest in parentheses on/off (P5 ± 100)"),
     entry("CW", R, Op::Toggle { n: 9, value: -1.0 }, "Centre whole rest (P9 = -1)"),
+    entry("RF-", R, Op::Toggle { n: 8, value: -2.0 }, "Inverted fermata below the rest on/off (P8 = -2)"),
+    entry("RP", R, Op::SetParams(&[(5, -4.0), (9, -1.0)]), "Repeat-bar sign, centred (P5 = -4, P9 = -1)"),
+    entry("WB", R, Op::WholeBarRest { european: false }, "Whole rest numbered n (P5 = -2, or -5 from 4; P8 = n, P9 = -1)"),
+    entry("EU", R, Op::WholeBarRest { european: true }, "European bar rest numbered n (P5 = -10 - n, P8 = n, P9 = -1)"),
     clef("TREB", 0.0, 0.0, "Treble clef"),
     clef("TRE", 0.0, 0.0, "Treble clef"),
     clef("BASS", 0.0, 1.0, "Bass clef"),
