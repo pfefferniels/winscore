@@ -25,7 +25,7 @@ void FUN_004e7f79(void)
   if (DAT_01fbb8a0 == 9) {
     DAT_01fbb7e0 = VEC_N;
     if ((char)DAT_020b8ea0 == '|') {
-      thunk_FUN_0041b011();
+      region_select();
       fVar1 = P4;
     }
     else {
@@ -35,7 +35,7 @@ void FUN_004e7f79(void)
       fVar1 = (P2 + P1) - f_1;
     }
     DAT_01fbb864 = (int)ROUND(fVar1);
-    thunk_FUN_004a30bb(&DAT_008d12f8,&DAT_00766140);
+    ask_source_box(&DAT_008d12f8,&DAT_00766140);
     if (DAT_008d12f8 != -2) {
       if (DAT_008d12f8 != 0) {
         DAT_01fbb860 = (int)ROUND(P1);
@@ -81,14 +81,14 @@ LAB_004e8460:
         thunk_FUN_00518448();
         DAT_01fbb7e0 = VEC_N;
         thunk_FUN_0041aa88();
-        thunk_FUN_004a30bb(&DAT_008d12f8,&DAT_00766170);
+        ask_source_box(&DAT_008d12f8,&DAT_00766170);
         if (DAT_008d12f8 == -2) goto LAB_004e8460;
         if (DAT_008d12f8 != 0) goto LAB_004e815d;
         VEC_N = DAT_01fbb7e0;
       }
       DAT_01fbb7e4 = VEC_N;
-      thunk_FUN_0041b011();
-      thunk_FUN_004a30bb(&DAT_008d12f8,&DAT_00766170);
+      region_select();
+      ask_source_box(&DAT_008d12f8,&DAT_00766170);
       if (DAT_008d12f8 == -2) goto LAB_004e8460;
       if (DAT_008d12f8 == 0) {
         VEC_N = DAT_01fbb7e4;

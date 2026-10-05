@@ -1,0 +1,7 @@
+IN 1 0 0 .8
+;
+G4/G4/C/R/ES:DN/B/SO/A/M/G:F:D/CF:ES:DF:B/GN:ES:AF:C/DN4/G3/RD;
+8../16/G/16/8../S/S/4/S/T/Q/8/8;
+TM 11/F2 7;
++1 2/4 6/8 9;
+9 10/8 11;

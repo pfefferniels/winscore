@@ -44,12 +44,13 @@ class Run:
     handlers: list[str] = field(default_factory=list)     # engine routines called directly by the interpreter
 
 
-def item_list(engine: Engine) -> list[list[float]]:
+def item_list(engine: Engine, digits: int | None = 4) -> list[list[float]]:
     out = []
     for i in range(1, engine.i32(0x20B8E24) + 1):
         w = engine.i32(0x2091D1C + 4 * i)
         length = int(struct.unpack("<f", engine.uc.mem_read(0x205343C + 4 * w, 4))[0])
-        out.append([round(v, 4) for v in struct.unpack(f"<{length}f", engine.uc.mem_read(0x2053440 + 4 * w, 4 * length))])
+        values = struct.unpack(f"<{length}f", engine.uc.mem_read(0x2053440 + 4 * w, 4 * length))
+        out.append([v if digits is None else round(v, digits) for v in values])
     return out
 
 

@@ -143,7 +143,7 @@ LAB_0040f627:
       if (DAT_02052748 == DAT_02052740) {
         DAT_01fbb7e0 = VEC_N;
         thunk_FUN_0041aa88();
-        thunk_FUN_004a30bb(&DAT_01fbb8d4,&DAT_0075f2c0);
+        ask_source_box(&DAT_01fbb8d4,&DAT_0075f2c0);
         if (DAT_01fbb8d4 == -2) {
           *(undefined4 *)(puVar3 + -0x70) = 0;
           goto LAB_00410114;
@@ -235,8 +235,8 @@ LAB_0040f8e9:
     }
     DAT_01fbb870 = f_0;
     DAT_01fbb7e0 = VEC_N;
-    thunk_FUN_0041b011();
-    thunk_FUN_004a30bb(&DAT_01fbb8d4,&DAT_0075f2c0);
+    region_select();
+    ask_source_box(&DAT_01fbb8d4,&DAT_0075f2c0);
     if (DAT_01fbb8d4 != -2) {
       if (DAT_01fbb8d4 == 0) {
         VEC_N = DAT_01fbb7e0;

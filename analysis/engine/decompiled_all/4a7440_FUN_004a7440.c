@@ -77,7 +77,7 @@ void FUN_004a7440(void)
     }
     else {
       DAT_02052740 = 8;
-      FUN_004a830b();
+      read_prefs();
       puVar5 = &DAT_00790b90;
       puVar7 = &DAT_019c68ac;
       for (iVar4 = 0x20; iVar4 != 0; iVar4 = iVar4 + -1) {

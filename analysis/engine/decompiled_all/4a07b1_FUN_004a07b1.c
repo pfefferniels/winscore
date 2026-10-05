@@ -20,7 +20,7 @@ void FUN_004a07b1(void)
       IP9 = 0;
     }
     if (DAT_01c5b1e0 == 0) {
-      thunk_FUN_00430ec0();
+      load_guitar_dat();
     }
     if ((IP9 < 0) || (4 < IP9)) {
       IP9 = 0;

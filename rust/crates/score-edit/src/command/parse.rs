@@ -41,6 +41,10 @@ pub fn number(text: &str) -> Option<f32> {
 }
 
 fn token(text: &str) -> Token {
+    // A trailing slash ends a line of rhythm input; the engine reads `4/` as 4.
+    if let Some(n) = text.strip_suffix('/').filter(|t| !t.starts_with('/')).and_then(number) {
+        return Token::Number(n);
+    }
     if let Some(n) = text.strip_prefix("//").and_then(number) {
         Token::Transfer(n)
     } else if let Some(n) = text.strip_prefix('/').and_then(number) {
@@ -54,6 +58,14 @@ fn token(text: &str) -> Token {
 
 pub fn tokens(line: &str) -> Vec<Token> {
     line.split([' ', ',', '\t']).filter(|t| !t.is_empty()).map(token).collect()
+}
+
+/// A line of quick text entry, `"text" p2 p3 …`: the text between the quotes
+/// and the rest of the line, or `None` if the line does not start with a quote.
+/// An unclosed quote is an error, as in the engine.
+pub fn quoted(line: &str) -> Option<Option<(&str, &str)>> {
+    let after = line.trim_start().strip_prefix('"')?;
+    Some(after.split_once('"'))
 }
 
 /// Splits a count off the end of a word: `R10` gives `("R", 10)`, `U` gives `("U", None)`.
@@ -84,6 +96,12 @@ mod tests {
     }
 
     #[test]
+    fn a_trailing_slash_is_ignored_after_numbers() {
+        assert_eq!(tokens("12 16/"), [Token::Number(12.0), Token::Number(16.0)]);
+        assert_eq!(tokens("10./ Q/"), [Token::Number(10.0), Token::Word("Q/".into())]);
+    }
+
+    #[test]
     fn words_with_signs_stay_words() {
         assert_eq!(tokens("ENH+1 -A + CR-"), ["ENH+1", "-A", "+", "CR-"].map(|w| Token::Word(w.into())));
     }
@@ -97,6 +115,13 @@ mod tests {
         assert_eq!(number("."), None);
         assert_eq!(number("1.2.3"), None);
         assert_eq!(number("5e3"), None);
+    }
+
+    #[test]
+    fn quoted_text_and_the_rest() {
+        assert_eq!(quoted(r#""_15A stitch, in time" 3 20 14"#), Some(Some(("_15A stitch, in time", " 3 20 14"))));
+        assert_eq!(quoted(r#""unclosed 1 2"#), Some(None));
+        assert_eq!(quoted("NOTE 1"), None);
     }
 
     #[test]

@@ -13,8 +13,11 @@ use score_input::InputFile;
 
 const TOLERANCE: f32 = 1e-4;
 
+/// The fixture directory; INPUT_FIXTURES points the test at another one (e.g. random cases).
 fn fixture_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/input")
+    std::env::var_os("INPUT_FIXTURES")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/input"))
 }
 
 fn cases() -> Vec<PathBuf> {

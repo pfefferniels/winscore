@@ -240,6 +240,8 @@ fn text_call<'t>(
         p15 => real(f64::from(p15) * constant(SIZE)),
     };
     let size = if ip(item, 4).abs() > 99 { real(size * constant(GRACE_SIZE)) } else { size };
+    // draw_note reads P10 = 110 as 10 before anything else.
+    let p10 = if ip(item, 10) == 110 { 10.0 } else { item.p(10) };
     let colour = if item.p(26) != 0.0 || item.p(25) != 0.0 {
         Some(item.p(26))
     } else {
@@ -257,8 +259,8 @@ fn text_call<'t>(
         height: 0.0,
         font_override: font as i32,
         rotation: item.p(13),
-        space: item.p(10),
-        shift: item.p(10),
+        space: p10,
+        shift: p10,
         colour,
         current_font,
     }

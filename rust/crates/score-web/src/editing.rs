@@ -11,6 +11,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::hit::At;
 use crate::input::{line_items, InputLine};
+use crate::placing;
 use crate::Score;
 
 fn indices(items: &[ItemId]) -> Vec<u32> {
@@ -75,8 +76,12 @@ impl Score {
     /// one undo step; the new items become the selection.
     #[wasm_bindgen(js_name = insertInput)]
     pub fn insert_input(&mut self, line: &InputLine) -> Result<String, JsError> {
-        let items = line_items(self.0.file(), &line.texts(), &line.options()).map_err(|err| JsError::new(&err.message))?;
+        let mut motives = self.0.motives().clone();
+        let items = line_items(self.0.file(), line, &mut motives).map_err(|err| JsError::new(&err.message))?;
         let result = self.0.editor_mut().insert_items(items);
+        if result.is_ok() {
+            self.0.set_motives(motives);
+        }
         self.finish(result)
     }
 
@@ -103,6 +108,51 @@ impl Score {
         } else {
             String::new()
         }
+    }
+
+    /// The question a group command (M, CO, DG, A, CPX …) is waiting to
+    /// have answered on the command bar, if any.
+    pub fn prompt(&self) -> Option<String> {
+        self.0.editor().prompt().map(str::to_owned)
+    }
+
+    /// Replaces the characters of text item `index` (WinScore's Edit Text).
+    #[wasm_bindgen(js_name = setText)]
+    pub fn set_text(&mut self, index: u32, text: &str) -> Result<String, JsError> {
+        let id = self.0.id(ItemId(index))?;
+        let result = self.0.editor_mut().set_text(id, text);
+        self.finish(result)
+    }
+
+    /// New text items as quick entry `"text" p2 p3 …` makes them; `params`
+    /// are P2, P3, … (0 keeps the default), `/` divides the text into items.
+    #[wasm_bindgen(js_name = insertText)]
+    pub fn insert_text(&mut self, text: &str, params: Vec<f32>) -> Result<String, JsError> {
+        let result = self.0.editor_mut().insert_text(text, &params);
+        self.finish(result)
+    }
+
+    /// A code-9 item showing library symbol `number` on `staff` at P3, P4, selected.
+    #[wasm_bindgen(js_name = insertSymbol)]
+    pub fn insert_symbol(&mut self, number: i32, staff: f32, p3: f32, p4: f32) -> Result<String, JsError> {
+        let result = self.0.editor_mut().insert_symbol(number, staff, p3, p4);
+        self.finish(result)
+    }
+
+    /// Staff, P3 and P4 of page point (`x`, `y`) on the nearest staff, for
+    /// placing new items (`Float32Array` of three, or `undefined` without staves).
+    #[wasm_bindgen(js_name = placeAt)]
+    pub fn place_at(&self, x: f64, y: f64) -> Option<Vec<f32>> {
+        placing::place_at(self.0.file(), x, y).map(|place| vec![place.staff as f32, place.p3, place.p4])
+    }
+
+    /// A box drawn on the page (corners in page coordinates), read as
+    /// WinScore reads a mouse-drawn area: it answers a group command waiting
+    /// for its area or destination, and otherwise selects the items inside.
+    #[wasm_bindgen(js_name = drawBox)]
+    pub fn draw_box(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> Result<String, JsError> {
+        let result = self.0.editor_mut().draw_box(x0, y0, x1, y1);
+        self.finish(result)
     }
 
     /// The item a click at page point (`x`, `y`) means (decision D8): the one
@@ -162,6 +212,18 @@ mod tests {
         let far_from_ink = (33500.0, 28000.0);
         assert_eq!(score.item_at(far_from_ink.0, far_from_ink.1, 10.0, 100.0), None);
         assert!(score.item_at(far_from_ink.0, far_from_ink.1, 10.0, 60000.0).is_some());
+    }
+
+    #[test]
+    fn a_drawn_box_selects_or_answers_a_group_command() {
+        let mut score = mozart();
+        score.draw_box(2000.0, 0.0, 32000.0, 56000.0).unwrap_or_else(|_| panic!("box"));
+        assert!(score.selection().len() > 100);
+        score.select(vec![]);
+        score.execute("M").unwrap_or_else(|_| panic!("M"));
+        let asks_area = score.prompt().unwrap();
+        score.draw_box(2000.0, 0.0, 32000.0, 56000.0).unwrap_or_else(|_| panic!("box"));
+        assert_ne!(score.prompt().unwrap(), asks_area);
     }
 
     #[test]

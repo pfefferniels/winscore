@@ -12,10 +12,11 @@ cd rust && cargo run -p score-testkit --bin score-compare -- --help             
 | File | Contents |
 |---|---|
 | `input.mus` | the score given to the engine |
+| `result.mus` | only for cases with commands: the score as the engine holds it afterwards (saved with `SA`); layout commands move and reorder items, and `item` indices then refer to this file |
 | `engine.json` | the engine's display list, page coordinates |
 | `meta.json` | commands, engine messages, item count, paper, view offset, validity |
 
-A case is produced by a fresh engine: `initialize()`, then `G case.mus` (the file is renamed in the sandbox because the engine reads `G input.mus` as `NPUT.MUS`), then the case's extra commands. The display list after the last command is stored.
+A case is produced by a fresh engine: `initialize()`, then `G case.mus` (the file is renamed in the sandbox because the engine reads `G input.mus` as `NPUT.MUS`), then the case's extra commands. The display list after the last command is stored. The engine's yes/no question (`0x595CD0`, e.g. "Source Box O.K.?" in LJ, LI and J, "Add bar lines?" in IN) is answered yes unless the case sets `confirm=False`; question and answer appear in `meta.json` events. `Fixture::input()` in `score-testkit` returns `result.mus` when it exists, so a renderer is compared on the score the engine drew.
 
 ## `engine.json`
 

@@ -58,7 +58,7 @@ void FUN_0042ea8c(void)
         P2 = (float)LOAD_STAFF;
         EDIT_ITEM = DAT_007f13d0;
         DAT_007f13cc = LOAD_W;
-        thunk_FUN_0045ef21();
+        edit_letters();
         DAT_020b9448 = P2;
         (&ITEM_P3)[DAT_007f13cc] = P2;
         FUN_005f34d1(puVar2,0x42ed8f);
@@ -88,7 +88,7 @@ void FUN_0042ea8c(void)
             P48 = f_1;
           }
           DAT_01caf6b0 = DAT_007f13c8 + iVar3;
-          thunk_FUN_0042fa58(&ITEM_LEN + DAT_01caf6b0,4,&IP12);
+          text_parse(&ITEM_LEN + DAT_01caf6b0,4,&IP12);
           P2 = DAT_01caf68c;
           DAT_007f13c4 = (&DAT_01caea3c)[DAT_01cb1068];
           DAT_007f13c0 = DAT_01caea44;

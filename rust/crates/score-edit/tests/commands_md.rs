@@ -2,6 +2,8 @@
 //! with the code. `UPDATE_COMMANDS_MD=1 cargo test -p score-edit --test commands_md`
 //! rewrites it.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
@@ -68,17 +70,25 @@ fn mark(yes: bool) -> &'static str {
     }
 }
 
+/// Commands whose catalogue run changed something and that the editor
+/// reproduces (tests/catalogue.rs checks every such row).
+fn catalogue_verified() -> Vec<String> {
+    common::rows()
+        .into_iter()
+        .filter(|row| row.has_effect() && is_supported(&row.command) && !common::deviates(row))
+        .map(|row| row.command.trim().to_owned())
+        .collect()
+}
+
 fn render() -> String {
     let menu = menu_commands();
     let verified = verified_words();
+    let catalogue = catalogue_verified();
     let numbers_verified = verified.iter().any(|w| is_numeric(w));
     let is_verified = |command: &str| {
         let token = first_token(command);
-        if is_numeric(&token) {
-            numbers_verified
-        } else {
-            verified.contains(&token)
-        }
+        let by_case = if is_numeric(&token) { numbers_verified } else { verified.contains(&token) };
+        by_case || catalogue.iter().any(|c| c == command.trim())
     };
     let rows: Vec<String> = menu
         .iter()
@@ -111,7 +121,9 @@ fn render() -> String {
          the engine cases; rewrite with `UPDATE_COMMANDS_MD=1 cargo test -p score-edit --test commands_md`.\n\n\
          *Implemented*: the editor accepts the command in some context. *Verified*: a case in \
          `tests/engine_cases.txt` starting with the same word gives the same items as WinScore's engine \
-         under emulation (parameter pairs count as one family). Many menu entries are display, file, \
+         under emulation (parameter pairs count as one family), or the command changed the score in \
+         disasm-expert's catalogue run (`analysis/engine/data/commands.tsv`) and `tests/catalogue.rs` \
+         finds the editor doing the same. Many menu entries are display, file, \
          MIDI or dialog commands that the browser shell handles itself or that are out of scope.\n\n\
          {} distinct menu commands, {} implemented, {} of them verified.\n\n\
          | Command | Meaning (tooltip) | Implemented | Verified |\n|---|---|---|---|\n{}\n\n\

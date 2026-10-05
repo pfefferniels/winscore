@@ -118,6 +118,37 @@ function paintFrame(ctx: CanvasRenderingContext2D, t: Transform, paper: Box) {
   ctx.stroke();
 }
 
+/** Paints the page for print: white paper filling the canvas, no screen aids. */
+export function paintPrint(ctx: CanvasRenderingContext2D, list: DisplayList, paper: Box) {
+  const { width, height } = ctx.canvas;
+  const k = width / (paper.x1 - paper.x0);
+  const t: Transform = { k, ox: -paper.x0 * k, oy: height + paper.y0 * k };
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = BACKGROUND;
+  ctx.fillRect(0, 0, width, height);
+  // A one-logical-unit pen under MM_HIENGLISH: 0.001 in, at least a device pixel.
+  ctx.lineWidth = Math.max(1, k * 4);
+  ctx.textBaseline = 'alphabetic';
+  paintList(ctx, t, list, null);
+}
+
+/** Paints `list` scaled to fit the canvas with a margin, for previews. */
+export function paintThumbnail(ctx: CanvasRenderingContext2D, list: DisplayList, box: Box) {
+  const { width, height } = ctx.canvas;
+  const margin = 0.15;
+  const k = Math.min(width / (box.x1 - box.x0 || 1), height / (box.y1 - box.y0 || 1)) * (1 - 2 * margin);
+  const t: Transform = {
+    k,
+    ox: (width - (box.x1 - box.x0) * k) / 2 - box.x0 * k,
+    oy: (height + (box.y1 - box.y0) * k) / 2 + box.y0 * k,
+  };
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  ctx.lineWidth = 1;
+  ctx.textBaseline = 'alphabetic';
+  paintList(ctx, t, list, null);
+}
+
 export function paint(ctx: CanvasRenderingContext2D, scene: Scene) {
   const { width, height } = ctx.canvas;
   const t = scene.transform;

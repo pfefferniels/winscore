@@ -74,10 +74,12 @@ function* records(header: Uint32Array): Generator<Record> {
   }
 }
 
+/** Decodes score-web's flat encoding. Each getter of `encoded` copies out of wasm memory, so each is read once. */
 export function decode(encoded: Encoded): DisplayList {
+  const coords = encoded.coords;
   let point = 0;
   const take = (length: number) => {
-    const path = encoded.coords.subarray(2 * point, 2 * (point + length));
+    const path = coords.subarray(2 * point, 2 * (point + length));
     point += length;
     return path;
   };
@@ -107,16 +109,35 @@ export function union(a: Box | null, b: Box | null): Box | null {
   return { x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1) };
 }
 
+/** One pass over the x, y pairs; this runs over every point of a page, so it avoids intermediate arrays. */
 function pathBounds(path: Int32Array): Box | null {
-  const xs = path.filter((_, i) => i % 2 === 0);
-  const ys = path.filter((_, i) => i % 2 === 1);
-  if (xs.length === 0) return null;
-  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+  if (path.length < 2) return null;
+  const box = { x0: path[0]!, y0: path[1]!, x1: path[0]!, y1: path[1]! };
+  for (let i = 2; i + 1 < path.length; i += 2) {
+    const x = path[i]!;
+    const y = path[i + 1]!;
+    if (x < box.x0) box.x0 = x;
+    else if (x > box.x1) box.x1 = x;
+    if (y < box.y0) box.y0 = y;
+    else if (y > box.y1) box.y1 = y;
+  }
+  return box;
 }
 
+/** Ascent and descent of a character cell in em (roughly Times New Roman), as score-web's hit test uses. */
+const CELL_ASCENT = 0.8;
+const CELL_DESCENT = 0.25;
+
+/** Boxes around a run's strings, whose y is the baseline. */
 function textBounds(run: TextRun): Box | null {
+  const advance = run.width > 0 ? run.width : run.height / 2;
   return run.strings
-    .map((s) => ({ x0: s.x, y0: s.y - run.height, x1: s.x + run.height * s.text.length, y1: s.y }))
+    .map((s) => ({
+      x0: s.x,
+      y0: s.y - CELL_DESCENT * run.height,
+      x1: s.x + advance * Math.max(1, s.text.length),
+      y1: s.y + CELL_ASCENT * run.height,
+    }))
     .reduce<Box | null>(union, null);
 }
 

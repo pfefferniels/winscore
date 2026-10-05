@@ -2,6 +2,7 @@
 //! commands, drags and undo.
 
 use score_format::{Item, MusError, MusFile};
+use score_layout::{Command as LayoutCommand, Options, StaffRange};
 use score_render::staff::Staff;
 use score_render::Document as RenderDocument;
 
@@ -10,10 +11,15 @@ use crate::command::Run;
 use crate::document::{Document, Edit, ItemId, Transaction};
 use crate::drag::{self, Axes, Constraint, Ends, PagePoint};
 use crate::error::EditError;
+use crate::group::{self, Pending, Region};
 use crate::history::{History, Step};
 use crate::params::{Draft, MAX_PARAM};
 use crate::pick;
 use crate::session::Session;
+use crate::transpose::Transposition;
+
+/// P1 of library symbols.
+const SYMBOL_CODE: f32 = 9.0;
 
 /// What an action did to the items, by id, and the selection after it.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -22,6 +28,8 @@ pub struct Change {
     pub removed: Vec<ItemId>,
     pub modified: Vec<ItemId>,
     pub selection: Vec<ItemId>,
+    /// What the engine would report, such as a layout it gave up on midway.
+    pub message: Option<String>,
 }
 
 impl Change {
@@ -77,8 +85,15 @@ pub struct Editor {
 }
 
 impl Editor {
+    /// Opens `file`. Text items get the lengths (P13) the engine measures when
+    /// it first draws the page; scores saved by WinScore already have them.
     pub fn new(file: MusFile) -> Self {
-        Self { doc: Document::new(file), session: Session::default(), history: History::default(), drag: None }
+        let mut doc = Document::new(file);
+        let mut session = Session::default();
+        let mut tx = Transaction::new(&mut doc);
+        Run { session: &mut session, tx: &mut tx }.refresh_text_lengths();
+        tx.commit();
+        Self { doc, session, history: History::default(), drag: None }
     }
 
     pub fn open(bytes: &[u8]) -> Result<Self, MusError> {
@@ -133,6 +148,28 @@ impl Editor {
         self.session.clear();
     }
 
+    /// Selects every item of an area (a box drawn on the page): staves
+    /// `region.bottom..=region.top`, P3 between `left` and `right`, the given codes.
+    pub fn select_region(&mut self, region: &Region) {
+        self.cancel_drag();
+        let mut tx = Transaction::new(&mut self.doc);
+        Run { session: &mut self.session, tx: &mut tx }.select_region(region);
+    }
+
+    /// A box drawn on the page (corners in page coordinates), read as WinScore
+    /// reads a mouse-drawn area ([`Region::from_page_box`]): it answers a group
+    /// command waiting for its area or destination, and otherwise selects the
+    /// items inside.
+    pub fn draw_box(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> Result<Change, EditError> {
+        self.act("Box", |run| run.draw_box((x0, y0), (x1, y1)))
+    }
+
+    /// The question a group command is waiting to have answered by the next
+    /// line given to [`Editor::execute`], if any.
+    pub fn prompt(&self) -> Option<&'static str> {
+        self.session.pending.as_ref().map(Pending::prompt)
+    }
+
     /// The item WinScore's click at page point (`x`, `y`) would select: the
     /// one whose reference point (P3, P4 and a per-code offset) is nearest,
     /// within `radius` page units if given.
@@ -162,10 +199,13 @@ impl Editor {
         self.cancel_drag();
         let mut session = self.session.clone();
         let mut tx = Transaction::new(&mut self.doc);
-        action(&mut Run { session: &mut session, tx: &mut tx })?;
+        let mut run = Run { session: &mut session, tx: &mut tx };
+        action(&mut run)?;
+        run.refresh_text_lengths();
         let edits = tx.commit();
+        let message = session.message.take();
         let before = std::mem::replace(&mut self.session, session);
-        let change = Change::new(&edits, self.session.selection());
+        let change = Change { message, ..Change::new(&edits, self.session.selection()) };
         if !edits.is_empty() {
             self.history.record(Step {
                 label: label.to_owned(),
@@ -223,6 +263,57 @@ impl Editor {
         self.act("Delete", |run| run.delete_selected(None))
     }
 
+    /// New characters for text item `id` (WinScore's Edit Text). Without a
+    /// font code of their own they keep the item's font; P12 and P13 follow.
+    pub fn set_text(&mut self, id: ItemId, text: &str) -> Result<Change, EditError> {
+        self.act("Edit text", |run| run.set_text(id, &crate::text::encode(text)))
+    }
+
+    /// New text items as quick entry `"text" p2 p3 …` makes them: `params`
+    /// are P2, P3, … (0 keeps the default), `/` divides the text into items.
+    pub fn insert_text(&mut self, text: &str, params: &[f32]) -> Result<Change, EditError> {
+        let rest: Vec<String> = params.iter().map(f32::to_string).collect();
+        self.act("Text", |run| {
+            run.session.clear();
+            run.enter_text(&crate::text::encode(text), &rest.join(" "))
+        })
+    }
+
+    /// A code-9 item showing library symbol `number` (see
+    /// [`crate::symbols::library_symbols`]) on `staff` at P3, P4, selected.
+    pub fn insert_symbol(&mut self, number: i32, staff: f32, p3: f32, p4: f32) -> Result<Change, EditError> {
+        let item = Draft::new(&[SYMBOL_CODE, staff, p3, p4, number as f32]).to_item();
+        self.act("Symbol", |run| {
+            run.session.clear();
+            run.append_items(vec![item])
+        })
+    }
+
+    /// TR: transposes the staves and positions of `region` with the values
+    /// of WinScore's Transpose Setup dialog.
+    pub fn transpose(&mut self, region: &Region, how: &Transposition) -> Result<Change, EditError> {
+        self.act("Transpose", |run| run.transpose(region, how))
+    }
+
+    /// LI, J or LJ on the system `range` (score-layout). The x range of
+    /// `options.source_box` limits J; LI and LJ line up whole staves. When
+    /// the engine would give up midway, the change keeps what it leaves and
+    /// [`Change::message`] says why.
+    pub fn lay_out(&mut self, command: LayoutCommand, range: StaffRange, options: &Options) -> Result<Change, EditError> {
+        self.act(group::LayoutCommand::system_word(command), |run| {
+            run.lay_out(command, range, options);
+            Ok(())
+        })
+    }
+
+    /// LJA: LJ on all staves with notes or rests.
+    pub fn lay_out_all(&mut self) -> Result<Change, EditError> {
+        self.act("LJA", |run| {
+            run.lay_out_all();
+            Ok(())
+        })
+    }
+
     /// Appends items (from the music input passes, say) and selects them.
     pub fn insert_items(&mut self, items: Vec<Item>) -> Result<Change, EditError> {
         self.act("Insert", |run| run.append_items(items))
@@ -248,11 +339,6 @@ impl Editor {
         self.drag = Some(Drag { items, grab, ends: self.session.drag_ends(), constraint: Constraint::default() });
     }
 
-    /// Starts a drag for [`Editor::drag_to`], which counts from wherever it started.
-    pub fn drag_begin(&mut self) {
-        self.drag_begin_at(0.0, 0.0);
-    }
-
     /// Moves the selection with the cursor at page point (`x`, `y`), keeping
     /// the grab offset; P3 and P4 come out as the engine computes them (P4 in
     /// whole steps for notes, rests, clefs, keys and meters, right ends along).
@@ -274,12 +360,6 @@ impl Editor {
             .collect();
         self.doc.apply_all(&edits);
         Change::new(&edits, self.selection())
-    }
-
-    /// [`Editor::drag_to_point`] by an offset (`dx`, `dy`) from where the drag began.
-    pub fn drag_to(&mut self, dx: f64, dy: f64) -> Change {
-        let Some(grab) = self.drag.as_ref().map(|d| d.grab) else { return Change::default() };
-        self.drag_to_point(grab.x + dx, grab.y + dy, false)
     }
 
     /// Ends a drag: `commit` keeps the new positions as one undo step, otherwise

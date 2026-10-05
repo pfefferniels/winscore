@@ -226,13 +226,13 @@ void FUN_00458c2a(undefined4 *param_1,int *param_2)
       while (0 < iVar3) {
         DAT_007fed4c = *(float *)(&DAT_01c17df8 + DAT_007fed28 * 8) / _DAT_007fed54;
         ffree(in_ST0);
-        fVar4 = (float10)FUN_005ff381(puVar5,0x459ace);
+        fVar4 = (float10)anint(puVar5,0x459ace);
         *(int *)(puVar5 + -0xa0) = (int)ROUND(fVar4);
         DAT_007fed04 = *(int *)(puVar5 + -0xa0);
         *(float *)(&DAT_01c17df8 + DAT_007fed28 * 8) = DAT_007fed4c;
         DAT_007fed4c = *(float *)(DAT_007fed28 * 8 + 0x1c17dfc) / _DAT_007fed54;
         ffree(extraout_ST1_00);
-        fVar4 = (float10)FUN_005ff381(puVar5,0x459b28);
+        fVar4 = (float10)anint(puVar5,0x459b28);
         *(int *)(puVar5 + -0xa0) = (int)ROUND(fVar4);
         DAT_007fed00 = *(int *)(puVar5 + -0xa0);
         *(float *)(DAT_007fed28 * 8 + 0x1c17dfc) = DAT_007fed4c;

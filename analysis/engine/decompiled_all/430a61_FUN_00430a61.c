@@ -7,7 +7,7 @@ void FUN_00430a61(void)
   if (DAT_0078b6a0 != DAT_00791444) {
     DAT_020b8e6c = OUTPUT_MODE;
     OUTPUT_MODE = 0;
-    thunk_FUN_0056b845();
+    load_font_metrics();
     OUTPUT_MODE = DAT_020b8e6c;
   }
   return;

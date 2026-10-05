@@ -1,0 +1,7 @@
+IN 1
+30 200
+G4/RU/G4/SO/G4/D:AN:A:D/CN/M/DN4/FS/BF/M2/TR/DN/SU/DN;
+8/8/8../G/4/Q/16/8/Q/Q/4.;
+CR 4/T 1:4;
+;
+5 9/1 4;

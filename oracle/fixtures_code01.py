@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from fixtures import Case
 from fixtures_cases import Item, built, item, label, staff
+from fixtures_code16 import text
 
 HEADS = {0: "black", 1: "half", 2: "whole", 3: "breve", 4: "white-diamond", 5: "black-diamond",
          6: "x", 7: "headless", 8: "diamond-x", 9: "oval-x"}
@@ -159,12 +160,14 @@ def offsets() -> list[Case]:
 
 
 def marks() -> list[Case]:
-    numbers = [single(f"p11-mark-{m}", f"mark P11 = {m}", p11=m) for m in range(1, 37) if m != 29]
+    numbers = [single(f"p11-mark-{m}", f"mark P11 = {m}", p11=m) for m in range(1, 41)]
     return numbers + [
-        *[single(f"p11-mark-{m}-down", f"mark P11 = {m}, stem down", p11=m, p5=20) for m in (5, 7, 14, 32)],
-        *[single(f"p11-mark-{label(m)}", f"mark P11 = {m} on the stem side", p11=m) for m in (-5, -7, -14, -32)],
+        *[single(f"p11-mark-{m}-down", f"mark P11 = {m}, stem down", p11=m, p5=20) for m in (5, 7, 14, 29, 32)],
+        *[single(f"p11-mark-{label(m)}", f"mark P11 = {m} on the stem side", p11=m) for m in (-5, -7, -14, -29, -32)],
         single("p11-mark-m32-down", "P11 = -32, stem down", p11=-32, p5=20),
         single("p11-mark-5.13", "P11 = 5.13: accent pushed 1.3 steps", p11=5.13),
+        single("p11-mark-29-p14", "P11 = 29 moved by P14 = -2", p11=29, p14=-2),
+        single("p11-mark-29-tails", "P11 = 29 on a note with two tails", p11=29, p9=2),
         single("p11-mark-m34.2-down", "P11 = -34.2, stem down", p11=-34.2, p5=20),
         single("p11-mark-7-high", "staccato on P4 = 12", p11=7, p4=12),
         single("p11-mark-7-low", "staccato on P4 = -2", p11=7, p4=-2),
@@ -288,6 +291,20 @@ def mixed() -> list[Case]:
     return [built("code01-mixed-bar", "fourteen notes of different kinds on one staff", [staff()] + notes)]
 
 
+def font_chain() -> list[Case]:
+    """draw_item makes the font a note loads last current for the next text item (0x547358)."""
+    first, second = text("_02first", p3=5, p4=14), text("second", p3=60, p4=14)
+    notes = [
+        ("font-after-fingering", "plain text after _02 text and a fingering mark (font 1000)", note(p3=35, p11=32)),
+        ("font-after-alpha", "plain text after _02 text and an AlphaNote (letter font 1005)", note(p3=35, p6=20)),
+        ("font-after-alpha-p21", "plain text after _02 text and an AlphaNote with P21 = 3", note(p3=35, p6=20, p21=3)),
+        ("font-after-tab", "plain text after _02 text and a tablature number (font 1005)", note(p3=35, p6=-6, p5=0)),
+        ("font-after-plain-note", "plain text after _02 text and a plain note (loads none)", note(p3=35)),
+    ]
+    return [built(f"code01-{name}", desc, [staff(), first, n, second]) for name, desc, n in notes]
+
+
 def cases() -> list[Case]:
     return (positions() + accidentals() + heads() + rhythm() + stem_lengths() + dots_and_tails() + offsets()
-            + marks() + other_staves() + sizes() + ledger_control() + colour() + grace() + staves() + mixed())
+            + marks() + other_staves() + sizes() + ledger_control() + colour() + grace() + staves() + font_chain()
+            + mixed())

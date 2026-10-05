@@ -6,23 +6,29 @@
 //! (`NOTE`, `TREB`, `METER34`) create one with the engine's defaults; the new
 //! item is selected, as the engine puts new items straight into edit mode.
 
+pub mod beams;
 pub mod create;
+pub mod groups;
 pub mod item;
 pub mod line;
 pub mod moves;
 pub mod note;
 pub mod numeric;
 pub mod parse;
+pub mod signs;
+pub mod text;
 
 use score_render::Document as RenderDocument;
 
+use crate::conditional;
 use crate::document::{ItemId, Transaction};
 use crate::drag::Ends;
+use crate::group::{GroupCommand, LayoutCommand, Order};
 use crate::error::EditError;
 use crate::params::Draft;
 use crate::session::{Deleted, Session};
 use create::{StaffChoice, Template};
-use moves::Move;
+use moves::{Axis, Move};
 use numeric::ParamOp;
 use parse::Token;
 
@@ -55,7 +61,7 @@ enum CopyMode {
 }
 
 /// Words about edit mode itself rather than about an item's parameters.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum SessionWord {
     /// X, or `X n` to go on with item n.
     Leave,
@@ -70,10 +76,82 @@ enum SessionWord {
     Undelete,
     /// LFT, RGT: drags move only that end of a line, slur, beam or trill.
     DragEnd(Ends),
+    /// CN [staff]: P3 of the nearest note or rest.
+    Center,
+    /// PSn: remember Pn of the item in edit mode.
+    SaveParam(Option<f32>),
+    /// PG, PGn: give the item the last remembered parameter (or the one remembered for Pn).
+    RecallParam(Option<f32>),
+    /// PT n: text size in points.
+    PointSize,
+    /// CT [x]: centre text on x.
+    CentreText,
+    /// CTN, CTX [staff]: centre text on the nearest note, CTX without punctuation.
+    CentreTextOnNote { skip_punctuation: bool },
+    /// JR [x]: text right-justified to x.
+    JustifyRight,
+    /// J [left right]: text justified between two positions.
+    Justify,
+    /// ADJ: stems reach their beam.
+    AdjustStems,
+    /// CH [value]: one duration for the whole chord.
+    ChordRhythm,
+    /// PST: the items cut last, added again.
+    Paste,
+    /// QPn: the parameter the slider buttons change.
+    SliderParam(usize),
+    /// PCHNGn: a slider button, adding to the slider's parameter (or zeroing it).
+    Slider(Option<f32>),
+    /// The arrow keys (~~037x left … ~~040x down): one step.
+    Arrow(Axis, f64),
+    /// PGR: the page to the recto side and back (P2 ± 200).
+    PageRight,
 }
+
+/// PCHNG0 … PCHNG14: what each slider button adds (PCHNG0 zeroes).
+const SLIDER_STEPS: [Option<f32>; 15] = [
+    None,
+    Some(-0.1),
+    Some(-0.5),
+    Some(-1.0),
+    Some(-5.0),
+    Some(-10.0),
+    Some(-20.0),
+    Some(0.1),
+    Some(0.5),
+    Some(1.0),
+    Some(5.0),
+    Some(10.0),
+    Some(20.0),
+    Some(0.05),
+    Some(-0.05),
+];
+/// QP2 … QP21 choose the slider's parameter.
+const SLIDER_PARAMS: std::ops::RangeInclusive<usize> = 2..=21;
 
 impl SessionWord {
     fn parse(word: &str) -> Option<Self> {
+        match parse::split_count(word) {
+            ("PS", n) => return Some(Self::SaveParam(n)),
+            ("PG", n) => return Some(Self::RecallParam(n)),
+            ("PCHNG", Some(n)) if n >= 0.0 && n.fract() == 0.0 => {
+                return SLIDER_STEPS.get(n as usize).map(|&step| Self::Slider(step));
+            }
+            ("QP", Some(n)) if SLIDER_PARAMS.contains(&(n as usize)) && n.fract() == 0.0 => {
+                return Some(Self::SliderParam(n as usize));
+            }
+            _ => {}
+        }
+        let arrow = match word {
+            "~~037X" => Some((Axis::Horizontal, -1.0)),
+            "~~038X" => Some((Axis::Vertical, 1.0)),
+            "~~039X" => Some((Axis::Horizontal, 1.0)),
+            "~~040X" => Some((Axis::Vertical, -1.0)),
+            _ => None,
+        };
+        if let Some((axis, distance)) = arrow {
+            return Some(Self::Arrow(axis, distance));
+        }
         let parsed = match word {
             "X" => Self::Leave,
             "AB" => Self::Abort { exit: false },
@@ -93,6 +171,17 @@ impl SessionWord {
             "UND" => Self::Undelete,
             "LFT" => Self::DragEnd(Ends::Left),
             "RGT" => Self::DragEnd(Ends::Right),
+            "CN" => Self::Center,
+            "PT" => Self::PointSize,
+            "CT" => Self::CentreText,
+            "CTN" => Self::CentreTextOnNote { skip_punctuation: false },
+            "CTX" => Self::CentreTextOnNote { skip_punctuation: true },
+            "JR" => Self::JustifyRight,
+            "J" => Self::Justify,
+            "ADJ" => Self::AdjustStems,
+            "CH" => Self::ChordRhythm,
+            "PST" => Self::Paste,
+            "PGR" => Self::PageRight,
             _ => return None,
         };
         Some(parsed)
@@ -102,12 +191,21 @@ impl SessionWord {
 /// Whether the editor knows the command of `line` in some context; menus
 /// can grey out the entries it does not.
 pub fn is_supported(line: &str) -> bool {
+    if conditional::parse(line).is_some() {
+        return true;
+    }
+    if let Some(entry) = text::quick_entry(line) {
+        return entry.is_ok();
+    }
     let tokens = parse::tokens(line);
     match tokens.first() {
         None => false,
         Some(Token::Word(w)) => {
             let word = w.to_ascii_uppercase();
             SessionWord::parse(&word).is_some()
+                || GroupCommand::word(&word).is_some()
+                || LayoutCommand::word(&word).is_some()
+                || Order::word(&word).is_some()
                 || Move::parse(&word, first_number(&tokens[1..])).is_some_and(Move::is_complete)
                 || item::is_edit_word(&word)
                 || create::template(&word).is_some()
@@ -138,6 +236,12 @@ fn plain_numbers(tokens: &[Token]) -> Option<Vec<f32>> {
     tokens.iter().map(Token::number).collect()
 }
 
+/// Codes an item can be typed in as numbers; 15 (EPS) and 16 (text) need a
+/// file name or characters.
+fn is_creatable_code(code: f32) -> bool {
+    code.fract() == 0.0 && matches!(code as i32, 1..=14 | 17 | 18)
+}
+
 /// Item number `n` (1-based) clamped to the last item, as `I 99` edits the last one.
 fn clamp_item(n: f32, len: usize) -> Option<usize> {
     (len > 0).then(|| (n.max(1.0) as usize).min(len) - 1)
@@ -146,6 +250,18 @@ fn clamp_item(n: f32, len: usize) -> Option<usize> {
 impl Run<'_, '_> {
     /// Executes one command line.
     pub fn line(&mut self, line: &str) -> Result<(), EditError> {
+        if self.session.pending.is_some() {
+            return self.answer_group(line);
+        }
+        if let Some(statement) = conditional::parse(line) {
+            self.session.clear();
+            return self.conditional(&statement);
+        }
+        if let Some(entry) = text::quick_entry(line) {
+            let (characters, rest) = entry?;
+            self.session.clear();
+            return self.enter_text(&characters, rest);
+        }
         let tokens = parse::tokens(line);
         if tokens.is_empty() {
             Ok(())
@@ -176,26 +292,68 @@ impl Run<'_, '_> {
             Some(SessionWord::Step(next)) => self.step(next),
             Some(SessionWord::Edit) => self.edit_item(number),
             Some(SessionWord::EditLast) => self.edit_last(),
-            Some(SessionWord::Undelete) => Err(EditError::InEditMode(word)),
+            Some(SessionWord::Undelete | SessionWord::Paste | SessionWord::PageRight) => {
+                Err(EditError::InEditMode(word))
+            }
+            Some(SessionWord::SliderParam(n)) => {
+                self.session.slider_param = n;
+                Ok(())
+            }
+            Some(SessionWord::Slider(step)) => {
+                let n = self.session.slider_param;
+                let op = step.map_or(ParamOp::Set { n, value: 0.0 }, |delta| ParamOp::Add { n, delta });
+                self.change_params(&[op])
+            }
+            Some(SessionWord::Arrow(axis, distance)) => {
+                self.rewrite_selected(|draft| moves::shift(draft, axis, distance));
+                Ok(())
+            }
             Some(SessionWord::DragEnd(end)) => {
                 self.session.toggle_drag_end(end);
                 Ok(())
             }
+            Some(SessionWord::Center) => self.center(number),
+            Some(SessionWord::SaveParam(n)) => self.save_param(n.or(number)),
+            Some(SessionWord::RecallParam(n)) => self.recall_param(n.or(number)),
+            Some(SessionWord::PointSize) => self.point_size(number),
+            Some(SessionWord::CentreText) => self.centre_text(number),
+            Some(SessionWord::CentreTextOnNote { skip_punctuation }) => {
+                self.centre_text_on_note(&word, number, skip_punctuation)
+            }
+            Some(SessionWord::JustifyRight) => self.justify_right(number),
+            Some(SessionWord::Justify) => self.justify(number, args.get(1).and_then(Token::number)),
+            Some(SessionWord::AdjustStems) => self.adjust_stems(),
+            Some(SessionWord::ChordRhythm) => self.chord_rhythm(number),
             None => self.edit_word(&word, args),
         }
     }
 
     fn outside_edit_mode(&mut self, tokens: &[Token]) -> Result<(), EditError> {
         if let Some(values) = plain_numbers(tokens) {
+            let code = values.first().copied().unwrap_or(0.0);
+            if !is_creatable_code(code) {
+                return Err(EditError::NotForCode { command: "new item".into(), code: code as i32 });
+            }
             return self.create_item(Draft::new(&values));
         }
         let (word, args) = word_and_args(tokens)?;
         let number = first_number(args);
+        if let Some(command) = GroupCommand::word(&word) {
+            return self.start_group(command, args);
+        }
+        if let Some(command) = LayoutCommand::word(&word) {
+            return self.start_layout(command, args);
+        }
+        if let Some(order) = Order::word(&word) {
+            return self.reorder(order);
+        }
         match SessionWord::parse(&word) {
             Some(SessionWord::Leave) => self.leave(number),
             Some(SessionWord::Edit) => self.edit_item(number),
             Some(SessionWord::EditLast) => self.edit_last(),
             Some(SessionWord::Undelete) => self.undelete(),
+            Some(SessionWord::Paste) => self.paste(),
+            Some(SessionWord::PageRight) => self.page_right(),
             Some(_) => Err(EditError::NoSelection(word)),
             None => match create::template(&word) {
                 Some(template) => self.create(&template, args),
@@ -242,8 +400,18 @@ impl Run<'_, '_> {
         });
     }
 
+    /// Parameter changes; the engine ignores a line that would leave the item
+    /// without a valid code or staff.
     fn change_params(&mut self, ops: &[ParamOp]) -> Result<(), EditError> {
-        self.rewrite_selected(|draft| ops.iter().for_each(|op| op.apply(draft)));
+        self.rewrite_selected(|draft| {
+            let mut changed = draft.clone();
+            ops.iter().for_each(|op| op.apply(&mut changed));
+            let code_ok = changed.code() == draft.code() || is_creatable_code(changed.get(1));
+            let staff_ok = changed.get(2) == draft.get(2) || changed.get(2) > 0.0;
+            if code_ok && staff_ok {
+                *draft = changed;
+            }
+        });
         Ok(())
     }
 
@@ -272,6 +440,69 @@ impl Run<'_, '_> {
                 entry.op.apply(draft, arg);
             }
         });
+        Ok(())
+    }
+
+    /// CN [staff]: the selected items moved to the P3 of the nearest note or
+    /// rest on their staff (or on `staff`); a beam's ends each to their own nearest.
+    fn center(&mut self, staff: Option<f32>) -> Result<(), EditError> {
+        let targets: Vec<(ItemId, Draft)> = self
+            .selection()
+            .into_iter()
+            .filter_map(|id| Some((id, Draft::of(self.tx.doc().item(id)?))))
+            .collect();
+        targets.into_iter().for_each(|(id, mut draft)| {
+            let on = staff.unwrap_or(draft.get(2));
+            let ends: &[usize] = match draft.code() {
+                6 => &[3, 6],
+                4 | 5 | 7 | 8 | 14 => &[],
+                _ => &[3],
+            };
+            ends.iter().for_each(|&n| {
+                if let Some(x) = self.nearest_note(on, draft.get(n)) {
+                    draft.set(n, x);
+                }
+            });
+            self.tx.replace(id, draft.to_item());
+        });
+        Ok(())
+    }
+
+    /// P3 of the note or rest on `staff` nearest to `p3` (the first of equals),
+    /// selected items left out.
+    pub fn nearest_note(&self, staff: f32, p3: f32) -> Option<f32> {
+        let selected = self.session.selection();
+        self.tx
+            .doc()
+            .entries()
+            .filter(|(id, item)| matches!(item.code(), 1 | 2) && item.param(2) == staff && !selected.contains(id))
+            .map(|(_, item)| item.param(3))
+            .fold(None, |best: Option<f32>, x| match best {
+                Some(b) if (b - p3).abs() <= (x - p3).abs() => Some(b),
+                _ => Some(x),
+            })
+    }
+
+    /// P1 of the first selected item, for error messages.
+    pub fn first_selected_code(&self) -> i32 {
+        self.selected_codes().first().copied().unwrap_or(0)
+    }
+
+    /// PSn: remembers Pn of the first selected item.
+    fn save_param(&mut self, n: Option<f32>) -> Result<(), EditError> {
+        let n = numeric::param_number(n.ok_or_else(|| EditError::BadArgument("PS".into()))?)?;
+        let first = self.selection().first().and_then(|&id| self.tx.doc().item(id)).map(|item| item.param(n));
+        if let Some(value) = first {
+            self.session.save_param(n, value);
+        }
+        Ok(())
+    }
+
+    /// PG, PGn: sets the remembered parameter on the selection.
+    fn recall_param(&mut self, n: Option<f32>) -> Result<(), EditError> {
+        let wanted = n.map(numeric::param_number).transpose()?;
+        let Some((n, value)) = self.session.saved_param(wanted) else { return Ok(()) };
+        self.rewrite_selected(|draft| draft.set(n, value));
         Ok(())
     }
 
@@ -316,16 +547,17 @@ impl Run<'_, '_> {
         });
     }
 
+    /// C, CC, CX: an edited item becomes a copy and the original returns;
+    /// an item left unchanged is not copied.
     fn copy(&mut self, mode: CopyMode) -> Result<(), EditError> {
         let originals = self.selection();
         let copies: Vec<ItemId> = originals
             .iter()
             .filter_map(|&id| {
                 let edited = self.tx.doc().item(id)?.clone();
+                let original = self.session.original(id).cloned().filter(|o| *o != edited)?;
                 let copy = self.tx.append(edited);
-                if let Some(original) = self.session.original(id).cloned() {
-                    self.tx.replace(id, original);
-                }
+                self.tx.replace(id, original);
                 Some(copy)
             })
             .collect();
@@ -333,6 +565,7 @@ impl Run<'_, '_> {
         let after_original = originals.last().and_then(|&id| doc.index_of(id)).and_then(|i| doc.id_at(i + 1));
         let next: Vec<ItemId> = match mode {
             CopyMode::Exit => Vec::new(),
+            CopyMode::Continue if copies.is_empty() => originals.clone(),
             CopyMode::Continue => copies.clone(),
             CopyMode::NextItem => after_original.into_iter().collect(),
         };

@@ -1,0 +1,7 @@
+IN 1 0 0 0 180
+;
+AL/K6F/CUT/A3:A:A:EF/A3:A:A:EF/SU/F/F/AS/A/M/RU/B5/FS4:C:EN:F;
+8/1/E/S/16/8/8/T/4.;
+-A 6/M 7/RI 8/TR 1:2;
+303 7;
+5 7/+6 7;

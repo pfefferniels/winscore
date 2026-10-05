@@ -5,6 +5,7 @@
 
 use score_edit::{Change, EditError, Editor};
 use score_format::{Item, MusError, MusFile};
+use score_input::Motives;
 use score_render::page::Paper;
 use score_render::{render, DisplayList, ItemId};
 
@@ -12,6 +13,8 @@ use crate::hit::{hit_test, At};
 
 /// P1 of text items, whose characters follow the parameters.
 pub const TEXT_CODE: i32 = 16;
+
+const STAFF_CODE: i32 = 8;
 
 fn render_page(file: &MusFile) -> DisplayList {
     render(&score_render::Document::new(file))
@@ -36,13 +39,15 @@ pub fn decode_text(bytes: &[u8]) -> String {
 pub struct Document {
     editor: Editor,
     page: DisplayList,
+    /// Motives of the music input, kept across lines as the engine keeps them.
+    motives: Motives,
 }
 
 impl Document {
     pub fn open(bytes: &[u8]) -> Result<Self, MusError> {
         let editor = Editor::open(bytes)?;
         let page = render_page(editor.file());
-        Ok(Self { editor, page })
+        Ok(Self { editor, page, motives: Motives::new() })
     }
 
     pub fn file(&self) -> &MusFile {
@@ -71,12 +76,33 @@ impl Document {
         &self.page
     }
 
+    /// Draws only the selected items again, for previews while they are
+    /// dragged; a full render instead when a staff is among them, since
+    /// everything on it moves along.
+    pub fn render_selection(&mut self) -> &DisplayList {
+        let selected: Vec<usize> = self.selection().iter().map(|id| id.0 as usize).collect();
+        let moves_staff = selected.iter().any(|&i| self.items().get(i).is_some_and(|item| item.code() == STAFF_CODE));
+        if moves_staff {
+            return self.render();
+        }
+        crate::live::rerender(&mut self.page, self.editor.file(), &selected);
+        &self.page
+    }
+
     pub fn hit(&self, at: At, tolerance: f64) -> Option<ItemId> {
         hit_test(&self.page, at, tolerance)
     }
 
     pub fn save(&self) -> Vec<u8> {
         self.editor.save()
+    }
+
+    pub fn motives(&self) -> &Motives {
+        &self.motives
+    }
+
+    pub fn set_motives(&mut self, motives: Motives) {
+        self.motives = motives;
     }
 
     pub fn editor(&self) -> &Editor {

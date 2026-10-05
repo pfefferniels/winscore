@@ -17,11 +17,16 @@ input.txt uses the layout of SCORE's own input files (INPUT.TMP, READ files):
 A pass ends at its first ";" and may span several lines, which are joined. Each pass is typed
 key by key, as a user types into the view. (Enter is not typed: pass 1 ignores it, but in
 pass 2 it submits the line.)
+
+A case may hold several such blocks, run one after the other in the same score, and between
+them lines starting with "!" that are sent as plain commands (e.g. "!SP 1" sets the spacing
+staff).
 """
 from __future__ import annotations
 
 import functools
 import re
+import shutil
 import struct
 import sys
 import tempfile
@@ -38,6 +43,8 @@ RANGE_DIALOG = 0x599FD0       # C++: input range / spacing staff dialog, edits 8
 KEY_PRESSED, KEY_CODE, MOUSE_EVENT = 0x9C6C5D, 0x9C48F4, 0x9A9488
 ENTER = 13
 PASS_COUNT = 5
+INSTRUCTION_LIMIT = 300_000_000       # a normal IN takes well under a tenth of this
+PARALLEL_JOBS = 4                     # team limit for concurrent oracle runs
 
 # Fields of the range dialog's record (0x2091C40), as far as established.
 RANGE_BEGIN, RANGE_END = 4, 5
@@ -63,6 +70,31 @@ class InputJob:
         return [*typed.encode("latin-1"), ord("X")]
 
 
+@dataclass(frozen=True)
+class InputScript:
+    """Input blocks and plain commands, in order."""
+    steps: tuple[InputJob | str, ...]
+
+    @classmethod
+    def parse(cls, text: str) -> "InputScript":
+        steps: list[InputJob | str] = []
+        rest = text.replace("\r\n", "\n").strip("\n")
+        while rest.strip():
+            first, _, tail = rest.partition("\n")
+            if first.startswith("!"):
+                steps.append(first[1:].strip())
+                rest = tail
+                continue
+            range_line, _, body = tail.partition("\n")
+            pieces = body.split(";")
+            if len(pieces) <= PASS_COUNT:
+                raise ValueError(f"expected {PASS_COUNT} passes ending in ';' after {first!r}")
+            passes = tuple(p.strip("\n") + ";" for p in pieces[:PASS_COUNT])
+            steps.append(InputJob(first.strip(), passes, parse_range(range_line)))
+            rest = ";".join(pieces[PASS_COUNT:]).lstrip("\n")
+        return cls(tuple(steps))
+
+
 def parse_range(line: str) -> tuple[float, float] | None:
     fields = line.replace(",", " ").split()
     if not fields or fields == [";"]:
@@ -77,6 +109,10 @@ class InputEngine(Engine):
     keys: list[int] = field(default_factory=list)
     input_range: tuple[float, float] | None = None
     range_record: tuple[int, ...] = ()
+
+    def call(self, func, *args, limit=0):
+        """As Engine.call, but an input the engine loops on fails instead of hanging."""
+        return super().call(func, *args, limit=limit or INSTRUCTION_LIMIT)
 
     def _on_cpp(self, uc, address, size, user):
         handler = {READ_LINE: self._read_line, RANGE_DIALOG: self._range_dialog}.get(address)
@@ -128,12 +164,24 @@ def process_sandbox() -> tempfile.TemporaryDirectory:
 
 def run_job(job: InputJob, root: Path | None = None) -> InputResult:
     """Type the job into a fresh engine, save the score, and return the saved file."""
+    return run_script(InputScript((job,)), root)
+
+
+def run_script(script: InputScript, root: Path | None = None) -> InputResult:
+    """Run the script's blocks and commands in a fresh engine, save the score, return the file."""
     sandbox = make_sandbox(root or Path(process_sandbox().name))
-    engine = InputEngine(sandbox, keys=job.keystrokes(), input_range=job.input_range)
+    engine = InputEngine(sandbox)
     engine.initialize()
     target = sandbox / "cwd" / "RESULT.MUS"
     target.unlink(missing_ok=True)
-    engine.command(job.command)
+    shutil.rmtree(sandbox / "cwd" / "!tmp", ignore_errors=True)      # motives of earlier jobs
+    for step in script.steps:
+        if isinstance(step, str):
+            engine.command(step)
+            continue
+        engine.keys = step.keystrokes()
+        engine.input_range = step.input_range
+        engine.command(step.command)
     engine.command("SA result.mus")
     quiet = ("service", "redraw", "text")       # text events echo every keystroke
     transcript = [f"{ev.kind}: {ev.detail}" for ev in engine.shell.events if ev.kind not in quiet]
@@ -158,8 +206,8 @@ def read_items(mus: bytes) -> list[list[float]]:
 
 
 def run_case(case_dir: Path) -> InputResult:
-    job = InputJob.parse((case_dir / "input.txt").read_text(encoding="latin-1"))
-    result = run_job(job)
+    script = InputScript.parse((case_dir / "input.txt").read_text(encoding="latin-1"))
+    result = run_script(script)
     (case_dir / "result.mus").write_bytes(result.mus)
     (case_dir / "transcript.txt").write_text("\n".join(result.transcript) + "\n", encoding="latin-1")
     return result
@@ -196,6 +244,6 @@ def report(case_dir: Path) -> str:
 if __name__ == "__main__":
     args = sys.argv[1:]
     dirs = write_corpus(Path(args[1]), Path(args[2]), *args[3:4]) if args[:1] == ["--corpus"] else [Path(a) for a in args]
-    with ProcessPoolExecutor(max_workers=6) as pool:
+    with ProcessPoolExecutor(max_workers=PARALLEL_JOBS) as pool:
         for text in pool.map(report, dirs):
             print(text)

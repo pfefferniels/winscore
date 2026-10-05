@@ -29,7 +29,7 @@ LAB_0058ad17:
         if (LOAD_CODE == 6) {
           ffree(in_ST0);
           puVar2 = &stack0xfffffffc;
-          fVar3 = (float10)FUN_005ff381(&stack0xfffffffc,0x58ad89);
+          fVar3 = (float10)anint(&stack0xfffffffc,0x58ad89);
           *(int *)(puVar2 + -0x3c) = (int)ROUND(fVar3);
           DAT_01a9f310 = (float)*(int *)(puVar2 + -0x3c);
           in_ST0 = extraout_ST1;

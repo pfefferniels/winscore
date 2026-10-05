@@ -1,0 +1,65 @@
+{
+ "case": "layout-lja-single",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 59,
+   "vector_words": 1005
+  },
+  {
+   "command": "LJA",
+   "line": "Staff   1 has  8.000 beats",
+   "status": 0,
+   "text_bytes": 59,
+   "vector_words": 1005
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
+ "description": "LJA on one staff with two measures",
+ "events": [
+  {
+   "detail": "Source Box O.K.? - -> yes",
+   "kind": "question"
+  },
+  {
+   "detail": " ",
+   "kind": "text"
+  },
+  {
+   "detail": "Staff   1 has  8.000 beats",
+   "kind": "text"
+  }
+ ],
+ "excluded_items": [],
+ "invalid_reasons": [],
+ "items": 12,
+ "not_found": [],
+ "page_frames": [
+  [
+   401,
+   -7697,
+   34399,
+   48301
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "start of the baseline: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS * (not saved -   12 Items)   <Legal>",
+ "valid": true,
+ "view_globals": [
+  2400,
+  -19250
+ ],
+ "view_offset": [
+  400,
+  -7698
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}

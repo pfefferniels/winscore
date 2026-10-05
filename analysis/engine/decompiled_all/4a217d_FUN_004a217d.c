@@ -101,8 +101,8 @@ LAB_004a257b:
     puVar5 = puVar4;
     if (((char)DAT_020b8ea0 == '|') || ((char)DAT_020b8ea0 == '~')) {
       DAT_01fbb7e0 = VEC_N;
-      thunk_FUN_0041b011();
-      FUN_004a30bb(&DAT_00838ab8,&DAT_0076382c);
+      region_select();
+      ask_source_box(&DAT_00838ab8,&DAT_0076382c);
       if (DAT_00838ab8 == -2) {
         *(undefined4 *)(puVar4 + -0x70) = 0;
         goto LAB_004a2aaf;
@@ -167,7 +167,7 @@ LAB_004a244c:
     DAT_01fbb7e0 = VEC_N;
     thunk_FUN_0041aa88();
     push_words(&DAT_00763878,&P1);
-    FUN_004a30bb(&DAT_00838ab8,&DAT_0076382c);
+    ask_source_box(&DAT_00838ab8,&DAT_0076382c);
     pop_words(&DAT_00763878,&P1);
     if (DAT_00838ab8 != -2) {
       if (DAT_00838ab8 == 0) {

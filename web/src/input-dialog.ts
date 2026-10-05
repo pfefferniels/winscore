@@ -66,6 +66,7 @@ export function createInputDialog(dialog: HTMLDialogElement): InputDialog {
       score = target;
       staff.value = String((target.highestStaff() ?? 0) + 1);
       check();
+      dialog.returnValue = '';
       dialog.showModal();
       passes[0]!.focus();
       return new Promise((resolve) => {

@@ -7,4 +7,5 @@ description = "Editing model of the SCORE editor: stable item ids, selection, un
 
 [dependencies]
 score-format = { path = "../score-format" }
-score-render = { path = "../score-render", default-features = false }
+score-layout = { path = "../score-layout" }
+score-render = { path = "../score-render" }

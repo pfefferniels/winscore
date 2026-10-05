@@ -18,6 +18,8 @@ pub enum EditError {
     InEditMode(String),
     /// A command that needs a number, given none or a wrong one.
     BadArgument(String),
+    /// A form of a command the editor does not do yet.
+    NotImplemented(String),
 }
 
 impl std::fmt::Display for EditError {
@@ -32,6 +34,7 @@ impl std::fmt::Display for EditError {
             EditError::NothingToUndelete => write!(f, "nothing to undelete"),
             EditError::InEditMode(w) => write!(f, "cannot do {w} while still in edit mode"),
             EditError::BadArgument(w) => write!(f, "{w} needs a number"),
+            EditError::NotImplemented(w) => write!(f, "{w}: not implemented yet"),
         }
     }
 }

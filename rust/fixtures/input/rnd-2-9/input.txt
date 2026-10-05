@@ -1,0 +1,7 @@
+IN 1 0 0 .8
+30 200
+BA/SO/G3/BS/AF/AN4/RD/SD/AN/CS3;
+H/2/T/4/4/8/Q;
+;
+3B;
+;

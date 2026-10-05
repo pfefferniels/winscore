@@ -5,7 +5,8 @@
 //! the previous note, chord or rest (without accidentals).
 
 use crate::error::{ErrorKind, InputError, Pass};
-use crate::scan::{entries, Cursor, Entry};
+use crate::motives::Motives;
+use crate::scan::{entries, recall_parts, Cursor, Entry};
 
 const PASS: Pass = Pass::Notes;
 
@@ -37,6 +38,10 @@ impl Letter {
     /// Diatonic step within the octave, C = 0.
     pub fn step(self) -> i32 {
         self as i32
+    }
+
+    pub fn from_step(step: i32) -> Self {
+        [Letter::C, Letter::D, Letter::E, Letter::F, Letter::G, Letter::A, Letter::B][step.rem_euclid(7) as usize]
     }
 }
 
@@ -97,6 +102,17 @@ impl Clef {
         self as i32
     }
 
+    /// The clef of a clef item's P5 (treble for codes it does not know).
+    pub fn from_code(code: i32) -> Self {
+        match code {
+            1 => Clef::Bass,
+            2 => Clef::Alto,
+            3 => Clef::Tenor,
+            4 => Clef::Percussion,
+            _ => Clef::Treble,
+        }
+    }
+
     /// Scale steps from a pitch's treble-clef level to its level on this clef's staff.
     pub fn level_offset(self) -> i32 {
         match self {
@@ -150,6 +166,8 @@ pub enum NoteEntry {
     Repeat { items: u32, times: u32, keep_accidentals: bool },
     /// An empty entry.
     RepeatPrevious,
+    /// `@Xn`: motive X again, transposed by n steps.
+    Recall { name: char, steps: i32 },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -157,13 +175,15 @@ pub struct Spanned<T> {
     pub value: T,
     pub entry: usize,
     pub span: crate::Span,
+    /// The motive this entry defines, if it stands between `X[` and `]`.
+    pub motive: Option<char>,
 }
 
-pub fn parse(text: &str) -> Result<Vec<Spanned<NoteEntry>>, InputError> {
-    entries(text, PASS)?
+pub fn parse(text: &str, motives: &mut Motives) -> Result<Vec<Spanned<NoteEntry>>, InputError> {
+    entries(text, PASS, motives)?
         .iter()
         .enumerate()
-        .map(|(index, entry)| Ok(Spanned { value: parse_entry(entry)?, entry: index, span: entry.span() }))
+        .map(|(index, entry)| Ok(Spanned { value: parse_entry(entry)?, entry: index, span: entry.span(), motive: entry.motive }))
         .collect()
 }
 
@@ -171,6 +191,9 @@ fn parse_entry(entry: &Entry) -> Result<NoteEntry, InputError> {
     let mut c = entry.cursor(PASS);
     if c.at_end() {
         return Ok(NoteEntry::RepeatPrevious);
+    }
+    if let Some((name, steps)) = recall_parts(&entry.text) {
+        return Ok(NoteEntry::Recall { name, steps });
     }
     let parsed = word_entry(&mut c).transpose().unwrap_or_else(|| chord(&mut c))?;
     c.finish()?;
@@ -310,7 +333,7 @@ mod tests {
     use super::*;
 
     fn values(text: &str) -> Vec<NoteEntry> {
-        parse(text).unwrap().into_iter().map(|s| s.value).collect()
+        parse(text, &mut Motives::new()).unwrap().into_iter().map(|s| s.value).collect()
     }
 
     #[test]
@@ -334,8 +357,8 @@ mod tests {
 
     #[test]
     fn errors_point_at_the_entry() {
-        let err = parse("C4/Q/D;").unwrap_err();
+        let err = parse("C4/Q/D;", &mut Motives::new()).unwrap_err();
         assert_eq!(err.span.start, 3);
-        assert!(parse("C4/D").is_err());
+        assert!(parse("C4/D", &mut Motives::new()).is_err());
     }
 }

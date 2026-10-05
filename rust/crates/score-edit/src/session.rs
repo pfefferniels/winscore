@@ -8,6 +8,8 @@ use score_format::Item;
 use crate::command::moves::Increments;
 use crate::document::{Document, ItemId};
 use crate::drag::Ends;
+use crate::group::Pending;
+use crate::transpose::Leftover;
 
 /// The ids in their first-seen order, without repeats.
 fn unique(ids: impl Iterator<Item = ItemId>) -> Vec<ItemId> {
@@ -27,7 +29,7 @@ pub struct Deleted {
     pub item: Item,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Session {
     selection: Vec<ItemId>,
     originals: Vec<(ItemId, Item)>,
@@ -36,6 +38,52 @@ pub struct Session {
     deleted: Vec<Vec<Deleted>>,
     /// What a drag moves (LFT, RGT); back to the whole item when edit mode ends.
     drag_ends: Ends,
+    /// Parameters remembered by PS, latest last.
+    saved: Vec<(usize, f32)>,
+    /// The font in effect at the end of the text entered last.
+    pub text_font: u8,
+    /// The position CT centred on last (CT alone reuses it).
+    pub centre_at: Option<f32>,
+    /// The position JR justified to last.
+    pub right_at: Option<f32>,
+    /// The positions J justified between last.
+    pub justify_between: Option<(f32, f32)>,
+    /// A group command waiting for its next line.
+    pub pending: Option<Pending>,
+    /// Items cut for pasting (IF … THEN CUT), pasted by PST.
+    pub clipboard: Vec<Item>,
+    /// The parameter the slider buttons (PCHNGn) change; QPn chooses it.
+    pub slider_param: usize,
+    /// What one TR leaves for the next.
+    pub transposition: Leftover,
+    /// A message the engine would show for the last action.
+    pub message: Option<String>,
+}
+
+/// The slider changes P2 until QPn chooses another parameter.
+const DEFAULT_SLIDER_PARAM: usize = 2;
+
+impl Default for Session {
+    fn default() -> Self {
+        Self {
+            selection: Vec::new(),
+            originals: Vec::new(),
+            current: None,
+            increments: Increments::default(),
+            deleted: Vec::new(),
+            drag_ends: Ends::default(),
+            saved: Vec::new(),
+            text_font: 0,
+            centre_at: None,
+            right_at: None,
+            justify_between: None,
+            pending: None,
+            clipboard: Vec::new(),
+            slider_param: DEFAULT_SLIDER_PARAM,
+            transposition: Leftover::default(),
+            message: None,
+        }
+    }
 }
 
 impl Session {
@@ -86,6 +134,16 @@ impl Session {
 
     pub fn set_current(&mut self, id: ItemId) {
         self.current = Some(id);
+    }
+
+    pub fn save_param(&mut self, n: usize, value: f32) {
+        self.saved.retain(|&(m, _)| m != n);
+        self.saved.push((n, value));
+    }
+
+    /// The parameter PS remembered last, or the one remembered for `n`.
+    pub fn saved_param(&self, n: Option<usize>) -> Option<(usize, f32)> {
+        self.saved.iter().rev().find(|&&(m, _)| n.is_none_or(|n| n == m)).copied()
     }
 
     pub fn remember_deleted(&mut self, batch: Vec<Deleted>) {

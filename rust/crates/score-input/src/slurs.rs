@@ -89,8 +89,9 @@ struct SlurEnds {
 
 impl SlurEnds {
     /// End levels and P8 (0x53D1E0): with equal stems each end is placed at its own note;
-    /// otherwise the end on the stem side follows the other end. Both move off staff lines.
-    fn levels_at(&self, a: &WorkEntry, b: &WorkEntry) -> (f32, f32, f32) {
+    /// otherwise the end on the stem side follows the other end. Both move off staff lines
+    /// unless the slur began as a tie.
+    fn levels_at(&self, a: &WorkEntry, b: &WorkEntry, off_lines: bool) -> (f32, f32, f32) {
         let d = self.direction;
         let (level1, level2) = self.levels;
         let (stem1, stem2) = self.stems;
@@ -120,7 +121,11 @@ impl SlurEnds {
                 (y1, y2)
             }
         };
-        (off_line(y1, d), off_line(y2, d), kind)
+        if off_lines {
+            (off_line(y1, d), off_line(y2, d), kind)
+        } else {
+            (y1, y2, kind)
+        }
     }
 }
 
@@ -213,6 +218,9 @@ struct SlurInput<'a> {
     /// Work-table index of each note's stem entry, by note number.
     note_entry: Vec<usize>,
     staff: f32,
+    /// The input range, where slurs from before the first or past the last note end.
+    begin: f32,
+    end: f32,
 }
 
 impl SlurInput<'_> {
@@ -220,10 +228,14 @@ impl SlurInput<'_> {
         self.note_entry.len()
     }
 
+    fn note_x(&self, number: usize) -> Option<f32> {
+        number.checked_sub(1).and_then(|i| self.note_entry.get(i)).map(|&e| self.entries[e].x)
+    }
+
     fn items(&mut self, connection: &Connection) -> Vec<score_format::Item> {
         let count = self.note_count() + 1;
         // 0x41A14C: note numbers as the engine adjusts them.
-        let typed_first = connection.first;
+        let mut typed_first = connection.first;
         let mut first = typed_first;
         let mut second = connection.last.max(1);
         let mut typed_second = connection.last;
@@ -240,7 +252,7 @@ impl SlurInput<'_> {
         let a = self.note_entry[first - 1];
         let b = self.note_entry[second_entry_number - 1];
         let tuplet = connection.tuplet as i32;
-        let mut direction = match connection.side {
+        let mut direction = match connection.side() {
             Some(Side::Above) => ABOVE,
             Some(Side::Below) => BELOW,
             None => 0,
@@ -248,6 +260,28 @@ impl SlurInput<'_> {
         let typed_direction = direction;
         let mut x1 = self.entries[a].x;
         let mut x2 = self.entries[b].x;
+        // 0x41A14C, pass 5: fractional note numbers place the ends between notes; the
+        // engine then treats the numbers as 1 and 1, so such a slur is never a tie.
+        let [f1, f2] = connection.fractions.map(f32::abs);
+        let mut anchor = first;
+        if f1 != 0.0 {
+            anchor = connection.first;
+            if count <= anchor {
+                return Vec::new();
+            }
+            let (from, to) = if anchor == 0 { (self.begin, x1) } else { (x1, self.note_x(anchor + 1).unwrap_or(x1)) };
+            x1 = (to - from) * f1 + from;
+            typed_first = 1;
+            typed_second = 1;
+        }
+        if f2 != 0.0 {
+            let next = (connection.last + 1).max(anchor + 1);
+            let from = if connection.last <= anchor { self.entries[a].x } else { x2 };
+            let to = if next < count { self.note_x(next).unwrap_or(self.end) } else { self.end };
+            x2 = (to - from) * f2 + from;
+            typed_first = 1;
+            typed_second = 1;
+        }
         let mut level1 = self.entries[a].level as f32;
         let mut level2 = self.entries[b].level as f32;
         let chord_start = self.entries.get(a + 1).is_some_and(|n| n.x == self.entries[a].x);
@@ -307,7 +341,7 @@ impl SlurInput<'_> {
                 x2 -= 1.5;
             }
             let ends = SlurEnds { direction, levels: (level1, level2), stems: (stem1, stem2) };
-            ends.levels_at(&self.entries[a], &self.entries[b])
+            ends.levels_at(&self.entries[a], &self.entries[b], !try_tie)
         };
 
         let mut shape = Shape { x1, y1, y2, x2, bend: 0.0, kind, tuplet: tuplet as f32 };
@@ -325,7 +359,9 @@ impl SlurInput<'_> {
         if direction == BELOW {
             shape.bend = -shape.bend;
         }
-        if !tie {
+        // A tie the engine had to give up (too short, or an accidental at its end) stays a
+        // slur that neither clears marks nor counts as a tie for the rest.
+        if !try_tie {
             clear_mark(&mut shape.y1, &mut self.entries[a], stem1, direction, tuplet != 0);
             clear_mark(&mut shape.y2, &mut self.entries[b], stem2, direction, tuplet != 0);
             if typed_second as i64 - typed_first as i64 > 1 {
@@ -335,7 +371,7 @@ impl SlurInput<'_> {
 
         let make = |s: &Shape| item(&[5.0, self.staff, s.x1, s.y1, s.y2, s.x2, s.bend, s.kind, s.tuplet]);
         let mut made = vec![make(&shape)];
-        if tie {
+        if try_tie {
             // Further heads of a chord get ties of their own; from the middle up they curve
             // the other way unless the direction was typed.
             let members = self.entries[a..].iter().take_while(|e| e.code == 1 && e.x == self.entries[a].x).count();
@@ -359,11 +395,11 @@ impl SlurInput<'_> {
     }
 }
 
-pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry]) -> Result<(), InputError> {
+pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry], (begin, end): (f32, f32)) -> Result<(), InputError> {
     let mut work = line.work_entries();
     let note_entry: Vec<usize> = work.iter().enumerate().filter(|(_, e)| e.note.is_some()).map(|(i, _)| i).collect();
     let staff = line.staff;
-    let mut input = SlurInput { entries: &mut work, note_entry, staff };
+    let mut input = SlurInput { entries: &mut work, note_entry, staff, begin, end };
     let made: Vec<score_format::Item> = entries
         .iter()
         .filter_map(|entry| match entry {

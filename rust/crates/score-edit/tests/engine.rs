@@ -4,8 +4,9 @@
 
 use std::collections::BTreeMap;
 
+use score_edit::group::TRANSPOSITION_PROMPT;
 use score_edit::{Draft, Editor};
-use score_format::MusFile;
+use score_format::{CountWidth, Item, MusFile, Word};
 
 const CASES: &str = include_str!("engine_cases.txt");
 const EXPECTED: &str = include_str!("engine_expected.txt");
@@ -14,7 +15,7 @@ const DEFAULT_BASE: &str = "8 1; 1 1 100 6 10 0 1";
 #[derive(Debug)]
 struct Case {
     name: String,
-    base: Vec<Vec<f32>>,
+    base: Vec<Item>,
     commands: Vec<String>,
 }
 
@@ -71,7 +72,7 @@ fn cases() -> Vec<Case> {
             let base = lines.iter().find_map(|l| l.strip_prefix("base:")).unwrap_or(DEFAULT_BASE);
             Case {
                 name: name.to_owned(),
-                base: base.split(';').filter(|i| !i.trim().is_empty()).map(parse_numbers).collect(),
+                base: base.split(';').filter(|i| !i.trim().is_empty()).map(base_item).collect(),
                 commands: lines.iter().filter(|l| !l.starts_with("base:")).cloned().collect(),
             }
         })
@@ -86,12 +87,29 @@ fn stored_line(line: &str) -> Stored {
     Stored { params: trimmed(parse_numbers(numbers)), text }
 }
 
-fn mus_file(items: &[Vec<f32>]) -> MusFile {
-    let mut words: Vec<f32> = items.iter().flat_map(|item| std::iter::once(item.len() as f32).chain(item.iter().copied())).collect();
-    words.extend([0.0, 0.0, 6.0, 0.0, 5.0, -9999.0]);
+/// A base item: numbers, a text item's followed by its characters in double quotes.
+fn base_item(text: &str) -> Item {
+    let (numbers, characters) = match text.split_once('"') {
+        Some((numbers, rest)) => (numbers, Some(rest.trim_end().trim_end_matches('"'))),
+        None => (text, None),
+    };
+    let params = parse_numbers(numbers).into_iter().map(Word::from_f32).collect();
+    match characters {
+        Some(chars) => {
+            let mut bytes: Vec<u8> = chars.chars().map(|c| c as u8).collect();
+            bytes.resize(bytes.len().div_ceil(4) * 4, b' ');
+            Item::with_text(params, bytes)
+        }
+        None => Item::new(params),
+    }
+}
+
+fn mus_file(items: &[Item]) -> MusFile {
+    let words: [f32; 6] = [0.0, 0.0, 6.0, 0.0, 5.0, -9999.0];
     let mut bytes = (words.len() as u16).to_le_bytes().to_vec();
     bytes.extend(words.iter().flat_map(|w| w.to_le_bytes()));
-    MusFile::parse(&bytes).expect("case base is a valid .mus file")
+    let trailer = MusFile::parse(&bytes).expect("an empty .mus file").trailer;
+    MusFile { width: CountWidth::Short, items: items.to_vec(), trailer }
 }
 
 fn stored(editor: &Editor) -> Vec<Stored> {
@@ -102,25 +120,30 @@ fn stored(editor: &Editor) -> Vec<Stored> {
         .map(|item| {
             let draft = Draft::of(item);
             let params = trimmed((1..=draft.len()).map(|n| draft.get(n)).collect());
-            Stored { params, text: String::from_utf8_lossy(item.text()).into_owned() }
+            Stored { params, text: item.text().iter().map(|&b| char::from(b)).collect() }
         })
         .collect()
 }
 
 /// A mouse line of the cases: `~v x y` (move with the button held), `~s x y`
 /// (with Shift), `~x x y` (button up), `~ x y` (click), in page coordinates.
-fn mouse(line: &str) -> Option<(&str, f64, f64)> {
+/// `~x x0 y0 x1 y1`: a box drawn from mouse-down to mouse-up.
+fn mouse(line: &str) -> Option<(&str, Vec<f64>)> {
     let mut parts = line.split_whitespace();
     let action = parts.next().filter(|a| matches!(*a, "~v" | "~s" | "~x" | "~"))?;
-    let x = parts.next()?.parse().ok()?;
-    let y = parts.next()?.parse().ok()?;
-    Some((action, x, y))
+    let numbers: Vec<f64> = parts.map(str::parse).collect::<Result<_, _>>().ok()?;
+    matches!(numbers.len(), 2 | 4).then_some((action, numbers))
 }
 
 /// Plays a mouse line the way the browser shell drives the editor. The engine
 /// drags an item to the cursor; the cases start each drag at the item's own
 /// reference point, where that and keeping the grab offset agree.
-fn play_mouse(editor: &mut Editor, dragging: &mut bool, (action, x, y): (&str, f64, f64)) {
+fn play_mouse(editor: &mut Editor, dragging: &mut bool, (action, numbers): (&str, Vec<f64>)) {
+    if let [x0, y0, x1, y1] = numbers[..] {
+        let _ = editor.draw_box(x0, y0, x1, y1);
+        return;
+    }
+    let (x, y) = (numbers[0], numbers[1]);
     match action {
         "~v" | "~s" => {
             if !*dragging {
@@ -141,18 +164,34 @@ fn play_mouse(editor: &mut Editor, dragging: &mut bool, (action, x, y): (&str, f
     }
 }
 
+/// The values a `!transpose` line gives TR's dialog, in the syntax of
+/// [`score_edit::transpose::Transposition::parse`].
+fn dialog_values(line: &str) -> Option<&str> {
+    line.strip_prefix("!transpose").map(str::trim)
+}
+
 fn replay(case: &Case) -> (Vec<Stored>, Vec<String>) {
     let mut editor = Editor::new(mus_file(&case.base));
     let mut dragging = false;
+    let mut dialog = None;
     let errors = case
         .commands
         .iter()
-        .filter_map(|c| match mouse(c) {
-            Some(m) => {
-                play_mouse(&mut editor, &mut dragging, m);
-                None
+        .filter_map(|c| {
+            if let Some(values) = dialog_values(c) {
+                dialog = Some(values);
+                return None;
             }
-            None => editor.execute(c).err().map(|e| format!("[{c}] {e}")),
+            let error = match mouse(c) {
+                Some(m) => {
+                    play_mouse(&mut editor, &mut dragging, m);
+                    None
+                }
+                None => editor.execute(c).err().map(|e| format!("[{c}] {e}")),
+            };
+            let answer = dialog.filter(|_| editor.prompt() == Some(TRANSPOSITION_PROMPT));
+            let dialog_error = answer.and_then(|v| editor.execute(v).err().map(|e| format!("[dialog {v}] {e}")));
+            error.or(dialog_error)
         })
         .collect();
     (stored(&editor), errors)

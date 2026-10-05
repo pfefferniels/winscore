@@ -1,0 +1,7 @@
+IN 1 0 0 .8
+2 150
+AL/CUT/F3/BS5/A5:EF:AN:AF/DS/BF:F:E:E/RI/RI/AS/EN/GS/B/R/F:F:D:F/RD;
+4/1/H/E/8/4./4./S/G/8/Q/4./1/16;
+;
+4 6;
+;

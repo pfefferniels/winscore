@@ -22,8 +22,9 @@ What the FORTRAN engine inside WScore.exe (WinScore 5.01) computes, with address
 | [text.md](text.md) | code 16 text: parser codes, advances from FMT widths, NINT positions, rotation, current font (by impl-text) |
 | [notes.md](notes.md) | code 1: heads (and the head cache), stems, tails, dots, accidentals, ledger lines |
 | [input.md](input.md) | the IN command: passes, spacing, minimum gap |
-| [layout.md](layout.md) | LJ/LI/J: how to drive them, routine map, the 1.5-per-doubling spacing rule (first notes) |
+| [layout.md](layout.md) | LI, J and LJ ported bit-exact: events, merging, d**log2(1.5) spacing, segment mapping, grace notes, justify columns and redistribution, what moves |
 | [kh_drw.md](kh_drw.md) | the compact "KH" .DRW variant: Microsoft FORTRAN unformatted records with i16 points |
+| [commands.md](commands.md) | the command layer: dispatch, edit mode, parameter forms, creation defaults, all menu strings catalogued |
 | [editing.md](editing.md) | mouse protocol between view and engine, creation-word tables |
 | [prefs.md](prefs.md) | PREF.DAT keywords and the globals they set (slur thickness, beam, metric, paper, ...) |
 | [display.md](display.md) | how the C++ shell paints the engine output (pens, zoom, text) |

@@ -48,7 +48,7 @@ void FUN_004e4432(int *param_1)
       iVar1 = -DAT_008d08c8;
     }
     _DAT_008d08c4 = ((float)iVar1 - f_1) * f_2_8 + f_3 + f_1;
-    fVar2 = (float10)FUN_005ff381(&stack0xfffffffc,0x4e46a3);
+    fVar2 = (float10)anint(&stack0xfffffffc,0x4e46a3);
     *(int *)(puVar3 + -0x2c) = (int)ROUND(fVar2);
     **(undefined4 **)(puVar3 + 8) = *(undefined4 *)(puVar3 + -0x2c);
   }
