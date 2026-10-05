@@ -42,15 +42,25 @@ Callers: static call sites (through the incremental-linking thunks) plus calls s
 | `4A830B` | `read_prefs` | parses scorlib/PREF.DAT (prefs.md) | 4a7440, 4aac7d | verified |
 | `4AEFA0` | `input_pass` | IN: parse one pass text and dispatch on the pass number |  | read |
 | `4AFB68` | `cmd_I` | commands starting with I: I n (edit item n), II, IN (staged input); also entered after item creation | interpret | read |
-| `4B5DB0` | `justify_distribute` | J: takes the needed space from the free space | justify, 4b8b97 | read |
-| `4B6F4A` | `justify` | J: columns per staff, merge, redistribution (layout.md §9) | lineup_pass | read |
+| `4B5DB0` | `justify_distribute` | J: takes the needed space from the free space | justify, 4b8b97 | verified |
+| `4B63CD` | `justify_stretch` | J: stretches the selected values inside one gap | justify_distribute | verified |
+| `4B6593` | `justify_shift` | J: shifts the selected values at or right of x | justify_distribute | verified |
+| `4B6657` | `rest_widths` | J: left/right needs of a rest | justify_columns, 50e830 | verified |
+| `4B6818` | `barline_widths` | J: left/right needs of a barline by P5 | justify_columns, 50e830 | verified |
+| `4B6A52` | `meter_widths` | J: left/right needs of a meter | justify_columns, 50e830 | verified |
+| `4B6C51` | `key_widths` | J: left/right needs of a key signature | justify_columns, 50e830 | verified |
+| `4B6CED` | `load_p_array` | J: copies P3..P14 of an item into the P array at 0x1C58924 | justify_columns, 50e830 | verified |
+| `4B6F4A` | `justify` | J: columns per staff, merge, redistribution (layout.md §10) | lineup_pass | verified |
+| `4B7468` | `justify_split_gap` | J: proportional share of a gap's need when another staff splits it | justify | verified |
 | `4B7AD8` | `cmd_lineup` | LJ/LI/J: prompts for the system | 4a2c81 | read |
 | `4B80B7` | `lineup_pass` | LJ/LI/J main pass | 47a4a8, cmd_lineup, lineup_answer, 51ffc0, input_main, 52fb54 (+2) | read |
 | `4B906D` | `lineup_answer` | LJ/LI/J: takes the staff answer or box, confirms, runs | interpret, cmd_lineup | read |
-| `4BCD68` | `justify_columns` | J: left/right space needs of the columns of one staff | justify | read |
+| `4BCD68` | `justify_columns` | J: left/right space needs of the columns of one staff | justify | verified |
 | `4BF4F8` | `draw_keysig` | code 17 | draw_item | read |
 | `4BFA59` | `draw_meter` | code 18 | draw_item | read |
-| `4C5AD8` | `place_grace_notes` | lineup: grace notes (P7 >= 64) before their main notes | lineup | read |
+| `4C5AD8` | `place_grace_notes` | lineup: grace notes (P7 >= 64) placed before their main notes (layout.md §9) | lineup | verified |
+| `4C7374` | `grace_widths` | lineup: left/right widths of grace notes and their anchors | place_grace_notes | verified |
+| `4C795B` | `grace_fit` | lineup: how much of its width a grace group may keep | place_grace_notes | verified |
 | `4C8290` | `lineup_apply` | lineup: per-staff segment mapping with +1000 parking, clefs placed (layout.md §6) | lineup | verified |
 | `4C9510` | `lineup` | LI core: anchors, events per staff, merges, spacing, apply (layout.md §4) | lineup_pass, 54aaf8 | verified |
 | `4CB010` | `lineup_others` | lineup: interpolates x parameters of codes 4-7, 9-13, 15, 16 between anchors (layout.md §7) | lineup | verified |

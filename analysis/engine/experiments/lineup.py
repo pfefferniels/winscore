@@ -14,6 +14,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 
+from grace import GracePass
 from staves import f32 as F, trunc
 
 EXPONENT = F(0.5849624872207642)      # f32 at 0x7926DC: log2(1.5)
@@ -550,10 +551,10 @@ class Lineup:
             self.master = merge_markers(self.master, entries)
             self.master = DurationMerge(self.master, [e for e in entries if e > 0]).run()
         self.offset[self.hi + 1] = len(self.saved_x)
-        if self.saw_long:
-            raise NotImplementedError("P7 >= 64 calls 0x4C5AD8, which is not modelled")
         self.new_x = spacing(self.master, F(self.step(self.lo) / 25), self.x_left, self.x_right)
         self.apply()
+        if self.saw_long:
+            GracePass(self.items, self.lo, self.hi, self.right, self.steps).run()
         self.interpolate_others()
 
     def normalize(self, ev: StaffEvents) -> tuple[list[float], list[float]]:

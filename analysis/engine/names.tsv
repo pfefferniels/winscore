@@ -94,7 +94,17 @@ address	name	confidence	role
 0049bb13	move_selected	verified	moves the selected parameters: shift, or linear map (mode < 0)
 004cb010	lineup_others	verified	lineup: interpolates x parameters of codes 4-7, 9-13, 15, 16 between anchors (layout.md §7)
 004cb2ea	interpolate_x	verified	lineup: one parameter between its two anchors
-004c5ad8	place_grace_notes	read	lineup: grace notes (P7 >= 64) before their main notes
-004b6f4a	justify	read	J: columns per staff, merge, redistribution (layout.md §9)
-004bcd68	justify_columns	read	J: left/right space needs of the columns of one staff
-004b5db0	justify_distribute	read	J: takes the needed space from the free space
+004c5ad8	place_grace_notes	verified	lineup: grace notes (P7 >= 64) placed before their main notes (layout.md §9)
+004b6f4a	justify	verified	J: columns per staff, merge, redistribution (layout.md §10)
+004bcd68	justify_columns	verified	J: left/right space needs of the columns of one staff
+004b5db0	justify_distribute	verified	J: takes the needed space from the free space
+004b7468	justify_split_gap	verified	J: proportional share of a gap's need when another staff splits it
+004b63cd	justify_stretch	verified	J: stretches the selected values inside one gap
+004b6593	justify_shift	verified	J: shifts the selected values at or right of x
+004b6818	barline_widths	verified	J: left/right needs of a barline by P5
+004b6657	rest_widths	verified	J: left/right needs of a rest
+004b6c51	key_widths	verified	J: left/right needs of a key signature
+004b6a52	meter_widths	verified	J: left/right needs of a meter
+004b6ced	load_p_array	verified	J: copies P3..P14 of an item into the P array at 0x1C58924
+004c795b	grace_fit	verified	lineup: how much of its width a grace group may keep
+004c7374	grace_widths	verified	lineup: left/right widths of grace notes and their anchors

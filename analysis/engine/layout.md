@@ -1,6 +1,6 @@
 # Layout: lineup (LI), justify (J) and LJ
 
-**Status.** The lineup is ported routine by routine in `experiments/lineup.py` and reproduces the engine's item list bit for bit (all parameters, f32) on 200 random plain systems of 1 to 4 staves, 30 richer ones (keys, meters, second voices, inner clefs, key changes, barlines with P12, lines, slurs, beams, numbers, unequal staff totals) and 12 targeted cases. Two parts are read but not yet modelled: the grace-note pass 0x4C5AD8 (runs only when a note or rest has P7 >= 64) and the whole of justify (J, the second half of LJ). Unless marked otherwise, statements below are **verified** by these comparisons; routine addresses name the code they come from.
+**Status.** LI, J and LJ are ported routine by routine (`experiments/lineup.py`, `experiments/grace.py`, `experiments/justify.py`) and reproduce the engine's item list bit for bit, all parameters as f32. Checked against the oracle: LI on 500 random systems of 1 to 4 staves (plain and rich: keys, meters, second voices, inner clefs, key changes, barlines with P12, lines, slurs, beams, numbers, unequal totals) and 12 targeted cases; LJ on 400 systems and J alone on 200, half of them dense (accidentals, dots, shifted heads, cue notes, barline types, numbers with P16, up to six measures, where J moves 25 to 90 items per system); grace notes in LI and LJ (§9). Statements below are **verified** by these comparisons unless marked otherwise; routine addresses name the code they come from.
 
 Notation as in the other notes: P(k) the f32 parameters, f32(·) rounding to single precision, trunc(·) toward zero, "staff" = trunc(P2), "code" = trunc(P1). Durations are P7 in quarter notes.
 
@@ -28,7 +28,7 @@ Per staff, the engine builds a list of *events*: an x position and an entry that
 
 **Which items count.** P3 <= 200.05 (a literal 200, independent of RIGHT). Notes and rests (codes 1, 2) with at least 7 parameters and P7 > 0; clefs (3), barlines (14), keys (17) and meters (18). Excluded: barlines with 8 <= trunc(P5) <= 10, clefs with P5 >= 44, keys and meters with P14 or P15 non-zero, meters with |P4 * P7| > 2 (P7 = 0 counts as 1). A P3 within 0.01 of 0 is set to 0, and the staff's last relevant item with P3 within 0.01 of 200 gets P3 = 200.
 
-**Notes and rests with P7 >= 64** (grace notes have 64 or 65, help text code1/compkybd) are left out of the events. Their presence triggers the grace-note pass 0x4C5AD8 at the end of the lineup (read in outline, not modelled).
+**Notes and rests with P7 >= 64** (grace notes have 64 or 65, help text code1/compkybd) are left out of the events. Their presence triggers the grace-note pass (§9).
 
 **Grouping.** A note or rest starts a new event when its P3 differs by more than 0.1 from the current event's x; otherwise its P7 joins the event (chords, notes of other voices within 0.1). A marker starts a new event whenever its P3 differs at all from the current event's x; at exactly the same x it is ignored. A barline with P12 > 0 is marked -140 (treated as -14 from §4 on).
 
@@ -117,18 +117,51 @@ So slurs, ties, beams, lines, text, numbers and library symbols follow the notes
 
 Rests (code 2) with P5 <= -2 between x_left and the right end of the answer's x range get P9 = -1 (the item is extended to 9 parameters). Then the page is redrawn.
 
-## 9. Justify (J) – read in outline
+## 9. Grace notes (0x4C5AD8)
 
-0x4B6F4A selects the items in the box (0x49B1D8; a side effect sets P6 = RIGHT on staff items with 6 or more parameters and P6 = 0), then per staff 0x4BCD68 collects the columns of the box (notes, rests, clefs, lines with P7 < 0, keys, meters, barlines, numbers with P16) and their left and right space needs: accidental widths from the tables at 0x792554/0x79254C, P10 shifts of chord notes (P10 = 10/20/110), dots, flags (0x4B6818), rests (0x4B6657), keys (0x4B6C51), other codes (0x4B6A52), with factors such as 1.3, 1.7, 1.8, 2.3, scaled by 0.04 * STAFF_STEP. The staves' column lists are merged (0x4B7468) and 0x4B5DB0 takes the needed space proportionally from the free space of the line, as the help describes ("Justify subtracts proportionally from all the extra space on the line"). Port and verification are the next step.
+Only when some note or rest in the system has P7 >= 64, after §6 and before §7. Grace notes were mapped with their segment like any note; this pass replaces their P3.
 
-## 10. Quirks worth keeping
+1. **Groups.** For every run of grace notes on a staff (skipping codes 4..16 except barlines, and displaced meters) the pass records the *before anchor* (the nearest preceding note, rest, clef, barline, key or meter of the staff, with the notes of its chord), the grace notes, and the *after anchor* (the next such item and the notes and rests at its x). With nothing before or after, a virtual anchor stands at 0 or RIGHT. A barline of the system that lies between an anchor and a grace note replaces that anchor.
+2. **Widths** (0x4C7374, in staff-size units, grace notes times 0.6): a note has right width 4.1 (4.6 for P6 = 2), plus the P10 shift (doubled for P10 = 10), plus 0.5 with ledger lines (pitch >= 13 or <= 0), plus dots from P9; its left width is the accidental (table 0x792638: 1.0, 4.2, 4.6, 4.2, 5.7, 4.6 by P5 mod 10) plus 10 * frac(P5), at least 1 (2 with ledger lines). Rests: right 3.1; clefs: right 7 (5.6 small); barlines: right 1.5 (4.9 for P5 >= 4), left 2.4, 2.7, 3.7, 6 or 5 by P5; meters: right 5.6 (8.1 for two digits). Left widths default to 1.2. Entries at the same x share the largest widths.
+3. **Fit** (0x4C795B). Per after anchor, the room is the distance to its before anchor and the need is the anchor's left width plus the grace notes' widths plus the before anchor's right width. If the room is smaller, every width of the group (anchors included) is multiplied by room/need; groups ending at the same x on several staves use the smallest ratio.
+4. **Placement.** From the after anchor leftwards, each grace note (each chord of them) goes one gap further left, the gap being its right width plus the left width of the entry after it, but never closer than 0.1 to the before anchor.
+
+## 10. Justify (J, 0x4B6F4A)
+
+J runs on the box: for LJ, x_left and x_right from the lineup (§4); for J alone, the answer's x range. Apart from two side effects (staff P6, clefs, below) it changes nothing unless some gap between columns is too narrow while others have room.
+
+1. **Selection** (0x49B1D8). The values J may move: P3 of every item of the staves in the box with P3 in [x_left - 0.001, x_right + 0.001], and in that range also P6 of codes 4 to 8 (not of code-4 lines with P7 < 0 and P6 = 0), P8 and P10 to P14 of code-4 polylines (P7 = 100), P11, P12, P14, P15 of beams, P8 of codes 7 and 8 with P7 > 19. Side effect: a staff item with 6 or more parameters and P6 = 0 gets P6 = RIGHT.
+2. **Columns per staff** (0x4BCD68). Taking part: notes (P7 >= 0), rests (P6, P7 >= 0), clefs (P5 <= 5), code-4 lines with P6 = 0 and P7 <= -1, keys, meters (not displaced), numbers (code 10) with P16 != 0, and barlines of lower staves of the system whose P4 span reaches this staff (P4 >= 0, P5 <= 7). Sorted by x; chord notes within 0.1 are merged, items within 0.03 share a column. Each item has a left and a right need in staff-size units:
+
+   | Item | right need | left need |
+   |---|---|---|
+   | note, chord | head 4.5 (5.0 for P6 mod 10 = 2, 3 below 20), + 1.5 (0.5 with P9) flag room after some up-stem chords, + the largest over the chord's notes of: dots (2.3 for a units digit in P9 when P5 mod 100 < 20, or 10 * frac(P9) + 1.7 * tens digit if larger) plus the head shift (P10 = 10 or 110: 2.833, 4.5 with the wide head; other P10 > 0: P10), + 1.8 for P6 = 10..19; all times 0.7 for cue notes (abs P4 >= 100) and times P15 | largest of: accidental width (P5 mod 10: 2.0, 2.4, 2.1, 4.0, 2.5, 2.0, 3.4, 2.0, 2.8; P5 > 100: 4.1, 4.6, 4.1, 6.2, 4.5) + 10 * frac(P5), reduced by 1.5 or dropped next to the previous chord's accidentals depending on P4, P5, P9, P12; P10 = 20 head; -P10 for negative P10; at least 1.3 for consecutive ledger-line notes on the same side; + 1.7 for P6 = 10..19 |
+   | rest | 4.5 (5 for abs P5 >= 100), + 0.5 per P5 above 1, 6 (9.5 for P5 = -4, 1 with P9) for P5 < 0, + 1.75 * P6, + P10 | -P10 |
+   | barline | 2.5, or for P5 = 4, 5, 6: 6, 6, 7 times f plus P13 + P14; f = P17/size or 1 | 1, or for P5 = 1..6: 2.2, 3.3, 5.4, 2, 5.4, 4.3 times f plus P13/P14 terms; -1 after a clef or key; P7 moves the line |
+   | clef | 7.5 (6.5 small) | 1 after a note |
+   | key | 4.5 (5.5 after a clef) + 2.8 * (abs(P5 mod 100) - 1) * (P7 or 1) | 2 after a note |
+   | meter | 7.5, + 2.5 for two-digit forms, more for P8..P12 forms; -2.5 at the last column | 0.5 after a barline, 2 after a note, -1.5 after a key |
+   | code-4 line | 1.8 + P15/size | 1.3 (0.2 after a barline, 0 after clef, key, meter) - P15/size |
+   | number | 4 * (P6 or 1) + P15/size | 0.2 - P15/size |
+
+   A clef after a barline shortens the barline's right need by 1 (to at least 2); a meter after a barline by 1.5. A clef too close to the previous column is moved right (its P3 is written) when there is room before the next. On staves smaller than P5 = 1, notes, rests and lines after a barline, key, meter or clef get extra left room (1.5, 2.8, 0.9, 1.8 divided by the size, minus 2.5, 2.8, 3.7, 1.8, if positive). The need of the gap after column k is `f32((right_k + left_{k+1}) * 0.04 * STAFF_STEP)`.
+3. **Staves together.** Column lists are merged: columns within 0.1 coincide and keep the larger need; a gap split by another staff's column gives that part a proportional share of its need, at least the other staff's own need for it (0x4B7468).
+4. **Distribution** (0x4B5DB0). With free_k = (x_{k+1} - x_k) - need_k, D the sum of the deficits and P the sum of the surpluses: if both are non-zero, each gap from the left changes by its deficit (widening) or by -surplus * D/P (narrowing), so the line keeps its width. A change is applied by stretching the selected values inside the gap linearly (`factor = f32(f32(span + change) / span)`, results kept at least 0.2 right of the previous gap's start) and shifting every selected value to the right of it. If the needs exceed the whole box, all needs are first reduced equally (the engine prints both sums). Finally every P3 within 0.01 of 0 or RIGHT is snapped to it.
+
+What J leaves alone: values outside the box or of other staves, vertical parameters, and x parameters not listed under Selection.
+
+## 11. Quirks worth keeping
 
 - Values open across a marker grow by the marker code (§3).
 - Markers at exactly the x of the current event are ignored; notes within 0.1 after a barline join the barline's event and their P7 is carried as P7 + 14.
 - The literal 200.05 / 200 in §3 ignores other page widths.
 - If no note, rest or clef lies in the system, 0x4C8290 returns early and the staff items keep their negated P2.
 - In 0x4C9510 the virtual anchors take their item reference from whatever the previous run left in the table; the model assumes a fresh engine, as in the oracle.
+- J keeps several values in globals from one staff (and one run) to the next: the ledger-line state, the small-clef flag, the previous chord's P4, P5, P9 and P12 (justify.py `JustifyState`). The grace pass keeps the last right width for keys (0x4C7374 sets none). Again the model starts from zero.
+- Ghidra's decompilation hides some f32 stores to scratch globals; in 0x4B63CD the stretch numerator is rounded to f32 before the division, which only the disassembly shows.
 
 ## Verification
 
-`python experiments/lineup.py [cases] [max_staves] [rich]` compares `lineup_items` with the oracle after `LI` and `lo count` (yes to the source box), item by item and bit for bit, including the engine's partly changed items when it gives up. Results: 200/200 plain, 30/30 rich, plus the targeted cases (triplets, notes 0.05 apart, keys and meters, staff size 0.75, staff P6 = 150, no closing barline, closing clef, barline with P12, slurs/beams/lines/numbers, a two-staff barline with P4 = 2).
+- `python experiments/lineup.py [cases] [max_staves] [rich]`: LI against the oracle after `LI` and `lo count` (yes to the source box), item by item and bit for bit, including the engine's partly changed items when it gives up. 200/200 plain, 300/300 rich, plus targeted cases (triplets, notes 0.05 apart, keys and meters, staff size 0.75, staff P6 = 150, no closing barline, closing clef, barline with P12, slurs/beams/lines/numbers, a two-staff barline with P4 = 2).
+- `python experiments/justify.py [cases] [max_staves] [LJ|J|LI] [dense]`: the same for the whole command. LJ 200/200 rich and 200/200 dense; J alone 100/100 rich and 100/100 dense.
+- Grace notes: random systems with groups of one to three grace notes (P7 = 65, P4 + 100, P8 = 101) before notes, LI and LJ.
