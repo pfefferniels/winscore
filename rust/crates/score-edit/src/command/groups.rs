@@ -1,6 +1,9 @@
 //! Running group edits: the dialogue of area, destination or changes, then
 //! the change to every item of the area as one undo step.
 
+use score_format::Item;
+use score_render::page::{page_offset, P3_UNIT};
+
 use crate::command::moves::{shift, Axis};
 use crate::command::numeric;
 use crate::command::parse::{self, Token};
@@ -8,24 +11,42 @@ use crate::command::Run;
 use crate::conditional::Statement;
 use crate::document::ItemId;
 use crate::error::EditError;
-use crate::group::{Destination, GroupCommand, Order, Pending, Region, FIXED_BY_MUD};
+use crate::group::{Destination, GroupCommand, Order, Pending, Region, FIXED_BY_MUD, NARROW_BOX};
 use crate::params::Draft;
 use crate::session::Deleted;
+use crate::transpose::{self, Transposition};
+
+/// Staff numbers of the recto page start above this; PGR adds this many.
+const RECTO_FROM: f32 = 200.0;
+const RECTO_STAVES: f32 = 200.0;
 
 impl Run<'_, '_> {
     /// Starts a group command; numbers typed after the word give the area at once.
     pub fn start_group(&mut self, command: GroupCommand, args: &[Token]) -> Result<(), EditError> {
+        let numbers: Vec<f32> = args.iter().filter_map(Token::number).collect();
+        if command == GroupCommand::Transpose && !numbers.is_empty() {
+            return match Transposition::typed(&numbers) {
+                Some((region, how)) => self.transpose(&region, &how),
+                None => Ok(()),
+            };
+        }
         self.session.pending = Some(Pending::Area(command));
-        if args.is_empty() {
+        if numbers.is_empty() {
             Ok(())
         } else {
-            self.answer_numbers(&args.iter().filter_map(Token::number).collect::<Vec<_>>())
+            self.answer_numbers(&numbers)
         }
     }
 
     /// A line typed while a group command waits: numbers answer it, anything
     /// else ends the group edit without a change.
     pub fn answer_group(&mut self, line: &str) -> Result<(), EditError> {
+        if let Some(Pending::Transposition(region)) = &self.session.pending {
+            let region = region.clone();
+            self.session.pending = None;
+            let how = Transposition::parse(line).ok_or_else(|| EditError::BadArgument(format!("TR values {line:?}")))?;
+            return self.transpose(&region, &how);
+        }
         let tokens = parse::tokens(line);
         let numbers: Option<Vec<f32>> = tokens.iter().map(Token::number).collect();
         match (self.session.pending.take(), numbers) {
@@ -48,6 +69,8 @@ impl Run<'_, '_> {
             Pending::Area(GroupCommand::Alter) => self.wait(Pending::AlterCode(region(numbers)?)),
             Pending::Area(GroupCommand::MoveUpDown) => self.wait(Pending::Steps(region(numbers)?)),
             Pending::Area(GroupCommand::CopyToStaves) => self.wait(Pending::Staves(region(numbers)?)),
+            Pending::Area(GroupCommand::Transpose) => self.wait(Pending::Transposition(region(numbers)?)),
+            Pending::Transposition(_) => Ok(()),
             Pending::Destination { region, copy } => {
                 let destination = Destination::parse(numbers).ok_or_else(|| EditError::BadArgument("destination".into()))?;
                 self.move_region(&region, &destination, copy)
@@ -56,6 +79,33 @@ impl Run<'_, '_> {
             Pending::AlterPairs { .. } => Ok(()),
             Pending::Steps(region) => self.move_region_up(&region, numbers[0]),
             Pending::Staves(region) => self.copy_to_staves(&region, numbers),
+        }
+    }
+
+    /// A box drawn on the page: it answers a group command waiting for its
+    /// area or destination, and otherwise selects what it holds. As a
+    /// destination, a click keeps the area's place on the clicked staff, a
+    /// thin line moves the area's left edge to the line, a box rescales it.
+    pub fn draw_box(&mut self, corner: (f64, f64), other: (f64, f64)) -> Result<(), EditError> {
+        let drawn = Region::from_page_box(self.tx.doc().file(), corner, other);
+        match self.session.pending.clone() {
+            Some(Pending::Area(_)) => self.answer_numbers(&[drawn.bottom, drawn.left, drawn.right, drawn.top]),
+            Some(Pending::Destination { region, .. }) => {
+                let narrow = (corner.0 - other.0).abs() < NARROW_BOX;
+                let answer = if narrow && corner.1 == other.1 {
+                    vec![drawn.bottom]
+                } else if narrow {
+                    let line = ((corner.0.min(other.0) - f64::from(page_offset(1).x)) / P3_UNIT) as f32;
+                    vec![drawn.bottom, line - region.left]
+                } else {
+                    vec![drawn.bottom, drawn.left, drawn.right]
+                };
+                self.answer_numbers(&answer)
+            }
+            _ => {
+                self.select_region(&drawn);
+                Ok(())
+            }
         }
     }
 
@@ -169,6 +219,25 @@ impl Run<'_, '_> {
         Ok(())
     }
 
+    /// PGR: every item 200 staves up to the recto page, or back from it if
+    /// anything is there already.
+    pub fn page_right(&mut self) -> Result<(), EditError> {
+        let entries: Vec<(ItemId, Draft)> =
+            self.tx.doc().entries().map(|(id, item)| (id, Draft::of(item))).collect();
+        let on_recto = entries.iter().any(|(_, d)| d.get(2) > RECTO_FROM);
+        entries.into_iter().for_each(|(id, mut draft)| {
+            let change = match (on_recto, draft.get(2) > RECTO_FROM) {
+                (false, _) => RECTO_STAVES,
+                (true, true) => -RECTO_STAVES,
+                (true, false) => return,
+            };
+            draft.add(2, change);
+            self.tx.replace(id, draft.to_item());
+        });
+        self.session.clear();
+        Ok(())
+    }
+
     /// PST: the items cut last, added again and selected.
     pub fn paste(&mut self) -> Result<(), EditError> {
         let items = self.session.clipboard.clone();
@@ -177,15 +246,45 @@ impl Run<'_, '_> {
 
     /// OS, OH, OT: the items put in a new order, ids kept.
     pub fn reorder(&mut self, order: Order) -> Result<(), EditError> {
-        let mut wanted: Vec<(ItemId, Draft)> = self.tx.doc().entries().map(|(id, item)| (id, Draft::of(item))).collect();
+        let mut wanted: Vec<(usize, Draft)> = self.tx.doc().entries().map(|(_, item)| Draft::of(item)).enumerate().collect();
         wanted.sort_by(|(_, a), (_, b)| order.compare(a, b));
-        wanted.into_iter().enumerate().for_each(|(index, (id, _))| {
-            if self.tx.doc().id_at(index) != Some(id) {
-                if let Some((_, item)) = self.tx.remove(id) {
-                    self.tx.restore(index, id, item);
+        let items = self.tx.doc().file().items.clone();
+        self.rearrange(wanted.into_iter().map(|(i, _)| (Some(i), items[i].clone())).collect());
+        Ok(())
+    }
+
+    /// TR on `region` with the dialog's values `how`, as one change of the file.
+    pub fn transpose(&mut self, region: &Region, how: &Transposition) -> Result<(), EditError> {
+        let arranged = transpose::transpose(&self.tx.doc().file().items, region, how, self.session.transposition)
+            .map_err(|unsupported| EditError::NotImplemented(format!("TR: {unsupported}")))?;
+        self.session.transposition = arranged.leftover;
+        self.rearrange(arranged.source.into_iter().zip(arranged.items).collect());
+        self.session.clear();
+        Ok(())
+    }
+
+    /// Makes the file `wanted`: each entry the index of an item now in the
+    /// file (`None` for a new one) and what it becomes; items not named go.
+    fn rearrange(&mut self, wanted: Vec<(Option<usize>, Item)>) {
+        let ids: Vec<ItemId> = self.tx.doc().ids().to_vec();
+        let kept: Vec<usize> = wanted.iter().filter_map(|(source, _)| *source).collect();
+        ids.iter().enumerate().filter(|(i, _)| !kept.contains(i)).for_each(|(_, &id)| {
+            self.tx.remove(id);
+        });
+        wanted.into_iter().enumerate().for_each(|(index, (source, item))| match source.map(|i| ids[i]) {
+            None => {
+                self.tx.insert(index, item);
+            }
+            Some(id) => {
+                if self.tx.doc().item(id) != Some(&item) {
+                    self.tx.replace(id, item);
+                }
+                if self.tx.doc().id_at(index) != Some(id) {
+                    if let Some((_, item)) = self.tx.remove(id) {
+                        self.tx.restore(index, id, item);
+                    }
                 }
             }
         });
-        Ok(())
     }
 }

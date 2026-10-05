@@ -4,6 +4,7 @@
 
 use std::collections::BTreeMap;
 
+use score_edit::group::TRANSPOSITION_PROMPT;
 use score_edit::{Draft, Editor};
 use score_format::{CountWidth, Item, MusFile, Word};
 
@@ -126,18 +127,23 @@ fn stored(editor: &Editor) -> Vec<Stored> {
 
 /// A mouse line of the cases: `~v x y` (move with the button held), `~s x y`
 /// (with Shift), `~x x y` (button up), `~ x y` (click), in page coordinates.
-fn mouse(line: &str) -> Option<(&str, f64, f64)> {
+/// `~x x0 y0 x1 y1`: a box drawn from mouse-down to mouse-up.
+fn mouse(line: &str) -> Option<(&str, Vec<f64>)> {
     let mut parts = line.split_whitespace();
     let action = parts.next().filter(|a| matches!(*a, "~v" | "~s" | "~x" | "~"))?;
-    let x = parts.next()?.parse().ok()?;
-    let y = parts.next()?.parse().ok()?;
-    Some((action, x, y))
+    let numbers: Vec<f64> = parts.map(str::parse).collect::<Result<_, _>>().ok()?;
+    matches!(numbers.len(), 2 | 4).then_some((action, numbers))
 }
 
 /// Plays a mouse line the way the browser shell drives the editor. The engine
 /// drags an item to the cursor; the cases start each drag at the item's own
 /// reference point, where that and keeping the grab offset agree.
-fn play_mouse(editor: &mut Editor, dragging: &mut bool, (action, x, y): (&str, f64, f64)) {
+fn play_mouse(editor: &mut Editor, dragging: &mut bool, (action, numbers): (&str, Vec<f64>)) {
+    if let [x0, y0, x1, y1] = numbers[..] {
+        let _ = editor.draw_box(x0, y0, x1, y1);
+        return;
+    }
+    let (x, y) = (numbers[0], numbers[1]);
     match action {
         "~v" | "~s" => {
             if !*dragging {
@@ -158,18 +164,41 @@ fn play_mouse(editor: &mut Editor, dragging: &mut bool, (action, x, y): (&str, f
     }
 }
 
+/// The values a `!transpose` line gives TR's dialog, in the syntax of
+/// [`score_edit::transpose::Transposition::parse`].
+fn dialog_values(line: &str) -> Option<&str> {
+    line.strip_prefix("!transpose").map(str::trim)
+}
+
+/// `!skip-lineup` makes the engine leave out the justification TR ends
+/// with, which score-edit does not do yet either.
+const SKIP_LINEUP: &str = "!skip-lineup";
+
 fn replay(case: &Case) -> (Vec<Stored>, Vec<String>) {
     let mut editor = Editor::new(mus_file(&case.base));
     let mut dragging = false;
+    let mut dialog = None;
     let errors = case
         .commands
         .iter()
-        .filter_map(|c| match mouse(c) {
-            Some(m) => {
-                play_mouse(&mut editor, &mut dragging, m);
-                None
+        .filter_map(|c| {
+            if let Some(values) = dialog_values(c) {
+                dialog = Some(values);
+                return None;
             }
-            None => editor.execute(c).err().map(|e| format!("[{c}] {e}")),
+            if c == SKIP_LINEUP {
+                return None;
+            }
+            let error = match mouse(c) {
+                Some(m) => {
+                    play_mouse(&mut editor, &mut dragging, m);
+                    None
+                }
+                None => editor.execute(c).err().map(|e| format!("[{c}] {e}")),
+            };
+            let answer = dialog.filter(|_| editor.prompt() == Some(TRANSPOSITION_PROMPT));
+            let dialog_error = answer.and_then(|v| editor.execute(v).err().map(|e| format!("[dialog {v}] {e}")));
+            error.or(dialog_error)
         })
         .collect();
     (stored(&editor), errors)

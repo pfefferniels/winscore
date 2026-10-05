@@ -15,6 +15,7 @@ use crate::history::{History, Step};
 use crate::params::{Draft, MAX_PARAM};
 use crate::pick;
 use crate::session::Session;
+use crate::transpose::Transposition;
 
 /// P1 of library symbols.
 const SYMBOL_CODE: f32 = 9.0;
@@ -152,6 +153,14 @@ impl Editor {
         Run { session: &mut self.session, tx: &mut tx }.select_region(region);
     }
 
+    /// A box drawn on the page (corners in page coordinates), read as WinScore
+    /// reads a mouse-drawn area ([`Region::from_page_box`]): it answers a group
+    /// command waiting for its area or destination, and otherwise selects the
+    /// items inside.
+    pub fn draw_box(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> Result<Change, EditError> {
+        self.act("Box", |run| run.draw_box((x0, y0), (x1, y1)))
+    }
+
     /// The question a group command is waiting to have answered by the next
     /// line given to [`Editor::execute`], if any.
     pub fn prompt(&self) -> Option<&'static str> {
@@ -274,6 +283,12 @@ impl Editor {
             run.session.clear();
             run.append_items(vec![item])
         })
+    }
+
+    /// TR: transposes the staves and positions of `region` with the values
+    /// of WinScore's Transpose Setup dialog.
+    pub fn transpose(&mut self, region: &Region, how: &Transposition) -> Result<Change, EditError> {
+        self.act("Transpose", |run| run.transpose(region, how))
     }
 
     /// Appends items (from the music input passes, say) and selects them.

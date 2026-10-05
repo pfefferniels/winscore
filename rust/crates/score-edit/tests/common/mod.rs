@@ -13,9 +13,11 @@ use std::path::PathBuf;
 /// selected NUML creates a number, L1 a note, THE or TN a text through the
 /// text dialog; the editor knows these words only in their own sense. The
 /// catalogue reads the engine's item store, which OS, OH and OT leave in
-/// place while reordering only its index (saving writes the new order).
+/// place while reordering only its index (saving writes the new order); its
+/// item-4 column misses PGR's change, which replaces every item.
 pub const DEVIATIONS: &[(&str, bool)] = &[
     ("16", false),
+    ("PGR", false),
     ("OS", false),
     ("OH", false),
     ("OT", false),
@@ -113,7 +115,7 @@ pub fn rows() -> Vec<Row> {
             Some(Row {
                 command: command.to_owned(),
                 note_context: context == "note",
-                added: added.split(';').filter(|s| !s.trim().is_empty()).map(numbers).collect(),
+                added: added.split(['|', ';']).filter(|s| !s.trim().is_empty()).map(numbers).collect(),
                 item4_after: item4.split_once("->").map(|(_, after)| numbers(after)),
             })
         })

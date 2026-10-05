@@ -78,6 +78,8 @@ pub enum Op {
     HairpinSpread(f32),
     /// 100 in or out of P(n), away from zero (cue size, KSCU/KSNO).
     Hundred { n: usize, on: bool },
+    /// P(n) steps through `values`, starting over after the last.
+    Cycle { n: usize, values: &'static [f32] },
     /// P(n) + delta, not below `min`.
     AddAtLeast { n: usize, delta: f32, min: f32 },
     PedalSize(f32),
@@ -159,6 +161,10 @@ impl Op {
             }
             Op::HairpinSpread(delta) => line::spread_hairpin(draft, delta),
             Op::Hundred { n, on } => note::set_hundred(draft, n, on),
+            Op::Cycle { n, values } => {
+                let next = values.iter().position(|&v| v == draft.get(n)).map_or(0, |i| (i + 1) % values.len());
+                draft.set(n, values[next]);
+            }
             Op::AddAtLeast { n, delta, min } => draft.set(n, (draft.get(n) + delta).max(min)),
             Op::PedalSize(delta) => signs::resize_pedal(draft, delta),
             Op::FlipSymbol => signs::flip_symbol(draft),
@@ -456,6 +462,13 @@ const LINES: &[Entry] = &[
 ];
 
 const SIGNS: &[Entry] = &[
+    entry("SUD", N, Op::Cycle { n: 12, values: &[0.0, 1.0, 2.0] }, "Note on the staff above, below, its own (P12)"),
+    entry("OVA", T, Op::SetParams(&[(7, 8.0), (12, -1.0)]), "8va (P7 = 8, P12 = -1)"),
+    entry("OVAU", T, Op::SetParams(&[(7, 88.0), (12, -1.0)]), "8va dashes up (P7 = 88)"),
+    entry("OVAD", T, Op::SetParams(&[(7, -88.0), (12, 1.0)]), "8va dashes down (P7 = -88)"),
+    entry("OBA", T, Op::SetParams(&[(7, -8.0), (11, 0.0), (12, 1.0)]), "8va bassa (P7 = -8)"),
+    entry("OMA", T, Op::SetParams(&[(7, 15.0), (12, -1.0)]), "15ma (P7 = 15)"),
+    entry("OMAU", T, Op::SetParams(&[(7, 155.0), (12, -1.0)]), "15ma dashes up (P7 = 155)"),
     mark("TRFW", 21.0, "Trill with flat (P11 = 21)"),
     mark("TRSW", 22.0, "Trill with sharp (P11 = 22)"),
     mark("TRNW", 23.0, "Trill with natural (P11 = 23)"),
