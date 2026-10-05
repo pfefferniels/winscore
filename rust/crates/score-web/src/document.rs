@@ -14,6 +14,8 @@ use crate::hit::{hit_test, At};
 /// P1 of text items, whose characters follow the parameters.
 pub const TEXT_CODE: i32 = 16;
 
+const STAFF_CODE: i32 = 8;
+
 fn render_page(file: &MusFile) -> DisplayList {
     render(&score_render::Document::new(file))
 }
@@ -71,6 +73,19 @@ impl Document {
 
     pub fn render(&mut self) -> &DisplayList {
         self.page = render_page(self.editor.file());
+        &self.page
+    }
+
+    /// Draws only the selected items again, for previews while they are
+    /// dragged; a full render instead when a staff is among them, since
+    /// everything on it moves along.
+    pub fn render_selection(&mut self) -> &DisplayList {
+        let selected: Vec<usize> = self.selection().iter().map(|id| id.0 as usize).collect();
+        let moves_staff = selected.iter().any(|&i| self.items().get(i).is_some_and(|item| item.code() == STAFF_CODE));
+        if moves_staff {
+            return self.render();
+        }
+        crate::live::rerender(&mut self.page, self.editor.file(), &selected);
         &self.page
     }
 
