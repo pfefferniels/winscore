@@ -5,6 +5,7 @@ use score_format::{Item, Word};
 
 use crate::chords::{accidental_offsets, dot_offsets, ChordHead};
 use crate::events::{Event, Head};
+use crate::num::amod;
 use crate::notes::{Clef, KeySignature, Meter, RestKind, StaffShift, StemMode};
 use crate::rhythm::Rhythm;
 use crate::slurs::WorkEntry;
@@ -20,7 +21,8 @@ const STEM_DOWN: i32 = 20;
 /// P10 of a chord note moved one head width to the right (stem up) or left (stem down).
 const SHIFT_RIGHT: f32 = 10.0;
 const SHIFT_LEFT: f32 = 20.0;
-const GRACE_LEVEL: i32 = 100;
+/// Added to P4 (away from 0) for grace and cue notes.
+const SMALL_LEVEL: i32 = 100;
 /// P7 of the further heads of a grace chord (the stem head has 65).
 const GRACE_CHORD_MEMBER: f32 = 64.0;
 
@@ -65,6 +67,11 @@ pub(crate) struct Note {
     kept_layout: Option<HeadLayout>,
     /// A grace chord that pass 1 sorted from the top and pass 2 spaced in that order.
     spaced_from_top: bool,
+    /// Cue size: P4 is stored 100 further from 0, as for grace notes.
+    pub cue: bool,
+    /// P5, P10 and dots of every head when they do not follow from the heads (a grace
+    /// chord in the refit).
+    explicit_layout: Option<Vec<HeadLayout>>,
 }
 
 /// What the chord layout gives a head: P5 with the accidental's offset, P10, and the dot
@@ -95,6 +102,8 @@ impl Note {
             stray_head: None,
             kept_layout: None,
             spaced_from_top: false,
+            cue: false,
+            explicit_layout: None,
         };
         note.laid_out_heads = note.heads.len();
         let down = match stems {
@@ -128,6 +137,124 @@ impl Note {
         note
     }
 
+    /// A chord whose notes reach pass 1 in two runs (the refit sends a stem code before a
+    /// stem head that is not the chord's first note). 0x4ECDF8 sorts only the first run
+    /// and appends the rest; the stem then goes up when the last note is above the first,
+    /// down when below, and for a unison by the stem of the note before it; P8 spans from
+    /// the first note; 0x4EE442 lays out the heads up to that last comparison.
+    pub fn set_pass1_chord(&mut self, run: &[Head], rest: &[Head]) {
+        let mut sorted = run.to_vec();
+        sorted.sort_by_key(|h| h.level);
+        let (low, high) = (sorted.first().map_or(0, |h| h.level), sorted.last().map_or(0, |h| h.level));
+        let ascending = match self.stem_mode {
+            StemMode::Up => true,
+            StemMode::Down => false,
+            StemMode::Ordinary => 2 * MIDDLE_LINE - (low + high) > 0,
+        };
+        if !ascending {
+            sorted = sorted.chunk_by(|a, b| a.level == b.level).rev().flatten().copied().collect();
+        }
+        let heads: Vec<Head> = sorted.into_iter().chain(rest.iter().copied()).collect();
+        let first = heads[0].level;
+        let first_down = match self.stem_mode {
+            StemMode::Up => false,
+            StemMode::Down => true,
+            StemMode::Ordinary => first >= MIDDLE_LINE,
+        };
+        // (sign, distance) of the last comparison with the first note.
+        let last = heads.iter().enumerate().skip(1).fold((if first_down { -1 } else { 1 }, 0usize), |_, (j, h)| {
+            let previous_down = j == 1 && first_down;
+            match h.level.cmp(&first) {
+                std::cmp::Ordering::Greater => (1, j),
+                std::cmp::Ordering::Less => (-1, j),
+                std::cmp::Ordering::Equal => (if previous_down { -1 } else { 1 }, 1),
+            }
+        });
+        let down = if heads.len() > 1 { last.0 < 0 } else { first_down };
+        let span = heads.iter().map(|h| (h.level - first).abs()).max().unwrap_or(0);
+        let to_middle = if down { first - STEM - MIDDLE_LINE } else { MIDDLE_LINE - STEM - first };
+        self.laid_out_heads = (last.1 + 1).max(1);
+        self.heads = heads;
+        self.down = down;
+        self.heads_down = down;
+        self.extension = span.max(to_middle).max(0) as f32;
+        self.table_extension = self.extension;
+    }
+
+    /// A grace chord as pass 2 leaves it inside the refit (0x47C3E8). 0x4EE442 skips the
+    /// part that only runs in the IN pass 2 (sorting the heads, clearing P10, rounding P5),
+    /// so: the heads keep pass 1's order, the lowest swapped to the front when the stem is
+    /// free (0x51CF40); P10 values stay at their places while P4 and P5 move; the
+    /// accidental offsets of pass 1 and pass 2 add up; P8 comes from a value 0x51C64F left
+    /// at 0 for the grace note.
+    fn lay_out_grace_chord_for_refit(&mut self) {
+        if !self.is_grace() || self.heads.len() < 2 {
+            return;
+        }
+        let side = |down: bool| if down { SHIFT_LEFT } else { SHIFT_RIGHT };
+        let pass1_down = match self.stem_mode {
+            StemMode::Up => false,
+            StemMode::Down => true,
+            StemMode::Ordinary => self.lowest() + self.highest() >= 2 * MIDDLE_LINE,
+        };
+        let mut heads = self.heads.clone();
+        heads.sort_by_key(|h| h.level);
+        if pass1_down {
+            heads = heads.chunk_by(|a, b| a.level == b.level).rev().flatten().copied().collect();
+        }
+        let stem = if pass1_down { STEM_DOWN } else { STEM_UP };
+        let (shifts, offsets) = Self::refit_layout_pass(&heads, &[], pass1_down, side(pass1_down));
+        let mut slots: Vec<(Head, f32)> = heads
+            .iter()
+            .zip(offsets)
+            .enumerate()
+            .map(|(k, (h, o))| {
+                let base = h.accidental.map_or(0, |a| a.code()) + if k == 0 { stem } else { 0 };
+                (*h, (f64::from(o) / 1000.0 + f64::from(base)) as f32)
+            })
+            .collect();
+        if self.stem_mode == StemMode::Ordinary {
+            slots[0].1 = amod(slots[0].1, 10.0);
+            for m in 1..slots.len() {
+                if slots[m].0.level <= slots[0].0.level {
+                    slots.swap(0, m);
+                }
+            }
+            slots[0].1 += STEM_UP as f32;
+        }
+        let down = amod(slots[0].1, 100.0) >= STEM_DOWN as f32;
+        let placed: Vec<Head> = slots.iter().map(|s| s.0).collect();
+        let (shifts, offsets) = Self::refit_layout_pass(&placed, &shifts, down, side(down));
+        self.explicit_layout = Some(
+            slots
+                .iter()
+                .zip(offsets)
+                .zip(shifts)
+                .map(|((slot, offset), shift)| HeadLayout { p5: (f64::from(offset) / 1000.0 + f64::from(slot.1)) as f32, shift, dots: 0 })
+                .collect(),
+        );
+        self.heads = placed;
+        self.down = down;
+        self.heads_down = down;
+        self.extension = (f64::from(0.0f32) * f64::from(1.6666f32) - f64::from(0.3333f32)) as f32;
+        self.table_extension = self.extension;
+    }
+
+    /// One run of 0x4EE442 without its IN-pass-2 part on heads in place order: P10 set
+    /// for seconds (other places keep `previous`), and the accidental offsets.
+    fn refit_layout_pass(heads: &[Head], previous: &[f32], down: bool, side: f32) -> (Vec<f32>, Vec<i32>) {
+        let levels: Vec<i32> = heads.iter().map(|h| h.level).collect();
+        let shifts: Vec<f32> = second_shifts(&levels)
+            .into_iter()
+            .enumerate()
+            .map(|(k, s)| if s { side } else { previous.get(k).copied().unwrap_or(0.0) })
+            .collect();
+        let left: Vec<bool> = shifts.iter().map(|s| *s == SHIFT_LEFT).collect();
+        let refs: Vec<&Head> = heads.iter().collect();
+        let offsets = positional_accidental_offsets(&refs, &left, down);
+        (shifts, offsets)
+    }
+
     /// P8 of a grace note (0x51CF40): 100 (the slash) plus a stem length that grows for notes
     /// below the staff; a grace chord encodes its span. `down` is the stem pass 1 gave the
     /// note before pass 2 turned every grace stem up.
@@ -139,7 +266,7 @@ impl Note {
         let level = self.lowest();
         let length = if !down && level < 1 { ((2 - level) as f64 * 1.66666f32 as f64 - 2.0) as f32 } else { 0.0 };
         let length = if length == 0.0 { 1.0 } else { length };
-        length + GRACE_LEVEL as f32
+        length + SMALL_LEVEL as f32
     }
 
     pub fn lowest(&self) -> i32 {
@@ -157,6 +284,11 @@ impl Note {
 
     pub fn is_grace(&self) -> bool {
         self.rhythm == Rhythm::Grace
+    }
+
+    /// Grace or cue size: the notes whose P4 is stored with 100 added (|P4| >= 100).
+    pub fn is_small(&self) -> bool {
+        self.is_grace() || self.cue
     }
 
     /// The heads 0x413CA8 turns with the chord: those at the chord's x, which leaves out a
@@ -271,6 +403,9 @@ impl Note {
 
     /// P5, P10 and the dot additions to P9 of each head in item order.
     fn head_layouts(&self) -> Vec<HeadLayout> {
+        if let Some(layout) = &self.explicit_layout {
+            return layout.clone();
+        }
         let ordered = self.ordered_heads();
         let levels: Vec<i32> = ordered.iter().map(|h| h.level).collect();
         let shifted = self.shifted();
@@ -289,7 +424,7 @@ impl Note {
                     (true, false) => STEM_UP,
                 };
                 HeadLayout {
-                    p5: offsets[i] as f32 / 1000.0 + (stem + head.accidental.map_or(0, |a| a.code())) as f32,
+                    p5: (f64::from(offsets[i]) / 1000.0 + f64::from(stem + head.accidental.map_or(0, |a| a.code()))) as f32,
                     shift: if shifted[i] { side } else { 0.0 },
                     dots: dots[i],
                 }
@@ -315,10 +450,10 @@ impl Note {
             .enumerate()
             .map(|(i, head)| {
                 let stem_head = i == 0;
-                let level = match (self.is_grace(), head.level < 0) {
+                let level = match (self.is_small(), head.level < 0) {
                     (false, _) => head.level,
-                    (true, false) => head.level + GRACE_LEVEL,
-                    (true, true) => head.level - GRACE_LEVEL,
+                    (true, false) => head.level + SMALL_LEVEL,
+                    (true, true) => head.level - SMALL_LEVEL,
                 };
                 let (extension, tails, mark) =
                     if stem_head { (self.extension, self.tails, self.mark) } else { (0.0, 0, 0.0) };
@@ -365,26 +500,30 @@ impl Note {
         self.redotted = Some((heads + 2).saturating_sub(first_entry).clamp(2, heads.max(2)));
     }
 
-    /// Accidental offsets (thousandths of P5) in item order; the layout works from the top.
+    /// Accidental offsets (thousandths of P5) in item order.
     fn accidental_offsets(&self, ordered: &[&Head], shifted: &[bool]) -> Vec<i32> {
-        let mut top_down: Vec<ChordHead> = ordered
-            .iter()
-            .zip(shifted)
-            .map(|(h, s)| ChordHead {
-                level: h.level,
-                accidental: h.accidental.map_or(0, |a| a.code()),
-                left_of_stem: *s && self.heads_down,
-            })
-            .collect();
-        if !self.heads_down {
-            top_down.reverse();
-        }
-        let mut offsets = accidental_offsets(&top_down);
-        if !self.heads_down {
-            offsets.reverse();
-        }
-        offsets
+        let left: Vec<bool> = shifted.iter().map(|s| *s && self.heads_down).collect();
+        positional_accidental_offsets(ordered, &left, self.heads_down)
     }
+}
+
+/// 0x4EE442's accidental layout on heads in item order, `left` marking the heads with
+/// P10 = 20: it works through them from the first for a down stem, from the last for an up
+/// stem (from the top, when the heads are sorted).
+fn positional_accidental_offsets(heads: &[&Head], left: &[bool], down: bool) -> Vec<i32> {
+    let mut walk: Vec<ChordHead> = heads
+        .iter()
+        .zip(left)
+        .map(|(h, l)| ChordHead { level: h.level, accidental: h.accidental.map_or(0, |a| a.code()), left_of_stem: *l })
+        .collect();
+    if !down {
+        walk.reverse();
+    }
+    let mut offsets = accidental_offsets(&walk);
+    if !down {
+        offsets.reverse();
+    }
+    offsets
 }
 
 /// Which heads (in item order, stem head first) sit on the other side of the stem: a head
@@ -512,10 +651,17 @@ impl Line {
         let mut stems = StemMode::Ordinary;
         let mut shift = StaffShift::Main;
         let mut clef = options.clef;
+        let mut cue = false;
         let elements: Vec<Element> = timed
             .iter()
             .filter_map(|t| match (t.event, t.rhythm) {
-                (Event::Chord(heads), Some(rhythm)) => Some(Element::Note(Note::new(0.0, heads.clone(), rhythm, stems, shift))),
+                (Event::Chord(heads), Some(rhythm)) => {
+                    // 0x4ECDF8: cue notes take an up stem unless SU/SD is in force.
+                    let mode = if cue && stems == StemMode::Ordinary { StemMode::Up } else { stems };
+                    let mut note = Note::new(0.0, heads.clone(), rhythm, mode, shift);
+                    note.cue = cue;
+                    Some(Element::Note(note))
+                }
                 (Event::Rest(kind), Some(rhythm)) => Some(Element::Rest { x: 0.0, kind: *kind, rhythm }),
                 (Event::Bar { staves }, _) => Some(Element::Bar { x: 0.0, staves: *staves }),
                 (Event::Clef(c), _) => {
@@ -530,6 +676,10 @@ impl Line {
                 }
                 (Event::Staff(s), _) => {
                     shift = *s;
+                    None
+                }
+                (Event::Cue(on), _) => {
+                    cue = *on;
                     None
                 }
                 (Event::Chord(_) | Event::Rest(_), None) => None,
@@ -564,6 +714,19 @@ impl Line {
         for (element, count) in self.elements.iter_mut().zip(entries.iter().map(Vec::len)) {
             let member_xs: Vec<f32> = next.by_ref().take(count).collect();
             element.place(&member_xs);
+        }
+    }
+
+    /// Grace chords as the refit's pass 2 leaves them.
+    pub fn lay_out_grace_chords_for_refit(&mut self) {
+        self.notes_mut().for_each(Note::lay_out_grace_chord_for_refit);
+    }
+
+    /// Puts the notes at the given positions, one per note: the refit keeps every P3.
+    pub fn place_notes(&mut self, xs: &[f32]) {
+        for (note, &x) in self.notes_mut().zip(xs) {
+            note.x = x;
+            note.stray_head = None;
         }
     }
 

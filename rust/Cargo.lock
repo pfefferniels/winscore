@@ -81,6 +81,7 @@ name = "score-input"
 version = "0.1.0"
 dependencies = [
  "score-format",
+ "score-layout",
 ]
 
 [[package]]

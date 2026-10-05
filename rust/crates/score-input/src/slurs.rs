@@ -353,8 +353,10 @@ impl SlurInput<'_> {
             if shape.kind < -1.0 && shape.kind > -4.0 {
                 length += shape.kind * 2.0;
             }
-            let base = (length as f64 / 20.0 + 0.9) as f32;
-            shape.bend = (((shape.y2 - shape.y1).abs() as f64) * 0.1 + base as f64) as f32;
+            // One extended-precision expression with the engine's f32 constants (0x53D1E0).
+            let base = f64::from(length) / f64::from(20.0f32) + f64::from(0.9f32);
+            let rise = (f64::from(shape.y2) - f64::from(shape.y1)).abs();
+            shape.bend = (rise * f64::from(0.1f32) + base) as f32;
         }
         if direction == BELOW {
             shape.bend = -shape.bend;

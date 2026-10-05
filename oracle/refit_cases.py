@@ -2,6 +2,8 @@
 stem option) against the emulated engine.
 
     refit_cases.py make SEED COUNT CASES [COMMAND]   append COUNT random cases to CASES
+    refit_cases.py fixtures SEED COUNT CASES DIR    append cases on the staves of COUNT IN
+                                                    fixtures in DIR (rust/fixtures/input)
     refit_cases.py run CASES EXPECTED [REGEX]       run them through the engine (4 jobs)
 
 A staff has notes and two-note chords with stems, accidentals, dots and marks, beams over
@@ -14,6 +16,7 @@ import random
 import sys
 from pathlib import Path
 
+from input_driver import read_items
 from layout_cases import run
 
 COMMANDS = ("FLI", "FLN", "FLU", "FLD")
@@ -72,6 +75,24 @@ def staff(rng: random.Random) -> tuple[list[list[float]], float]:
     return items + beams + slurs, end
 
 
+def from_fixtures(seed: int, count: int, cases_path: Path, fixtures: Path) -> None:
+    """Cases on the staves IN made for score-input's fixtures (beams with secondary items,
+    chords, grace notes, ties, tremolos), each with a random command and area."""
+    rng = random.Random(seed)
+    dirs = sorted(d for d in fixtures.iterdir() if (d / "result.mus").exists())
+    out = []
+    for case in rng.sample(dirs, min(count, len(dirs))):
+        items = read_items((case / "result.mus").read_bytes())
+        if not items or any(int(it[0]) == 16 for it in items):
+            continue
+        base = "; ".join(" ".join(f"{v:.9g}" for v in it) for it in items)
+        cmd = rng.choice(COMMANDS)
+        area = "1 0 200" if rng.random() < 0.7 else f"1 {rng.randint(0, 60)} {rng.randint(100, 200)}"
+        out.append(f"== {cmd.lower()}-{case.name}\nbase: {base}\n{cmd}\n{area}\n")
+    with cases_path.open("a", encoding="latin-1") as f:
+        f.write("".join(out))
+
+
 def make(seed: int, count: int, cases_path: Path, command: str) -> None:
     rng = random.Random(seed)
     out = []
@@ -88,5 +109,7 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if args[0] == "make":
         make(int(args[1]), int(args[2]), Path(args[3]), args[4] if len(args) > 4 else "any")
+    elif args[0] == "fixtures":
+        from_fixtures(int(args[1]), int(args[2]), Path(args[3]), Path(args[4]))
     else:
         run(Path(args[1]), Path(args[2]), *args[3:4])
