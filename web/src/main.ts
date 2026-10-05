@@ -12,6 +12,7 @@ import { bindInteraction } from './interaction';
 import { formatParam, markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer } from './paint';
 import { createPalette, type DialogKind } from './palette';
+import { download, printPage } from './print';
 import { createSymbolDialog } from './symbol-dialog';
 import { createTextDialog, editInPlace } from './text-dialog';
 import { stepZoom, ZOOM_LEVELS } from './view';
@@ -69,6 +70,8 @@ const ui = {
   file: $<HTMLInputElement>('file'),
   sample: $<HTMLSelectElement>('sample'),
   save: $<HTMLButtonElement>('save'),
+  exportSvg: $<HTMLButtonElement>('export-svg'),
+  print: $<HTMLButtonElement>('print'),
   undo: $<HTMLButtonElement>('undo'),
   redo: $<HTMLButtonElement>('redo'),
   input: $<HTMLButtonElement>('input'),
@@ -204,6 +207,8 @@ function refreshStatus() {
   const items = state.score?.itemCount() ?? 0;
   ui.status.textContent = state.score ? `${state.fileName}${state.modified ? ' (modified)' : ''} · ${items} items` : '';
   ui.save.disabled = !state.score;
+  ui.exportSvg.disabled = !state.score;
+  ui.print.disabled = !state.score;
   const undo = state.editor?.undoLabel() ?? null;
   const redo = state.editor?.redoLabel() ?? null;
   ui.undo.disabled = undo === null;
@@ -486,12 +491,27 @@ async function openFile(file: File) {
 
 function save() {
   if (!state.score) return;
-  const blob = new Blob([state.score.save() as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' });
-  const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: state.fileName || 'score.mus' });
-  link.click();
-  URL.revokeObjectURL(link.href);
+  download(state.score.save() as Uint8Array<ArrayBuffer>, state.fileName || 'score.mus', 'application/octet-stream');
   state.modified = false;
   refreshStatus();
+}
+
+/** The score's file name with another extension. */
+function exportName(extension: string): string {
+  return `${(state.fileName || 'score').replace(/\.[^.]*$/, '')}.${extension}`;
+}
+
+function exportSvg() {
+  if (state.score) download(state.score.exportSvg(), exportName('svg'), 'image/svg+xml');
+}
+
+async function print() {
+  if (!state.score) return;
+  try {
+    await printPage(decodeAndFree(state.score.renderPrint()), paperBox());
+  } catch (err) {
+    failed(err);
+  }
 }
 
 function setMode(mode: Mode) {
@@ -564,6 +584,8 @@ function bindControls(samples: Sample[]) {
     if (sample) void openSample(sample);
   });
   ui.save.addEventListener('click', save);
+  ui.exportSvg.addEventListener('click', exportSvg);
+  ui.print.addEventListener('click', () => void print());
   ui.zoomIn.addEventListener('click', () => view.setZoom(stepZoom(view.zoom, 1)));
   ui.zoomOut.addEventListener('click', () => view.setZoom(stepZoom(view.zoom, -1)));
   ui.zoom.addEventListener('change', () => view.setZoom(Number(ui.zoom.value)));

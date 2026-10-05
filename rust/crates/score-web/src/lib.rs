@@ -12,6 +12,7 @@ pub mod editing;
 pub mod encode;
 pub mod hit;
 pub mod input;
+pub mod output;
 pub mod param_names;
 pub mod placing;
 pub mod symbols;
