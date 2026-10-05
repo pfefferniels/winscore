@@ -95,3 +95,5 @@ code03-staff-size-0.75-treble-8va
 code03-staff-size-1.4-treble-8va
 code03-staff-size-m1-treble-8va
 code03-p5-symbol-45
+fuzz-code03-p5-p10-e6050f
+fuzz-code03-p5-p10-e66eab

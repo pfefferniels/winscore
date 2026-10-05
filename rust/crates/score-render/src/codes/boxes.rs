@@ -284,11 +284,7 @@ fn draw_arrow(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at
         }
         at
     } else {
-        let Some(centre) = draw_arc_arrow(doc, item, canvas, at, call, marked, (width, height, head_width, head_length))
-        else {
-            return;
-        };
-        centre
+        draw_arc_arrow(doc, item, canvas, at, call, marked, (width, height, head_width, head_length))
     };
     if doc.screen() && p9 != 0.0 {
         rotate_points(&mut canvas.buffer_mut()[start..], centre.to_point(), p9);
@@ -331,8 +327,10 @@ const ARROWHEAD_LIFT: f32 = 0.28;
 const ARROWHEAD_REACH: f32 = 5.0;
 const ARROWHEAD_SIDES: i32 = 120;
 
-/// The arc and its head (both through draw_box); returns the arc's centre,
-/// or `None` where the engine would read outside its circle table.
+/// The arc and its head (both through draw_box); returns the arc's centre.
+/// For P11 above 180 the engine reads its circle table below its start,
+/// where it finds zeros (verified with P11 = 270 and 405): the arc is then
+/// centred on the item's point.
 fn draw_arc_arrow(
     doc: &Document<'_>,
     item: ItemRef<'_>,
@@ -341,14 +339,13 @@ fn draw_arc_arrow(
     call: &BoxCall,
     marked: bool,
     sizes: (f64, f64, f64, f64),
-) -> Option<Pos> {
+) -> Pos {
     let (width, height, head_width, head_length) = sizes;
     let staff = doc.staff_of(item);
     let step = staff.step;
     let unit = real(step * f64::from(ARROW_UNIT));
     let end = HALF_TURN - call.ip11.min(LAST_ARC_P11);
-    let degree = usize::try_from(end % FULL_TURN).ok()?;
-    let (sin, cos) = CIRCLE[degree];
+    let (sin, cos) = usize::try_from(end % FULL_TURN).map_or((0.0, 0.0), |degree| CIRCLE[degree]);
     let a = real(width * f64::from(sin) / f64::from(ARC_TABLE_DIVISOR));
     let b = real(height * f64::from(cos) / f64::from(ARC_TABLE_DIVISOR));
     let (dx, dy) = if call.ip9 == 0 {
@@ -396,7 +393,7 @@ fn draw_arc_arrow(
         );
         draw_box(canvas, head_at, step, &head);
     }
-    Some(centre)
+    centre
 }
 
 const DEGREES_PER_RADIAN: f32 = 57.295_776;
