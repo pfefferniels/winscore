@@ -11,6 +11,7 @@
  ],
  "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
  "description": "fuzz, impl-notes: text offset; \"G\" shifted by (0, -3150)",
+ "dropped_items": [],
  "events": [],
  "excluded_items": [],
  "invalid_reasons": [],

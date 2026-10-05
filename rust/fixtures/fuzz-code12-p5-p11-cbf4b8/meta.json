@@ -11,6 +11,7 @@
  ],
  "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
  "description": "fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 181 points from (5333, 2511)",
+ "dropped_items": [],
  "events": [],
  "excluded_items": [],
  "invalid_reasons": [],

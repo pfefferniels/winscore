@@ -349,6 +349,57 @@
   "detail": "\"1\" shifted by (98, 336)"
  },
  {
+  "name": "fuzz-code05-p11-p16-41830b",
+  "target": 2,
+  "commands": [],
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     8.0,
+     2.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     5.0,
+     1.0,
+     120.03,
+     1.5,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     2.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     12.0
+    ],
+    "text": ""
+   }
+  ],
+  "code": 5,
+  "signature": "code05-p11-p16|text offset",
+  "owner": "impl-beams",
+  "symptoms": [
+   "text offset"
+  ],
+  "detail": "\"1\" shifted by (30, 349)"
+ },
+ {
   "name": "fuzz-code05-p11-p16-cf241b",
   "target": 1,
   "items": [
@@ -420,6 +471,43 @@
    "absent"
   ],
   "detail": "stroke #000000, 1 path(s), 2 points from (22061, 3648)"
+ },
+ {
+  "name": "fuzz-code12-p5-p10-b1ef17",
+  "target": 1,
+  "commands": [],
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     12.0,
+     1.0,
+     153.46,
+     7.0,
+     1.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     3009.0
+    ],
+    "text": ""
+   }
+  ],
+  "code": 12,
+  "signature": "code12-p5-p10|failed",
+  "owner": "impl-symbols",
+  "symptoms": [
+   "failed"
+  ],
+  "detail": "render panicked: index out of bounds: the len is 361 but the index is 3009"
  },
  {
   "name": "fuzz-code12-p5-p11-cbf4b8",

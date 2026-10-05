@@ -1,16 +1,17 @@
 {
- "case": "fuzz-code06-p8-p17-f76ce8",
+ "case": "fuzz-code12-p5-p10-b1ef17",
  "commands": [
   {
    "command": "G case.mus",
    "line": "    =     0",
    "status": -1,
-   "text_bytes": 117,
-   "vector_words": 90
+   "text_bytes": 59,
+   "vector_words": 78
   }
  ],
  "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
- "description": "fuzz, impl-beams: text missing; \"?\" in Times 678.0/279.7 at (15334, 1369)",
+ "description": "fuzz, impl-symbols: failed; render panicked: index out of bounds: the len is 361 but the index is 3009",
+ "dropped_items": [],
  "events": [],
  "excluded_items": [],
  "invalid_reasons": [],
