@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 use score_render::{DisplayList, ItemId};
+use score_testkit::layout::compare_layout;
 use score_testkit::svg::{triptych, Caption};
 use score_testkit::triage::triage;
 use score_testkit::{
@@ -306,6 +307,16 @@ fn row_json(row: &Row, actual: &Actual, options: &CompareOptions) -> serde_json:
                 })
             })
             .collect();
+        let layout_findings: Vec<serde_json::Value> = compare_layout(row.fixture)
+            .unwrap_or_default()
+            .iter()
+            .map(|d| serde_json::json!({ "item": d.item, "code": 0, "symptom": "layout", "detail": d.detail }))
+            .collect();
+        if !layout_findings.is_empty() && report.is_match() {
+            value["result"] = "differs".into();
+        }
+        let findings: Vec<serde_json::Value> =
+            findings.into_iter().chain(layout_findings).collect();
         value["shapes"] = counts(&report.shapes);
         value["texts"] = counts(&report.texts);
         value["max_deviation"] = report.max_deviation().into();

@@ -21,6 +21,7 @@
 pub mod compare;
 pub mod fixture;
 pub mod json;
+pub mod layout;
 pub mod svg;
 pub mod triage;
 

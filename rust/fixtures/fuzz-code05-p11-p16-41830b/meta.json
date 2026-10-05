@@ -1,0 +1,75 @@
+{
+ "case": "fuzz-code05-p11-p16-41830b",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": 0,
+   "text_bytes": 176,
+   "vector_words": 144
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
+ "description": "fuzz, impl-beams: text offset; \"1\" shifted by (30, 349)",
+ "dropped_items": [],
+ "events": [
+  {
+   "detail": "*** Code 7 needs value in P6 ***                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+   "kind": "text"
+  },
+  {
+   "detail": "*** Code 7 needs value in P6 ***                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+   "kind": "text"
+  },
+  {
+   "detail": "*** Code 7 needs value in P6 ***                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+   "kind": "text"
+  },
+  {
+   "detail": "*** Code 7 needs value in P6 ***                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+   "kind": "text"
+  },
+  {
+   "detail": "*** Code 7 needs value in P6 ***                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+   "kind": "text"
+  },
+  {
+   "detail": "*** Code 7 needs value in P6 ***                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+   "kind": "text"
+  },
+  {
+   "detail": "*** Code 7 needs value in P6 ***                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+   "kind": "text"
+  }
+ ],
+ "excluded_items": [],
+ "invalid_reasons": [],
+ "items": 3,
+ "not_found": [],
+ "page_frames": [
+  [
+   401,
+   -10497,
+   34399,
+   45501
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "start of the baseline: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -    3 Items)   <Legal>",
+ "valid": true,
+ "view_globals": [
+  2400,
+  -16450
+ ],
+ "view_offset": [
+  400,
+  -10498
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}
