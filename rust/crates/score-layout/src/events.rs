@@ -42,7 +42,7 @@ fn shortest_open_value(values: &[f32]) -> (f32, Vec<f32>) {
 }
 
 /// 0x5358E5
-fn p14_or_p15(row: &Row) -> bool {
+pub fn p14_or_p15(row: &Row) -> bool {
     row.len() >= 14 && (row.par(14) != 0.0 || (row.len() >= 15 && row.par(15) != 0.0))
 }
 

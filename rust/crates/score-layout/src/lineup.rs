@@ -6,6 +6,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::events::{staff_events, StaffEvents, BARLINE_P12};
+use crate::grace::GracePass;
 use crate::merge::{drop_repeated_barlines, merge_durations, merge_markers, BARLINE};
 use crate::num::{trunc, wide};
 use crate::rows::{Row, BEAM, CLEF, STAFF};
@@ -58,7 +59,7 @@ pub struct Lineup<'a> {
     offset: BTreeMap<i32, usize>,
     master: Vec<f32>,
     new_x: Vec<f32>,
-    pub x_left: f32,
+    x_left: f32,
     x_right: f32,
     saw_long: bool,
 }
@@ -181,14 +182,19 @@ impl<'a> Lineup<'a> {
             self.master = merge_durations(&merged, &durations)?;
         }
         self.offset.insert(hi + 1, self.saved_x.len());
-        if self.saw_long {
-            return Err(LayoutErrorKind::LongValues);
-        }
         let size = self.step(self.lo) / 25.0;
         self.new_x = positions(&self.master, size, self.x_left, self.x_right);
         self.apply()?;
+        if self.saw_long {
+            GracePass::new(self.rows, (self.lo, self.hi), self.right, &self.steps).run();
+        }
         self.interpolate_others();
         Ok(())
+    }
+
+    /// The x range J works on after the line-up, and the lowest staff with events.
+    pub fn extent(&self) -> ((f32, f32), i32) {
+        ((self.x_left, self.x_right), self.lo)
     }
 
     /// Barlines with P12 count as plain ones, a missing closing barline is added, durations

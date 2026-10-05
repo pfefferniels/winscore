@@ -59,7 +59,9 @@ pub fn positions(entries: &[f32], size: f32, left: f32, right: f32) -> Vec<f32> 
             }
         })
         .collect();
-    let unit = (((wide(right) - wide(left)) - wide(size) * wide(fixed)) / wide(total)) as f32;
+    // The width is stored as f32 (0x89FCDC) before the rest of the expression.
+    let width = right - left;
+    let unit = ((wide(width) - wide(size) * wide(fixed)) / wide(total)) as f32;
     let mut x = left;
     let mut out: Vec<f32> = entries
         .iter()

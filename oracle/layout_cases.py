@@ -2,7 +2,8 @@
 
     layout_cases.py make SEED COUNT CASES [KIND [COMMAND]]
                                                    append COUNT random cases to CASES; KIND is
-                                                   plain, rich or crowded, COMMAND LI, J or LJ
+                                                   plain, rich, crowded, dense or grace,
+                                                   COMMAND LI, J, LJ or LJA
     layout_cases.py run CASES EXPECTED [REGEX]     run the cases through the engine (4 jobs)
 
 CASES uses edit_driver.py's format ("== name", a "base:" line with the items, then the
@@ -114,7 +115,51 @@ def crowded_staff(rng: random.Random, staff: int, measures: int) -> list[list[fl
     return items
 
 
-KINDS = ("plain", "rich", "crowded")
+def decorate(rng: random.Random, it: list[float]) -> list[float]:
+    """Accidentals, dots, shifted heads and cue size on notes, P10 on rests, barline types."""
+    it = list(it)
+    if it[0] == 1:
+        it = (it + [0.0] * 10)[:10]
+        it[4] = rng.choice([1, 2]) * 10 + rng.choice([0, 0, 0, 1, 2, 3, 4, 5, 9])
+        if rng.random() < 0.15:
+            it[5] = rng.choice([1, 2, 3, 12])
+        if rng.random() < 0.2:
+            it[8] = rng.choice([1, 2, 11, 1.3])
+        if rng.random() < 0.15:
+            it[9] = rng.choice([10, 20, 110, -3, 4])
+        if rng.random() < 0.05:
+            it[3] += 100 if it[3] >= 0 else -100
+        while it[-1] == 0 and len(it) > 7:
+            it.pop()
+    elif it[0] == 2 and rng.random() < 0.2:
+        it = (it + [0.0] * 10)[:10]
+        it[9] = rng.choice([2, -2])
+    elif it[0] == 14 and it[2] < 200 and rng.random() < 0.2:
+        it = (it + [0.0] * 5)[:5]
+        it[4] = rng.choice([1, 2, 3, 4, 5, 6])
+    return it
+
+
+def dense_staff(rng: random.Random, staff: int, measures: int) -> list[list[float]]:
+    items = [decorate(rng, it) for it in rich_staff(rng, staff, measures)]
+    if rng.random() < 0.3:
+        items.append([10, staff, round(rng.uniform(20, 180), 2), 12, 3] + [0] * 10 + [1])
+    return items
+
+
+def grace_staff(rng: random.Random, staff: int, measures: list[list[float]]) -> list[list[float]]:
+    """plain_staff with groups of one to three grace notes (P7 65, P4 + 100, P8 101) before
+    some notes."""
+    items = []
+    for it in plain_staff(rng, staff, measures):
+        if it[0] == 1 and it[2] > 12 and rng.random() < 0.3 and not (items and items[-1][2] == it[2]):
+            count = rng.randint(1, 3)
+            items += [[1, staff, round(it[2] - 0.5 * (count - k), 2), rng.randint(1, 10) + 100, 10, 0, 65, 101] for k in range(count)]
+        items.append(it)
+    return items
+
+
+KINDS = ("plain", "rich", "crowded", "dense", "grace")
 
 
 def system(rng: random.Random, kind: str) -> tuple[list[list[float]], int]:
@@ -124,6 +169,11 @@ def system(rng: random.Random, kind: str) -> tuple[list[list[float]], int]:
         items = [it for s in range(1, staves + 1) for it in rich_staff(rng, s, measures)]
     elif kind == "crowded":
         items = [it for s in range(1, staves + 1) for it in crowded_staff(rng, s, measures + 1)]
+    elif kind == "dense":
+        items = [it for s in range(1, staves + 1) for it in dense_staff(rng, s, measures + 2)]
+    elif kind == "grace":
+        shapes = [[split_measure(rng) for _ in range(measures)] for _ in range(staves)]
+        items = [it for s in range(1, staves + 1) for it in grace_staff(rng, s, shapes[s - 1])]
     else:
         shapes = [[split_measure(rng) for _ in range(measures)] for _ in range(staves)]
         items = [it for s in range(1, staves + 1) for it in plain_staff(rng, s, shapes[s - 1])]
@@ -140,7 +190,8 @@ def make(seed: int, count: int, cases_path: Path, kind: str, command: str) -> No
     for i in range(count):
         items, staves = system(rng, kind)
         base = "; ".join(" ".join(value(v) for v in it) for it in items)
-        out.append(f"== {command.lower()}-{kind}-{seed}-{i}\nbase: {base}\n{command}\n1 {staves}\n")
+        answer = "" if command == "LJA" else f"1 {staves}\n"
+        out.append(f"== {command.lower()}-{kind}-{seed}-{i}\nbase: {base}\n{command}\n{answer}")
     with cases_path.open("a", encoding="latin-1") as f:
         f.write("".join(out))
 
@@ -162,7 +213,7 @@ if __name__ == "__main__":
     if args[0] == "make":
         kind = args[4] if len(args) > 4 else "plain"
         command = args[5] if len(args) > 5 else "LI"
-        assert kind in KINDS and command in ("LI", "J", "LJ"), "kind: plain|rich|crowded, command: LI|J|LJ"
+        assert kind in KINDS and command in ("LI", "J", "LJ", "LJA"), f"kind: {'|'.join(KINDS)}, command: LI|J|LJ|LJA"
         make(int(args[1]), int(args[2]), Path(args[3]), kind, command)
     else:
         run(Path(args[1]), Path(args[2]), *args[3:4])
