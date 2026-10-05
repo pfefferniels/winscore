@@ -56,6 +56,8 @@ pub struct Session {
     pub slider_param: usize,
     /// What one TR leaves for the next.
     pub transposition: Leftover,
+    /// A message the engine would show for the last action.
+    pub message: Option<String>,
 }
 
 /// The slider changes P2 until QPn chooses another parameter.
@@ -79,6 +81,7 @@ impl Default for Session {
             clipboard: Vec::new(),
             slider_param: DEFAULT_SLIDER_PARAM,
             transposition: Leftover::default(),
+            message: None,
         }
     }
 }

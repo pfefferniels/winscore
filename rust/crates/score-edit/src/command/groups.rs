@@ -2,6 +2,7 @@
 //! the change to every item of the area as one undo step.
 
 use score_format::Item;
+use score_layout::{Options, StaffRange};
 use score_render::page::{page_offset, P3_UNIT};
 
 use crate::command::moves::{shift, Axis};
@@ -11,7 +12,7 @@ use crate::command::Run;
 use crate::conditional::Statement;
 use crate::document::ItemId;
 use crate::error::EditError;
-use crate::group::{Destination, GroupCommand, Order, Pending, Region, FIXED_BY_MUD, NARROW_BOX};
+use crate::group::{Destination, GroupCommand, LayoutCommand, Order, Pending, Region, FIXED_BY_MUD, NARROW_BOX};
 use crate::params::Draft;
 use crate::session::Deleted;
 use crate::transpose::{self, Transposition};
@@ -36,6 +37,32 @@ impl Run<'_, '_> {
         } else {
             self.answer_numbers(&numbers)
         }
+    }
+
+    /// Starts a layout command; `lowest count` typed after the word answer it at once.
+    pub fn start_layout(&mut self, command: LayoutCommand, args: &[Token]) -> Result<(), EditError> {
+        self.session.pending = Some(Pending::System(command));
+        let numbers: Vec<f32> = args.iter().filter_map(Token::number).collect();
+        if numbers.is_empty() {
+            Ok(())
+        } else {
+            self.answer_numbers(&numbers)
+        }
+    }
+
+    /// Runs a layout command on the system `range`. When the engine gives up
+    /// midway, the items stay as it leaves them and its message is reported.
+    fn lay_out(&mut self, command: LayoutCommand, range: StaffRange, options: &Options) {
+        let items = &self.tx.doc().file().items;
+        let (layout, failure) = match command {
+            LayoutCommand::LineUp => match score_layout::line_up(items, range, options) {
+                Ok(layout) => (layout, None),
+                Err(error) => (error.layout, Some(error.kind)),
+            },
+        };
+        self.rearrange(layout.source.into_iter().map(Some).zip(layout.items).collect());
+        self.session.message = failure.map(|kind| format!("*** ERROR: {kind}"));
+        self.session.clear();
     }
 
     /// A line typed while a group command waits: numbers answer it, anything
@@ -71,6 +98,11 @@ impl Run<'_, '_> {
             Pending::Area(GroupCommand::CopyToStaves) => self.wait(Pending::Staves(region(numbers)?)),
             Pending::Area(GroupCommand::Transpose) => self.wait(Pending::Transposition(region(numbers)?)),
             Pending::Transposition(_) => Ok(()),
+            Pending::System(command) => {
+                let range = StaffRange::from_answer(numbers[0] as i32, numbers.get(1).map_or(0, |&n| n as i32));
+                self.lay_out(command, range, &Options::default());
+                Ok(())
+            }
             Pending::Destination { region, copy } => {
                 let destination = Destination::parse(numbers).ok_or_else(|| EditError::BadArgument("destination".into()))?;
                 self.move_region(&region, &destination, copy)
@@ -90,6 +122,13 @@ impl Run<'_, '_> {
         let drawn = Region::from_page_box(self.tx.doc().file(), corner, other);
         match self.session.pending.clone() {
             Some(Pending::Area(_)) => self.answer_numbers(&[drawn.bottom, drawn.left, drawn.right, drawn.top]),
+            Some(Pending::System(command)) => {
+                self.session.pending = None;
+                let range = StaffRange { first: drawn.bottom as i32, last: drawn.top as i32 };
+                let options = Options { source_box: (drawn.left, drawn.right), ..Options::default() };
+                self.lay_out(command, range, &options);
+                Ok(())
+            }
             Some(Pending::Destination { region, .. }) => {
                 let narrow = (corner.0 - other.0).abs() < NARROW_BOX;
                 let answer = if narrow && corner.1 == other.1 {

@@ -27,6 +27,8 @@ pub struct Change {
     pub removed: Vec<ItemId>,
     pub modified: Vec<ItemId>,
     pub selection: Vec<ItemId>,
+    /// What the engine would report, such as a layout it gave up on midway.
+    pub message: Option<String>,
 }
 
 impl Change {
@@ -200,8 +202,9 @@ impl Editor {
         action(&mut run)?;
         run.refresh_text_lengths();
         let edits = tx.commit();
+        let message = session.message.take();
         let before = std::mem::replace(&mut self.session, session);
-        let change = Change::new(&edits, self.session.selection());
+        let change = Change { message, ..Change::new(&edits, self.session.selection()) };
         if !edits.is_empty() {
             self.history.record(Step {
                 label: label.to_owned(),

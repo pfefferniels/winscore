@@ -179,6 +179,24 @@ pub enum Pending {
     Staves(Region),
     /// The values of WinScore's Transpose Setup dialog, for TR.
     Transposition(Region),
+    /// The system a layout command works on.
+    System(LayoutCommand),
+}
+
+/// The layout commands of score-layout.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LayoutCommand {
+    /// LI: line the notes of a system up by their durations.
+    LineUp,
+}
+
+impl LayoutCommand {
+    pub fn word(word: &str) -> Option<Self> {
+        match word {
+            "LI" => Some(Self::LineUp),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -219,6 +237,7 @@ impl Pending {
             Pending::Steps(_) => "Enter the number of steps to move, plus or minus",
             Pending::Staves(_) => "Enter the staff numbers to copy to",
             Pending::Transposition(_) => TRANSPOSITION_PROMPT,
+            Pending::System(_) => "Enter Lowest Staff# of system and how many staves in system - or Draw Box.",
         }
     }
 }
