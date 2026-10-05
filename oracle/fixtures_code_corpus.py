@@ -1,13 +1,34 @@
-"""Minimal cases for differences found in real SCORE files (corpus/REPORT.md, sources in corpus/SOURCES.md).
+"""Real SCORE files and minimal cases for differences found in them (corpus/REPORT.md).
 
-The corpus files themselves are not committed. Each case here is synthetic: a staff and the
-few items that show the difference, with the parameter values of the corpus item it stands
-for. Names: codeNN-corpus-<what>. Owned by corpus.
+Most corpus files may not be redistributed and stay out of the repository (corpus/SOURCES.md).
+The few that may are in corpus/free/ and become whole-page cases corpus-<file>. The minimal
+cases are synthetic: a staff and the few items that show a difference, with the parameter
+values of the corpus item they stand for; names codeNN-corpus-<what>. Owned by corpus.
 """
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 from fixtures import Case
 from fixtures_code01 import single
+
+FREE = Path(__file__).resolve().parents[1] / "corpus" / "free"
+sys.path.insert(0, str(FREE.parent))
+
+from pmx import pmx_to_mus  # noqa: E402
+
+
+def free_page(path: Path) -> Case:
+    name = path.name.split(".")[0]
+    if path.suffix == ".mus":
+        return Case(f"corpus-{name}", f"corpus/free/{path.name}", path.read_bytes())
+    return Case(f"corpus-{name}", f"corpus/free/{path.name} (PMX converted)", pmx_to_mus(path.read_text(encoding="latin-1")))
+
+
+def free_pages() -> list[Case]:
+    """Chopin op. 28/4 and 28/6 (Sapp, CC BY 4.0) and mus2pmx's ex1 (licence "Whatever")."""
+    return [free_page(p) for p in sorted(FREE.iterdir()) if p.suffix in {".mus", ".txt"}]
 
 
 def mark_29() -> list[Case]:
@@ -23,4 +44,4 @@ def mark_29() -> list[Case]:
 
 
 def cases() -> list[Case]:
-    return mark_29()
+    return free_pages() + mark_29()

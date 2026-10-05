@@ -1,0 +1,45 @@
+{
+ "case": "corpus-chopin2804",
+ "commands": [
+  {
+   "command": "G case.mus",
+   "line": "    =     0",
+   "status": -1,
+   "text_bytes": 2166,
+   "vector_words": 107730
+  }
+ ],
+ "coordinates": "page: origin at the bottom-left paper corner, y up; page = internal + (2000, 26948); view = page + view_offset",
+ "description": "corpus/free/chopin2804.pmx.txt (PMX converted)",
+ "events": [],
+ "excluded_items": [],
+ "invalid_reasons": [],
+ "items": 796,
+ "not_found": [],
+ "page_frames": [
+  [
+   401,
+   -45788,
+   34399,
+   10210
+  ]
+ ],
+ "page_size": [
+  34000,
+  56000
+ ],
+ "paper": "Legal",
+ "text_origin": "start of the baseline: engine (x, y + 96), then translated",
+ "title": "C:\\WORK\\CASE.MUS   (saved -  796 Items)   <Legal>",
+ "valid": true,
+ "view_globals": [
+  2400,
+  18841
+ ],
+ "view_offset": [
+  400,
+  -45789
+ ],
+ "warnings": [],
+ "zoom_checked": true
+}
