@@ -30,6 +30,7 @@ from musbuild import param, read_items, text_item
 
 ORACLE = Path(__file__).resolve().parent
 CASES_FILE = ORACLE / "fuzz_cases.json"
+ROUNDS_FILE = ORACLE / "fuzz_rounds.json"
 REPORT = FIXTURES / "FUZZ.md"
 COMPARE = Path("/Users/nielspfeffer/Projects/winscore/rust/target-verifier/release/score-compare")
 SCRATCH = SANDBOXES / "fuzz"
@@ -432,36 +433,51 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--jobs", type=int, default=4, help="workers; the machine is shared, keep it small")
     parser.add_argument("--shrink", type=int, default=3, help="mismatches shrunk per (code, symptoms, parameters) group")
+    parser.add_argument("--report-only", action="store_true", help="re-run the saved cases and rewrite FUZZ.md")
     args = parser.parse_args(argv)
 
+    saved_cases = [FuzzCase.from_json(entry) for entry in load_saved()]
+    try:
+        with ProcessPoolExecutor(max_workers=args.jobs, initializer=use_snapshot_engine) as pool:
+            rechecked = {r.case.name: r for batch in pool.map(evaluate_batch, chunks(saved_cases, 25)) for r in batch}
+            if not args.report_only:
+                rounds = load_rounds() + [fuzz_round(args, pool)]
+                ROUNDS_FILE.write_text(json.dumps(rounds, indent=1) + "\n")
+    finally:
+        shutil.rmtree(SANDBOXES, ignore_errors=True)
+    REPORT.write_text(render_report(load_rounds(), {c["name"]: c for c in load_saved()}, rechecked))
+    print(REPORT.read_text().split("\n## Saved")[0])
+    return 0
+
+
+def fuzz_round(args, pool) -> dict:
     rng = random.Random(args.seed)
     pools = value_pools()
     codes = [int(c) for c in args.codes.split(",") if c]
     cases = [single_case(rng, code, pools, i) for code in codes for i in range(args.per_code)]
     cases += [page_case(rng, pools, i) for i in range(args.pages)]
     print(f"{len(cases)} cases", flush=True)
-    saved = [FuzzCase.from_json(entry) for entry in load_saved()]
-    try:
-        with ProcessPoolExecutor(max_workers=args.jobs, initializer=use_snapshot_engine) as pool:
-            rechecked = {r.case.name: r for batch in pool.map(evaluate_batch, chunks(saved, 25)) for r in batch}
-            results = []
-            for done, batch in enumerate(pool.map(evaluate_batch, chunks(cases, 25)), start=1):
-                results += batch
-                if done % 20 == 0:
-                    print(f"{len(results)} of {len(cases)} evaluated", flush=True)
-            report = analyse(results, args, pool, rechecked)
-    finally:
-        shutil.rmtree(SANDBOXES, ignore_errors=True)
-    REPORT.write_text(report)
-    print(report.split("\n## Minimal cases")[0])
-    return 0
+    results = []
+    for done, batch in enumerate(pool.map(evaluate_batch, chunks(cases, 25)), start=1):
+        results += batch
+        if done % 20 == 0:
+            print(f"{len(results)} of {len(cases)} evaluated", flush=True)
+    per_code, deviations, new = analyse(results, args, pool)
+    return {"seed": args.seed, "per_code": args.per_code, "pages": args.pages,
+            "counts": {label: dict(c) for label, c in sorted(per_code.items())},
+            "deviations": dict(deviations.most_common()), "new_cases": new}
+
+
+def load_rounds() -> list[dict]:
+    return json.loads(ROUNDS_FILE.read_text()) if ROUNDS_FILE.is_file() else []
 
 
 def group_key(result: Result, code: int) -> str:
     return signature(result.case, code, symptoms_for(result, code) or {result.outcome})
 
 
-def analyse(results: list[Result], args, pool, rechecked: dict[str, Result]) -> str:
+def analyse(results: list[Result], args, pool) -> tuple[dict[str, Counter], Counter, list[str]]:
+    """Counts per code, known deviations hit, and the names of the minimal cases saved from this round."""
     per_code: dict[str, Counter] = defaultdict(Counter)
     to_shrink: dict[str, list[tuple[Result, int]]] = defaultdict(list)
     deviations: Counter = Counter()
@@ -485,7 +501,6 @@ def analyse(results: list[Result], args, pool, rechecked: dict[str, Result]) -> 
                 to_shrink[key].append((r, code))
     jobs = [(r, code) for group in to_shrink.values() for r, code in group]
     shrunk = list(pool.map(shrink_job, jobs)) if jobs else []
-    saved = {c["name"]: c for c in load_saved()}
     minimal: dict[str, tuple[FuzzCase, Result, int]] = {}
     for (case, best), (original, code) in zip(shrunk, jobs):
         if case.target is None and original.case.target is None:
@@ -501,13 +516,20 @@ def analyse(results: list[Result], args, pool, rechecked: dict[str, Result]) -> 
             del minimal[sig]
         else:
             by_items[items] = sig
+    return per_code, deviations, save_minimal(minimal)
+
+
+def save_minimal(minimal: dict[str, tuple[FuzzCase, "Result", int]]) -> list[str]:
+    saved = {c["name"]: c for c in load_saved()}
+    names = []
     for sig, (case, best, code) in minimal.items():
         name = saved_name(case, code, sig)
         saved[name] = {**replace(case, name=name).to_json(), "code": code, "signature": sig,
                        "owner": OWNERS.get(code, "?"), "symptoms": sorted(symptoms_for(best, code) or {best.outcome}),
                        "detail": next((f["detail"] for f in best.findings if f.get("code") == code), best.reason)}
+        names.append(name)
     CASES_FILE.write_text(json.dumps(sorted(saved.values(), key=lambda c: c["name"]), indent=1) + "\n")
-    return render_report(per_code, deviations, minimal, saved, args, rechecked)
+    return names
 
 
 def shrink_job(job: tuple[Result, int]) -> tuple[FuzzCase, Result]:
@@ -515,36 +537,41 @@ def shrink_job(job: tuple[Result, int]) -> tuple[FuzzCase, Result]:
     return shrink(result, code)
 
 
-def render_report(per_code, deviations, minimal, saved, args, rechecked: dict[str, Result]) -> str:
+def items_text(entry: dict) -> str:
+    return "; ".join(" ".join(f"{p:g}" for p in i["params"]) + (f" {i['text']!r}" if i["text"] else "") for i in entry["items"])
+
+
+def render_report(rounds: list[dict], saved: dict[str, dict], rechecked: dict[str, Result]) -> str:
     lines = ["# Differential fuzzing", "",
-             f"Written by `oracle/fuzz.py` (seed {args.seed}, {args.per_code} random items per code, {args.pages} random pages). "
-             "Each case is drawn by the emulated engine and by `score_render`; *mismatch* = any element differs beyond ±1 unit "
-             "or the renderer panics. Combinations the owners list as deliberate deviations are counted apart. "
-             "Cases the oracle rejects (dialogs, messages, crashes) are *invalid* and not compared.", "",
-             "| | cases | invalid (oracle) | match | known deviation | mismatch | mismatch rate |", "|---|---|---|---|---|---|---|"]
-    for label in sorted(per_code):
-        c = per_code[label]
-        compared = c["match"] + c["mismatch"] + c["known deviation"]
-        rate = f"{100 * c['mismatch'] / compared:.1f} %" if compared else ""
-        lines.append(f"| {label} | {c['cases']} | {c['invalid (oracle)']} | {c['match']} | {c['known deviation']} | {c['mismatch']} | {rate} |")
-    if deviations:
-        lines += ["", "Known deviations hit: " + "; ".join(f"{r} ×{n}" for r, n in deviations.most_common()) + "."]
-    lines += ["", "## Minimal cases (this round)", "",
-              "Shrunk to the fewest items and non-zero parameters that still differ; fixtures `rust/fixtures/<name>/`.", "",
-              "| case | owner | symptoms | items | detail |", "|---|---|---|---|---|"]
-    for sig, (case, best, code) in sorted(minimal.items()):
-        name = saved_name(case, code, sig)
-        entry = saved[name]
-        items = "; ".join(" ".join(f"{p:g}" for p in i.params) + (f" {i.text.decode('latin-1')!r}" if i.text else "")
-                          for i in case.items)
-        lines.append(f"| {name} | {entry['owner']} | {', '.join(entry['symptoms'])} | `{items}` | {str(entry['detail'])[:120].replace('|', '/')} |")
-    lines += ["", "## All saved minimal cases", "",
-              "Every case in `oracle/fuzz_cases.json`, re-run at the start of this round (before the new ones were added).", "",
-              "| case | owner | status at the start of the round |", "|---|---|---|"]
+             "Written by `oracle/fuzz.py`. Random items per code are recombined from the parameter values the fixtures "
+             "use (documented value classes), with measures perturbed; random pages mix codes. Each case is drawn by the "
+             "emulated engine and by `score_render`; *mismatch* = any element differs beyond ±1 unit or the renderer "
+             "panics. Combinations the owners list as deliberate deviations are counted apart. Cases the oracle rejects "
+             "(dialogs, messages, coordinate overflow) are *invalid* and not compared.", ""]
+    for number, rnd in reversed(list(enumerate(rounds, start=1))):
+        lines += [f"## Round {number} (seed {rnd['seed']}, {rnd['per_code']} items per code, {rnd['pages']} pages)", "",
+                  "| | cases | invalid (oracle) | match | known deviation | mismatch | mismatch rate |",
+                  "|---|---|---|---|---|---|---|"]
+        for label, c in rnd["counts"].items():
+            get = lambda k: c.get(k, 0)  # noqa: E731
+            compared = get("match") + get("mismatch") + get("known deviation")
+            rate = f"{100 * get('mismatch') / compared:.1f} %" if compared else ""
+            lines.append(f"| {label} | {get('cases')} | {get('invalid (oracle)')} | {get('match')} | "
+                         f"{get('known deviation')} | {get('mismatch')} | {rate} |")
+        if rnd["deviations"]:
+            lines += ["", "Known deviations hit: " + "; ".join(f"{r} ×{n}" for r, n in rnd["deviations"].items()) + "."]
+        if rnd["new_cases"]:
+            lines += ["", "New minimal cases: " + ", ".join(f"`{n}`" for n in rnd["new_cases"]) + "."]
+        lines.append("")
+    lines += ["## Saved minimal cases", "",
+              "Every case in `oracle/fuzz_cases.json` (fixtures `rust/fixtures/<name>/`), shrunk to the fewest items and "
+              "non-zero parameters that still differ, with its status when this report was written.", "",
+              "| case | owner | status | symptoms | items | detail |", "|---|---|---|---|---|---|"]
     for name, entry in sorted(saved.items()):
         r = rechecked.get(name)
-        status = "new this round" if r is None else ("fixed" if r.outcome == "match" else r.outcome)
-        lines.append(f"| {name} | {entry['owner']} | {status} |")
+        status = "new" if r is None else ("fixed" if r.outcome == "match" else "open" if r.outcome == "differs" else r.outcome)
+        detail = str(entry["detail"])[:140].replace("|", "/")
+        lines.append(f"| {name} | {entry['owner']} | {status} | {', '.join(entry['symptoms'])} | `{items_text(entry)}` | {detail} |")
     return "\n".join(lines) + "\n"
 
 
