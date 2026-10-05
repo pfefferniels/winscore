@@ -35,6 +35,8 @@ pub struct TextSymbolCall {
     pub p14: f32,
     pub p16: f32,
     pub p26: f32,
+    /// STEP when the caller scaled it (a rest with P15); `None` is the staff's.
+    pub step: Option<f64>,
 }
 
 impl TextSymbolCall {
@@ -58,6 +60,7 @@ impl TextSymbolCall {
             p14: p(14),
             p16: p(16),
             p26: p(26),
+            step: None,
         }
     }
 }
@@ -115,6 +118,7 @@ pub fn text_symbol_call(doc: &Document<'_>, call: &TextSymbolCall, current_font:
         rotation: call.p9,
         colour: (call.p26 != 0.0).then_some(call.p26),
         current_font,
+        step: call.step,
         ..TextCall::default()
     };
     Some(match call.number {
@@ -131,15 +135,16 @@ pub fn text_symbol_call(doc: &Document<'_>, call: &TextSymbolCall, current_font:
 /// unrotated.
 fn general_pause<'t>(doc: &Document<'_>, call: &TextSymbolCall, base: TextCall<'t>) -> TextCall<'t> {
     let staff = doc.staves.get(call.staff);
+    let step = call.step.unwrap_or(staff.step);
     let rest = call.item_code == codes::REST;
     let (p3, rotation, y) = if rest {
         let p3 = if call.p9 > 0.0 { call.p9 } else { call.p3 };
-        let level = (f64::from(call.p11) + f64::from(GP_REST_LEVEL)) * 7.0 * staff.step;
+        let level = (f64::from(call.p11) + f64::from(GP_REST_LEVEL)) * 7.0 * step;
         (p3, 0.0, real(f64::from(staff.level0) + level))
     } else {
         (call.p3, call.p9, call.origin.y)
     };
-    let unit = real(staff.step / 25.0);
+    let unit = real(step / 25.0);
     let unit = if call.p12 != 0.0 { real(f64::from(call.p12) * unit) } else { unit };
     let indent = real(unit * f64::from(GP_INDENT));
     let x = real(((f64::from(call.p16) + f64::from(p3)) - indent) * page::P3_UNIT);
