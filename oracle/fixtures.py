@@ -159,10 +159,16 @@ class FixtureEngine(Engine):
 
 
 def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
+    """A case in a newly booted engine."""
     fresh_sandbox(root, case)
     engine = FixtureEngine(root)
-    engine.confirm = case.confirm
     engine.initialize()
+    return run_on(engine, case, root, zoom)
+
+
+def run_on(engine: FixtureEngine, case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
+    """A case in an engine that is initialised and has run nothing else, with the case's sandbox in place."""
+    engine.confirm = case.confirm
     engine.put32(ZOOM, zoom)
     run = Run()
     try:
@@ -472,10 +478,23 @@ def worker_sandbox() -> Path:
     return SANDBOXES / f"worker-{os.getpid()}"
 
 
+_REUSABLE = None   # this worker's snapshot engine (snapshot.ReusableEngine), when enabled
+
+
+def use_snapshot_engine() -> None:
+    """Pool initialiser: boot once per worker and restore the post-init state for every case."""
+    global _REUSABLE
+    from snapshot import ReusableEngine
+    _REUSABLE = ReusableEngine(worker_sandbox())
+
+
+def run_in_worker(case: Case, zoom: int = BASE_ZOOM) -> Run:
+    return _REUSABLE.run(case, zoom) if _REUSABLE is not None else run_case(case, worker_sandbox(), zoom)
+
+
 def write_fixture(case: Case, out: Path, zoom_check: bool) -> Written:
-    root = worker_sandbox()
-    run = run_case(case, root)
-    zoom_run = run_case(case, root, CHECK_ZOOM) if zoom_check else None
+    run = run_in_worker(case)
+    zoom_run = run_in_worker(case, CHECK_ZOOM) if zoom_check else None
     target = out / case.name
     target.mkdir(parents=True, exist_ok=True)
     (target / INPUT).write_bytes(case.mus)
@@ -506,6 +525,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 2))
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--no-zoom-check", action="store_true")
+    parser.add_argument("--boot-each", action="store_true", help="boot a new engine per case instead of restoring a snapshot")
     args = parser.parse_args(argv)
 
     cases = selected(all_cases(), args.patterns)
@@ -513,7 +533,8 @@ def main(argv: list[str]) -> int:
         print("\n".join(f"{c.name}\t{c.description}" for c in cases))
         return 0
     try:
-        with ProcessPoolExecutor(max_workers=args.jobs) as pool:
+        initializer = None if args.boot_each else use_snapshot_engine
+        with ProcessPoolExecutor(max_workers=args.jobs, initializer=initializer) as pool:
             written = list(pool.map(write_fixture, cases, [args.out] * len(cases), [not args.no_zoom_check] * len(cases)))
     finally:
         shutil.rmtree(SANDBOXES, ignore_errors=True)   # one copy of the install per worker process
