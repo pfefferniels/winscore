@@ -216,6 +216,7 @@ pub fn is_supported(line: &str) -> bool {
                 || Order::word(&word).is_some()
                 || Move::parse(&word, first_number(&tokens[1..])).is_some_and(Move::is_complete)
                 || item::is_edit_word(&word)
+                || matches!(parse::split_count(&word), (stem, Some(_)) if NUMBERED_WORDS.contains(&stem))
                 || create::template(&word).is_some()
                 || drawn::centred_staves(&word, &numbers_after(&tokens)).is_some()
         }
