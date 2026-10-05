@@ -170,15 +170,14 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64, canvas: &mut Canv
     let t = rest.kind + 8;
     let shift = p10_shift(item, &rest);
     let x = if shift == 0.0 { rest.x } else { real(shift * P3_UNIT + rest.x) };
-    let p3 = real(shift + f64::from(item.p(3)));
-    let bars = if centred(item, t) { neighbouring_bars(doc, item, p3, rest.unit) } else { None };
-    let h_bar = match &bars {
-        Some(bars) if t == T_H_BAR => (x, real(bars.h_bar_end(p3, rest.unit) * P3_UNIT)),
+    let cw = Centring::of(doc, item);
+    let h_bar = match &cw {
+        Some(cw) if t == T_H_BAR => (x, real(cw.bars.h_bar_end(cw.p3, rest.unit) * P3_UNIT)),
         _ => (rest.x, real(f64::from(item.p(9)) * P3_UNIT)),
     };
     // The engine stores the centre in P9, so every later redraw uses it.
-    let p9 = match &bars {
-        Some(bars) if t != T_H_BAR => bars.centre(rest.unit, t),
+    let p9 = match &cw {
+        Some(cw) if t != T_H_BAR => cw.bars.centre(rest.unit, t),
         _ => f64::from(item.p(9)),
     };
     let x = if trunc(p9) != 0 && trunc(p9) != -1 && t <= T_WHOLE { real(p9 * P3_UNIT) } else { x };
@@ -191,13 +190,57 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64, canvas: &mut Canv
 /// no barline follows it, or for the bar rest P5 = -5, which is spread
 /// between the barlines on every draw and keeps P9 = -1.
 pub fn centre(doc: &Document<'_>, item: ItemRef<'_>) -> Option<f32> {
-    let rest = Rest::new(doc, item, page::x(item.p(3)))?;
-    let t = rest.kind + 8;
-    if !centred(item, t) || t == T_H_BAR {
-        return None;
+    let cw = Centring::of(doc, item)?;
+    (cw.t != T_H_BAR).then(|| cw.bars.centre(cw.rest.unit, cw.t) as f32)
+}
+
+/// The P9 a draw writes into the edit buffer while the rest is being
+/// edited, which leaving edit mode stores: the centre as [`centre`], or
+/// for the bar rest P5 = -5 its right end. In edit mode the engine looks
+/// for barlines only among the items up to the edited one (ITEM_I); this
+/// scans the whole document.
+pub fn edit_p9(doc: &Document<'_>, item: ItemRef<'_>) -> Option<f32> {
+    let cw = Centring::of(doc, item)?;
+    Some(match cw.t {
+        T_H_BAR => cw.bars.h_bar_end(cw.p3, cw.rest.unit) as f32,
+        t => cw.bars.centre(cw.rest.unit, t) as f32,
+    })
+}
+
+/// The spacing P6 a draw writes into the edit buffer for a centred
+/// composite rest P5 = -13 or -15 … -19: the bar's width × 1.04167 / STEP.
+/// draw_rest's test (t < -4, t != -6) leaves out -11, -12 and -14.
+pub fn edit_spacing(doc: &Document<'_>, item: ItemRef<'_>) -> Option<f32> {
+    let cw = Centring::of(doc, item)?;
+    let spaced = cw.t < -4 && cw.t != -6;
+    spaced.then(|| {
+        let width = real(cw.bars.right - cw.bars.left);
+        // One x87 expression: rounded to f32 only when stored.
+        real(width * constant(1.04167) / cw.rest.step) as f32
+    })
+}
+
+/// A rest CW centres (P9 = -1, whole rest or longer) and the barlines
+/// around it; None without a barline to its right.
+struct Centring {
+    rest: Rest,
+    t: i32,
+    /// P3 with the P10 shift.
+    p3: f64,
+    bars: Bars,
+}
+
+impl Centring {
+    fn of(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Self> {
+        let rest = Rest::new(doc, item, page::x(item.p(3)))?;
+        let t = rest.kind + 8;
+        if !centred(item, t) {
+            return None;
+        }
+        let p3 = real(p10_shift(item, &rest) + f64::from(item.p(3)));
+        let bars = neighbouring_bars(doc, item, p3, rest.unit)?;
+        Some(Self { rest, t, p3, bars })
     }
-    let p3 = real(p10_shift(item, &rest) + f64::from(item.p(3)));
-    neighbouring_bars(doc, item, p3, rest.unit).map(|bars| bars.centre(rest.unit, t) as f32)
 }
 
 /// CW: P9 = -1 on a whole rest or longer (t = P5 + 8 <= 6).
@@ -683,5 +726,53 @@ impl Drawing<'_, '_, '_> {
         let right_units = if ip(item, 6) == 1 { real(constant(PAREN_RIGHT[k]) + constant(1.9)) } else { constant(PAREN_RIGHT[k]) };
         let right = real(real(unit * right_units + p3) * P3_UNIT);
         glyph::library(self.doc, self.item, self.canvas, PARENTHESIS_SYMBOL, Pos::new(right, y), (-size, size), rest.staff.step);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::display::ItemId;
+    use score_format::{Item, MusFile, Word};
+
+    /// A size-1 staff 1 with barlines at P3 = 60 and 120, and `rest`.
+    fn file(rest: &[f32]) -> MusFile {
+        let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
+        let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
+        bytes.extend(trailer.iter().flat_map(|w| w.to_le_bytes()));
+        let mut file = MusFile::parse(&bytes).expect("an empty file parses");
+        let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
+        file.items =
+            vec![words(&[8.0, 1.0, 0.0, 0.0, 1.0]), words(&[14.0, 1.0, 60.0]), words(&[14.0, 1.0, 120.0]), words(rest)];
+        file
+    }
+
+    fn rest<'a>(doc: &Document<'a>) -> ItemRef<'a> {
+        doc.item(ItemId(3)).expect("the rest")
+    }
+
+    /// Engine results editor-core recorded for WB4 and EU9 on leaving edit mode.
+    #[test]
+    fn edit_mode_writes_back_bar_end_and_spacing() {
+        let bar_rest = file(&[2.0, 1.0, 80.0, 0.0, -5.0, 0.0, 1.0, 4.0, -1.0]);
+        let doc = Document::new(&bar_rest);
+        assert_eq!(edit_p9(&doc, rest(&doc)), Some(116.5));
+        assert_eq!(centre(&doc, rest(&doc)), None);
+        let composite = file(&[2.0, 1.0, 80.0, 0.0, -19.0, 1.0, 4.0, 0.0, -1.0]);
+        let doc = Document::new(&composite);
+        assert_eq!(edit_spacing(&doc, rest(&doc)), Some(1.854_172_6));
+        assert_eq!(edit_p9(&doc, rest(&doc)), centre(&doc, rest(&doc)));
+    }
+
+    #[test]
+    fn only_some_composites_get_a_spacing() {
+        let spaced = |p5: f32| {
+            let f = file(&[2.0, 1.0, 80.0, 0.0, p5, 0.0, 1.0, 0.0, -1.0]);
+            let doc = Document::new(&f);
+            edit_spacing(&doc, rest(&doc)).is_some()
+        };
+        let with: Vec<i32> = (11..=19).filter(|&n| spaced(-(n as f32))).collect();
+        assert_eq!(with, vec![13, 15, 16, 17, 18, 19]);
+        assert!(!spaced(-2.0));
     }
 }
