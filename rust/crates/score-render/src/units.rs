@@ -22,7 +22,9 @@ pub fn constant(value: f32) -> f64 {
 
 /// Fortran AMOD (amod 0x54AABA): x - trunc(x / y)·y, with the quotient truncated.
 pub fn amod(x: f64, y: f64) -> f64 {
-    x - (x / y).trunc() * y
+    // 0x54AABA: the quotient goes through FISTP into a 32-bit integer, the
+    // result through FSTP into a REAL*4.
+    real(x - f64::from(trunc(x / y)) * y)
 }
 
 /// The engine's float-to-integer conversion for points: truncation toward
@@ -96,6 +98,12 @@ mod tests {
     fn amod_keeps_the_sign() {
         assert_eq!(amod(101.5, 100.0), 1.5);
         assert_eq!(amod(-250.0, 100.0), -50.0);
+    }
+
+    #[test]
+    fn amod_rounds_to_real_and_uses_the_integer_quotient() {
+        assert_eq!(amod(100.1, 100.0), real(100.1 - 100.0));
+        assert_eq!(amod(3.0e11, 1.0), real(3.0e11 + 2_147_483_648.0));
     }
 
     #[test]

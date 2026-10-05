@@ -165,8 +165,7 @@ impl<'a> Canvas<'a> {
     pub fn flush(&mut self) {
         let (offset, colour, source) = (self.offset, self.colour, self.source);
         self.buffer.drain(..).for_each(|p| {
-            let at = Point::new(p.at.x + offset.x, p.at.y + offset.y);
-            self.stream.write(at, p.pen, colour, source);
+            self.stream.write(p.at.shifted(offset.x, offset.y), p.pen, colour, source);
         });
     }
 
@@ -176,7 +175,7 @@ impl<'a> Canvas<'a> {
         let strings = strings
             .into_iter()
             .map(|s| PlacedText {
-                origin: Point::new(s.at.x - PAPER_ORIGIN.x, s.at.y + TEXT_BASELINE - PAPER_ORIGIN.y),
+                origin: s.at.shifted(-PAPER_ORIGIN.x, TEXT_BASELINE - PAPER_ORIGIN.y),
                 text: s.text,
             })
             .collect();
