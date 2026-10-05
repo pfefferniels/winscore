@@ -19,11 +19,18 @@ pub const METER: i32 = 18;
 pub struct Row {
     pub p: Vec<f32>,
     pub source: usize,
+    /// Words of text after the parameters (text items).
+    pub text_words: usize,
 }
 
 impl Row {
     pub fn of(item: &Item, source: usize) -> Self {
-        Row { p: item.params().iter().map(|w| w.as_f32()).collect(), source }
+        Row { p: item.params().iter().map(|w| w.as_f32()).collect(), source, text_words: item.text().len().div_ceil(4) }
+    }
+
+    /// The words the item takes in the engine's item store, its length word included.
+    pub fn store_words(&self) -> usize {
+        self.p.len() + self.text_words + 1
     }
 
     pub fn len(&self) -> usize {

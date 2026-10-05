@@ -1,7 +1,7 @@
 """Reference model of SCORE's justify (J, the second half of LJ), ported from WScore.exe with
 the engine's f32 stores, the drivers for LI, J and LJ (0x4B80B7), and the check against the oracle.
 
-    python justify.py [cases] [max_staves] [command] [dense]   (default 50 cases, 1..3 staves, LJ, rich)
+    python justify.py [cases] [max_staves] [LJ|J|LI] [rich|dense|grace]   (default 50, 3, LJ, rich)
 
 Items and conventions as in lineup.py. Justify keeps state in globals that persist from one
 staff to the next; `JustifyState` holds them, starting from zero as in a fresh engine.
@@ -13,6 +13,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 
+from grace import GraceSession
 from lineup import (F, LineupError, Lineup, code, staff, xpos, par, p14_or_p15, prepare,
                     staff_steps, trunc, rich_staff, rich_system)
 
@@ -752,14 +753,17 @@ def justify(items, lo: int, hi: int, x_left: float, x_right: float, right: float
 # ---------------------------------------------------------------- LI, J, LJ (0x4B80B7)
 
 def layout_items(items, lo: int, hi: int, command: str = "LJ", right: float = 200.0,
-                 box: tuple[float, float] = (0.0, 200.0)) -> list[list[float]]:
-    """The whole command after the answer 'lo count' and yes to "Source Box O.K.?"."""
+                 box: tuple[float, float] = (0.0, 200.0), grace: GraceSession | None = None) -> list[list[float]]:
+    """The whole command after the answer 'lo count' and yes to "Source Box O.K.?".
+
+    Pass the same `grace` session to successive calls to carry 0x89FBF0 as the engine does.
+    """
     items, hi = prepare([list(it) for it in items], lo, hi, right, box)
     if hi is None:
         return items
     x_left, x_right = box
     if command[0] == "L":
-        run = Lineup(items, lo, hi, right, staff_steps(items))
+        run = Lineup(items, lo, hi, right, staff_steps(items), grace=grace or GraceSession())
         try:
             run.run()
         except LineupError as err:
@@ -812,6 +816,35 @@ def dense_system(rng: random.Random, max_staves: int) -> tuple[list[list[float]]
     return [[F(float(v)) for v in it] for it in items], staves
 
 
+def with_grace(rng: random.Random, items: list[list[float]]) -> list[list[float]]:
+    """Put groups of one to four grace notes (P7 64/65, P4 +-100, P8 = 101, some chords) before some notes."""
+    out = []
+    for it in items:
+        if it[0] == 1 and len(it) > 6 and rng.random() < 0.2:
+            count, gap = rng.choice([1, 2, 3, 4]), rng.choice([0.3, 0.5, 1.0])
+            for g in range(count):
+                x = round(it[2] - count * gap + g * gap, 2)
+                for chord in range(rng.choice([1, 1, 2])):
+                    p4 = it[3] + rng.randint(-3, 3) + 2 * chord
+                    out.append([1, it[1], x, p4 + 100 if p4 >= 0 else p4 - 100,
+                                rng.choice([1, 2]) * 10 + rng.choice([0, 0, 1, 2, 3]), 0,
+                                rng.choice([64, 65]), 101] + ([0, rng.choice([0, 1])] if rng.random() < 0.3 else []))
+        out.append(it)
+    return out
+
+
+def grace_system(rng: random.Random, max_staves: int) -> tuple[list[list[float]], int]:
+    staves = rng.randint(1, max_staves)
+    measures = rng.randint(1, 3)
+    items = []
+    for s in range(1, staves + 1):
+        items += with_grace(rng, [i for i in rich_staff(rng, s, measures) if not (i[0] == 3 and i[2] > 3)])
+    return [[F(float(v)) for v in it] for it in items], staves
+
+
+GENERATORS = {"rich": rich_system, "dense": dense_system, "grace": grace_system}
+
+
 def compare(items, staves, command: str) -> str | None:
     from layoutlab import run_layout
     error = None
@@ -830,17 +863,17 @@ def compare(items, staves, command: str) -> str | None:
     return f"{len(diff)} items differ, first {diff[:2]}"
 
 
-def main(cases: int = 50, max_staves: int = 3, command: str = "LJ", dense: int = 0):
-    rng = random.Random(11 + dense)
+def main(cases: int = 50, max_staves: int = 3, command: str = "LJ", kind: str = "rich"):
+    rng = random.Random(11 + list(GENERATORS).index(kind))
     good = 0
     for case in range(cases):
-        items, staves = (dense_system if dense else rich_system)(rng, max_staves)
+        items, staves = GENERATORS[kind](rng, max_staves)
         problem = compare(items, staves, command)
         if problem is None:
             good += 1
         else:
             print(f"case {case} ({staves} staves): {problem}")
-    print(f"{good}/{cases} systems identical after {command}")
+    print(f"{good}/{cases} {kind} systems identical after {command}")
 
 
 if __name__ == "__main__":

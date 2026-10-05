@@ -641,3 +641,27 @@ button.primary:not(:disabled) {
 .message.error {
   color: #b91c1c;
 }
+
+.print-page {
+  display: none;
+}
+
+@media print {
+  .app,
+  dialog {
+    display: none !important;
+  }
+
+  body {
+    margin: 0;
+    background: #ffffff;
+  }
+
+  .print-page {
+    display: block;
+  }
+
+  .print-page canvas {
+    display: block;
+  }
+}

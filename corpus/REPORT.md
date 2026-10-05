@@ -1,6 +1,6 @@
 # Corpus report
 
-Real SCORE files from the web (`corpus/SOURCES.md`) drawn by WinScore's engine under emulation (`corpus/corpus.py`, fixtures in the gitignored `corpus/fixtures/`) and by `score_render`, compared with `score-compare --fixtures corpus/fixtures` (tolerance ±1 engine unit, staff numbers included). Renderer: main at 687baba.
+Real SCORE files from the web (`corpus/SOURCES.md`) drawn by WinScore's engine under emulation (`corpus/corpus.py`, fixtures in the gitignored `corpus/fixtures/`) and by `score_render`, compared with `score-compare --fixtures corpus/fixtures` (tolerance ±1 engine unit, staff numbers included). Renderer: main at 5fea817 (round 3).
 
 ```sh
 python corpus/corpus.py --jobs 4 'corpus-*'                      # engine references
@@ -10,16 +10,20 @@ python corpus/report.py                                          # the tables be
 
 ## Findings
 
-- Round 2 (main 687baba): 271 of 272 files are valid engine references. 270 match in every shape and text run; together 267,025 of 267,027 shapes and all 57,607 text strings match, maximum deviation 0.
-- **The one new group:** mark P11 = 29 (code 1), used in Sapp's SCORE 3.11 code-1 parameter sheet (`sapp-ccrma-code-input/code1.mus`, item 122). The help leaves mark 29 blank and the code-1 sweep skipped it; the engine draws it as the trill sign "tr" (two fills), `score_render` drew nothing. Minimal cases `code01-corpus-mark29`, `-mark29-p14`, `-mark29-down`, `-mark-m29` (`oracle/fixtures_code_corpus.py`). Routed to impl-notes, fixed on branch impl-notes at 60b1698 (marks 20–23 and 29 go to the code-7 trill routine with IP8 = mark − 20; impl-notes).
-- The one invalid file (`mus2pmx-epsgraph`) imports an EPS file that is not part of the download.
-- Coverage is uneven. Notes, rests, clefs, slurs, beams, staves, library symbols, barlines, text, keys and meters occur in most files. Trills/ottava/pedal (7) occur in few files, boxes (12) in one, numbers (10) mostly as text. User symbols (11) and EPS (15) hardly occur. Most files come from a few encoders: Craig Sapp (SCORE 3.11 work of 1998–99, scorelib output of 2009–2014), W. Hewlett (MuseData conversions of 2009, CCARH), Thomas Brodhead (BEAM and EDIT demo files), the SIP tools' Bach samples (de Kloe) and the SCOREMID example pages (Christoph Lübbe, 1996). WinScore-era (2009–2013) files by ordinary users have not been found.
+- Round 3 (main 5fea817): 388 files from 20 sources, 386 valid; all 386 match in every shape and text run (338,540 shapes, 82,023 text strings, maximum deviation 0). New in this round: Sapp's SCORE tutorial examples from score.sapp.org, bol.sapp.org tabla pages (code-12 boxes), more SIP files, and the twelve guitar-chord libraries `scorlib/GUIT01–12.CHD` of the WinScore install, which are .mus files (code-12 grids, 2,600–3,200 shapes each).
+- Round 2 (main 687baba): 271 of 272 files valid, 270 matching; together 267,025 of 267,027 shapes.
+- **Attribution, not geometry:** the "By item code" table below shows mismatches although every element matches. The engine silently drops items with P1 = 0 or 13 when it loads a file (checked with synthetic files), so in `engine.json` every element after such an item carries the engine's index, one lower than its index in `input.mus`. Five files are affected (Brodhead's BEAM and EDIT demos with code-13 items, Sapp's code1.mus, which starts with a code-0 item). Routed to verifier (oracle/fixtures.py); no committed fixture contains such items.
+- Invalid: `mus2pmx-epsgraph` (imports an EPS file that is not part of the download) and `bol-sapp-org-c11test` (the engine calls dialog 0x59AFC0 287 times; not investigated).
+- **The one new group so far:** mark P11 = 29 (code 1), used in Sapp's SCORE 3.11 code-1 parameter sheet (`sapp-ccrma-code-input/code1.mus`, item 122). The help leaves mark 29 blank and the code-1 sweep skipped it; the engine draws it as the trill sign "tr" (two fills), `score_render` drew nothing. Minimal cases `code01-corpus-mark29`, `-mark29-p14`, `-mark29-down`, `-mark-m29` (`oracle/fixtures_code_corpus.py`). Routed to impl-notes, fixed on branch impl-notes at 60b1698 (marks 20–23 and 29 go to the code-7 trill routine with IP8 = mark − 20; impl-notes).
+- Coverage is uneven. Notes, rests, clefs, slurs, beams, staves, library symbols, barlines, text, keys and meters occur in most files. Code 7 occurs as 12 trills in 11 files (no ottava, no pedal), code 13 in 4 files, code 15 in one (invalid), code 11 in none. Code 12 now has 194 items in 24 files plus the guitar libraries. Text fonts 00, 01, 02, 04, 06, 08, 09, 14 and 99 are common; 03, 05, 10, 12, 20, 22, 24, 29, 34 and 94 occur a few times; the others not at all. Most files come from a few encoders: Craig Sapp (SCORE 3.11 work of 1998–99, scorelib output of 2009–2014), W. Hewlett (MuseData conversions of 2009, CCARH), Thomas Brodhead (BEAM and EDIT demo files), the SIP tools' Bach samples (de Kloe) and the SCOREMID example pages (Christoph Lübbe, 1996). WinScore-era (2009–2013) files by ordinary users have not been found.
 - Densmore *Teton Sioux Music*: 24 of 245 pages compared (every tenth); Beethoven Symphony 1: all 70 pages, plus two or four pages of each other symphony. Duplicates (a PMX listing next to its binary file, the `-markup` variants of Sapp's examples, the .ppmx pages that repeat binary pages) are left out.
 
 ## Engine observations made on the way
 
 - A code-16 item needs P13. The engine reads the characters from word 14 onwards: with only 12 parameters the text loses its first word and runs past the item; with 12 parameters and a single text word it reports "Unknown Code Number" and deletes the item (P1 shown as 99). A text item with P12 = 0 (no characters) is deleted the same way. `score_format` takes the characters from word L − ⌈P12/4⌉ + 1, which agrees whenever P13 is present. SCORE itself always writes P13, so only hand-made or converted files are affected. Not routed as a case: the engine's reading past the item is a quirk the port need not imitate.
 - `.SCO` files (SCORE 3.11 preview samples) are a different binary format; `score_format` rejects them, as expected.
+- Items with P1 = 0 or 13 are dropped on load without a message (see above). An item on staff 0 (`1 0 0 0`, the first line of a score.sapp.org example) makes the engine refuse the whole file ("Input data error"). A text item with nothing but font codes (`_00`) is deleted with "No text found".
+- Committed regression pages: `rust/fixtures/corpus-chopin2804`, `corpus-chopin2806` (Sapp, CC BY 4.0) and `corpus-mus2pmx-ex1` (licence "Whatever"), from `corpus/free/`; all three match.
 
 <!-- generated by corpus/report.py below this line -->
 
@@ -29,10 +33,12 @@ Counts are matched/expected elements; `+n` = elements only the Rust side has.
 
 | source | files | valid | matching | shapes | texts |
 |---|---|---|---|---|---|
+| bol-sapp-org | 18 | 17 | 17 | 3567/3567 | 4223/4223 |
 | brodhead-demos | 15 | 15 | 15 | 10828/10828 | 4647/4647 |
+| ccarh-esf | 1 | 1 | 1 | 29/29 | 1/1 |
 | ccarh-music253 | 1 | 1 | 1 | 318/318 | 2162/2162 |
 | ccarh-wiki | 2 | 2 | 2 | 224/224 | 2/2 |
-| dekloe-sip | 26 | 26 | 26 | 33876/33876 | 2770/2770 |
+| dekloe-sip | 34 | 34 | 34 | 43374/43374 | 5909/5909 |
 | github-craigsapp-chopin-mazurka24-2 | 4 | 4 | 4 | 4652/4652 | 303/303 |
 | github-craigsapp-mus2pmx | 2 | 1 | 1 | 748/748 | 355/355 |
 | github-craigsapp-prettypmx | 6 | 6 | 6 | 312/312 | 42/42 |
@@ -43,9 +49,11 @@ Counts are matched/expected elements; `+n` = elements only the Rust side has.
 | imslp-sapp | 4 | 4 | 4 | 6182/6182 | 368/368 |
 | mazurka-org-uk | 1 | 1 | 1 | 247/247 | 1060/1060 |
 | sapp | 46 | 46 | 46 | 15710/15710 | 827/827 |
-| sapp-ccrma-code-input | 4 | 4 | 3 | 2039/2041 | 2141/2141 |
+| sapp-ccrma-code-input | 4 | 4 | 4 | 2041/2041 | 2141/2141 |
+| score-sapp-org-examples | 77 | 77 | 77 | 25078/25078 | 4397/4397 |
 | scorelib-sapp-org-site | 19 | 19 | 19 | 9158/9158 | 27296/27296 |
 | scoremid-shareware | 7 | 7 | 7 | 8414/8414 | 483/483 |
+| winscore-guitar | 12 | 12 | 12 | 33341/33341 | 12656/12656 |
 
 ## By item code
 
@@ -54,27 +62,45 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code | items | fixtures with output | fully matching | shapes | texts |
 |---|---|---|---|---|---|
 | 0 |  | 1 | 0 | 0/0 | 0/3 |
-| 1 | notes | 271 | 266 | 159586/159829 +892 | 47/449 +5 |
-| 2 | rests | 200 | 198 | 30480/30480 +10 | 0/20 |
-| 3 | clefs | 252 | 250 | 11745/11769 +15 | 6/10 |
-| 4 | lines, hairpins | 85 | 82 | 1436/1468 +16 | 0/9 |
-| 5 | slurs, brackets | 218 | 215 | 6359/6415 +23 | 187/209 |
-| 6 | beams | 246 | 241 | 17705/17799 +62 | 202/238 +12 |
-| 7 | trills, ottava, pedal | 9 | 7 | 279/281 +130 | 21/21 |
-| 8 | staves | 271 | 267 | 11085/11128 +115 | 2808/2861 +36 |
-| 9 | library symbols | 169 | 165 | 8548/8651 +113 | 191/254 +60 |
-| 10 | numbers | 68 | 66 | 28/34 +4 | 408/408 +8 |
-| 12 | boxes, grids | 5 | 2 | 118/124 +3 | 0/0 |
+| 1 | notes | 369 | 364 | 183849/184092 +894 | 57/459 +5 |
+| 2 | rests | 260 | 258 | 32854/32854 +10 | 0/20 |
+| 3 | clefs | 333 | 331 | 13297/13321 +15 | 6/10 |
+| 4 | lines, hairpins | 123 | 120 | 3202/3234 +16 | 0/9 |
+| 5 | slurs, brackets | 285 | 282 | 7508/7564 +23 | 270/292 |
+| 6 | beams | 336 | 331 | 21763/21857 +62 | 252/288 +12 |
+| 7 | trills, ottava, pedal | 11 | 9 | 320/322 +130 | 24/24 |
+| 8 | staves | 386 | 382 | 14502/14545 +115 | 3608/3661 +36 |
+| 9 | library symbols | 233 | 229 | 9376/9479 +113 | 239/302 +60 |
+| 10 | numbers | 103 | 101 | 28/34 +4 | 895/895 +8 |
+| 12 | boxes, grids | 35 | 32 | 28004/28010 +3 | 10552/10552 |
 | 13 |  | 4 | 0 | 0/8 | 0/15 |
-| 14 | barlines | 255 | 250 | 10660/10870 +134 | 0/15 |
-| 16 | text | 210 | 206 | 309/1026 | 53067/53095 +549 |
-| 17 | key signatures | 149 | 147 | 5919/5948 +66 | 0/0 |
-| 18 | meters | 91 | 89 | 1181/1197 +4 | 0/0 |
+| 14 | barlines | 340 | 335 | 12124/12334 +134 | 0/15 |
+| 16 | text | 286 | 282 | 417/1134 | 65450/65478 +549 |
+| 17 | key signatures | 210 | 208 | 8225/8254 +66 | 0/0 |
+| 18 | meters | 133 | 131 | 1482/1498 +4 | 0/0 |
 
 ## By file
 
 | case | state | shapes | texts | file |
 |---|---|---|---|---|
+| corpus-bol-sapp-org-c01-pmx | match | 214/214 | 273/273 | corpus file bol-sapp-org/c01.pmx (PMX converted) |
+| corpus-bol-sapp-org-c02-pmx | match | 125/125 | 161/161 | corpus file bol-sapp-org/c02.pmx (PMX converted) |
+| corpus-bol-sapp-org-c04-pmx | match | 110/110 | 168/168 | corpus file bol-sapp-org/c04.pmx (PMX converted) |
+| corpus-bol-sapp-org-c05-pmx | match | 256/256 | 326/326 | corpus file bol-sapp-org/c05.pmx (PMX converted) |
+| corpus-bol-sapp-org-c06-pmx | match | 434/434 | 611/611 | corpus file bol-sapp-org/c06.pmx (PMX converted) |
+| corpus-bol-sapp-org-c08-pmx | match | 224/224 | 241/241 | corpus file bol-sapp-org/c08.pmx (PMX converted) |
+| corpus-bol-sapp-org-c10b-pmx | match | 250/250 | 297/297 | corpus file bol-sapp-org/c10b.pmx (PMX converted) |
+| corpus-bol-sapp-org-c11test-pmx | invalid | 0/0 | 0/0 | dialog: 0x59afc0 args=['0x0', '0x5', '0x0'] (x246); dialog: 0x59afc0 args=['0x0', '0x5', '0x768990'] (x41) |
+| corpus-bol-sapp-org-c12-pmx | match | 213/213 | 200/200 | corpus file bol-sapp-org/c12.pmx (PMX converted) |
+| corpus-bol-sapp-org-c13-pmx | match | 83/83 | 111/111 | corpus file bol-sapp-org/c13.pmx (PMX converted) |
+| corpus-bol-sapp-org-c14-pmx | match | 77/77 | 105/105 | corpus file bol-sapp-org/c14.pmx (PMX converted) |
+| corpus-bol-sapp-org-c15-pmx | match | 311/311 | 394/394 | corpus file bol-sapp-org/c15.pmx (PMX converted) |
+| corpus-bol-sapp-org-pmxqaida-pmx-c1-pmx | match | 320/320 | 271/271 | corpus file bol-sapp-org/pmxQaida_pmx_c1.pmx (PMX converted) |
+| corpus-bol-sapp-org-pmxqaida-pmx-c10a-pmx | match | 113/113 | 159/159 | corpus file bol-sapp-org/pmxQaida_pmx_c10a.pmx (PMX converted) |
+| corpus-bol-sapp-org-pmxqaida-pmx-c10b-pmx | match | 145/145 | 195/195 | corpus file bol-sapp-org/pmxQaida_pmx_c10b.pmx (PMX converted) |
+| corpus-bol-sapp-org-pmxqaida-pmx-c12a-pmx | match | 347/347 | 339/339 | corpus file bol-sapp-org/pmxQaida_pmx_c12a.pmx (PMX converted) |
+| corpus-bol-sapp-org-pmxqaida-pmx-c12b-pmx | match | 262/262 | 262/262 | corpus file bol-sapp-org/pmxQaida_pmx_c12b.pmx (PMX converted) |
+| corpus-bol-sapp-org-pmxqaida-pmx-c13-pmx | match | 83/83 | 110/110 | corpus file bol-sapp-org/pmxQaida_pmx_c13.pmx (PMX converted) |
 | corpus-brodhead-demos-beamdemo-b-test1 | match | 859/859 | 6/6 | corpus file brodhead-demos/beamdemo-B-TEST1.MUS |
 | corpus-brodhead-demos-beamdemo-b-test2 | match | 467/467 | 2/2 | corpus file brodhead-demos/beamdemo-B-TEST2.MUS |
 | corpus-brodhead-demos-beamdemo-b-test3 | match | 1092/1092 | 20/20 | corpus file brodhead-demos/beamdemo-B-TEST3.MUS |
@@ -90,6 +116,7 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | corpus-brodhead-demos-editdemo-demo1 | match | 470/470 | 120/120 | corpus file brodhead-demos/editdemo-DEMO1.MUS |
 | corpus-brodhead-demos-editdemo-demo2 | match | 470/470 | 120/120 | corpus file brodhead-demos/editdemo-DEMO2.MUS |
 | corpus-brodhead-demos-editdemo-demo3 | match | 470/470 | 120/120 | corpus file brodhead-demos/editdemo-DEMO3.MUS |
+| corpus-ccarh-esf-test1 | match | 29/29 | 1/1 | corpus file ccarh-esf/test1.mus |
 | corpus-ccarh-music253-psheets-code6 | match | 318/318 | 2162/2162 | corpus file ccarh-music253/psheets-code6.mus |
 | corpus-ccarh-wiki-shortex1-pmx | match | 112/112 | 1/1 | corpus file ccarh-wiki/shortex1.pmx (PMX converted) |
 | corpus-ccarh-wiki-shortex2 | match | 112/112 | 1/1 | corpus file ccarh-wiki/shortex2.mus |
@@ -123,6 +150,14 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | corpus-dekloe-sip-sipscoretoxml-sample01-bach0022 | match | 1516/1516 | 96/96 | corpus file dekloe-sip/sipscoretoxml-sample01-BACH0022.mus |
 | corpus-dekloe-sip-sipscoretoxml-sample01-bach0023 | match | 1279/1279 | 96/96 | corpus file dekloe-sip/sipscoretoxml-sample01-BACH0023.mus |
 | corpus-dekloe-sip-sipscoretoxml-sample01-bach0024 | match | 1117/1117 | 96/96 | corpus file dekloe-sip/sipscoretoxml-sample01-BACH0024.mus |
+| corpus-dekloe-sip-xmlsco01 | match | 1019/1019 | 425/425 | corpus file dekloe-sip/xmlsco01.mus |
+| corpus-dekloe-sip-xmlsco02 | match | 1623/1623 | 590/590 | corpus file dekloe-sip/xmlsco02.mus |
+| corpus-dekloe-sip-xmlsco03 | match | 1048/1048 | 336/336 | corpus file dekloe-sip/xmlsco03.mus |
+| corpus-dekloe-sip-xmlsco05 | match | 1299/1299 | 387/387 | corpus file dekloe-sip/xmlsco05.mus |
+| corpus-dekloe-sip-xmlsco06 | match | 1129/1129 | 374/374 | corpus file dekloe-sip/xmlsco06.mus |
+| corpus-dekloe-sip-xmlsco07 | match | 1085/1085 | 461/461 | corpus file dekloe-sip/xmlsco07.mus |
+| corpus-dekloe-sip-xmlsco08 | match | 1268/1268 | 317/317 | corpus file dekloe-sip/xmlsco08.mus |
+| corpus-dekloe-sip-xmlsco09 | match | 1027/1027 | 249/249 | corpus file dekloe-sip/xmlsco09.mus |
 | corpus-humdrum-old-website-programming-rstd-random-pmx | match | 137/137 | 1/1 | corpus file github-humdrum-old-website/programming.rstd_random.pmx (PMX converted) |
 | corpus-humdrum-old-website-rhythm-rstd-example-jos0602c-jos0602c-pmx | match | 281/281 | 9/9 | corpus file github-humdrum-old-website/rhythm.rstd_Example_jos0602c_jos0602c.pmx (PMX converted) |
 | corpus-humdrum-old-website-rhythm-rstd-example-nocturne-noc9-3-pmx | match | 256/256 | 7/7 | corpus file github-humdrum-old-website/rhythm.rstd_Example_nocturne_noc9-3.pmx (PMX converted) |
@@ -238,7 +273,7 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | corpus-prettypmx-output1b-pmx | match | 49/49 | 1/1 | corpus file github-craigsapp-prettypmx/output1b.pmx (PMX converted) |
 | corpus-prettypmx-output1c-pmx | match | 49/49 | 1/1 | corpus file github-craigsapp-prettypmx/output1c.pmx (PMX converted) |
 | corpus-prettypmx-output2-pmx | match | 58/58 | 19/19 | corpus file github-craigsapp-prettypmx/output2.pmx (PMX converted) |
-| corpus-sapp-ccrma-code-input-code1 | differs | 904/906 | 878/878 | corpus file sapp-ccrma-code-input/code1.mus |
+| corpus-sapp-ccrma-code-input-code1 | match | 906/906 | 878/878 | corpus file sapp-ccrma-code-input/code1.mus |
 | corpus-sapp-ccrma-code-input-code5 | match | 996/996 | 1247/1247 | corpus file sapp-ccrma-code-input/code5.mus |
 | corpus-sapp-ccrma-code-input-input-ex1 | match | 37/37 | 15/15 | corpus file sapp-ccrma-code-input/input-ex1.mus |
 | corpus-sapp-ccrma-code-input-input-ex2-five6-pmx | match | 102/102 | 1/1 | corpus file sapp-ccrma-code-input/input-ex2-five6.pmx (PMX converted) |
@@ -288,6 +323,83 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | corpus-sapp-short2-ex7-rz4e | match | 272/272 | 22/22 | corpus file sapp/short2_ex7_rz4e.mus |
 | corpus-sapp-short2-ex8-chopin | match | 261/261 | 7/7 | corpus file sapp/short2_ex8_chopin.mus |
 | corpus-sapp-short2-ex9-greg | match | 38/38 | 34/34 | corpus file sapp/short2_ex9_greg.mus |
+| corpus-score-sapp-org-examples-example-0001-01-ex0001-01-pmx | match | 103/103 | 1/1 | corpus file score-sapp-org-examples/example-0001-01-ex0001-01.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0001-01-note-p11-pmx | match | 162/162 | 89/89 | corpus file score-sapp-org-examples/example-0001-01-note-p11.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0001-01-note-p4-pmx | match | 54/54 | 48/48 | corpus file score-sapp-org-examples/example-0001-01-note-p4.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0001-01-note-p5-pmx | match | 101/101 | 197/197 | corpus file score-sapp-org-examples/example-0001-01-note-p5.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0001-02-ex0001-02-pmx | match | 167/167 | 1/1 | corpus file score-sapp-org-examples/example-0001-02-ex0001-02.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0001-03-ex0001-03-pmx | match | 223/223 | 3/3 | corpus file score-sapp-org-examples/example-0001-03-ex0001-03.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0001-04-ex0001-04-pmx | match | 218/218 | 2/2 | corpus file score-sapp-org-examples/example-0001-04-ex0001-04.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0001-05-ex0001-05-pmx | match | 458/458 | 2/2 | corpus file score-sapp-org-examples/example-0001-05-ex0001-05.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0002-01-ex0002-01-pmx | match | 435/435 | 2/2 | corpus file score-sapp-org-examples/example-0002-01-ex0002-01.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0002-02-ex0002-02-pmx | match | 261/261 | 7/7 | corpus file score-sapp-org-examples/example-0002-02-ex0002-02.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0002-03-ex0002-03-pmx | match | 38/38 | 34/34 | corpus file score-sapp-org-examples/example-0002-03-ex0002-03.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0002-04-ex0002-04-pmx | match | 350/350 | 6/6 | corpus file score-sapp-org-examples/example-0002-04-ex0002-04.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0002-05-ex0002-05-pmx | match | 214/214 | 2/2 | corpus file score-sapp-org-examples/example-0002-05-ex0002-05.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0002-06-ex0002-06-pmx | match | 241/241 | 2/2 | corpus file score-sapp-org-examples/example-0002-06-ex0002-06.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0002-07-ex0002-07-pmx | match | 110/110 | 1/1 | corpus file score-sapp-org-examples/example-0002-07-ex0002-07.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0002-08-ex0002-08-pmx | match | 303/303 | 20/20 | corpus file score-sapp-org-examples/example-0002-08-ex0002-08.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0002-09-ex0002-09-pmx | match | 506/506 | 135/135 | corpus file score-sapp-org-examples/example-0002-09-ex0002-09.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0003-01-ex0003-01-pmx | match | 408/408 | 3/3 | corpus file score-sapp-org-examples/example-0003-01-ex0003-01.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0010-01-note-parameters-pmx | match | 906/906 | 878/878 | corpus file score-sapp-org-examples/example-0010-01-note-parameters.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0010-05-slur-parameters-pmx | match | 996/996 | 1247/1247 | corpus file score-sapp-org-examples/example-0010-05-slur-parameters.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-01-ex0100-01m1-pmx | match | 257/257 | 12/12 | corpus file score-sapp-org-examples/example-0100-01-ex0100-01m1.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-01-ex0100-01m2-pmx | match | 285/285 | 13/13 | corpus file score-sapp-org-examples/example-0100-01-ex0100-01m2.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-01-ex0100-01m3-pmx | match | 288/288 | 26/26 | corpus file score-sapp-org-examples/example-0100-01-ex0100-01m3.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-01-ex0100-01m4-pmx | match | 321/321 | 15/15 | corpus file score-sapp-org-examples/example-0100-01-ex0100-01m4.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-08-ex0100-08-pmx | match | 227/227 | 10/10 | corpus file score-sapp-org-examples/example-0100-08-ex0100-08.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-08-ex0100-08b-pmx | match | 232/232 | 380/380 | corpus file score-sapp-org-examples/example-0100-08-ex0100-08b.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-08-ex0100-08m1-pmx | match | 647/647 | 17/17 | corpus file score-sapp-org-examples/example-0100-08-ex0100-08m1.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-08-ex0100-08m2-pmx | match | 447/447 | 21/21 | corpus file score-sapp-org-examples/example-0100-08-ex0100-08m2.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-08-ex0100-08m3-pmx | match | 231/231 | 9/9 | corpus file score-sapp-org-examples/example-0100-08-ex0100-08m3.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-14-ex0100-14m1-pmx | match | 281/281 | 97/97 | corpus file score-sapp-org-examples/example-0100-14-ex0100-14m1.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-14-ex0100-14m2-pmx | match | 309/309 | 12/12 | corpus file score-sapp-org-examples/example-0100-14-ex0100-14m2.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-14-ex0100-14m3-pmx | match | 335/335 | 15/15 | corpus file score-sapp-org-examples/example-0100-14-ex0100-14m3.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-26-ex0100-26m1-pmx | match | 289/289 | 22/22 | corpus file score-sapp-org-examples/example-0100-26-ex0100-26m1.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-26-ex0100-26m1b-pmx | match | 288/288 | 33/33 | corpus file score-sapp-org-examples/example-0100-26-ex0100-26m1b.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-26-ex0100-26m2-pmx | match | 275/275 | 19/19 | corpus file score-sapp-org-examples/example-0100-26-ex0100-26m2.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-26-ex0100-26m2b-pmx | match | 275/275 | 19/19 | corpus file score-sapp-org-examples/example-0100-26-ex0100-26m2b.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-26-ex0100-26m3-pmx | match | 342/342 | 18/18 | corpus file score-sapp-org-examples/example-0100-26-ex0100-26m3.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0100-32-ex0100-32m1-pmx | match | 353/353 | 16/16 | corpus file score-sapp-org-examples/example-0100-32-ex0100-32m1.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0101-16-ex0101-16-pmx | match | 97/97 | 2/2 | corpus file score-sapp-org-examples/example-0101-16-ex0101-16.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0101-16-ex0101-16m1-pmx | match | 168/168 | 9/9 | corpus file score-sapp-org-examples/example-0101-16-ex0101-16m1.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0101-16-ex0101-16m2-pmx | match | 262/262 | 20/20 | corpus file score-sapp-org-examples/example-0101-16-ex0101-16m2.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0101-16-ex0101-16m3-pmx | match | 189/189 | 17/17 | corpus file score-sapp-org-examples/example-0101-16-ex0101-16m3.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-01-break-pmx | match | 170/170 | 7/7 | corpus file score-sapp-org-examples/example-0300-01-break.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-02-grace-pmx | match | 108/108 | 2/2 | corpus file score-sapp-org-examples/example-0300-02-grace.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-03-secondary-pmx | match | 66/66 | 1/1 | corpus file score-sapp-org-examples/example-0300-03-secondary.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-04-artic-pmx | match | 41/41 | 1/1 | corpus file score-sapp-org-examples/example-0300-04-artic.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-05-bidur-pmx | match | 201/201 | 2/2 | corpus file score-sapp-org-examples/example-0300-05-bidur.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-06-seconds-pmx | match | 33/33 | 1/1 | corpus file score-sapp-org-examples/example-0300-06-seconds.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-07-lhrh-pmx | match | 221/221 | 2/2 | corpus file score-sapp-org-examples/example-0300-07-lhrh.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-08-lhrh2-pmx | match | 150/150 | 3/3 | corpus file score-sapp-org-examples/example-0300-08-lhrh2.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-09-lhrh3-pmx | match | 380/380 | 10/10 | corpus file score-sapp-org-examples/example-0300-09-lhrh3.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-10-lhrh4-pmx | match | 351/351 | 8/8 | corpus file score-sapp-org-examples/example-0300-10-lhrh4.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-11-lhrh5-pmx | match | 408/408 | 10/10 | corpus file score-sapp-org-examples/example-0300-11-lhrh5.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-12-x3staff-pmx | match | 326/326 | 12/12 | corpus file score-sapp-org-examples/example-0300-12-x3staff.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-13-xchord-pmx | match | 199/199 | 2/2 | corpus file score-sapp-org-examples/example-0300-13-xchord.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-14-xstaff-pmx | match | 361/361 | 4/4 | corpus file score-sapp-org-examples/example-0300-14-xstaff.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-15-xtie-pmx | match | 65/65 | 2/2 | corpus file score-sapp-org-examples/example-0300-15-xtie.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-16-syllab-pmx | match | 370/370 | 97/97 | corpus file score-sapp-org-examples/example-0300-16-syllab.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-17-caution-pmx | match | 93/93 | 2/2 | corpus file score-sapp-org-examples/example-0300-17-caution.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-18-fturn-pmx | match | 204/204 | 2/2 | corpus file score-sapp-org-examples/example-0300-18-fturn.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-19-trill-pmx | match | 361/361 | 2/2 | corpus file score-sapp-org-examples/example-0300-19-trill.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-20-turn-pmx | match | 172/172 | 2/2 | corpus file score-sapp-org-examples/example-0300-20-turn.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-21-turn2-pmx | match | 149/149 | 2/2 | corpus file score-sapp-org-examples/example-0300-21-turn2.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-22-fractup-pmx | match | 53/53 | 1/1 | corpus file score-sapp-org-examples/example-0300-22-fractup.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-23-ambig-pmx | match | 27/27 | 3/3 | corpus file score-sapp-org-examples/example-0300-23-ambig.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-24-ambig2-pmx | match | 99/99 | 4/4 | corpus file score-sapp-org-examples/example-0300-24-ambig2.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-25-nested-pmx | match | 60/60 | 3/3 | corpus file score-sapp-org-examples/example-0300-25-nested.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-26-keytime-pmx | match | 115/115 | 22/22 | corpus file score-sapp-org-examples/example-0300-26-keytime.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-27-layers-pmx | match | 68/68 | 2/2 | corpus file score-sapp-org-examples/example-0300-27-layers.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-28-finger-pmx | match | 256/256 | 2/2 | corpus file score-sapp-org-examples/example-0300-28-finger.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-29-finger2-pmx | match | 202/202 | 2/2 | corpus file score-sapp-org-examples/example-0300-29-finger2.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-0300-30-xlayer-pmx | match | 286/286 | 2/2 | corpus file score-sapp-org-examples/example-0300-30-xlayer.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-1000-01-ex1000-01-pmx | match | 2487/2487 | 220/220 | corpus file score-sapp-org-examples/example-1000-01-ex1000-01.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-1001-01-ex1001-01-pmx | match | 838/838 | 247/247 | corpus file score-sapp-org-examples/example-1001-01-ex1001-01.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-1002-01-ex1002-01-pmx | match | 500/500 | 73/73 | corpus file score-sapp-org-examples/example-1002-01-ex1002-01.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-2001-11-ex2001-11-pmx | match | 929/929 | 118/118 | corpus file score-sapp-org-examples/example-2001-11-ex2001-11.pmx (PMX converted) |
+| corpus-score-sapp-org-examples-example-3000-09-ex3000-09a-pmx | match | 2077/2077 | 42/42 | corpus file score-sapp-org-examples/example-3000-09-ex3000-09a.pmx (PMX converted) |
 | corpus-scorelib-bach-chorales-chor005 | match | 1081/1081 | 41/41 | corpus file github-craigsapp-scorelib/bach-chorales_chor005.mus |
 | corpus-scorelib-brahms-op76-brahms-op76n7-p1 | match | 1521/1521 | 72/72 | corpus file github-craigsapp-scorelib/brahms-op76_brahms-op76n7-p1.mus |
 | corpus-scorelib-brahms-op76-brahms-op76n7-p2 | match | 1631/1631 | 48/48 | corpus file github-craigsapp-scorelib/brahms-op76_brahms-op76n7-p2.mus |
@@ -347,3 +459,15 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | corpus-scoremid-shareware-rac-30-pag | match | 744/744 | 43/43 | corpus file scoremid-shareware/RAC_30.PAG |
 | corpus-scoremid-shareware-rac-31-pag | match | 805/805 | 47/47 | corpus file scoremid-shareware/RAC_31.PAG |
 | corpus-scoremid-shareware-sc2mid-rh170 | match | 477/477 | 24/24 | corpus file scoremid-shareware/sc2mid-rh170.mus |
+| corpus-winscore-guitar-guit01 | match | 2578/2578 | 1077/1077 | corpus file winscore-guitar/guit01.mus |
+| corpus-winscore-guitar-guit02 | match | 2990/2990 | 1095/1095 | corpus file winscore-guitar/guit02.mus |
+| corpus-winscore-guitar-guit03 | match | 2594/2594 | 1075/1075 | corpus file winscore-guitar/guit03.mus |
+| corpus-winscore-guitar-guit04 | match | 2975/2975 | 1120/1120 | corpus file winscore-guitar/guit04.mus |
+| corpus-winscore-guitar-guit05 | match | 2584/2584 | 1021/1021 | corpus file winscore-guitar/guit05.mus |
+| corpus-winscore-guitar-guit06 | match | 2577/2577 | 1024/1024 | corpus file winscore-guitar/guit06.mus |
+| corpus-winscore-guitar-guit07 | match | 3195/3195 | 1032/1032 | corpus file winscore-guitar/guit07.mus |
+| corpus-winscore-guitar-guit08 | match | 2577/2577 | 981/981 | corpus file winscore-guitar/guit08.mus |
+| corpus-winscore-guitar-guit09 | match | 3007/3007 | 1085/1085 | corpus file winscore-guitar/guit09.mus |
+| corpus-winscore-guitar-guit10 | match | 2620/2620 | 1016/1016 | corpus file winscore-guitar/guit10.mus |
+| corpus-winscore-guitar-guit11 | match | 2939/2939 | 1073/1073 | corpus file winscore-guitar/guit11.mus |
+| corpus-winscore-guitar-guit12 | match | 2705/2705 | 1057/1057 | corpus file winscore-guitar/guit12.mus |

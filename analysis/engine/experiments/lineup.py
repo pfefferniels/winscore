@@ -14,7 +14,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 
-from grace import GracePass
+from grace import GracePass, GraceSession
 from staves import f32 as F, trunc
 
 EXPONENT = F(0.5849624872207642)      # f32 at 0x7926DC: log2(1.5)
@@ -451,7 +451,7 @@ def spacing(entries: list[float], size: float, left: float, right: float) -> lis
             w = marker_width(e, entries[k + 1])
             fixed = F(w + fixed)
         widths.append(w)
-    unit = F(((right - left) - size * fixed) / total)
+    unit = F((F(right - left) - size * fixed) / total)      # the difference is stored first (0x89FCDC)
     out, x = [], left
     for e, w in zip(entries, widths):
         out.append(x)
@@ -486,6 +486,7 @@ class Lineup:
     x_left: float = 9999.0
     x_right: float = 200.0
     saw_long: bool = False
+    grace: GraceSession = field(default_factory=GraceSession)
 
     def item(self, i):
         return self.items[i - 1]
@@ -554,7 +555,7 @@ class Lineup:
         self.new_x = spacing(self.master, F(self.step(self.lo) / 25), self.x_left, self.x_right)
         self.apply()
         if self.saw_long:
-            GracePass(self.items, self.lo, self.hi, self.right, self.steps).run()
+            GracePass(self.items, self.lo, self.hi, self.right, self.steps, session=self.grace).run()
         self.interpolate_others()
 
     def normalize(self, ev: StaffEvents) -> tuple[list[float], list[float]]:

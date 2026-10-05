@@ -12,6 +12,8 @@ pub mod editing;
 pub mod encode;
 pub mod hit;
 pub mod input;
+pub mod live;
+pub mod output;
 pub mod param_names;
 pub mod placing;
 pub mod symbols;
@@ -122,6 +124,20 @@ impl Score {
         EncodedList::from(self.0.render())
     }
 
+    /// The page with only the selected items drawn again: the preview while
+    /// they are dragged. [`Score::render`] after the drag gives the exact page.
+    #[wasm_bindgen(js_name = renderSelection)]
+    pub fn render_selection(&mut self) -> EncodedList {
+        EncodedList::from(self.0.render_selection())
+    }
+
+    /// Code, P2 and P3 of every item, three numbers per item in file order
+    /// (`Float32Array`), for the item list.
+    #[wasm_bindgen(js_name = itemSummaries)]
+    pub fn item_summaries(&self) -> Vec<f32> {
+        self.0.items().iter().flat_map(|item| [item.code() as f32, item.param(2), item.param(3)]).collect()
+    }
+
     pub fn item(&self, index: u32) -> Option<ItemInfo> {
         self.0.item(ItemId(index)).map(|item| ItemInfo {
             code: item.code(),
@@ -134,6 +150,12 @@ impl Score {
     pub fn save(&self) -> Vec<u8> {
         self.0.save()
     }
+}
+
+/// What kind of item code `code` (P1) stands for, e.g. "Note".
+#[wasm_bindgen(js_name = codeName)]
+pub fn code_name_js(code: i32) -> Option<String> {
+    code_name(code).map(str::to_owned)
 }
 
 /// What parameter `n` of items with code `code` means, in the words of the

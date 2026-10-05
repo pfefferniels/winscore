@@ -20,11 +20,14 @@ npm run dev        # builds the wasm, copies samples and references, serves http
 
 Environment variables: `CARGO_TARGET_DIR` (default `rust/target`), `WASM_PROFILE` (default `release`), `REFERENCE_DIR` (default `rust/fixtures`).
 
+Frame times while dragging: `npm run build && npm run perf [FILE.mus …]` (default the largest sample); it fails if a frame during the drag takes more than 50 ms. Drags re-render only the moved items (`rust/crates/score-web/src/live.rs`); the full render follows on drop.
+
 Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT_DIR [name='sample=mozart.mus&mode=overlay&zoom=200' …]` (needs `npx playwright install chromium` once).
 
 ## Using it
 
 - **Open** a `.mus` file with the button or by dropping it on the window; the bundled samples are in the drop-down (`WINSCORE 5.01/winscore/*.mus`, `SCORE 4/SCORE/NEWLINE.MUS`, `NEWLIB.MUS`). Dropping an `engine.json` loads it as the reference for the current score.
+- **SVG** and **Print** render the page for print (no staff numbers or other screen aids). SVG uses `score_render::svg` and is paper-sized; Print paints the page on a 300 dpi canvas that a print stylesheet shows alone on paper of the score's size.
 - **Rust / Engine / Overlay**: the Rust renderer's page, the original engine's display list (`rust/fixtures/sample-*/engine.json`, produced from WScore.exe under emulation), or both, engine in cyan and Rust in magenta, multiplied, so that matching elements come out dark.
 - **Zoom**: −/+ buttons or the `+` and `_` keys, the percent list, Fit, or ctrl/⌘ + wheel (pinch) around the pointer.
 - **Selection**: click an element or a row of the item list; Shift-click adds or removes; Escape clears. A click selects the item whose drawn outline is under the pointer (in the Engine view through the fixture's item attribution); where there is none, WinScore's own rule picks the item with the nearest reference point within 12 px (decision D8). The panel shows P1…Pn of the last selected item with the help's label for each; edit a value and press Enter to set it and re-render.

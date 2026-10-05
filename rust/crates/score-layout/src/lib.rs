@@ -1,16 +1,20 @@
 //! SCORE's layout commands on an item list: LI lines up the notes of a system, spacing
-//! them by duration across all its staves. J (justify) and LJ (both) follow.
+//! them by duration across all its staves; J justifies, making room for accidentals,
+//! dots, flags and shifted heads; LJ does both, and LJA does LJ on all staves with notes.
 //!
 //! This is a reimplementation of WinScore's routines 0x4B80B7 (the command's main pass),
-//! 0x4F7808 (sort), 0x534C40 (events), 0x4C9510 (merge), 0x4CC470 (spacing) and 0x4C8290
-//! (mapping), after disasm-expert's reference model `analysis/engine/experiments/lineup.py`
-//! and its notes in `analysis/engine/layout.md`. Results are compared with the engine
-//! item by item (`tests/engine.rs`).
+//! 0x4F7808 (sort), 0x534C40 (events), 0x4C9510 (merge), 0x4CC470 (spacing), 0x4C8290
+//! (mapping), 0x4C5AD8 (grace notes), 0x4B6F4A (justify) and 0x4B93F2 (LJA's system),
+//! after disasm-expert's reference models `analysis/engine/experiments/lineup.py`,
+//! `grace.py` and `justify.py` and the notes in `analysis/engine/layout.md`. Results are
+//! compared with the engine item by item (`tests/engine.rs`).
 //!
 //! The engine sorts the whole file before it lines up, so the result is a reordered list:
 //! [`Layout::source`] tells which input item each output item is.
 
 mod events;
+mod grace;
+mod justify;
 mod lineup;
 mod merge;
 mod num;
@@ -26,6 +30,7 @@ use score_format::Item;
 use crate::lineup::Lineup;
 use crate::prepare::{prepare, staff_steps};
 use crate::rows::{Row, REST};
+use crate::sort::sort_rows;
 
 /// The system a layout command works on: staves `first..=last`, as answered to the
 /// engine's question "Enter Lowest Staff# of system and how many staves".
@@ -76,8 +81,6 @@ pub enum LayoutErrorKind {
     Unalignable { staff: i32 },
     /// A P4 of 900 or more, which makes the engine's sort repeat items.
     P4TooLarge,
-    /// Notes or rests with P7 >= 64 (the engine hands them to 0x4C5AD8, not ported yet).
-    LongValues,
     /// One of the engine's loops would not end.
     NoEnd,
 }
@@ -91,7 +94,6 @@ impl fmt::Display for LayoutErrorKind {
             LayoutErrorKind::NoNotes => write!(f, "no staff of the system has notes"),
             LayoutErrorKind::Unalignable { staff } => write!(f, "the rhythm of staff {staff} cannot be aligned"),
             LayoutErrorKind::P4TooLarge => write!(f, "an item has P4 >= 900"),
-            LayoutErrorKind::LongValues => write!(f, "values with P7 >= 64 are not supported yet"),
             LayoutErrorKind::NoEnd => write!(f, "the layout does not terminate"),
         }
     }
@@ -113,11 +115,59 @@ impl fmt::Display for LayoutError {
 
 impl std::error::Error for LayoutError {}
 
+/// What a layout command does, from its letters (0x4B80B7): L lines up, J justifies.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Command {
+    /// LI
+    LineUp,
+    /// J
+    Justify,
+    /// LJ
+    LineUpAndJustify,
+}
+
 /// LI: lines up the system `range`, as the engine does after the answer and "yes" to
 /// "Source Box O.K.?".
 pub fn line_up(items: &[Item], range: StaffRange, options: &Options) -> Result<Layout, LayoutError> {
+    layout(items, Command::LineUp, range, options)
+}
+
+/// J: justifies the system `range` between the x range of `options.source_box`.
+pub fn justify(items: &[Item], range: StaffRange, options: &Options) -> Result<Layout, LayoutError> {
+    layout(items, Command::Justify, range, options)
+}
+
+/// LJ: lines up the system `range`, then justifies it.
+pub fn line_up_and_justify(items: &[Item], range: StaffRange, options: &Options) -> Result<Layout, LayoutError> {
+    layout(items, Command::LineUpAndJustify, range, options)
+}
+
+/// LJA: LJ on all staves with notes or rests (0x4B93F2). The engine answers its own
+/// question with the lowest and the highest such staff, and reads the second number as a
+/// count, as for a typed answer. Without notes or rests nothing changes.
+pub fn line_up_and_justify_all(items: &[Item], options: &Options) -> Result<Layout, LayoutError> {
+    let staves: Vec<i32> = items.iter().filter(|it| it.code() < 3 && it.params().len() > 6 && it.param(7) > 0.0).map(|it| it.param(2) as i32).collect();
+    match (staves.iter().min(), staves.iter().max()) {
+        (Some(&lowest), Some(&highest)) => line_up_and_justify(items, StaffRange::from_answer(lowest, highest), options),
+        _ => Ok(Layout { items: items.to_vec(), source: (0..items.len()).collect() }),
+    }
+}
+
+/// The sort the layout commands (and TR) start with (0x4F7808 in mode 'X'): every P3
+/// rounded to hundredths, then the items ordered by staff and P3.
+pub fn sort(items: &[Item]) -> Result<Layout, LayoutError> {
+    on_rows(items, sort_rows)
+}
+
+/// Runs a layout command, as the engine does after the answer and "yes" to "Source Box
+/// O.K.?".
+pub fn layout(items: &[Item], command: Command, range: StaffRange, options: &Options) -> Result<Layout, LayoutError> {
+    on_rows(items, |rows| layout_rows(rows, command, range, options))
+}
+
+fn on_rows(items: &[Item], work: impl FnOnce(&mut [Row]) -> Result<(), LayoutErrorKind>) -> Result<Layout, LayoutError> {
     let mut rows: Vec<Row> = items.iter().enumerate().map(|(i, item)| Row::of(item, i)).collect();
-    let outcome = line_up_rows(&mut rows, range, options);
+    let outcome = work(&mut rows);
     let layout = Layout {
         items: rows.iter().map(|row| row.to_item(&items[row.source])).collect(),
         source: rows.iter().map(|row| row.source).collect(),
@@ -128,16 +178,22 @@ pub fn line_up(items: &[Item], range: StaffRange, options: &Options) -> Result<L
     }
 }
 
-fn line_up_rows(rows: &mut [Row], range: StaffRange, options: &Options) -> Result<(), LayoutErrorKind> {
-    let StaffRange { first: lo, last: hi } = range;
+fn layout_rows(rows: &mut [Row], command: Command, range: StaffRange, options: &Options) -> Result<(), LayoutErrorKind> {
+    let StaffRange { first: mut lo, last: hi } = range;
     let Some(hi) = prepare(rows, lo, hi, options.right, options.source_box)? else {
         return Ok(());
     };
     let steps = staff_steps(rows);
-    let mut lineup = Lineup::new(rows, lo, hi, options.right, steps);
-    lineup.run()?;
-    let x_left = lineup.x_left;
-    mark_whole_rests_for_centring(rows, lo, hi, x_left, options.source_box.1);
+    let mut extent = options.source_box;
+    if command != Command::Justify {
+        let mut lineup = Lineup::new(rows, lo, hi, options.right, steps.clone());
+        lineup.run()?;
+        (extent, lo) = lineup.extent();
+    }
+    if command != Command::LineUp {
+        justify::justify(rows, (lo, hi), extent, options.right, &steps);
+    }
+    mark_whole_rests_for_centring(rows, lo, hi, extent.0, options.source_box.1);
     Ok(())
 }
 

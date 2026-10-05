@@ -1,6 +1,6 @@
 # Layout: lineup (LI), justify (J) and LJ
 
-**Status.** LI, J and LJ are ported routine by routine (`experiments/lineup.py`, `experiments/grace.py`, `experiments/justify.py`) and reproduce the engine's item list bit for bit, all parameters as f32. Checked against the oracle: LI on 500 random systems of 1 to 4 staves (plain and rich: keys, meters, second voices, inner clefs, key changes, barlines with P12, lines, slurs, beams, numbers, unequal totals) and 12 targeted cases; LJ on 400 systems and J alone on 200, half of them dense (accidentals, dots, shifted heads, cue notes, barline types, numbers with P16, up to six measures, where J moves 25 to 90 items per system); grace notes in LI and LJ (§9). Statements below are **verified** by these comparisons unless marked otherwise; routine addresses name the code they come from.
+**Status.** LI, J and LJ are ported routine by routine (`experiments/lineup.py`, `experiments/grace.py`, `experiments/justify.py`) and reproduce the engine's item list bit for bit, all parameters as f32. Checked against the oracle: LI on 500 random systems of 1 to 4 staves (plain and rich: keys, meters, second voices, inner clefs, key changes, barlines with P12, lines, slurs, beams, numbers, unequal totals) and 12 targeted cases; LJ on 400 systems and J alone on 200, half of them dense (accidentals, dots, shifted heads, cue notes, barline types, numbers with P16, up to six measures, where J moves 25 to 90 items per system); grace notes in LI and LJ on 280 systems (§9). Statements below are **verified** by these comparisons unless marked otherwise; routine addresses name the code they come from.
 
 Notation as in the other notes: P(k) the f32 parameters, f32(·) rounding to single precision, trunc(·) toward zero, "staff" = trunc(P2), "code" = trunc(P1). Durations are P7 in quarter notes.
 
@@ -11,7 +11,7 @@ Notation as in the other notes: P(k) the f32 parameters, f32(·) rounding to sin
 - a typed answer `lo count` selects staves lo .. lo+count-1 and the x range 0 .. RIGHT, where RIGHT is the page's right limit (f32 0x1FBB8B8: 200 for the default page; 0x488258 sets 194, 234, 266 or 285 for other page formats);
 - a box selects the staves it touches and its own x range, clamped to 0 .. RIGHT.
 
-Then the engine asks "Source Box O.K.?" through the yes/no callback 0x595CD0. The oracle answers 0 (No) by default, and the command then does nothing; `experiments/layoutlab.py` answers 1. The letters decide what runs (0x4B80B7): first letter L runs the lineup 0x4C9510, second letter J (or first letter J) runs justify 0x4B6F4A afterwards. A second letter T goes to 0x4B8B97 instead (not examined).
+Then the engine asks "Source Box O.K.?" through the yes/no callback 0x595CD0. The oracle answers 0 (No) by default, and the command then does nothing; `experiments/layoutlab.py` answers 1. The letters decide what runs (0x4B80B7): first letter L runs the lineup 0x4C9510, second letter J (or first letter J) runs justify 0x4B6F4A afterwards. A second letter T (`JT`) goes to 0x4B8B97 instead, which by its code (**read**, not verified) justifies text: the code-16 items of one staff inside the x range whose P4 is within 1.9 of a given line (any line for 99) become columns with need 1.5 * size + P13 + P11, and the distribution of §10 step 4 moves them.
 
 The upper staff is clamped to the staff of the last item in the file. For LI and LJ the x range of the answer does **not** limit the lineup: whole staves take part (every event with P3 <= 200.05). The x range is used by J, by the clef adjustment below and by the rest flag at the end.
 
@@ -56,7 +56,7 @@ The master list gets new positions from x_left to x_right:
 size  = f32(STAFF_STEP(lo) / 25)             # 1 for a P5 = 1 staff
 w(d)  = f32(d ** f32(0.5849624872207642))    # d in sixteenths; f32 at 0x7926DC = log2(1.5)
 fixed = sum of marker widths (table below), the last entry gets none
-unit  = f32(((x_right - x_left) - size*fixed) / sum of w)
+unit  = f32((f32(x_right - x_left) - size*fixed) / sum of w)
 x_1   = x_left,   x_{k+1} = f32(f32(width_k * (unit for durations | size for markers)) + x_k)
 ```
 
@@ -115,7 +115,7 @@ So slurs, ties, beams, lines, text, numbers and library symbols follow the notes
 
 ## 8. After the lineup
 
-Rests (code 2) with P5 <= -2 between x_left and the right end of the answer's x range get P9 = -1 (the item is extended to 9 parameters). Then the page is redrawn.
+Rests (code 2) with P5 <= -2 between x_left and the right end of the answer's x range get P9 = -1 (the item is extended to 9 parameters). Then the page is redrawn, and the redraw changes items too: `draw_rest` 0x519C38 replaces P9 = -1 of such a rest by its computed centre between the surrounding barlines (in the item, when it has more than 8 parameters). That step belongs to the rest's rendering and is not part of the models here.
 
 ## 9. Grace notes (0x4C5AD8)
 
@@ -157,11 +157,29 @@ What J leaves alone: values outside the box or of other staves, vertical paramet
 - The literal 200.05 / 200 in §3 ignores other page widths.
 - If no note, rest or clef lies in the system, 0x4C8290 returns early and the staff items keep their negated P2.
 - In 0x4C9510 the virtual anchors take their item reference from whatever the previous run left in the table; the model assumes a fresh engine, as in the oracle.
-- J keeps several values in globals from one staff (and one run) to the next: the ledger-line state, the small-clef flag, the previous chord's P4, P5, P9 and P12 (justify.py `JustifyState`). The grace pass keeps the last right width for keys (0x4C7374 sets none). Again the model starts from zero.
-- Ghidra's decompilation hides some f32 stores to scratch globals; in 0x4B63CD the stretch numerator is rounded to f32 before the division, which only the disassembly shows.
+- J keeps several values in globals from one staff (and one run) to the next: the ledger-line state, the small-clef flag, the previous chord's P4, P5, P9 and P12 (justify.py `JustifyState`). The grace pass keeps the last right width for keys (0x4C7374 sets none). Again the model starts from zero; LJ run twice in one engine still matched the model run twice (13/13 dense systems), so the carried values rarely matter.
+- Ghidra's decompilation hides some f32 stores to scratch globals, which only the disassembly shows: in 0x4CC470 x_right - x_left is rounded to f32 before the unit is computed, and in 0x4B63CD the stretch numerator before the division. Both were found as one-ulp differences (the first only on a real file).
+
+## 12. State carried from one run to the next
+
+A port starts each command from a fresh state, as the models do. Of the statics in these routines, one changes results in normal use; the others cancel out or matter only in corner cases.
+
+| Global | Written by | Read by | Effect | Visible in normal use |
+|---|---|---|---|---|
+| f32 0x89FBF0 | grace pass: last right width (0x4C7374), last x of a group of equal x, last fit ratio (0x4C795B) | 0x4C7374 as the right width of a **key signature** (it sets none for keys) | a grace group directly after a key signature is spaced from the previous run's leftover | **yes**: a second LI on clef, key, two grace notes, note moved the grace notes by 0.2 and 0.1. `GraceSession` in grace.py carries it; with it, LI three times and LJ twice match the engine |
+| 0x1EA3FE4, 0x1EA4F84 at a virtual anchor's index | grace pass widths | grace fit and placement | widths of a virtual anchor are whatever an earlier run left | only for a grace group with no note or barline before it on its staff, or none after it; not modelled |
+| int 0x89FC00 | grace pass | item reference of a virtual anchor | none (virtual anchors are never written) | no |
+| int 0x89F930 | J, per note (ledger side) | first chord of each staff | the comparison resets the ledger state to 0 either way | no |
+| int 0x89F8F0 | J, at each clef (small clef) | the extra left room right after a clef | always set by that same clef | no |
+| f32 0x89F938 | J (largest right extra of a chord, flag width, an x) | flag-room test when an up-stem chord is followed by a barline | compared with a note's x; differs except by coincidence | practically no |
+| 0x89F900, 0x89F940, 0x89F8F8, 0x89F8FC, 0x89F8F4 | J, at the end of each chord | accidental rule next to the previous chord | read only when the previous column of the same staff is a chord | no |
+| f32 0x1E9B280[1] | J (left need of the box-start column, zeroed once per run) | nothing | never enters a gap need | no |
+| int 0x1ABFE1C (item reference of virtual lineup anchors) | sort of the anchors in 0x4C9510 (sets -1) | the next run's sort | by the code a stale -1 would drop the virtual anchors | no: LI twice on a staff without closing barline matched the model that keeps them, so something rewrites the table (not traced) |
+
+Recommendation: port from a fresh state. If repeated LJ on the same page must match WinScore exactly, keep 0x89FBF0 as one float per session.
 
 ## Verification
 
 - `python experiments/lineup.py [cases] [max_staves] [rich]`: LI against the oracle after `LI` and `lo count` (yes to the source box), item by item and bit for bit, including the engine's partly changed items when it gives up. 200/200 plain, 300/300 rich, plus targeted cases (triplets, notes 0.05 apart, keys and meters, staff size 0.75, staff P6 = 150, no closing barline, closing clef, barline with P12, slurs/beams/lines/numbers, a two-staff barline with P4 = 2).
 - `python experiments/justify.py [cases] [max_staves] [LJ|J|LI] [dense]`: the same for the whole command. LJ 200/200 rich and 200/200 dense; J alone 100/100 rich and 100/100 dense.
-- Grace notes: random systems with groups of one to three grace notes (P7 = 65, P4 + 100, P8 = 101) before notes, LI and LJ.
+- Grace notes: random systems of 1 to 3 staves with groups of one to four grace notes (P7 = 64 or 65, P4 +- 100, P8 = 101, some chords, accidentals, dots) before notes: LI 120/120, LJ 160/160 (`justify.py ... grace`).

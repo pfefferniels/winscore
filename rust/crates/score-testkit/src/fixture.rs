@@ -43,6 +43,9 @@ pub struct Meta {
     pub invalid_reasons: Vec<String>,
     #[serde(default)]
     pub warnings: Vec<String>,
+    /// Items of the drawn file that the engine did not keep on load (codes 0 and 13, for instance).
+    #[serde(default)]
+    pub dropped_items: Vec<u32>,
 }
 
 #[derive(Debug)]
