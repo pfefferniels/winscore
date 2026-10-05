@@ -1,0 +1,7 @@
+IN 1
+;
+12 8/F3:DN/M2/EF5/RD/EF5/E:BN/M/RD/E/EF/DN/G:D:D:EN/G4/CN/CN/E/M/D:BF/RI;
+4./2/4./8/Q/4./2/8/32/8../G/S/E/2/4./16;
+;
++6 8;
++3 5;

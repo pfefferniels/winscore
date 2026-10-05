@@ -1,0 +1,7 @@
+IN 1
+;
+TE/K1S/12 8/D3:G:A/M/D3:G:A/D3:G:A/RD/F3:C:CS:CN/E:CN:EF/RD/E:CN:EF/RI/E;
+2/4/8/4/Q/S/4/4/4/32;
+C- 3.25 3/CR 7/TRW 1.25 2;
+;
+5 7/-6 7;

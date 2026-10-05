@@ -1,0 +1,7 @@
+IN 1
+;
+AL/4 4/G3/F3/EF/B/TE/EF4/TR/D3:B/DN:E:DS:CF/E:GF;
+32/8/E/32/G/24/8./1;
+AS 8/T 6:8/TRW 3 7;
+1 4/6 7;
+;

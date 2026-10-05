@@ -131,6 +131,62 @@ try {
   assert.match(await page.textContent('#item h2'), /^Item 348 · Note \(\+4 selected\)/);
   await page.click('#undo');
   assert.equal(await page.textContent('#item-count'), '(344)');
+
+  // Text: the palette's Text button opens the dialog; the font goes in front as _NN.
+  await page.click('#items li[data-index="2"]');
+  await page.click('#palette button:text-is("Text")');
+  await page.fill('#text-value', 'Allegro');
+  await page.selectOption('#text-font', '1');
+  await page.click('#text-insert');
+  await page.waitForFunction(() => document.getElementById('item-count').textContent === '(345)');
+  assert.match(await page.textContent('#item h2'), /^Item 344 · Text/);
+  assert.equal(await page.inputValue('#item-text'), '_01Allegro');
+  await page.fill('#item-text', '_01Allegro vivace');
+  await page.press('#item-text', 'Enter');
+  assert.match(await page.textContent('#message'), /^Edit text/);
+  assert.equal(await page.inputValue('#item-text'), '_01Allegro vivace');
+  await page.click('#undo');
+  await page.click('#undo');
+  assert.equal(await page.textContent('#item-count'), '(344)');
+
+  // Symbol picker: a searchable grid of library symbols drawn by the renderer.
+  await page.click('#items li[data-index="2"]');
+  await page.click('#palette button:text-is("Symbol")');
+  await page.waitForSelector('#symbol-grid .symbol-cell');
+  const symbol = await page.getAttribute('#symbol-grid .symbol-cell:nth-child(2)', 'data-number');
+  await page.fill('#symbol-search', 'no symbol is called this');
+  assert.equal(await page.textContent('#symbol-count'), '0 symbols');
+  await page.fill('#symbol-search', '');
+  await page.click('#symbol-grid .symbol-cell:nth-child(2)');
+  await page.waitForFunction(() => document.getElementById('item-count').textContent === '(345)');
+  assert.match(await page.textContent('#item h2'), /^Item 344 · Symbol/);
+  assert.equal(await page.inputValue('#p5'), symbol);
+  await page.click('#undo');
+
+  // Group edit: the command asks for the area, then the destination; Cancel ends it.
+  await page.click('#palette button:text-is("Move area")');
+  assert.match(await page.textContent('#prompt'), /^Enter staff, left position/);
+  await page.keyboard.type('1 0 200 2');
+  await page.keyboard.press('Enter');
+  assert.match(await page.textContent('#prompt'), /^Enter destination staff/);
+  await page.click('#prompt-cancel');
+  assert.ok(await page.isHidden('#prompt'));
+  assert.equal(await page.textContent('#item-count'), '(344)');
+
+  // A box drawn over empty paper selects the items inside it (fresh view: scrolled to the music).
+  await page.goto('http://localhost:4178/?sample=mozart.mus&mode=rust');
+  await page.waitForSelector('#app[data-ready="true"]');
+  const area = await page.evaluate(() => {
+    const r = document.getElementById('viewport').getBoundingClientRect();
+    return { x0: r.left + 6, y0: r.top + 6, x1: r.left + r.width * 0.6, y1: r.top + r.height * 0.95 };
+  });
+  await page.mouse.move(area.x0, area.y0);
+  await page.mouse.down();
+  await page.mouse.move(area.x1, area.y1, { steps: 5 });
+  await page.mouse.up();
+  assert.match(await page.textContent('#item h2'), /\(\+\d+ selected\)/);
+  await page.keyboard.press('Escape');
+
   assert.deepEqual(errors, []);
 
   // Without the wasm module the page says so instead of staying blank.

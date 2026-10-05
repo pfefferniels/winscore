@@ -1,23 +1,25 @@
 // A palette of WinScore's toolbar commands, sent to score-edit as SCORE
-// command lines. Command strings and tooltips come from WinScore's command
-// table (analysis/data/command_map.tsv), looked up by menu id.
-import commands from './generated/commands.json';
-
-interface Command {
-  command: string;
-  tooltip: string;
-}
+// command lines; the symbol and text buttons open the shell's dialogs, as
+// WinScore's open its own. Command strings and tooltips come from WinScore's
+// command table, looked up by menu id.
+import { commandById } from './commands';
 
 interface Entry {
   /** WinScore's menu/toolbar id. */
   id: number;
   label: string;
+  /** Opens a dialog of the shell instead of sending the command (WinScore opens one too). */
+  dialog?: DialogKind;
 }
+
+export type DialogKind = 'symbol' | 'text';
 
 interface Group {
   name: string;
   /** Whether the commands act on the item in edit mode (the selection). */
   needsSelection: boolean;
+  /** Group-edit commands, which ask for an area outside edit mode. */
+  area?: boolean;
   entries: Entry[];
 }
 
@@ -35,13 +37,13 @@ const GROUPS: Group[] = [
       { id: 32698, label: 'Beam' },
       { id: 32696, label: 'Trill' },
       { id: 32857, label: 'Staff' },
-      { id: 32694, label: 'Symbol' },
+      { id: 32694, label: 'Symbol', dialog: 'symbol' },
       { id: 32692, label: 'Number' },
       { id: 32690, label: 'Box' },
       { id: 32688, label: 'Circle' },
       { id: 32858, label: 'Guitar' },
       { id: 32686, label: 'Bar' },
-      { id: 32860, label: 'Text' },
+      { id: 32860, label: 'Text', dialog: 'text' },
       { id: 32859, label: 'Key' },
       { id: 32682, label: 'Meter' },
     ],
@@ -90,12 +92,25 @@ const GROUPS: Group[] = [
       { id: 32787, label: 'Next' },
     ],
   },
+  {
+    name: 'Area',
+    needsSelection: false,
+    area: true,
+    entries: [
+      { id: 33094, label: 'Move area' },
+      { id: 33096, label: 'Copy area' },
+      { id: 33098, label: 'Delete area' },
+      { id: 34237, label: 'Alter area' },
+      { id: 34125, label: 'Copy to staves' },
+    ],
+  },
 ];
-
-const TABLE = commands as Record<string, Command>;
 
 export interface PaletteHandlers {
   run(command: string): void;
+  /** Group edits leave edit mode first; the area may come from a drawn box. */
+  runArea(command: string): void;
+  open(dialog: DialogKind): void;
   supported(command: string): boolean;
 }
 
@@ -106,19 +121,26 @@ export interface Palette {
 
 interface Button {
   element: HTMLButtonElement;
-  command: string;
+  /** The SCORE command, or null for a shell dialog. */
+  command: string | null;
   needsSelection: boolean;
 }
 
 function button(entry: Entry, group: Group, handlers: PaletteHandlers): Button | null {
-  const found = TABLE[String(entry.id)];
+  const found = commandById(entry.id);
   if (!found) return null;
   const element = document.createElement('button');
   element.type = 'button';
   element.textContent = entry.label;
   element.title = `${found.tooltip || found.command} — ${found.command}`;
-  element.addEventListener('click', () => handlers.run(found.command));
-  return { element, command: found.command, needsSelection: group.needsSelection };
+  const { dialog } = entry;
+  const act = dialog
+    ? () => handlers.open(dialog)
+    : group.area
+      ? () => handlers.runArea(found.command)
+      : () => handlers.run(found.command);
+  element.addEventListener('click', act);
+  return { element, command: dialog ? null : found.command, needsSelection: group.needsSelection };
 }
 
 export function createPalette(container: HTMLElement, handlers: PaletteHandlers): Palette {
@@ -138,7 +160,7 @@ export function createPalette(container: HTMLElement, handlers: PaletteHandlers)
   return {
     refresh(hasSelection) {
       buttons.forEach((b) => {
-        const supported = handlers.supported(b.command);
+        const supported = b.command === null || handlers.supported(b.command);
         b.element.disabled = !supported || (b.needsSelection && !hasSelection);
         b.element.classList.toggle('unsupported', !supported);
       });

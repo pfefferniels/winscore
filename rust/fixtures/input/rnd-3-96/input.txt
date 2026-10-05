@@ -1,0 +1,7 @@
+IN 1 0 0 0 180
+2 150
+BA/K1S/GN3/ES/M/ES:GS:DS/AN/M/G/M/BS4/DS:E:FN/CS5/GF/R;
+16/8./G/8./S/Q/E/8../8/8;
+-AO 2;
+4 5/7 9;
+-5 8;

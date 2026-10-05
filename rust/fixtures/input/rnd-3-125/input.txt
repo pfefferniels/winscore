@@ -1,0 +1,7 @@
+IN 1
+;
+TE/E4/A/FN/B:E/E/GF/DS/M/D:G:A/FN/F5/DS/DS/GF/M2;
+4./4./1/S/1/Q/H/E/G/2/2/32/Q;
+U 12:13/C 7.5 10;
+;
+;

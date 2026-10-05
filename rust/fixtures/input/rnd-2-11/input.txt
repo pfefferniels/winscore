@@ -1,0 +1,7 @@
+IN 1
+2 150
+TR/E4/DF:B:DF:F/DF:B:DF:F/SU/D/A/CN/CF3:D:BN/GN5/E5:FF:F:C/M/R/C:AN/F:A/RD;
+8./S/2/G/8/T/12/4./12/2/4./8/2;
+FE 3:5;
+;
++5 10/+8 10;

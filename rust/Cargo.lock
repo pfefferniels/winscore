@@ -84,6 +84,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "score-layout"
+version = "0.1.0"
+dependencies = [
+ "score-format",
+]
+
+[[package]]
 name = "score-render"
 version = "0.1.0"
 dependencies = [
@@ -110,6 +117,7 @@ dependencies = [
  "score-input",
  "score-render",
  "score-testkit",
+ "serde_json",
  "wasm-bindgen",
 ]
 
