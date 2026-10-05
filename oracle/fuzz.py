@@ -76,10 +76,16 @@ class Item:
         return replace(self, params=tuple(params))
 
     def packed(self) -> bytes:
-        return text_item(list(self.params), self.text)
+        return text_item(list(self.text_layout() if self.text else self.params), self.text)
+
+    def text_layout(self) -> tuple[float, ...]:
+        """The engine reads a text item's characters after P13, or after P16 when P14 = -1 (colour block)."""
+        width = 16 if self.p(14) == -1 else 13
+        return tuple(self.p(n) for n in range(1, width + 1))
 
     def nonzero(self) -> list[int]:
-        return [n for n in range(5, len(self.params) + 1) if self.params[n - 1] and not (self.text and n in (12, 13))]
+        params = self.text_layout() if self.text else self.params
+        return [n for n in range(5, len(params) + 1) if params[n - 1] and not (self.text and n in (12, 13))]
 
 
 @dataclass(frozen=True)
@@ -179,6 +185,8 @@ def random_item(rng: random.Random, code: int, pools: dict, staff: int = 1, x: f
         # and the engine reads the characters after P13 whatever the item length.
         text = random_text(rng, pools)
         item = replace(item, text=text).with_param(6, item.p(6) or 1).with_param(12, float(len(text))).with_param(13, 0.0)
+        if item.p(15) or item.p(16):                 # layer and colour only count after P14 = -1
+            item = item.with_param(14, -1.0)
     return item
 
 
