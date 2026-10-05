@@ -10,13 +10,13 @@
 //! guitar chords, moves the beams, and refits the slurs to the moved notes
 //! (0x55C373 and 0x55CB57). Key signatures left without accidentals are removed.
 //!
-//! Not yet done here: normalizing stems (0x47C3E8, input-lang's refit), the
-//! enharmonic change (half steps ±99), and the justification (J) the engine
-//! runs on every staff at the end.
+//! Last, it justifies every staff of the area (J, score-layout). Not yet done
+//! here: normalizing stems (0x47C3E8) and the enharmonic change (±99 half steps).
 
 use std::cmp::Ordering;
 
 use score_format::Item;
+use score_layout::{self as layout, Layout, LayoutErrorKind, Options, StaffRange};
 
 use crate::group::Region;
 use crate::params::Draft;
@@ -118,12 +118,14 @@ impl Transposition {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Unsupported {
     Enharmonic,
     StemNormalization,
     /// Beyond the ±30 half steps the engine's key table covers.
     Interval(i32),
+    /// The engine's sort would garble the file.
+    Layout(LayoutErrorKind),
 }
 
 impl std::fmt::Display for Unsupported {
@@ -132,6 +134,7 @@ impl std::fmt::Display for Unsupported {
             Unsupported::Enharmonic => write!(f, "the enharmonic change is not implemented"),
             Unsupported::StemNormalization => write!(f, "normalizing stems is not implemented yet"),
             Unsupported::Interval(h) => write!(f, "{h} half steps is beyond ±{MAX_HALF_STEPS}"),
+            Unsupported::Layout(kind) => kind.fmt(f),
         }
     }
 }
@@ -171,11 +174,12 @@ pub fn transpose(
     if how.normalize_stems {
         return Err(Unsupported::StemNormalization);
     }
-    let mut rows = engine_order(items);
+    let mut rows = sorted(items)?;
     let area = Area { left: region.left, right: region.right };
     let first = region.bottom.round() as i32;
     let last = region.top.round() as i32;
     (first..=last).for_each(|staff| transpose_staff(&mut rows, staff, area, how, &mut leftover));
+    let rows = justify_staves(rows, first, last);
     let (items, source) = rows
         .into_iter()
         .filter(|row| row.draft.get(1) != DELETED)
@@ -210,36 +214,26 @@ struct Area {
     right: f32,
 }
 
-/// The file sorted as 0x4F7808 in mode 'X' sorts it: P3 rounded to hundredths,
-/// then stably by staff and P3 (notes and rests first at equal P3), then by P4
-/// (a rest's P4 counted 5 higher).
-// The same order as score_layout's sort, which is not public yet.
-fn engine_order(items: &[Item]) -> Vec<Row> {
-    let mut rows: Vec<Row> = items
-        .iter()
-        .enumerate()
-        .map(|(i, item)| {
-            let mut draft = Draft::of(item);
-            if draft.len() > 2 {
-                let hundredths = (f64::from(draft.get(3)) * 100.0).round() as f32;
-                draft.set(3, hundredths / 100.0);
-            }
-            Row { draft, source: Some(i) }
-        })
-        .collect();
-    let primary = |row: &Row| {
-        let key = (f64::from(row.draft.get(2)) * 1e6 + f64::from(row.x()) * 1000.0) as i64;
-        key + i64::from(row.draft.get(1) > 2.0)
-    };
-    let secondary = |row: &Row| match row.draft.len() {
-        0..=3 => 0.0,
-        _ if row.code() == REST => row.draft.get(4) + 5.0,
-        _ => row.draft.get(4),
-    };
-    rows.sort_by(|a, b| {
-        primary(a).cmp(&primary(b)).then(secondary(a).partial_cmp(&secondary(b)).unwrap_or(Ordering::Equal))
-    });
-    rows
+/// The file as the engine's sort 0x4F7808 leaves it, which TR starts with.
+fn sorted(items: &[Item]) -> Result<Vec<Row>, Unsupported> {
+    let layout = layout::sort(items).map_err(|error| Unsupported::Layout(error.kind))?;
+    Ok(rows_of(layout, Some))
+}
+
+/// The rows of a layout, each with the source `source_of` gives its input index.
+fn rows_of(layout: Layout, source_of: impl Fn(usize) -> Option<usize>) -> Vec<Row> {
+    layout.source.into_iter().zip(layout.items).map(|(i, item)| Row { draft: Draft::of(&item), source: source_of(i) }).collect()
+}
+
+/// J on each staff `first..=last` over the whole width, as TR ends (0x4B80B7
+/// called once per staff). A staff J gives up on stays as J leaves it.
+fn justify_staves(rows: Vec<Row>, first: i32, last: i32) -> Vec<Row> {
+    (first..=last).fold(rows, |rows, staff| {
+        let items: Vec<Item> = rows.iter().map(|row| row.draft.to_item()).collect();
+        let range = StaffRange { first: staff, last: staff };
+        let layout = layout::justify(&items, range, &Options::default()).unwrap_or_else(|error| error.layout);
+        rows_of(layout, |i| rows[i].source)
+    })
 }
 
 fn round_even(x: f32) -> i32 {

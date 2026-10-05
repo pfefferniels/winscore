@@ -2,6 +2,7 @@
 //! commands, drags and undo.
 
 use score_format::{Item, MusError, MusFile};
+use score_layout::{Command as LayoutCommand, Options, StaffRange};
 use score_render::staff::Staff;
 use score_render::Document as RenderDocument;
 
@@ -10,7 +11,7 @@ use crate::command::Run;
 use crate::document::{Document, Edit, ItemId, Transaction};
 use crate::drag::{self, Axes, Constraint, Ends, PagePoint};
 use crate::error::EditError;
-use crate::group::{Pending, Region};
+use crate::group::{self, Pending, Region};
 use crate::history::{History, Step};
 use crate::params::{Draft, MAX_PARAM};
 use crate::pick;
@@ -292,6 +293,25 @@ impl Editor {
     /// of WinScore's Transpose Setup dialog.
     pub fn transpose(&mut self, region: &Region, how: &Transposition) -> Result<Change, EditError> {
         self.act("Transpose", |run| run.transpose(region, how))
+    }
+
+    /// LI, J or LJ on the system `range` (score-layout). The x range of
+    /// `options.source_box` limits J; LI and LJ line up whole staves. When
+    /// the engine would give up midway, the change keeps what it leaves and
+    /// [`Change::message`] says why.
+    pub fn lay_out(&mut self, command: LayoutCommand, range: StaffRange, options: &Options) -> Result<Change, EditError> {
+        self.act(group::LayoutCommand::system_word(command), |run| {
+            run.lay_out(command, range, options);
+            Ok(())
+        })
+    }
+
+    /// LJA: LJ on all staves with notes or rests.
+    pub fn lay_out_all(&mut self) -> Result<Change, EditError> {
+        self.act("LJA", |run| {
+            run.lay_out_all();
+            Ok(())
+        })
     }
 
     /// Appends items (from the music input passes, say) and selects them.

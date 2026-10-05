@@ -2,7 +2,7 @@
 //! the change to every item of the area as one undo step.
 
 use score_format::Item;
-use score_layout::{Options, StaffRange};
+use score_layout::{self as layout, Options, StaffRange};
 use score_render::page::{page_offset, P3_UNIT};
 
 use crate::command::moves::{shift, Axis};
@@ -41,6 +41,10 @@ impl Run<'_, '_> {
 
     /// Starts a layout command; `lowest count` typed after the word answer it at once.
     pub fn start_layout(&mut self, command: LayoutCommand, args: &[Token]) -> Result<(), EditError> {
+        let LayoutCommand::System(command) = command else {
+            self.lay_out_all();
+            return Ok(());
+        };
         self.session.pending = Some(Pending::System(command));
         let numbers: Vec<f32> = args.iter().filter_map(Token::number).collect();
         if numbers.is_empty() {
@@ -50,15 +54,24 @@ impl Run<'_, '_> {
         }
     }
 
-    /// Runs a layout command on the system `range`. When the engine gives up
+    /// Runs a layout command on the system `range`.
+    pub fn lay_out(&mut self, command: layout::Command, range: StaffRange, options: &Options) {
+        let outcome = layout::layout(&self.tx.doc().file().items, command, range, options);
+        self.take_layout(outcome);
+    }
+
+    /// LJA: LJ on all staves with notes or rests.
+    pub fn lay_out_all(&mut self) {
+        let outcome = layout::line_up_and_justify_all(&self.tx.doc().file().items, &Options::default());
+        self.take_layout(outcome);
+    }
+
+    /// Makes the file what a layout command left. When the engine gives up
     /// midway, the items stay as it leaves them and its message is reported.
-    fn lay_out(&mut self, command: LayoutCommand, range: StaffRange, options: &Options) {
-        let items = &self.tx.doc().file().items;
-        let (layout, failure) = match command {
-            LayoutCommand::LineUp => match score_layout::line_up(items, range, options) {
-                Ok(layout) => (layout, None),
-                Err(error) => (error.layout, Some(error.kind)),
-            },
+    fn take_layout(&mut self, outcome: Result<layout::Layout, layout::LayoutError>) {
+        let (layout, failure) = match outcome {
+            Ok(layout) => (layout, None),
+            Err(error) => (error.layout, Some(error.kind)),
         };
         self.rearrange(layout.source.into_iter().map(Some).zip(layout.items).collect());
         self.session.message = failure.map(|kind| format!("*** ERROR: {kind}"));
