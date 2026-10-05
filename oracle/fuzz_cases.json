@@ -434,92 +434,6 @@
   "detail": "\"?\" in Times 678.0/279.7 at (15334, 1369)"
  },
  {
-  "name": "fuzz-code07-p7-p16-1b6f6e",
-  "target": 1,
-  "items": [
-   {
-    "params": [
-     8.0,
-     1.0,
-     0.0
-    ],
-    "text": ""
-   },
-   {
-    "params": [
-     7.0,
-     1.0,
-     46.27,
-     -4.0,
-     0.0,
-     0.0,
-     1.0,
-     0.0,
-     0.0,
-     0.0,
-     0.0,
-     0.0,
-     0.0,
-     0.0,
-     0.0,
-     1.0
-    ],
-    "text": ""
-   }
-  ],
-  "code": 7,
-  "signature": "code07-p7-p16|distorted",
-  "owner": "impl-lines",
-  "symptoms": [
-   "distorted"
-  ],
-  "detail": "same structure, off by up to 11474 after aligning"
- },
- {
-  "name": "fuzz-code07-p7-p18-634834",
-  "target": 1,
-  "items": [
-   {
-    "params": [
-     8.0,
-     1.0,
-     0.0
-    ],
-    "text": ""
-   },
-   {
-    "params": [
-     7,
-     1,
-     128.06,
-     12,
-     0,
-     0,
-     1,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     3
-    ],
-    "text": ""
-   }
-  ],
-  "code": 7,
-  "signature": "code07-p7-p18|distorted",
-  "owner": "impl-lines",
-  "symptoms": [
-   "distorted"
-  ],
-  "detail": "same structure, off by up to 11474 after aligning"
- },
- {
   "name": "fuzz-code10-p6-p19-efc753",
   "target": 1,
   "items": [
@@ -558,11 +472,11 @@
   ],
   "code": 10,
   "signature": "code10-p6-p19|text offset",
-  "owner": "impl-symbols",
+  "owner": "impl-text",
   "symptoms": [
    "text offset"
   ],
-  "detail": "\"0\" shifted by (-20000, 1)"
+  "detail": "\"0\" shifted by (-20000, 1) (draw_text re-encodes x < -19000 internal by +20000; handed over by impl-symbols)"
  },
  {
   "name": "fuzz-code12-p5-ffbe10",
@@ -670,79 +584,6 @@
   "detail": "stroke #000000, 1 path(s), 91 points from (7810, 3823)"
  },
  {
-  "name": "fuzz-code12-p5-p8-ee6fed",
-  "target": 1,
-  "items": [
-   {
-    "params": [
-     8,
-     2,
-     0,
-     0,
-     1.5
-    ],
-    "text": ""
-   },
-   {
-    "params": [
-     12,
-     2,
-     15.21,
-     7,
-     1,
-     0,
-     0,
-     111
-    ],
-    "text": ""
-   }
-  ],
-  "code": 12,
-  "signature": "code12-p5-p8|distorted",
-  "owner": "impl-symbols",
-  "symptoms": [
-   "distorted"
-  ],
-  "detail": "same structure, off by up to 64836 after aligning"
- },
- {
-  "name": "fuzz-code12-p5-p8-p11-97487e",
-  "target": 1,
-  "items": [
-   {
-    "params": [
-     8.0,
-     1.0,
-     0.0
-    ],
-    "text": ""
-   },
-   {
-    "params": [
-     12,
-     1,
-     75.13,
-     5,
-     1,
-     0,
-     0,
-     1010,
-     0,
-     0,
-     60
-    ],
-    "text": ""
-   }
-  ],
-  "code": 12,
-  "signature": "code12-p5-p8-p11|distorted",
-  "owner": "impl-symbols",
-  "symptoms": [
-   "distorted"
-  ],
-  "detail": "same structure, off by up to 62467 after aligning"
- },
- {
   "name": "fuzz-code16-p8-p9-b70d9e",
   "target": 1,
   "items": [
@@ -819,77 +660,5 @@
    "offset"
   ],
   "detail": "shifted by (5576, 0), residual 0"
- },
- {
-  "name": "fuzz-code17-p5-p10-ad28d4",
-  "target": 1,
-  "items": [
-   {
-    "params": [
-     8.0,
-     1.0,
-     0.0
-    ],
-    "text": ""
-   },
-   {
-    "params": [
-     17,
-     1,
-     109.79,
-     0,
-     5,
-     0,
-     0,
-     0,
-     0,
-     309
-    ],
-    "text": ""
-   }
-  ],
-  "code": 17,
-  "signature": "code17-p5-p10|distorted",
-  "owner": "impl-symbols",
-  "symptoms": [
-   "distorted"
-  ],
-  "detail": "same structure, off by up to 825 after aligning"
- },
- {
-  "name": "fuzz-code17-p5-p10-b79043",
-  "target": 1,
-  "items": [
-   {
-    "params": [
-     8.0,
-     1.0,
-     0.0
-    ],
-    "text": ""
-   },
-   {
-    "params": [
-     17,
-     1,
-     32.71,
-     0,
-     -3,
-     0,
-     0,
-     0,
-     0,
-     309
-    ],
-    "text": ""
-   }
-  ],
-  "code": 17,
-  "signature": "code17-p5-p10|distorted",
-  "owner": "impl-symbols",
-  "symptoms": [
-   "distorted"
-  ],
-  "detail": "same structure, off by up to 43 after aligning"
  }
 ]
