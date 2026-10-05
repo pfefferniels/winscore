@@ -8,7 +8,7 @@ use std::fs;
 use std::path::Path;
 
 use score_format::{Item, Word};
-use score_input::{refit, RefitMode};
+use score_input::{refit_staves, RefitMode};
 
 const TOLERANCE: f32 = 1e-4;
 
@@ -62,10 +62,7 @@ fn run(case: &Case) -> Vec<Item> {
     let first = get(0) as i32;
     let last = (get(3) as i32).max(first);
     let sorted = score_layout::sort(&case.base).map_or_else(|err| err.layout.items, |layout| layout.items);
-    (first..=last).fold(sorted, |items, staff| match refit(&items, staff, (get(1), right), mode) {
-        Ok(items) => items,
-        Err(err) => err.items,
-    })
+    refit_staves(&sorted, (first, last), (get(1), right), mode).items
 }
 
 fn params(item: &Item) -> Vec<f32> {

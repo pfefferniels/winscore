@@ -43,7 +43,7 @@ use score_format::Item;
 pub use error::{ErrorKind, InputError, Pass, Span};
 pub use file::{InputFile, InputLine, StaffArgs, Step};
 pub use motives::Motives;
-pub use refit::{refit, RefitError, RefitErrorKind, RefitMode};
+pub use refit::{refit, refit_staves, RefitError, RefitErrorKind, RefitMode, StavesRefit};
 
 /// The texts of the five passes, each ending with `;`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

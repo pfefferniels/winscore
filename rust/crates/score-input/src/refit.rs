@@ -108,13 +108,47 @@ impl std::error::Error for RefitError {}
 /// Refits stems, beams and slurs of the notes on `staff` with P3 in `area`; returns the
 /// items in the same order.
 pub fn refit(items: &[Item], staff: i32, area: (f32, f32), mode: RefitMode) -> Result<Vec<Item>, RefitError> {
-    let mut rows: Vec<Vec<f32>> = items.iter().map(|item| item.params().iter().map(|w| w.as_f32()).collect()).collect();
+    let mut rows = rows_of(items);
     let outcome = Refit { rows: &mut rows, staff, left: area.0, right: area.1, mode }.run();
-    let refitted: Vec<Item> = items.iter().zip(&rows).map(|(item, row)| rebuilt(item, row)).collect();
+    let refitted = items_of(items, &rows);
     match outcome {
-        Ok(()) => Ok(refitted),
+        Ok(_) => Ok(refitted),
         Err(kind) => Err(RefitError { kind, items: refitted }),
     }
+}
+
+/// The refits of a group command (0x494302) over the staves `first..=last` of an area:
+/// the engine goes on with the next staff when it gives up on one.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StavesRefit {
+    pub items: Vec<Item>,
+    /// The staves the engine gave up on, and why.
+    pub problems: Vec<(i32, RefitErrorKind)>,
+}
+
+/// Refits each staff of `first..=last` in turn, as FLI/FLN/FLU/FLD do after sorting the
+/// items. Pass 1 sets an area's left end of 0 to 1.5 (0x4ECDF8) once a staff has had
+/// notes to refit, which the later staves see.
+pub fn refit_staves(items: &[Item], (first, last): (i32, i32), area: (f32, f32), mode: RefitMode) -> StavesRefit {
+    let mut rows = rows_of(items);
+    let mut problems = Vec::new();
+    let (mut left, right) = area;
+    for staff in first..=last.max(first) {
+        match (Refit { rows: &mut rows, staff, left, right, mode }.run()) {
+            Ok(true) if left == 0.0 => left = 1.5,
+            Ok(_) => {}
+            Err(kind) => problems.push((staff, kind)),
+        }
+    }
+    StavesRefit { items: items_of(items, &rows), problems }
+}
+
+fn rows_of(items: &[Item]) -> Vec<Vec<f32>> {
+    items.iter().map(|item| item.params().iter().map(|w| w.as_f32()).collect()).collect()
+}
+
+fn items_of(items: &[Item], rows: &[Vec<f32>]) -> Vec<Item> {
+    items.iter().zip(rows).map(|(item, row)| rebuilt(item, row)).collect()
 }
 
 fn rebuilt(item: &Item, row: &[f32]) -> Item {
@@ -164,10 +198,11 @@ struct Refit<'a> {
 }
 
 impl Refit<'_> {
-    fn run(&mut self) -> Result<(), RefitErrorKind> {
+    /// Refits the staff; tells whether pass 1 ran (the staff had notes to refit).
+    fn run(&mut self) -> Result<bool, RefitErrorKind> {
         let found = self.scan()?;
         if found.notes.is_empty() {
-            return Ok(());
+            return Ok(false);
         }
         let stream = Stream::build(self.rows, &found.notes, self.mode)?;
         let mut line = stream.line(self.staff, (self.left, self.right));
@@ -182,7 +217,8 @@ impl Refit<'_> {
         let slur_rows = if self.mode == RefitMode::Normal { Vec::new() } else { found.slurs.clone() };
         let slur_pairs = note_pairs(self.rows, &slur_rows, &stream.chord_xs, Pass::Slurs);
         slurs::apply(&mut line, &slur_pairs, (self.left, self.right), self.staff_end()).map_err(|_| RefitErrorKind::Unsupported("a slur"))?;
-        self.write_back(&line, &stream.order, &found.beams, &slur_rows)
+        self.write_back(&line, &stream.order, &found.beams, &slur_rows)?;
+        Ok(true)
     }
 
     /// The notes, beams and slurs of the staff within the area, in item order; the scan
