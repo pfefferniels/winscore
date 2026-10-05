@@ -252,12 +252,25 @@ def compare_dir(directory: Path) -> dict[str, dict]:
     return {row["case"]: row for row in json.loads(report.read_text())} if report.is_file() else {}
 
 
+def compare_one(directory: Path, name: str) -> dict[str, dict]:
+    """Compare one case on its own, so that a fixture score-compare cannot load spoils nothing else."""
+    alone = directory / "alone"
+    shutil.rmtree(alone, ignore_errors=True)
+    alone.mkdir()
+    shutil.copytree(directory / name, alone / name)
+    rows = compare_dir(alone)
+    shutil.rmtree(alone, ignore_errors=True)
+    return rows
+
+
 def evaluate(cases: list[FuzzCase], directory: Path) -> list[Result]:
     """Run in a worker: oracle fixtures for the cases into `directory`, then score-compare over it."""
     shutil.rmtree(directory, ignore_errors=True)
     directory.mkdir(parents=True)
     written = {c.name: write_fixture(c.case(), directory, False) for c in cases}
     rows = compare_dir(directory)
+    if len(rows) < len(cases):
+        rows = {name: row for c in cases for name, row in compare_one(directory, c.name).items()}
     results = []
     for c in cases:
         w, row = written[c.name], rows.get(c.name, {})
@@ -317,10 +330,21 @@ def simpler_values(value: float) -> list[float]:
     return [v for v in dict.fromkeys(options) if v != value]
 
 
+def staves_used(item: Item) -> set[float]:
+    """The staves an item draws on: its own, those a barline spans, the one a note moves to with P12."""
+    staff = item.p(2)
+    if item.code == 14 and item.p(4):
+        span = 256 if abs(item.p(4)) >= 999 else int(abs(item.p(4)))
+        return {staff + k for k in range(max(1, span))}
+    if item.code == 1 and item.p(12) in (1, 2):
+        return {staff, staff + 1 if item.p(12) == 1 else staff - 1}
+    return {staff}
+
+
 def without(case: FuzzCase, drop: set[int]) -> FuzzCase | None:
-    """The case minus the items at `drop`; None if that removes the target or a staff a remaining item hangs on."""
+    """The case minus the items at `drop`; None if that removes the target or a staff a remaining item uses."""
     kept = [n for n in range(len(case.items)) if n not in drop]
-    hanging = {case.items[n].p(2) for n in kept if case.items[n].code != 8}
+    hanging = {s for n in kept if case.items[n].code != 8 for s in staves_used(case.items[n])}
     dropped_staves = {case.items[n].p(2) for n in drop if n < len(case.items) and case.items[n].code == 8}
     if case.target in drop or not kept or dropped_staves & hanging:
         return None

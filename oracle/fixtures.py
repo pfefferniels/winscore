@@ -301,6 +301,14 @@ class PageView:
                    tuple(notes))
 
     @property
+    def overflows(self) -> bool:
+        """Some page coordinate does not fit an i32: the engine converted an out-of-range float."""
+        dx, dy = self.offset
+        shape_coordinates = (v for s in self.content for path in s.paths for x, y in path for v in (x - dx, y - dy))
+        text_coordinates = (v for r in self.texts for t in r.strings for v in (t.x - dx, t.y + TEXT_BASELINE_OFFSET - dy))
+        return any(not -2**31 < v < 2**31 for coordinates in (shape_coordinates, text_coordinates) for v in coordinates)
+
+    @property
     def frame_agrees(self) -> bool:
         """The leftmost frame sits where the view globals put the paper."""
         return not self.frames or min(f.origin for f in self.frames) == self.offset
@@ -413,6 +421,8 @@ def invalid_reasons(run: Run, zoom_run: Run | None, view: PageView | None) -> li
     reasons += counted(f"{e.kind}: {e.detail}" for e in run.events if e.kind in INVALIDATING_EVENTS)
     if view is not None and not view.frame_agrees:
         reasons.append(f"page frame at {[f.origin for f in view.frames]}, view globals say {view.offset}")
+    if view is not None and view.overflows:
+        reasons.append("engine coordinate overflow (a float too large for an int becomes 0x80000000)")
     if zoom_run is not None and zoom_run.final is not None and run.final is not None:
         if (zoom_run.final.vector, zoom_run.final.text) != (run.final.vector, run.final.text):
             reasons.append(f"output differs between zoom {BASE_ZOOM:#x} and {CHECK_ZOOM:#x}")
