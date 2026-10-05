@@ -59,6 +59,7 @@ SHELL_VECTOR_WORDS, SHELL_OBJECTS, SHELL_TEXT_BYTES = 1_000_000, 10_000, 440_000
 INVALIDATING_EVENTS = {"message", "dialog", "prompt-unanswered"}
 QUIET_EVENTS = {"service", "redraw", "document"}
 BASE_ZOOM, CHECK_ZOOM = 0x40, 0x80
+COMMAND_TIMEOUT_MS = 15_000     # the largest sample takes about 3 s; beyond this the engine is looping
 
 
 @dataclass(frozen=True)
@@ -195,6 +196,7 @@ def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
 def run_on(engine: FixtureEngine, case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     """A case in an engine that is initialised and has run nothing else, with the case's sandbox in place."""
     engine.confirm = case.confirm
+    engine.timeout_ms = COMMAND_TIMEOUT_MS
     engine.put32(ZOOM, zoom)
     run = Run()
     try:

@@ -64,6 +64,7 @@ class Engine:
     trace: list[str] = field(default_factory=list)
     shell: Shell = field(default_factory=Shell)
     current_callback: int = 0
+    timeout_ms: int = 0              # wall-clock limit per call; 0 = none
 
     def __post_init__(self):
         self.pe = pefile.PE(str(EXE))
@@ -223,10 +224,12 @@ class Engine:
         self.uc.reg_write(UC_X86_REG_ESP, esp)
         self.trace.clear()
         try:
-            self.uc.emu_start(func, RETURN_SENTINEL, count=limit)
+            self.uc.emu_start(func, RETURN_SENTINEL, timeout=1000 * self.timeout_ms, count=limit)
         except UcError as err:
             self.trace.append(f"{err} at eip {self.reg(UC_X86_REG_EIP):#x}")
         finished = self.reg(UC_X86_REG_EIP) == RETURN_SENTINEL
+        if not finished and not self.trace and self.timeout_ms:
+            self.trace.append(f"no return within {self.timeout_ms} ms (eip {self.reg(UC_X86_REG_EIP):#x}); the engine loops")
         return finished, self.reg(UC_X86_REG_EAX)
 
     def initialize(self) -> int:
