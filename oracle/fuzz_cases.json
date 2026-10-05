@@ -391,49 +391,6 @@
   "detail": "\"3\" shifted by (211, 279)"
  },
  {
-  "name": "fuzz-code06-p8-p17-f76ce8",
-  "target": 1,
-  "items": [
-   {
-    "params": [
-     8.0,
-     1.0,
-     0.0
-    ],
-    "text": ""
-   },
-   {
-    "params": [
-     6,
-     1,
-     84.49,
-     4.5,
-     0,
-     0,
-     0,
-     34003,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     -1
-    ],
-    "text": ""
-   }
-  ],
-  "code": 6,
-  "signature": "code06-p8-p17|text missing",
-  "owner": "impl-beams",
-  "symptoms": [
-   "text missing"
-  ],
-  "detail": "\"?\" in Times 678.0/279.7 at (15334, 1369)"
- },
- {
   "name": "fuzz-code12-p5-ffbe10",
   "target": 1,
   "items": [

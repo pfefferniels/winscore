@@ -104,6 +104,7 @@ name = "score-testkit"
 version = "0.1.0"
 dependencies = [
  "score-format",
+ "score-layout",
  "score-render",
  "serde",
  "serde_json",

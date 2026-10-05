@@ -35,8 +35,12 @@ REPORT = FIXTURES / "FUZZ.md"
 COMPARE = Path("/Users/nielspfeffer/Projects/winscore/rust/target-verifier/release/score-compare")
 SCRATCH = SANDBOXES / "fuzz"
 
-CODES = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 18)
-OWNERS = {1: "impl-notes", 2: "impl-notes", 3: "impl-symbols", 4: "impl-lines", 5: "impl-beams", 6: "impl-beams",
+CODES = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18)
+LAYOUT = 0                            # pseudo code of findings from comparing layout commands
+EPS = Path(__file__).resolve().parents[1] / "WINSCORE 5.01" / "winscore" / "logo-col.eps"
+USER_LIBRARIES = {"KBRHY.DRW": (0, 1), "FAULT.DRW": (0,), "kbrhy.drw": (0, 1), "\\WINSCORE\\SCORLIB\\FAULT.DRW": (0,)}
+NAMED = {11: 13, 15: 13}              # codes whose file name follows P13 (code 11) or fills P14… (code 15)
+OWNERS = {LAYOUT: "input-lang", 1: "impl-notes", 2: "impl-notes", 3: "impl-symbols", 4: "impl-lines", 5: "impl-beams", 6: "impl-beams",
           7: "impl-lines", 8: "render-core", 9: "impl-lines", 10: "impl-symbols", 11: "impl-symbols",
           12: "impl-symbols", 14: "render-core", 15: "impl-lines", 16: "impl-text", 17: "impl-symbols", 18: "impl-text"}
 POSITIONED_PAIR = {4, 5, 6}
@@ -80,8 +84,9 @@ class Item:
         return text_item(list(self.text_layout() if self.text else self.params), self.text)
 
     def text_layout(self) -> tuple[float, ...]:
-        """The engine reads a text item's characters after P13, or after P16 when P14 = -1 (colour block)."""
-        width = 16 if self.p(14) == -1 else 13
+        """The engine reads a text item's characters after P13, or after P16 when P14 = -1 (colour block);
+        a code-11 item's file name always follows P13."""
+        width = 16 if self.code == 16 and self.p(14) == -1 else 13
         return tuple(self.p(n) for n in range(1, width + 1))
 
     def nonzero(self) -> list[int]:
@@ -94,23 +99,32 @@ class FuzzCase:
     name: str
     items: tuple[Item, ...]
     target: int | None          # index of the fuzzed item; None for a page
+    commands: tuple[str, ...] = ()
 
     @property
     def code(self) -> int:
         return self.items[self.target].code if self.target is not None else 0
 
+    @property
+    def label(self) -> str:
+        if self.commands:
+            return f"layout {self.commands[0]}"
+        return f"code {self.code:02d}" if self.target is not None else "pages"
+
     def case(self) -> Case:
         from musbuild import mus_bytes
-        return Case(self.name, f"fuzz {self.name}", mus_bytes([i.packed() for i in self.items]))
+        attachments = (EPS,) if any(i.code == 15 for i in self.items) else ()
+        return Case(self.name, f"fuzz {self.name}", mus_bytes([i.packed() for i in self.items]), self.commands,
+                    attachments)
 
     def to_json(self) -> dict:
-        return {"name": self.name, "target": self.target,
+        return {"name": self.name, "target": self.target, "commands": list(self.commands),
                 "items": [{"params": list(i.params), "text": i.text.decode("latin-1")} for i in self.items]}
 
     @classmethod
     def from_json(cls, d: dict) -> "FuzzCase":
         items = tuple(Item(tuple(i["params"]), i["text"].encode("latin-1")) for i in d["items"])
-        return cls(d["name"], items, d["target"])
+        return cls(d["name"], items, d["target"], tuple(d.get("commands", ())))
 
 
 # -- value pools ---------------------------------------------------------------------
@@ -123,7 +137,7 @@ def value_pools() -> dict[int, dict[int, list[float]]]:
         for packed in read_items(path.read_bytes()):
             code, count = int(param(packed, 1)), len(packed) // 4
             chars = int(param(packed, 12)) if code == 16 else 0
-            last = count - (chars + 3) // 4          # a text item's characters follow its parameters
+            last = NAMED.get(code, count - (chars + 3) // 4)   # characters (or a file name) follow the parameters
             for n in range(3, last + 1):
                 value = round(param(packed, n), 4)
                 if value and not (code == 16 and n in (12, 13)):
@@ -191,7 +205,31 @@ def random_item(rng: random.Random, code: int, pools: dict, staff: int = 1, x: f
     return item
 
 
+def user_symbol_item(rng: random.Random, pools: dict, staff: int) -> Item:
+    """Code 11: a symbol from one of the compact libraries shipped in scorlib, name after P13."""
+    name = rng.choice(list(USER_LIBRARIES))
+    item = random_item(rng, 11, pools, staff)
+    item = replace(item, text=name.encode("latin-1").ljust(128, b" ")).with_param(13, 0.0)
+    return item.with_param(5, float(rng.choice(USER_LIBRARIES[name])))
+
+
+def eps_item(rng: random.Random, pools: dict, staff: int) -> Item:
+    """Code 15: logo-col.eps with its bounding box read (P11 -9999) or as a placeholder (P11 0)."""
+    from fixtures_code15 import BOUNDING_BOX, BOUNDING_BOX_READ, name_words
+    item = random_item(rng, 15, {15: {n: v for n, v in pools[15].items() if n in (4, 5, 6, 12, 26)}}, staff)
+    fixed = {7: BOUNDING_BOX["p7"], 8: BOUNDING_BOX["p8"], 9: BOUNDING_BOX["p9"], 10: BOUNDING_BOX["p10"],
+             11: BOUNDING_BOX_READ if rng.random() < 0.8 else 0}
+    fixed |= {int(k[1:]): v for k, v in name_words("logo-col.eps").items()}
+    for n, value in sorted(fixed.items()):
+        item = item.with_param(n, float(value))
+    return item
+
+
 def single_case(rng: random.Random, code: int, pools: dict, index: int) -> FuzzCase:
+    if code in (11, 15):
+        staves = [staff_item(rng, 1, varied=rng.random() < 0.3)]
+        item = (user_symbol_item if code == 11 else eps_item)(rng, pools, 1)
+        return FuzzCase(f"code{code}-{index}", (*staves, item), 1)
     if code == 8:
         staff = random_item(rng, 8, pools)
         staff = replace(staff, params=(8.0, float(rng.choice([1, 1, 2, 3])), *staff.params[2:]))
@@ -200,6 +238,51 @@ def single_case(rng: random.Random, code: int, pools: dict, index: int) -> FuzzC
     on = 2 if code == 1 and rng.random() < 0.3 else 1
     item = random_item(rng, code, pools, staff=on)
     return FuzzCase(f"code{code:02d}-{index}", (*staves, item), len(staves))
+
+
+MEASURE_RHYTHMS = [(1, 1, 1, 1), (2, 1, 1), (1, 1, 2), (0.5, 0.5, 1, 2), (1.5, 0.5, 2), (4,), (3, 1), (2, 2),
+                   (0.5, 0.5, 0.5, 0.5, 1, 1), (1, 0.5, 0.5, 1, 1), (0.25, 0.25, 0.5, 1, 2), (1.5, 0.5, 1, 1)]
+
+
+def layout_note(rng: random.Random, staff: int, x: float, rhythm: float, pools: dict) -> Item:
+    """A note (sometimes a rest) of the given duration, with occasional accidentals, dots and flags."""
+    if rng.random() < 0.12:
+        rest_type = {4: -2, 2: -1, 1: 0, 0.5: 1, 0.25: 2}.get(rhythm, 0)
+        return Item((2.0, float(staff), x, 0.0, float(rest_type), 0.0, float(rhythm)))
+    head = 2 if rhythm >= 4 else 1 if rhythm >= 2 else 0
+    stem = 0 if rhythm >= 4 else rng.choice([10, 20])
+    accidental = rng.choice([0, 0, 0, 0, 1, 2, 3])
+    dots = 1 if rhythm in (1.5, 3, 0.75) else 0
+    tails = {0.5: 1, 0.25: 2}.get(rhythm, 0)
+    item = Item((1.0, float(staff), x, float(rng.randint(-2, 12)), float(stem + accidental), float(head), float(rhythm),
+                 0.0, float(10 * dots + tails)))
+    if rng.random() < 0.08:
+        item = item.with_param(10, float(rng.choice([10, 20])))
+    return item
+
+
+def layout_case(rng: random.Random, pools: dict, index: int) -> FuzzCase:
+    """A system of one to three staves with equal-length measures at uneven positions, then LI, LJ or LJA."""
+    count = rng.choice([1, 2, 2, 3])
+    measures = rng.randint(2, 4)
+    items = [staff_item(rng, n + 1, varied=rng.random() < 0.2) for n in range(count)]
+    items += [Item((3.0, float(n + 1), 2.0, 0.0, float(rng.choice([0, 1])))) for n in range(count)]
+    items += [Item((14.0, 1.0, 0.0, float(count)))]
+    x = 8.0
+    for measure in range(measures):
+        start, longest = x, 0.0
+        for staff in range(1, count + 1):
+            sx = start + rng.uniform(1, 4)
+            for rhythm in rng.choice(MEASURE_RHYTHMS):
+                items.append(layout_note(rng, staff, round(sx, 2), rhythm, pools))
+                sx += rng.uniform(3, 12) * (rhythm ** 0.5)
+            longest = max(longest, sx)
+        x = round(min(longest + 2, 196.0 * (measure + 1) / measures), 2)
+        items.append(Item((14.0, 1.0, x, float(count))))
+        x += 2
+    command = rng.choice(["LI", "LJ", "LJ", "LJA"])
+    commands = (command,) if command == "LJA" else (command, f"1 {count}")
+    return FuzzCase(f"layout-{index}", tuple(items), None, commands)
 
 
 def page_case(rng: random.Random, pools: dict, index: int) -> FuzzCase:
@@ -321,7 +404,9 @@ def deviation(item: Item) -> str | None:
         (c == 5 and any(item.p(n) and not 0 < item.p(n) <= 1 for n in (14, 15)),
          "slur cut P14/P15 outside 0…1 finds no place and reads stale state (impl-beams)"),
         (c == 6 and item.p(10) == 0 and item.p(8) <= 0 and item.p(13) != 0, "second partial with stale line (impl-beams)"),
-        (c == 6 and item.p(8) != 0 and int(item.p(17)) >= 1, "beam number letter from P17 (impl-beams, by design)"),
+        (c == 6 and item.p(8) != 0 and int(item.p(17)) != 0, "beam number letter from P17 (impl-beams, by design)"),
+        (c == 5 and 1 <= int(item.p(8)) <= 9 and int(item.p(8)) != 3 and int(item.p(12)) < 0,
+         "ending number with P12 < 0 placed from a stale x offset (impl-beams, stale state)"),
         (c == 12 and item.p(16) == 1, "box P16 = 1 cm scaling (impl-lines, not imitated)"),
         (c == 7 and item.p(7) == 1 and (item.p(16) == 1 or item.p(18) != 0),
          "harp diagram boxes read P16 as the box cm flag (impl-lines, not imitated)"),
@@ -439,8 +524,9 @@ def signature(case: FuzzCase, code: int, symptoms: set[str]) -> str:
 
 def saved_name(case: FuzzCase, code: int, sig: str) -> str:
     params = sig.split("|")[0].split("-", 1)[1] if "-" in sig.split("|")[0] else "base"
-    digest = hashlib.sha1(json.dumps(case.to_json()["items"]).encode()).hexdigest()[:6]
-    return f"fuzz-code{code:02d}-{params or 'base'}-{digest}"[:72]
+    digest = hashlib.sha1(json.dumps(case.to_json()).encode()).hexdigest()[:6]
+    prefix = f"fuzz-layout-{case.commands[0].lower()}" if code == LAYOUT and case.commands else f"fuzz-code{code:02d}"
+    return f"{prefix}-{(params or 'base')[:40]}-{digest}"
 
 
 def load_saved() -> list[dict]:
@@ -457,6 +543,7 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--per-code", type=int, default=200)
     parser.add_argument("--pages", type=int, default=50)
+    parser.add_argument("--layouts", type=int, default=100, help="random systems run through LI, LJ or LJA")
     parser.add_argument("--codes", default=",".join(map(str, CODES)))
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--jobs", type=int, default=4, help="workers; the machine is shared, keep it small")
@@ -485,6 +572,7 @@ def fuzz_round(args, pool) -> dict:
     codes = [int(c) for c in args.codes.split(",") if c]
     cases = [single_case(rng, code, pools, i) for code in codes for i in range(args.per_code)]
     cases += [page_case(rng, pools, i) for i in range(args.pages)]
+    cases += [layout_case(rng, pools, i) for i in range(args.layouts)]
     print(f"{len(cases)} cases", flush=True)
     results = []
     for done, batch in enumerate(pool.map(evaluate_batch, chunks(cases, 25)), start=1):
@@ -492,7 +580,7 @@ def fuzz_round(args, pool) -> dict:
         if done % 20 == 0:
             print(f"{len(results)} of {len(cases)} evaluated", flush=True)
     per_code, deviations, new = analyse(results, args, pool)
-    return {"seed": args.seed, "per_code": args.per_code, "pages": args.pages,
+    return {"seed": args.seed, "per_code": args.per_code, "pages": args.pages, "layouts": args.layouts,
             "counts": {label: dict(c) for label, c in sorted(per_code.items())},
             "deviations": dict(deviations.most_common()), "new_cases": new}
 
@@ -525,7 +613,7 @@ def analyse(results: list[Result], args, pool) -> tuple[dict[str, Counter], Coun
     to_shrink: dict[str, list[tuple[Result, int]]] = defaultdict(list)
     deviations: Counter = Counter()
     for r in results:
-        label = f"code {r.case.code:02d}" if r.case.target is not None else "pages"
+        label = r.case.label
         per_code[label]["cases"] += 1
         if not r.valid:
             per_code[label]["invalid (oracle)"] += 1
@@ -592,7 +680,8 @@ def render_report(rounds: list[dict], saved: dict[str, dict], rechecked: dict[st
              "panics. Combinations the owners list as deliberate deviations are counted apart. Cases the oracle rejects "
              "(dialogs, messages, coordinate overflow) are *invalid* and not compared.", ""]
     for number, rnd in reversed(list(enumerate(rounds, start=1))):
-        lines += [f"## Round {number} (seed {rnd['seed']}, {rnd['per_code']} items per code, {rnd['pages']} pages)", "",
+        layouts = f", {rnd['layouts']} layout systems" if rnd.get("layouts") else ""
+        lines += [f"## Round {number} (seed {rnd['seed']}, {rnd['per_code']} items per code, {rnd['pages']} pages{layouts})", "",
                   "| | cases | invalid (oracle) | match | known deviation | mismatch | mismatch rate |",
                   "|---|---|---|---|---|---|---|"]
         for label, c in rnd["counts"].items():
