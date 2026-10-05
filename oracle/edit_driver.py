@@ -22,6 +22,12 @@ coordinates: engine units from the paper's bottom-left corner, y up, as score-re
 They are sent as the view does (analysis/engine/editing.md): the point goes to the engine's
 mouse globals, converted with the engine's current VIEW_DX/VIEW_DY.
 
+Lines starting with '!' are for the driver. "!transpose half=2 stems=1 clef=1 key=1 cue=1"
+gives the values the Transpose Setup dialog returns when TR next opens it (half steps;
+normalize stems; clef change, -1 none (the default), 0 treble, 1 bass, 2 alto, 3 tenor;
+add a key signature; transpose cue notes). "!skip-lineup" makes the lineup pass of
+LJ/LI/J, which TR runs at its end, return at once, so the rest can be checked on its own.
+
 EXPECTED gets one block per case: the items of the saved score, one per line. Values are
 printed with 9 significant digits, so every f32 reads back exactly; text items end with
 their characters in quotes. Lines starting with '#' carry the engine's messages and are
@@ -37,6 +43,8 @@ import tempfile
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
+
+from unicorn import UC_HOOK_CODE
 
 from emu import COMMAND, ENGINE_ZOOM, FLAG_9A9498, LINE_BUF, MESSAGE_BUF, TEXT_OUT, ZOOM, Engine, EngineResult
 from musbuild import mus_bytes, text_item
@@ -59,14 +67,59 @@ YES_NO_QUESTION = 0x595CD0
 YES = 1
 
 
+# The Transpose Setup dialog (0x599E90) edits 19 ints at its first argument; the fields
+# found by experiment and in TR (0x55B1F8), as "!transpose half=2 clef=1" lines name them.
+# A clef of -1 is the dialog's "No Clef Change".
+TRANSPOSE_DIALOG = 0x599E90
+TRANSPOSE_FIELDS = {"half": 10, "stems": 11, "clef": 13, "key": 14, "cue": 15}
+TRANSPOSE_DEFAULTS = {"clef": -1}
+# LJ/LI/J's pass (ret 0x10); TR ends with it on every staff.
+LINEUP_PASS, LINEUP_ARG_BYTES = 0x4B80B7, 16
+
+
+@dataclass
 class EditEngine(Engine):
-    """The emulated engine, answering yes to the questions group edits ask."""
+    """The emulated engine, answering yes to the questions group edits ask, filling
+    the transpose dialog with the values of the last "!transpose" line and, after
+    "!skip-lineup", returning at once from the lineup pass."""
+    transpose: dict[int, int] = field(default_factory=dict)
+    skip_lineup: bool = False
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.uc.hook_add(UC_HOOK_CODE, self._on_lineup, begin=LINEUP_PASS, end=LINEUP_PASS)
+
+    def _on_lineup(self, uc, address, size, user):
+        if self.skip_lineup:
+            self.shell.record("dialog", "lineup pass skipped")
+            self.return_from_call(0, LINEUP_ARG_BYTES)
 
     def _on_cpp(self, uc, address, size, user):
-        if address != YES_NO_QUESTION:
-            return super()._on_cpp(uc, address, size, user)
-        self.shell.record("question", f"{self.cstr(self.arg(0), 200).strip()} -> yes")
-        self.return_from_call(YES, 0)
+        if address == YES_NO_QUESTION:
+            self.shell.record("question", f"{self.cstr(self.arg(0), 200).strip()} -> yes")
+            self.return_from_call(YES, 0)
+        elif address == TRANSPOSE_DIALOG:
+            record = self.arg(0)
+            for index, value in self.transpose.items():
+                self.uc.mem_write(record + 4 * index, struct.pack("<i", value))
+            self.shell.record("dialog", f"transpose {self.transpose}")
+            self.return_from_call(YES, 0)
+        else:
+            super()._on_cpp(uc, address, size, user)
+
+
+def directive(engine: EditEngine, line: str) -> bool:
+    """A line for the driver rather than the engine: "!transpose half=2 clef=1" sets the
+    values of the next transpose dialog, "!skip-lineup" turns the lineup pass off."""
+    word, *rest = line.split() or [""]
+    if word == "!transpose":
+        values = TRANSPOSE_DEFAULTS | dict(pair.split("=") for pair in rest)
+        engine.transpose = {TRANSPOSE_FIELDS[name]: int(value) for name, value in values.items()}
+    elif word == "!skip-lineup":
+        engine.skip_lineup = True
+    else:
+        return False
+    return True
 
 
 @dataclass(frozen=True)
@@ -179,6 +232,8 @@ def run_case(case: Case) -> Outcome:
         engine.command("G base.mus")
         transcript, status = [], 0
         for command in case.commands:
+            if directive(engine, command):
+                continue
             result = mouse(engine, command) or engine.command(command)
             status = result.status
             transcript.append(f"[{command}] status {status}: {result.message[:100]}")
