@@ -41,6 +41,7 @@ TEXT_BASELINE_OFFSET = 96       # OnDraw (0x5E5910): the baseline of a string is
 VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4   # emit_points: x_out = x + VIEW_DX, y_out = y - VIEW_DY
 PAGE_FROM_INTERNAL = (2000, 26948)        # paper bottom-left at internal (-2000, -26947.7); analysis/engine/coordinates.md
 ITEM_COUNT = 0x20B8E24          # number of items, and the 1-based loop index while drawing
+ITEM_WORDS, ITEM_START = 0x205343C, 0x2091D1C   # item store: P_k of item i at ITEM_WORDS + 4 (start[i] + k); dispatch.md
 # Pen-width records (tag = colour + pen << 24), print metadata that also reaches the screen (impl-notes):
 # 0x4D4F3F writes (0, 0, pen -99) "reset width", 0x4D4ED2 writes (999, w, pen 99) "set width".
 PEN_RESET_KIND, PEN_SET_KIND, PEN_SET_X = 0x9D, 0x63, 999
@@ -91,11 +92,17 @@ class Run:
     final: EngineResult | None = None
     vector_writers: dict[int, int] = field(default_factory=dict)
     text_writers: dict[int, int] = field(default_factory=dict)
-    excluded: dict[int, str] = field(default_factory=dict)   # 0-based item -> reason
+    excluded: dict[int, str] = field(default_factory=dict)   # 0-based file item -> reason
+    to_file: list[int | None] = field(default_factory=list)  # engine item (0-based) -> item of the drawn file
     result_mus: bytes | None = None
     view_dx: int = 0
     view_dy: int = 0
     error: str = ""
+
+    def file_item(self, engine_item: int | None) -> int | None:
+        if engine_item is None or engine_item >= len(self.to_file):
+            return None
+        return self.to_file[engine_item]
 
     @property
     def offset(self) -> tuple[int, int]:
@@ -157,6 +164,25 @@ class FixtureEngine(Engine):
         self.text_writers.clear()
         return super().command(text)
 
+    def item_store(self) -> list[tuple[float, float, float]]:
+        """P1-P3 of the items the engine holds, in its order (it drops some on load, e.g. codes 0 and 13)."""
+        def word(address: int) -> float:
+            return struct.unpack("<f", bytes(self.uc.mem_read(address, 4)))[0]
+        starts = [self.i32(ITEM_START + 4 * i) for i in range(1, self.i32(ITEM_COUNT) + 1)]
+        return [tuple(word(ITEM_WORDS + 4 * (w + k)) for k in (1, 2, 3)) for w in starts]
+
+
+def align(store: list[tuple[float, float, float]], items: list[bytes]) -> list[int | None]:
+    """Each engine item's index in the file: the next file item with the same P1-P3, in order."""
+    as_f32 = (lambda v: struct.unpack("<f", struct.pack("<f", v))[0])
+    keys = [tuple(as_f32(param(packed, n)) for n in (1, 2, 3)) for packed in items]
+    mapping, cursor = [], 0
+    for key in store:
+        found = next((j for j in range(cursor, len(keys)) if keys[j] == key), None)
+        mapping.append(found)
+        cursor = found + 1 if found is not None else cursor
+    return mapping
+
 
 def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     """A case in a newly booted engine."""
@@ -182,10 +208,14 @@ def run_on(engine: FixtureEngine, case: Case, root: Path, zoom: int = BASE_ZOOM)
     run.view_dx, run.view_dy = engine.i32(VIEW_DX), engine.i32(VIEW_DY)
     run.vector_writers = dict(engine.vector_writers)
     run.text_writers = dict(engine.text_writers)
+    store = engine.item_store() if not run.error else []
     if case.commands and not run.error:
         run.result_mus = saved_score(engine, root)
     drawn = read_items(run.result_mus) if run.result_mus else read_items(case.mus)
-    run.excluded = stale_symbol_items(read_items(case.mus), engine.missing_library, drawn)
+    run.to_file = align(store, drawn)
+    missing = {f: notice for e, notice in engine.missing_library.items()
+               if e < len(run.to_file) and (f := run.to_file[e]) is not None}
+    run.excluded = stale_symbol_items(drawn, missing, drawn)
     if run.final is not None:
         try:
             text_runs(run.final.text)
@@ -286,13 +316,13 @@ class PageView:
         all_shapes = shapes([run.final.vector[k] for k in kept])
         frames = [PageFrame.of(s) for s in all_shapes if is_page_frame(s)]
         content = [(s, item) for s in all_shapes if not is_page_frame(s)
-                   if (item := shape_writer(s, kept, run.vector_writers)) not in run.excluded]
+                   if (item := run.file_item(shape_writer(s, kept, run.vector_writers))) not in run.excluded]
         records = len(run.final.vector) - len(kept)
         # The shell would draw each record as a one-point object of its own kind.
         notes = [f"{records} pen-width record(s) left out"] if records else []
         if any(i is None for _, i in content):
             notes.append("shapes without a single writing item; not attributed")
-        attributed = [(r, run_writer(r, run.text_writers)) for r in text_runs(run.final.text)]
+        attributed = [(r, run.file_item(run_writer(r, run.text_writers))) for r in text_runs(run.final.text)]
         runs = [r for r, item in attributed if item not in run.excluded]
         text_items = [item for _, item in attributed if item not in run.excluded]
         if None in text_items:
@@ -441,6 +471,13 @@ def warnings(run: Run, view: PageView | None) -> list[str]:
     return notes
 
 
+def dropped_items(case: Case, run: Run) -> list[int]:
+    """File items the engine did not keep on load (it drops codes 0 and 13, for instance)."""
+    drawn = read_items(run.result_mus) if run.result_mus else read_items(case.mus)
+    kept = set(run.to_file)
+    return [n for n in range(len(drawn)) if n not in kept] if run.to_file else []
+
+
 def meta_json(case: Case, run: Run, zoom_run: Run | None, view: PageView | None) -> dict:
     title = document_title(run.events)
     items = TITLE_ITEMS.search(title)
@@ -464,6 +501,7 @@ def meta_json(case: Case, run: Run, zoom_run: Run | None, view: PageView | None)
         "events": [{"kind": e.kind, "detail": e.detail} for e in run.events if e.kind not in QUIET_EVENTS],
         "not_found": counted(e.detail for e in run.events if e.kind == "not-found"),
         "excluded_items": [{"item": i, "reason": reason} for i, reason in sorted(run.excluded.items())],
+        "dropped_items": dropped_items(case, run),
         "zoom_checked": zoom_run is not None,
         "valid": not reasons,
         "invalid_reasons": reasons,
