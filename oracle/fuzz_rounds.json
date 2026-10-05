@@ -1,0 +1,137 @@
+[
+ {
+  "seed": 104,
+  "per_code": 300,
+  "pages": 100,
+  "counts": {
+   "code 01": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 299,
+    "known deviation": 1,
+    "mismatch": 0
+   },
+   "code 02": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 299,
+    "known deviation": 0,
+    "mismatch": 1
+   },
+   "code 03": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 297,
+    "known deviation": 0,
+    "mismatch": 3
+   },
+   "code 04": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 300,
+    "known deviation": 0,
+    "mismatch": 0
+   },
+   "code 05": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 291,
+    "known deviation": 9,
+    "mismatch": 0
+   },
+   "code 06": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 292,
+    "known deviation": 8,
+    "mismatch": 0
+   },
+   "code 07": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 299,
+    "known deviation": 0,
+    "mismatch": 1
+   },
+   "code 08": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 264,
+    "known deviation": 36,
+    "mismatch": 0
+   },
+   "code 09": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 300,
+    "known deviation": 0,
+    "mismatch": 0
+   },
+   "code 10": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 300,
+    "known deviation": 0,
+    "mismatch": 0
+   },
+   "code 12": {
+    "cases": 300,
+    "invalid (oracle)": 1,
+    "match": 283,
+    "known deviation": 6,
+    "mismatch": 10
+   },
+   "code 14": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 300,
+    "known deviation": 0,
+    "mismatch": 0
+   },
+   "code 16": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 299,
+    "known deviation": 0,
+    "mismatch": 1
+   },
+   "code 17": {
+    "cases": 300,
+    "invalid (oracle)": 1,
+    "match": 299,
+    "known deviation": 0,
+    "mismatch": 0
+   },
+   "code 18": {
+    "cases": 300,
+    "invalid (oracle)": 0,
+    "match": 300,
+    "known deviation": 0,
+    "mismatch": 0
+   },
+   "pages": {
+    "cases": 100,
+    "invalid (oracle)": 2,
+    "match": 90,
+    "known deviation": 0,
+    "mismatch": 8
+   }
+  },
+  "deviations": {
+   "staff 1 placed by its own P10 moves on every draw (engine; analysis/engine/coordinates.md)": 36,
+   "slur cut P14/P15 outside 0\u20261 finds no place and reads stale state (impl-beams)": 9,
+   "box P16 = 1 cm scaling (impl-lines, not imitated)": 6,
+   "beam number letter from P17 (impl-beams, by design)": 5,
+   "second partial with stale line (impl-beams)": 3,
+   "P13 = 99 mark position (impl-notes, by design)": 1
+  },
+  "new_cases": [
+   "fuzz-code01-p11-p14-5b0460",
+   "fuzz-code02-p8-p15-37bcaa",
+   "fuzz-code03-p5-p10-e6050f",
+   "fuzz-code07-p7-p16-1b6f6e",
+   "fuzz-code12-p5-ffbe10",
+   "fuzz-code16-p8-p9-b70d9e"
+  ]
+ }
+]

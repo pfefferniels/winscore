@@ -25,7 +25,7 @@ fn every_input_parses() {
         if let Some(items) = f.meta.items {
             assert_eq!(
                 file.items.len() as u32,
-                items,
+                items + f.meta.dropped_items.len() as u32,
                 "{}: item count differs from the engine's",
                 f.name
             );
