@@ -39,20 +39,14 @@ Every case in `oracle/fuzz_cases.json` (fixtures `rust/fixtures/<name>/`), shrun
 | fuzz-code02-p6-p8-c48746 | impl-notes | open | text style | `8 1 0; 2 1 164.33 2.5 0 -1 0 -3` | "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 813.5/335.6 #999999 w400 esc 0 |
 | fuzz-code02-p8-p15-37bcaa | impl-notes | open | text style | `8 1 0; 2 1 138.05 6 0 0 0 -3 0 0 0 0 0 0 0.8` | "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 650.8/268.5 #000000 w400 esc 0 |
 | fuzz-code02-p8-p17-c92312 | impl-notes | open | text offset | `8 2 0; 2 2 43 4 0 0 0 -3 0 0 0 0 0 0 0 0 1` | "G" shifted by (0, -3150) |
-| fuzz-code03-p5-p10-e6050f | impl-symbols | open | extra | `8 1 0; 3 1 88.48 0 0.1 0 0 0 0 1` | fill #000000, 1 path(s), 62 points from (15678, 4037) |
-| fuzz-code03-p5-p10-e66eab | impl-symbols | open | extra | `8 1 0; 3 1 60.13 6 0.9 0 0 0 0 2` | fill #000000, 1 path(s), 62 points from (11425, 5087) |
+| fuzz-code03-p5-p10-e6050f | impl-symbols | fixed | extra | `8 1 0; 3 1 88.48 0 0.1 0 0 0 0 1` | fill #000000, 1 path(s), 62 points from (15678, 4037) |
+| fuzz-code03-p5-p10-e66eab | impl-symbols | fixed | extra | `8 1 0; 3 1 60.13 6 0.9 0 0 0 0 2` | fill #000000, 1 path(s), 62 points from (11425, 5087) |
 | fuzz-code05-p11-p16-2701e0 | impl-beams | open | text offset | `8 1 0; 5 1 26.49 5 0 0 0 0 0 0 2 0 0 0 0 12` | "1" shifted by (98, 336) |
 | fuzz-code05-p11-p16-cf241b | impl-beams | open | text offset | `8 1 0; 5 1 121.01 13 0 0 0 0 0 0 3 0 0 0 0 3` | "3" shifted by (211, 279) |
 | fuzz-code06-p8-p17-f76ce8 | impl-beams | open | text missing | `8 1 0; 6 1 84.49 4.5 0 0 0 34003 0 0 0 0 0 0 0 0 -1` | "?" in Times 678.0/279.7 at (15334, 1369) |
-| fuzz-code07-p7-p16-1b6f6e | impl-lines | open | distorted | `8 1 0; 7 1 46.27 -4 0 0 1 0 0 0 0 0 0 0 0 1` | same structure, off by up to 11474 after aligning |
-| fuzz-code07-p7-p18-634834 | impl-lines | open | distorted | `8 1 0; 7 1 128.06 12 0 0 1 0 0 0 0 0 0 0 0 0 0 3` | same structure, off by up to 11474 after aligning |
-| fuzz-code10-p6-p19-efc753 | impl-symbols | open | text offset | `8 1 0; 10 1 70.96 0 0 76 0 0 0 0 0 0 0 0 0 0 0 0 -90` | "0" shifted by (-20000, 1) |
-| fuzz-code12-p5-ffbe10 | impl-symbols | open | absent | `8 1 0; 12 1 133.74 7 -2` | stroke #000000, 1 path(s), 2 points from (22061, 3648) |
-| fuzz-code12-p5-p11-cbf4b8 | impl-symbols | open | absent | `8 1 0; 12 1 16.39 0.5 5 0 0 0 0 0 270` | stroke #000000, 1 path(s), 181 points from (5333, 2511) |
-| fuzz-code12-p5-p11-ec0e0d | impl-symbols | open | absent | `8 1 0; 12 1 32.9 8 5 0 0 0 0 0 405` | stroke #000000, 1 path(s), 91 points from (7810, 3823) |
-| fuzz-code12-p5-p8-ee6fed | impl-symbols | open | distorted | `8 2 0 0 1.5; 12 2 15.21 7 1 0 0 111` | same structure, off by up to 64836 after aligning |
-| fuzz-code12-p5-p8-p11-97487e | impl-symbols | open | distorted | `8 1 0; 12 1 75.13 5 1 0 0 1010 0 0 60` | same structure, off by up to 62467 after aligning |
+| fuzz-code10-p6-p19-efc753 | impl-text | open | text offset | `8 1 0; 10 1 70.96 0 0 76 0 0 0 0 0 0 0 0 0 0 0 0 -90` | "0" shifted by (-20000, 1) (draw_text re-encodes x < -19000 internal by +20000; handed over by impl-symbols) |
+| fuzz-code12-p5-ffbe10 | impl-symbols | fixed | absent | `8 1 0; 12 1 133.74 7 -2` | stroke #000000, 1 path(s), 2 points from (22061, 3648) |
+| fuzz-code12-p5-p11-cbf4b8 | impl-symbols | fixed | absent | `8 1 0; 12 1 16.39 0.5 5 0 0 0 0 0 270` | stroke #000000, 1 path(s), 181 points from (5333, 2511) |
+| fuzz-code12-p5-p11-ec0e0d | impl-symbols | fixed | absent | `8 1 0; 12 1 32.9 8 5 0 0 0 0 0 405` | stroke #000000, 1 path(s), 91 points from (7810, 3823) |
 | fuzz-code16-p8-p9-b70d9e | impl-text | open | offset | `8 1 0; 16 1 139.97 8 0 0 0 94 90 0 0 15 0 "_05DS7960Ea:9-'"` | shifted by (688, 688), residual 0 |
 | fuzz-code16-p9-862d87 | impl-text | open | offset | `8 1 0; 16 1 140.07 -6 0 0 0 0 180 0 0 20 0 '_90Allegro [ = 120 ]'` | shifted by (5576, 0), residual 0 |
-| fuzz-code17-p5-p10-ad28d4 | impl-symbols | open | distorted | `8 1 0; 17 1 109.79 0 5 0 0 0 0 309` | same structure, off by up to 825 after aligning |
-| fuzz-code17-p5-p10-b79043 | impl-symbols | open | distorted | `8 1 0; 17 1 32.71 0 -3 0 0 0 0 309` | same structure, off by up to 43 after aligning |

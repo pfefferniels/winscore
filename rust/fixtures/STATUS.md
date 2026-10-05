@@ -6,8 +6,8 @@ Written by `score-compare` (crate `score-testkit`). Compared: the engine's `engi
 
 | group | cases | valid | compared | matching | shapes | texts |
 |---|---|---|---|---|---|---|
-| code01 | 327 | 327 | 327 | 325 | 2881/2883 +2 | 416/416 |
-| code02 | 148 | 148 | 148 | 148 | 1297/1297 | 159/159 |
+| code01 | 345 | 345 | 345 | 343 | 3027/3029 +2 | 498/498 |
+| code02 | 152 | 152 | 152 | 152 | 1328/1328 | 216/216 |
 | code03 | 96 | 96 | 96 | 96 | 1132/1132 | 124/124 |
 | code04 | 113 | 113 | 113 | 113 | 1959/1959 | 116/116 |
 | code05 | 105 | 105 | 105 | 105 | 770/770 | 148/148 |
@@ -16,16 +16,18 @@ Written by `score-compare` (crate `score-testkit`). Compared: the engine's `engi
 | code08 | 59 | 59 | 59 | 59 | 419/419 | 92/92 |
 | code09 | 105 | 105 | 105 | 105 | 1560/1560 | 139/139 |
 | code10 | 71 | 71 | 71 | 71 | 378/378 | 263/263 |
-| code12 | 110 | 110 | 110 | 107 | 907/944 | 112/112 |
+| code11 | 30 | 30 | 30 | 30 | 496/496 | 33/33 |
+| code12 | 173 | 173 | 173 | 173 | 2259/2259 | 352/352 |
 | code14 | 93 | 93 | 93 | 93 | 2410/2410 | 359/359 |
 | code15 | 20 | 20 | 20 | 20 | 143/143 | 23/23 |
-| code16 | 126 | 126 | 126 | 126 | 698/698 | 1988/1988 |
+| code16 | 133 | 133 | 133 | 133 | 744/744 | 2088/2088 |
 | code17 | 42 | 42 | 42 | 42 | 950/950 | 44/44 |
 | code18 | 47 | 47 | 47 | 47 | 400/400 | 55/55 |
 | code99 | 17 | 17 | 17 | 17 | 291/291 | 26/26 |
-| fuzz | 23 | 23 | 23 | 0 | 18971/20040 +1113 | 38/56 +17 |
+| corpus | 3 | 3 | 3 | 3 | 3777/3777 | 552/552 |
+| fuzz | 17 | 17 | 17 | 5 | 133/159 +26 | 32/50 +17 |
 | layout | 3 | 3 | 3 | 3 | 134/134 | 5/5 |
-| sample | 6 | 6 | 6 | 5 | 7868/7952 | 2122/2143 |
+| sample | 6 | 6 | 6 | 6 | 7952/7952 | 2143/2143 |
 
 ## By item code
 
@@ -33,27 +35,37 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 
 | code | items | fixtures with output | fully matching | shapes | texts |
 |---|---|---|---|---|---|
-| 1 | notes | 352 | 348 | 5996/6000 +4 | 75/76 +1 |
-| 2 | rests | 154 | 150 | 1302/1304 +2 | 5/17 +12 |
-| 3 | clefs | 107 | 105 | 998/998 +60 | 27/27 |
-| 4 | lines, hairpins | 118 | 118 | 1482/1482 | 0/0 |
-| 5 | slurs, brackets | 116 | 114 | 390/390 | 44/47 +3 |
-| 6 | beams | 85 | 84 | 554/554 | 18/19 |
-| 7 | trills, ottava, pedal | 73 | 71 | 1164/1178 +14 | 45/45 |
-| 8 | staves | 1650 | 1650 | 10179/10179 | 2118/2118 |
-| 9 | library symbols | 111 | 111 | 1409/1409 | 83/83 |
-| 10 | numbers | 76 | 75 | 41/41 | 321/322 +1 |
-| 12 | boxes, grids | 115 | 106 | 1340/1698 +221 | 0/21 |
-| 14 | barlines | 111 | 111 | 845/845 | 0/0 |
+| 1 | notes | 373 | 369 | 8670/8674 +4 | 84/85 +1 |
+| 2 | rests | 161 | 157 | 1392/1394 +2 | 14/26 +12 |
+| 3 | clefs | 110 | 110 | 1148/1148 | 27/27 |
+| 4 | lines, hairpins | 121 | 121 | 1536/1536 | 0/0 |
+| 5 | slurs, brackets | 121 | 119 | 469/469 | 50/53 +3 |
+| 6 | beams | 89 | 88 | 747/747 | 21/22 |
+| 7 | trills, ottava, pedal | 72 | 72 | 1152/1152 | 48/48 |
+| 8 | staves | 1769 | 1769 | 10914/10914 | 2273/2273 |
+| 9 | library symbols | 116 | 116 | 1455/1455 | 97/97 |
+| 10 | numbers | 78 | 77 | 41/41 | 337/338 +1 |
+| 11 | user symbols | 29 | 29 | 341/341 | 0/0 |
+| 12 | boxes, grids | 176 | 176 | 1520/1520 | 198/198 |
+| 14 | barlines | 115 | 115 | 1043/1043 | 0/0 |
 | 15 | EPS | 21 | 21 | 42/42 | 0/0 |
-| 16 | text | 135 | 133 | 85/107 +22 | 3685/3685 |
-| 17 | key signatures | 48 | 46 | 18786/19578 +792 | 0/0 |
-| 18 | meters | 56 | 56 | 340/340 | 8/8 |
+| 16 | text | 154 | 152 | 85/107 +22 | 4351/4351 |
+| 17 | key signatures | 49 | 49 | 1126/1126 | 0/0 |
+| 18 | meters | 59 | 59 | 366/366 | 8/8 |
 
 ## Cases
 
 | case | result | shapes | texts | max dev | note |
 |---|---|---|---|---|---|
+| code01-corpus-mark-m29 | match | 9/9 | 1/1 | 0 | mark P11 = -29 on the stem side |
+| code01-corpus-mark29 | match | 9/9 | 1/1 | 0 | mark P11 = 29 (as in Sapp's code-1 parameter sheet) |
+| code01-corpus-mark29-down | match | 9/9 | 1/1 | 0 | mark P11 = 29, stem down |
+| code01-corpus-mark29-p14 | match | 9/9 | 1/1 | 0 | mark P11 = 29 moved by P14 = -2 (as in Sapp's code-1 parameter sheet) |
+| code01-font-after-alpha | match | 7/7 | 13/13 | 0 | plain text after _02 text and an AlphaNote (letter font 1005) |
+| code01-font-after-alpha-p21 | match | 7/7 | 13/13 | 0 | plain text after _02 text and an AlphaNote with P21 = 3 |
+| code01-font-after-fingering | match | 7/7 | 13/13 | 0 | plain text after _02 text and a fingering mark (font 1000) |
+| code01-font-after-plain-note | match | 7/7 | 12/12 | 0 | plain text after _02 text and a plain note (loads none) |
+| code01-font-after-tab | match | 5/5 | 13/13 | 0 | plain text after _02 text and a tablature number (font 1005) |
 | code01-grace-down | match | 7/7 | 1/1 | 0 | grace note P4 = 105, stem down |
 | code01-grace-ledger | match | 8/8 | 1/1 | 0 | grace note on P4 = 100 (ledger line) |
 | code01-grace-mark | match | 8/8 | 1/1 | 0 | grace note with staccato |
@@ -99,6 +111,10 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code01-p11-mark-26 | match | 9/9 | 1/1 | 0 | mark P11 = 26 |
 | code01-p11-mark-27 | match | 10/10 | 1/1 | 0 | mark P11 = 27 |
 | code01-p11-mark-28 | match | 11/11 | 1/1 | 0 | mark P11 = 28 |
+| code01-p11-mark-29 | match | 9/9 | 1/1 | 0 | mark P11 = 29 |
+| code01-p11-mark-29-down | match | 9/9 | 1/1 | 0 | mark P11 = 29, stem down |
+| code01-p11-mark-29-p14 | match | 9/9 | 1/1 | 0 | P11 = 29 moved by P14 = -2 |
+| code01-p11-mark-29-tails | match | 13/13 | 1/1 | 0 | P11 = 29 on a note with two tails |
 | code01-p11-mark-3 | match | 11/11 | 1/1 | 0 | mark P11 = 3 |
 | code01-p11-mark-30 | match | 7/7 | 2/2 | 0 | mark P11 = 30 |
 | code01-p11-mark-31 | match | 7/7 | 2/2 | 0 | mark P11 = 31 |
@@ -108,7 +124,11 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code01-p11-mark-34 | match | 7/7 | 2/2 | 0 | mark P11 = 34 |
 | code01-p11-mark-35 | match | 7/7 | 2/2 | 0 | mark P11 = 35 |
 | code01-p11-mark-36 | match | 7/7 | 2/2 | 0 | mark P11 = 36 |
+| code01-p11-mark-37 | match | 7/7 | 2/2 | 0 | mark P11 = 37 |
+| code01-p11-mark-38 | match | 7/7 | 2/2 | 0 | mark P11 = 38 |
+| code01-p11-mark-39 | match | 7/7 | 2/2 | 0 | mark P11 = 39 |
 | code01-p11-mark-4 | match | 9/9 | 1/1 | 0 | mark P11 = 4 |
+| code01-p11-mark-40 | match | 7/7 | 3/3 | 0 | mark P11 = 40 |
 | code01-p11-mark-5 | match | 8/8 | 1/1 | 0 | mark P11 = 5 |
 | code01-p11-mark-5-down | match | 8/8 | 1/1 | 0 | mark P11 = 5, stem down |
 | code01-p11-mark-5-tails | match | 12/12 | 1/1 | 0 | accent with two tails |
@@ -123,6 +143,7 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code01-p11-mark-8 | match | 10/10 | 1/1 | 0 | mark P11 = 8 |
 | code01-p11-mark-9 | match | 9/9 | 1/1 | 0 | mark P11 = 9 |
 | code01-p11-mark-m14 | match | 9/9 | 1/1 | 0 | mark P11 = -14 on the stem side |
+| code01-p11-mark-m29 | match | 9/9 | 1/1 | 0 | mark P11 = -29 on the stem side |
 | code01-p11-mark-m32 | match | 7/7 | 2/2 | 0 | mark P11 = -32 on the stem side |
 | code01-p11-mark-m32-down | match | 7/7 | 2/2 | 0 | P11 = -32, stem down |
 | code01-p11-mark-m34.2-down | match | 7/7 | 2/2 | 0 | P11 = -34.2, stem down |
@@ -381,6 +402,10 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code01-staff-1.3-full | match | 18/18 | 1/1 | 0 | staff size 1.3: sharp, dot, two tails, ledger line |
 | code01-staff-p4-offset | match | 8/8 | 1/1 | 0 | note on a staff moved up (P4 = 2.5) |
 | code01-staff-recto | match | 7/7 | 3/3 | 0 | note on staff 201 (recto page) |
+| code02-font-after-gp | match | 9/9 | 16/16 | 0 | plain text after _02 text and a G.P. rest (font 1000) |
+| code02-font-after-gp-p14 | match | 9/9 | 16/16 | 0 | plain text after _02 text and a G.P. rest in font P14 = 4 |
+| code02-font-after-number | match | 7/7 | 12/12 | 0 | plain text after _02 text and a rest number (meter font, loads none) |
+| code02-font-after-number-p14 | match | 6/6 | 13/13 | 0 | plain text after _02 text and a rest number in font P14 = 2 |
 | code02-grace-dot | match | 10/10 | 1/1 | 0 | grace quarter rest with a dot |
 | code02-grace-eighth | match | 7/7 | 1/1 | 0 | grace-size eighth rest (P4 = 100) |
 | code02-grace-fermata | match | 11/11 | 1/1 | 0 | grace quarter rest with a fermata |
@@ -1221,6 +1246,36 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code10-staff-size-0.75-box | match | 6/6 | 5/5 | 0 | staff size 0.75, box |
 | code10-staff-size-1.4 | match | 5/5 | 3/3 | 0 | staff size 1.4 |
 | code10-staff-size-m1 | match | 5/5 | 3/3 | 0 | staff size -1 |
+| code11-fault | match | 6/6 | 1/1 | 0 | FAULT symbol 0 |
+| code11-name-lower-case | match | 23/23 | 1/1 | 0 | name kbrhy.drw |
+| code11-name-no-extension | match | 36/36 | 1/1 | 0 | name KBRHY |
+| code11-name-scorlib-path | match | 23/23 | 1/1 | 0 | name \WINSCORE\SCORLIB\KBRHY.DRW |
+| code11-p10-pixels-1 | match | 10/10 | 1/1 | 0 | pixel thickness P10 = 1 |
+| code11-p10-pixels-2 | match | 14/14 | 1/1 | 0 | pixel thickness P10 = 2 |
+| code11-p15-offset | match | 23/23 | 1/1 | 0 | P15 = 5 (not applied to code 11) |
+| code11-p26-grey | match | 6/6 | 1/1 | 0 | P26 = 0.5 |
+| code11-p4-p3 | match | 6/6 | 1/1 | 0 | P3 = 120, P4 = 2 |
+| code11-p5-0 | match | 23/23 | 1/1 | 0 | KBRHY symbol 0 |
+| code11-p5-1 | match | 36/36 | 1/1 | 0 | KBRHY symbol 1 |
+| code11-p5-2 | match | 5/5 | 1/1 | 0 | KBRHY symbol 2 |
+| code11-p5-9 | match | 54/54 | 1/1 | 0 | KBRHY symbol 9 |
+| code11-p6-p7 | match | 23/23 | 1/1 | 0 | P6 = 0.5, P7 = 1.5 |
+| code11-p6-size-0.5 | match | 23/23 | 1/1 | 0 | size P6 = 0.5 |
+| code11-p6-size-1.5 | match | 23/23 | 1/1 | 0 | size P6 = 1.5 |
+| code11-p6-size-101 | match | 23/23 | 1/1 | 0 | size P6 = 101 |
+| code11-p6-size-m1 | match | 23/23 | 1/1 | 0 | size P6 = -1 |
+| code11-p8-thick-101 | match | 10/10 | 1/1 | 0 | thickness P8 = 101 |
+| code11-p8-thick-2 | match | 10/10 | 1/1 | 0 | thickness P8 = 2 |
+| code11-p8-thick-m1 | match | 6/6 | 1/1 | 0 | thickness P8 = -1 |
+| code11-p9-rotate-0.5 | match | 6/6 | 1/1 | 0 | rotation P9 = 0.5 |
+| code11-p9-rotate-30 | match | 6/6 | 1/1 | 0 | rotation P9 = 30 |
+| code11-p9-rotate-m90 | match | 6/6 | 1/1 | 0 | rotation P9 = -90 |
+| code11-staff-recto-201 | match | 6/6 | 3/3 | 0 | recto staff 201 |
+| code11-staff-size-0.75 | match | 6/6 | 1/1 | 0 | staff size 0.75 |
+| code11-staff-size-1.4 | match | 6/6 | 1/1 | 0 | staff size 1.4 |
+| code11-staff-size-m1 | match | 6/6 | 1/1 | 0 | staff size -1 |
+| code11-then-staff | match | 11/11 | 2/2 | 0 | a code-11 item, then a second staff |
+| code11-two-files | match | 37/37 | 1/1 | 0 | KBRHY symbol 1 then FAULT symbol 0 |
 | code12-arrow-arc-flipped | match | 7/7 | 1/1 | 0 | arc arrow, P6 = -2, P7 = -2 |
 | code12-arrow-arc-head | match | 7/7 | 1/1 | 0 | arc arrow, P12 = 2, P13 = 3 |
 | code12-arrow-arc-marked | match | 13/13 | 1/1 | 0 | arc arrow, P26 = -1 |
@@ -1239,6 +1294,69 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code12-arrow-straight-no-head | match | 6/6 | 1/1 | 0 | straight arrow, P12 = -1 |
 | code12-arrow-straight-rotated | match | 7/7 | 1/1 | 0 | straight arrow, P9 = 30 |
 | code12-arrow-straight-rotated-no-head | match | 6/6 | 1/1 | 0 | straight arrow, P9 = -60, P12 = -1 |
+| code12-grid-barre | match | 24/24 | 4/4 | 0 | guitar grid, P13 = 133211, P12 = 1601 |
+| code12-grid-barre-3 | match | 24/24 | 4/4 | 0 | guitar grid, P13 = 335553, P12 = 2603 |
+| code12-grid-basic | match | 18/18 | 1/1 | 0 | guitar grid, P5 = -1 |
+| code12-grid-dict-10-1-0 | match | 25/25 | 5/5 | 0 | guitar grid, dictionary P5 = -4, P7 = 10, P8 = 1, P9 = 0 |
+| code12-grid-dict-10-2-0 | match | 26/26 | 7/7 | 0 | guitar grid, dictionary P5 = -4, P7 = 10, P8 = 2, P9 = 0 |
+| code12-grid-dict-11-19-0 | match | 33/33 | 8/8 | 0 | guitar grid, dictionary P5 = -4, P7 = 11, P8 = 19, P9 = 0 |
+| code12-grid-dict-12-7-2 | match | 28/28 | 12/12 | 0 | guitar grid, dictionary P5 = -4, P7 = 12, P8 = 7, P9 = 2 |
+| code12-grid-dict-21-3-0 | match | 30/30 | 7/7 | 0 | guitar grid, dictionary P5 = -4, P7 = 21, P8 = 3, P9 = 0 |
+| code12-grid-dict-41-11-4 | match | 29/29 | 8/8 | 0 | guitar grid, dictionary P5 = -4, P7 = 41, P8 = 11, P9 = 4 |
+| code12-grid-dict-60-12-1 | match | 24/24 | 14/14 | 0 | guitar grid, dictionary P5 = -4, P7 = 60, P8 = 12, P9 = 1 |
+| code12-grid-dict-72-20-3 | match | 32/32 | 5/5 | 0 | guitar grid, dictionary P5 = -4, P7 = 72, P8 = 20, P9 = 3 |
+| code12-grid-dict-p5-5 | match | 5/5 | 2/2 | 0 | guitar grid, P5 = -5, P7 = 10 |
+| code12-grid-dict-p5-6 | match | 26/26 | 5/5 | 0 | guitar grid, P5 = -6, P7 = 10, P8 = 7 |
+| code12-grid-dots | match | 24/24 | 1/1 | 0 | guitar grid, P13 = 132211 |
+| code12-grid-dots-4 | match | 20/20 | 1/1 | 0 | guitar grid, P14 = 54, P13 = 1234 |
+| code12-grid-fingers | match | 24/24 | 7/7 | 0 | guitar grid, P13 = 132211, P18 = 132411 |
+| code12-grid-fingers-thumb | match | 24/24 | 7/7 | 0 | guitar grid, P13 = 132211, P18 = 932811 |
+| code12-grid-fret | match | 23/23 | 4/4 | 0 | guitar grid, P12 = 5, P13 = 133211 |
+| code12-grid-fret-frac | match | 17/17 | 4/4 | 0 | guitar grid, P12 = 5.5 |
+| code12-grid-name-only | match | 5/5 | 2/2 | 0 | guitar grid, P5 = -3, P7 = 10 |
+| code12-grid-no-nut | match | 17/17 | 1/1 | 0 | guitar grid, P5 = -2 |
+| code12-grid-open-muted | match | 25/25 | 1/1 | 0 | guitar grid, P13 = 932818 |
+| code12-grid-p10-1000 | match | 18/18 | 5/5 | 0 | guitar grid, P7 = 10, P10 = 1000 |
+| code12-grid-p10-109 | match | 21/21 | 3/3 | 0 | guitar grid, P7 = 10, P10 = 109 |
+| code12-grid-p10-2000 | match | 18/18 | 5/5 | 0 | guitar grid, P7 = 10, P10 = 2000 |
+| code12-grid-p10-3009 | match | 18/18 | 8/8 | 0 | guitar grid, P7 = 10, P10 = 3009 |
+| code12-grid-p11-105 | match | 21/21 | 4/4 | 0 | guitar grid, P7 = 10, P11 = 105 |
+| code12-grid-p11-5000 | match | 18/18 | 4/4 | 0 | guitar grid, P7 = 10, P11 = 5000 |
+| code12-grid-p11-7011 | match | 18/18 | 6/6 | 0 | guitar grid, P7 = 10, P11 = 7011 |
+| code12-grid-p14-45 | match | 16/16 | 1/1 | 0 | guitar grid, P5 = -1, P14 = 45 (4 strings? 5 frets) |
+| code12-grid-p14-64 | match | 17/17 | 1/1 | 0 | guitar grid, P5 = -1, P14 = 64 |
+| code12-grid-p16 | match | 18/18 | 2/2 | 0 | guitar grid, P16 = 1.5, P7 = 10 |
+| code12-grid-p17-negative | match | 17/17 | 1/1 | 0 | guitar grid, P17 = -1 |
+| code12-grid-p17-wide | match | 24/24 | 1/1 | 0 | guitar grid, P17 = 1.5 |
+| code12-grid-p19-name | match | 18/18 | 2/2 | 0 | guitar grid, P19 = 2, P7 = 10 |
+| code12-grid-p9-107 | match | 21/21 | 3/3 | 0 | guitar grid, P7 = 10, P9 = 107 |
+| code12-grid-p9-409 | match | 18/18 | 4/4 | 0 | guitar grid, P7 = 10, P9 = 409 |
+| code12-grid-p9-513 | match | 18/18 | 5/5 | 0 | guitar grid, P7 = 10, P9 = 513 |
+| code12-grid-p9-607 | match | 19/19 | 3/3 | 0 | guitar grid, P7 = 10, P9 = 607 |
+| code12-grid-root-10 | match | 18/18 | 2/2 | 0 | guitar grid, P7 = 10 |
+| code12-grid-root-11 | match | 21/21 | 2/2 | 0 | guitar grid, P7 = 11 |
+| code12-grid-root-12 | match | 22/22 | 2/2 | 0 | guitar grid, P7 = 12 |
+| code12-grid-root-20 | match | 18/18 | 2/2 | 0 | guitar grid, P7 = 20 |
+| code12-grid-root-32 | match | 22/22 | 2/2 | 0 | guitar grid, P7 = 32 |
+| code12-grid-root-41 | match | 21/21 | 2/2 | 0 | guitar grid, P7 = 41 |
+| code12-grid-root-52 | match | 22/22 | 2/2 | 0 | guitar grid, P7 = 52 |
+| code12-grid-root-60 | match | 18/18 | 2/2 | 0 | guitar grid, P7 = 60 |
+| code12-grid-root-70 | match | 18/18 | 2/2 | 0 | guitar grid, P7 = 70 |
+| code12-grid-root-71 | match | 21/21 | 2/2 | 0 | guitar grid, P7 = 71 |
+| code12-grid-rotated | match | 24/24 | 1/1 | 0 | guitar grid, P9 = 20 is a name code, not rotation; P13 dots |
+| code12-grid-sample-000-a | match | 25/25 | 5/5 | 0 | guitar grid, 000.mus: P5 = -4, P6 = 1, P7 = 10 |
+| code12-grid-sample-000-b | match | 25/25 | 5/5 | 0 | guitar grid, 000.mus: P5 = -4, P6 = 1, P7 = 60, P8 = 1 |
+| code12-grid-sample-000-c | match | 29/29 | 10/10 | 0 | guitar grid, 000.mus: P5 = -4, P6 = 1, P7 = 12, P8 = 2 |
+| code12-grid-size | match | 24/24 | 1/1 | 0 | guitar grid, P6 = 1.5, P13 = 132211 |
+| code12-grid-type-1 | match | 18/18 | 5/5 | 0 | guitar grid, P7 = 10, P8 = 1 |
+| code12-grid-type-2 | match | 18/18 | 3/3 | 0 | guitar grid, P7 = 10, P8 = 2 |
+| code12-grid-type-3 | match | 19/19 | 2/2 | 0 | guitar grid, P7 = 10, P8 = 3 |
+| code12-grid-type-4 | match | 20/20 | 2/2 | 0 | guitar grid, P7 = 10, P8 = 4 |
+| code12-grid-type-5 | match | 18/18 | 3/3 | 0 | guitar grid, P7 = 10, P8 = 5 |
+| code12-grid-type-6 | match | 18/18 | 5/5 | 0 | guitar grid, P7 = 10, P8 = 6 |
+| code12-grid-type-7 | match | 18/18 | 5/5 | 0 | guitar grid, P7 = 10, P8 = 7 |
+| code12-grid-type-8 | match | 19/19 | 2/2 | 0 | guitar grid, P7 = 10, P8 = 8 |
+| code12-grid-type-9 | match | 18/18 | 3/3 | 0 | guitar grid, P7 = 10, P8 = 9 |
 | code12-p10-dash-0.5 | match | 18/18 | 1/1 | 0 | dashed box dash P10 = 0.5 |
 | code12-p10-dash-2 | match | 6/6 | 1/1 | 0 | dashed box dash P10 = 2 |
 | code12-p10-p11-arc--90-90 | match | 6/6 | 1/1 | 0 | circle arc P10 = -90, P11 = 90 |
@@ -1275,9 +1393,9 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code12-p5-other-2 | match | 7/7 | 1/1 | 0 | P5 = 2 |
 | code12-p5-other-4 | match | 7/7 | 1/1 | 0 | P5 = 4 |
 | code12-p5-other-5 | match | 7/7 | 1/1 | 0 | P5 = 5 |
-| code12-p5-other-m1 | differs | 5/18 | 1/1 | 0 | P5 = -1 |
-| code12-p5-other-m10 | differs | 5/17 | 1/1 | 0 | P5 = -10 |
-| code12-p5-other-m2 | differs | 5/17 | 1/1 | 0 | P5 = -2 |
+| code12-p5-other-m1 | match | 18/18 | 1/1 | 0 | P5 = -1 |
+| code12-p5-other-m10 | match | 17/17 | 1/1 | 0 | P5 = -10 |
+| code12-p5-other-m2 | match | 17/17 | 1/1 | 0 | P5 = -2 |
 | code12-p5-other-m5 | match | 5/5 | 1/1 | 0 | P5 = -5 |
 | code12-p6-2-box | match | 6/6 | 1/1 | 0 | P6 = 2, P5 = 0 |
 | code12-p6-2-circle | match | 6/6 | 1/1 | 0 | P6 = 2, P5 = 1 |
@@ -1498,11 +1616,18 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code16-font-94 | match | 13/13 | 1/1 | 0 | meter font _94 |
 | code16-font-98 | match | 5/5 | 19/19 | 0 | font _98 |
 | code16-font-99-comment | match | 5/5 | 10/10 | 0 | non-printing comment _99% |
+| code16-font-after-ending | match | 7/7 | 13/13 | 0 | plain text after _05 text and a first ending (code 5) |
 | code16-font-after-meter | match | 7/7 | 12/12 | 0 | plain text after _02 text and a 3/4 meter (font 94, loads none) |
 | code16-font-after-meter-p13 | match | 5/5 | 14/14 | 0 | plain text after _02 text and a meter in font P13 = 2 (Helvetica) |
 | code16-font-after-number | match | 5/5 | 13/13 | 0 | plain text after _02 text and a code-10 number (font 1000) |
+| code16-font-after-ottava | match | 5/5 | 15/15 | 0 | plain text after _05 text and an 8va (code 7) |
 | code16-font-after-staff | match | 5/5 | 6/6 | 0 | text without a font code after a staff (Helvetica-Narrow) |
+| code16-font-after-term | match | 5/5 | 17/17 | 0 | plain text after _05 text and a CODE9.DAT term (code 9, 3004) |
 | code16-font-after-text | match | 5/5 | 12/12 | 0 | text without a font code after _02 text |
+| code16-font-after-text-symbol | match | 5/5 | 17/17 | 0 | plain text after _05 text and pizz. (code 9, symbol 66) |
+| code16-font-after-tuplet | match | 6/6 | 13/13 | 0 | plain text after _05 text and a beam with tuplet number 3 (code 6) |
+| code16-font-after-tuplet-bracket | match | 7/7 | 13/13 | 0 | plain text after _05 text and a tuplet bracket with 3 (code 5) |
+| code16-font-after-two-bar-repeat | match | 11/11 | 12/12 | 0 | plain text after _05 text and a two-bar repeat with number 2 (code 14) |
 | code16-font-no-staff | match | 0/0 | 11/11 | 0 | text without a font code, no staff |
 | code16-font-wraps | match | 5/5 | 12/12 | 0 | text without a font code before _05 text |
 | code16-fonts-mixed | match | 5/5 | 24/24 | 0 | font changes inside the string |
@@ -1676,33 +1801,30 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code99-slur | match | 14/14 | 1/1 | 0 | slur over four quarter notes |
 | code99-system | match | 28/28 | 2/2 | 0 | two staves with brace, notes on both, barlines |
 | code99-tie | match | 10/10 | 1/1 | 0 | two half notes tied |
+| corpus-chopin2804 | match | 1603/1603 | 97/97 | 0 | corpus/free/chopin2804.pmx.txt (PMX converted) |
+| corpus-chopin2806 | match | 1426/1426 | 100/100 | 0 | corpus/free/chopin2806.pmx.txt (PMX converted) |
+| corpus-mus2pmx-ex1 | match | 748/748 | 355/355 | 0 | corpus/free/mus2pmx-ex1.mus |
 | fuzz-code01-p11-p14-5b0460 | differs | 6/8 +2 | 1/1 | 0 | fuzz, impl-notes: distorted; same structure, off by up to 337 after aligning |
 | fuzz-code01-p6-p10-e9c174 | differs | 5/5 | 1/2 +1 | 0 | fuzz, impl-notes: text offset; "2" shifted by (15000, 0) |
 | fuzz-code02-p5-p15-275998 | differs | 7/9 +2 | 1/1 | 0 | fuzz, impl-notes: distorted; same structure, off by up to 342 after aligning |
 | fuzz-code02-p6-p8-c48746 | differs | 9/9 | 1/5 +4 | 0 | fuzz, impl-notes: text style; "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 813.5/335.6 #999999 w400 esc 0 |
 | fuzz-code02-p8-p15-37bcaa | differs | 9/9 | 1/5 +4 | 0 | fuzz, impl-notes: text style; "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 650.8/268.5 #000000 w400 esc 0 |
 | fuzz-code02-p8-p17-c92312 | differs | 9/9 | 1/5 +4 | 0 | fuzz, impl-notes: text offset; "G" shifted by (0, -3150) |
-| fuzz-code03-p5-p10-e6050f | differs | 10/10 +20 | 3/3 | 0 | fuzz, impl-symbols: extra; fill #000000, 1 path(s), 62 points from (15678, 4037) |
-| fuzz-code03-p5-p10-e66eab | differs | 10/10 +40 | 2/2 | 0 | fuzz, impl-symbols: extra; fill #000000, 1 path(s), 62 points from (11425, 5087) |
+| fuzz-code03-p5-p10-e6050f | match | 10/10 | 3/3 | 0 | fuzz, impl-symbols: extra; fill #000000, 1 path(s), 62 points from (15678, 4037) |
+| fuzz-code03-p5-p10-e66eab | match | 10/10 | 2/2 | 0 | fuzz, impl-symbols: extra; fill #000000, 1 path(s), 62 points from (11425, 5087) |
 | fuzz-code05-p11-p16-2701e0 | differs | 8/8 | 1/3 +2 | 0 | fuzz, impl-beams: text offset; "1" shifted by (98, 336) |
 | fuzz-code05-p11-p16-cf241b | differs | 8/8 | 1/2 +1 | 0 | fuzz, impl-beams: text offset; "3" shifted by (211, 279) |
 | fuzz-code06-p8-p17-f76ce8 | differs | 6/6 | 2/3 | 0 | fuzz, impl-beams: text missing; "?" in Times 678.0/279.7 at (15334, 1369) |
-| fuzz-code07-p7-p16-1b6f6e | differs | 11/18 +7 | 1/1 | 0 | fuzz, impl-lines: distorted; same structure, off by up to 11474 after aligning |
-| fuzz-code07-p7-p18-634834 | differs | 11/18 +7 | 1/1 | 0 | fuzz, impl-lines: distorted; same structure, off by up to 11474 after aligning |
 | fuzz-code10-p6-p19-efc753 | differs | 5/5 | 1/2 +1 | 0 | fuzz, impl-symbols: text offset; "0" shifted by (-20000, 1) |
-| fuzz-code12-p5-ffbe10 | differs | 5/17 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 2 points from (22061, 3648) |
-| fuzz-code12-p5-p11-cbf4b8 | differs | 5/7 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 181 points from (5333, 2511) |
-| fuzz-code12-p5-p11-ec0e0d | differs | 5/7 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 91 points from (7810, 3823) |
-| fuzz-code12-p5-p8-ee6fed | differs | 143/172 +29 | 1/1 | 0 | fuzz, impl-symbols: distorted; same structure, off by up to 64836 after aligning |
-| fuzz-code12-p5-p8-p11-97487e | differs | 824/1016 +192 | 1/1 | 0 | fuzz, impl-symbols: distorted; same structure, off by up to 62467 after aligning |
+| fuzz-code12-p5-ffbe10 | match | 17/17 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 2 points from (22061, 3648) |
+| fuzz-code12-p5-p11-cbf4b8 | match | 7/7 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 181 points from (5333, 2511) |
+| fuzz-code12-p5-p11-ec0e0d | match | 7/7 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 91 points from (7810, 3823) |
 | fuzz-code16-p8-p9-b70d9e | differs | 5/19 +14 | 1/1 | 0 | fuzz, impl-text: offset; shifted by (688, 688), residual 0 |
 | fuzz-code16-p9-862d87 | differs | 5/13 +8 | 12/12 | 1 | fuzz, impl-text: offset; shifted by (5576, 0), residual 0 |
-| fuzz-code17-p5-p10-ad28d4 | differs | 12505/12865 +360 | 1/1 | 0 | fuzz, impl-symbols: distorted; same structure, off by up to 825 after aligning |
-| fuzz-code17-p5-p10-b79043 | differs | 5360/5792 +432 | 1/1 | 0 | fuzz, impl-symbols: distorted; same structure, off by up to 43 after aligning |
 | layout-li-system | match | 55/55 | 2/2 | 0 | LI on a two-staff system (the engine gives the same result as LJ here) |
 | layout-lj-system | match | 55/55 | 2/2 | 0 | LJ on a two-staff system (lowest staff 1, two staves) |
 | layout-lja-single | match | 24/24 | 1/1 | 0 | LJA on one staff with two measures |
-| sample-000 | differs | 466/550 | 154/175 | 0 | WinScore sample 000.mus |
+| sample-000 | match | 550/550 | 175/175 | 0 | WinScore sample 000.mus |
 | sample-carmen | match | 3300/3300 | 331/331 | 0 | WinScore sample carmen.mus |
 | sample-mozart | match | 768/768 | 136/136 | 0 | WinScore sample mozart.mus |
 | sample-newlib | match | 182/182 | 219/219 | 0 | SCORE 4 sample NEWLIB.MUS |
