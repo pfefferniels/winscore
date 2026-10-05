@@ -177,7 +177,8 @@ impl Note {
         self.heads = heads;
         self.down = down;
         self.heads_down = down;
-        self.extension = span.max(to_middle).max(0) as f32;
+        let normal = span.max(to_middle).max(0) as f32;
+        self.extension = if self.cue { self.cue_extension(normal) } else { normal };
         self.table_extension = self.extension;
     }
 
@@ -284,6 +285,31 @@ impl Note {
 
     pub fn is_grace(&self) -> bool {
         self.rhythm == Rhythm::Grace
+    }
+
+    /// Makes the note cue size. 0x51CF40 gives cue notes their own P8: from a head below
+    /// the staff (stem up) or above it (stem down), and for a chord at least twice the
+    /// normal P8.
+    pub fn set_cue(&mut self) {
+        self.cue = true;
+        self.extension = self.cue_extension(self.extension);
+        self.table_extension = self.extension;
+    }
+
+    /// P8 of a cue note or chord whose P8 at normal size would be `normal`.
+    fn cue_extension(&self, normal: f32) -> f32 {
+        let from_head = |steps: i32| (f64::from(steps as f32) * f64::from(1.66666f32) - 2.0) as f32;
+        let by_level = match (self.down, self.stem_level()) {
+            (true, l) if l > 13 => from_head(l - 12),
+            (false, l) if l < 1 => from_head(2 - l),
+            _ => 0.0,
+        };
+        let doubled = amod(normal, 100.0) * 2.0;
+        if self.heads.len() > 1 && by_level < doubled {
+            doubled
+        } else {
+            by_level
+        }
     }
 
     /// Grace or cue size: the notes whose P4 is stored with 100 added (|P4| >= 100).
@@ -659,7 +685,9 @@ impl Line {
                     // 0x4ECDF8: cue notes take an up stem unless SU/SD is in force.
                     let mode = if cue && stems == StemMode::Ordinary { StemMode::Up } else { stems };
                     let mut note = Note::new(0.0, heads.clone(), rhythm, mode, shift);
-                    note.cue = cue;
+                    if cue {
+                        note.set_cue();
+                    }
                     Some(Element::Note(note))
                 }
                 (Event::Rest(kind), Some(rhythm)) => Some(Element::Rest { x: 0.0, kind: *kind, rhythm }),

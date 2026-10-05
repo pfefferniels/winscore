@@ -181,7 +181,7 @@ impl Refit<'_> {
         // Mode 2 (FLN, TR) leaves the slurs as they are.
         let slur_rows = if self.mode == RefitMode::Normal { Vec::new() } else { found.slurs.clone() };
         let slur_pairs = note_pairs(self.rows, &slur_rows, &stream.chord_xs, Pass::Slurs);
-        slurs::apply(&mut line, &slur_pairs, (self.left, self.right)).map_err(|_| RefitErrorKind::Unsupported("a slur"))?;
+        slurs::apply(&mut line, &slur_pairs, (self.left, self.right), self.staff_end()).map_err(|_| RefitErrorKind::Unsupported("a slur"))?;
         self.write_back(&line, &stream.order, &found.beams, &slur_rows)
     }
 
@@ -349,11 +349,19 @@ impl Refit<'_> {
         }
     }
 
+    fn staff_item(&self) -> Option<&Vec<f32>> {
+        self.rows.iter().find(|r| trunc(par(r, 1)) == STAFF && trunc(par(r, 2)) == self.staff)
+    }
+
     /// The staff step (25 for a staff of normal size) from the staff item.
     fn staff_step(&self) -> f32 {
-        let staff_item = self.rows.iter().find(|r| trunc(par(r, 1)) == STAFF && trunc(par(r, 2)) == self.staff);
-        let size = staff_item.map_or(0.0, |r| if par(r, 14) != 0.0 { par(r, 14) / 0.889 } else { par(r, 5) });
+        let size = self.staff_item().map_or(0.0, |r| if par(r, 14) != 0.0 { par(r, 14) / 0.889 } else { par(r, 5) });
         25.0 * if size != 0.0 { size } else { 1.0 }
+    }
+
+    /// The staff's right end (0x547AE0): its P6, else the page's limit.
+    fn staff_end(&self) -> f32 {
+        self.staff_item().filter(|r| r.len() >= 6 && r[5] != 0.0).map_or(slurs::STAFF_END, |r| r[5])
     }
 
     fn restore(&mut self, beam: &BeamItem, direction: i32, (p4, p5): (f32, f32)) {
