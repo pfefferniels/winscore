@@ -1,6 +1,8 @@
 """Random systems for checking score-layout's LI/LJ/J against the emulated engine.
 
-    layout_cases.py make SEED COUNT CASES [rich]   append COUNT random LI cases to CASES
+    layout_cases.py make SEED COUNT CASES [KIND [COMMAND]]
+                                                   append COUNT random cases to CASES; KIND is
+                                                   plain, rich or crowded, COMMAND LI, J or LJ
     layout_cases.py run CASES EXPECTED [REGEX]     run the cases through the engine (4 jobs)
 
 CASES uses edit_driver.py's format ("== name", a "base:" line with the items, then the
@@ -87,11 +89,41 @@ def rich_staff(rng: random.Random, staff: int, measures: int) -> list[list[float
     return items
 
 
-def system(rng: random.Random, rich: bool) -> tuple[list[list[float]], int]:
+def crowded_staff(rng: random.Random, staff: int, measures: int) -> list[list[float]]:
+    """Many short notes with accidentals, flags, dots and seconds in chords: lines where
+    justification has to find room."""
+    items = [[8, staff, 0, 0, 1], [3, staff, 2, 0, 0]]
+    x = 10.0
+    for m in range(measures):
+        for d in split_measure(rng, 4.0):
+            if d >= 1 and rng.random() < 0.5:
+                d = rng.choice([0.25, 0.5])
+            level = rng.randint(-2, 12)
+            accidental = rng.choice([0, 0, 0, 1, 2, 3])
+            tails = {0.25: 2, 0.5: 1}.get(d, 0)
+            dots = 10 if rng.random() < 0.15 else 0
+            items.append([1, staff, round(x, 2), level, (20 if level > 6 else 10) + accidental, 0, d, 0, tails + dots])
+            if rng.random() < 0.3:
+                second = level + rng.choice([1, -1, 2])
+                items.append([1, staff, round(x, 2), second, rng.choice([0, 0, 1, 3]), 0, d, 0, dots, 10])
+            x += rng.uniform(2, 6)
+        if m < measures - 1:
+            items.append([14, staff, round(x, 2), 1])
+            x += rng.uniform(2, 4)
+    items.append([14, staff, 200, 1])
+    return items
+
+
+KINDS = ("plain", "rich", "crowded")
+
+
+def system(rng: random.Random, kind: str) -> tuple[list[list[float]], int]:
     staves = rng.randint(1, 3)
     measures = rng.randint(1, 3)
-    if rich:
+    if kind == "rich":
         items = [it for s in range(1, staves + 1) for it in rich_staff(rng, s, measures)]
+    elif kind == "crowded":
+        items = [it for s in range(1, staves + 1) for it in crowded_staff(rng, s, measures + 1)]
     else:
         shapes = [[split_measure(rng) for _ in range(measures)] for _ in range(staves)]
         items = [it for s in range(1, staves + 1) for it in plain_staff(rng, s, shapes[s - 1])]
@@ -102,14 +134,13 @@ def value(v: float) -> str:
     return f"{v:g}"
 
 
-def make(seed: int, count: int, cases_path: Path, rich: bool) -> None:
+def make(seed: int, count: int, cases_path: Path, kind: str, command: str) -> None:
     rng = random.Random(seed)
-    kind = "rich" if rich else "plain"
     out = []
     for i in range(count):
-        items, staves = system(rng, rich)
+        items, staves = system(rng, kind)
         base = "; ".join(" ".join(value(v) for v in it) for it in items)
-        out.append(f"== li-{kind}-{seed}-{i}\nbase: {base}\nLI\n1 {staves}\n")
+        out.append(f"== {command.lower()}-{kind}-{seed}-{i}\nbase: {base}\n{command}\n1 {staves}\n")
     with cases_path.open("a", encoding="latin-1") as f:
         f.write("".join(out))
 
@@ -129,6 +160,9 @@ def run(cases_path: Path, expected_path: Path, pattern: str = "") -> None:
 if __name__ == "__main__":
     args = sys.argv[1:]
     if args[0] == "make":
-        make(int(args[1]), int(args[2]), Path(args[3]), len(args) > 4 and args[4] == "rich")
+        kind = args[4] if len(args) > 4 else "plain"
+        command = args[5] if len(args) > 5 else "LI"
+        assert kind in KINDS and command in ("LI", "J", "LJ"), "kind: plain|rich|crowded, command: LI|J|LJ"
+        make(int(args[1]), int(args[2]), Path(args[3]), kind, command)
     else:
         run(Path(args[1]), Path(args[2]), *args[3:4])
