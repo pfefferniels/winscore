@@ -9,6 +9,7 @@ use crate::command::moves::Increments;
 use crate::document::{Document, ItemId};
 use crate::drag::Ends;
 use crate::group::Pending;
+use crate::transpose::Leftover;
 
 /// The ids in their first-seen order, without repeats.
 fn unique(ids: impl Iterator<Item = ItemId>) -> Vec<ItemId> {
@@ -53,6 +54,8 @@ pub struct Session {
     pub clipboard: Vec<Item>,
     /// The parameter the slider buttons (PCHNGn) change; QPn chooses it.
     pub slider_param: usize,
+    /// What one TR leaves for the next.
+    pub transposition: Leftover,
 }
 
 /// The slider changes P2 until QPn chooses another parameter.
@@ -75,6 +78,7 @@ impl Default for Session {
             pending: None,
             clipboard: Vec::new(),
             slider_param: DEFAULT_SLIDER_PARAM,
+            transposition: Leftover::default(),
         }
     }
 }

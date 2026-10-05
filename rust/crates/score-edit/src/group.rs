@@ -158,6 +158,10 @@ const RIGHT_END_X: [i32; 4] = [4, 5, 6, 7];
 /// Codes MUD leaves where they are: clefs, staves, barlines, keys, meters.
 pub const FIXED_BY_MUD: [i32; 5] = [3, 8, 14, 17, 18];
 
+/// What TR asks after its area, standing in for the Transpose Setup dialog.
+pub const TRANSPOSITION_PROMPT: &str =
+    "Transpose: half=n [clef=0 treble, 1 bass, 2 alto, 3 tenor] [key=1 add key signature] [stems=1] [cue=1]";
+
 /// What a group command still needs to hear.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Pending {
@@ -173,6 +177,8 @@ pub enum Pending {
     Steps(Region),
     /// The staves CPX copies to.
     Staves(Region),
+    /// The values of WinScore's Transpose Setup dialog, for TR.
+    Transposition(Region),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -183,6 +189,7 @@ pub enum GroupCommand {
     Alter,
     MoveUpDown,
     CopyToStaves,
+    Transpose,
 }
 
 impl GroupCommand {
@@ -194,6 +201,7 @@ impl GroupCommand {
             "A" => Self::Alter,
             "MUD" | "MU" => Self::MoveUpDown,
             "CPX" => Self::CopyToStaves,
+            "TR" => Self::Transpose,
             _ => return None,
         };
         Some(command)
@@ -210,6 +218,7 @@ impl Pending {
             Pending::AlterPairs { .. } => "Type P#, change, P#, change, ...",
             Pending::Steps(_) => "Enter the number of steps to move, plus or minus",
             Pending::Staves(_) => "Enter the staff numbers to copy to",
+            Pending::Transposition(_) => TRANSPOSITION_PROMPT,
         }
     }
 }

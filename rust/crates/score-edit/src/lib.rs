@@ -24,6 +24,7 @@ pub mod pick;
 mod session;
 pub mod symbols;
 pub mod text;
+pub mod transpose;
 
 pub use document::{Document, Edit, ItemId};
 pub use editor::{Change, Editor};

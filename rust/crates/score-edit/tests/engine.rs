@@ -4,6 +4,7 @@
 
 use std::collections::BTreeMap;
 
+use score_edit::group::TRANSPOSITION_PROMPT;
 use score_edit::{Draft, Editor};
 use score_format::{CountWidth, Item, MusFile, Word};
 
@@ -163,18 +164,41 @@ fn play_mouse(editor: &mut Editor, dragging: &mut bool, (action, numbers): (&str
     }
 }
 
+/// The values a `!transpose` line gives TR's dialog, in the syntax of
+/// [`score_edit::transpose::Transposition::parse`].
+fn dialog_values(line: &str) -> Option<&str> {
+    line.strip_prefix("!transpose").map(str::trim)
+}
+
+/// `!skip-lineup` makes the engine leave out the justification TR ends
+/// with, which score-edit does not do yet either.
+const SKIP_LINEUP: &str = "!skip-lineup";
+
 fn replay(case: &Case) -> (Vec<Stored>, Vec<String>) {
     let mut editor = Editor::new(mus_file(&case.base));
     let mut dragging = false;
+    let mut dialog = None;
     let errors = case
         .commands
         .iter()
-        .filter_map(|c| match mouse(c) {
-            Some(m) => {
-                play_mouse(&mut editor, &mut dragging, m);
-                None
+        .filter_map(|c| {
+            if let Some(values) = dialog_values(c) {
+                dialog = Some(values);
+                return None;
             }
-            None => editor.execute(c).err().map(|e| format!("[{c}] {e}")),
+            if c == SKIP_LINEUP {
+                return None;
+            }
+            let error = match mouse(c) {
+                Some(m) => {
+                    play_mouse(&mut editor, &mut dragging, m);
+                    None
+                }
+                None => editor.execute(c).err().map(|e| format!("[{c}] {e}")),
+            };
+            let answer = dialog.filter(|_| editor.prompt() == Some(TRANSPOSITION_PROMPT));
+            let dialog_error = answer.and_then(|v| editor.execute(v).err().map(|e| format!("[dialog {v}] {e}")));
+            error.or(dialog_error)
         })
         .collect();
     (stored(&editor), errors)

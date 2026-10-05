@@ -15,6 +15,7 @@ use crate::history::{History, Step};
 use crate::params::{Draft, MAX_PARAM};
 use crate::pick;
 use crate::session::Session;
+use crate::transpose::Transposition;
 
 /// P1 of library symbols.
 const SYMBOL_CODE: f32 = 9.0;
@@ -282,6 +283,12 @@ impl Editor {
             run.session.clear();
             run.append_items(vec![item])
         })
+    }
+
+    /// TR: transposes the staves and positions of `region` with the values
+    /// of WinScore's Transpose Setup dialog.
+    pub fn transpose(&mut self, region: &Region, how: &Transposition) -> Result<Change, EditError> {
+        self.act("Transpose", |run| run.transpose(region, how))
     }
 
     /// Appends items (from the music input passes, say) and selects them.
