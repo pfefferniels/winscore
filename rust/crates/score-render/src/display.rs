@@ -19,6 +19,12 @@ impl Point {
     pub const fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
+
+    /// The point moved by `dx`, `dy` with the engine's 32-bit integer adds,
+    /// which wrap; a coordinate truncated from NaN is i32::MIN.
+    pub const fn shifted(self, dx: i32, dy: i32) -> Self {
+        Self { x: self.x.wrapping_add(dx), y: self.y.wrapping_add(dy) }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]

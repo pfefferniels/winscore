@@ -56,8 +56,8 @@ pub fn thicken(points: &mut Vec<BufferPoint>, start: usize, n: i32) {
     let original = points[start..].to_vec();
     let moved = |dx: i32, dy: i32| {
         original.iter().map(move |p| {
-            let x = if p.at.x >= UNMOVED_X { p.at.x + dx } else { p.at.x };
-            BufferPoint { at: Point::new(x, p.at.y + dy), pen: p.pen }
+            let dx = if p.at.x >= UNMOVED_X { dx } else { 0 };
+            BufferPoint { at: p.at.shifted(dx, dy), pen: p.pen }
         })
     };
     let vertical: Vec<BufferPoint> = copy_offsets(2 * (n / 100)).flat_map(|d| moved(0, d)).collect();
@@ -91,6 +91,13 @@ mod tests {
         let mut points = vec![BufferPoint { at: Point::new(-192_601, 0), pen: Pen::Stroke }];
         thicken(&mut points, 0, 1);
         assert_eq!(at(&points), [(-192_601, 0), (-192_601, 0), (-192_601, 0)]);
+    }
+
+    #[test]
+    fn thickening_wraps_like_the_engine() {
+        let mut points = vec![BufferPoint { at: Point::new(0, i32::MIN), pen: Pen::Fill }];
+        thicken(&mut points, 0, 100);
+        assert_eq!(at(&points), [(0, i32::MIN), (0, i32::MIN + 14), (0, i32::MAX - 13)]);
     }
 
     #[test]
