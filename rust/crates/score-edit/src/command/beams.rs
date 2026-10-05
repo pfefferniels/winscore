@@ -7,6 +7,7 @@ use score_render::Document as RenderDocument;
 use crate::command::{auto_beam, Run};
 use crate::document::ItemId;
 use crate::error::EditError;
+use crate::group::Region;
 use crate::params::Draft;
 
 const NOTE: i32 = 1;
@@ -285,6 +286,29 @@ impl Run<'_, '_> {
             outcome.inserted.iter().enumerate().for_each(|(k, copy)| {
                 self.tx.insert(edit + 1 + k, copy.to_item());
             });
+        });
+        Ok(())
+    }
+
+    /// ADJ (any AD… word) with no item in edit mode: the stems under every
+    /// beam of the area `staff left right top`, or of the whole file when no
+    /// staff is given, fitted as plain ADJ does.
+    pub fn adjust_stems_in_area(&mut self, numbers: &[f32]) -> Result<(), EditError> {
+        let area = numbers.first().filter(|&&staff| staff != 0.0).and_then(|_| Region::parse(numbers));
+        let staves = RenderDocument::new(self.tx.doc().file()).staves;
+        let mut items: Vec<Draft> = self.tx.doc().file().items.iter().map(Draft::of).collect();
+        let before = items.clone();
+        let beams: Vec<Draft> = before
+            .iter()
+            .filter(|d| is_fitting_beam(d))
+            .filter(|d| area.as_ref().is_none_or(|a| (a.bottom..=a.top).contains(&d.get(2)) && a.contains_x(d.get(3))))
+            .cloned()
+            .collect();
+        let plain = StemFit { opposite: false, french: false };
+        beams.iter().for_each(|beam| fit_under(&mut items, beam, plain, &staves));
+        let ids: Vec<ItemId> = self.tx.doc().ids().to_vec();
+        ids.iter().zip(&before).zip(&items).filter(|((_, old), new)| !new.describes(&old.to_item())).for_each(|((&id, _), new)| {
+            self.tx.replace(id, new.to_item());
         });
         Ok(())
     }

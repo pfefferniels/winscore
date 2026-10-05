@@ -388,6 +388,7 @@ impl Run<'_, '_> {
             Some(SessionWord::Undelete) => self.undelete(),
             Some(SessionWord::Paste) => self.paste(),
             Some(SessionWord::PageRight) => self.page_right(),
+            Some(SessionWord::AdjustStems(_)) => self.adjust_stems_in_area(&args.iter().filter_map(Token::number).collect::<Vec<_>>()),
             Some(_) => Err(EditError::NoSelection(word)),
             None => match create::template(&word) {
                 Some(template) => self.create(&template, args),
