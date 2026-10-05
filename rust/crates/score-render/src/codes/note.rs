@@ -214,7 +214,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     if note.accidental != 0 {
         accidental(doc, item, &note, canvas);
     }
-    let stem_length = if note.stem == Stem::None { 0.0 } else { stem(doc, item, &note, canvas) };
+    let stem_length = if note.stem == Stem::None { unwritten_stem_length(item) } else { stem(doc, item, &note, canvas) };
     if ip(item, 9) >= 10 {
         dots(doc, item, &note, canvas);
     }
@@ -231,6 +231,13 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
         None => tablature::font_loaded(doc, item),
         Some(note) => mark::font_loaded(doc, item, &note).or_else(|| head::font_loaded(doc, item, &note)),
     }
+}
+
+/// The stem length the marks read when no stem routine ran: the stem
+/// routine keeps its f32 length in the IP14 slot, so without it the marks
+/// read trunc(P14)'s bits as a float (0 for P14 = 0, NaN when negative).
+fn unwritten_stem_length(item: ItemRef<'_>) -> f64 {
+    f64::from(f32::from_bits(ip(item, 14) as u32))
 }
 
 /// P8 without the 100 that asks for a grace-note slash.

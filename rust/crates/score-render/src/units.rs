@@ -22,12 +22,18 @@ pub fn constant(value: f32) -> f64 {
 
 /// Fortran AMOD (amod 0x54AABA): x - trunc(x / y)·y, with the quotient truncated.
 pub fn amod(x: f64, y: f64) -> f64 {
-    x - f64::from(trunc(x / y)) * y
+    x - (x / y).trunc() * y
 }
 
-/// The engine's float-to-integer conversion for points: truncation toward zero.
+/// The engine's float-to-integer conversion for points: truncation toward
+/// zero. Like the x87 FISTP it gives i32::MIN, the "integer indefinite",
+/// for NaN and for values outside the i32 range.
 pub fn trunc(value: f64) -> i32 {
-    value as i32
+    if value > -2_147_483_649.0 && value < 2_147_483_648.0 {
+        value as i32
+    } else {
+        i32::MIN
+    }
 }
 
 /// FORTRAN's NINT through ANINT 0x5FF381: trunc(x ± 0.5) in f64, so halves
@@ -69,6 +75,13 @@ mod tests {
         assert_eq!(trunc(37.5), 37);
         assert_eq!(trunc(-37.5), -37);
         assert_eq!(trunc(-23692.91), -23692);
+    }
+
+    #[test]
+    fn truncates_out_of_range_to_integer_indefinite() {
+        assert_eq!(trunc(f64::NAN), i32::MIN);
+        assert_eq!(trunc(3.0e9), i32::MIN);
+        assert_eq!(trunc(-3.0e9), i32::MIN);
     }
 
     #[test]

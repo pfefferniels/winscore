@@ -33,12 +33,12 @@ Every case in `oracle/fuzz_cases.json` (fixtures `rust/fixtures/<name>/`), shrun
 
 | case | owner | status | symptoms | items | detail |
 |---|---|---|---|---|---|
-| fuzz-code01-p11-p14-5b0460 | impl-notes | open | distorted | `8 1 0; 1 1 159 9 0 0 0 0 0 0 -14 0 0 -1` | same structure, off by up to 337 after aligning |
-| fuzz-code01-p6-p10-e9c174 | impl-notes | open | text offset | `8 2 0; 1 2 134 5.5 0 -14 0 0 0 110` | "2" shifted by (15000, 0) |
-| fuzz-code02-p5-p15-275998 | impl-notes | open | distorted | `8 1 0; 2 1 47 103 101 0 0 0 0 0 0 0 0 0 1` | same structure, off by up to 342 after aligning |
-| fuzz-code02-p6-p8-c48746 | impl-notes | open | text style | `8 1 0; 2 1 164.33 2.5 0 -1 0 -3` | "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 813.5/335.6 #999999 w400 esc 0 |
-| fuzz-code02-p8-p15-37bcaa | impl-notes | open | text style | `8 1 0; 2 1 138.05 6 0 0 0 -3 0 0 0 0 0 0 0.8` | "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 650.8/268.5 #000000 w400 esc 0 |
-| fuzz-code02-p8-p17-c92312 | impl-notes | open | text offset | `8 2 0; 2 2 43 4 0 0 0 -3 0 0 0 0 0 0 0 0 1` | "G" shifted by (0, -3150) |
+| fuzz-code01-p11-p14-5b0460 | impl-notes | fixed, ratcheted | distorted | `8 1 0; 1 1 159 9 0 0 0 0 0 0 -14 0 0 -1` | same structure, off by up to 337 after aligning |
+| fuzz-code01-p6-p10-e9c174 | impl-notes | fixed, ratcheted | text offset | `8 2 0; 1 2 134 5.5 0 -14 0 0 0 110` | "2" shifted by (15000, 0) |
+| fuzz-code02-p5-p15-275998 | impl-notes | fixed, ratcheted | distorted | `8 1 0; 2 1 47 103 101 0 0 0 0 0 0 0 0 0 1` | same structure, off by up to 342 after aligning |
+| fuzz-code02-p6-p8-c48746 | impl-notes | fixed, ratcheted | text style | `8 1 0; 2 1 164.33 2.5 0 -1 0 -3` | "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 813.5/335.6 #999999 w400 esc 0 |
+| fuzz-code02-p8-p15-37bcaa | impl-notes | fixed, ratcheted | text style | `8 1 0; 2 1 138.05 6 0 0 0 -3 0 0 0 0 0 0 0.8` | "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 650.8/268.5 #000000 w400 esc 0 |
+| fuzz-code02-p8-p17-c92312 | impl-notes | fixed, ratcheted | text offset | `8 2 0; 2 2 43 4 0 0 0 -3 0 0 0 0 0 0 0 0 1` | "G" shifted by (0, -3150) |
 | fuzz-code03-p5-p10-e6050f | impl-symbols | open | extra | `8 1 0; 3 1 88.48 0 0.1 0 0 0 0 1` | fill #000000, 1 path(s), 62 points from (15678, 4037) |
 | fuzz-code03-p5-p10-e66eab | impl-symbols | open | extra | `8 1 0; 3 1 60.13 6 0.9 0 0 0 0 2` | fill #000000, 1 path(s), 62 points from (11425, 5087) |
 | fuzz-code05-p11-p16-2701e0 | impl-beams | open | text offset | `8 1 0; 5 1 26.49 5 0 0 0 0 0 0 2 0 0 0 0 12` | "1" shifted by (98, 336) |

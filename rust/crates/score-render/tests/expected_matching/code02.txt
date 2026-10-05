@@ -151,3 +151,7 @@ code02-font-after-gp
 code02-font-after-gp-p14
 code02-font-after-number
 code02-font-after-number-p14
+fuzz-code02-p5-p15-275998
+fuzz-code02-p6-p8-c48746
+fuzz-code02-p8-p15-37bcaa
+fuzz-code02-p8-p17-c92312

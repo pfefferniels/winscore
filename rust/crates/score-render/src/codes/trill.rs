@@ -278,6 +278,7 @@ fn ottava_text(mark: &Mark<'_, '_>) -> TextSymbolCall {
         p14: mark.p(14),
         p16: mark.p(16),
         p26: mark.p(26),
+        step: None,
     }
 }
 

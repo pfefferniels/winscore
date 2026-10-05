@@ -71,8 +71,9 @@ const INVISIBLE_GREY: f32 = 0.6;
 /// What draw_rest derives from the parameters before drawing.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Rest {
-    /// The staff drawn on (P17 moves to a neighbour).
+    /// The staff drawn on (P17 moves to a neighbour) and its number (CUR_STAFF).
     staff: Staff,
+    staff_number: i32,
     /// X_POS of the item, before P10 and P9.
     x: f64,
     /// P5 without the parentheses' hundreds; -44 read as -4.
@@ -105,11 +106,12 @@ impl Rest {
         if kind < -7 && !(-19..=-11).contains(&kind) {
             return None;
         }
-        let staff = match ip(item, 17) {
-            0 => doc.staff_of(item),
-            2 => doc.staves.get(item.staff() - 1),
-            _ => doc.staves.get(item.staff() + 1),
+        let staff_number = match ip(item, 17) {
+            0 => item.staff(),
+            2 => item.staff() - 1,
+            _ => item.staff() + 1,
         };
+        let staff = if staff_number == item.staff() { doc.staff_of(item) } else { doc.staves.get(staff_number) };
         let number_shift = if two_bar_repeat && ip(item, 8) != 0 {
             real(-(staff.step * constant(3.2) / 25.0))
         } else {
@@ -132,6 +134,7 @@ impl Rest {
             if grace { (real(step * constant(GRACE_SIZE)), constant(GRACE_SIZE), real(amod(level, 100.0))) } else { (step, 1.0, level) };
         Some(Self {
             staff,
+            staff_number,
             x: if ip(item, 17) == 0 { x_pos } else { page::x(item.p(3)) },
             kind,
             parenthesised,
@@ -165,25 +168,49 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64, canvas: &mut Canv
         canvas.colour = colour::from_p26(INVISIBLE_GREY, doc.options.medium);
     }
     let t = rest.kind + 8;
-    let shift = match item.p(10) {
-        0.0 => 0.0,
-        p10 => real(rest.unit * f64::from(p10) / 25.0),
-    };
+    let shift = p10_shift(item, &rest);
     let x = if shift == 0.0 { rest.x } else { real(shift * P3_UNIT + rest.x) };
-    let p3 = if shift == 0.0 { f64::from(item.p(3)) } else { real(shift + f64::from(item.p(3))) };
-    let centred = ip(item, 9) == -1 && t <= T_WHOLE;
-    let bars = if centred { neighbouring_bars(doc, item, p3, rest.unit) } else { None };
+    let p3 = real(shift + f64::from(item.p(3)));
+    let bars = if centred(item, t) { neighbouring_bars(doc, item, p3, rest.unit) } else { None };
     let h_bar = match &bars {
         Some(bars) if t == T_H_BAR => (x, real(bars.h_bar_end(p3, rest.unit) * P3_UNIT)),
         _ => (rest.x, real(f64::from(item.p(9)) * P3_UNIT)),
     };
-    // CW stores the centred position in P9, so every later redraw uses it.
+    // The engine stores the centre in P9, so every later redraw uses it.
     let p9 = match &bars {
         Some(bars) if t != T_H_BAR => bars.centre(rest.unit, t),
         _ => f64::from(item.p(9)),
     };
     let x = if trunc(p9) != 0 && trunc(p9) != -1 && t <= T_WHOLE { real(p9 * P3_UNIT) } else { x };
     Drawing { doc, item, rest: &rest, h_bar, canvas }.from(t, x, rest.size, rest.dots, rest.number);
+}
+
+/// The P9 a redraw writes into a centred rest (CW, P9 = -1, draw_rest
+/// 0x519C38): the middle between the barlines around it, in P3 units, for
+/// whole rests and longer (P5 <= -2). None when the rest is not centred,
+/// no barline follows it, or for the bar rest P5 = -5, which is spread
+/// between the barlines on every draw and keeps P9 = -1.
+pub fn centre(doc: &Document<'_>, item: ItemRef<'_>) -> Option<f32> {
+    let rest = Rest::new(doc, item, page::x(item.p(3)))?;
+    let t = rest.kind + 8;
+    if !centred(item, t) || t == T_H_BAR {
+        return None;
+    }
+    let p3 = real(p10_shift(item, &rest) + f64::from(item.p(3)));
+    neighbouring_bars(doc, item, p3, rest.unit).map(|bars| bars.centre(rest.unit, t) as f32)
+}
+
+/// CW: P9 = -1 on a whole rest or longer (t = P5 + 8 <= 6).
+fn centred(item: ItemRef<'_>, t: i32) -> bool {
+    ip(item, 9) == -1 && t <= T_WHOLE
+}
+
+/// P10 in P3 units: P10/25 of the rest's step unit.
+fn p10_shift(item: ItemRef<'_>, rest: &Rest) -> f64 {
+    match item.p(10) {
+        0.0 => 0.0,
+        p10 => real(rest.unit * f64::from(p10) / 25.0),
+    }
 }
 
 /// The barlines (or a clef, for composite rests) either side of a rest on
@@ -364,16 +391,16 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
 /// globals: P3 with the P10 shift, P16 as draw_rest moved it, at the
 /// fermata's size P12 (× 0.7 grace).
 fn general_pause_call(doc: &Document<'_>, item: ItemRef<'_>, rest: &Rest, size: f64) -> TextSymbolCall {
-    let shift = match item.p(10) {
-        0.0 => 0.0,
-        p10 => real(rest.unit * f64::from(p10) / 25.0),
-    };
+    let shift = p10_shift(item, rest);
     let sx = real(size * number_scale(item));
     TextSymbolCall {
         size_x: sx,
         size_y: sx,
+        staff: rest.staff_number,
         p3: real(shift + f64::from(item.p(3))) as f32,
         p16: rest.number_shift as f32,
+        p26: if invisible_on_screen(doc, item) { INVISIBLE_GREY } else { item.p(26) },
+        step: Some(rest.step),
         ..TextSymbolCall::of(doc, item, GENERAL_PAUSE_SYMBOL)
     }
 }
@@ -642,18 +669,14 @@ impl Drawing<'_, '_, '_> {
         let item = self.item;
         let k = (rest.kind + 4).clamp(0, 7) as usize;
         let unit = real(rest.unit / 25.0);
-        let p10_shift = match item.p(10) {
-            0.0 => 0.0,
-            p10 => real(rest.unit * f64::from(p10) / 25.0),
-        };
-        let p3 = real(p10_shift + f64::from(item.p(3)));
+        let p3 = real(p10_shift(item, &rest) + f64::from(item.p(3)));
         let p3 = if item.p(5) < -101.0 && item.p(9) > 0.0 { f64::from(item.p(9)) } else { p3 };
         let mut p4 = real(amod(f64::from(item.p(4)), 100.0) + constant(PAREN_LEVEL[k]));
         if k > 5 && rest.step != rest.unit {
             p4 = real(p4 + 1.0);
         }
         let size = if k < 4 { 1.0 } else { constant(1.9) };
-        let size = if ip(item, 4).abs() >= 100 { real(size * constant(GRACE_SIZE)) } else { size };
+        let size = if rest.size != 1.0 { real(size * constant(GRACE_SIZE)) } else { size };
         let y = rest.staff.y(amod(p4, 100.0));
         let left = real(real(p3 - unit * constant(PAREN_LEFT[k])) * P3_UNIT);
         glyph::library(self.doc, self.item, self.canvas, PARENTHESIS_SYMBOL, Pos::new(left, y), (size, size), rest.staff.step);
