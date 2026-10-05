@@ -13,6 +13,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 
+from grace import GraceSession
 from lineup import (F, LineupError, Lineup, code, staff, xpos, par, p14_or_p15, prepare,
                     staff_steps, trunc, rich_staff, rich_system)
 
@@ -752,14 +753,17 @@ def justify(items, lo: int, hi: int, x_left: float, x_right: float, right: float
 # ---------------------------------------------------------------- LI, J, LJ (0x4B80B7)
 
 def layout_items(items, lo: int, hi: int, command: str = "LJ", right: float = 200.0,
-                 box: tuple[float, float] = (0.0, 200.0)) -> list[list[float]]:
-    """The whole command after the answer 'lo count' and yes to "Source Box O.K.?"."""
+                 box: tuple[float, float] = (0.0, 200.0), grace: GraceSession | None = None) -> list[list[float]]:
+    """The whole command after the answer 'lo count' and yes to "Source Box O.K.?".
+
+    Pass the same `grace` session to successive calls to carry 0x89FBF0 as the engine does.
+    """
     items, hi = prepare([list(it) for it in items], lo, hi, right, box)
     if hi is None:
         return items
     x_left, x_right = box
     if command[0] == "L":
-        run = Lineup(items, lo, hi, right, staff_steps(items))
+        run = Lineup(items, lo, hi, right, staff_steps(items), grace=grace or GraceSession())
         try:
             run.run()
         except LineupError as err:

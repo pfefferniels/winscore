@@ -160,6 +160,24 @@ What J leaves alone: values outside the box or of other staves, vertical paramet
 - J keeps several values in globals from one staff (and one run) to the next: the ledger-line state, the small-clef flag, the previous chord's P4, P5, P9 and P12 (justify.py `JustifyState`). The grace pass keeps the last right width for keys (0x4C7374 sets none). Again the model starts from zero; LJ run twice in one engine still matched the model run twice (13/13 dense systems), so the carried values rarely matter.
 - Ghidra's decompilation hides some f32 stores to scratch globals, which only the disassembly shows: in 0x4CC470 x_right - x_left is rounded to f32 before the unit is computed, and in 0x4B63CD the stretch numerator before the division. Both were found as one-ulp differences (the first only on a real file).
 
+## 12. State carried from one run to the next
+
+A port starts each command from a fresh state, as the models do. Of the statics in these routines, one changes results in normal use; the others cancel out or matter only in corner cases.
+
+| Global | Written by | Read by | Effect | Visible in normal use |
+|---|---|---|---|---|
+| f32 0x89FBF0 | grace pass: last right width (0x4C7374), last x of a group of equal x, last fit ratio (0x4C795B) | 0x4C7374 as the right width of a **key signature** (it sets none for keys) | a grace group directly after a key signature is spaced from the previous run's leftover | **yes**: a second LI on clef, key, two grace notes, note moved the grace notes by 0.2 and 0.1. `GraceSession` in grace.py carries it; with it, LI three times and LJ twice match the engine |
+| 0x1EA3FE4, 0x1EA4F84 at a virtual anchor's index | grace pass widths | grace fit and placement | widths of a virtual anchor are whatever an earlier run left | only for a grace group with no note or barline before it on its staff, or none after it; not modelled |
+| int 0x89FC00 | grace pass | item reference of a virtual anchor | none (virtual anchors are never written) | no |
+| int 0x89F930 | J, per note (ledger side) | first chord of each staff | the comparison resets the ledger state to 0 either way | no |
+| int 0x89F8F0 | J, at each clef (small clef) | the extra left room right after a clef | always set by that same clef | no |
+| f32 0x89F938 | J (largest right extra of a chord, flag width, an x) | flag-room test when an up-stem chord is followed by a barline | compared with a note's x; differs except by coincidence | practically no |
+| 0x89F900, 0x89F940, 0x89F8F8, 0x89F8FC, 0x89F8F4 | J, at the end of each chord | accidental rule next to the previous chord | read only when the previous column of the same staff is a chord | no |
+| f32 0x1E9B280[1] | J (left need of the box-start column, zeroed once per run) | nothing | never enters a gap need | no |
+| int 0x1ABFE1C (item reference of virtual lineup anchors) | sort of the anchors in 0x4C9510 (sets -1) | the next run's sort | by the code a stale -1 would drop the virtual anchors | no: LI twice on a staff without closing barline matched the model that keeps them, so something rewrites the table (not traced) |
+
+Recommendation: port from a fresh state. If repeated LJ on the same page must match WinScore exactly, keep 0x89FBF0 as one float per session.
+
 ## Verification
 
 - `python experiments/lineup.py [cases] [max_staves] [rich]`: LI against the oracle after `LI` and `lo count` (yes to the source box), item by item and bit for bit, including the engine's partly changed items when it gives up. 200/200 plain, 300/300 rich, plus targeted cases (triplets, notes 0.05 apart, keys and meters, staff size 0.75, staff P6 = 150, no closing barline, closing clef, barline with P12, slurs/beams/lines/numbers, a two-staff barline with P4 = 2).

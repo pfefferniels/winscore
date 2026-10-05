@@ -49,6 +49,12 @@ def is_spacer(it) -> bool:
 
 
 @dataclass
+class GraceSession:
+    """The global 0x89FBF0, which survives from one lineup to the next (layout.md §12)."""
+    fbf0: float = 0.0
+
+
+@dataclass
 class Entry:
     x: float
     item: int | None               # item whose P3 the entry stands for (None: virtual)
@@ -68,7 +74,7 @@ class GracePass:
     steps: dict[int, float]
     e: list[Entry] = field(default_factory=list)
     bars: list[tuple[float, int]] = field(default_factory=list)
-    last_right: float = 0.0        # 0x89FBF0 keeps its value for keys (0x4C7374 sets no right width)
+    session: GraceSession = field(default_factory=GraceSession)
 
     def item(self, i):
         return self.items[i - 1]
@@ -213,7 +219,7 @@ class GracePass:
     def entry_widths(self, k: int, it) -> tuple[float, float]:
         """0x4C7374"""
         n = len(it)
-        left, right = F(1.2), self.last_right
+        left, right = F(1.2), self.session.fbf0
         if k == 1:
             least = 1.0
             right = F(4.6) if n > 5 and it[5] == 2 else F(4.1)
@@ -259,7 +265,7 @@ class GracePass:
                     left = F(5)
         elif k != 17:
             right = F(8.1) if (par(it, 5) > 9 or (par(it, 6) > 9 and par(it, 5) < 90)) else F(5.6)
-        self.last_right = right
+        self.session.fbf0 = right
         return left, right
 
     def sort(self) -> list[int]:
@@ -281,7 +287,7 @@ class GracePass:
         c = 0
         while c < n - 1:
             if e[order[c]].x == e[order[c + 1]].x:
-                x = e[order[c]].x
+                x = self.session.fbf0 = e[order[c]].x
                 m = c
                 lmax = rmax = F(-99)
                 while m < n and not x < e[order[m]].x:
@@ -333,6 +339,7 @@ class GracePass:
                 r, j = self.fit(m)
                 e[m].mark = 1
                 ratio = min(ratio, r)
+            self.session.fbf0 = ratio
             if ratio == 1 or ratio <= 0:
                 continue
             m = len(e) - 1
