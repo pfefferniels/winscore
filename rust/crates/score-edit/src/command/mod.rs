@@ -112,6 +112,16 @@ enum SessionWord {
     PageRight,
 }
 
+/// The centring words: CN (both ends to notes), CV (and levels over the
+/// notes), CNL (slur from the line's start), CNR (slur to the line's end).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CentreWord {
+    Ends,
+    Vertical,
+    LineStart,
+    LineEnd,
+}
+
 /// Edit words that take their number attached as well as after a blank (WB3, EU5).
 const NUMBERED_WORDS: [&str; 2] = ["WB", "EU"];
 
@@ -216,7 +226,7 @@ pub fn is_supported(line: &str) -> bool {
                 || GroupCommand::word(&word).is_some()
                 || LayoutCommand::word(&word).is_some()
                 || auto_beam::Word::parse(&word).is_some()
-                || matches!(word.as_str(), "ADOF" | "CNX")
+                || matches!(word.as_str(), "ADOF" | "CNX" | "CV" | "CNL" | "CNR")
                 || Order::word(&word).is_some()
                 || Move::parse(&word, first_number(&tokens[1..])).is_some_and(Move::is_complete)
                 || item::is_edit_word(&word)
@@ -300,6 +310,9 @@ impl Run<'_, '_> {
             return self.auto_beam(auto);
         }
         match word.as_str() {
+            "CV" => return self.centre_ends(None, CentreWord::Vertical),
+            "CNL" => return self.centre_ends(None, CentreWord::LineStart),
+            "CNR" => return self.centre_ends(None, CentreWord::LineEnd),
             "ADOF" => return self.stem_offsets(),
             "CNX" => {
                 self.center(number)?;
@@ -484,36 +497,47 @@ impl Run<'_, '_> {
     /// CN [staff]: the selected items moved to the P3 of the nearest note or
     /// rest on their staff (or on `staff`); a beam's ends each to their own nearest.
     fn center(&mut self, staff: Option<f32>) -> Result<(), EditError> {
-        let targets: Vec<(ItemId, Draft)> = self
+        self.centre_ends(staff, CentreWord::Ends)
+    }
+
+    /// CN, CV, CNL, CNR on the selection: CN on every item, the others on slurs.
+    fn centre_ends(&mut self, staff: Option<f32>, word: CentreWord) -> Result<(), EditError> {
+        let selected: Vec<(ItemId, Draft)> = self
             .selection()
             .into_iter()
             .filter_map(|id| Some((id, Draft::of(self.tx.doc().item(id)?))))
             .collect();
         let staves = RenderDocument::new(self.tx.doc().file()).staves;
-        targets.into_iter().for_each(|(id, mut draft)| {
-            let on = staff.unwrap_or(draft.get(2));
-            if (4..=7).contains(&draft.code()) {
-                let targets: Vec<centre::Target> = self
-                    .tx
-                    .doc()
-                    .entries()
-                    .map(|(other, item)| (other, Draft::of(item)))
-                    .filter(|(other, d)| *other != id && centre::is_target(&draft, d) && d.get(2) as i32 == on as i32)
-                    .map(|(_, d)| centre::Target(d))
-                    .collect();
-                centre::centred(&draft, &targets, &staves).into_iter().for_each(|(n, value)| draft.set(n, value));
-                self.tx.replace(id, draft.to_item());
+        selected.into_iter().for_each(|(id, mut draft)| {
+            let on = match word {
+                CentreWord::Ends => staff.unwrap_or(draft.get(2)),
+                _ => draft.get(2),
+            };
+            let others: Vec<(ItemId, Draft)> = self.tx.doc().entries().filter(|&(other, _)| other != id).map(|(o, item)| (o, Draft::of(item))).collect();
+            let on_staff = |d: &Draft| d.get(2) as i32 == on as i32;
+            let targets: Vec<centre::Target> = others
+                .iter()
+                .filter(|(_, d)| centre::is_target(&draft, d) && on_staff(d))
+                .map(|(_, d)| centre::Target(d.clone()))
+                .collect();
+            let notes: Vec<Draft> = others.iter().map(|(_, d)| d).filter(|d| d.code() == 1 && on_staff(d)).cloned().collect();
+            let step = staves.get(on as i32).step as f32;
+            let pairs = match (word, draft.code()) {
+                (CentreWord::Vertical, 5) => centre::vertically_centred(&draft, &targets, &staves).unwrap_or_default(),
+                (CentreWord::LineStart, 5) => centre::to_line_start(&draft, &notes, step),
+                (CentreWord::LineEnd, 5) => {
+                    let barlines: Vec<Draft> = others.iter().map(|(_, d)| d).filter(|d| d.code() == 14).cloned().collect();
+                    centre::to_line_end(&draft, &barlines, &notes, step)
+                }
+                (CentreWord::Vertical | CentreWord::LineStart | CentreWord::LineEnd, _) => Vec::new(),
+                (_, 4..=7) => centre::centred(&draft, &targets, &staves),
+                (_, 8 | 14) => Vec::new(),
+                _ => self.nearest_note(on, draft.get(3)).map(|x| vec![(3, x)]).unwrap_or_default(),
+            };
+            if pairs.is_empty() {
                 return;
             }
-            let ends: &[usize] = match draft.code() {
-                8 | 14 => &[],
-                _ => &[3],
-            };
-            ends.iter().for_each(|&n| {
-                if let Some(x) = self.nearest_note(on, draft.get(n)) {
-                    draft.set(n, x);
-                }
-            });
+            pairs.into_iter().for_each(|(n, value)| draft.set(n, value));
             self.tx.replace(id, draft.to_item());
         });
         Ok(())
