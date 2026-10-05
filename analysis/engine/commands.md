@@ -131,8 +131,8 @@ ADF (French), notes not within 0.1 of either end: P8 = f32((P8 - extra) - cut)
 
 | Prefix | Effect |
 |---|---|
-| `AU` (AUTO, AUTOX) | P2 = 99 (98 for AUTOX), then 0x417738 computes the secondary beams from the notes' durations (P10.. of the beam) and the stems; AUTOX takes notes of both stem directions |
-| `SP` (SPL1..4, SPL222) | P1 = 8 marker, P2 = -n (two-digit n becomes -(10n + 9)), then 0x417738 (splits the secondary beams) |
+| `AU` (AUTO, AUTOX) | secondary beams from the notes' durations, see below |
+| `SP` (SPL1..4, SPL222) | secondary beams with breaks, see below |
 | `BE` | P8 = trunc(P8/10)*10 + (number or 1); `BE+` adds 1 |
 | `CU`, `CUX` | P4 +- 100 (cue beam on/off) |
 | `LO`, `RO` | P14 / P15 = 20 (M), 10 (P) or the number |
@@ -142,6 +142,15 @@ ADF (French), notes not within 0.1 of either end: P8 = f32((P8 - extra) - cut)
 | `NL`, `NU` | P17 +- 0.02, P20 +- 0.2 (0 with a final 0) |
 | `FL` (FLR11, FLR14) | P12 or P15 = 999 |
 | `TH` | P18 = number, `THM` subtracts 0.05 |
+
+### Secondary beams: AUTO, AUTOX, SPL1..4, SPL22, SPL222 (verified, `experiments/auto_beam.py`, 175/175 bit for bit)
+
+On a beam in edit mode, 0x43D0B0 sets P2 = 99 (AUTO), 98 (AUTOX) or, for SPLn, P1 = 8 and P2 = -n (two-digit n becomes -(10n + 9)) and calls 0x417738:
+
+1. **Notes**: code 1 on the beam's staff with P7 > 0, at least 7 parameters and P3 within the beam's ends +- 0.04, whose stem digit equals the beam's direction (any stem for AUTOX, or P12 != 0). The first note decides cue or normal size: the beam's P4 is moved into the same range (+-100), and notes of the other size are skipped. Durations: P7 (64 or more counts as 0.25), divided by 1.5 or 1.75 for one or two dots (tens digit of P9); the scan stops at the first note longer than 0.5001. Beam count per note: 1 down to 0.2501, 2 down to 0.1251, 3 down to 0.0626, then 4, 5, 6 (limits 0.0313, 0.0157). With fewer than two notes the beam flips direction once (P4, P5 +-13) and tries again; otherwise nothing changes.
+2. **SPLn** inserts a pseudo-note with count 1 at 0.2 after the given notes, so that the inner beams break there: n < 100 breaks after note n; three digits abc after a+.., b.., c.. notes (SPL222: after notes 2, 5 and 8). SPL does nothing when P13 = 0 and P14 or P15 is set, or when the beam equals the item before or after it in P1..P6 (a second-level beam item).
+3. **Result**: notes sorted by x (the last of equal x first); P7 = direction*10 + smallest count, P3 and P6 = first and last note x. If all counts are equal, P8..P15 become 0. Otherwise the first run of the next count goes into P10 (code smallest*10 + next - smallest, e.g. 11), P11 and P12 (start and end x; 0 and -1 when the run is only the last note; start and end exchanged when the run begins after a note of lower count), the next run into P13..P15, and the item is cut to its last non-zero parameter. Further runs go into new beam items inserted after it (copies of the beam with their own P10..P15).
+4. AUTOX then writes P9 = digits for the ends (hundreds), beam 2 (tens) and beam 3 (units) where a note with the opposite stem sits (1 start, 2 end, 3 both; 0x419498), into the last item written. Last, the stem pass of ADJ (ADX for AUTOX) runs with the edit buffer, which at that point holds the last item written.
 
 ### Group re-input: FLU, FLD, FLI, FLN, FLA, FLV (read; modes checked in the oracle)
 
