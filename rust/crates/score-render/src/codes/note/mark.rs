@@ -161,14 +161,15 @@ fn place(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, p11: i32, stem_leng
             if p11 == -14 {
                 size_y = -size;
             }
-            dy = dy.min(limit);
+            // fcomp: an unordered (NaN) length keeps the mark where it is.
+            dy = if dy > limit { limit } else { dy };
         } else {
             if stem == Stem::Up {
                 dy = real(dy + stem_length - s7);
             }
             let limit = real(s7 * 13.0 + (level0 - note.origin.y));
             stem = Stem::Up;
-            dy = dy.max(limit);
+            dy = if dy >= limit { dy } else { limit };
         }
     } else {
         if stem == Stem::Up {

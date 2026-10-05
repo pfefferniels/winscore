@@ -1,5 +1,5 @@
 import './style.css';
-import init, { commandSupported, paramName, Reference as EngineList, Score, type EncodedList } from './wasm/score_web.js';
+import init, { codeName, commandSupported, paramName, Reference as EngineList, Score, type EncodedList } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
 import { bindCommandBar } from './command-bar';
 import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
@@ -12,6 +12,7 @@ import { bindInteraction } from './interaction';
 import { formatParam, markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer } from './paint';
 import { createPalette, type DialogKind } from './palette';
+import { download, printPage } from './print';
 import { createSymbolDialog } from './symbol-dialog';
 import { createTextDialog, editInPlace } from './text-dialog';
 import { stepZoom, ZOOM_LEVELS } from './view';
@@ -52,6 +53,8 @@ interface State {
   modified: boolean;
   /** The last click on empty paper, where new items go when nothing is selected. */
   lastPaper: Point | null;
+  /** The scrollable page area; kept while a drag is in progress. */
+  extent: Box | null;
 }
 
 const MARGIN = 1000;
@@ -69,6 +72,8 @@ const ui = {
   file: $<HTMLInputElement>('file'),
   sample: $<HTMLSelectElement>('sample'),
   save: $<HTMLButtonElement>('save'),
+  exportSvg: $<HTMLButtonElement>('export-svg'),
+  print: $<HTMLButtonElement>('print'),
   undo: $<HTMLButtonElement>('undo'),
   redo: $<HTMLButtonElement>('redo'),
   input: $<HTMLButtonElement>('input'),
@@ -99,9 +104,16 @@ const ui = {
   palette: $<HTMLElement>('palette'),
 };
 
-const state: State = { score: null, editor: null, fileName: '', rust: EMPTY, reference: null, mode: 'rust', modified: false, lastPaper: null };
+const state: State = { score: null, editor: null, fileName: '', rust: EMPTY, reference: null, mode: 'rust', modified: false, lastPaper: null, extent: null };
 
 const view = createPageView(ui, showZoom);
+/** Names of the item codes P1 takes, looked up once each. */
+const codeNames = new Map<number, string>();
+
+function nameOf(code: number): string {
+  if (!codeNames.has(code)) codeNames.set(code, codeName(code) ?? `Code ${code}`);
+  return codeNames.get(code)!;
+}
 const inputDialog = createInputDialog(ui.inputDialog);
 const symbolDialog = createSymbolDialog(ui.symbolDialog);
 const textDialog = createTextDialog(ui.textDialog);
@@ -190,12 +202,14 @@ function primary(): number | null {
   return selection().at(-1) ?? null;
 }
 
-function scene(): Scene {
+/** What the page view shows; `live` (a drag in progress) keeps the scrollable area as it was. */
+function scene(live = false): Scene {
   const paper = paperBox();
+  if (!live || !state.extent) state.extent = extent(paper);
   return {
     layers: layers(),
     paper,
-    extent: extent(paper),
+    extent: state.extent,
     highlights: selection().flatMap((item) => shownLists().map((list) => ({ list, item }))),
   };
 }
@@ -204,6 +218,8 @@ function refreshStatus() {
   const items = state.score?.itemCount() ?? 0;
   ui.status.textContent = state.score ? `${state.fileName}${state.modified ? ' (modified)' : ''} · ${items} items` : '';
   ui.save.disabled = !state.score;
+  ui.exportSvg.disabled = !state.score;
+  ui.print.disabled = !state.score;
   const undo = state.editor?.undoLabel() ?? null;
   const redo = state.editor?.redoLabel() ?? null;
   ui.undo.disabled = undo === null;
@@ -219,17 +235,6 @@ function refreshStatus() {
     button.disabled = mode !== 'rust' && !state.reference;
   });
   ui.legend.hidden = state.mode !== 'overlay';
-}
-
-function summary(score: Score, index: number): ItemSummary | null {
-  const info = score.item(index);
-  if (!info) return null;
-  try {
-    const params = info.params;
-    return { index, code: info.code, name: info.name ?? `Code ${info.code}`, staff: params[1] ?? 0, p3: params[2] ?? 0 };
-  } finally {
-    info.free();
-  }
 }
 
 function details(score: Score, index: number): ItemDetails | null {
@@ -254,13 +259,18 @@ function details(score: Score, index: number): ItemDetails | null {
   }
 }
 
+function itemSummaries(score: Score): ItemSummary[] {
+  const numbers = score.itemSummaries();
+  return Array.from({ length: numbers.length / 3 }, (_, index) => {
+    const [code = 0, staff = 0, p3 = 0] = numbers.subarray(3 * index, 3 * index + 3);
+    return { index, code, name: nameOf(code), staff, p3 };
+  });
+}
+
 function refreshItemList() {
-  const score = state.score;
-  const items = score
-    ? Array.from({ length: score.itemCount() }, (_, i) => summary(score, i)).filter((s): s is ItemSummary => s !== null)
-    : [];
+  const items = state.score ? itemSummaries(state.score) : [];
   renderItemList(ui.items, items, handlers);
-  ui.itemCount.textContent = score ? `(${items.length})` : '';
+  ui.itemCount.textContent = state.score ? `(${items.length})` : '';
 }
 
 /** Re-renders the parameter panel, keeping the keyboard in the field it was in. */
@@ -274,9 +284,9 @@ function refreshPanel() {
   field?.select();
 }
 
-function redraw() {
-  view.setScene(scene());
-  refreshStatus();
+function redraw(live = false) {
+  view.setScene(scene(live));
+  if (!live) refreshStatus();
 }
 
 async function loadFontsAndRepaint() {
@@ -315,7 +325,7 @@ function select(items: number[], reveal = false) {
 function edited(change: Change | null, live: boolean) {
   const score = state.score;
   if (!score) return;
-  state.rust = decodeAndFree(score.render());
+  state.rust = decodeAndFree(live ? score.renderSelection() : score.render());
   if (!live) {
     state.modified ||= change !== null;
     refreshItemList();
@@ -323,7 +333,7 @@ function edited(change: Change | null, live: boolean) {
     void loadFontsAndRepaint();
     report(change?.label ?? null);
   }
-  redraw();
+  redraw(live);
 }
 
 function failed(err: unknown) {
@@ -486,12 +496,27 @@ async function openFile(file: File) {
 
 function save() {
   if (!state.score) return;
-  const blob = new Blob([state.score.save() as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' });
-  const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: state.fileName || 'score.mus' });
-  link.click();
-  URL.revokeObjectURL(link.href);
+  download(state.score.save() as Uint8Array<ArrayBuffer>, state.fileName || 'score.mus', 'application/octet-stream');
   state.modified = false;
   refreshStatus();
+}
+
+/** The score's file name with another extension. */
+function exportName(extension: string): string {
+  return `${(state.fileName || 'score').replace(/\.[^.]*$/, '')}.${extension}`;
+}
+
+function exportSvg() {
+  if (state.score) download(state.score.exportSvg(), exportName('svg'), 'image/svg+xml');
+}
+
+async function print() {
+  if (!state.score) return;
+  try {
+    await printPage(decodeAndFree(state.score.renderPrint()), paperBox());
+  } catch (err) {
+    failed(err);
+  }
 }
 
 function setMode(mode: Mode) {
@@ -564,6 +589,8 @@ function bindControls(samples: Sample[]) {
     if (sample) void openSample(sample);
   });
   ui.save.addEventListener('click', save);
+  ui.exportSvg.addEventListener('click', exportSvg);
+  ui.print.addEventListener('click', () => void print());
   ui.zoomIn.addEventListener('click', () => view.setZoom(stepZoom(view.zoom, 1)));
   ui.zoomOut.addEventListener('click', () => view.setZoom(stepZoom(view.zoom, -1)));
   ui.zoom.addEventListener('change', () => view.setZoom(Number(ui.zoom.value)));

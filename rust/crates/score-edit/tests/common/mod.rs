@@ -9,13 +9,16 @@ use std::path::PathBuf;
 /// Commands the editor handles differently on purpose. Typed "16" makes the
 /// engine create a text item without characters. The engine matches some
 /// words by their first letters, so in edit mode DBRS+ acts as DBF, LOFF0 and
-/// ROT0 as offsets, PLUS1 as the plus mark, UND as U, and with nothing
+/// ROT0 as offsets, PLUS1 as the plus mark, UND as U, LJ and LJA as L, and with nothing
 /// selected NUML creates a number, L1 a note, THE or TN a text through the
 /// text dialog; the editor knows these words only in their own sense. The
 /// catalogue reads the engine's item store, which OS, OH and OT leave in
-/// place while reordering only its index (saving writes the new order).
+/// place while reordering only its index (saving writes the new order); its
+/// item-4 column misses PGR's change, which replaces every item. The
+/// catalogue answers "Source Box O.K.?" with no, so LJA does nothing there.
 pub const DEVIATIONS: &[(&str, bool)] = &[
     ("16", false),
+    ("PGR", false),
     ("OS", false),
     ("OH", false),
     ("OT", false),
@@ -36,6 +39,9 @@ pub const DEVIATIONS: &[(&str, bool)] = &[
     ("NUMU", false),
     ("NUMV0", false),
     ("L1", false),
+    ("LJ", true),
+    ("LJA", false),
+    ("LJA", true),
     ("PDSZ+", true),
     ("PDSZ-", true),
     ("PLUS1", false),
@@ -113,7 +119,7 @@ pub fn rows() -> Vec<Row> {
             Some(Row {
                 command: command.to_owned(),
                 note_context: context == "note",
-                added: added.split(';').filter(|s| !s.trim().is_empty()).map(numbers).collect(),
+                added: added.split(['|', ';']).filter(|s| !s.trim().is_empty()).map(numbers).collect(),
                 item4_after: item4.split_once("->").map(|(_, after)| numbers(after)),
             })
         })

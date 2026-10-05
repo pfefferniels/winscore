@@ -22,6 +22,12 @@ coordinates: engine units from the paper's bottom-left corner, y up, as score-re
 They are sent as the view does (analysis/engine/editing.md): the point goes to the engine's
 mouse globals, converted with the engine's current VIEW_DX/VIEW_DY.
 
+Lines starting with '!' are for the driver. "!transpose half=2 stems=1 clef=1 key=1 cue=1"
+gives the values the Transpose Setup dialog returns when TR next opens it (half steps;
+normalize stems; clef change, -1 none (the default), 0 treble, 1 bass, 2 alto, 3 tenor;
+add a key signature; transpose cue notes). "!skip-lineup" makes the lineup pass of
+LJ/LI/J, which TR runs at its end, return at once, so the rest can be checked on its own.
+
 EXPECTED gets one block per case: the items of the saved score, one per line. Values are
 printed with 9 significant digits, so every f32 reads back exactly; text items end with
 their characters in quotes. Lines starting with '#' carry the engine's messages and are
@@ -38,12 +44,16 @@ from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from unicorn import UC_HOOK_CODE
+
 from emu import COMMAND, ENGINE_ZOOM, FLAG_9A9498, LINE_BUF, MESSAGE_BUF, TEXT_OUT, ZOOM, Engine, EngineResult
 from musbuild import mus_bytes, text_item
 from sandbox import INSTALL
 
 DEFAULT_BASE = "8 1; 1 1 100 6 10 0 1"
+WORKERS = 4
 MOUSE_X, MOUSE_Y = 0x1A14950, 0x1A1494C
+MOUSE_UP_X, MOUSE_UP_Y = 0x1A14948, 0x1A14944
 VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4
 # score-render's page frame: internal coordinates plus the paper origin's offset.
 PAGE_FROM_INTERNAL = (2000, 26948)
@@ -58,14 +68,59 @@ YES_NO_QUESTION = 0x595CD0
 YES = 1
 
 
+# The Transpose Setup dialog (0x599E90) edits 19 ints at its first argument; the fields
+# found by experiment and in TR (0x55B1F8), as "!transpose half=2 clef=1" lines name them.
+# A clef of -1 is the dialog's "No Clef Change".
+TRANSPOSE_DIALOG = 0x599E90
+TRANSPOSE_FIELDS = {"half": 10, "stems": 11, "clef": 13, "key": 14, "cue": 15}
+TRANSPOSE_DEFAULTS = {"clef": -1}
+# LJ/LI/J's pass (ret 0x10); TR ends with it on every staff.
+LINEUP_PASS, LINEUP_ARG_BYTES = 0x4B80B7, 16
+
+
+@dataclass
 class EditEngine(Engine):
-    """The emulated engine, answering yes to the questions group edits ask."""
+    """The emulated engine, answering yes to the questions group edits ask, filling
+    the transpose dialog with the values of the last "!transpose" line and, after
+    "!skip-lineup", returning at once from the lineup pass."""
+    transpose: dict[int, int] = field(default_factory=dict)
+    skip_lineup: bool = False
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.uc.hook_add(UC_HOOK_CODE, self._on_lineup, begin=LINEUP_PASS, end=LINEUP_PASS)
+
+    def _on_lineup(self, uc, address, size, user):
+        if self.skip_lineup:
+            self.shell.record("dialog", "lineup pass skipped")
+            self.return_from_call(0, LINEUP_ARG_BYTES)
 
     def _on_cpp(self, uc, address, size, user):
-        if address != YES_NO_QUESTION:
-            return super()._on_cpp(uc, address, size, user)
-        self.shell.record("question", f"{self.cstr(self.arg(0), 200).strip()} -> yes")
-        self.return_from_call(YES, 0)
+        if address == YES_NO_QUESTION:
+            self.shell.record("question", f"{self.cstr(self.arg(0), 200).strip()} -> yes")
+            self.return_from_call(YES, 0)
+        elif address == TRANSPOSE_DIALOG:
+            record = self.arg(0)
+            for index, value in self.transpose.items():
+                self.uc.mem_write(record + 4 * index, struct.pack("<i", value))
+            self.shell.record("dialog", f"transpose {self.transpose}")
+            self.return_from_call(YES, 0)
+        else:
+            super()._on_cpp(uc, address, size, user)
+
+
+def directive(engine: EditEngine, line: str) -> bool:
+    """A line for the driver rather than the engine: "!transpose half=2 clef=1" sets the
+    values of the next transpose dialog, "!skip-lineup" turns the lineup pass off."""
+    word, *rest = line.split() or [""]
+    if word == "!transpose":
+        values = TRANSPOSE_DEFAULTS | dict(pair.split("=") for pair in rest)
+        engine.transpose = {TRANSPOSE_FIELDS[name]: int(value) for name, value in values.items()}
+    elif word == "!skip-lineup":
+        engine.skip_lineup = True
+    else:
+        return False
+    return True
 
 
 @dataclass(frozen=True)
@@ -140,16 +195,26 @@ def format_item(words: tuple[int, ...]) -> str:
     return " ".join(f"{v:.9g}" for v in floats) + text
 
 
+def engine_point(engine: Engine, page_x: float, page_y: float) -> tuple[int, int]:
+    """A page point in the engine's output coordinates, as the view hands mouse points over."""
+    return (round(page_x - PAGE_FROM_INTERNAL[0] + engine.i32(VIEW_DX)),
+            round(page_y - PAGE_FROM_INTERNAL[1] - engine.i32(VIEW_DY)))
+
+
 def mouse(engine: Engine, line: str) -> EngineResult | None:
-    """A mouse line ("~v 17000 2773"), sent like the view's mouse handlers; None for other lines."""
+    """A mouse line ("~v 17000 2773"; "~x X0 Y0 X1 Y1" for a box from mouse-down to mouse-up),
+    sent like the view's mouse handlers; None for other lines."""
     action, *point = line.split()
-    if action not in MOUSE_ACTIONS or len(point) != 2:
+    if action not in MOUSE_ACTIONS or len(point) not in (2, 4):
         return None
-    page_x, page_y = (float(v) for v in point)
-    x = round(page_x - PAGE_FROM_INTERNAL[0] + engine.i32(VIEW_DX))
-    y = round(page_y - PAGE_FROM_INTERNAL[1] - engine.i32(VIEW_DY))
+    numbers = [float(v) for v in point]
+    x, y = engine_point(engine, *numbers[:2])
     engine.put32(MOUSE_X, x)
     engine.put32(MOUSE_Y, y)
+    if len(numbers) == 4:
+        up_x, up_y = engine_point(engine, *numbers[2:])
+        engine.put32(MOUSE_UP_X, up_x)
+        engine.put32(MOUSE_UP_Y, up_y)
     command, line_buffer = MOUSE_ACTIONS[action]
     engine.uc.mem_write(COMMAND, command.encode() + b"\0")
     engine.uc.mem_write(LINE_BUF, line_buffer.encode() + b"\0")
@@ -168,6 +233,8 @@ def run_case(case: Case) -> Outcome:
         engine.command("G base.mus")
         transcript, status = [], 0
         for command in case.commands:
+            if directive(engine, command):
+                continue
             result = mouse(engine, command) or engine.command(command)
             status = result.status
             transcript.append(f"[{command}] status {status}: {result.message[:100]}")
@@ -197,7 +264,7 @@ def blocks(text: str) -> dict[str, str]:
 def update(cases_path: Path, expected_path: Path, pattern: str = "") -> None:
     cases = [c for c in parse_cases(cases_path.read_text(encoding="latin-1")) if re.search(pattern, c.name)]
     old = blocks(expected_path.read_text(encoding="latin-1")) if expected_path.exists() else {}
-    with ProcessPoolExecutor() as pool:
+    with ProcessPoolExecutor(WORKERS) as pool:
         fresh = dict(zip((c.name for c in cases), pool.map(report, cases)))
     order = [c.name for c in parse_cases(cases_path.read_text(encoding="latin-1"))]
     merged = [fresh.get(name) or old.get(name) for name in order]

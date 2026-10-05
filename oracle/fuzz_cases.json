@@ -1,0 +1,664 @@
+[
+ {
+  "name": "fuzz-code01-p11-p14-5b0460",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     1.0,
+     1.0,
+     159.0,
+     9.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     -14.0,
+     0.0,
+     0.0,
+     -1.0
+    ],
+    "text": ""
+   }
+  ],
+  "code": 1,
+  "signature": "code01-p11-p14|distorted",
+  "owner": "impl-notes",
+  "symptoms": [
+   "distorted"
+  ],
+  "detail": "same structure, off by up to 337 after aligning"
+ },
+ {
+  "name": "fuzz-code01-p6-p10-e9c174",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     2.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     1,
+     2,
+     134,
+     5.5,
+     0,
+     -14,
+     0,
+     0,
+     0,
+     110
+    ],
+    "text": ""
+   }
+  ],
+  "code": 1,
+  "signature": "code01-p6-p10|text offset",
+  "owner": "impl-notes",
+  "symptoms": [
+   "text offset"
+  ],
+  "detail": "\"2\" shifted by (15000, 0)"
+ },
+ {
+  "name": "fuzz-code02-p5-p15-275998",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     2,
+     1,
+     47,
+     103,
+     101,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    "text": ""
+   }
+  ],
+  "code": 2,
+  "signature": "code02-p5-p15|distorted",
+  "owner": "impl-notes",
+  "symptoms": [
+   "distorted"
+  ],
+  "detail": "same structure, off by up to 342 after aligning"
+ },
+ {
+  "name": "fuzz-code02-p6-p8-c48746",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     2,
+     1,
+     164.33,
+     2.5,
+     0,
+     -1,
+     0,
+     -3
+    ],
+    "text": ""
+   }
+  ],
+  "code": 2,
+  "signature": "code02-p6-p8|text style",
+  "owner": "impl-notes",
+  "symptoms": [
+   "text style"
+  ],
+  "detail": "\"G\": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 813.5/335.6 #999999 w400 esc 0"
+ },
+ {
+  "name": "fuzz-code02-p8-p15-37bcaa",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     2.0,
+     1.0,
+     138.05,
+     6.0,
+     0.0,
+     0.0,
+     0.0,
+     -3.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.8
+    ],
+    "text": ""
+   }
+  ],
+  "code": 2,
+  "signature": "code02-p8-p15|text style",
+  "owner": "impl-notes",
+  "symptoms": [
+   "text style"
+  ],
+  "detail": "\"G\": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 650.8/268.5 #000000 w400 esc 0"
+ },
+ {
+  "name": "fuzz-code02-p8-p17-c92312",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     2.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     2,
+     2,
+     43,
+     4,
+     0,
+     0,
+     0,
+     -3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    "text": ""
+   }
+  ],
+  "code": 2,
+  "signature": "code02-p8-p17|text offset",
+  "owner": "impl-notes",
+  "symptoms": [
+   "text offset"
+  ],
+  "detail": "\"G\" shifted by (0, -3150)"
+ },
+ {
+  "name": "fuzz-code03-p5-p10-e6050f",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     3.0,
+     1.0,
+     88.48,
+     0.0,
+     0.1,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ],
+    "text": ""
+   }
+  ],
+  "code": 3,
+  "signature": "code03-p5-p10|extra",
+  "owner": "impl-symbols",
+  "symptoms": [
+   "extra"
+  ],
+  "detail": "fill #000000, 1 path(s), 62 points from (15678, 4037)"
+ },
+ {
+  "name": "fuzz-code03-p5-p10-e66eab",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     3,
+     1,
+     60.13,
+     6,
+     0.9,
+     0,
+     0,
+     0,
+     0,
+     2
+    ],
+    "text": ""
+   }
+  ],
+  "code": 3,
+  "signature": "code03-p5-p10|extra",
+  "owner": "impl-symbols",
+  "symptoms": [
+   "extra"
+  ],
+  "detail": "fill #000000, 1 path(s), 62 points from (11425, 5087)"
+ },
+ {
+  "name": "fuzz-code05-p11-p16-2701e0",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     5,
+     1,
+     26.49,
+     5,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     12
+    ],
+    "text": ""
+   }
+  ],
+  "code": 5,
+  "signature": "code05-p11-p16|text offset",
+  "owner": "impl-beams",
+  "symptoms": [
+   "text offset"
+  ],
+  "detail": "\"1\" shifted by (98, 336)"
+ },
+ {
+  "name": "fuzz-code05-p11-p16-cf241b",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     5,
+     1,
+     121.01,
+     13,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     3,
+     0,
+     0,
+     0,
+     0,
+     3
+    ],
+    "text": ""
+   }
+  ],
+  "code": 5,
+  "signature": "code05-p11-p16|text offset",
+  "owner": "impl-beams",
+  "symptoms": [
+   "text offset"
+  ],
+  "detail": "\"3\" shifted by (211, 279)"
+ },
+ {
+  "name": "fuzz-code06-p8-p17-f76ce8",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     6,
+     1,
+     84.49,
+     4.5,
+     0,
+     0,
+     0,
+     34003,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     -1
+    ],
+    "text": ""
+   }
+  ],
+  "code": 6,
+  "signature": "code06-p8-p17|text missing",
+  "owner": "impl-beams",
+  "symptoms": [
+   "text missing"
+  ],
+  "detail": "\"?\" in Times 678.0/279.7 at (15334, 1369)"
+ },
+ {
+  "name": "fuzz-code10-p6-p19-efc753",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     10,
+     1,
+     70.96,
+     0,
+     0,
+     76,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     -90
+    ],
+    "text": ""
+   }
+  ],
+  "code": 10,
+  "signature": "code10-p6-p19|text offset",
+  "owner": "impl-text",
+  "symptoms": [
+   "text offset"
+  ],
+  "detail": "\"0\" shifted by (-20000, 1) (draw_text re-encodes x < -19000 internal by +20000; handed over by impl-symbols)"
+ },
+ {
+  "name": "fuzz-code12-p5-ffbe10",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     12.0,
+     1.0,
+     133.74,
+     7.0,
+     -2.0
+    ],
+    "text": ""
+   }
+  ],
+  "code": 12,
+  "signature": "code12-p5|absent",
+  "owner": "impl-symbols",
+  "symptoms": [
+   "absent"
+  ],
+  "detail": "stroke #000000, 1 path(s), 2 points from (22061, 3648)"
+ },
+ {
+  "name": "fuzz-code12-p5-p11-cbf4b8",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     12,
+     1,
+     16.39,
+     0.5,
+     5,
+     0,
+     0,
+     0,
+     0,
+     0,
+     270
+    ],
+    "text": ""
+   }
+  ],
+  "code": 12,
+  "signature": "code12-p5-p11|absent",
+  "owner": "impl-symbols",
+  "symptoms": [
+   "absent"
+  ],
+  "detail": "stroke #000000, 1 path(s), 181 points from (5333, 2511)"
+ },
+ {
+  "name": "fuzz-code12-p5-p11-ec0e0d",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     12,
+     1,
+     32.9,
+     8,
+     5,
+     0,
+     0,
+     0,
+     0,
+     0,
+     405
+    ],
+    "text": ""
+   }
+  ],
+  "code": 12,
+  "signature": "code12-p5-p11|absent",
+  "owner": "impl-symbols",
+  "symptoms": [
+   "absent"
+  ],
+  "detail": "stroke #000000, 1 path(s), 91 points from (7810, 3823)"
+ },
+ {
+  "name": "fuzz-code16-p8-p9-b70d9e",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     16.0,
+     1.0,
+     139.97,
+     8.0,
+     0.0,
+     0.0,
+     0.0,
+     94.0,
+     90.0,
+     0.0,
+     0.0,
+     15.0,
+     0.0
+    ],
+    "text": "_05DS7960Ea:9-'"
+   }
+  ],
+  "code": 16,
+  "signature": "code16-p8-p9|offset",
+  "owner": "impl-text",
+  "symptoms": [
+   "offset"
+  ],
+  "detail": "shifted by (688, 688), residual 0"
+ },
+ {
+  "name": "fuzz-code16-p9-862d87",
+  "target": 1,
+  "items": [
+   {
+    "params": [
+     8.0,
+     1.0,
+     0.0
+    ],
+    "text": ""
+   },
+   {
+    "params": [
+     16.0,
+     1.0,
+     140.07,
+     -6.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     180.0,
+     0.0,
+     0.0,
+     20.0,
+     0.0
+    ],
+    "text": "_90Allegro [ = 120 ]"
+   }
+  ],
+  "code": 16,
+  "signature": "code16-p9|offset",
+  "owner": "impl-text",
+  "symptoms": [
+   "offset"
+  ],
+  "detail": "shifted by (5576, 0), residual 0"
+ }
+]

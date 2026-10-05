@@ -13,6 +13,7 @@ use std::process::{Command, ExitCode};
 
 use score_render::{DisplayList, ItemId};
 use score_testkit::svg::{triptych, Caption};
+use score_testkit::triage::triage;
 use score_testkit::{
     compare, display_from_json, display_to_json, fixtures_dir, load_all, render_fixture, restrict,
     CompareOptions, Fixture, Report, Section,
@@ -27,6 +28,7 @@ score-compare [OPTIONS] [PATTERN ...]
   --status FILE           status table (default: <fixtures>/STATUS.md; \"-\" skips it)
   --images DIR            write engine | actual | diff pictures (PNG via resvg, else SVG)
   --dump DIR              write the compared lists as DIR/<case>.json (engine.json format)
+  --json FILE             per-case results with classified differences (score-testkit triage) as JSON
   --width PX              picture width (default 2400)
   --ignore-staff-numbers  leave staff-number texts out of the comparison
   --verbose               print the report of every differing case
@@ -66,6 +68,7 @@ struct Args {
     fixtures: PathBuf,
     source: Source,
     status: Option<PathBuf>,
+    json: Option<PathBuf>,
     images: Option<PathBuf>,
     dump: Option<PathBuf>,
     width: u32,
@@ -79,6 +82,7 @@ fn parse_args() -> Result<Args, String> {
         fixtures: fixtures_dir(),
         source: Source::Rust,
         status: None,
+        json: None,
         images: None,
         dump: None,
         width: 2400,
@@ -96,6 +100,7 @@ fn parse_args() -> Result<Args, String> {
             "--actual" => args.source = Source::Directory(value("--actual")?.into()),
             "--against" => args.source = Source::Fixture(value("--against")?),
             "--status" => status = Some(value("--status")?),
+            "--json" => args.json = Some(value("--json")?.into()),
             "--images" => args.images = Some(value("--images")?.into()),
             "--dump" => args.dump = Some(value("--dump")?.into()),
             "--width" => {
@@ -281,6 +286,34 @@ fn evaluate<'a>(fixture: &'a Fixture, actual: &Actual, options: &CompareOptions)
         outcome,
         by_code,
     }
+}
+
+fn row_json(row: &Row, actual: &Actual, options: &CompareOptions) -> serde_json::Value {
+    let counts = |s: &Section| serde_json::json!([s.matched, s.expected, s.extra.len()]);
+    let mut value = serde_json::json!({ "case": row.fixture.name, "result": row.result() });
+    if let (Outcome::Compared(report), Actual::List(list)) = (&row.outcome, actual) {
+        let codes = codes_of(row.fixture);
+        let findings: Vec<serde_json::Value> = triage(&row.fixture.display, list, report, options)
+            .iter()
+            .map(|f| {
+                let item = f.item.map(|ItemId(i)| i);
+                serde_json::json!({
+                    "item": item,
+                    "code": item.and_then(|i| codes.get(&i)),
+                    "symptom": f.symptom.label(),
+                    "detail": f.detail,
+                })
+            })
+            .collect();
+        value["shapes"] = counts(&report.shapes);
+        value["texts"] = counts(&report.texts);
+        value["max_deviation"] = report.max_deviation().into();
+        value["findings"] = findings.into();
+    }
+    if let Outcome::Invalid(reason) | Outcome::Failed(reason) = &row.outcome {
+        value["reason"] = reason.clone().into();
+    }
+    value
 }
 
 // -- status table ----------------------------------------------------------------
@@ -516,9 +549,13 @@ fn run(args: &Args) -> Result<bool, String> {
         fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     }
     let mut rows = Vec::with_capacity(selected.len());
+    let mut results = Vec::new();
     for fixture in selected {
         let actual = actual_for(&args.source, fixture, &fixtures);
         let row = evaluate(fixture, &actual, &args.options);
+        if args.json.is_some() {
+            results.push(row_json(&row, &actual, &args.options));
+        }
         println!("{:44} {:9} {}", fixture.name, row.result(), summary(&row));
         if let (true, Outcome::Compared(report)) = (args.verbose, &row.outcome) {
             if !report.is_match() {
@@ -542,6 +579,10 @@ fn run(args: &Args) -> Result<bool, String> {
     if let Some(path) = &args.status {
         fs::write(path, status_markdown(&rows, &args.source, &args.options))
             .map_err(|e| format!("{}: {e}", path.display()))?;
+    }
+    if let Some(path) = &args.json {
+        let text = serde_json::to_string(&results).map_err(|e| e.to_string())?;
+        fs::write(path, text).map_err(|e| format!("{}: {e}", path.display()))?;
     }
     Ok(rows
         .iter()

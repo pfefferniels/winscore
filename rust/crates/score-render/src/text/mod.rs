@@ -22,6 +22,7 @@ use crate::canvas::{Canvas, TextString, TextStyle};
 use crate::colour;
 use crate::display::{Colour, Point};
 use crate::document::{Document, ItemRef};
+use crate::geometry::rotate_points;
 use crate::page::RECTO_SHIFT;
 use crate::symbols::{draw_library_symbol, ItemContext, SymbolCall};
 use crate::units::{amod, nint, real, trunc, Pos};
@@ -382,10 +383,20 @@ impl<'c> Text<'c> {
         };
         let recto = if self.call.staff > LAST_VERSO_STAFF { RECTO_SHIFT } else { 0 };
         let origin = Pos::new(f64::from(at.x - recto), self.call.origin.y);
-        let call = SymbolCall { number, size_x, size_y, thickness: 0, rotation: f64::from(self.call.rotation) };
+        // rotate_points (0x42A5F4) turns the points of a code-16 item about
+        // (P3·150, Y_POS) rather than about the symbol.
+        let centre = (self.call.item_code == TEXT_ITEM)
+            .then(|| Point::new(trunc(f64::from(self.call.p3) * P3_UNIT), trunc(self.call.origin.y)));
+        let rotation = f64::from(self.call.rotation);
+        let own_rotation = if centre.is_some() { 0.0 } else { rotation };
+        let call = SymbolCall { number, size_x, size_y, thickness: 0, rotation: own_rotation };
         // 0x56B529 sets IP1 = 16; draw_text has cleared IP10.
         let context = ItemContext { code: TEXT_ITEM, pixels: 0, ..ItemContext::of(item) };
+        let start = canvas.buffer_mut().len();
         draw_library_symbol(doc, &context, canvas, origin, self.step, &call);
+        if let Some(centre) = centre.filter(|_| trunc(rotation) != 0) {
+            rotate_points(&mut canvas.buffer_mut()[start..], centre, self.call.rotation);
+        }
     }
 
     /// The record header (0x56CAF0) for font `font`.

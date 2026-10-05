@@ -9,6 +9,7 @@ use crate::command::moves::Increments;
 use crate::document::{Document, ItemId};
 use crate::drag::Ends;
 use crate::group::Pending;
+use crate::transpose::Leftover;
 
 /// The ids in their first-seen order, without repeats.
 fn unique(ids: impl Iterator<Item = ItemId>) -> Vec<ItemId> {
@@ -28,7 +29,7 @@ pub struct Deleted {
     pub item: Item,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Session {
     selection: Vec<ItemId>,
     originals: Vec<(ItemId, Item)>,
@@ -51,6 +52,38 @@ pub struct Session {
     pub pending: Option<Pending>,
     /// Items cut for pasting (IF … THEN CUT), pasted by PST.
     pub clipboard: Vec<Item>,
+    /// The parameter the slider buttons (PCHNGn) change; QPn chooses it.
+    pub slider_param: usize,
+    /// What one TR leaves for the next.
+    pub transposition: Leftover,
+    /// A message the engine would show for the last action.
+    pub message: Option<String>,
+}
+
+/// The slider changes P2 until QPn chooses another parameter.
+const DEFAULT_SLIDER_PARAM: usize = 2;
+
+impl Default for Session {
+    fn default() -> Self {
+        Self {
+            selection: Vec::new(),
+            originals: Vec::new(),
+            current: None,
+            increments: Increments::default(),
+            deleted: Vec::new(),
+            drag_ends: Ends::default(),
+            saved: Vec::new(),
+            text_font: 0,
+            centre_at: None,
+            right_at: None,
+            justify_between: None,
+            pending: None,
+            clipboard: Vec::new(),
+            slider_param: DEFAULT_SLIDER_PARAM,
+            transposition: Leftover::default(),
+            message: None,
+        }
+    }
 }
 
 impl Session {

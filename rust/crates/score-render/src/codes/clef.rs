@@ -37,8 +37,13 @@ const TABLATURE_SIZE: f32 = 0.1;
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let step = doc.staff_of(item).step;
-    let context = ItemContext::of(item);
     let clef = Clef::of(doc, item);
+    // draw_number clears IP10 and does not restore it, so a clef drawn
+    // after its octave number has no pixel thickness.
+    let context = match clef.number {
+        Some(_) => ItemContext { pixels: 0, ..ItemContext::of(item) },
+        None => ItemContext::of(item),
+    };
     if let Some((at, call)) = clef.number {
         draw_number(doc, item, canvas, at, &call);
     }

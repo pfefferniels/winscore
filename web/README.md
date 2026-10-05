@@ -20,11 +20,14 @@ npm run dev        # builds the wasm, copies samples and references, serves http
 
 Environment variables: `CARGO_TARGET_DIR` (default `rust/target`), `WASM_PROFILE` (default `release`), `REFERENCE_DIR` (default `rust/fixtures`).
 
+Frame times while dragging: `npm run build && npm run perf [FILE.mus …]` (default the largest sample); it fails if a frame during the drag takes more than 50 ms. Drags re-render only the moved items (`rust/crates/score-web/src/live.rs`); the full render follows on drop.
+
 Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT_DIR [name='sample=mozart.mus&mode=overlay&zoom=200' …]` (needs `npx playwright install chromium` once).
 
 ## Using it
 
 - **Open** a `.mus` file with the button or by dropping it on the window; the bundled samples are in the drop-down (`WINSCORE 5.01/winscore/*.mus`, `SCORE 4/SCORE/NEWLINE.MUS`, `NEWLIB.MUS`). Dropping an `engine.json` loads it as the reference for the current score.
+- **SVG** and **Print** render the page for print (no staff numbers or other screen aids). SVG uses `score_render::svg` and is paper-sized; Print paints the page on a 300 dpi canvas that a print stylesheet shows alone on paper of the score's size.
 - **Rust / Engine / Overlay**: the Rust renderer's page, the original engine's display list (`rust/fixtures/sample-*/engine.json`, produced from WScore.exe under emulation), or both, engine in cyan and Rust in magenta, multiplied, so that matching elements come out dark.
 - **Zoom**: −/+ buttons or the `+` and `_` keys, the percent list, Fit, or ctrl/⌘ + wheel (pinch) around the pointer.
 - **Selection**: click an element or a row of the item list; Shift-click adds or removes; Escape clears. A click selects the item whose drawn outline is under the pointer (in the Engine view through the fixture's item attribution); where there is none, WinScore's own rule picks the item with the nearest reference point within 12 px (decision D8). The panel shows P1…Pn of the last selected item with the help's label for each; edit a value and press Enter to set it and re-render.
@@ -33,7 +36,7 @@ Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT
 - **Text**: the palette's Text button opens a dialog (text, font from WinScore's font menu as its `_NN` code, staff, P3, P4) and creates the items as SCORE's quick entry `"text" staff P3 P4` does. Double-click a text item to edit its characters where they stand, or edit them and pick a font in the panel.
 - **Symbols**: the palette's Symbol button opens a searchable grid of every symbol in WinScore's bundled libraries, each drawn by the Rust renderer, with WinScore's names (`symblist.txt`).
 - New items (text, symbols) go to the selected item's place, else to the last click on empty paper, else to the top staff at P3 100.
-- **Group edit**: drag a box over empty paper to select the items inside (WinScore's mouse-drawn area). The Area buttons (Move, Copy, Delete, Alter, Copy to staves) start WinScore's line-by-line dialogue: its question appears before the command bar, and the answer is typed there or given by drawing a box; Cancel ends it without a change. `IF … THEN …` conditional edits go through the command bar.
+- **Group edit**: drag a box over empty paper to select the items inside. score-edit reads the box as WinScore reads a mouse-drawn area (`Editor::draw_box`): staves by their middle lines, P3 from x, a narrow box meaning the whole width. The Area buttons (Move, Copy, Delete, Alter, Copy to staves) start WinScore's line-by-line dialogue: its question appears before the command bar, and the answer is typed there or given with the mouse (a box for the area; for the destination a click keeps the area's position on that staff, a thin line moves its left edge, a box rescales it); Cancel ends it without a change. `IF … THEN …` conditional edits go through the command bar.
 - **Palette** (below the toolbar): WinScore's Items menu, clefs, note and rest values, and edit-mode buttons, each sending the SCORE command from WinScore's command table (`analysis/data/command_map.tsv`) with its tooltip. Commands `score-edit` does not handle yet are struck through and disabled.
 - **Input…** opens WinScore's five-pass input dialog (Smith's "Computer Keyboard Input", `IN`): staff (proposed one above the highest), input range, and the notes, rhythms, marks, beams and slurs passes. `score-input` checks the passes as you type and marks the failing one; Enter moves to the next pass and inserts after the fifth. A missing staff is created as the engine's `IN n` creates it (`score_input::StaffArgs`). Insert is one undo step.
 - URL parameters for direct links: `?sample=mozart.mus&mode=overlay&zoom=200&select=12`.

@@ -2,6 +2,9 @@
 
 use std::path::PathBuf;
 
+use score_edit::group::{Region, TRANSPOSITION_PROMPT};
+use score_edit::score_layout::{Command as LayoutCommand, Options, StaffRange};
+use score_edit::transpose::Transposition;
 use score_edit::{EditError, Editor, ItemId};
 
 fn sample(name: &str) -> Vec<u8> {
@@ -285,4 +288,47 @@ fn inserted_items_append_and_select() {
     assert_eq!(e.file().items.len(), 5);
     e.undo();
     assert_eq!(e.file().items.len(), 3);
+}
+
+#[test]
+fn transposition_keeps_ids_and_undoes_in_one_step() {
+    let mut e = editor_with(&[&[8.0, 1.0, 0.0], &[1.0, 1.0, 100.0, 6.0, 10.0, 0.0, 1.0], &[17.0, 1.0, 10.0, 0.0, 1.0]]);
+    let (note, key) = (e.id_at(1).unwrap(), e.id_at(2).unwrap());
+    let area = Region::parse(&[1.0]).unwrap();
+    let up_a_tone = Transposition { half_steps: 2, ..Transposition::default() };
+    let change = e.transpose(&area, &up_a_tone).unwrap();
+    assert_eq!((e.index_of(key), e.index_of(note)), (Some(1), Some(2)));
+    assert_eq!((p(&e, key, 5), p(&e, note, 4)), (3.0, 7.0));
+    assert_eq!(change.modified.len(), 2);
+    assert_eq!(e.undo_label(), Some("Transpose"));
+    e.undo();
+    assert_eq!((e.index_of(note), p(&e, note, 4), p(&e, key, 5)), (Some(1), 6.0, 1.0));
+    let stems = Transposition { normalize_stems: true, ..up_a_tone };
+    assert!(matches!(e.transpose(&area, &stems), Err(EditError::NotImplemented(_))));
+}
+
+#[test]
+fn tr_asks_for_its_area_and_then_the_dialog_values() {
+    let mut e = small();
+    e.execute("TR").unwrap();
+    e.execute("1 0 0 0").unwrap();
+    assert_eq!(e.prompt(), Some(TRANSPOSITION_PROMPT));
+    e.execute("half=-1").unwrap();
+    assert_eq!(e.prompt(), None);
+    assert_eq!(p(&e, e.id_at(1).unwrap(), 4), 5.0);
+}
+
+#[test]
+fn layout_commands_report_where_the_engine_gives_up() {
+    let mut e = editor_with(&[
+        &[8.0, 1.0, 0.0],
+        &[8.0, 2.0, 0.0, 0.0, 0.0, 200.0],
+        &[1.0, 1.0, 20.0, 6.0, 10.0, 0.0, 2.0],
+        &[1.0, 2.0, 20.0, 6.0, 10.0, 0.0, 1.0],
+    ]);
+    let system = StaffRange::from_answer(1, 2);
+    let change = e.lay_out(LayoutCommand::LineUp, system, &Options::default()).unwrap();
+    assert!(change.message.is_some_and(|m| m.contains("beats")));
+    e.execute("LI").unwrap();
+    assert!(e.prompt().is_some_and(|p| p.starts_with("Enter Lowest Staff#")));
 }

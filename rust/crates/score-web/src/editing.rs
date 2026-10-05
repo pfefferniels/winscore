@@ -5,7 +5,6 @@
 //! or an empty string when it changed nothing; call [`Score::render`] to see
 //! the result.
 
-use score_edit::group::Region;
 use score_edit::{Change, EditError};
 use score_render::ItemId;
 use wasm_bindgen::prelude::*;
@@ -147,22 +146,13 @@ impl Score {
         placing::place_at(self.0.file(), x, y).map(|place| vec![place.staff as f32, place.p3, place.p4])
     }
 
-    /// A box drawn on the page, read as WinScore reads a mouse-drawn area:
-    /// it answers a waiting group command's area question, or else selects
-    /// the items inside.
+    /// A box drawn on the page (corners in page coordinates), read as
+    /// WinScore reads a mouse-drawn area: it answers a group command waiting
+    /// for its area or destination, and otherwise selects the items inside.
     #[wasm_bindgen(js_name = drawBox)]
     pub fn draw_box(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> Result<String, JsError> {
-        let Some(area) = placing::area_in_box(self.0.file(), x0, y0, x1, y1) else {
-            return Ok(String::new());
-        };
-        if self.0.editor().prompt().is_some() {
-            let answer = format!("{} {} {} {}", area.bottom, area.left, area.right, area.top);
-            let result = self.0.editor_mut().execute(&answer);
-            return self.finish(result);
-        }
-        let region = Region { bottom: area.bottom as f32, top: area.top as f32, left: area.left, right: area.right, codes: Vec::new() };
-        self.0.editor_mut().select_region(&region);
-        Ok(String::new())
+        let result = self.0.editor_mut().draw_box(x0, y0, x1, y1);
+        self.finish(result)
     }
 
     /// The item a click at page point (`x`, `y`) means (decision D8): the one
@@ -222,6 +212,18 @@ mod tests {
         let far_from_ink = (33500.0, 28000.0);
         assert_eq!(score.item_at(far_from_ink.0, far_from_ink.1, 10.0, 100.0), None);
         assert!(score.item_at(far_from_ink.0, far_from_ink.1, 10.0, 60000.0).is_some());
+    }
+
+    #[test]
+    fn a_drawn_box_selects_or_answers_a_group_command() {
+        let mut score = mozart();
+        score.draw_box(2000.0, 0.0, 32000.0, 56000.0).unwrap_or_else(|_| panic!("box"));
+        assert!(score.selection().len() > 100);
+        score.select(vec![]);
+        score.execute("M").unwrap_or_else(|_| panic!("M"));
+        let asks_area = score.prompt().unwrap();
+        score.draw_box(2000.0, 0.0, 32000.0, 56000.0).unwrap_or_else(|_| panic!("box"));
+        assert_ne!(score.prompt().unwrap(), asks_area);
     }
 
     #[test]

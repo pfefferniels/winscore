@@ -117,6 +117,20 @@ try {
   assert.equal(saved.length, original.length);
   assert.notDeepEqual(saved, original);
 
+  // SVG export downloads the printed page; Print paints it alone for the print stylesheet.
+  const [svgDownload] = await Promise.all([page.waitForEvent('download'), page.click('#export-svg')]);
+  assert.equal(svgDownload.suggestedFilename(), 'mozart.svg');
+  const svg = fs.readFileSync(await svgDownload.path(), 'utf8');
+  assert.match(svg, /^<svg[^>]*width="8.5in"/);
+  await page.evaluate(() => (window.print = () => (document.body.dataset.printed = 'yes')));
+  await page.click('#print');
+  await page.waitForSelector('body[data-printed="yes"]', { state: 'attached' });
+  assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('#print-page canvas')].map((c) => [c.width, c.height])), [[2550, 4200]]);
+  await page.emulateMedia({ media: 'print' });
+  assert.ok(await page.isHidden('#app'));
+  assert.ok(await page.isVisible('#print-page canvas'));
+  await page.emulateMedia({ media: 'screen' });
+
   // Five-pass input: errors are marked in their pass; a valid line adds a staff and four notes.
   await page.click('#input');
   assert.equal(await page.inputValue('#input-staff'), '9');
@@ -180,12 +194,22 @@ try {
     const r = document.getElementById('viewport').getBoundingClientRect();
     return { x0: r.left + 6, y0: r.top + 6, x1: r.left + r.width * 0.6, y1: r.top + r.height * 0.95 };
   });
-  await page.mouse.move(area.x0, area.y0);
-  await page.mouse.down();
-  await page.mouse.move(area.x1, area.y1, { steps: 5 });
-  await page.mouse.up();
+  const drawBox = async () => {
+    await page.mouse.move(area.x0, area.y0);
+    await page.mouse.down();
+    await page.mouse.move(area.x1, area.y1, { steps: 5 });
+    await page.mouse.up();
+  };
+  await drawBox();
   assert.match(await page.textContent('#item h2'), /\(\+\d+ selected\)/);
   await page.keyboard.press('Escape');
+
+  // While a group command waits for its area, the box answers it (editor-core's draw_box).
+  await page.click('#palette button:text-is("Move area")');
+  await drawBox();
+  assert.match(await page.textContent('#prompt'), /^Enter destination staff/);
+  await page.click('#prompt-cancel');
+  assert.ok(await page.isHidden('#prompt'));
 
   assert.deepEqual(errors, []);
 

@@ -45,6 +45,11 @@ function element<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
+/** What a row shows; rows whose key is unchanged are kept as they are. */
+function rowKey(item: ItemSummary): string {
+  return `${item.index} ${item.code} ${item.staff} ${item.p3}`;
+}
+
 function itemRow(item: ItemSummary, handlers: PanelHandlers): HTMLLIElement {
   const row = element('li', { title: `Item ${item.index}: ${item.name}` }, [
     element('span', { className: 'index' }, [String(item.index)]),
@@ -52,12 +57,22 @@ function itemRow(item: ItemSummary, handlers: PanelHandlers): HTMLLIElement {
     element('span', { className: 'where' }, [`${formatParam(item.staff)} · ${formatParam(item.p3)}`]),
   ]);
   row.dataset.index = String(item.index);
+  row.dataset.key = rowKey(item);
   row.addEventListener('click', () => handlers.select(item.index));
   return row;
 }
 
+/** Brings the list up to date, rebuilding only the rows that changed (a page has a thousand items or more). */
 export function renderItemList(list: HTMLOListElement, items: ItemSummary[], handlers: PanelHandlers) {
-  list.replaceChildren(...items.map((item) => itemRow(item, handlers)));
+  const rows = list.children as HTMLCollectionOf<HTMLLIElement>;
+  items.forEach((item, i) => {
+    const row = rows[i];
+    if (row?.dataset.key === rowKey(item)) return;
+    const fresh = itemRow(item, handlers);
+    if (row) row.replaceWith(fresh);
+    else list.append(fresh);
+  });
+  while (rows.length > items.length) rows[rows.length - 1]!.remove();
 }
 
 /** Marks the rows of `items` and scrolls the last one into view. */

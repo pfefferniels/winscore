@@ -132,3 +132,9 @@ code16-font-after-two-bar-repeat
 code16-font-after-ending
 code16-font-after-tuplet
 code16-font-after-tuplet-bracket
+code16-p9-rotate-180-symbols
+code16-p9-rotate-30-p11
+code16-p9-rotate-90-font-94
+code16-staff-201-rotate-symbols
+fuzz-code16-p8-p9-b70d9e
+fuzz-code16-p9-862d87

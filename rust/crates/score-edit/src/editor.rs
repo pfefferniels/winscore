@@ -2,6 +2,7 @@
 //! commands, drags and undo.
 
 use score_format::{Item, MusError, MusFile};
+use score_layout::{Command as LayoutCommand, Options, StaffRange};
 use score_render::staff::Staff;
 use score_render::Document as RenderDocument;
 
@@ -10,11 +11,12 @@ use crate::command::Run;
 use crate::document::{Document, Edit, ItemId, Transaction};
 use crate::drag::{self, Axes, Constraint, Ends, PagePoint};
 use crate::error::EditError;
-use crate::group::{Pending, Region};
+use crate::group::{self, Pending, Region};
 use crate::history::{History, Step};
 use crate::params::{Draft, MAX_PARAM};
 use crate::pick;
 use crate::session::Session;
+use crate::transpose::Transposition;
 
 /// P1 of library symbols.
 const SYMBOL_CODE: f32 = 9.0;
@@ -26,6 +28,8 @@ pub struct Change {
     pub removed: Vec<ItemId>,
     pub modified: Vec<ItemId>,
     pub selection: Vec<ItemId>,
+    /// What the engine would report, such as a layout it gave up on midway.
+    pub message: Option<String>,
 }
 
 impl Change {
@@ -152,6 +156,14 @@ impl Editor {
         Run { session: &mut self.session, tx: &mut tx }.select_region(region);
     }
 
+    /// A box drawn on the page (corners in page coordinates), read as WinScore
+    /// reads a mouse-drawn area ([`Region::from_page_box`]): it answers a group
+    /// command waiting for its area or destination, and otherwise selects the
+    /// items inside.
+    pub fn draw_box(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> Result<Change, EditError> {
+        self.act("Box", |run| run.draw_box((x0, y0), (x1, y1)))
+    }
+
     /// The question a group command is waiting to have answered by the next
     /// line given to [`Editor::execute`], if any.
     pub fn prompt(&self) -> Option<&'static str> {
@@ -191,8 +203,9 @@ impl Editor {
         action(&mut run)?;
         run.refresh_text_lengths();
         let edits = tx.commit();
+        let message = session.message.take();
         let before = std::mem::replace(&mut self.session, session);
-        let change = Change::new(&edits, self.session.selection());
+        let change = Change { message, ..Change::new(&edits, self.session.selection()) };
         if !edits.is_empty() {
             self.history.record(Step {
                 label: label.to_owned(),
@@ -273,6 +286,31 @@ impl Editor {
         self.act("Symbol", |run| {
             run.session.clear();
             run.append_items(vec![item])
+        })
+    }
+
+    /// TR: transposes the staves and positions of `region` with the values
+    /// of WinScore's Transpose Setup dialog.
+    pub fn transpose(&mut self, region: &Region, how: &Transposition) -> Result<Change, EditError> {
+        self.act("Transpose", |run| run.transpose(region, how))
+    }
+
+    /// LI, J or LJ on the system `range` (score-layout). The x range of
+    /// `options.source_box` limits J; LI and LJ line up whole staves. When
+    /// the engine would give up midway, the change keeps what it leaves and
+    /// [`Change::message`] says why.
+    pub fn lay_out(&mut self, command: LayoutCommand, range: StaffRange, options: &Options) -> Result<Change, EditError> {
+        self.act(group::LayoutCommand::system_word(command), |run| {
+            run.lay_out(command, range, options);
+            Ok(())
+        })
+    }
+
+    /// LJA: LJ on all staves with notes or rests.
+    pub fn lay_out_all(&mut self) -> Result<Change, EditError> {
+        self.act("LJA", |run| {
+            run.lay_out_all();
+            Ok(())
         })
     }
 

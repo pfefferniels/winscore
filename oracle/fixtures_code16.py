@@ -64,6 +64,10 @@ def cases() -> list[Case]:
         *[(f"p10-space-{label(v)}", f"space size P10 = {v}", "_00one two  three", {"p10": v}) for v in (0.5, -0.5)],
         ("p9-rotate-30-large", "rotation P9 = 30 at size 2", SAMPLE, {"p9": 30, "p6": 2}),
         ("p8-font-1004-tab", "font override P8 = 1004 with a font code and a tab", "_02A~60~B", {"p8": 1004}),
+        # Symbol glyphs of a rotated text item turn about (P3·150, Y_POS) (rotate_points 0x42A5F4).
+        ("p9-rotate-180-symbols", "rotation P9 = 180 with [ ] symbols", "_90Allegro [ = 120 ]", {"p9": 180, "p3": 40}),
+        ("p9-rotate-90-font-94", "meter font P8 = 94 rotated by P9 = 90", "_051234", {"p8": 94, "p9": 90}),
+        ("p9-rotate-30-p11", "symbols, rotation P9 = 30 and shift P11 = 5", "_00A[B]C", {"p9": 30, "p11": 5}),
         ("special-ascii", "# $ % & < > @", "_00A#B$C%D&E<F>G@H", {}),
         ("special-accents", "~n, ^e, %%o, ##c, <<e, >>a", "_00A~nB ^e S%%ohne ##c <<e >>a", {}),
         ("special-escapes", "?A ?E ?a ?s ?t !a !A !f", "_00?A ?E ?a ?s ?t !a !A !f", {}),
@@ -81,6 +85,8 @@ def cases() -> list[Case]:
         ("lines", "three lines of text", on_staff(*(text(f"_00line {n}", p4=12 - 4 * n) for n in range(3)))),
         ("staff-2", "text on staff 2", [staff(), staff(p2=2), text(p2=2)]),
         ("staff-200", "text on staff 200 (verso for text, recto for shapes)", [staff(), staff(p2=200), text(p2=200)]),
+        ("staff-201-rotate-symbols", "rotated text with symbols on recto staff 201",
+         [staff(), staff(p2=201), text("_00A[B]C", p2=201, p9=45)]),
         # The engine keeps the current font across items and drawing passes.
         ("font-after-staff", "text without a font code after a staff (Helvetica-Narrow)", on_staff(text("plain"))),
         ("font-after-text", "text without a font code after _02 text", on_staff(text("_02first"), text("second", p4=4))),

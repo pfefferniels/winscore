@@ -41,6 +41,10 @@ pub fn number(text: &str) -> Option<f32> {
 }
 
 fn token(text: &str) -> Token {
+    // A trailing slash ends a line of rhythm input; the engine reads `4/` as 4.
+    if let Some(n) = text.strip_suffix('/').filter(|t| !t.starts_with('/')).and_then(number) {
+        return Token::Number(n);
+    }
     if let Some(n) = text.strip_prefix("//").and_then(number) {
         Token::Transfer(n)
     } else if let Some(n) = text.strip_prefix('/').and_then(number) {
@@ -89,6 +93,12 @@ mod tests {
                 Token::Word("NOTE".into())
             ]
         );
+    }
+
+    #[test]
+    fn a_trailing_slash_is_ignored_after_numbers() {
+        assert_eq!(tokens("12 16/"), [Token::Number(12.0), Token::Number(16.0)]);
+        assert_eq!(tokens("10./ Q/"), [Token::Number(10.0), Token::Word("Q/".into())]);
     }
 
     #[test]

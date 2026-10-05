@@ -8,7 +8,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-use score_render::{Colour, DisplayList, ItemId, Point, Shape};
+use score_render::{Colour, DisplayList, ItemId, Point, Shape, TextRun};
 
 use crate::compare::{placed_strings, point_deviation, same_style, CompareOptions, Placed, Report};
 
@@ -276,15 +276,24 @@ fn text_findings(
                             detail,
                         }
                     } else {
+                        let style = |r: &TextRun| {
+                            format!(
+                                "{} {:.1}/{:.1} {} w{}{}{} esc {}",
+                                r.font,
+                                r.height,
+                                r.width,
+                                hex(r.colour),
+                                r.weight,
+                                if r.italic { " italic" } else { "" },
+                                if r.underline { " underlined" } else { "" },
+                                r.escapement
+                            )
+                        };
                         let detail = format!(
-                            "{:?}: {} {:.1}/{:.1} instead of {} {:.1}/{:.1}",
+                            "{:?}: {} instead of {}",
                             e.string.text,
-                            a.run.font,
-                            a.run.height,
-                            a.run.width,
-                            e.run.font,
-                            e.run.height,
-                            e.run.width
+                            style(a.run),
+                            style(e.run)
                         );
                         Finding {
                             item,

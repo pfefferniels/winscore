@@ -23,12 +23,12 @@ use score_render::Document as RenderDocument;
 use crate::conditional;
 use crate::document::{ItemId, Transaction};
 use crate::drag::Ends;
-use crate::group::{GroupCommand, Order};
+use crate::group::{GroupCommand, LayoutCommand, Order};
 use crate::error::EditError;
 use crate::params::Draft;
 use crate::session::{Deleted, Session};
 use create::{StaffChoice, Template};
-use moves::Move;
+use moves::{Axis, Move};
 use numeric::ParamOp;
 use parse::Token;
 
@@ -98,14 +98,59 @@ enum SessionWord {
     ChordRhythm,
     /// PST: the items cut last, added again.
     Paste,
+    /// QPn: the parameter the slider buttons change.
+    SliderParam(usize),
+    /// PCHNGn: a slider button, adding to the slider's parameter (or zeroing it).
+    Slider(Option<f32>),
+    /// The arrow keys (~~037x left … ~~040x down): one step.
+    Arrow(Axis, f64),
+    /// PGR: the page to the recto side and back (P2 ± 200).
+    PageRight,
 }
+
+/// PCHNG0 … PCHNG14: what each slider button adds (PCHNG0 zeroes).
+const SLIDER_STEPS: [Option<f32>; 15] = [
+    None,
+    Some(-0.1),
+    Some(-0.5),
+    Some(-1.0),
+    Some(-5.0),
+    Some(-10.0),
+    Some(-20.0),
+    Some(0.1),
+    Some(0.5),
+    Some(1.0),
+    Some(5.0),
+    Some(10.0),
+    Some(20.0),
+    Some(0.05),
+    Some(-0.05),
+];
+/// QP2 … QP21 choose the slider's parameter.
+const SLIDER_PARAMS: std::ops::RangeInclusive<usize> = 2..=21;
 
 impl SessionWord {
     fn parse(word: &str) -> Option<Self> {
         match parse::split_count(word) {
             ("PS", n) => return Some(Self::SaveParam(n)),
             ("PG", n) => return Some(Self::RecallParam(n)),
+            ("PCHNG", Some(n)) if n >= 0.0 && n.fract() == 0.0 => {
+                return SLIDER_STEPS.get(n as usize).map(|&step| Self::Slider(step));
+            }
+            ("QP", Some(n)) if SLIDER_PARAMS.contains(&(n as usize)) && n.fract() == 0.0 => {
+                return Some(Self::SliderParam(n as usize));
+            }
             _ => {}
+        }
+        let arrow = match word {
+            "~~037X" => Some((Axis::Horizontal, -1.0)),
+            "~~038X" => Some((Axis::Vertical, 1.0)),
+            "~~039X" => Some((Axis::Horizontal, 1.0)),
+            "~~040X" => Some((Axis::Vertical, -1.0)),
+            _ => None,
+        };
+        if let Some((axis, distance)) = arrow {
+            return Some(Self::Arrow(axis, distance));
         }
         let parsed = match word {
             "X" => Self::Leave,
@@ -136,6 +181,7 @@ impl SessionWord {
             "ADJ" => Self::AdjustStems,
             "CH" => Self::ChordRhythm,
             "PST" => Self::Paste,
+            "PGR" => Self::PageRight,
             _ => return None,
         };
         Some(parsed)
@@ -158,6 +204,7 @@ pub fn is_supported(line: &str) -> bool {
             let word = w.to_ascii_uppercase();
             SessionWord::parse(&word).is_some()
                 || GroupCommand::word(&word).is_some()
+                || LayoutCommand::word(&word).is_some()
                 || Order::word(&word).is_some()
                 || Move::parse(&word, first_number(&tokens[1..])).is_some_and(Move::is_complete)
                 || item::is_edit_word(&word)
@@ -245,7 +292,22 @@ impl Run<'_, '_> {
             Some(SessionWord::Step(next)) => self.step(next),
             Some(SessionWord::Edit) => self.edit_item(number),
             Some(SessionWord::EditLast) => self.edit_last(),
-            Some(SessionWord::Undelete | SessionWord::Paste) => Err(EditError::InEditMode(word)),
+            Some(SessionWord::Undelete | SessionWord::Paste | SessionWord::PageRight) => {
+                Err(EditError::InEditMode(word))
+            }
+            Some(SessionWord::SliderParam(n)) => {
+                self.session.slider_param = n;
+                Ok(())
+            }
+            Some(SessionWord::Slider(step)) => {
+                let n = self.session.slider_param;
+                let op = step.map_or(ParamOp::Set { n, value: 0.0 }, |delta| ParamOp::Add { n, delta });
+                self.change_params(&[op])
+            }
+            Some(SessionWord::Arrow(axis, distance)) => {
+                self.rewrite_selected(|draft| moves::shift(draft, axis, distance));
+                Ok(())
+            }
             Some(SessionWord::DragEnd(end)) => {
                 self.session.toggle_drag_end(end);
                 Ok(())
@@ -279,6 +341,9 @@ impl Run<'_, '_> {
         if let Some(command) = GroupCommand::word(&word) {
             return self.start_group(command, args);
         }
+        if let Some(command) = LayoutCommand::word(&word) {
+            return self.start_layout(command, args);
+        }
         if let Some(order) = Order::word(&word) {
             return self.reorder(order);
         }
@@ -288,6 +353,7 @@ impl Run<'_, '_> {
             Some(SessionWord::EditLast) => self.edit_last(),
             Some(SessionWord::Undelete) => self.undelete(),
             Some(SessionWord::Paste) => self.paste(),
+            Some(SessionWord::PageRight) => self.page_right(),
             Some(_) => Err(EditError::NoSelection(word)),
             None => match create::template(&word) {
                 Some(template) => self.create(&template, args),
@@ -341,7 +407,7 @@ impl Run<'_, '_> {
             let mut changed = draft.clone();
             ops.iter().for_each(|op| op.apply(&mut changed));
             let code_ok = changed.code() == draft.code() || is_creatable_code(changed.get(1));
-            let staff_ok = changed.get(2) == draft.get(2) || changed.get(2) >= 1.0;
+            let staff_ok = changed.get(2) == draft.get(2) || changed.get(2) > 0.0;
             if code_ok && staff_ok {
                 *draft = changed;
             }

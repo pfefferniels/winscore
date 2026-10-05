@@ -342,3 +342,5 @@ code01-staff-1.3-down
 code01-staff-1.3-full
 code01-staff-p4-offset
 code01-staff-recto
+fuzz-code01-p11-p14-5b0460
+fuzz-code01-p6-p10-e9c174

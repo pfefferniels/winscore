@@ -116,11 +116,12 @@ fn cached_black_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas:
         .map_or(*note, |at| heads[at].1);
     let start = canvas.buffer_mut().len();
     glyph::clef(doc, item, canvas, FIRST_HEAD_SYMBOL, source.origin, (source.width, 1.0), source.unit);
-    let shift = |own: f64, theirs: f64| trunc(own) - trunc(theirs);
+    // Integer adds wrap in the engine, also for indefinite (i32::MIN) points.
+    let shift = |own: f64, theirs: f64| trunc(own).wrapping_sub(trunc(theirs));
     let (dx, dy) = (shift(note.origin.x, source.origin.x), shift(note.origin.y, source.origin.y));
     canvas.buffer_mut()[start..].iter_mut().for_each(|p| {
-        p.at.x += dx;
-        p.at.y += dy;
+        p.at.x = p.at.x.wrapping_add(dx);
+        p.at.y = p.at.y.wrapping_add(dy);
     });
 }
 

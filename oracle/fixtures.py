@@ -41,6 +41,7 @@ TEXT_BASELINE_OFFSET = 96       # OnDraw (0x5E5910): the baseline of a string is
 VIEW_DX, VIEW_DY = 0x20527F0, 0x20527F4   # emit_points: x_out = x + VIEW_DX, y_out = y - VIEW_DY
 PAGE_FROM_INTERNAL = (2000, 26948)        # paper bottom-left at internal (-2000, -26947.7); analysis/engine/coordinates.md
 ITEM_COUNT = 0x20B8E24          # number of items, and the 1-based loop index while drawing
+ITEM_WORDS, ITEM_START = 0x205343C, 0x2091D1C   # item store: P_k of item i at ITEM_WORDS + 4 (start[i] + k); dispatch.md
 # Pen-width records (tag = colour + pen << 24), print metadata that also reaches the screen (impl-notes):
 # 0x4D4F3F writes (0, 0, pen -99) "reset width", 0x4D4ED2 writes (999, w, pen 99) "set width".
 PEN_RESET_KIND, PEN_SET_KIND, PEN_SET_X = 0x9D, 0x63, 999
@@ -91,11 +92,17 @@ class Run:
     final: EngineResult | None = None
     vector_writers: dict[int, int] = field(default_factory=dict)
     text_writers: dict[int, int] = field(default_factory=dict)
-    excluded: dict[int, str] = field(default_factory=dict)   # 0-based item -> reason
+    excluded: dict[int, str] = field(default_factory=dict)   # 0-based file item -> reason
+    to_file: list[int | None] = field(default_factory=list)  # engine item (0-based) -> item of the drawn file
     result_mus: bytes | None = None
     view_dx: int = 0
     view_dy: int = 0
     error: str = ""
+
+    def file_item(self, engine_item: int | None) -> int | None:
+        if engine_item is None or engine_item >= len(self.to_file):
+            return None
+        return self.to_file[engine_item]
 
     @property
     def offset(self) -> tuple[int, int]:
@@ -157,12 +164,37 @@ class FixtureEngine(Engine):
         self.text_writers.clear()
         return super().command(text)
 
+    def item_store(self) -> list[tuple[float, float, float]]:
+        """P1-P3 of the items the engine holds, in its order (it drops some on load, e.g. codes 0 and 13)."""
+        def word(address: int) -> float:
+            return struct.unpack("<f", bytes(self.uc.mem_read(address, 4)))[0]
+        starts = [self.i32(ITEM_START + 4 * i) for i in range(1, self.i32(ITEM_COUNT) + 1)]
+        return [tuple(word(ITEM_WORDS + 4 * (w + k)) for k in (1, 2, 3)) for w in starts]
+
+
+def align(store: list[tuple[float, float, float]], items: list[bytes]) -> list[int | None]:
+    """Each engine item's index in the file: the next file item with the same P1-P3, in order."""
+    as_f32 = (lambda v: struct.unpack("<f", struct.pack("<f", v))[0])
+    keys = [tuple(as_f32(param(packed, n)) for n in (1, 2, 3)) for packed in items]
+    mapping, cursor = [], 0
+    for key in store:
+        found = next((j for j in range(cursor, len(keys)) if keys[j] == key), None)
+        mapping.append(found)
+        cursor = found + 1 if found is not None else cursor
+    return mapping
+
 
 def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
+    """A case in a newly booted engine."""
     fresh_sandbox(root, case)
     engine = FixtureEngine(root)
-    engine.confirm = case.confirm
     engine.initialize()
+    return run_on(engine, case, root, zoom)
+
+
+def run_on(engine: FixtureEngine, case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
+    """A case in an engine that is initialised and has run nothing else, with the case's sandbox in place."""
+    engine.confirm = case.confirm
     engine.put32(ZOOM, zoom)
     run = Run()
     try:
@@ -176,10 +208,14 @@ def run_case(case: Case, root: Path, zoom: int = BASE_ZOOM) -> Run:
     run.view_dx, run.view_dy = engine.i32(VIEW_DX), engine.i32(VIEW_DY)
     run.vector_writers = dict(engine.vector_writers)
     run.text_writers = dict(engine.text_writers)
+    store = engine.item_store() if not run.error else []
     if case.commands and not run.error:
         run.result_mus = saved_score(engine, root)
     drawn = read_items(run.result_mus) if run.result_mus else read_items(case.mus)
-    run.excluded = stale_symbol_items(read_items(case.mus), engine.missing_library, drawn)
+    run.to_file = align(store, drawn)
+    missing = {f: notice for e, notice in engine.missing_library.items()
+               if e < len(run.to_file) and (f := run.to_file[e]) is not None}
+    run.excluded = stale_symbol_items(drawn, missing, drawn)
     if run.final is not None:
         try:
             text_runs(run.final.text)
@@ -280,19 +316,27 @@ class PageView:
         all_shapes = shapes([run.final.vector[k] for k in kept])
         frames = [PageFrame.of(s) for s in all_shapes if is_page_frame(s)]
         content = [(s, item) for s in all_shapes if not is_page_frame(s)
-                   if (item := shape_writer(s, kept, run.vector_writers)) not in run.excluded]
+                   if (item := run.file_item(shape_writer(s, kept, run.vector_writers))) not in run.excluded]
         records = len(run.final.vector) - len(kept)
         # The shell would draw each record as a one-point object of its own kind.
         notes = [f"{records} pen-width record(s) left out"] if records else []
         if any(i is None for _, i in content):
             notes.append("shapes without a single writing item; not attributed")
-        attributed = [(r, run_writer(r, run.text_writers)) for r in text_runs(run.final.text)]
+        attributed = [(r, run.file_item(run_writer(r, run.text_writers))) for r in text_runs(run.final.text)]
         runs = [r for r, item in attributed if item not in run.excluded]
         text_items = [item for _, item in attributed if item not in run.excluded]
         if None in text_items:
             notes.append("text runs without a single writing item; not attributed")
         return cls([s for s, _ in content], [item for _, item in content], runs, text_items, frames, run.offset,
                    tuple(notes))
+
+    @property
+    def overflows(self) -> bool:
+        """Some page coordinate does not fit an i32: the engine converted an out-of-range float."""
+        dx, dy = self.offset
+        shape_coordinates = (v for s in self.content for path in s.paths for x, y in path for v in (x - dx, y - dy))
+        text_coordinates = (v for r in self.texts for t in r.strings for v in (t.x - dx, t.y + TEXT_BASELINE_OFFSET - dy))
+        return any(not -2**31 < v < 2**31 for coordinates in (shape_coordinates, text_coordinates) for v in coordinates)
 
     @property
     def frame_agrees(self) -> bool:
@@ -407,6 +451,8 @@ def invalid_reasons(run: Run, zoom_run: Run | None, view: PageView | None) -> li
     reasons += counted(f"{e.kind}: {e.detail}" for e in run.events if e.kind in INVALIDATING_EVENTS)
     if view is not None and not view.frame_agrees:
         reasons.append(f"page frame at {[f.origin for f in view.frames]}, view globals say {view.offset}")
+    if view is not None and view.overflows:
+        reasons.append("engine coordinate overflow (a float too large for an int becomes 0x80000000)")
     if zoom_run is not None and zoom_run.final is not None and run.final is not None:
         if (zoom_run.final.vector, zoom_run.final.text) != (run.final.vector, run.final.text):
             reasons.append(f"output differs between zoom {BASE_ZOOM:#x} and {CHECK_ZOOM:#x}")
@@ -423,6 +469,13 @@ def warnings(run: Run, view: PageView | None) -> list[str]:
     if len(run.final.text) > SHELL_TEXT_BYTES:
         notes.append("more text than the engine's text buffer holds")
     return notes
+
+
+def dropped_items(case: Case, run: Run) -> list[int]:
+    """File items the engine did not keep on load (it drops codes 0 and 13, for instance)."""
+    drawn = read_items(run.result_mus) if run.result_mus else read_items(case.mus)
+    kept = set(run.to_file)
+    return [n for n in range(len(drawn)) if n not in kept] if run.to_file else []
 
 
 def meta_json(case: Case, run: Run, zoom_run: Run | None, view: PageView | None) -> dict:
@@ -448,6 +501,7 @@ def meta_json(case: Case, run: Run, zoom_run: Run | None, view: PageView | None)
         "events": [{"kind": e.kind, "detail": e.detail} for e in run.events if e.kind not in QUIET_EVENTS],
         "not_found": counted(e.detail for e in run.events if e.kind == "not-found"),
         "excluded_items": [{"item": i, "reason": reason} for i, reason in sorted(run.excluded.items())],
+        "dropped_items": dropped_items(case, run),
         "zoom_checked": zoom_run is not None,
         "valid": not reasons,
         "invalid_reasons": reasons,
@@ -472,10 +526,23 @@ def worker_sandbox() -> Path:
     return SANDBOXES / f"worker-{os.getpid()}"
 
 
+_REUSABLE = None   # this worker's snapshot engine (snapshot.ReusableEngine), when enabled
+
+
+def use_snapshot_engine() -> None:
+    """Pool initialiser: boot once per worker and restore the post-init state for every case."""
+    global _REUSABLE
+    from snapshot import ReusableEngine
+    _REUSABLE = ReusableEngine(worker_sandbox())
+
+
+def run_in_worker(case: Case, zoom: int = BASE_ZOOM) -> Run:
+    return _REUSABLE.run(case, zoom) if _REUSABLE is not None else run_case(case, worker_sandbox(), zoom)
+
+
 def write_fixture(case: Case, out: Path, zoom_check: bool) -> Written:
-    root = worker_sandbox()
-    run = run_case(case, root)
-    zoom_run = run_case(case, root, CHECK_ZOOM) if zoom_check else None
+    run = run_in_worker(case)
+    zoom_run = run_in_worker(case, CHECK_ZOOM) if zoom_check else None
     target = out / case.name
     target.mkdir(parents=True, exist_ok=True)
     (target / INPUT).write_bytes(case.mus)
@@ -506,6 +573,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 2))
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--no-zoom-check", action="store_true")
+    parser.add_argument("--boot-each", action="store_true", help="boot a new engine per case instead of restoring a snapshot")
     args = parser.parse_args(argv)
 
     cases = selected(all_cases(), args.patterns)
@@ -513,7 +581,8 @@ def main(argv: list[str]) -> int:
         print("\n".join(f"{c.name}\t{c.description}" for c in cases))
         return 0
     try:
-        with ProcessPoolExecutor(max_workers=args.jobs) as pool:
+        initializer = None if args.boot_each else use_snapshot_engine
+        with ProcessPoolExecutor(max_workers=args.jobs, initializer=initializer) as pool:
             written = list(pool.map(write_fixture, cases, [args.out] * len(cases), [not args.no_zoom_check] * len(cases)))
     finally:
         shutil.rmtree(SANDBOXES, ignore_errors=True)   # one copy of the install per worker process
