@@ -70,7 +70,8 @@ class Item:
     def with_param(self, n: int, value: float) -> "Item":
         params = list(self.params) + [0.0] * max(0, n - len(self.params))
         params[n - 1] = value
-        while len(params) > 3 and params[-1] == 0 and not (self.text and len(params) <= 13):
+        least = 13 if self.text else 3
+        while len(params) > least and params[-1] == 0:
             params.pop()
         return replace(self, params=tuple(params))
 
@@ -114,14 +115,14 @@ def value_pools() -> dict[int, dict[int, list[float]]]:
     for path in sorted(FIXTURES.glob("code*/input.mus")):
         for packed in read_items(path.read_bytes()):
             code, count = int(param(packed, 1)), len(packed) // 4
-            last = 13 if code == 16 else count
+            chars = int(param(packed, 12)) if code == 16 else 0
+            last = count - (chars + 3) // 4          # a text item's characters follow its parameters
             for n in range(3, last + 1):
                 value = round(param(packed, n), 4)
                 if value and not (code == 16 and n in (12, 13)):
                     pools[code][n].add(value)
             if code == 16:
-                chars = int(param(packed, 12))
-                texts.append(packed[4 * (count - (chars + 3) // 4):][:chars])
+                texts.append(packed[4 * last:][:chars])
     result = {code: {n: sorted(v) for n, v in by_param.items()} for code, by_param in pools.items()}
     result[16][0] = sorted({t.decode("latin-1") for t in texts if b"~" not in t})   # strings, keyed 0
     return result
@@ -174,9 +175,10 @@ def random_item(rng: random.Random, code: int, pools: dict, staff: int = 1, x: f
         measure = n in MEASURES.get(code, set())
         item = item.with_param(n, perturbed(rng, value) if measure and rng.random() < 0.3 else value)
     if code == 16:
+        # The text goes in first: with_param keeps 13 parameters only for an item that has characters,
+        # and the engine reads the characters after P13 whatever the item length.
         text = random_text(rng, pools)
-        item = item.with_param(6, item.p(6) or 1).with_param(12, float(len(text))).with_param(13, 0.0)
-        item = replace(item, text=text)
+        item = replace(item, text=text).with_param(6, item.p(6) or 1).with_param(12, float(len(text))).with_param(13, 0.0)
     return item
 
 
@@ -297,6 +299,8 @@ def deviation(item: Item) -> str | None:
         (c == 1 and item.p(6) < 0 and item.p(8) < 0, "tablature with P8 < 0 (impl-notes, by design)"),
         (c == 2 and item.p(9) == -1, "rest CW centring P9 = -1 writes back (impl-notes, by design)"),
         (c == 5 and item.p(9) == 99 and item.p(16) != 0, "triangle with number uses stale spacing (impl-beams)"),
+        (c == 5 and any(item.p(n) and not 0 < item.p(n) <= 1 for n in (14, 15)),
+         "slur cut P14/P15 outside 0…1 finds no place and reads stale state (impl-beams)"),
         (c == 6 and item.p(10) == 0 and item.p(8) <= 0 and item.p(13) != 0, "second partial with stale line (impl-beams)"),
         (c == 6 and item.p(8) != 0 and int(item.p(17)) >= 1, "beam number letter from P17 (impl-beams, by design)"),
         (c == 12 and item.p(16) == 1, "box P16 = 1 cm scaling (impl-lines, not imitated)"),
