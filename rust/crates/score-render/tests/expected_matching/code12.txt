@@ -172,3 +172,6 @@ code12-grid-type-9
 code12-p5-other-m1
 code12-p5-other-m10
 code12-p5-other-m2
+fuzz-code12-p5-ffbe10
+fuzz-code12-p5-p11-cbf4b8
+fuzz-code12-p5-p11-ec0e0d
