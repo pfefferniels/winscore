@@ -194,6 +194,10 @@ fn replay(case: &Case) -> (Vec<Stored>, Vec<String>) {
             error.or(dialog_error)
         })
         .collect();
+    // The driver leaves edit mode before saving, which redraws the page.
+    if !editor.selection().is_empty() {
+        editor.execute("X").expect("X leaves edit mode");
+    }
     (stored(&editor), errors)
 }
 

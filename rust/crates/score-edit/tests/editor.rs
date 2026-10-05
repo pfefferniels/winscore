@@ -329,6 +329,9 @@ fn layout_commands_report_where_the_engine_gives_up() {
     let system = StaffRange::from_answer(1, 2);
     let change = e.lay_out(LayoutCommand::LineUp, system, &Options::default()).unwrap();
     assert!(change.message.is_some_and(|m| m.contains("beats")));
-    e.execute("LI").unwrap();
+    let mut e = small();
+    e.execute("LJ").unwrap();
     assert!(e.prompt().is_some_and(|p| p.starts_with("Enter Lowest Staff#")));
+    e.execute("1 1").unwrap();
+    assert_eq!(e.undo_label(), Some("LJ 1 1"));
 }

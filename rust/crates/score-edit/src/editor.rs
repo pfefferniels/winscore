@@ -85,13 +85,13 @@ pub struct Editor {
 }
 
 impl Editor {
-    /// Opens `file`. Text items get the lengths (P13) the engine measures when
-    /// it first draws the page; scores saved by WinScore already have them.
+    /// Opens `file`. Items get what the engine stores when it first draws the
+    /// page: text lengths (P13) and the centres of centred rests (P9).
     pub fn new(file: MusFile) -> Self {
         let mut doc = Document::new(file);
         let mut session = Session::default();
         let mut tx = Transaction::new(&mut doc);
-        Run { session: &mut session, tx: &mut tx }.refresh_text_lengths();
+        Run { session: &mut session, tx: &mut tx }.refresh_drawn();
         tx.commit();
         Self { doc, session, history: History::default(), drag: None }
     }
@@ -161,7 +161,7 @@ impl Editor {
     /// command waiting for its area or destination, and otherwise selects the
     /// items inside.
     pub fn draw_box(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> Result<Change, EditError> {
-        self.act("Box", |run| run.draw_box((x0, y0), (x1, y1)))
+        self.answer("Box", |run| run.draw_box((x0, y0), (x1, y1)))
     }
 
     /// The question a group command is waiting to have answered by the next
@@ -201,7 +201,7 @@ impl Editor {
         let mut tx = Transaction::new(&mut self.doc);
         let mut run = Run { session: &mut session, tx: &mut tx };
         action(&mut run)?;
-        run.refresh_text_lengths();
+        run.refresh_drawn();
         let edits = tx.commit();
         let message = session.message.take();
         let before = std::mem::replace(&mut self.session, session);
@@ -220,7 +220,23 @@ impl Editor {
     /// Executes a SCORE command line as typed or sent by a WinScore menu, e.g.
     /// `R 5`, `600 5`, `FLI`, `DE`, `NOTE 1 50`, `TREB`.
     pub fn execute(&mut self, line: &str) -> Result<Change, EditError> {
-        self.act(line.trim(), |run| run.line(line))
+        self.answer(line.trim(), |run| run.line(line))
+    }
+
+    /// An action that may start or answer a command's dialogue: the undo step
+    /// is named after the whole dialogue so far ("LJ 1 2", "M 1 0 0 0 2").
+    fn answer(
+        &mut self,
+        said: &str,
+        action: impl FnOnce(&mut Run<'_, '_>) -> Result<(), EditError>,
+    ) -> Result<Change, EditError> {
+        let label = match self.session.dialogue.as_deref().filter(|_| self.session.pending.is_some()) {
+            Some(so_far) => format!("{so_far} {said}"),
+            None => said.to_owned(),
+        };
+        let change = self.act(&label, action)?;
+        self.session.dialogue = self.session.pending.is_some().then_some(label);
+        Ok(change)
     }
 
     /// Sets parameter `n` (1-based) of any item, selected or not.

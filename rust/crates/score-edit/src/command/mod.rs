@@ -6,8 +6,11 @@
 //! (`NOTE`, `TREB`, `METER34`) create one with the engine's defaults; the new
 //! item is selected, as the engine puts new items straight into edit mode.
 
+mod auto_beam;
 pub mod beams;
+mod centre;
 pub mod create;
+mod drawn;
 pub mod groups;
 pub mod item;
 pub mod line;
@@ -27,6 +30,7 @@ use crate::group::{GroupCommand, LayoutCommand, Order};
 use crate::error::EditError;
 use crate::params::Draft;
 use crate::session::{Deleted, Session};
+use beams::StemFit;
 use create::{StaffChoice, Template};
 use moves::{Axis, Move};
 use numeric::ParamOp;
@@ -92,8 +96,8 @@ enum SessionWord {
     JustifyRight,
     /// J [left right]: text justified between two positions.
     Justify,
-    /// ADJ: stems reach their beam.
-    AdjustStems,
+    /// ADJ, ADJX, ADX, ADF, ADFX: stems reach their beam.
+    AdjustStems(StemFit),
     /// CH [value]: one duration for the whole chord.
     ChordRhythm,
     /// PST: the items cut last, added again.
@@ -107,6 +111,9 @@ enum SessionWord {
     /// PGR: the page to the recto side and back (P2 ± 200).
     PageRight,
 }
+
+/// Edit words that take their number attached as well as after a blank (WB3, EU5).
+const NUMBERED_WORDS: [&str; 2] = ["WB", "EU"];
 
 /// PCHNG0 … PCHNG14: what each slider button adds (PCHNG0 zeroes).
 const SLIDER_STEPS: [Option<f32>; 15] = [
@@ -178,7 +185,10 @@ impl SessionWord {
             "CTX" => Self::CentreTextOnNote { skip_punctuation: true },
             "JR" => Self::JustifyRight,
             "J" => Self::Justify,
-            "ADJ" => Self::AdjustStems,
+            "ADJ" => Self::AdjustStems(StemFit { opposite: false, french: false }),
+            "ADJX" | "ADX" => Self::AdjustStems(StemFit { opposite: true, french: false }),
+            "ADF" => Self::AdjustStems(StemFit { opposite: false, french: true }),
+            "ADFX" => Self::AdjustStems(StemFit { opposite: true, french: true }),
             "CH" => Self::ChordRhythm,
             "PST" => Self::Paste,
             "PGR" => Self::PageRight,
@@ -205,10 +215,14 @@ pub fn is_supported(line: &str) -> bool {
             SessionWord::parse(&word).is_some()
                 || GroupCommand::word(&word).is_some()
                 || LayoutCommand::word(&word).is_some()
+                || auto_beam::Word::parse(&word).is_some()
+                || matches!(word.as_str(), "ADOF" | "CNX")
                 || Order::word(&word).is_some()
                 || Move::parse(&word, first_number(&tokens[1..])).is_some_and(Move::is_complete)
                 || item::is_edit_word(&word)
+                || matches!(parse::split_count(&word), (stem, Some(_)) if NUMBERED_WORDS.contains(&stem))
                 || create::template(&word).is_some()
+                || drawn::centred_staves(&word, &numbers_after(&tokens)).is_some()
         }
         Some(_) => numeric::param_ops(&tokens).is_some_and(|ops| ops.is_ok()),
     }
@@ -225,6 +239,10 @@ fn word_and_args(tokens: &[Token]) -> Result<(String, &[Token]), EditError> {
         Some((other, _)) => Err(EditError::UnknownCommand(format!("{other:?}"))),
         None => Err(EditError::UnknownCommand(String::new())),
     }
+}
+
+fn numbers_after(tokens: &[Token]) -> Vec<f32> {
+    tokens.iter().skip(1).filter_map(Token::number).collect()
 }
 
 fn first_number(args: &[Token]) -> Option<f32> {
@@ -278,6 +296,17 @@ impl Run<'_, '_> {
         }
         let (word, args) = word_and_args(tokens)?;
         let number = first_number(args);
+        if let Some(auto) = auto_beam::Word::parse(&word).filter(|_| self.selected_codes().contains(&6)) {
+            return self.auto_beam(auto);
+        }
+        match word.as_str() {
+            "ADOF" => return self.stem_offsets(),
+            "CNX" => {
+                self.center(number)?;
+                return self.stem_offsets();
+            }
+            _ => {}
+        }
         match SessionWord::parse(&word) {
             Some(SessionWord::Leave) => self.leave(number),
             Some(SessionWord::Abort { exit }) => {
@@ -322,7 +351,7 @@ impl Run<'_, '_> {
             }
             Some(SessionWord::JustifyRight) => self.justify_right(number),
             Some(SessionWord::Justify) => self.justify(number, args.get(1).and_then(Token::number)),
-            Some(SessionWord::AdjustStems) => self.adjust_stems(),
+            Some(SessionWord::AdjustStems(fit)) => self.adjust_stems(fit, number),
             Some(SessionWord::ChordRhythm) => self.chord_rhythm(number),
             None => self.edit_word(&word, args),
         }
@@ -344,6 +373,11 @@ impl Run<'_, '_> {
         if let Some(command) = LayoutCommand::word(&word) {
             return self.start_layout(command, args);
         }
+        let numbers: Vec<f32> = args.iter().filter_map(Token::number).collect();
+        if let Some(staff) = drawn::centred_staves(&word, &numbers) {
+            self.centre_whole_rests(staff);
+            return Ok(());
+        }
         if let Some(order) = Order::word(&word) {
             return self.reorder(order);
         }
@@ -354,6 +388,7 @@ impl Run<'_, '_> {
             Some(SessionWord::Undelete) => self.undelete(),
             Some(SessionWord::Paste) => self.paste(),
             Some(SessionWord::PageRight) => self.page_right(),
+            Some(SessionWord::AdjustStems(_)) => self.adjust_stems_in_area(&args.iter().filter_map(Token::number).collect::<Vec<_>>()),
             Some(_) => Err(EditError::NoSelection(word)),
             None => match create::template(&word) {
                 Some(template) => self.create(&template, args),
@@ -376,7 +411,10 @@ impl Run<'_, '_> {
                 self.create(&template, args)
             }
             _ if item::is_edit_word(word) => self.rewrite(word, first_number(args)),
-            _ => Err(EditError::UnknownCommand(word.to_owned())),
+            _ => match parse::split_count(word) {
+                (stem, Some(n)) if NUMBERED_WORDS.contains(&stem) => self.rewrite(stem, Some(n)),
+                _ => Err(EditError::UnknownCommand(word.to_owned())),
+            },
         }
     }
 
@@ -451,11 +489,24 @@ impl Run<'_, '_> {
             .into_iter()
             .filter_map(|id| Some((id, Draft::of(self.tx.doc().item(id)?))))
             .collect();
+        let staves = RenderDocument::new(self.tx.doc().file()).staves;
         targets.into_iter().for_each(|(id, mut draft)| {
             let on = staff.unwrap_or(draft.get(2));
+            if (4..=7).contains(&draft.code()) {
+                let targets: Vec<centre::Target> = self
+                    .tx
+                    .doc()
+                    .entries()
+                    .map(|(other, item)| (other, Draft::of(item)))
+                    .filter(|(other, d)| *other != id && centre::is_target(&draft, d) && d.get(2) as i32 == on as i32)
+                    .map(|(_, d)| centre::Target(d))
+                    .collect();
+                centre::centred(&draft, &targets, &staves).into_iter().for_each(|(n, value)| draft.set(n, value));
+                self.tx.replace(id, draft.to_item());
+                return;
+            }
             let ends: &[usize] = match draft.code() {
-                6 => &[3, 6],
-                4 | 5 | 7 | 8 | 14 => &[],
+                8 | 14 => &[],
                 _ => &[3],
             };
             ends.iter().for_each(|&n| {
