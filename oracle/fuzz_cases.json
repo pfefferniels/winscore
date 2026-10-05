@@ -434,51 +434,6 @@
   "detail": "\"?\" in Times 678.0/279.7 at (15334, 1369)"
  },
  {
-  "name": "fuzz-code10-p6-p19-efc753",
-  "target": 1,
-  "items": [
-   {
-    "params": [
-     8.0,
-     1.0,
-     0.0
-    ],
-    "text": ""
-   },
-   {
-    "params": [
-     10,
-     1,
-     70.96,
-     0,
-     0,
-     76,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     -90
-    ],
-    "text": ""
-   }
-  ],
-  "code": 10,
-  "signature": "code10-p6-p19|text offset",
-  "owner": "impl-text",
-  "symptoms": [
-   "text offset"
-  ],
-  "detail": "\"0\" shifted by (-20000, 1) (draw_text re-encodes x < -19000 internal by +20000; handed over by impl-symbols)"
- },
- {
   "name": "fuzz-code12-p5-ffbe10",
   "target": 1,
   "items": [

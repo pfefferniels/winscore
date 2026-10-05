@@ -335,10 +335,21 @@ def deviation(item: Item) -> str | None:
 POINT_BUFFER = 50_000   # add_point has no bound; beyond this the engine overwrites earlier coordinates (impl-symbols)
 
 
+TEXT_X_REENCODING = 20_000   # 0x56AC18: glyphs left of internal x ≈ -19000 land 20000 units further right (impl-text)
+
+
+def is_reencoded_glyph(finding: dict) -> bool:
+    delta = finding.get("delta")
+    return (finding.get("symptom") == "text offset" and delta is not None
+            and abs(delta[0] + TEXT_X_REENCODING) <= 1 and abs(delta[1]) <= 1)
+
+
 def known_deviation(result: Result) -> str | None:
     codes = result.codes()
     if any(points > POINT_BUFFER for points in result.engine_points.values()):
         return "item with more than 50,000 points overflows the engine's point buffer (impl-symbols, not imitated)"
+    if result.findings and all(map(is_reencoded_glyph, result.findings)):
+        return "glyphs far left of the paper re-encoded 20000 units right (impl-text, engine bug not imitated)"
     return next((r for i in result.case.items if i.code in codes and (r := deviation(i))), None)
 
 

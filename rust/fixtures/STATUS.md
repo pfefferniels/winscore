@@ -20,12 +20,12 @@ Written by `score-compare` (crate `score-testkit`). Compared: the engine's `engi
 | code12 | 173 | 173 | 173 | 173 | 2259/2259 | 352/352 |
 | code14 | 93 | 93 | 93 | 93 | 2410/2410 | 359/359 |
 | code15 | 20 | 20 | 20 | 20 | 143/143 | 23/23 |
-| code16 | 133 | 133 | 133 | 133 | 744/744 | 2088/2088 |
+| code16 | 137 | 137 | 137 | 137 | 797/797 | 2112/2112 |
 | code17 | 42 | 42 | 42 | 42 | 950/950 | 44/44 |
 | code18 | 47 | 47 | 47 | 47 | 400/400 | 55/55 |
 | code99 | 17 | 17 | 17 | 17 | 291/291 | 26/26 |
 | corpus | 3 | 3 | 3 | 3 | 3777/3777 | 552/552 |
-| fuzz | 17 | 17 | 17 | 5 | 133/159 +26 | 32/50 +17 |
+| fuzz | 16 | 16 | 16 | 13 | 154/154 | 44/48 +3 |
 | layout | 3 | 3 | 3 | 3 | 134/134 | 5/5 |
 | sample | 6 | 6 | 6 | 6 | 7952/7952 | 2143/2143 |
 
@@ -35,21 +35,21 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 
 | code | items | fixtures with output | fully matching | shapes | texts |
 |---|---|---|---|---|---|
-| 1 | notes | 373 | 369 | 8670/8674 +4 | 84/85 +1 |
-| 2 | rests | 161 | 157 | 1392/1394 +2 | 14/26 +12 |
+| 1 | notes | 373 | 371 | 8672/8674 +2 | 85/85 |
+| 2 | rests | 161 | 161 | 1394/1394 | 26/26 |
 | 3 | clefs | 110 | 110 | 1148/1148 | 27/27 |
 | 4 | lines, hairpins | 121 | 121 | 1536/1536 | 0/0 |
 | 5 | slurs, brackets | 121 | 119 | 469/469 | 50/53 +3 |
 | 6 | beams | 89 | 88 | 747/747 | 21/22 |
 | 7 | trills, ottava, pedal | 72 | 72 | 1152/1152 | 48/48 |
-| 8 | staves | 1769 | 1769 | 10914/10914 | 2273/2273 |
+| 8 | staves | 1772 | 1772 | 10934/10934 | 2279/2279 |
 | 9 | library symbols | 116 | 116 | 1455/1455 | 97/97 |
-| 10 | numbers | 78 | 77 | 41/41 | 337/338 +1 |
+| 10 | numbers | 77 | 77 | 41/41 | 337/337 |
 | 11 | user symbols | 29 | 29 | 341/341 | 0/0 |
 | 12 | boxes, grids | 176 | 176 | 1520/1520 | 198/198 |
 | 14 | barlines | 115 | 115 | 1043/1043 | 0/0 |
 | 15 | EPS | 21 | 21 | 42/42 | 0/0 |
-| 16 | text | 154 | 152 | 85/107 +22 | 4351/4351 |
+| 16 | text | 158 | 158 | 135/135 | 4368/4368 |
 | 17 | key signatures | 49 | 49 | 1126/1126 | 0/0 |
 | 18 | meters | 59 | 59 | 366/366 | 8/8 |
 
@@ -1673,9 +1673,12 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code16-p8-outline-1105 | match | 5/5 | 16/16 | 0 | outline font override P8 = 1105 |
 | code16-p8-outline-193 | match | 5/5 | 16/16 | 0 | outline font override P8 = 193 |
 | code16-p9-rotate-180 | match | 5/5 | 16/16 | 1 | rotation P9 = 180 degrees |
+| code16-p9-rotate-180-symbols | match | 13/13 | 12/12 | 1 | rotation P9 = 180 with [ ] symbols |
 | code16-p9-rotate-30 | match | 5/5 | 16/16 | 0 | rotation P9 = 30 degrees |
 | code16-p9-rotate-30-large | match | 5/5 | 16/16 | 0 | rotation P9 = 30 at size 2 |
+| code16-p9-rotate-30-p11 | match | 13/13 | 4/4 | 0 | symbols, rotation P9 = 30 and shift P11 = 5 |
 | code16-p9-rotate-90 | match | 5/5 | 16/16 | 0 | rotation P9 = 90 degrees |
+| code16-p9-rotate-90-font-94 | match | 9/9 | 1/1 | 0 | meter font P8 = 94 rotated by P9 = 90 |
 | code16-p9-rotate-m45 | match | 5/5 | 16/16 | 0 | rotation P9 = -45 degrees |
 | code16-punctuation | match | 13/13 | 13/13 | 0 | punctuation and digits |
 | code16-spaces | match | 5/5 | 12/12 | 0 | words separated by spaces |
@@ -1690,6 +1693,7 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | code16-special-umlaut | match | 5/5 | 13/13 | 0 | %% escapes |
 | code16-staff-2 | match | 10/10 | 17/17 | 0 | text on staff 2 |
 | code16-staff-200 | match | 10/10 | 19/19 | 0 | text on staff 200 (verso for text, recto for shapes) |
+| code16-staff-201-rotate-symbols | match | 18/18 | 7/7 | 0 | rotated text with symbols on recto staff 201 |
 | code16-staff-large | match | 5/5 | 16/16 | 0 | text on a staff of size 1.5 |
 | code16-staff-recto | match | 10/10 | 19/19 | 0 | text on recto staff 201 |
 | code16-staff-small | match | 5/5 | 16/16 | 0 | text on a staff of size 0.7 |
@@ -1804,23 +1808,22 @@ Only the elements drawn by items of that code, over all compared fixtures; a fix
 | corpus-chopin2804 | match | 1603/1603 | 97/97 | 0 | corpus/free/chopin2804.pmx.txt (PMX converted) |
 | corpus-chopin2806 | match | 1426/1426 | 100/100 | 0 | corpus/free/chopin2806.pmx.txt (PMX converted) |
 | corpus-mus2pmx-ex1 | match | 748/748 | 355/355 | 0 | corpus/free/mus2pmx-ex1.mus |
-| fuzz-code01-p11-p14-5b0460 | differs | 6/8 +2 | 1/1 | 0 | fuzz, impl-notes: distorted; same structure, off by up to 337 after aligning |
-| fuzz-code01-p6-p10-e9c174 | differs | 5/5 | 1/2 +1 | 0 | fuzz, impl-notes: text offset; "2" shifted by (15000, 0) |
-| fuzz-code02-p5-p15-275998 | differs | 7/9 +2 | 1/1 | 0 | fuzz, impl-notes: distorted; same structure, off by up to 342 after aligning |
-| fuzz-code02-p6-p8-c48746 | differs | 9/9 | 1/5 +4 | 0 | fuzz, impl-notes: text style; "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 813.5/335.6 #999999 w400 esc 0 |
-| fuzz-code02-p8-p15-37bcaa | differs | 9/9 | 1/5 +4 | 0 | fuzz, impl-notes: text style; "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 650.8/268.5 #000000 w400 esc 0 |
-| fuzz-code02-p8-p17-c92312 | differs | 9/9 | 1/5 +4 | 0 | fuzz, impl-notes: text offset; "G" shifted by (0, -3150) |
+| fuzz-code01-p11-p14-5b0460 | match | 8/8 | 1/1 | 0 | fuzz, impl-notes: distorted; same structure, off by up to 337 after aligning |
+| fuzz-code01-p6-p10-e9c174 | match | 5/5 | 2/2 | 0 | fuzz, impl-notes: text offset; "2" shifted by (15000, 0) |
+| fuzz-code02-p5-p15-275998 | match | 9/9 | 1/1 | 0 | fuzz, impl-notes: distorted; same structure, off by up to 342 after aligning |
+| fuzz-code02-p6-p8-c48746 | match | 9/9 | 5/5 | 0 | fuzz, impl-notes: text style; "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 813.5/335.6 #999999 w400 esc 0 |
+| fuzz-code02-p8-p15-37bcaa | match | 9/9 | 5/5 | 0 | fuzz, impl-notes: text style; "G": Times 813.5/335.6 #000000 w400 esc 0 instead of Times 650.8/268.5 #000000 w400 esc 0 |
+| fuzz-code02-p8-p17-c92312 | match | 9/9 | 5/5 | 0 | fuzz, impl-notes: text offset; "G" shifted by (0, -3150) |
 | fuzz-code03-p5-p10-e6050f | match | 10/10 | 3/3 | 0 | fuzz, impl-symbols: extra; fill #000000, 1 path(s), 62 points from (15678, 4037) |
 | fuzz-code03-p5-p10-e66eab | match | 10/10 | 2/2 | 0 | fuzz, impl-symbols: extra; fill #000000, 1 path(s), 62 points from (11425, 5087) |
 | fuzz-code05-p11-p16-2701e0 | differs | 8/8 | 1/3 +2 | 0 | fuzz, impl-beams: text offset; "1" shifted by (98, 336) |
 | fuzz-code05-p11-p16-cf241b | differs | 8/8 | 1/2 +1 | 0 | fuzz, impl-beams: text offset; "3" shifted by (211, 279) |
 | fuzz-code06-p8-p17-f76ce8 | differs | 6/6 | 2/3 | 0 | fuzz, impl-beams: text missing; "?" in Times 678.0/279.7 at (15334, 1369) |
-| fuzz-code10-p6-p19-efc753 | differs | 5/5 | 1/2 +1 | 0 | fuzz, impl-symbols: text offset; "0" shifted by (-20000, 1) |
 | fuzz-code12-p5-ffbe10 | match | 17/17 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 2 points from (22061, 3648) |
 | fuzz-code12-p5-p11-cbf4b8 | match | 7/7 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 181 points from (5333, 2511) |
 | fuzz-code12-p5-p11-ec0e0d | match | 7/7 | 1/1 | 0 | fuzz, impl-symbols: absent; stroke #000000, 1 path(s), 91 points from (7810, 3823) |
-| fuzz-code16-p8-p9-b70d9e | differs | 5/19 +14 | 1/1 | 0 | fuzz, impl-text: offset; shifted by (688, 688), residual 0 |
-| fuzz-code16-p9-862d87 | differs | 5/13 +8 | 12/12 | 1 | fuzz, impl-text: offset; shifted by (5576, 0), residual 0 |
+| fuzz-code16-p8-p9-b70d9e | match | 19/19 | 1/1 | 0 | fuzz, impl-text: offset; shifted by (688, 688), residual 0 |
+| fuzz-code16-p9-862d87 | match | 13/13 | 12/12 | 1 | fuzz, impl-text: offset; shifted by (5576, 0), residual 0 |
 | layout-li-system | match | 55/55 | 2/2 | 0 | LI on a two-staff system (the engine gives the same result as LJ here) |
 | layout-lj-system | match | 55/55 | 2/2 | 0 | LJ on a two-staff system (lowest staff 1, two staves) |
 | layout-lja-single | match | 24/24 | 1/1 | 0 | LJA on one staff with two measures |

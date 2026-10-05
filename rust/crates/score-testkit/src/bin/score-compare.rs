@@ -301,6 +301,7 @@ fn row_json(row: &Row, actual: &Actual, options: &CompareOptions) -> serde_json:
                     "item": item,
                     "code": item.and_then(|i| codes.get(&i)),
                     "symptom": f.symptom.label(),
+                    "delta": f.delta.map(|d| [d.x, d.y]),
                     "detail": f.detail,
                 })
             })
