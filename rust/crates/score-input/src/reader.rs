@@ -153,10 +153,11 @@ fn item_passes(item: &[u8]) -> bool {
     }
 }
 
-/// An input clef `-TR`, `-BA`, ... in front is passed over by the check.
+/// The `-` of an input clef (`-TR`, `-BA`, ...) is passed over by the check, which then
+/// looks at the clef's letters: `-BE` fails.
 fn skip_input_clef(item: &[u8]) -> &[u8] {
     match item {
-        [b'-', b'T' | b'A' | b'B', b'R' | b'E' | b'L' | b'A', rest @ ..] => rest,
+        [b'-', b'T' | b'A' | b'B', b'R' | b'E' | b'L' | b'A', ..] => &item[1..],
         _ => item,
     }
 }

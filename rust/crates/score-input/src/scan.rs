@@ -63,6 +63,8 @@ pub(crate) fn entries(text: &str, pass: Pass, motives: &mut Motives) -> Result<V
             at += close + 1;
             match body[at..].chars().next() {
                 Some('/' | ',') => at += 1,
+                // A call right after the definition continues its last item (see notes.rs).
+                Some('@') if pass == Pass::Notes => at -= 1,
                 None => break,
                 Some(_) => {}
             }

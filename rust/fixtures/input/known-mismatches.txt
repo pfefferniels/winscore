@@ -3,7 +3,5 @@
 sapp-repeat-chord
 e2-missing-after-chord
 e2-missing-rhythms
-# Pass 1, open questions to disasm-expert: `-BE` keeps the alto clef; `]/@` in a macro
-# definition with U/J/P inside.
-g-p1-input-clef-alias
+# Pass 1: `]/@` loses its `/` after this definition (with U/J inside), but not in mt-notes.
 g-p1-macro-octaves

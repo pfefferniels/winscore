@@ -118,6 +118,14 @@ impl NoteName {
         NoteName { mode: None, letter, accidental: None, cautionary: false, octave: Vec::new(), dyad: None }
     }
 
+    pub fn has_digit(&self) -> bool {
+        self.octave.iter().any(|mark| matches!(mark, OctaveMark::Digit(_)))
+    }
+
+    pub fn has_jump(&self) -> bool {
+        self.octave.iter().any(|mark| matches!(mark, OctaveMark::Jump(_)))
+    }
+
     /// The octave number typed last, if the octave marks end with one.
     pub fn final_digit(&self) -> Option<u8> {
         match self.octave.last() {
@@ -273,9 +281,22 @@ pub enum NoteEntry {
     /// previous one again.
     RepeatChord { keep_accidentals: bool },
     /// `@Xn`: motive X again, transposed by n steps.
-    Recall { name: char, steps: i32 },
+    Recall { name: char, steps: i32, joins: Join },
     /// `Xn` without its count: the parser returns a token 0.
     ZeroToken,
+}
+
+/// How a recall `@X` inside an item joins what precedes it. The tokenizer puts the motive's
+/// text in place of the call and starts the item there, so the item's text before `@` is
+/// lost, but a chord it continued goes on with the motive's first note (0x524C4A).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Join {
+    /// A call on its own.
+    Separate,
+    /// After `:`: the motive's first note is a further note of the chord.
+    ChordMember,
+    /// `]@X`, a call right after a definition: it replaces the definition's last note.
+    LastNote,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -303,7 +324,10 @@ pub fn parse(text: &str, motives: &mut Motives) -> Result<Vec<Spanned<NoteEntry>
 /// One item: usually one entry, two with a repeat suffix (`C4X3`).
 fn parse_entry(entry: &Entry) -> Result<Vec<NoteEntry>, InputError> {
     if let Some((name, steps)) = recall_parts(&entry.text) {
-        return Ok(vec![NoteEntry::Recall { name, steps }]);
+        return Ok(vec![NoteEntry::Recall { name, steps, joins: Join::Separate }]);
+    }
+    if let Some(at) = entry.text.find('@') {
+        return joined_recall(entry, at);
     }
     check_repeat_letters(entry)?;
     let mut c = entry.spaced_cursor(PASS);
@@ -333,6 +357,28 @@ fn parse_entry(entry: &Entry) -> Result<Vec<NoteEntry>, InputError> {
     };
     c.finish()?;
     Ok(std::iter::once(value).chain(suffix).collect())
+}
+
+/// A call inside an item: the chord notes before the last `:` stay, the rest before `@`
+/// is lost (see [`Join`]).
+fn joined_recall(entry: &Entry, at: usize) -> Result<Vec<NoteEntry>, InputError> {
+    let (before, call) = entry.text.split_at(at);
+    let error = || InputError::new(PASS, crate::Span::at(entry.start + at), ErrorKind::Unexpected(call.into()));
+    let (name, steps) = recall_parts(call).ok_or_else(error)?;
+    let recall = |joins| NoteEntry::Recall { name, steps, joins };
+    if before == "]" {
+        return Ok(vec![recall(Join::LastNote)]);
+    }
+    match before.rfind(':') {
+        Some(colon) => {
+            let chord_text = Entry { text: before[..colon].to_string(), ..entry.clone() };
+            let mut c = chord_text.spaced_cursor(PASS);
+            let (chord, _) = chord(&mut c)?;
+            c.finish()?;
+            Ok(vec![chord, recall(Join::ChordMember)])
+        }
+        None => Ok(vec![recall(Join::Separate)]),
+    }
 }
 
 /// 0x524C4A: an `X` or `Z` must be followed by `[` or a digit 1-9.

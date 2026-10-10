@@ -7,8 +7,8 @@
 use crate::error::{ErrorKind, InputError, Pass};
 use crate::motives::{transpose, Carried, Motives};
 use crate::notes::{
-    Accidental, BarStyle, Clef, Direction, KeySignature, Meter, NoteEntry, NoteName, OctaveMark, OctaveMode, Rest, Spanned,
-    StaffShift, StemMode,
+    Accidental, BarStyle, Clef, Direction, Join, KeySignature, Meter, NoteEntry, NoteName, OctaveMark, OctaveMode, Rest,
+    Spanned, StaffShift, StemMode,
 };
 
 /// The parser's octave register c0 at the start of a line: octave 4.
@@ -162,6 +162,9 @@ impl Octaves {
 /// Pass-1 state while the items are read in order.
 struct Resolver<'a> {
     octaves: Octaves,
+    /// The reader's own octave state (0x41FAB5), which gives the notes of a motive
+    /// definition their octave numbers; outside definitions it follows the parser's.
+    reader: Octaves,
     /// The barline span, remembered from barline to barline.
     span: u8,
     tokens: Vec<Token>,
@@ -193,7 +196,7 @@ impl Resolver<'_> {
     fn entry(&mut self, value: &NoteEntry, span: crate::Span) -> Result<NoteEntry, InputError> {
         let error = |kind| InputError::new(Pass::Notes, span, kind);
         match value {
-            NoteEntry::Chord(names) => return Ok(NoteEntry::Chord(self.chord(names))),
+            NoteEntry::Chord(names) => return Ok(NoteEntry::Chord(self.chord(names, false))),
             NoteEntry::Rest(rest) => self.tokens.push(Token::Rest(*rest)),
             NoteEntry::Bar(bar) => {
                 self.span = bar.span.unwrap_or(self.span);
@@ -222,30 +225,40 @@ impl Resolver<'_> {
                 let block = copied(&self.tokens[from..to], *keep_accidentals);
                 self.tokens.extend(block);
             }
-            NoteEntry::Recall { name, steps } => {
+            NoteEntry::Recall { name, steps, joins } => {
                 let stored = self.motives.notes(*name).ok_or_else(|| error(ErrorKind::UnknownMotive(*name)))?.to_vec();
+                let mut member = match joins {
+                    Join::Separate => false,
+                    Join::ChordMember => true,
+                    Join::LastNote => self.drop_last_note(),
+                };
                 for entry in stored {
-                    let moved = match entry {
-                        NoteEntry::Chord(names) => NoteEntry::Chord(names.iter().map(|n| transpose(n, *steps)).collect()),
-                        other => other,
-                    };
-                    self.entry(&moved, span)?;
+                    match entry {
+                        NoteEntry::Chord(names) => {
+                            let moved: Vec<NoteName> = names.iter().map(|n| transpose(n, *steps)).collect();
+                            self.chord(&moved, std::mem::take(&mut member));
+                        }
+                        other => {
+                            self.entry(&other, span)?;
+                        }
+                    }
                 }
             }
         }
         Ok(value.clone())
     }
 
-    /// The notes of a chord, the first a positive token, the others members; a dyad adds a
-    /// member an octave away (0x4AF456). Returns the names with their octave numbers.
-    fn chord(&mut self, names: &[NoteName]) -> Vec<NoteName> {
+    /// The notes of a chord, the first a positive token (unless `continues` an earlier
+    /// chord), the others members; a dyad adds a member an octave away (0x4AF456). Returns
+    /// the names as a motive definition stores them.
+    fn chord(&mut self, names: &[NoteName], continues: bool) -> Vec<NoteName> {
         names
             .iter()
             .enumerate()
             .map(|(i, name)| {
-                let step = self.octaves.step(name);
+                let (step, written) = self.step(name);
                 let pitch = Pitch { step, accidental: name.accidental, cautionary: name.cautionary };
-                let member = i > 0;
+                let member = i > 0 || continues;
                 self.tokens.push(if !member && pitch.value() < 1000 { Token::Misread(pitch.value()) } else { Token::Note { pitch, member } });
                 let octave = match name.dyad {
                     Some(Direction::Up) => Some(7),
@@ -253,10 +266,41 @@ impl Resolver<'_> {
                     None => None,
                 };
                 self.tokens.extend(octave.map(|o| Token::Note { pitch: Pitch { step: step + o, ..pitch }, member: true }));
-                let digit = (step - (name.letter.step() + 1)).div_euclid(7).clamp(0, 9) as u8;
-                NoteName { octave: vec![OctaveMark::Digit(digit)], ..name.clone() }
+                written
             })
             .collect()
+    }
+
+    /// The step of a note and the name as the reader leaves it. In a motive definition the
+    /// reader appends an octave number to every note without one: from its own octave state,
+    /// and for a note with `U`/`J` the octave before the jump (the jump moves only the later
+    /// notes).
+    fn step(&mut self, name: &NoteName) -> (i32, NoteName) {
+        if self.defining.is_none() {
+            let step = self.octaves.step(name);
+            self.reader = self.octaves;
+            return (step, name.clone());
+        }
+        let before = self.reader.base;
+        let read = self.reader.step(name);
+        let written = if name.has_digit() {
+            let octave = (read - (name.letter.step() + 1)).div_euclid(7);
+            NoteName { octave: vec![OctaveMark::Digit(octave.clamp(0, 9) as u8)], ..name.clone() }
+        } else {
+            let base = if name.has_jump() { before } else { read - (name.letter.step() + 1) };
+            let mut written = name.clone();
+            written.octave.push(OctaveMark::Digit(base.div_euclid(7).clamp(0, 9) as u8));
+            written
+        };
+        (self.octaves.step(&written), written)
+    }
+
+    /// `]@X`: the definition's last note is lost; returns whether it continued a chord.
+    fn drop_last_note(&mut self) -> bool {
+        match self.tokens.iter().rposition(|t| matches!(t, Token::Note { .. })) {
+            Some(i) => matches!(self.tokens.remove(i), Token::Note { member: true, .. }),
+            None => false,
+        }
     }
 
     /// `=`: past the last item of R, the nearest note or chord before it (its tokens).
@@ -330,7 +374,7 @@ fn misread_meter(value: i32) -> Meter {
 
 pub fn resolve(entries: &[Spanned<NoteEntry>], clef: Clef, motives: &mut Motives) -> Result<Vec<Event>, InputError> {
     let octaves = Octaves::new(&motives.carried);
-    let mut resolver = Resolver { octaves, span: 1, tokens: Vec::new(), motives, defining: None };
+    let mut resolver = Resolver { octaves, reader: octaves, span: 1, tokens: Vec::new(), motives, defining: None };
     entries.iter().try_for_each(|spanned| resolver.spanned(spanned))?;
     resolver.finish_definition();
     resolver.motives.carried.last_step = resolver.octaves.last_step;
