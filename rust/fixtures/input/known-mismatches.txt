@@ -1,18 +1,4 @@
 # Cases score-input does not reproduce yet (one name per line, # comments).
 # Syntax from Craig Sapp's SCORE input page (oracle/input_corpus_sapp.txt), until the
 # five-pass grammar derived from the engine is in.
-sapp-alt-accidentals
-sapp-barlines
-sapp-cautionary
-sapp-chord-jump
-sapp-cue
-sapp-dyad
-sapp-example-letters
-sapp-example-numbers
-sapp-input-clef
-sapp-jump-down
-sapp-jump-limit
-sapp-jump-up
 sapp-repeat-chord
-sapp-rests
-sapp-whole-repeat

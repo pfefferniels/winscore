@@ -70,12 +70,31 @@ pub enum OctaveMode {
     Proximity,
 }
 
+/// Up or down from the previous note (`U`/`J`), or the octave added to a dyad (`+`/`-`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Direction {
+    Up,
+    Down,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NoteName {
     pub mode: Option<OctaveMode>,
     pub letter: Letter,
     pub accidental: Option<Accidental>,
+    /// `(` before the accidental: drawn in parentheses.
+    pub cautionary: bool,
     pub octave: Option<u8>,
+    /// `U`/`J`: the nearest note of this letter above or below the previous note.
+    pub jump: Option<Direction>,
+    /// `+`/`-`: the note together with its octave above or below.
+    pub dyad: Option<Direction>,
+}
+
+impl NoteName {
+    pub fn new(letter: Letter, accidental: Option<Accidental>, octave: Option<u8>) -> Self {
+        NoteName { mode: None, letter, accidental, cautionary: false, octave, jump: None, dyad: None }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -83,8 +102,33 @@ pub enum RestKind {
     Normal,
     Up,
     Down,
+    /// `RW`: a whole rest centred in its measure.
     Whole,
     Invisible,
+    /// `RF`: with a fermata.
+    Fermata,
+    /// `RP`: a measure-repeat sign centred in its measure.
+    RepeatSign,
+    /// `Rn`: a whole rest centred in its measure with the number n above it.
+    Measures(u8),
+}
+
+/// Barline types, numbered as in a barline's P5.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BarStyle {
+    Single = 0,
+    Double = 1,
+    Heavy = 2,
+    LeftRepeat = 3,
+    RightRepeat = 4,
+    DoubleRepeat = 5,
+    Dashed = 7,
+}
+
+impl BarStyle {
+    pub fn code(self) -> i32 {
+        self as i32
+    }
 }
 
 /// Clefs, numbered as in a clef's P5.
@@ -152,20 +196,34 @@ pub enum StaffShift {
     Below,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Bar {
+    pub style: BarStyle,
+    pub invisible: bool,
+    /// Staves spanned; the previous barline's number when none is typed.
+    pub staves: Option<u8>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NoteEntry {
     Chord(Vec<NoteName>),
     Rest { kind: RestKind, count: u32 },
-    Bar { staves: Option<u8> },
+    Bar(Bar),
     Clef(Clef),
+    /// `-TR`, `-BA`, ...: later notes are read in this clef; the staff's clef stays.
+    InputClef(Clef),
     Key(KeySignature),
     Meter(Meter),
     Stems(StemMode),
     Staff(StaffShift),
+    /// `Q+` cue-size notes from here on, `Q-` or `Q0` normal ones again.
+    Cue(bool),
     /// `Xn m` / `Zn m`: the last `items` entries are repeated so that they occur `times` times.
     Repeat { items: u32, times: u32, keep_accidentals: bool },
     /// An empty entry.
     RepeatPrevious,
+    /// `.` (accidentals dropped) or `..` (kept): the last chord again, across rests and barlines.
+    RepeatChord { keep_accidentals: bool },
     /// `@Xn`: motive X again, transposed by n steps.
     Recall { name: char, steps: i32 },
 }
@@ -203,14 +261,7 @@ fn parse_entry(entry: &Entry) -> Result<NoteEntry, InputError> {
 /// Entries introduced by a fixed word; checked before note letters because `BA`, `AL`, `CUT`
 /// and `COM` start with one.
 fn word_entry(c: &mut Cursor) -> Result<Option<NoteEntry>, InputError> {
-    const CLEFS: [(&str, Clef); 5] = [
-        ("TR", Clef::Treble),
-        ("BA", Clef::Bass),
-        ("AL", Clef::Alto),
-        ("TE", Clef::Tenor),
-        ("PR", Clef::Percussion),
-    ];
-    const WORDS: [(&str, NoteEntry); 8] = [
+    const WORDS: [(&str, NoteEntry); 13] = [
         ("COM", NoteEntry::Meter(Meter::Common)),
         ("CUT", NoteEntry::Meter(Meter::Cut)),
         ("SU", NoteEntry::Stems(StemMode::Up)),
@@ -219,19 +270,24 @@ fn word_entry(c: &mut Cursor) -> Result<Option<NoteEntry>, InputError> {
         ("S+", NoteEntry::Staff(StaffShift::Above)),
         ("S-", NoteEntry::Staff(StaffShift::Below)),
         ("S0", NoteEntry::Staff(StaffShift::Main)),
+        ("Q+", NoteEntry::Cue(true)),
+        ("Q-", NoteEntry::Cue(false)),
+        ("Q0", NoteEntry::Cue(false)),
+        ("..", NoteEntry::RepeatChord { keep_accidentals: true }),
+        (".", NoteEntry::RepeatChord { keep_accidentals: false }),
     ];
-    if let Some((_, clef)) = CLEFS.iter().find(|(word, _)| c.eat_word(word)) {
-        return Ok(Some(NoteEntry::Clef(*clef)));
+    if let Some(clef) = clef(c) {
+        return Ok(Some(NoteEntry::Clef(clef)));
+    }
+    if c.eat(b'-') {
+        return clef(c).map(|clef| Some(NoteEntry::InputClef(clef))).ok_or_else(|| c.unexpected());
     }
     if let Some((_, entry)) = WORDS.iter().find(|(word, _)| c.eat_word(word)) {
         return Ok(Some(entry.clone()));
     }
     match c.peek() {
         Some(b'R') => rest(c).map(Some),
-        Some(b'M') => {
-            c.bump();
-            Ok(Some(NoteEntry::Bar { staves: c.integer().map(|n| n.min(u32::from(u8::MAX)) as u8) }))
-        }
+        Some(b'M') => Ok(Some(NoteEntry::Bar(bar(c)))),
         Some(b'K') => key(c).map(Some),
         Some(b'X' | b'Z') => repeat(c).map(Some),
         Some(b'0'..=b'9') => meter(c).map(Some),
@@ -239,20 +295,52 @@ fn word_entry(c: &mut Cursor) -> Result<Option<NoteEntry>, InputError> {
     }
 }
 
+fn clef(c: &mut Cursor) -> Option<Clef> {
+    const CLEFS: [(&str, Clef); 5] = [
+        ("TR", Clef::Treble),
+        ("BA", Clef::Bass),
+        ("AL", Clef::Alto),
+        ("TE", Clef::Tenor),
+        ("PR", Clef::Percussion),
+    ];
+    CLEFS.iter().find(|(word, _)| c.eat_word(word)).map(|(_, clef)| *clef)
+}
+
 fn rest(c: &mut Cursor) -> Result<NoteEntry, InputError> {
     c.bump();
-    let kind = match c.peek() {
-        Some(b'U') => RestKind::Up,
-        Some(b'D') => RestKind::Down,
-        Some(b'W') => RestKind::Whole,
-        Some(b'I') => RestKind::Invisible,
-        _ => RestKind::Normal,
+    const KINDS: [(u8, RestKind); 6] = [
+        (b'U', RestKind::Up),
+        (b'D', RestKind::Down),
+        (b'W', RestKind::Whole),
+        (b'I', RestKind::Invisible),
+        (b'F', RestKind::Fermata),
+        (b'P', RestKind::RepeatSign),
+    ];
+    let kind = match KINDS.iter().find(|(letter, _)| c.eat(*letter)) {
+        Some((_, kind)) => *kind,
+        None => match c.integer() {
+            Some(n) => RestKind::Measures(u8::try_from(n).map_err(|_| c.error_here(ErrorKind::OutOfRange("measures".into())))?),
+            None => RestKind::Normal,
+        },
     };
-    if kind != RestKind::Normal {
-        c.bump();
-    }
     let count = if c.eat(b'X') { c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))? } else { 1 };
     Ok(NoteEntry::Rest { kind, count })
+}
+
+fn bar(c: &mut Cursor) -> Bar {
+    c.bump();
+    const STYLES: [(&str, BarStyle); 6] = [
+        ("RD", BarStyle::DoubleRepeat),
+        ("D", BarStyle::Double),
+        ("H", BarStyle::Heavy),
+        ("L", BarStyle::LeftRepeat),
+        ("R", BarStyle::RightRepeat),
+        ("S", BarStyle::Dashed),
+    ];
+    let invisible = c.eat(b'I');
+    let style = STYLES.iter().find(|(word, _)| c.eat_word(word)).map_or(BarStyle::Single, |(_, style)| *style);
+    let staves = c.integer().map(|n| n.min(u32::from(u8::MAX)) as u8);
+    Bar { style, invisible, staves }
 }
 
 fn key(c: &mut Cursor) -> Result<NoteEntry, InputError> {
@@ -302,14 +390,43 @@ fn note(c: &mut Cursor) -> Result<NoteName, InputError> {
     } else {
         None
     };
-    let letter = c.peek().and_then(Letter::from_byte).ok_or_else(|| c.unexpected())?;
+    let byte = c.peek().ok_or_else(|| c.unexpected())?;
+    let letter = Letter::from_byte(byte).ok_or_else(|| c.unexpected())?;
     c.bump();
-    let accidental = accidental(c);
+    let cautionary = c.eat(b'(');
+    let accidental = if cautionary { accidental(c) } else { repeated_letter(c, byte).or_else(|| accidental(c)) };
     let octave = c.digit();
     if octave.is_some_and(|o| o > 8) {
         return Err(c.error_here(ErrorKind::OutOfRange("octave".into())));
     }
-    Ok(NoteName { mode, letter, accidental, octave })
+    let jump = direction(c, b'U', b'J');
+    let dyad = direction(c, b'+', b'-');
+    Ok(NoteName { mode, letter, accidental, cautionary, octave, jump, dyad })
+}
+
+fn direction(c: &mut Cursor, up: u8, down: u8) -> Option<Direction> {
+    if c.eat(up) {
+        Some(Direction::Up)
+    } else if c.eat(down) {
+        Some(Direction::Down)
+    } else {
+        None
+    }
+}
+
+/// The letter typed again: twice a flat, three times a sharp, four times a natural.
+fn repeated_letter(c: &mut Cursor, letter: u8) -> Option<Accidental> {
+    let repeats = (0..3).take_while(|&ahead| c.peek_at(ahead) == Some(letter)).count();
+    let accidental = match repeats {
+        1 => Accidental::Flat,
+        2 => Accidental::Sharp,
+        3 => Accidental::Natural,
+        _ => return None,
+    };
+    (0..repeats).for_each(|_| {
+        c.bump();
+    });
+    Some(accidental)
 }
 
 fn accidental(c: &mut Cursor) -> Option<Accidental> {
@@ -346,7 +463,7 @@ mod tests {
         assert_eq!(parsed[3], NoteEntry::Key(KeySignature { count: 2, sharps: true, naturals: false }));
         assert_eq!(parsed[4], NoteEntry::Meter(Meter::Fraction(3, 4)));
         assert_eq!(parsed[5], NoteEntry::Rest { kind: RestKind::Up, count: 3 });
-        assert_eq!(parsed[6], NoteEntry::Bar { staves: Some(2) });
+        assert_eq!(parsed[6], NoteEntry::Bar(Bar { style: BarStyle::Single, invisible: false, staves: Some(2) }));
         assert_eq!(parsed[7], NoteEntry::RepeatPrevious);
     }
 

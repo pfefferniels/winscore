@@ -548,7 +548,7 @@ impl Stream {
                     cue = small;
                 }
             }
-            let head = Head { level: level % 100, accidental: accidental(p5 % 10)? };
+            let head = Head::new(level % 100, accidental(p5 % 10)?);
             if !(-27..=71).contains(&head.level) {
                 return Err(RefitErrorKind::Unsupported("a note this far from the staff"));
             }
