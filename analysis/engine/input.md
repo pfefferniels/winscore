@@ -319,3 +319,30 @@ Rules of the numbers (0x4D8460):
 - Note numbers count notes and chords only; a fractional number is an offset only for code-9/4/7 marks.
 - `-` reverses note marks (P11 < 0) and moves dynamics and words above the staff.
 - Not on Sapp's page: `S2`–`S4`, `TH`, `TM4`, the long spellings, `@name n` with a note offset.
+
+### Passes 4 and 5: beams and slurs
+
+Both passes use the item parser 0x4DA9C3; the builders are 0x413CA8 (beams) and 0x53D1E0 (slurs). Notes are numbered as in pass 3: notes and chords, not rests (g-p4-chord-rest). The reader (0x427C68) upper-cases letters; `,` separates as `/` (g-p4-comma, g-p4-lower).
+
+#### Items (0x4DA9C3)
+
+| Construct | Rule | R | Result | Probe |
+|---|---|---|---|---|
+| `a b` | two numbers (0x5194D5); a third is ignored (g-p4-three-numbers) | a, b | pass 4: code-6 beam from note a to b (P3 x_a, P4/P5 the notes' P4, P6 x_b, P7 = 11 above / 21 below); pass 5: code-5 slur | g-p4-pair, g-p5-pair |
+| `b ≤ a`, a single number | the end is the next note: `1 1`, `4 1` (→ 4 5), `1` (→ 1 2) | | | g-p4-same, g-p4-reversed, g-p4-single, g-p5-same |
+| `+` before either number | 10000 added to a: beam above, slur arched up | a + 10000 | | g-p4-plus-*, g-p5-plus* |
+| `-` before either number | the number is negative (sign of 0x5194D5): beam below (stems down), slur down | −a or −b | | g-p4-minus-*, g-p5-minus* |
+| `k·100 + a` | pass 4: number k over the beam (P8 = k), on either number (`301 3`, `1 304`); pass 5: tuplet bracket over a…b, P8 = 3, P9 = k, where k = (n div 100) mod 100 and a = n mod 100 | | `503 7` = quintuplet over 3–7 | g-p4-number, g-p5-tuplet-* |
+| `0 b`, `a 99` (pass 5) | slur from the left edge (P3 = x_b − 8) / to the right edge (P6 = 198.5) | | | g-p5-from-left, g-p5-to-right |
+| fractions | pass 4: truncated (`1.5 3` = `1 3`); pass 5: the slur end is moved between the notes | | | g-p4-fraction, g-p5-fraction |
+| `nB`, `nBp` (pass 4) | automatic beams over groups of n eighths, skipping p notes first. Found by scanning the first 10 characters of the pass for a digit followed later by `B` (not `B[` or `@…B`); the parse then ends (0x4DA9C3 returns 999). A sign before n is lost (`+2B` = `2B`). Anything after it in the pass, even `/1 2`, leaves no beams at all; a pair before it is read as the auto form (`1 2/4B` = `1B2`) | 9999, n, p | | g-p4-auto*, g-p4-auto-then-slash, g-p4-pairs-then-auto |
+| `B` or `A` alone (pass 4, first character) | automatic beams by the last meter (0x78D918/0x78D91C): `2B` for x/4, common time or no meter; `4B` for x/2 and cut time; `8B` for x/1; for x/8: `2B` if x is 2, 4 or 8, `3B` if x is 3, 6, 9 or 12; other meters: no beams | | | g-p4-auto-b, g-p4-auto-meter-* |
+| `@name n` | motive with note numbers shifted so that note 1 is note n (0x4E620C) | | | g-p4-macro, g-p5-macro |
+| `Xk…` | handled first by 0x4E4D40, which runs the text after it through 0x518448 and appends pairs read back with an offset k − 1; no effect in a single input (read, not examined further) | | | g-p4-x, g-p4-x-offset |
+| `1-2` | read as the number −12 (no beam) | | | g-p4-dash |
+
+#### Differences from Sapp's page
+
+- `+2B`/`-2B`: the sign is ignored. Automatic beaming must be the only item of the pass.
+- Tuplet numbers are k·100 + start note: Sapp's `5013 17` gives a bracket numbered 50 from note 13; a quintuplet over 13–17 is `513 17`. Sapp's "X0Y" reading holds only for start notes below 10.
+- Not on Sapp's page: `B`/`A` (beams by meter), numbers over beams (`k·100 + a`), the "next note" reading of `a a`, `b < a` and a single number.
