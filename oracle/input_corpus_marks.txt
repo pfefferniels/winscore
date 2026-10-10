@@ -1,0 +1,120 @@
+== im2-heads
+IN 1
+;
+C4/D/E/F/G/A;
+.75/1.6/3.6/3.5/1.5/.9;
+;
+;
+;
+== im2-t-mid
+IN 1
+;
+C4/D/E;
+T3/QTE/T6;
+;
+;
+;
+== im2-fill-three-chars
+IN 1
+;
+C4/D/E;
+16.;
+;
+;
+;
+== im2-dot-then-letter
+IN 1
+;
+C4/D;
+Q.E/4;
+;
+;
+;
+== im2-letters-then-dot
+IN 1
+;
+C4/D;
+QE./4;
+;
+;
+;
+== im2-dot-space-number
+IN 1
+;
+C4/D;
+4. 8/4;
+;
+;
+;
+== im2-ratio-then-letter
+IN 1
+;
+C4/D;
+3:2Q/4;
+;
+;
+;
+== im2-leading-space
+IN 1
+;
+C4/D;
+ 4/8;
+;
+;
+;
+== im2-space-before-slash
+IN 1
+;
+C4/D;
+4 /8;
+;
+;
+;
+== im2-space-before-dot
+IN 1
+;
+C4/D;
+8 ./4;
+;
+;
+;
+== im2-space-after-dot
+IN 1
+;
+C4/D;
+8. /4;
+;
+;
+;
+== im2-fill-slash
+IN 1
+;
+C4/D/E;
+4/;
+;
+;
+;
+== im2-fill-t16
+IN 1
+;
+C4/D/E;
+T16;
+;
+;
+;
+== im2-macro-round
+IN 1
+;
+C4/D/E/F/G/A;
+Z[4/8/Q]/@Z3;
+;
+;
+;
+== im2-reject-t-mid
+IN 1
+;
+C4/D;
+QT/4;
+;
+;
+;

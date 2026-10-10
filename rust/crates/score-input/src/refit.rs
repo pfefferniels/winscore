@@ -663,14 +663,5 @@ fn rhythm_of(value: f32, dots: i32) -> Rhythm {
     if value >= GRACE {
         return Rhythm::Grace;
     }
-    let sent = (dots * 1000) as f32 + value;
-    let duration = amod(sent, 1000.0);
-    let dots = trunc(sent / 100.0) / 10;
-    let plain = if dots == 0 {
-        duration
-    } else {
-        let scale = f64::from(2.0f32.powi(dots));
-        (scale * f64::from(duration) / (scale * 2.0 - 1.0)) as f32
-    };
-    Rhythm::Value { per_whole: 4.0 / plain, dots: dots.clamp(0, 255) as u8 }
+    Rhythm::from_token((dots * 1000) as f32 + value)
 }

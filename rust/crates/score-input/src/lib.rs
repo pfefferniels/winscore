@@ -91,13 +91,8 @@ pub fn run(passes: &Passes, options: &Options) -> Result<Vec<Item>, InputError> 
 /// As [`run`], with motives kept from earlier lines and stored for later ones.
 pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motives) -> Result<Vec<Item>, InputError> {
     let events = events::resolve(&notes::parse(passes.notes, motives)?, options.clef, motives)?;
-    let rhythms = rhythm::parse(passes.rhythms, motives)?;
     let needed = events.iter().filter(|e| e.is_rhythmic()).count();
-    // Rhythms beyond the last note are ignored.
-    if rhythms.len() < needed {
-        let kind = ErrorKind::RhythmCount { found: rhythms.len(), needed };
-        return Err(InputError::new(Pass::Rhythms, Span::at(0), kind));
-    }
+    let rhythms = rhythm::parse(passes.rhythms, needed, motives)?;
     let marks = marks::parse(passes.marks, motives)?;
     let beams = connect::parse(passes.beams, Pass::Beams, motives)?;
     let slurs = connect::parse(passes.slurs, Pass::Slurs, motives)?;

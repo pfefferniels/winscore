@@ -2,8 +2,9 @@
 //!
 //! Each case directory holds `input.txt` (SCORE input-file layout) and `result.mus` (what the
 //! engine saved after the input was typed; see oracle/input_driver.py). Cases named in
-//! `known-mismatches.txt` (one name per line, `#` comments) may differ; every other case must
-//! give the same items with parameters equal within 1e-4.
+//! `known-mismatches.txt` (one name per line, `#` comments) may differ; cases named in
+//! `rejected.txt` must be rejected; every other case must give the same items with parameters
+//! equal within 1e-4.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -20,21 +21,33 @@ fn fixture_root() -> PathBuf {
         .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/input"))
 }
 
-fn cases() -> Vec<PathBuf> {
-    let mut dirs: Vec<PathBuf> = fs::read_dir(fixture_root())
+/// Case directories with an engine result, and those listed as rejected (the engine may
+/// have left none: it waits for a correction).
+fn cases(rejected: &[String]) -> Vec<PathBuf> {
+    let root = fixture_root();
+    let mut dirs: Vec<PathBuf> = fs::read_dir(&root)
         .map(|entries| entries.filter_map(|e| e.ok().map(|e| e.path())).filter(|p| p.join("result.mus").exists()).collect())
         .unwrap_or_default();
+    dirs.extend(rejected.iter().map(|name| root.join(name)).filter(|p| p.join("input.txt").exists() && !p.join("result.mus").exists()));
     dirs.sort();
     dirs
 }
 
-fn known_mismatches() -> Vec<String> {
-    fs::read_to_string(fixture_root().join("known-mismatches.txt"))
+/// Case names listed in a file of the fixture directory (one per line, `#` comments).
+fn listed(file: &str) -> Vec<String> {
+    fs::read_to_string(fixture_root().join(file))
         .unwrap_or_default()
         .lines()
         .map(|l| l.split('#').next().unwrap_or("").trim().to_string())
         .filter(|l| !l.is_empty())
         .collect()
+}
+
+/// None if score-input rejects the input, as the engine does.
+fn compare_rejected(dir: &Path) -> Option<String> {
+    let input = fs::read_to_string(dir.join("input.txt")).ok()?;
+    let accepted = InputFile::parse(&input).ok().and_then(|file| file.items().ok());
+    accepted.map(|items| format!("accepted ({} items), the engine rejects it", items.len()))
 }
 
 fn params(item: &Item) -> Vec<f32> {
@@ -73,10 +86,15 @@ fn compare(dir: &Path) -> Option<String> {
 
 #[test]
 fn input_fixtures_match_the_engine() {
-    let known = known_mismatches();
-    let results: Vec<(String, Option<String>)> = cases()
+    let known = listed("known-mismatches.txt");
+    let rejected = listed("rejected.txt");
+    let results: Vec<(String, Option<String>)> = cases(&rejected)
         .iter()
-        .map(|dir| (dir.file_name().unwrap().to_string_lossy().into_owned(), compare(dir)))
+        .map(|dir| {
+            let name = dir.file_name().unwrap().to_string_lossy().into_owned();
+            let result = if rejected.contains(&name) { compare_rejected(dir) } else { compare(dir) };
+            (name, result)
+        })
         .collect();
     let matching = results.iter().filter(|(_, r)| r.is_none()).count();
     eprintln!("{matching} of {} input fixtures match the engine", results.len());

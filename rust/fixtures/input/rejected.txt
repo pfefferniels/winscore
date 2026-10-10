@@ -1,0 +1,17 @@
+# Cases score-input must reject (one name per line, # comments). The engine shows
+# "*** Syntax Error ***" and waits for a correction; the driver's remaining keys then act as
+# one, or the engine waits for good (no result.mus).
+g-p2-junk-first
+g-p2-erase-junk
+g-p2-t-after-value
+g-p2-erase-t-after
+im2-dot-then-letter
+im2-space-before-dot
+im2-reject-t-mid
+# The engine reads the rest of the item again as a new item (an extra value).
+g-p2-trailing-junk
+g-p2-value-then-g
+# A group repeat without its count uses a stale number in the engine.
+g-p2-x-group-no-count
+# T3 takes the next character, here the slash, as its second digit.
+im2-t-mid
