@@ -338,8 +338,9 @@ Both passes use the item parser 0x4DA9C3. The builders are 0x413CA8 (beams) and 
 | `nB`, `nBp` (pass 4) | automatic beams over groups of n eighths, skipping p notes first. Found by scanning the first 10 characters of the pass for a digit followed later by `B` (not `B[` or `@…B`). The parse then ends (0x4DA9C3 returns 999). A sign before n is lost (`+2B` = `2B`). Anything after it in the pass, even `/1 2`, leaves no beams at all. A pair before it is read as the auto form (`1 2/4B` = `1B2`) | 9999, n, p | | g-p4-auto*, g-p4-auto-then-slash, g-p4-pairs-then-auto |
 | `B` or `A` alone (pass 4, first character) | automatic beams by the last meter (0x78D918/0x78D91C): `2B` for x/4, common time or no meter. `4B` for x/2 and cut time. `8B` for x/1. For x/8: `2B` if x is 2, 4 or 8, `3B` if x is 3, 6, 9 or 12. Other meters: no beams | | | g-p4-auto-b, g-p4-auto-meter-* |
 | `@name n` | motive with note numbers shifted so that note 1 is note n (0x4E620C) | | | g-p4-macro, g-p5-macro |
-| `Xk…` | handled first by 0x4E4D40, which runs the text after it through 0x518448 and appends pairs read back with an offset k − 1. No effect in a single input (read, not examined further) | | | g-p4-x, g-p4-x-offset |
+| `Xk n1 n2 …` | 0x4E4D40 turns it into the pairs (n, n + k − 1) for each n: `X3 1 4 7 10` beams 1–3, 4–6, 7–9, 10–12, `X2 1 4` beams 1–2, 4–5; it may follow other items (`1 2/X2 4 6`). The reader puts a `/` before a typed `X` and drops a typed `X1 ` altogether, so `X1 1 3` is the pair 1 3. Overlapping beams are all kept (`1 3/2 4`, `X3 1 2`) | | | g-p4-x, g-p4-x-first, g-p4-x-groups, g-p4-overlap |
 | `1-2` | read as the number −12 (no beam) | | | g-p4-dash |
+| note numbers beyond the last note | 0x41A14C clamps the end to the last note but not the start, which then reads the empty slot before note 1 (x 0, level 0.5); 0x53D1E0 sees the unclamped end and draws an edge tie (P6 = right end, P8 = −2). Invalid input, not grammar (D12) | | | g-p5-tuplet, g-p5-tuplet-12, g-p5-tuplet-sapp |
 
 #### Differences from Sapp's page
 
