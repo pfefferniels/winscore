@@ -244,7 +244,7 @@ The token is the duration in quarter notes, plus 1000 per dot. The parser dispat
 
 After a value, the item may continue with a letter `S T E Q H W D`, a digit or `.` (added), or `X` (repeat). Any other character ends the value. What follows it is then read again as an item, which gave an extra token in the probe (`4Y/4` → 1 1 1, `4G/4` likewise). A group repeat without its count (`X2`) uses a stale number (g-p2-x-group-no-count). These cases are better rejected by a port.
 
-**Dots in chords with displaced heads** (0x51C824, run by pass 2): for a dotted chord containing a displaced head (work-table P10 ≠ 0), the dot offsets added to P9 (1000, 100) are walked from the top down when the chord's first entry has P5 < 20 and from the bottom up otherwise. The test reads the raw work-table P5 of that entry, accidental digit and cautionary +100 included, so a cautionary on the chord's first note sends a stem-up chord down the stem-down rule: `OBS:A:GJ:F(F` dotted gives P9 + 0, 1100, 100, 1100 from the bottom, `OBS:A:GJ:FF` gives 1100, 0, 1100, 0 (g-p2-chord-dots-cautionary, g-p2-chord-dots-plain; found by input-lang). Probably a flaw, for main to rule on.
+**Dots in chords with displaced heads** (0x51C824, run by pass 2): for a dotted chord containing a displaced head (work-table P10 ≠ 0), the dot offsets added to P9 (1000, 100) are walked from the top down when the chord's first entry has P5 < 20 and from the bottom up otherwise. The test reads the raw work-table P5 of that entry, accidental digit and cautionary +100 included, so a cautionary on the chord's first note sends a stem-up chord down the stem-down rule: `OBS:A:GJ:F(F` dotted gives P9 + 0, 1100, 100, 1100 from the bottom, `OBS:A:GJ:FF` gives 1100, 0, 1100, 0 (g-p2-chord-dots-cautionary, g-p2-chord-dots-plain; found by input-lang). Engine flaw, not grammar (D12, not ported): the port decides the walk by the stem direction.
 
 #### Differences from Sapp's page
 
@@ -333,7 +333,7 @@ Both passes use the item parser 0x4DA9C3. The builders are 0x413CA8 (beams) and 
 | Construct | Rule | R | Result | Probe |
 |---|---|---|---|---|
 | `a b` | two numbers (0x5194D5). A third is ignored (g-p4-three-numbers) | a, b | pass 4: code-6 beam from note a to b (P3 x_a, P4/P5 the notes' P4, P6 x_b, P7 = 11 above / 21 below). Pass 5: code-5 slur | g-p4-pair, g-p5-pair |
-| `b ≤ a`, a single number | the end is the next note: `1 1`, `4 1` (→ 4 5), `1` (→ 1 2) | | | g-p4-same, g-p4-reversed, g-p4-single, g-p5-same |
+| `b ≤ a`, a single number | the end is the next note: `1 1`, `4 1` (→ 4 5). A single number reads its partner past the `/`: it takes the first number of the next item (`1/-4 7` gives the pairs 1 −4 and −4 7, so a beam 1–4 below and 4–7 below; `1/5` gives 1–5 and 5–6), and only in the last item it gets 0, i.e. the next note (`1` → 1 2, `4 7/1` → 4–7 and 1–2). Same in pass 5 | 1, −4, −4, 7 | | g-p4-same, g-p4-reversed, g-p4-single, g-p4-single-then-pair, g-p4-single-then-single, g-p4-pair-then-single, g-p5-same, g-p5-single-then-pair |
 | `+` before either number | 10000 added to a: beam above, slur arched up | a + 10000 | | g-p4-plus-*, g-p5-plus* |
 | `-` before either number | the number is negative (sign of 0x5194D5): beam below (stems down), slur down | −a or −b | | g-p4-minus-*, g-p5-minus* |
 | `k·100 + a` | pass 4: number k over the beam (P8 = k), on either number (`301 3`, `1 304`). Pass 5: tuplet bracket over a…b, P8 = 3, P9 = k, where k = (n div 100) mod 100 and a = n mod 100 | | `503 7` = quintuplet over 3–7 | g-p4-number, g-p5-tuplet-* |

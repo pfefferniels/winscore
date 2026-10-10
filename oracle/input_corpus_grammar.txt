@@ -2851,3 +2851,35 @@ OB3/OBS:A:GJ:FF/C5;
 ;
 ;
 ;
+== g-p4-single-then-pair
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1/-4 7;
+;
+== g-p4-pair-then-single
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+4 7/1;
+;
+== g-p4-single-then-single
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1/5;
+;
+== g-p5-single-then-pair
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1/4 7;
