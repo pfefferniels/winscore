@@ -93,7 +93,8 @@ pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motive
     let events = events::resolve(&notes::parse(passes.notes, motives)?, options.clef, motives)?;
     let rhythms = rhythm::parse(passes.rhythms, motives)?;
     let needed = events.iter().filter(|e| e.is_rhythmic()).count();
-    if rhythms.len() != needed {
+    // Rhythms beyond the last note are ignored.
+    if rhythms.len() < needed {
         let kind = ErrorKind::RhythmCount { found: rhythms.len(), needed };
         return Err(InputError::new(Pass::Rhythms, Span::at(0), kind));
     }

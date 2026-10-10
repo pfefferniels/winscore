@@ -4,3 +4,6 @@
 sapp-repeat-chord
 # Cue notes after SO: stem rule pending the grammar.
 e1-cue-stems
+# Fewer rhythms than notes: rule pending the pass-2 grammar.
+e2-missing-after-chord
+e2-missing-rhythms

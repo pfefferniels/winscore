@@ -70,3 +70,27 @@ C4/D/E;
 ;
 ;
 2 9;
+== e2-missing-rhythms
+IN 1
+;
+C4/D/E/F;
+4/4;
+;
+;
+;
+== e2-missing-after-chord
+IN 1
+;
+C4:E/D/G5/R;
+8;
+;
+;
+;
+== e2-extra-rhythms
+IN 1
+;
+C4/D;
+8/8/8/8;
+;
+;
+;
