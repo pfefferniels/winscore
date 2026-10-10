@@ -31,6 +31,7 @@ pub mod marks;
 mod motives;
 pub mod notes;
 mod num;
+mod reader;
 mod refit;
 pub mod rhythm;
 mod scan;
@@ -90,7 +91,7 @@ pub fn run(passes: &Passes, options: &Options) -> Result<Vec<Item>, InputError> 
 
 /// As [`run`], with motives kept from earlier lines and stored for later ones.
 pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motives) -> Result<Vec<Item>, InputError> {
-    let events = events::resolve(&notes::parse(passes.notes, motives)?, options.clef, motives)?;
+    let events = pass_one(passes.notes, options, motives)?;
     let needed = events.iter().filter(|e| e.is_rhythmic()).count();
     let rhythms = rhythm::parse(passes.rhythms, needed, motives)?;
     let marks = marks::parse(passes.marks, motives)?;
@@ -108,4 +109,18 @@ pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motive
     slurs::apply(&mut line, &slurs, (options.begin, options.end), options.staff_end)?;
     // 0x5253FD stores the line, then fits the stems to the beams in the item store.
     Ok(stems::fit_items(&line.items(), i32::from(options.staff), 25.0 * options.size))
+}
+
+/// Pass 1 as the reader leaves it; errors point into the typed text.
+fn pass_one(text: &str, options: &Options, motives: &mut Motives) -> Result<Vec<events::Event>, InputError> {
+    let read = reader::read(text);
+    let in_typed_text = |err: InputError| InputError { span: read.origin_span(err.span), ..err };
+    let entries = notes::parse(&read.text, motives).map_err(in_typed_text)?;
+    events::resolve(&entries, options.clef, motives).map_err(in_typed_text)
+}
+
+/// The items of a pass-1 text that WinScore's reader erases as they are typed (it shows
+/// "Input error" and removes the item; [`run`] leaves them out the same way), in that text.
+pub fn erased_items(notes: &str) -> Vec<Span> {
+    reader::read(notes).erased
 }

@@ -1,3 +1,5 @@
 # Cases score-input does not reproduce yet (one name per line, # comments).
-# Cue notes after SO: stem rule pending the grammar.
-e1-cue-stems
+# Pass 1, open questions to disasm-expert: `-BE` keeps the alto clef; `]/@` in a macro
+# definition with U/J/P inside.
+g-p1-input-clef-alias
+g-p1-macro-octaves

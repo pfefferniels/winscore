@@ -1,8 +1,8 @@
 //! Pass 1: notes, rests, barlines, clefs, key signatures, meters and the switches between them.
 //!
-//! Syntax as documented in WinScore's help ("Computer Keyboard Input") and observed in the
-//! engine: entries are separated by `/`, chord notes by `:` or `'`; an empty entry repeats
-//! the previous note, chord or rest (without accidentals).
+//! The item parser 0x4E2CC8 as analysis/engine/input.md ("Pass 1: notes") describes it. The
+//! text has been through the reader (reader.rs), and scan.rs splits it into items; spaces
+//! inside an item are passed over.
 
 use crate::error::{ErrorKind, InputError, Pass};
 use crate::motives::Motives;
@@ -35,6 +35,10 @@ impl Letter {
         })
     }
 
+    fn byte(self) -> u8 {
+        b"CDEFGAB"[self as usize]
+    }
+
     /// Diatonic step within the octave, C = 0.
     pub fn step(self) -> i32 {
         self as i32
@@ -53,11 +57,22 @@ pub enum Accidental {
     Natural = 3,
     DoubleFlat = 4,
     DoubleSharp = 5,
+    QuarterFlat = 6,
+    ThreeQuarterFlat = 7,
+    QuarterSharp = 8,
+    ThreeQuarterSharp = 9,
 }
 
 impl Accidental {
     pub fn code(self) -> i32 {
         self as i32
+    }
+
+    pub fn from_code(code: i32) -> Option<Self> {
+        use Accidental::*;
+        [Flat, Sharp, Natural, DoubleFlat, DoubleSharp, QuarterFlat, ThreeQuarterFlat, QuarterSharp, ThreeQuarterSharp]
+            .into_iter()
+            .find(|a| a.code() == code)
     }
 }
 
@@ -70,48 +85,75 @@ pub enum OctaveMode {
     Proximity,
 }
 
-/// Up or down from the previous note (`U`/`J`), or the octave added to a dyad (`+`/`-`).
+/// Up or down: a jump (`U`/`J`), the octave added to a dyad (`+`/`-`), a rest moved off the
+/// middle (`RU`/`RD`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Direction {
     Up,
     Down,
 }
 
+/// An octave digit or a jump after the note letter; they act in the order typed, so `C4U`
+/// is C5 and `CU4` is C4.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OctaveMark {
+    Digit(u8),
+    Jump(Direction),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct NoteName {
     pub mode: Option<OctaveMode>,
     pub letter: Letter,
     pub accidental: Option<Accidental>,
-    /// `(` before the accidental: drawn in parentheses.
+    /// `(`: the accidental is drawn in parentheses.
     pub cautionary: bool,
-    pub octave: Option<u8>,
-    /// `U`/`J`: the nearest note of this letter above or below the previous note.
-    pub jump: Option<Direction>,
+    pub octave: Vec<OctaveMark>,
     /// `+`/`-`: the note together with its octave above or below.
     pub dyad: Option<Direction>,
 }
 
 impl NoteName {
-    pub fn new(letter: Letter, accidental: Option<Accidental>, octave: Option<u8>) -> Self {
-        NoteName { mode: None, letter, accidental, cautionary: false, octave, jump: None, dyad: None }
+    pub fn new(letter: Letter) -> Self {
+        NoteName { mode: None, letter, accidental: None, cautionary: false, octave: Vec::new(), dyad: None }
+    }
+
+    /// The octave number typed last, if the octave marks end with one.
+    pub fn final_digit(&self) -> Option<u8> {
+        match self.octave.last() {
+            Some(OctaveMark::Digit(d)) => Some(*d),
+            _ => None,
+        }
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RestKind {
     Normal,
-    Up,
-    Down,
     /// `RW`: a whole rest centred in its measure.
     Whole,
+    /// `RI`.
     Invisible,
-    /// `RF`: with a fermata.
+    /// `RF`.
     Fermata,
     /// `RP`: a measure-repeat sign centred in its measure.
     RepeatSign,
     /// `Rn`: a rest for n measures with the number n above it: a whole rest centred in its
     /// measure, from four measures on a bar rest spread over the measure.
     Measures(u8),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Rest {
+    pub kind: RestKind,
+    /// `RU`, `RD`, `RFU`, `RFD`: six steps above or below the middle.
+    pub shift: Option<Direction>,
+}
+
+impl Rest {
+    pub fn new(kind: RestKind) -> Self {
+        Rest { kind, shift: None }
+    }
 }
 
 /// Barline types, numbered as in a barline's P5.
@@ -124,6 +166,8 @@ pub enum BarStyle {
     RightRepeat = 4,
     DoubleRepeat = 5,
     Dashed = 7,
+    /// Stored as a negative P4 and no P5.
+    Invisible = 9,
 }
 
 impl BarStyle {
@@ -169,6 +213,7 @@ impl Clef {
     }
 }
 
+/// `count` 0 (`K0S`) makes no item.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct KeySignature {
     pub count: u8,
@@ -180,7 +225,8 @@ pub struct KeySignature {
 pub enum Meter {
     Common,
     Cut,
-    Fraction(u16, u16),
+    /// P5 and P6 of the meter item; a single number n is stored as (0, n).
+    Fraction(i32, i32),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -200,33 +246,36 @@ pub enum StaffShift {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Bar {
     pub style: BarStyle,
-    pub invisible: bool,
     /// Staves spanned; the previous barline's number when none is typed.
-    pub staves: Option<u8>,
+    pub span: Option<u8>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NoteEntry {
     Chord(Vec<NoteName>),
-    Rest { kind: RestKind, count: u32 },
+    Rest(Rest),
     Bar(Bar),
     Clef(Clef),
     /// `-TR`, `-BA`, ...: later notes are read in this clef; the staff's clef stays.
     InputClef(Clef),
     Key(KeySignature),
     Meter(Meter),
+    /// `T`: the last meter typed (in this line or an earlier one) again.
+    LastMeter,
     Stems(StemMode),
     Staff(StaffShift),
     /// `Q+` cue-size notes from here on, `Q-` or `Q0` normal ones again.
     Cue(bool),
-    /// `Xn m` / `Zn m`: the last `items` entries are repeated so that they occur `times` times.
+    /// `Xn m`, `Zn m`, `REPn m`, or `Xn` after an item (n = 1): the last `items` items
+    /// repeated so that there are `times` in all; `X` drops accidentals, `Z` keeps them.
     Repeat { items: u32, times: u32, keep_accidentals: bool },
-    /// An empty entry.
-    RepeatPrevious,
-    /// `.` (accidentals dropped) or `..` (kept): the last chord again, across rests and barlines.
+    /// `=` (typed `.`, accidentals dropped) or `==` (typed `..`, kept): the item before the
+    /// previous one again.
     RepeatChord { keep_accidentals: bool },
     /// `@Xn`: motive X again, transposed by n steps.
     Recall { name: char, steps: i32 },
+    /// `Xn` without its count: the parser returns a token 0.
+    ZeroToken,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -238,173 +287,173 @@ pub struct Spanned<T> {
     pub motive: Option<char>,
 }
 
+/// The items of a pass-1 text as the reader leaves it (see reader.rs).
 pub fn parse(text: &str, motives: &mut Motives) -> Result<Vec<Spanned<NoteEntry>>, InputError> {
-    entries(text, PASS, motives)?
+    let parsed: Vec<Vec<Spanned<NoteEntry>>> = entries(text, PASS, motives)?
         .iter()
         .enumerate()
-        .map(|(index, entry)| Ok(Spanned { value: parse_entry(entry)?, entry: index, span: entry.span(), motive: entry.motive }))
-        .collect()
+        .map(|(index, entry)| {
+            let spanned = |value| Spanned { value, entry: index, span: entry.span(), motive: entry.motive };
+            parse_entry(entry).map(|values| values.into_iter().map(spanned).collect())
+        })
+        .collect::<Result<_, _>>()?;
+    Ok(parsed.into_iter().flatten().collect())
 }
 
-fn parse_entry(entry: &Entry) -> Result<NoteEntry, InputError> {
-    let mut c = entry.cursor(PASS);
-    if c.at_end() {
-        return Ok(NoteEntry::RepeatPrevious);
-    }
+/// One item: usually one entry, two with a repeat suffix (`C4X3`).
+fn parse_entry(entry: &Entry) -> Result<Vec<NoteEntry>, InputError> {
     if let Some((name, steps)) = recall_parts(&entry.text) {
-        return Ok(NoteEntry::Recall { name, steps });
+        return Ok(vec![NoteEntry::Recall { name, steps: steps.round() as i32 }]);
     }
-    let parsed = word_entry(&mut c).transpose().unwrap_or_else(|| chord(&mut c))?;
-    c.finish()?;
-    Ok(parsed)
-}
-
-/// Entries introduced by a fixed word; checked before note letters because `BA`, `AL`, `CUT`
-/// and `COM` start with one.
-fn word_entry(c: &mut Cursor) -> Result<Option<NoteEntry>, InputError> {
-    const WORDS: [(&str, NoteEntry); 13] = [
-        ("COM", NoteEntry::Meter(Meter::Common)),
-        ("CUT", NoteEntry::Meter(Meter::Cut)),
-        ("SU", NoteEntry::Stems(StemMode::Up)),
-        ("SD", NoteEntry::Stems(StemMode::Down)),
-        ("SO", NoteEntry::Stems(StemMode::Ordinary)),
-        ("S+", NoteEntry::Staff(StaffShift::Above)),
-        ("S-", NoteEntry::Staff(StaffShift::Below)),
-        ("S0", NoteEntry::Staff(StaffShift::Main)),
-        ("Q+", NoteEntry::Cue(true)),
-        ("Q-", NoteEntry::Cue(false)),
-        ("Q0", NoteEntry::Cue(false)),
-        ("..", NoteEntry::RepeatChord { keep_accidentals: true }),
-        (".", NoteEntry::RepeatChord { keep_accidentals: false }),
-    ];
-    if let Some(clef) = clef(c) {
-        return Ok(Some(NoteEntry::Clef(clef)));
+    check_repeat_letters(entry)?;
+    let mut c = entry.spaced_cursor(PASS);
+    if c.at_end() {
+        return Ok(vec![NoteEntry::Repeat { items: 1, times: 2, keep_accidentals: false }]);
     }
-    if c.eat(b'-') {
-        return clef(c).map(|clef| Some(NoteEntry::InputClef(clef))).ok_or_else(|| c.unexpected());
-    }
-    if let Some((_, entry)) = WORDS.iter().find(|(word, _)| c.eat_word(word)) {
-        return Ok(Some(entry.clone()));
-    }
-    match c.peek() {
-        Some(b'R') => rest(c).map(Some),
-        Some(b'M') => Ok(Some(NoteEntry::Bar(bar(c)))),
-        Some(b'K') => key(c).map(Some),
-        Some(b'X' | b'Z') => repeat(c).map(Some),
-        Some(b'0'..=b'9') => meter(c).map(Some),
-        _ => Ok(None),
-    }
-}
-
-fn clef(c: &mut Cursor) -> Option<Clef> {
-    const CLEFS: [(&str, Clef); 5] = [
-        ("TR", Clef::Treble),
-        ("BA", Clef::Bass),
-        ("AL", Clef::Alto),
-        ("TE", Clef::Tenor),
-        ("PR", Clef::Percussion),
-    ];
-    CLEFS.iter().find(|(word, _)| c.eat_word(word)).map(|(_, clef)| *clef)
-}
-
-fn rest(c: &mut Cursor) -> Result<NoteEntry, InputError> {
-    c.bump();
-    const KINDS: [(u8, RestKind); 6] = [
-        (b'U', RestKind::Up),
-        (b'D', RestKind::Down),
-        (b'W', RestKind::Whole),
-        (b'I', RestKind::Invisible),
-        (b'F', RestKind::Fermata),
-        (b'P', RestKind::RepeatSign),
-    ];
-    let kind = match KINDS.iter().find(|(letter, _)| c.eat(*letter)) {
-        Some((_, kind)) => *kind,
-        None => match c.integer() {
-            Some(n) => RestKind::Measures(u8::try_from(n).map_err(|_| c.error_here(ErrorKind::OutOfRange("measures".into())))?),
-            None => RestKind::Normal,
+    let first = c.peek().unwrap_or(b' ');
+    let (value, suffix) = match first {
+        b'A'..=b'G' => match note_word(&mut c) {
+            Some(word) => (word, None),
+            None => chord(&mut c)?,
         },
-    };
-    let count = if c.eat(b'X') { c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))? } else { 1 };
-    Ok(NoteEntry::Rest { kind, count })
-}
-
-fn bar(c: &mut Cursor) -> Bar {
-    c.bump();
-    const STYLES: [(&str, BarStyle); 6] = [
-        ("RD", BarStyle::DoubleRepeat),
-        ("D", BarStyle::Double),
-        ("H", BarStyle::Heavy),
-        ("L", BarStyle::LeftRepeat),
-        ("R", BarStyle::RightRepeat),
-        ("S", BarStyle::Dashed),
-    ];
-    let invisible = c.eat(b'I');
-    let style = STYLES.iter().find(|(word, _)| c.eat_word(word)).map_or(BarStyle::Single, |(_, style)| *style);
-    let staves = c.integer().map(|n| n.min(u32::from(u8::MAX)) as u8);
-    Bar { style, invisible, staves }
-}
-
-fn key(c: &mut Cursor) -> Result<NoteEntry, InputError> {
-    c.bump();
-    let count = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
-    if !(1..=7).contains(&count) {
-        return Err(c.error_here(ErrorKind::OutOfRange("number of accidentals".into())));
-    }
-    let sharps = match c.bump() {
-        Some(b'S') => true,
-        Some(b'F') => false,
+        b'O' => chord(&mut c)?,
+        b'P' if c.peek_at(1) == Some(b'R') => (word(&mut c, 2, NoteEntry::Clef(Clef::Percussion)), None),
+        b'P' => chord(&mut c)?,
+        b'K' => (key(&mut c)?, None),
+        b'M' => (NoteEntry::Bar(bar(&mut c)?), None),
+        b'R' => rest(&mut c)?,
+        b'S' => (switch(&mut c)?, None),
+        b'T' => (t_item(&mut c)?, None),
+        b'X' | b'Z' => (group_repeat(&mut c)?, None),
+        b'-' => (input_clef(&mut c), None),
+        b'=' | b'.' => (chord_repeat(&mut c)?, None),
+        b'Q' => (cue(&mut c), None),
+        b'0'..=b'9' => (meter(&mut c)?, None),
         _ => return Err(c.unexpected()),
     };
-    let naturals = c.eat(b'N');
-    Ok(NoteEntry::Key(KeySignature { count: count as u8, sharps, naturals }))
+    c.finish()?;
+    Ok(std::iter::once(value).chain(suffix).collect())
 }
 
-fn meter(c: &mut Cursor) -> Result<NoteEntry, InputError> {
-    let top = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
-    c.skip_spaces();
-    let bottom = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
-    let fit = |n: u32| u16::try_from(n).map_err(|_| c.error_here(ErrorKind::OutOfRange("meter".into())));
-    Ok(NoteEntry::Meter(Meter::Fraction(fit(top)?, fit(bottom)?)))
-}
-
-fn repeat(c: &mut Cursor) -> Result<NoteEntry, InputError> {
-    let keep_accidentals = c.bump() == Some(b'Z');
-    let items = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
-    c.skip_spaces();
-    let times = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
-    Ok(NoteEntry::Repeat { items, times, keep_accidentals })
-}
-
-fn chord(c: &mut Cursor) -> Result<NoteEntry, InputError> {
-    let mut notes = vec![note(c)?];
-    while c.eat(b':') || c.eat(b'\'') {
-        notes.push(note(c)?);
+/// 0x524C4A: an `X` or `Z` must be followed by `[` or a digit 1-9.
+fn check_repeat_letters(entry: &Entry) -> Result<(), InputError> {
+    let bytes = entry.text.as_bytes();
+    let bad = bytes
+        .iter()
+        .enumerate()
+        .find(|&(i, &b)| matches!(b, b'X' | b'Z') && !matches!(bytes.get(i + 1), Some(b'[' | b'1'..=b'9')));
+    match bad {
+        Some((i, _)) => Err(InputError::new(PASS, crate::Span::at(entry.start + i), ErrorKind::Unexpected(char::from(bytes[i]).into()))),
+        None => Ok(()),
     }
-    Ok(NoteEntry::Chord(notes))
 }
 
-fn note(c: &mut Cursor) -> Result<NoteName, InputError> {
-    let mode = if c.eat(b'P') {
-        Some(OctaveMode::Proximity)
-    } else if c.eat(b'O') {
+/// Consumes `len` characters and the rest of the item, which the parser ignores.
+fn word(c: &mut Cursor, len: usize, entry: NoteEntry) -> NoteEntry {
+    c.skip(len);
+    c.skip_rest();
+    entry
+}
+
+/// Items that start with a note letter: `BA`, `AL`, and `C?M`, `C?T` (common and cut time,
+/// whatever the second character).
+fn note_word(c: &mut Cursor) -> Option<NoteEntry> {
+    let entry = match (c.peek(), c.peek_at(1), c.peek_at(2)) {
+        (Some(b'B'), Some(b'A'), _) => NoteEntry::Clef(Clef::Bass),
+        (Some(b'A'), Some(b'L'), _) => NoteEntry::Clef(Clef::Alto),
+        (Some(b'C'), Some(_), Some(b'M')) => NoteEntry::Meter(Meter::Common),
+        (Some(b'C'), Some(_), Some(b'T')) => NoteEntry::Meter(Meter::Cut),
+        _ => return None,
+    };
+    Some(word(c, 0, entry))
+}
+
+/// A chord, notes separated by `:`; a repeat suffix on the last note repeats the chord.
+fn chord(c: &mut Cursor) -> Result<(NoteEntry, Option<NoteEntry>), InputError> {
+    let mut notes = Vec::new();
+    loop {
+        let (name, suffix) = note(c)?;
+        notes.push(name);
+        if suffix.is_some() || !c.eat(b':') {
+            return Ok((NoteEntry::Chord(notes), suffix));
+        }
+    }
+}
+
+/// A note: `[O|P]letter`, then the suffix loop of 0x4E2CC8.
+fn note(c: &mut Cursor) -> Result<(NoteName, Option<NoteEntry>), InputError> {
+    let mut mode = None;
+    while let Some(prefix) = octave_mode(c) {
+        mode = Some(prefix);
+    }
+    let letter = c.peek().and_then(Letter::from_byte).ok_or_else(|| c.unexpected())?;
+    c.bump();
+    let mut name = NoteName { mode, ..NoteName::new(letter) };
+    let mut accidental = 0;
+    // Typing this letter again changes the accidental: the note letter, after an
+    // accidental that accidental's letter.
+    let mut repeated = letter.byte();
+    loop {
+        match c.peek() {
+            None | Some(b':') => break,
+            Some(next) if next == repeated => {
+                c.bump();
+                accidental += if repeated == letter.byte() { 1 } else { 3 };
+                continue;
+            }
+            // Parentheses only before a letter accidental: `CF(` is rejected.
+            Some(b'(') if repeated == letter.byte() => {
+                c.bump();
+                name.cautionary = true;
+                continue;
+            }
+            Some(next @ (b'F' | b'S' | b'N')) => {
+                c.bump();
+                accidental = match next {
+                    b'F' => 1,
+                    b'S' => 2,
+                    _ => 3,
+                };
+                repeated = next;
+                continue;
+            }
+            Some(_) => {}
+        }
+        if let Some(digit) = c.digit() {
+            name.octave.push(OctaveMark::Digit(digit));
+        }
+        if let Some(direction) = direction(c, b'+', b'-') {
+            name.dyad = Some(direction);
+        }
+        if let Some(suffix) = repeat_suffix(c)? {
+            name.accidental = accidental_code(c, accidental)?;
+            return Ok((name, Some(suffix)));
+        }
+        match direction(c, b'U', b'J') {
+            Some(jump) => name.octave.push(OctaveMark::Jump(jump)),
+            None if c.at_end() || c.peek() == Some(b':') => break,
+            None => return Err(c.unexpected()),
+        }
+    }
+    name.accidental = accidental_code(c, accidental)?;
+    Ok((name, None))
+}
+
+fn accidental_code(c: &Cursor, code: i32) -> Result<Option<Accidental>, InputError> {
+    match code {
+        0 => Ok(None),
+        code => Accidental::from_code(code).map(Some).ok_or_else(|| c.error_here(ErrorKind::OutOfRange("accidental".into()))),
+    }
+}
+
+fn octave_mode(c: &mut Cursor) -> Option<OctaveMode> {
+    if c.eat(b'O') {
         Some(OctaveMode::Ordinary)
+    } else if c.eat(b'P') {
+        Some(OctaveMode::Proximity)
     } else {
         None
-    };
-    let byte = c.peek().ok_or_else(|| c.unexpected())?;
-    let letter = Letter::from_byte(byte).ok_or_else(|| c.unexpected())?;
-    c.bump();
-    let cautionary = c.eat(b'(');
-    // A letter accidental after repeated letters replaces theirs (`AAS` is A sharp).
-    let repeated = if cautionary { None } else { repeated_letter(c, byte) };
-    let accidental = accidental(c).or(repeated);
-    let octave = c.digit();
-    if octave.is_some_and(|o| o > 8) {
-        return Err(c.error_here(ErrorKind::OutOfRange("octave".into())));
     }
-    let jump = direction(c, b'U', b'J');
-    let dyad = direction(c, b'+', b'-');
-    Ok(NoteName { mode, letter, accidental, cautionary, octave, jump, dyad })
 }
 
 fn direction(c: &mut Cursor, up: u8, down: u8) -> Option<Direction> {
@@ -417,33 +466,186 @@ fn direction(c: &mut Cursor, up: u8, down: u8) -> Option<Direction> {
     }
 }
 
-/// The letter typed again: twice a flat, three times a sharp, four times a natural.
-fn repeated_letter(c: &mut Cursor, letter: u8) -> Option<Accidental> {
-    let repeats = (0..3).take_while(|&ahead| c.peek_at(ahead) == Some(letter)).count();
-    let accidental = match repeats {
-        1 => Accidental::Flat,
-        2 => Accidental::Sharp,
-        3 => Accidental::Natural,
-        _ => return None,
+/// `Xn` or `Zn` after an item: n of it in all.
+fn repeat_suffix(c: &mut Cursor) -> Result<Option<NoteEntry>, InputError> {
+    let keep_accidentals = match c.peek() {
+        Some(b'X') => false,
+        Some(b'Z') => true,
+        _ => return Ok(None),
     };
-    c.skip(repeats);
-    Some(accidental)
+    c.bump();
+    let times = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
+    Ok(Some(NoteEntry::Repeat { items: 1, times, keep_accidentals }))
 }
 
-fn accidental(c: &mut Cursor) -> Option<Accidental> {
-    if c.eat_word("FF") {
-        Some(Accidental::DoubleFlat)
-    } else if c.eat_word("SS") {
-        Some(Accidental::DoubleSharp)
-    } else if c.eat(b'F') {
-        Some(Accidental::Flat)
-    } else if c.eat(b'S') {
-        Some(Accidental::Sharp)
-    } else if c.eat(b'N') {
-        Some(Accidental::Natural)
-    } else {
-        None
+/// `Xn m`, `Zn m` (and `REPn m` after its `REP`).
+fn group_repeat(c: &mut Cursor) -> Result<NoteEntry, InputError> {
+    let keep_accidentals = c.bump() == Some(b'Z');
+    repeat_counts(c, keep_accidentals)
+}
+
+fn repeat_counts(c: &mut Cursor, keep_accidentals: bool) -> Result<NoteEntry, InputError> {
+    let items = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
+    Ok(match c.integer() {
+        Some(times) => NoteEntry::Repeat { items, times, keep_accidentals },
+        None => NoteEntry::ZeroToken,
+    })
+}
+
+/// `R` and its kinds (`W` and `F` take one more `U` or `D`), `Rn`, and `REPn m`; only a
+/// repeat suffix may follow.
+fn rest(c: &mut Cursor) -> Result<(NoteEntry, Option<NoteEntry>), InputError> {
+    c.bump();
+    if c.eat_word("EP") {
+        return Ok((repeat_counts(c, false)?, None));
     }
+    let shift = |c: &mut Cursor| direction(c, b'U', b'D');
+    let kind = |c: &mut Cursor, kind| {
+        c.bump();
+        NoteEntry::Rest(Rest::new(kind))
+    };
+    let rest = match c.peek() {
+        Some(b'I') => kind(c, RestKind::Invisible),
+        Some(b'P') => kind(c, RestKind::RepeatSign),
+        Some(b'W') => {
+            c.bump();
+            // `RWU` and `RWD` are plain `RW`.
+            shift(c);
+            NoteEntry::Rest(Rest::new(RestKind::Whole))
+        }
+        Some(b'F') => {
+            c.bump();
+            NoteEntry::Rest(Rest { kind: RestKind::Fermata, shift: shift(c) })
+        }
+        Some(b'U' | b'D') => NoteEntry::Rest(Rest { kind: RestKind::Normal, shift: shift(c) }),
+        Some(b'0'..=b'9') => {
+            let n = c.integer().unwrap_or(0);
+            let n = u8::try_from(n).map_err(|_| c.error_here(ErrorKind::OutOfRange("measures".into())))?;
+            NoteEntry::Rest(Rest::new(if n == 0 { RestKind::Whole } else { RestKind::Measures(n) }))
+        }
+        _ => NoteEntry::Rest(Rest::new(RestKind::Normal)),
+    };
+    Ok((rest, repeat_suffix(c)?))
+}
+
+/// `KnS`, `KnF`, `KnSN`, `KnFN`; `K` alone takes a key name that input never sets.
+fn key(c: &mut Cursor) -> Result<NoteEntry, InputError> {
+    c.bump();
+    let none = KeySignature { count: 0, sharps: true, naturals: false };
+    let Some(count) = c.integer() else {
+        return if c.at_end() { Ok(NoteEntry::Key(none)) } else { Err(c.unexpected()) };
+    };
+    let count = u8::try_from(count).map_err(|_| c.error_here(ErrorKind::OutOfRange("number of accidentals".into())))?;
+    let sharps = match c.bump() {
+        Some(b'S') => true,
+        Some(b'F') => false,
+        _ => return Err(c.unexpected()),
+    };
+    let naturals = c.eat(b'N');
+    Ok(NoteEntry::Key(KeySignature { count, sharps, naturals }))
+}
+
+/// `M`, then type letters (`D`/`M` double, a second one heavy, after another type a double
+/// repeat; `H` `L` `R` `S` `I`) and a span, which ends the item.
+fn bar(c: &mut Cursor) -> Result<Bar, InputError> {
+    c.bump();
+    let mut style = BarStyle::Single;
+    loop {
+        style = match c.peek() {
+            None => return Ok(Bar { style, span: None }),
+            Some(b'0'..=b'9') => {
+                let span = c.integer().map(|n| n.min(u32::from(u8::MAX)) as u8);
+                c.skip_rest();
+                return Ok(Bar { style, span });
+            }
+            Some(b'D' | b'M') => match style {
+                BarStyle::Single => BarStyle::Double,
+                BarStyle::Double => BarStyle::Heavy,
+                _ => BarStyle::DoubleRepeat,
+            },
+            Some(b'H') => BarStyle::Heavy,
+            Some(b'L') => BarStyle::LeftRepeat,
+            Some(b'R') => BarStyle::RightRepeat,
+            Some(b'S') => BarStyle::Dashed,
+            Some(b'I') => BarStyle::Invisible,
+            Some(_) => return Err(c.unexpected()),
+        };
+        c.bump();
+    }
+}
+
+/// `SU`, `SD`, `SO` (stems) and `S+`, `S-`, `S0` (staff); later characters are ignored.
+fn switch(c: &mut Cursor) -> Result<NoteEntry, InputError> {
+    let entry = match c.peek_at(1) {
+        Some(b'U') => NoteEntry::Stems(StemMode::Up),
+        Some(b'D') => NoteEntry::Stems(StemMode::Down),
+        Some(b'O') => NoteEntry::Stems(StemMode::Ordinary),
+        Some(b'+') => NoteEntry::Staff(StaffShift::Above),
+        Some(b'-') => NoteEntry::Staff(StaffShift::Below),
+        Some(b'0') => NoteEntry::Staff(StaffShift::Main),
+        _ => {
+            c.bump();
+            return Err(c.unexpected());
+        }
+    };
+    Ok(word(c, 2, entry))
+}
+
+/// `TR`, `TE`; `T` (the last meter) and `Tn m`.
+fn t_item(c: &mut Cursor) -> Result<NoteEntry, InputError> {
+    match c.peek_at(1) {
+        Some(b'R') => Ok(word(c, 2, NoteEntry::Clef(Clef::Treble))),
+        Some(b'E') => Ok(word(c, 2, NoteEntry::Clef(Clef::Tenor))),
+        None => Ok(word(c, 1, NoteEntry::LastMeter)),
+        Some(b'0'..=b'9') => {
+            c.bump();
+            meter(c)
+        }
+        Some(_) => {
+            c.bump();
+            Err(c.unexpected())
+        }
+    }
+}
+
+/// `-` and a clef: only the second character counts (`B` bass, `A` alto, `TE` tenor,
+/// anything else treble).
+fn input_clef(c: &mut Cursor) -> NoteEntry {
+    let clef = match (c.peek_at(1), c.peek_at(2)) {
+        (Some(b'B'), _) => Clef::Bass,
+        (Some(b'A'), _) => Clef::Alto,
+        (Some(b'T'), Some(b'E')) => Clef::Tenor,
+        _ => Clef::Treble,
+    };
+    word(c, 1, NoteEntry::InputClef(clef))
+}
+
+fn chord_repeat(c: &mut Cursor) -> Result<NoteEntry, InputError> {
+    let dots = std::iter::from_fn(|| (c.eat(b'=') || c.eat(b'.')).then_some(())).count();
+    match dots {
+        1 => Ok(NoteEntry::RepeatChord { keep_accidentals: false }),
+        2 => Ok(NoteEntry::RepeatChord { keep_accidentals: true }),
+        _ => Err(c.unexpected()),
+    }
+}
+
+/// `Q+` cue size on; `Q` with anything else, off.
+fn cue(c: &mut Cursor) -> NoteEntry {
+    let on = c.peek_at(1) == Some(b'+');
+    word(c, 1, NoteEntry::Cue(on))
+}
+
+/// `n m`; a single number n (or `n 0`) is stored as (0, n).
+fn meter(c: &mut Cursor) -> Result<NoteEntry, InputError> {
+    let fit = |c: &Cursor, n: u32| i32::try_from(n).map_err(|_| c.error_here(ErrorKind::OutOfRange("meter".into())));
+    let top = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
+    let top = fit(c, top)?;
+    let bottom = match c.integer() {
+        Some(n) => fit(c, n)?,
+        None => 0,
+    };
+    let meter = if bottom == 0 { Meter::Fraction(0, top) } else { Meter::Fraction(top, bottom) };
+    Ok(NoteEntry::Meter(meter))
 }
 
 #[cfg(test)]
@@ -457,26 +659,60 @@ mod tests {
     #[test]
     fn notes_chords_and_words() {
         let parsed = values("C4/BF3:D/BA/K2S/3 4/RUX3/M2/;");
-        assert_eq!(parsed.len(), 8);
+        assert_eq!(parsed.len(), 9);
         assert!(matches!(parsed[1], NoteEntry::Chord(ref notes) if notes.len() == 2
-            && notes[0].accidental == Some(Accidental::Flat) && notes[0].octave == Some(3)));
+            && notes[0].accidental == Some(Accidental::Flat) && notes[0].final_digit() == Some(3)));
         assert_eq!(parsed[2], NoteEntry::Clef(Clef::Bass));
         assert_eq!(parsed[3], NoteEntry::Key(KeySignature { count: 2, sharps: true, naturals: false }));
         assert_eq!(parsed[4], NoteEntry::Meter(Meter::Fraction(3, 4)));
-        assert_eq!(parsed[5], NoteEntry::Rest { kind: RestKind::Up, count: 3 });
-        assert_eq!(parsed[6], NoteEntry::Bar(Bar { style: BarStyle::Single, invisible: false, staves: Some(2) }));
-        assert_eq!(parsed[7], NoteEntry::RepeatPrevious);
+        assert_eq!(parsed[5], NoteEntry::Rest(Rest { kind: RestKind::Normal, shift: Some(Direction::Up) }));
+        assert_eq!(parsed[6], NoteEntry::Repeat { items: 1, times: 3, keep_accidentals: false });
+        assert_eq!(parsed[7], NoteEntry::Bar(Bar { style: BarStyle::Single, span: Some(2) }));
+        assert_eq!(parsed[8], NoteEntry::Repeat { items: 1, times: 2, keep_accidentals: false });
     }
 
     #[test]
-    fn empty_pass_has_no_entries() {
-        assert!(values(";").is_empty());
+    fn accidentals_from_letters_and_repeats() {
+        let accidental = |text: &str| match &values(text)[0] {
+            NoteEntry::Chord(notes) => notes[0].accidental.map(Accidental::code),
+            other => panic!("{other:?}"),
+        };
+        assert_eq!(accidental("BB4;"), Some(1));
+        assert_eq!(accidental("FFF;"), Some(2));
+        assert_eq!(accidental("AAS;"), Some(2));
+        assert_eq!(accidental("GGFF;"), Some(4));
+        assert_eq!(accidental("BNN;"), Some(6));
+        assert_eq!(accidental("C S 4;"), Some(2));
+    }
+
+    #[test]
+    fn octave_marks_keep_their_order() {
+        let marks = |text: &str| match &values(text)[0] {
+            NoteEntry::Chord(notes) => notes[0].octave.clone(),
+            other => panic!("{other:?}"),
+        };
+        assert_eq!(marks("C4U;"), [OctaveMark::Digit(4), OctaveMark::Jump(Direction::Up)]);
+        assert_eq!(marks("CU4;"), [OctaveMark::Jump(Direction::Up), OctaveMark::Digit(4)]);
+        assert!(parse("C4S;", &mut Motives::new()).is_err());
+    }
+
+    #[test]
+    fn barline_types() {
+        let style = |text: &str| match values(text)[0] {
+            NoteEntry::Bar(bar) => (bar.style, bar.span),
+            ref other => panic!("{other:?}"),
+        };
+        assert_eq!(style("MRD;"), (BarStyle::DoubleRepeat, None));
+        assert_eq!(style("MDD;"), (BarStyle::Heavy, None));
+        assert_eq!(style("M2D;"), (BarStyle::Single, Some(2)));
+        assert_eq!(style("MI3;"), (BarStyle::Invisible, Some(3)));
     }
 
     #[test]
     fn errors_point_at_the_entry() {
-        let err = parse("C4/Q/D;", &mut Motives::new()).unwrap_err();
+        let err = parse("C4/Y/D;", &mut Motives::new()).unwrap_err();
         assert_eq!(err.span.start, 3);
         assert!(parse("C4/D", &mut Motives::new()).is_err());
+        assert!(parse("RX/C4;", &mut Motives::new()).is_err());
     }
 }

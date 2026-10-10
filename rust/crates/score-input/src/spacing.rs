@@ -16,7 +16,8 @@ pub enum Entry {
     Clef,
     Bar,
     Key(KeySignature),
-    Meter(Meter),
+    /// A meter, and the duration it counts for: 0 unless it is a misread note token.
+    Meter(Meter, f32),
 }
 
 /// Spacing units of a grace note in the duration sum.
@@ -34,7 +35,7 @@ impl Entry {
             Entry::Clef => 3,
             Entry::Bar => 14,
             Entry::Key(_) => 17,
-            Entry::Meter(_) => 18,
+            Entry::Meter(..) => 18,
         }
     }
 
@@ -45,7 +46,7 @@ impl Entry {
     /// Duration counted once per chord.
     fn duration(self) -> f32 {
         match self {
-            Entry::Note { quarters, first: true, .. } | Entry::Rest { quarters } => quarters,
+            Entry::Note { quarters, first: true, .. } | Entry::Rest { quarters } | Entry::Meter(_, quarters) => quarters,
             _ => 0.0,
         }
     }
@@ -69,7 +70,7 @@ fn width(entries: &[Entry], j: usize, last: usize) -> f32 {
     let next_code = next.map_or(0, Entry::code);
     match entries[j] {
         Entry::Key(key) => {
-            let narrower = if j < last && matches!(next, Some(Entry::Meter(_))) { 0.3 } else { 0.0 };
+            let narrower = if j < last && matches!(next, Some(Entry::Meter(..))) { 0.3 } else { 0.0 };
             key_count(key) * 2.8 + 2.0 - narrower
         }
         _ if j == last => 0.0,
@@ -78,7 +79,7 @@ fn width(entries: &[Entry], j: usize, last: usize) -> f32 {
             _ if next_code == 3 || next_code > 16 => 1.5,
             _ => 3.5,
         },
-        Entry::Meter(meter) => {
+        Entry::Meter(meter, _) => {
             if big_meter(meter) {
                 9.0
             } else {
@@ -104,10 +105,10 @@ pub fn positions(entries: &[Entry], begin: f32, end: f32, size: f32) -> Vec<f32>
     let mut end = end;
     let mut extra = 0.0f32;
     let mut n = entries.len();
-    while let Some(entry @ (Entry::Key(_) | Entry::Meter(_))) = n.checked_sub(1).map(|i| entries[i]) {
+    while let Some(entry @ (Entry::Key(_) | Entry::Meter(..))) = n.checked_sub(1).map(|i| entries[i]) {
         let (w, e) = match entry {
-            Entry::Meter(meter) if big_meter(meter) => (7.0, 1.5),
-            Entry::Meter(_) => (4.0, 1.5),
+            Entry::Meter(meter, _) if big_meter(meter) => (7.0, 1.5),
+            Entry::Meter(..) => (4.0, 1.5),
             Entry::Key(key) => (key_count(key) * 2.8 + 0.5, 2.5),
             _ => unreachable!(),
         };
