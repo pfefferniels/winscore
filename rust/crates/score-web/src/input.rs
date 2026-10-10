@@ -60,6 +60,7 @@ fn options(file: &MusFile, line: &InputLine) -> Options {
         begin: line.begin,
         end: right_end.map_or(line.end, |right| line.end.min(right)),
         clef,
+        staff_end: right_end.unwrap_or(Options::default().staff_end),
     }
 }
 
@@ -197,9 +198,9 @@ mod tests {
 
     #[test]
     fn reports_the_failing_pass_in_utf16() {
-        let err = line_items(&file(&[]), &line("C4/D;", "4/4/4;"), &mut Motives::new()).unwrap_err();
+        let err = line_items(&file(&[]), &line("C4/D;", "4/Y;"), &mut Motives::new()).unwrap_err();
         assert_eq!(err.pass, 2);
-        assert!(err.message.contains("rhythm"), "{}", err.message);
+        assert_eq!((err.start, err.end), (2, 3));
         assert_eq!(utf16_offset("é/x", 3), 2);
     }
 }

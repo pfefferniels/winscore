@@ -1,1 +1,9 @@
 # Cases score-input does not reproduce yet (one name per line, # comments).
+# Syntax from Craig Sapp's SCORE input page (oracle/input_corpus_sapp.txt), until the
+# five-pass grammar derived from the engine is in.
+sapp-repeat-chord
+# Cue notes after SO: stem rule pending the grammar.
+e1-cue-stems
+# Fewer rhythms than notes: rule pending the pass-2 grammar.
+e2-missing-after-chord
+e2-missing-rhythms

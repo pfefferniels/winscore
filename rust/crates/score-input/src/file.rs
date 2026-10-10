@@ -151,7 +151,8 @@ impl InputLine {
             end = end.min(staff.right);
         }
         let size = if staff.size == 0.0 { 1.0 } else { staff.size };
-        Options { staff: self.staff.number, size, begin, end, clef }
+        let staff_end = if staff.right > 0.0 { staff.right } else { default.staff_end };
+        Options { staff: self.staff.number, size, begin, end, clef, staff_end }
     }
 }
 
