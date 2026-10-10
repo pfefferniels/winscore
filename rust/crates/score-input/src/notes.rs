@@ -109,7 +109,8 @@ pub enum RestKind {
     Fermata,
     /// `RP`: a measure-repeat sign centred in its measure.
     RepeatSign,
-    /// `Rn`: a whole rest centred in its measure with the number n above it.
+    /// `Rn`: a rest for n measures with the number n above it: a whole rest centred in its
+    /// measure, from four measures on a bar rest spread over the measure.
     Measures(u8),
 }
 
@@ -394,7 +395,9 @@ fn note(c: &mut Cursor) -> Result<NoteName, InputError> {
     let letter = Letter::from_byte(byte).ok_or_else(|| c.unexpected())?;
     c.bump();
     let cautionary = c.eat(b'(');
-    let accidental = if cautionary { accidental(c) } else { repeated_letter(c, byte).or_else(|| accidental(c)) };
+    // A letter accidental after repeated letters replaces theirs (`AAS` is A sharp).
+    let repeated = if cautionary { None } else { repeated_letter(c, byte) };
+    let accidental = accidental(c).or(repeated);
     let octave = c.digit();
     if octave.is_some_and(|o| o > 8) {
         return Err(c.error_here(ErrorKind::OutOfRange("octave".into())));

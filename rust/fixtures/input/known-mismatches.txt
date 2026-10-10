@@ -2,3 +2,5 @@
 # Syntax from Craig Sapp's SCORE input page (oracle/input_corpus_sapp.txt), until the
 # five-pass grammar derived from the engine is in.
 sapp-repeat-chord
+# Cue notes after SO: stem rule pending the grammar.
+e1-cue-stems

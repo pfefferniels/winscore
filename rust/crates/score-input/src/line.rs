@@ -610,6 +610,7 @@ impl Element {
     fn items(&self, staff: f32) -> Vec<Item> {
         match self {
             Element::Note(note) => note.items(staff),
+            Element::Rest { x, kind: kind @ RestKind::Measures(_), rhythm } => vec![rest_item(*kind, *rhythm, *x, staff, -1.0)],
             Element::Rest { x, kind, rhythm } => vec![rest_item(*kind, *rhythm, *x, staff, 0.0)],
             Element::Bar { x, staves, style } => vec![item(&[14.0, staff, *x, *staves as f32, style.code() as f32])],
             Element::Clef { x, clef, small } => {
@@ -646,6 +647,7 @@ fn rest_item(kind: RestKind, rhythm: Rhythm, x: f32, staff: f32, centre: f32) ->
     let level = rest_level(kind);
     // P5: flags for short rests, 0 quarter, -1 half, -2 whole, -3 breve, -4 repeat sign.
     let symbol = match (kind, rhythm.head()) {
+        (RestKind::Measures(n), _) if n >= BAR_REST_MEASURES => -5.0,
         (RestKind::Whole | RestKind::Measures(_), _) => -2.0,
         (RestKind::RepeatSign, _) => -4.0,
         (_, 0) => rhythm.tails() as f32,
@@ -665,8 +667,17 @@ fn rest_item(kind: RestKind, rhythm: Rhythm, x: f32, staff: f32, centre: f32) ->
     item(&[2.0, staff, x, level, symbol, dots, rhythm.quarters(), above, centre])
 }
 
+/// From this many measures on, `Rn` is a bar rest (P5 = -5).
+const BAR_REST_MEASURES: u8 = 4;
+
+/// Rests draw_rest centres in their measure; a bar rest is spread over it on every draw
+/// and keeps P9 = -1.
 fn is_centred(kind: RestKind) -> bool {
-    matches!(kind, RestKind::Whole | RestKind::RepeatSign | RestKind::Measures(_))
+    match kind {
+        RestKind::Measures(n) => n < BAR_REST_MEASURES,
+        RestKind::Whole | RestKind::RepeatSign => true,
+        _ => false,
+    }
 }
 
 /// A pass-1 event with the rhythm pass 2 gave it (chords and rests only).
@@ -710,7 +721,7 @@ impl Line {
                     clef = *c;
                     Some(Element::Clef { x: 0.0, clef, small: false })
                 }
-                (Event::Key(key), _) => Some(Element::Key { x: 0.0, key: *key, clef }),
+                (Event::Key(key, clef), _) => Some(Element::Key { x: 0.0, key: *key, clef: *clef }),
                 (Event::Meter(meter), _) => Some(Element::Meter { x: 0.0, meter: *meter }),
                 (Event::Stems(mode), _) => {
                     stems = *mode;

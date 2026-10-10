@@ -33,7 +33,8 @@ pub enum Event {
     /// `staves` is negative for an invisible barline, as P4 stores it.
     Bar { staves: i32, style: BarStyle },
     Clef(Clef),
-    Key(KeySignature),
+    /// The key signature and the clef it is drawn for: the one notes are read in.
+    Key(KeySignature, Clef),
     Meter(Meter),
     Stems(StemMode),
     Staff(StaffShift),
@@ -122,11 +123,12 @@ fn nearest(previous: i32, step: i32) -> i32 {
     }
 }
 
-/// The nearest note with diatonic step `step` above or below `previous`, within an octave.
+/// The nearest note with diatonic step `step` above or below `previous`: an octave away for
+/// the same letter.
 fn jump(previous: i32, step: i32, direction: Direction) -> i32 {
     match direction {
-        Direction::Up => previous + (step - previous).rem_euclid(7),
-        Direction::Down => previous - (previous - step).rem_euclid(7),
+        Direction::Up => previous + 1 + (step - previous - 1).rem_euclid(7),
+        Direction::Down => previous - 1 - (previous - 1 - step).rem_euclid(7),
     }
 }
 
@@ -183,7 +185,7 @@ impl Resolver<'_> {
             }
             NoteEntry::InputClef(clef) => self.pitches.clef = *clef,
             NoteEntry::Cue(on) => self.events.push(Event::Cue(*on)),
-            NoteEntry::Key(key) => self.events.push(Event::Key(*key)),
+            NoteEntry::Key(key) => self.events.push(Event::Key(*key, self.pitches.clef)),
             NoteEntry::Meter(meter) => self.events.push(Event::Meter(*meter)),
             NoteEntry::Stems(mode) => self.events.push(Event::Stems(*mode)),
             NoteEntry::Staff(shift) => self.events.push(Event::Staff(*shift)),
