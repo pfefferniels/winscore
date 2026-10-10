@@ -1,0 +1,128 @@
+== sapp-jump-down
+IN 1
+;
+OG4/AJ;
+4/4;
+;
+;
+;
+== sapp-jump-up
+IN 1
+;
+PC4/AU/A;
+4/4/4;
+;
+;
+;
+== sapp-jump-limit
+IN 1
+;
+OE5/DJ;
+4/4;
+;
+;
+;
+== sapp-chord-jump
+IN 1
+;
+C5:AJ:F/G;
+4/4;
+;
+;
+;
+== sapp-dyad
+IN 1
+;
+C4+/C4-/E5+;
+4/4/4;
+;
+;
+;
+== sapp-cautionary
+IN 1
+;
+B(F4/C(S5/D(N;
+4/4/4;
+;
+;
+;
+== sapp-alt-accidentals
+IN 1
+;
+BB4/CCC5/EEEE/DD;
+4/4/4/4;
+;
+;
+;
+== sapp-rests
+IN 1
+;
+R/RF/RU/RD/R3/RI/C4;
+4/4/4/4/4/4/4;
+;
+;
+;
+== sapp-whole-repeat
+IN 1
+;
+RW/M/RP/M/C4;
+1/1/4;
+;
+;
+;
+== sapp-input-clef
+IN 1
+;
+BA/-TR/C4/E/G;
+4/4/4;
+;
+;
+;
+== sapp-barlines
+IN 1
+;
+C4/MS/D/MI/E/MRD/F/MD/G/MH;
+4/4/4/4/4;
+;
+;
+;
+== sapp-cue
+IN 1
+;
+C4/Q+/D/E/Q-/F/Q+/G/Q0/A;
+4/4/4/4/4/4;
+;
+;
+;
+== sapp-repeat-chord
+IN 1
+;
+C4:EF:G/M/./R/../;
+4/4/4/4;
+;
+;
+;
+== sapp-stems
+IN 1
+;
+SU/C4/D/SD/E/F/SO/G;
+4/4/4/4/4;
+;
+;
+;
+== sapp-example-letters
+IN 1
+;
+tr/3 4/e4/m/cu/aj/m/f/d/m/bj/b/cu/d/e/m/c/aj/eu/m/cu/aj/m/f/e/m/ds/d/e/fs/d/m/e/r/ml;
+q/h/q/h/q/q/e/e/e/e/q/q/q/h/q/h/q/q/e/e/e/e/q/q;
+;
+;
+;
+== sapp-example-numbers
+IN 1
+;
+tr/3 4/e4/m/cu/aj/m/f/d/m/bj/b/cu/d/e/m/c/aj/eu/m/cu/aj/m/f/e/m/ds/d/e/fs/d/m/e/r/ml;
+4/2/4/2/4/4/8/8/8/8/4/4/4/2/4/2/4/4/8/8/8/8/4/4;
+;
+;
+;

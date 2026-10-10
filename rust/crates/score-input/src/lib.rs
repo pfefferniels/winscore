@@ -31,6 +31,7 @@ pub mod marks;
 mod motives;
 pub mod notes;
 mod num;
+mod reader;
 mod refit;
 pub mod rhythm;
 mod scan;
@@ -62,8 +63,9 @@ impl Default for Passes<'_> {
 }
 
 /// Where the line goes: the staff (P2 of every item), its size factor (P5 of the staff
-/// item, 1 for a normal staff), the input range in P3 units, and the clef in force on the
-/// staff when the line starts (the engine keeps the last clef of each staff).
+/// item, 1 for a normal staff), the input range in P3 units, the clef in force on the
+/// staff when the line starts (the engine keeps the last clef of each staff), and the
+/// staff's right end (P6 of the staff item, 200 when 0), where slurs past the last note end.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Options {
     pub staff: u8,
@@ -71,13 +73,14 @@ pub struct Options {
     pub begin: f32,
     pub end: f32,
     pub clef: notes::Clef,
+    pub staff_end: f32,
 }
 
 impl Default for Options {
-    /// Staff 1 of normal size in treble clef and the range WinScore's input dialog proposes,
-    /// 2 to 200.
+    /// Staff 1 of normal size and full length in treble clef, and the range WinScore's input
+    /// dialog proposes, 2 to 200.
     fn default() -> Self {
-        Self { staff: 1, size: 1.0, begin: 2.0, end: 200.0, clef: notes::Clef::Treble }
+        Self { staff: 1, size: 1.0, begin: 2.0, end: 200.0, clef: notes::Clef::Treble, staff_end: slurs::STAFF_END }
     }
 }
 
@@ -88,10 +91,11 @@ pub fn run(passes: &Passes, options: &Options) -> Result<Vec<Item>, InputError> 
 
 /// As [`run`], with motives kept from earlier lines and stored for later ones.
 pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motives) -> Result<Vec<Item>, InputError> {
-    let events = events::resolve(&notes::parse(passes.notes, motives)?, options.clef, motives)?;
+    let events = pass_one(passes.notes, options, motives)?;
     let rhythms = rhythm::parse(passes.rhythms, motives)?;
     let needed = events.iter().filter(|e| e.is_rhythmic()).count();
-    if rhythms.len() != needed {
+    // Rhythms beyond the last note are ignored.
+    if rhythms.len() < needed {
         let kind = ErrorKind::RhythmCount { found: rhythms.len(), needed };
         return Err(InputError::new(Pass::Rhythms, Span::at(0), kind));
     }
@@ -107,7 +111,21 @@ pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motive
     let mut line = line::Line::new(&timed, options);
     marks::apply(&mut line, &marks)?;
     beams::apply(&mut line, &beams)?;
-    slurs::apply(&mut line, &slurs, (options.begin, options.end), slurs::STAFF_END)?;
+    slurs::apply(&mut line, &slurs, (options.begin, options.end), options.staff_end)?;
     // 0x5253FD stores the line, then fits the stems to the beams in the item store.
     Ok(stems::fit_items(&line.items(), i32::from(options.staff), 25.0 * options.size))
+}
+
+/// Pass 1 as the reader leaves it; errors point into the typed text.
+fn pass_one(text: &str, options: &Options, motives: &mut Motives) -> Result<Vec<events::Event>, InputError> {
+    let read = reader::read(text);
+    let in_typed_text = |err: InputError| InputError { span: read.origin_span(err.span), ..err };
+    let entries = notes::parse(&read.text, motives).map_err(in_typed_text)?;
+    events::resolve(&entries, options.clef, motives).map_err(in_typed_text)
+}
+
+/// The items of a pass-1 text that WinScore's reader erases as they are typed (it shows
+/// "Input error" and removes the item; [`run`] leaves them out the same way), in that text.
+pub fn erased_items(notes: &str) -> Vec<Span> {
+    reader::read(notes).erased
 }

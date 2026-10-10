@@ -2,8 +2,8 @@
 
     input_random.py SEED COUNT OUT_FILE      writes COUNT cases ("== rnd-SEED-i" blocks) to OUT_FILE
 
-The cases use the documented syntax only and are built so that the engine accepts them
-(rhythm counts match, note numbers exist). Run them with
+The cases use the syntax of the engine's grammar (analysis/engine/input.md) and are built so
+that the engine accepts them (rhythm counts match, note numbers exist). Run them with
 `input_driver.py --corpus OUT_FILE DIR` and compare with score-input's fixture test
 (`INPUT_FIXTURES=DIR cargo test -p score-input --test fixtures`).
 """
@@ -21,6 +21,9 @@ HEAD_MARKS = ["A", "S", "T", "W", "WS", "AS", "TS", "ACT", "FE", "TR", "-A", "-S
 OTHER_MARKS = ["AO", "PZ", "RI", "CR", "TM", "TME", "-AO"]
 LINE_MARKS = ["TRW", "C", "C-", "O", "OB"]
 CLEFS = ["TR", "BA", "AL", "TE"]
+BARS = ["M", "M", "M", "MD", "MH", "ML", "MR", "MRD", "MS", "MI"]
+RESTS = ["R", "R", "RU", "RD", "RI", "RF"]
+MEASURE_RESTS = ["RW", "RP", "R2", "R3", "R5", "R12"]
 METERS = ["3 4", "4 4", "6 8", "COM", "CUT", "2 2", "12 8"]
 
 
@@ -43,9 +46,25 @@ def tails_of(rhythm: str) -> int:
     return int(math.log2(value)) - 2 if value >= 8 else 0
 
 
-def pitch(rng: random.Random, with_octave: bool) -> str:
-    name = rng.choice(LETTERS) + rng.choice(ACCIDENTALS)
-    return name + (str(rng.randint(3, 5)) if with_octave else "")
+def accidental(rng: random.Random, letter: str) -> str:
+    roll = rng.random()
+    if roll < 0.08:
+        return "(" + rng.choice(["S", "F", "N", "SS", "FF"])
+    if roll < 0.14:
+        return letter * rng.randint(1, 3)
+    return rng.choice(ACCIDENTALS)
+
+
+def pitch(rng: random.Random, with_octave: bool, dyad: bool = False) -> str:
+    letter = rng.choice(LETTERS)
+    name = letter + accidental(rng, letter)
+    if with_octave:
+        name += str(rng.randint(3, 5))
+    elif rng.random() < 0.15:
+        name += rng.choice("UJ")
+    if dyad and rng.random() < 0.08:
+        name += rng.choice("+-")
+    return name
 
 
 def make_line(rng: random.Random) -> Line:
@@ -56,37 +75,45 @@ def make_line(rng: random.Random) -> Line:
         line.notes.append(f"K{rng.randint(1, 6)}{rng.choice('SF')}" + ("N" if rng.random() < 0.1 else ""))
     if rng.random() < 0.4:
         line.notes.append(rng.choice(METERS))
+    if rng.random() < 0.1:
+        line.notes.append("-" + rng.choice(CLEFS))
     first = True
     previous = None
     for _ in range(rng.randint(3, 16)):
         roll = rng.random()
         if roll < 0.10:
-            line.notes.append(rng.choice(["R", "R", "RU", "RD", "RI"]))
+            line.notes.append(rng.choice(RESTS))
             line.rhythms.append(rng.choice(["4", "8", "2", "16", "4."]))
             continue
-        if roll < 0.14:
-            line.notes.append(rng.choice(["SU", "SD", "SO"]))
+        if roll < 0.12:
+            line.notes.append(rng.choice(MEASURE_RESTS))
+            line.rhythms.append(rng.choice(["1", "2.", "W"]))
             continue
-        if roll < 0.17 and not first:
-            line.notes.append(rng.choice(CLEFS))
+        if roll < 0.16:
+            line.notes.append(rng.choice(["SU", "SD", "SO", "Q+", "Q-", "Q0", "S+", "S-", "S0"]))
             continue
+        if roll < 0.19 and not first:
+            line.notes.append(("-" if rng.random() < 0.2 else "") + rng.choice(CLEFS))
+            continue
+        rhythm = rng.choice(RHYTHMS)
         if previous and rng.random() < 0.12:
             heads = previous                     # same notes again: a tie candidate
+            line.notes.append(rng.choice([":".join(heads), ".", ".."]) if rhythm != "G" else ":".join(heads))
         else:
-            heads = [pitch(rng, first or rng.random() < 0.3)]
-            if rng.random() < 0.25:
-                heads += [pitch(rng, False) for _ in range(rng.randint(1, 3))]
-        first = False
-        rhythm = rng.choice(RHYTHMS)
-        if rhythm == "G":
+            mode = rng.choice(["", "", "", "", "O", "P"])
             # The engine never returns from a grace chord with two heads on one letter.
-            heads = list({h[0]: h for h in heads}.values())
+            heads = [mode + pitch(rng, first or rng.random() < 0.3, dyad=rhythm != "G")]
+            if rng.random() < 0.25:
+                heads += [pitch(rng, False, dyad=rhythm != "G") for _ in range(rng.randint(1, 3))]
+            if rhythm == "G":
+                heads = list({h.lstrip("OP")[0]: h for h in heads}.values())
+            line.notes.append(":".join(heads))
+        first = False
         previous = heads
-        line.notes.append(":".join(heads))
         line.rhythms.append(rhythm)
         line.tails.append(tails_of(rhythm))
         if rng.random() < 0.12:
-            line.notes.append("M" if rng.random() < 0.8 else "M2")
+            line.notes.append(rng.choice(BARS) + ("2" if rng.random() < 0.15 else ""))
     if line.note_count == 0:
         line.notes.append("C4")
         line.rhythms.append("4")
