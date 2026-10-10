@@ -1,0 +1,192 @@
+== im2-heads
+IN 1
+;
+C4/D/E/F/G/A;
+.75/1.6/3.6/3.5/1.5/.9;
+;
+;
+;
+== im2-t-mid
+IN 1
+;
+C4/D/E;
+T3/QTE/T6;
+;
+;
+;
+== im2-fill-three-chars
+IN 1
+;
+C4/D/E;
+16.;
+;
+;
+;
+== im2-dot-then-letter
+IN 1
+;
+C4/D;
+Q.E/4;
+;
+;
+;
+== im2-letters-then-dot
+IN 1
+;
+C4/D;
+QE./4;
+;
+;
+;
+== im2-dot-space-number
+IN 1
+;
+C4/D;
+4. 8/4;
+;
+;
+;
+== im2-ratio-then-letter
+IN 1
+;
+C4/D;
+3:2Q/4;
+;
+;
+;
+== im2-leading-space
+IN 1
+;
+C4/D;
+ 4/8;
+;
+;
+;
+== im2-space-before-slash
+IN 1
+;
+C4/D;
+4 /8;
+;
+;
+;
+== im2-space-before-dot
+IN 1
+;
+C4/D;
+8 ./4;
+;
+;
+;
+== im2-space-after-dot
+IN 1
+;
+C4/D;
+8. /4;
+;
+;
+;
+== im2-fill-slash
+IN 1
+;
+C4/D/E;
+4/;
+;
+;
+;
+== im2-fill-t16
+IN 1
+;
+C4/D/E;
+T16;
+;
+;
+;
+== im2-macro-round
+IN 1
+;
+C4/D/E/F/G/A;
+Z[4/8/Q]/@Z3;
+;
+;
+;
+== im2-reject-t-mid
+IN 1
+;
+C4/D;
+QT/4;
+;
+;
+;
+== im3-symbols-high
+IN 1
+;
+C6/D/E/F;
+4/4/4/4;
+F 1/P 2/PZ 3/-PZ 4;
+;
+;
+== im3-numbered-levels
+IN 1
+;
+G4/B/D5/F;
+4/4/4/4;
+N45 1/N5 2/-N45 3/N60 4;
+;
+;
+== im3-numbered-low
+IN 1
+;
+C4/A3/F/D;
+4/4/4/4;
+N5 1/N30 2/-N5 3/N45 4;
+;
+;
+== im3-empty-repeat
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F 2//S 3;
+;
+;
+== im3-uneven-fractions
+IN 1
+;
+C4/D/E/F;
+2/8/8/4;
+F 1.5/N45 2.5/C 2.5 3.5;
+;
+;
+== im3-range-fraction
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 1.5:3/A 0;
+;
+;
+== im3-letter-digit
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S1 2/A2 3/T 4;
+;
+;
+== im3-lines-flipped
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+-TRW 1 2/-O 2 3/-C 3 4;
+;
+;
+== im3-span-beyond
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 3 5;
+;
+;

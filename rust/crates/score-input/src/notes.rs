@@ -303,7 +303,7 @@ pub fn parse(text: &str, motives: &mut Motives) -> Result<Vec<Spanned<NoteEntry>
 /// One item: usually one entry, two with a repeat suffix (`C4X3`).
 fn parse_entry(entry: &Entry) -> Result<Vec<NoteEntry>, InputError> {
     if let Some((name, steps)) = recall_parts(&entry.text) {
-        return Ok(vec![NoteEntry::Recall { name, steps }]);
+        return Ok(vec![NoteEntry::Recall { name, steps: steps.round() as i32 }]);
     }
     check_repeat_letters(entry)?;
     let mut c = entry.spaced_cursor(PASS);

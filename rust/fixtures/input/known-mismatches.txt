@@ -1,8 +1,4 @@
 # Cases score-input does not reproduce yet (one name per line, # comments).
-# Pass 2, fewer rhythms than notes (input-marks ports the pass-2 reader rule).
-sapp-repeat-chord
-e2-missing-after-chord
-e2-missing-rhythms
 # Pass 1, open questions to disasm-expert: `-BE` keeps the alto clef; `]/@` in a macro
 # definition with U/J/P inside.
 g-p1-input-clef-alias

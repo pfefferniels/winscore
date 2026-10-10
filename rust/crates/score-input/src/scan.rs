@@ -107,15 +107,16 @@ fn recall(piece: &str, at: usize, pass: Pass, motives: &Motives) -> Result<Vec<E
     let (name, number) = recall_parts(piece).ok_or_else(|| InputError::new(pass, Span::at(at), ErrorKind::Unexpected(piece.into())))?;
     let stored = motives.text(pass, name).ok_or_else(|| InputError::new(pass, Span::at(at), ErrorKind::UnknownMotive(name)))?;
     let text = match number {
-        0 => stored.to_string(),
-        n if pass == Pass::Rhythms => augment(stored, n),
-        n => renumber(stored, n, pass, at)?,
+        0.0 => stored.to_string(),
+        factor if pass == Pass::Rhythms => augment(stored, factor),
+        first => renumber(stored, first.round() as i32, pass, at)?,
     };
     Ok(split(&text, at, None).into_iter().map(|e| Entry { start: at, ..e }).collect())
 }
 
-/// The letter and (possibly negative) number of a recall `@Xn`; 0 when no number follows.
-pub(crate) fn recall_parts(piece: &str) -> Option<(char, i32)> {
+/// The letter and (possibly negative or fractional) number of a recall `@Xn`; 0 when no
+/// number follows.
+pub(crate) fn recall_parts(piece: &str) -> Option<(char, f32)> {
     let text = piece.trim();
     let mut chars = text.strip_prefix('@')?.chars();
     let name = chars.next()?.to_ascii_uppercase();
@@ -124,7 +125,7 @@ pub(crate) fn recall_parts(piece: &str) -> Option<(char, i32)> {
     }
     // `@X-` without a number is the plain recall.
     let number = chars.as_str().trim().trim_end_matches('-');
-    let value = if number.is_empty() { 0 } else { number.parse().ok()? };
+    let value = if number.is_empty() { 0.0 } else { number.parse().ok()? };
     Some((name, value))
 }
 

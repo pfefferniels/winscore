@@ -92,13 +92,8 @@ pub fn run(passes: &Passes, options: &Options) -> Result<Vec<Item>, InputError> 
 /// As [`run`], with motives kept from earlier lines and stored for later ones.
 pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motives) -> Result<Vec<Item>, InputError> {
     let events = pass_one(passes.notes, options, motives)?;
-    let rhythms = rhythm::parse(passes.rhythms, motives)?;
     let needed = events.iter().filter(|e| e.is_rhythmic()).count();
-    // Rhythms beyond the last note are ignored.
-    if rhythms.len() < needed {
-        let kind = ErrorKind::RhythmCount { found: rhythms.len(), needed };
-        return Err(InputError::new(Pass::Rhythms, Span::at(0), kind));
-    }
+    let rhythms = rhythm::parse(passes.rhythms, needed, motives)?;
     let marks = marks::parse(passes.marks, motives)?;
     let beams = connect::parse(passes.beams, Pass::Beams, motives)?;
     let slurs = connect::parse(passes.slurs, Pass::Slurs, motives)?;
@@ -109,7 +104,7 @@ pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motive
         .map(|event| line::Timed { event, rhythm: if event.is_rhythmic() { rhythm_iter.next() } else { None } })
         .collect();
     let mut line = line::Line::new(&timed, options);
-    marks::apply(&mut line, &marks)?;
+    marks::apply(&mut line, &marks, (0.0, options.staff_end))?;
     beams::apply(&mut line, &beams)?;
     slurs::apply(&mut line, &slurs, (options.begin, options.end), options.staff_end)?;
     // 0x5253FD stores the line, then fits the stems to the beams in the item store.
