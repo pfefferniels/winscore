@@ -1,14 +1,19 @@
-//! Passes 4 and 5: beams and slurs between numbered notes.
+//! Passes 4 and 5: beams and slurs between numbered notes, read by the item parser 0x4DA9C3
+//! (analysis/engine/input.md, "Passes 4 and 5").
 //!
-//! Both passes share a syntax: pairs of note numbers (`1 4`), separated by `/`. A sign in
-//! front of either number puts the beam or slur above (`+`) or below (`-`). Written without
-//! a space after the first number, `1+4` is only a separator (as in SCORE 4's own files);
-//! the engine misreads `1-4`, which is therefore an error here. Adding 100 times n to a
-//! note number puts the tuplet number n over the beam. `Xn a b c` makes groups of n notes starting at a, b, c.
-//! Pass 4 also has `xB` (beam every x eighths) and `xBy` (after y pickup notes).
+//! Both passes share a syntax: pairs of note numbers (`1 4`), separated by `/` or `,`; a
+//! third number is ignored, and a single number or an end not after the start means the
+//! next note. A sign in front of either number puts the beam or slur above (`+`) or below
+//! (`-`). Written without a space after the first number, `1+4` is only a separator (as in
+//! SCORE 4's own files), while `1-2` is the number -12. Adding 100 times k to a note number
+//! puts the number k over the beam, or a tuplet bracket numbered k over the slur. `Xk a b c`
+//! makes the pairs (a, a + k - 1), (b, b + k - 1), ... (0x4E4D40). Pass 4 also has automatic
+//! beams: `nB` or `nBp` (every n eighths, after p notes) and `B` or `A` alone (by the last
+//! meter).
 
 use crate::error::{ErrorKind, InputError, Pass};
 use crate::motives::Motives;
+use crate::notes::Meter;
 use crate::scan::{entries, Cursor, Entry};
 
 /// Where a beam or slur goes relative to the notes, if the input says so.
@@ -57,8 +62,14 @@ struct Endpoint {
     fraction: f32,
 }
 
-fn endpoint(c: &mut Cursor, pass: Pass) -> Result<Endpoint, InputError> {
-    c.skip_spaces();
+impl Endpoint {
+    fn from_value(side: Option<Side>, value: f32) -> Self {
+        let whole = value.trunc() as u32;
+        Endpoint { side, note: (whole % 100) as usize, tuplet: whole / 100 % 100, fraction: value.fract() }
+    }
+}
+
+fn endpoint(c: &mut Cursor, pass: Pass) -> Option<Endpoint> {
     let side = if c.eat(b'+') {
         Some(Side::Above)
     } else if c.eat(b'-') {
@@ -66,68 +77,115 @@ fn endpoint(c: &mut Cursor, pass: Pass) -> Result<Endpoint, InputError> {
     } else {
         None
     };
-    let value = if pass == Pass::Slurs { c.number() } else { c.integer().map(|n| n as f32) };
-    let value = value.ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
-    let whole = value.trunc() as u32;
-    Ok(Endpoint { side, note: (whole % 100) as usize, tuplet: whole / 100, fraction: value.fract() })
+    let value = c.number()?;
+    // 0x5194D5 reads on through a `-` between digits: `1-2` is -12.
+    let (side, value) = if c.peek_raw() == Some(b'-') && c.peek_raw_at(1).is_some_and(|b| b.is_ascii_digit()) {
+        c.bump();
+        let rest = c.integer().unwrap_or(0);
+        let digits = format!("{}{rest}", value.trunc() as u32);
+        (Some(Side::Below), digits.parse().unwrap_or(0.0))
+    } else {
+        (side, value)
+    };
+    // Beams take whole note numbers.
+    let value = if pass == Pass::Beams { value.trunc() } else { value };
+    Some(Endpoint::from_value(side, value))
 }
 
-fn pair(c: &mut Cursor, pass: Pass) -> Result<Connection, InputError> {
-    let a = endpoint(c, pass)?;
-    let tight_plus = c.peek() == Some(b'+');
-    if c.peek() == Some(b'-') {
-        return Err(c.unexpected());
-    }
-    let mut b = endpoint(c, pass)?;
-    if tight_plus {
-        b.side = None;
-    }
+/// `a b` (a third number ignored), or `a` alone; an end not after the start is resolved
+/// to the next note by the builders.
+fn pair(c: &mut Cursor, pass: Pass) -> Result<Option<Connection>, InputError> {
+    let Some(a) = endpoint(c, pass) else {
+        return if c.at_end() { Ok(None) } else { Err(c.error_here(ErrorKind::ExpectedNumber)) };
+    };
+    let tight_plus = c.peek_raw() == Some(b'+');
+    let b = endpoint(c, pass).map(|b| if tight_plus { Endpoint { side: None, ..b } } else { b });
+    c.skip_rest();
+    let b = b.unwrap_or(Endpoint { side: None, note: 0, tuplet: 0, fraction: 0.0 });
     let tuplet = if b.tuplet != 0 { b.tuplet } else { a.tuplet };
-    Ok(Connection { first: a.note, last: b.note, sides: [a.side, b.side], tuplet, fractions: [a.fraction, b.fraction] })
+    Ok(Some(Connection { first: a.note, last: b.note, sides: [a.side, b.side], tuplet, fractions: [a.fraction, b.fraction] }))
 }
 
+/// `Xk a b c`: the pairs (a, a + k - 1), (b, b + k - 1), ...
 fn groups(c: &mut Cursor, pass: Pass) -> Result<Vec<Connection>, InputError> {
     c.bump();
     let size = c.digit().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))? as usize;
-    let starts: Vec<Endpoint> = std::iter::from_fn(|| {
-        c.skip_spaces();
-        (!c.at_end()).then(|| endpoint(c, pass))
-    })
-    .collect::<Result<_, _>>()?;
+    let starts: Vec<Endpoint> = std::iter::from_fn(|| endpoint(c, pass)).collect();
+    if !c.at_end() {
+        return Err(c.unexpected());
+    }
     Ok(starts
         .into_iter()
         .map(|s| Connection { sides: [s.side, None], tuplet: s.tuplet, ..Connection::new(s.note, s.note + size - 1) })
         .collect())
 }
 
-fn parse_entry(entry: &Entry, pass: Pass) -> Result<Vec<ConnectEntry>, InputError> {
-    let mut c = entry.cursor(pass);
-    c.skip_spaces();
+fn parse_entry(entry: &Entry, pass: Pass) -> Result<Vec<Connection>, InputError> {
+    let mut c = entry.spaced_cursor(pass);
     if c.peek() == Some(b'X') {
-        return Ok(groups(&mut c, pass)?.into_iter().map(ConnectEntry::Pair).collect());
+        return groups(&mut c, pass);
     }
-    if pass == Pass::Beams && c.rest().contains('B') {
-        let eighths = c.integer().ok_or_else(|| c.error_here(ErrorKind::ExpectedNumber))?;
-        if !c.eat(b'B') {
-            return Err(c.unexpected());
-        }
-        let pickup = c.integer().unwrap_or(0);
-        c.finish()?;
-        return Ok(vec![ConnectEntry::EveryEighths { eighths, pickup }]);
-    }
-    let made = pair(&mut c, pass)?;
-    c.skip_spaces();
-    c.finish()?;
-    Ok(vec![ConnectEntry::Pair(made)])
+    Ok(pair(&mut c, pass)?.into_iter().collect())
 }
 
 pub fn parse(text: &str, pass: Pass, motives: &mut Motives) -> Result<Vec<ConnectEntry>, InputError> {
-    let parsed: Vec<Vec<ConnectEntry>> = entries(text, pass, motives)?
+    if pass == Pass::Beams {
+        if let Some(automatic) = automatic_beams(text, motives.carried.last_meter) {
+            return Ok(automatic.into_iter().collect());
+        }
+    }
+    let parsed: Vec<Vec<Connection>> = entries(text, pass, motives)?
         .iter()
         .filter(|e| !e.text.trim().is_empty())
         .map(|e| parse_entry(e, pass))
         .collect::<Result<_, _>>()?;
-    Ok(parsed.into_iter().flatten().collect())
+    Ok(parsed.into_iter().flatten().map(ConnectEntry::Pair).collect())
+}
+
+/// Pass 4's automatic beams (0x4DA9C3): `B` or `A` as the first character beams by the last
+/// meter; otherwise a digit followed by `B` in the first 10 characters (not `B[`, not after
+/// `@`) makes the first item `n B p`, its first two numbers, signs ignored. Any further item
+/// leaves no beams at all. None when the pass is not automatic; Some(None) for no beams.
+fn automatic_beams(text: &str, meter: Option<Meter>) -> Option<Option<ConnectEntry>> {
+    let body: String = text.split(';').next().unwrap_or("").to_ascii_uppercase();
+    match body.trim_start().bytes().next() {
+        Some(b'B' | b'A') => {
+            let eighths = meter.map_or(Some(2), eighths_for_meter);
+            return Some(eighths.map(|eighths| ConnectEntry::EveryEighths { eighths, pickup: 0 }));
+        }
+        None => return None,
+        Some(_) => {}
+    }
+    let head: Vec<u8> = body.bytes().take(10).collect();
+    let digit = head.iter().position(u8::is_ascii_digit)?;
+    let b = head.iter().enumerate().skip(digit + 1).position(|(i, &c)| c == b'B' && head.get(i + 1) != Some(&b'['))? + digit + 1;
+    if head[..b].contains(&b'@') {
+        return None;
+    }
+    let mut items = body.split(['/', ',']).filter(|item| !item.trim().is_empty());
+    let first = items.next().unwrap_or("");
+    if items.next().is_some() {
+        return Some(None);
+    }
+    let mut numbers = first.split(|c: char| !c.is_ascii_digit()).filter(|n| !n.is_empty()).map(|n| n.parse::<u32>().unwrap_or(0));
+    let eighths = numbers.next().unwrap_or(0);
+    let pickup = numbers.next().unwrap_or(0);
+    Some(Some(ConnectEntry::EveryEighths { eighths, pickup }))
+}
+
+/// `B`/`A`: groups by the meter (0x78D918): 2 eighths in x/4 and common time, 4 in x/2 and
+/// cut time, 8 in x/1; in x/8, 2 for x = 2, 4, 8 and 3 for x = 3, 6, 9, 12. None: no beams.
+fn eighths_for_meter(meter: Meter) -> Option<u32> {
+    match meter {
+        Meter::Common => Some(2),
+        Meter::Cut => Some(4),
+        Meter::Fraction(_, 4) => Some(2),
+        Meter::Fraction(_, 2) => Some(4),
+        Meter::Fraction(_, 1) => Some(8),
+        Meter::Fraction(2 | 4 | 8, 8) => Some(2),
+        Meter::Fraction(3 | 6 | 9 | 12, 8) => Some(3),
+        Meter::Fraction(..) => None,
+    }
 }
 
 #[cfg(test)]
@@ -151,11 +209,17 @@ mod tests {
             pairs("1 2/-4 306/7 +309/1+4;", Pass::Beams),
             [(1, 2, None, 0), (4, 6, Some(Side::Below), 3), (7, 9, Some(Side::Above), 3), (1, 4, None, 0)]
         );
+        assert_eq!(pairs("1 2 3/5/1.5 3;", Pass::Beams), [(1, 2, None, 0), (5, 0, None, 0), (1, 3, None, 0)]);
+        assert_eq!(pairs("1-2;", Pass::Slurs), [(12, 0, Some(Side::Below), 0)]);
+        assert_eq!(pairs("X3 1 4 7;", Pass::Slurs), [(1, 3, None, 0), (4, 6, None, 0), (7, 9, None, 0)]);
     }
 
     #[test]
-    fn groups_and_every_eighths() {
-        assert_eq!(pairs("X3 1 4 7;", Pass::Slurs), [(1, 3, None, 0), (4, 6, None, 0), (7, 9, None, 0)]);
-        assert_eq!(parse("2B2;", Pass::Beams, &mut Motives::new()).unwrap(), [ConnectEntry::EveryEighths { eighths: 2, pickup: 2 }]);
+    fn automatic_beams() {
+        let auto = |text: &str| parse(text, Pass::Beams, &mut Motives::new()).unwrap();
+        assert_eq!(auto("2B2;"), [ConnectEntry::EveryEighths { eighths: 2, pickup: 2 }]);
+        assert_eq!(auto("+2B;"), [ConnectEntry::EveryEighths { eighths: 2, pickup: 0 }]);
+        assert_eq!(auto("B;"), [ConnectEntry::EveryEighths { eighths: 2, pickup: 0 }]);
+        assert!(auto("2B/1 2;").is_empty());
     }
 }

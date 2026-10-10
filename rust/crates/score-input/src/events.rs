@@ -159,6 +159,29 @@ impl Octaves {
     }
 }
 
+impl Octaves {
+    /// The reader's tracking of a note with an octave number or a jump: the number, then
+    /// one jump at most.
+    fn track(&mut self, name: &NoteName) {
+        match name.mode {
+            Some(OctaveMode::Ordinary) => self.proximity = false,
+            Some(OctaveMode::Proximity) => self.proximity = true,
+            None => {}
+        }
+        let letter = name.letter.step() + 1;
+        if let Some(digit) = name.octave.iter().rev().find_map(|m| if let OctaveMark::Digit(d) = m { Some(*d) } else { None }) {
+            self.base = 7 * i32::from(digit);
+        }
+        match name.octave.iter().find(|m| matches!(m, OctaveMark::Jump(_))) {
+            Some(OctaveMark::Jump(Direction::Up)) if letter <= self.last_letter => self.base += 7,
+            Some(OctaveMark::Jump(Direction::Down)) if self.last_letter <= letter => self.base -= 7,
+            _ => {}
+        }
+        self.last_step = self.base + letter;
+        self.last_letter = letter;
+    }
+}
+
 /// Pass-1 state while the items are read in order.
 struct Resolver<'a> {
     octaves: Octaves,
@@ -271,28 +294,28 @@ impl Resolver<'_> {
             .collect()
     }
 
-    /// The step of a note and the name as the reader leaves it. In a motive definition the
-    /// reader appends an octave number to every note without one: from its own octave state,
-    /// and for a note with `U`/`J` the octave before the jump (the jump moves only the later
-    /// notes).
+    /// The step of a note, and the name as a motive stores it (with the octave it was read
+    /// in). In a definition the reader (0x41FAB5) gives a note without octave number or
+    /// jump the octave its own state tracks, which counts one jump per earlier note. Notes
+    /// with a jump are read as written: the engine appends a stale digit there and loses
+    /// characters after `]`, which is not imitated (decision D12).
     fn step(&mut self, name: &NoteName) -> (i32, NoteName) {
+        let letter = name.letter.step() + 1;
         if self.defining.is_none() {
             let step = self.octaves.step(name);
             self.reader = self.octaves;
             return (step, name.clone());
         }
-        let before = self.reader.base;
-        let read = self.reader.step(name);
-        let written = if name.has_digit() {
-            let octave = (read - (name.letter.step() + 1)).div_euclid(7);
-            NoteName { octave: vec![OctaveMark::Digit(octave.clamp(0, 9) as u8)], ..name.clone() }
+        let read = if name.has_digit() || name.has_jump() {
+            self.reader.track(name);
+            name.clone()
         } else {
-            let base = if name.has_jump() { before } else { read - (name.letter.step() + 1) };
-            let mut written = name.clone();
-            written.octave.push(OctaveMark::Digit(base.div_euclid(7).clamp(0, 9) as u8));
-            written
+            let octave = (self.reader.step(name) - letter).div_euclid(7);
+            NoteName { octave: vec![OctaveMark::Digit(octave.clamp(0, 9) as u8)], ..name.clone() }
         };
-        (self.octaves.step(&written), written)
+        let step = self.octaves.step(&read);
+        let octave = (step - letter).div_euclid(7).clamp(0, 9) as u8;
+        (step, NoteName { octave: vec![OctaveMark::Digit(octave)], ..name.clone() })
     }
 
     /// `]@X`: the definition's last note is lost; returns whether it continued a chord.

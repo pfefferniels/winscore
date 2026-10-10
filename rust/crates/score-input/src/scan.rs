@@ -152,6 +152,15 @@ impl Cursor<'_> {
         }
     }
 
+    /// The next character, spaces included.
+    pub fn peek_raw(&self) -> Option<u8> {
+        self.bytes.get(self.pos).copied()
+    }
+
+    pub fn peek_raw_at(&self, ahead: usize) -> Option<u8> {
+        self.bytes.get(self.pos + ahead).copied()
+    }
+
     pub fn peek(&self) -> Option<u8> {
         let mut ahead = self.clone();
         ahead.pass_spaces();
