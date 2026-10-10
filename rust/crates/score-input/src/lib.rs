@@ -104,7 +104,7 @@ pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motive
         .map(|event| line::Timed { event, rhythm: if event.is_rhythmic() { rhythm_iter.next() } else { None } })
         .collect();
     let mut line = line::Line::new(&timed, options);
-    marks::apply(&mut line, &marks)?;
+    marks::apply(&mut line, &marks, (0.0, options.staff_end))?;
     beams::apply(&mut line, &beams)?;
     slurs::apply(&mut line, &slurs, (options.begin, options.end), options.staff_end)?;
     // 0x5253FD stores the line, then fits the stems to the beams in the item store.

@@ -15,3 +15,29 @@ g-p2-value-then-g
 g-p2-x-group-no-count
 # T3 takes the next character, here the slash, as its second digit.
 im2-t-mid
+# Pass 3: a two-point mark with one number, `+`/`=` before a mark name, a `-` the reader
+# splits off, long spellings that leave letters among the numbers.
+g-p3-mark-O
+g-p3-mark-OB
+g-p3-span-one
+g-p3-trill-one
+g-p3-plus
+g-p3-equals
+g-p3-minus-fraction
+g-p3-long-8BA
+g-p3-long-8VA
+g-p3-long-8VB
+g-p3-long-ACCEL
+g-p3-long-ACCENT
+g-p3-long-ACL
+g-p3-long-ARCO
+g-p3-long-CRESC
+g-p3-long-CRH
+g-p3-long-DOWN
+g-p3-long-FERM
+g-p3-long-FERMATA
+g-p3-long-PIZZ
+g-p3-long-STACC
+g-p3-long-STACCATO
+g-p3-long-TENUTO
+g-p3-long-WEDGE

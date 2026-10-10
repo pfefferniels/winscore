@@ -209,7 +209,7 @@ impl Refit<'_> {
         let unsupported = |_| RefitErrorKind::Unsupported("a stored mark");
         let chords = stream.chord_xs.len() as u32;
         let stored: Vec<_> = stream.marks.iter().map(|&(code, number)| marks::stored(code, (number as u32).min(chords))).collect();
-        marks::apply(&mut line, &stored).map_err(unsupported)?;
+        marks::apply(&mut line, &stored, (0.0, self.staff_end())).map_err(unsupported)?;
         let beam_rows: Vec<usize> = found.beams.iter().map(|b| b.row).collect();
         let beam_pairs = note_pairs(self.rows, &beam_rows, &stream.chord_xs, Pass::Beams);
         beams::apply(&mut line, &beam_pairs).map_err(|_| RefitErrorKind::Unsupported("a beam"))?;
