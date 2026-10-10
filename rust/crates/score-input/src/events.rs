@@ -344,10 +344,15 @@ impl Resolver<'_> {
         }
     }
 
-    /// `=`: past the last item of R, the nearest note or chord before it (its tokens).
+    /// `=`: past the last item of R (a whole chord), the nearest note or chord before it
+    /// (its tokens).
     fn chord_before_last_item(&self) -> Option<(usize, usize)> {
-        let last = self.unit_start(1)?;
-        let from = self.tokens[..last].iter().rposition(|t| matches!(t, Token::Note { member: false, .. }))?;
+        let is_head = |t: &Token| matches!(t, Token::Note { member: false, .. });
+        let last = match self.tokens.last()? {
+            Token::Note { .. } => self.tokens.iter().rposition(is_head)?,
+            _ => self.tokens.len() - 1,
+        };
+        let from = self.tokens[..last].iter().rposition(is_head)?;
         let members = self.tokens[from + 1..].iter().take_while(|t| matches!(t, Token::Note { member: true, .. })).count();
         Some((from, from + 1 + members))
     }
