@@ -250,3 +250,72 @@ After a value, the item may continue with a letter `S T E Q H W D`, a digit or `
 - `T` alone is a triplet eighth; `TT` (triplet 32nd), `TW`, `TD`, the `T`+number forms and dotted triplets are not on the page.
 - Values can be added inside one item (`QE`, `4 8`); `.5` is a breve like `D`.
 - A single value fills all notes, and the pass ends by itself after the last note's value.
+
+### Pass 3: marks
+
+Each item is a mark name followed by note numbers. Notes are numbered from 1 in pass-1 order; a chord counts as one note, rests, barlines and other items are not numbered (g-p3-rest-marks, g-p3-numbering).
+
+#### Reader (0x426950)
+
+- `a`–`z` are stored as `A`–`Z`; `'` as `:`; `~` as a space.
+- A letter (any character above `@`) typed after a digit, a space or `,` gets a `/` put before it, and so does `-` (the reverse-side prefix): a new mark always starts a new item. `S 1A 2` → `S 1/A 2`, `S 1-3` → `S 1/-3` (rejected), `8VA` → `8/VA` (rejected), a leading `-` gives `/-` (sweep, g-p3-minus, g-p3-long-8VA).
+- `%`, `&`, `(` are not stored (view functions, 0x52FEF6); `^` and `@` start special input.
+- `+` before a mark letter is followed by an inserted `/` (`+S 2` → `+/S 2`, rejected), so `+` works only as the sign of a number.
+
+#### Items (0x4DAEB2)
+
+On the first item of the pass, 0x4DAEB2 first rewrites some longer spellings in the whole text (loop at 0x4DAF60). Then each item: an optional `-` (or `+`, or `=` read as `+`) sets "reverse side" (array 0x1AADA3C); the mark letters select a mark number m (table below); the token is 10000·m (negative for `N`). The note numbers follow, each appended to R: digits, `.`, a sign; a number followed by `:` gets +1000 (range start), except for marks 95–98. A letter or other character among the numbers rejects the item. The last number is the item's token returned to 0x4AF456.
+
+| Mark | m | Result (0x4D8460) | Probe |
+|---|---|---|---|
+| `W` | 4 | note P11 = 4 (wedge) | g-p3-mark-W |
+| `A` | 5 | P11 = 5.05 (accent) | g-p3-mark-A |
+| `T` | 6 | tenuto | g-p3-mark-T |
+| `S` | 7 | staccato | g-p3-mark-S |
+| `WS` (W + any letter) | 8 | wedge-staccato | g-p3-mark-WS |
+| `AS` | 9 | accent-staccato | g-p3-mark-AS |
+| `TS` | 10 | tenuto-staccato | g-p3-mark-TS |
+| `D` | 11 | down bow | g-p3-mark-D |
+| `U` (U + anything) | 12 | up bow | g-p3-mark-U |
+| `H` | 13 | harmonic | g-p3-mark-H |
+| `FE` | 14 | fermata | g-p3-mark-FE |
+| `TH` | 16 | thesis | g-p3-mark-TH |
+| `M`, `MO` (M + any letter but F, P) | 17 | mordent | g-p3-mark-M |
+| `I`, `IM` (I + anything) | 18 | inverted mordent | g-p3-mark-I |
+| `HW` (H + any letter) | 19 | heavy wedge | g-p3-mark-HW |
+| `TR` | 20 | trill | g-p3-mark-TR |
+| `TRF`, `TRS`, `TRN` (TR + other letter = F) | 21, 22, 23 | trill with flat, sharp, natural | g-p3-mark-TRF |
+| `PL` (P + letter other than P, Z) | 24 | plus | g-p3-mark-PL |
+| `ACT` | 25 | accent-tenuto | g-p3-mark-ACT |
+| `S2`, `S3`, `S4` | 26, 27, 28 | P11 = 26–28 | g-p3-mark-S2 |
+| `F0` … `F9` | 30 … 39 | fingering | g-p3-mark-F0 |
+| `FIF`, `FIS`, `FIN` (FI + other = F) | 1, 2, 3 | musica ficta | g-p3-mark-FIF |
+| `PPP`, `PP`, `P`, `MP`, `MF`, `F`, `FF`, `FFF`, `FP`, `SF`, `SFZ` | 51, 52, 53, 54, 55, 56, 57, 58, 60, 61, 62 | code-9 item (that symbol number) at the note's x, P4 below the note (−2…−4), P15 = −0.5 | g-p3-mark-F |
+| `CR`, `DI`, `R`/`RI`, `AC` | 63, 64, 65, 68 | code-9 words cresc., dim., rit., accel., below | g-p3-mark-CR |
+| `PZ`, `AO` (also `AR`, `PI`) | 66, 67 | code-9 pizz., arco, P4 = 14 (above) | g-p3-mark-PZ |
+| `Nk` | −k | code-9 item with symbol k | g-p3-mark-N45 |
+| `TM` (T + any letter but S, H, R), `TMT` | 93 | code-6 tremolo, P10 = 13 (3 strokes) | g-p3-mark-TM |
+| `TME`/`TM1`, `TMS`/`TM2`, `TM3`, `TM4` | 91, 92, 93, 94 | code 6, P10 = 10 + strokes | g-p3-mark-TME |
+| `OB`, `O` | 95, 96 | code-7 octave line from the first to the second number: O P4 = 12.5, P7 = 8, P12 = −1; OB P4 = −4, P7 = −8, P12 = 1 | g-p3-span-O |
+| `C`, `C+`, `C-` | 97, 97, 98 | code-4 hairpin from the first to the second number (P3, P6 = x, P5 = 999); C- adds P7 = −1. Pairs: `C 1 2 3 4` gives two | g-p3-span-C, g-p3-span-several |
+| `TRW`, `TRFW`, `TRSW`, `TRNW` | 120 … 123 | code-7 trill line, P5 = 1, P6 = end x + 4.167; P8 = 1/2/3 for F/S/N | g-p3-span-TRW |
+| other first letters (B E G J K L Q V X Y Z, digits) | | rejected | |
+
+Rules of the numbers (0x4D8460):
+
+- Several numbers put the mark on each note (`S 1 3 4`); `a:b` on every note from a to b (`S 1:3`, `F 1:3` gives three code-9 items, `TM 1:2` two tremolos); the two-point marks (95–98, 120–123) take numbers in pairs, `:` being only a separator there, and reject a single number (g-p3-span-one, g-p3-trill-one).
+- A fractional number is rounded to the nearest note for P11 marks (`A 1.4` → note 1, `S 2.6` → note 3, `T 3.5` → note 4) but places code-9, code-4 and code-7 items between the notes by linear interpolation of x (`F 1.5` at x = 26.75 between 2 and 51.5) (g-p3-fraction-round, g-p3-word-fraction, g-p3-span-fraction).
+- Numbers beyond the last note mean the last note (g-p3-beyond).
+- `-` before the mark: P11 negative (stem side) for note marks; code-9 marks go above (P4 = 14) instead of below; no effect seen on tremolos (g-p3-minus, g-p3-word-minus, g-p3-tremolo-minus).
+- A note has one P11: a later mark on the same note replaces the earlier (g-p3-same-note-twice). On a chord the mark goes to its first note (g-p3-chord-mark).
+- `@name n`: the stored marks with their note numbers shifted so that note 1 of the motive is note n (`Z[S 1/A 2]/@Z2` adds S 2, A 3) (g-p3-macro).
+
+**Longer spellings** (rewritten before parsing, 0x4DAF60, observed): `DC` = `C-`; `HA` = `H`; `HV` = `HW`; `PI` = `PZ`; `AR` = `AO` (so the arsis accent, m = 15, cannot be typed); `TREM` = `TM`; `TRILL` = `TR`, `TRILLW` = `TRW`; `RIT` = `R`; `DIM` = `DI`; `DN` = `D`; `UP` = `U`; `ACC` = `A`; `ACCS` = `AS`; `TE…` reads as a tremolo (`TEN` = `TM`, `TES` = `TMS`); `WES` = `W`. Rejected: `ARCO`, `PIZZ`, `TENUTO`, `STACC(ATO)`, `WEDGE`, `FERM(ATA)`, `CRESC`, `DOWN`, `ACCENT`, `ACCEL`, `ACL`. `8VA`/`8VB`/`8BA` would read as `O`/`OB`, but the reader splits them (g-p3-long-*).
+
+#### Differences from Sapp's page
+
+- `AR` is arco, not the arsis accent; `C+` is the same as `C`; `IM`, `MO`, `RI` are accepted because only the first letter counts there.
+- `TM` alone is a three-stroke tremolo (like `TMT`, `TM3`).
+- Note numbers count notes and chords only; a fractional number is an offset only for code-9/4/7 marks.
+- `-` reverses note marks (P11 < 0) and moves dynamics and words above the staff.
+- Not on Sapp's page: `S2`–`S4`, `TH`, `TM4`, the long spellings, `@name n` with a note offset.

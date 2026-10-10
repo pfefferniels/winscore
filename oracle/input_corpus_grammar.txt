@@ -1061,3 +1061,1051 @@ C4/D/E;
 ;
 ;
 ;
+== g-p3-mark-A
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A 2;
+;
+;
+== g-p3-mark-AC
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+AC 2;
+;
+;
+== g-p3-mark-ACT
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACT 2;
+;
+;
+== g-p3-mark-AR
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+AR 2;
+;
+;
+== g-p3-mark-AS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+AS 2;
+;
+;
+== g-p3-mark-AO
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+AO 2;
+;
+;
+== g-p3-mark-CR
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+CR 2;
+;
+;
+== g-p3-mark-D
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+D 2;
+;
+;
+== g-p3-mark-DI
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+DI 2;
+;
+;
+== g-p3-mark-F
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F 2;
+;
+;
+== g-p3-mark-FP
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FP 2;
+;
+;
+== g-p3-mark-FF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FF 2;
+;
+;
+== g-p3-mark-FFF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FFF 2;
+;
+;
+== g-p3-mark-FE
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FE 2;
+;
+;
+== g-p3-mark-FIF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FIF 2;
+;
+;
+== g-p3-mark-FIS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FIS 2;
+;
+;
+== g-p3-mark-FIN
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FIN 2;
+;
+;
+== g-p3-mark-F0
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F0 2;
+;
+;
+== g-p3-mark-F5
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F5 2;
+;
+;
+== g-p3-mark-H
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+H 2;
+;
+;
+== g-p3-mark-HW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+HW 2;
+;
+;
+== g-p3-mark-I
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+I 2;
+;
+;
+== g-p3-mark-IM
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+IM 2;
+;
+;
+== g-p3-mark-M
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+M 2;
+;
+;
+== g-p3-mark-MF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+MF 2;
+;
+;
+== g-p3-mark-MP
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+MP 2;
+;
+;
+== g-p3-mark-MO
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+MO 2;
+;
+;
+== g-p3-mark-O
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+O 2;
+;
+;
+== g-p3-mark-OB
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+OB 2;
+;
+;
+== g-p3-mark-P
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+P 2;
+;
+;
+== g-p3-mark-PL
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PL 2;
+;
+;
+== g-p3-mark-PZ
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PZ 2;
+;
+;
+== g-p3-mark-PP
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PP 2;
+;
+;
+== g-p3-mark-PPP
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PPP 2;
+;
+;
+== g-p3-mark-R
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+R 2;
+;
+;
+== g-p3-mark-RI
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+RI 2;
+;
+;
+== g-p3-mark-S
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 2;
+;
+;
+== g-p3-mark-SF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+SF 2;
+;
+;
+== g-p3-mark-SFZ
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+SFZ 2;
+;
+;
+== g-p3-mark-S2
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S2 2;
+;
+;
+== g-p3-mark-S3
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S3 2;
+;
+;
+== g-p3-mark-S4
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S4 2;
+;
+;
+== g-p3-mark-T
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+T 2;
+;
+;
+== g-p3-mark-TS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TS 2;
+;
+;
+== g-p3-mark-TH
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TH 2;
+;
+;
+== g-p3-mark-TR
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TR 2;
+;
+;
+== g-p3-mark-TRF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRF 2;
+;
+;
+== g-p3-mark-TRS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRS 2;
+;
+;
+== g-p3-mark-TRN
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRN 2;
+;
+;
+== g-p3-mark-TM
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TM 2;
+;
+;
+== g-p3-mark-TME
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TME 2;
+;
+;
+== g-p3-mark-TMS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TMS 2;
+;
+;
+== g-p3-mark-TMT
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TMT 2;
+;
+;
+== g-p3-mark-TM1
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TM1 2;
+;
+;
+== g-p3-mark-TM4
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TM4 2;
+;
+;
+== g-p3-mark-U
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+U 2;
+;
+;
+== g-p3-mark-W
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+W 2;
+;
+;
+== g-p3-mark-WS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+WS 2;
+;
+;
+== g-p3-mark-N45
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+N45 2;
+;
+;
+== g-p3-mark-N113
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+N113 2;
+;
+;
+== g-p3-span-C
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 1 3;
+;
+;
+== g-p3-span-Cplus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C+ 1 3;
+;
+;
+== g-p3-span-Cminus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C- 1 3;
+;
+;
+== g-p3-span-TRW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRW 1 3;
+;
+;
+== g-p3-span-TRFW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRFW 1 3;
+;
+;
+== g-p3-span-TRSW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRSW 1 3;
+;
+;
+== g-p3-span-TRNW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRNW 1 3;
+;
+;
+== g-p3-span-O
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+O 1 3;
+;
+;
+== g-p3-span-OB
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+OB 1 3;
+;
+;
+== g-p3-long-8VA
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+8VA 1 3;
+;
+;
+== g-p3-long-8VB
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+8VB 1 3;
+;
+;
+== g-p3-long-8BA
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+8BA 1 3;
+;
+;
+== g-p3-long-ARCO
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ARCO 2;
+;
+;
+== g-p3-long-DC
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+DC 1 3;
+;
+;
+== g-p3-long-HA
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+HA 2;
+;
+;
+== g-p3-long-HV
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+HV 2;
+;
+;
+== g-p3-long-PIZZ
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PIZZ 2;
+;
+;
+== g-p3-long-PI
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PI 2;
+;
+;
+== g-p3-long-TREM
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TREM 2;
+;
+;
+== g-p3-long-TRILL
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRILL 2;
+;
+;
+== g-p3-long-TEN
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TEN 2;
+;
+;
+== g-p3-long-TENUTO
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TENUTO 2;
+;
+;
+== g-p3-long-STACC
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+STACC 2;
+;
+;
+== g-p3-long-STACCATO
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+STACCATO 2;
+;
+;
+== g-p3-long-WEDGE
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+WEDGE 2;
+;
+;
+== g-p3-long-FERM
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FERM 2;
+;
+;
+== g-p3-long-FERMATA
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FERMATA 2;
+;
+;
+== g-p3-long-RIT
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+RIT 2;
+;
+;
+== g-p3-long-CRESC
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+CRESC 2;
+;
+;
+== g-p3-long-CRH
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+CRH 2;
+;
+;
+== g-p3-long-DN
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+DN 2;
+;
+;
+== g-p3-long-UP
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+UP 2;
+;
+;
+== g-p3-long-DOWN
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+DOWN 2;
+;
+;
+== g-p3-long-ACCENT
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACCENT 2;
+;
+;
+== g-p3-long-ACCEL
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACCEL 2;
+;
+;
+== g-p3-long-ACC
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACC 2;
+;
+;
+== g-p3-long-DIM
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+DIM 2;
+;
+;
+== g-p3-long-ACCS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACCS 2;
+;
+;
+== g-p3-long-ACL
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACL 2;
+;
+;
+== g-p3-long-TRILLW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRILLW 1 3;
+;
+;
+== g-p3-long-TEU
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TEU 2;
+;
+;
+== g-p3-long-TES
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TES 2;
+;
+;
+== g-p3-long-WES
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+WES 2;
+;
+;
+== g-p3-list
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 1 3 4;
+;
+;
+== g-p3-range
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 1:3;
+;
+;
+== g-p3-minus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+-S 2;
+;
+;
+== g-p3-plus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
++S 2;
+;
+;
+== g-p3-equals
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+=S 2;
+;
+;
+== g-p3-fraction
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A 1.5;
+;
+;
+== g-p3-span-fraction
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 1.5 3.7;
+;
+;
+== g-p3-span-one
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 1;
+;
+;
+== g-p3-trill-one
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRW 1;
+;
+;
+== g-p3-fingering-minus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+-F3 2;
+;
+;
+== g-p3-several
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 1/A 2/F 3;
+;
+;
+== g-p3-beyond
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 9;
+;
+;
+== g-p3-range-list
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 1:2 4;
+;
+;
+== g-p3-minus-fraction
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A -1.5;
+;
+;
+== g-p3-plus-number
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A +2;
+;
+;
+== g-p3-word-minus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+-F 2;
+;
+;
+== g-p3-tremolo-minus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+-TM 2;
+;
+;
+== g-p3-numbering
+IN 1
+;
+C4:E/R/D/M/E;
+4/4/4/4;
+S 1 2 3 4;
+;
+;
+== g-p3-macro
+IN 1
+;
+C4/D/E/F/G/A;
+4/4/4/4/4/4;
+Z[S 1/A 2]/@Z2;
+;
+;
+== g-p3-fraction-round
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A 1.4/S 2.6/T 3.5;
+;
+;
+== g-p3-word-fraction
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F 1.5/N45 2.5;
+;
+;
+== g-p3-rest-marks
+IN 1
+;
+C4/R/D/E;
+4/4/4/4;
+FE 2/S 2/F 2;
+;
+;
+== g-p3-word-range
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F 1:3;
+;
+;
+== g-p3-tremolo-range
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TM 1:2;
+;
+;
+== g-p3-span-colon
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 1:3;
+;
+;
+== g-p3-span-several
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 1 2 3 4;
+;
+;
+== g-p3-same-note-twice
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A 2/S 2;
+;
+;
+== g-p3-chord-mark
+IN 1
+;
+C4:E:G/D;
+4/4;
+S 1/F 2;
+;
+;
