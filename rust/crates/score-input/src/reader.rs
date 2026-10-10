@@ -84,6 +84,11 @@ impl Typed {
         self.chars.truncate(start);
     }
 
+    fn finish(self) -> ReadText {
+        let (bytes, origins): (Vec<u8>, Vec<usize>) = self.chars.into_iter().unzip();
+        ReadText { text: String::from_utf8_lossy(&bytes).into_owned(), origins, erased: self.erased }
+    }
+
     /// `;` typed: a final `M/` or `M?/` loses its `/`.
     fn end(&mut self, at: usize) {
         let n = self.chars.len();
@@ -114,8 +119,33 @@ pub(crate) fn read(typed: &str) -> ReadText {
             other => text.push(other, at),
         }
     }
-    let (bytes, origins): (Vec<u8>, Vec<usize>) = text.chars.into_iter().unzip();
-    ReadText { text: String::from_utf8_lossy(&bytes).into_owned(), origins, erased: text.erased }
+    text.finish()
+}
+
+/// The reader of passes 4 and 5 (0x427C68): upper case, a `/` before a typed `X`, and a
+/// typed `X1 ` dropped altogether.
+pub(crate) fn read_connections(typed: &str) -> ReadText {
+    let mut text = Typed::default();
+    let bytes = typed.as_bytes();
+    let mut at = 0;
+    while let Some(&byte) = bytes.get(at) {
+        match byte.to_ascii_uppercase() {
+            b';' => {
+                text.push(b';', at);
+                break;
+            }
+            b'X' if bytes.get(at + 1) == Some(&b'1') && bytes.get(at + 2) == Some(&b' ') => at += 2,
+            b'X' => {
+                if !matches!(text.last(), Some(b'/' | b',') | None) {
+                    text.push(b'/', at);
+                }
+                text.push(b'X', at);
+            }
+            other => text.push(other, at),
+        }
+        at += 1;
+    }
+    text.finish()
 }
 
 /// The item check 0x4C2912 on an item closed by `/`.
@@ -189,6 +219,12 @@ mod tests {
         assert_eq!(read.text, "C4/E;");
         assert_eq!(read.erased, [Span::new(3, 6), Span::new(6, 10), Span::new(10, 14)]);
         assert_eq!(read.origin(3), 14);
+    }
+
+    #[test]
+    fn connections_split_at_x_and_drop_x1() {
+        assert_eq!(read_connections("1 2 x3 4;").text, "1 2 /X3 4;");
+        assert_eq!(read_connections("X1 1 3;").text, "1 3;");
     }
 
     #[test]

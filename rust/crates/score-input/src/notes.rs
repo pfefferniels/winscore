@@ -324,7 +324,7 @@ pub fn parse(text: &str, motives: &mut Motives) -> Result<Vec<Spanned<NoteEntry>
 /// One item: usually one entry, two with a repeat suffix (`C4X3`).
 fn parse_entry(entry: &Entry) -> Result<Vec<NoteEntry>, InputError> {
     if let Some((name, steps)) = recall_parts(&entry.text) {
-        return Ok(vec![NoteEntry::Recall { name, steps, joins: Join::Separate }]);
+        return Ok(vec![NoteEntry::Recall { name, steps: steps.round() as i32, joins: Join::Separate }]);
     }
     if let Some(at) = entry.text.find('@') {
         return joined_recall(entry, at);
@@ -365,7 +365,7 @@ fn joined_recall(entry: &Entry, at: usize) -> Result<Vec<NoteEntry>, InputError>
     let (before, call) = entry.text.split_at(at);
     let error = || InputError::new(PASS, crate::Span::at(entry.start + at), ErrorKind::Unexpected(call.into()));
     let (name, steps) = recall_parts(call).ok_or_else(error)?;
-    let recall = |joins| NoteEntry::Recall { name, steps, joins };
+    let recall = |joins| NoteEntry::Recall { name, steps: steps.round() as i32, joins };
     if before == "]" {
         return Ok(vec![recall(Join::LastNote)]);
     }

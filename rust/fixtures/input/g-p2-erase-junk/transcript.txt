@@ -1,0 +1,11 @@
+document: n:  <Legal>
+range-dialog: record [99, 1, 0, 0, 2, 200, 0, 1]
+message: *** Syntax Error ***  4/Y/8;
+message: *** No notes/rests given. ***
+dialog: 0x59c140 args=['0x99a54c', '0x99a550', '0x0']
+dialog: 0x59c140 args=['0x99a54c', '0x99a550', '0x0']
+dialog: 0x59c140 args=['0x99a54c', '0x99a550', '0x0']
+dialog: 0x595cd0 args=['0x20b8ea0', '0x524825', '0x20b90a0']
+dialog: 0x596010 args=['0x20b8ea0', '0x1', '0x204e49']
+document: n: SCORE.MUS * (not saved -    4 Items)   <Legal>
+document: n: C:\WORK\RESULT.MUS   (saved -    4 Items)   <Legal>

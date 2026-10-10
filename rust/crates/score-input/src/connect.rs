@@ -14,6 +14,7 @@
 use crate::error::{ErrorKind, InputError, Pass};
 use crate::motives::Motives;
 use crate::notes::Meter;
+use crate::reader;
 use crate::scan::{entries, Cursor, Entry};
 
 /// Where a beam or slur goes relative to the notes, if the input says so.
@@ -134,10 +135,13 @@ pub fn parse(text: &str, pass: Pass, motives: &mut Motives) -> Result<Vec<Connec
             return Ok(automatic.into_iter().collect());
         }
     }
-    let parsed: Vec<Vec<Connection>> = entries(text, pass, motives)?
+    let read = reader::read_connections(text);
+    let in_typed_text = |err: InputError| InputError { span: read.origin_span(err.span), ..err };
+    let parsed: Vec<Vec<Connection>> = entries(&read.text, pass, motives)
+        .map_err(in_typed_text)?
         .iter()
         .filter(|e| !e.text.trim().is_empty())
-        .map(|e| parse_entry(e, pass))
+        .map(|e| parse_entry(e, pass).map_err(in_typed_text))
         .collect::<Result<_, _>>()?;
     Ok(parsed.into_iter().flatten().map(ConnectEntry::Pair).collect())
 }

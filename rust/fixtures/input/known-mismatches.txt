@@ -1,19 +1,10 @@
 # Cases score-input does not reproduce yet (one name per line, # comments).
-# Pass 2, fewer rhythms than notes (input-marks ports the pass-2 reader rule).
-sapp-repeat-chord
-e2-missing-after-chord
-e2-missing-rhythms
 # Deliberate (D12): a definition with U/J makes the engine lose typed characters after `]`;
-# score-input reads the text as written. The k-cases have no engine result.
+# score-input reads the text as written. Only g-p1-macro-octaves has an engine result.
 g-p1-macro-octaves
 g-p1-macro-loss-k1
 g-p1-macro-loss-k2
 g-p1-macro-loss-k3
 g-p1-macro-loss-double-j
 g-p1-macro-loss-chord
-# Passes 4/5, asked of disasm-expert: X1 groups that overlap; a slur from a note past the last.
-g-p4-x-first
-g-p5-tuplet
-g-p5-tuplet-12
-g-p5-tuplet-5013
-g-p5-tuplet-sapp
+g-p1-macro-oct-jump

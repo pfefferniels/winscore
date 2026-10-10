@@ -3,7 +3,7 @@
 //! 0x42C60E (off the staff lines), 0x53E094 (marks) and 0x53E32F (inner notes).
 
 use crate::connect::{ConnectEntry, Connection, Side};
-use crate::error::InputError;
+use crate::error::{ErrorKind, InputError, Pass, Span};
 use crate::line::{item, Line};
 
 /// Directions as the engine codes them (also a note's stem direction).
@@ -404,15 +404,19 @@ pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry], (begin, end): (f3
     let mut work = line.work_entries();
     let note_entry: Vec<usize> = work.iter().enumerate().filter(|(_, e)| e.note.is_some()).map(|(i, _)| i).collect();
     let staff = line.staff;
-    let mut input = SlurInput { entries: &mut work, note_entry, staff, begin, end, staff_end };
-    let made: Vec<score_format::Item> = entries
+    let pairs: Vec<Connection> = entries
         .iter()
         .filter_map(|entry| match entry {
             ConnectEntry::Pair(c) => Some(*c),
             ConnectEntry::EveryEighths { .. } => None,
         })
-        .flat_map(|c| input.items(&c))
         .collect();
+    // A start past the last note is invalid input: 0x41A14C reads the empty slot before note 1.
+    if let Some(bad) = pairs.iter().find(|c| c.first > note_entry.len() && c.first != PAST_LAST) {
+        return Err(InputError::new(Pass::Slurs, Span::default(), ErrorKind::NoSuchNote(bad.first as f32)));
+    }
+    let mut input = SlurInput { entries: &mut work, note_entry, staff, begin, end, staff_end };
+    let made: Vec<score_format::Item> = pairs.iter().flat_map(|c| input.items(c)).collect();
     line.take_marks(&work);
     line.attachments.extend(made);
     Ok(())

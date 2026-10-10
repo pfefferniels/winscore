@@ -113,29 +113,46 @@ impl Token {
     }
 }
 
-/// The parser's octave state: the octave register c0 (0x78DEC0), the mode (0x78DEC4), the
-/// step and letter of the previous note.
+/// The parser's octave state: the octave register c0 (0x78DEC0), the mode with the
+/// proximity reference (0x78DEC4: none for ordinary), the step and letter of the previous
+/// note (0x78DEC8, 0x78DECC).
 #[derive(Debug, Clone, Copy)]
 struct Octaves {
     base: i32,
-    proximity: bool,
+    proximity: Option<i32>,
     last_step: i32,
     /// C = 1 ... B = 7; carried over from earlier lines.
     last_letter: i32,
 }
 
 impl Octaves {
+    /// A line starts in ordinary mode. (The engine starts it in the mode its typing-time parse
+    /// left, so a `P` item late in the line can change earlier notes; not imitated, D12.)
     fn new(carried: &Carried) -> Self {
-        Octaves { base: START_BASE, proximity: false, last_step: carried.last_step, last_letter: carried.last_letter }
+        Octaves { base: START_BASE, proximity: None, last_step: carried.last_step, last_letter: carried.last_letter }
+    }
+
+    fn set_mode(&mut self, mode: Option<OctaveMode>) {
+        match mode {
+            Some(OctaveMode::Ordinary) => self.proximity = None,
+            Some(OctaveMode::Proximity) => self.proximity = Some(self.last_step),
+            None => {}
+        }
+    }
+
+    /// Ends a note on `letter`: its step becomes the previous one, and the reference in
+    /// proximity mode.
+    fn finish(&mut self, letter: i32) -> i32 {
+        let step = self.base + letter;
+        self.last_step = step;
+        self.last_letter = letter;
+        self.proximity = self.proximity.map(|_| step);
+        step
     }
 
     /// The step of a note (0x4E2CC8, finished by 0x4E33A4).
     fn step(&mut self, name: &NoteName) -> i32 {
-        match name.mode {
-            Some(OctaveMode::Ordinary) => self.proximity = false,
-            Some(OctaveMode::Proximity) => self.proximity = true,
-            None => {}
-        }
+        self.set_mode(name.mode);
         let letter = name.letter.step() + 1;
         name.octave.iter().for_each(|mark| match mark {
             OctaveMark::Digit(d) => self.base = 7 * i32::from(*d),
@@ -144,30 +161,21 @@ impl Octaves {
             OctaveMark::Jump(_) => {}
         });
         // A digit also moves the proximity reference to the note; a jump skips the step.
-        if self.proximity && name.octave.is_empty() {
-            let distance = self.last_step - (letter + self.base);
+        if let (Some(reference), true) = (self.proximity, name.octave.is_empty()) {
+            let distance = reference - (letter + self.base);
             if distance > 3 {
                 self.base += 7;
             } else if distance < -3 {
                 self.base -= 7;
             }
         }
-        let step = self.base + letter;
-        self.last_step = step;
-        self.last_letter = letter;
-        step
+        self.finish(letter)
     }
-}
 
-impl Octaves {
     /// The reader's tracking of a note with an octave number or a jump: the number, then
     /// one jump at most.
     fn track(&mut self, name: &NoteName) {
-        match name.mode {
-            Some(OctaveMode::Ordinary) => self.proximity = false,
-            Some(OctaveMode::Proximity) => self.proximity = true,
-            None => {}
-        }
+        self.set_mode(name.mode);
         let letter = name.letter.step() + 1;
         if let Some(digit) = name.octave.iter().rev().find_map(|m| if let OctaveMark::Digit(d) = m { Some(*d) } else { None }) {
             self.base = 7 * i32::from(digit);
@@ -177,8 +185,7 @@ impl Octaves {
             Some(OctaveMark::Jump(Direction::Down)) if self.last_letter <= letter => self.base -= 7,
             _ => {}
         }
-        self.last_step = self.base + letter;
-        self.last_letter = letter;
+        self.finish(letter);
     }
 }
 

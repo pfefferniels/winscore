@@ -74,12 +74,12 @@ pub(crate) fn transpose(name: &NoteName, steps: i32) -> NoteName {
 }
 
 /// `@Rn` in pass 2: every rhythm (letters as their numbers) divided by n and rounded to a
-/// whole rhythm number; grace notes stay.
-pub(crate) fn augment(text: &str, factor: i32) -> String {
+/// whole rhythm number, so the durations are multiplied by n; grace notes stay.
+pub(crate) fn augment(text: &str, factor: f32) -> String {
     text.split('/')
         .map(|piece| match leading_value(piece) {
             Some((value, rest)) => {
-                let scaled = value / factor as f32;
+                let scaled = value / factor;
                 let number = if scaled == 0.5 { ".5".to_string() } else { (scaled.abs() + 0.5).trunc().to_string() };
                 format!("{number}{rest}")
             }
@@ -127,8 +127,9 @@ mod tests {
 
     #[test]
     fn augmentation_divides_rhythm_numbers() {
-        assert_eq!(augment("8/8/4", 2), "4/4/2");
-        assert_eq!(augment("8./Q/1", 2), "4./2/.5");
-        assert_eq!(augment("T/E./TQ/G", 2), "6/4./3/G");
+        assert_eq!(augment("8/8/4", 2.0), "4/4/2");
+        assert_eq!(augment("4/8/8", 0.5), "8/16/16");
+        assert_eq!(augment("8./Q/1", 2.0), "4./2/.5");
+        assert_eq!(augment("T/E./TQ/G", 2.0), "6/4./3/G");
     }
 }
