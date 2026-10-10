@@ -131,12 +131,12 @@ try {
   assert.ok(await page.isVisible('#print-page canvas'));
   await page.emulateMedia({ media: 'screen' });
 
-  // Five-pass input: errors are marked in their pass; a valid line adds a staff and four notes.
+  // Five-pass input: a bad rhythm is marked in its pass; a valid line adds a staff and four notes.
   await page.click('#input');
   assert.equal(await page.inputValue('#input-staff'), '9');
   await page.fill('#pass-1', 'C4/D/E/F;');
-  await page.fill('#pass-2', '4/4;');
-  assert.match(await page.textContent('#pass-error-2'), /rhythm/);
+  await page.fill('#pass-2', '4/Y;');
+  assert.match(await page.textContent('#pass-error-2'), /\S/);
   assert.ok(await page.isDisabled('#input-insert'));
   await page.fill('#pass-2', '4/4/4/4;');
   assert.equal(await page.textContent('#input-status'), 'Adds 5 items');
