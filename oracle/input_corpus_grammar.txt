@@ -2739,3 +2739,51 @@ R3/R4/R1/C4;
 ;
 ;
 ;
+== g-p1-macro-loss-k1
+IN 1
+;
+Z[C4/AJ/B]/E/F/G/@Z;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-loss-k2
+IN 1
+;
+Z[C4/AJ/BJ]/E/F/G/@Z;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-loss-k3
+IN 1
+;
+Z[C4/AJ/BJ/CJ]/E/F/G/@Z;
+4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-loss-double-j
+IN 1
+;
+Z[C4/AJJ/B]/E/F/G/@Z;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-loss-chord
+IN 1
+;
+Z[C4/AJ:CU/B]/E/F/G/@Z;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-loss-with-digit
+IN 1
+;
+Z[C4/AJ4/B]/E/F/G/@Z;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
