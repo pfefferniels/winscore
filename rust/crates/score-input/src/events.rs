@@ -218,7 +218,7 @@ impl Resolver<'_> {
                 self.tokens.extend(std::iter::repeat_n(block, copies).flatten());
             }
             NoteEntry::RepeatChord { keep_accidentals } => {
-                let (from, to) = self.unit_start(2).zip(self.unit_start(1)).ok_or_else(|| error(ErrorKind::NothingToRepeat))?;
+                let (from, to) = self.chord_before_last_item().ok_or_else(|| error(ErrorKind::NothingToRepeat))?;
                 let block = copied(&self.tokens[from..to], *keep_accidentals);
                 self.tokens.extend(block);
             }
@@ -257,6 +257,14 @@ impl Resolver<'_> {
                 NoteName { octave: vec![OctaveMark::Digit(digit)], ..name.clone() }
             })
             .collect()
+    }
+
+    /// `=`: past the last item of R, the nearest note or chord before it (its tokens).
+    fn chord_before_last_item(&self) -> Option<(usize, usize)> {
+        let last = self.unit_start(1)?;
+        let from = self.tokens[..last].iter().rposition(|t| matches!(t, Token::Note { member: false, .. }))?;
+        let members = self.tokens[from + 1..].iter().take_while(|t| matches!(t, Token::Note { member: true, .. })).count();
+        Some((from, from + 1 + members))
     }
 
     /// Where the last `units` items of R start, counting as 0x4AF456 does.

@@ -572,7 +572,8 @@ fn second_shifts(levels: &[i32]) -> Vec<bool> {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Element {
     Note(Note),
-    Rest { x: f32, rest: Rest, rhythm: Rhythm },
+    /// `cue`: P4 is stored 100 further from 0 (up from the middle).
+    Rest { x: f32, rest: Rest, rhythm: Rhythm, cue: bool },
     /// `staves` negative for an invisible barline (P4).
     Bar { x: f32, staves: i32, style: BarStyle },
     /// `small`: a clef change within the line (P4 = 100).
@@ -611,7 +612,7 @@ impl Element {
     fn items(&self, staff: f32) -> Vec<Item> {
         match self {
             Element::Note(note) => note.items(staff),
-            Element::Rest { x, rest, rhythm } => vec![rest_item(*rest, *rhythm, *x, staff, uncentred(rest.kind))],
+            Element::Rest { x, rest, rhythm, cue } => vec![rest_item(*rest, *rhythm, *x, staff, *cue, uncentred(rest.kind))],
             Element::Bar { x, staves, style } => {
                 let p5 = if *style == BarStyle::Invisible { 0 } else { style.code() };
                 vec![item(&[14.0, staff, *x, *staves as f32, p5 as f32])]
@@ -649,8 +650,9 @@ fn rest_level(rest: Rest) -> f32 {
 }
 
 /// A rest item; `centre` is P9 (see [`centre`] for the rests centred in their measure).
-fn rest_item(rest: Rest, rhythm: Rhythm, x: f32, staff: f32, centre: f32) -> Item {
+fn rest_item(rest: Rest, rhythm: Rhythm, x: f32, staff: f32, cue: bool, centre: f32) -> Item {
     let level = rest_level(rest);
+    let level = if cue { level + SMALL_LEVEL as f32 * if level < 0.0 { -1.0 } else { 1.0 } } else { level };
     let kind = rest.kind;
     // P5: flags for short rests, 0 quarter, -1 half, -2 whole, -3 breve, -4 repeat sign.
     let symbol = match (kind, rhythm.head()) {
@@ -716,8 +718,8 @@ pub(crate) struct Line {
 impl Line {
     pub fn new(timed: &[Timed], options: &Options) -> Self {
         let mut stems = StemMode::Ordinary;
-        // 0x4ECDF8: Q+ turns automatic stems up, Q- restores the mode Q+ found.
-        let mut before_cue: Option<StemMode> = None;
+        // 0x4ECDF8: Q+ turns automatic stems up, Q- goes back to the mode SU/SD/SO chose.
+        let mut chosen = StemMode::Ordinary;
         let mut shift = StaffShift::Main;
         let mut clef = options.clef;
         let mut cue = false;
@@ -731,7 +733,7 @@ impl Line {
                     }
                     Some(Element::Note(note))
                 }
-                (Event::Rest(rest), Some(rhythm)) => Some(Element::Rest { x: 0.0, rest: *rest, rhythm }),
+                (Event::Rest(rest), Some(rhythm)) => Some(Element::Rest { x: 0.0, rest: *rest, rhythm, cue }),
                 (Event::Bar { staves, style }, _) => Some(Element::Bar { x: 0.0, staves: *staves, style: *style }),
                 (Event::Clef(c), _) => {
                     clef = *c;
@@ -744,6 +746,7 @@ impl Line {
                 }
                 (Event::Stems(mode), _) => {
                     stems = *mode;
+                    chosen = *mode;
                     None
                 }
                 (Event::Staff(s), _) => {
@@ -751,7 +754,6 @@ impl Line {
                     None
                 }
                 (Event::Cue(true), _) => {
-                    before_cue = Some(stems);
                     if stems == StemMode::Ordinary {
                         stems = StemMode::Up;
                     }
@@ -759,7 +761,7 @@ impl Line {
                     None
                 }
                 (Event::Cue(false), _) => {
-                    stems = before_cue.take().unwrap_or(stems);
+                    stems = chosen;
                     cue = false;
                     None
                 }
@@ -889,8 +891,8 @@ impl Line {
         self.elements
             .iter()
             .flat_map(|e| match e {
-                Element::Rest { x, rest, rhythm } if is_centred(rest.kind) => {
-                    vec![rest_item(*rest, *rhythm, *x, self.staff, centre(rest.kind, *x, self.size, &bars))]
+                Element::Rest { x, rest, rhythm, cue } if is_centred(rest.kind) => {
+                    vec![rest_item(*rest, *rhythm, *x, self.staff, *cue, centre(rest.kind, *x, self.size, &bars))]
                 }
                 other => other.items(self.staff),
             })

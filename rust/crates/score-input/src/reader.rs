@@ -108,7 +108,7 @@ pub(crate) fn read(typed: &str) -> ReadText {
             b'/' => text.close_item(at),
             b'\'' => text.push(b':', at),
             b'.' | b'=' => {
-                let repeat = matches!(text.last(), Some(b'/' | b'=') | None);
+                let repeat = matches!(text.last(), Some(b'/' | b'='));
                 text.push(if repeat { b'=' } else { b'+' }, at);
             }
             other => text.push(other, at),
@@ -177,6 +177,7 @@ mod tests {
     fn rewrites_and_drops() {
         assert_eq!(read("c4'e./d/.;").text, "C4:E+/D/=;");
         assert_eq!(read("/C4#/D..;").text, "C4/D++;");
+        assert_eq!(read(".;").text, "+;");
         assert_eq!(read("C4/M/;").text, "C4/M;");
         assert_eq!(read("C4/MRD/;").text, "C4/MRD/;");
     }

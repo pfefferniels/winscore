@@ -22,14 +22,20 @@ pub struct Motives {
     pub(crate) carried: Carried,
 }
 
-/// What the pass-1 parser keeps from earlier lines: the letter (C = 1 ... B = 7, 0 before
-/// any note) and step of the last note, for `U`/`J` and `P` on a line's first note, and the
-/// last meter, for `T`.
-#[derive(Debug, Clone, Copy, Default, PartialEq)]
+/// What the pass-1 parser keeps from earlier lines: the letter (C = 1 ... B = 7) and step
+/// of the last note, for `U`/`J` and `P` on a line's first note, and the last meter, for `T`.
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Carried {
     pub last_letter: i32,
     pub last_step: i32,
     pub last_meter: Option<Meter>,
+}
+
+impl Default for Carried {
+    /// A fresh engine: letter C (0x78DECC), step 0 (0x78DEC8), meter 4/4 (0x78D918).
+    fn default() -> Self {
+        Carried { last_letter: 1, last_step: 0, last_meter: Some(Meter::Fraction(4, 4)) }
+    }
 }
 
 impl Motives {

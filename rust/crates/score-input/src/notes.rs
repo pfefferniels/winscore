@@ -492,16 +492,21 @@ fn repeat_counts(c: &mut Cursor, keep_accidentals: bool) -> Result<NoteEntry, In
     })
 }
 
-/// `R` and its kinds, `Rn`, and `REPn m`.
+/// `R` and its kinds (`W` and `F` take one more `U` or `D`), `Rn`, and `REPn m`; only a
+/// repeat suffix may follow.
 fn rest(c: &mut Cursor) -> Result<(NoteEntry, Option<NoteEntry>), InputError> {
     c.bump();
     if c.eat_word("EP") {
         return Ok((repeat_counts(c, false)?, None));
     }
     let shift = |c: &mut Cursor| direction(c, b'U', b'D');
+    let kind = |c: &mut Cursor, kind| {
+        c.bump();
+        NoteEntry::Rest(Rest::new(kind))
+    };
     let rest = match c.peek() {
-        Some(b'I') => word(c, 1, NoteEntry::Rest(Rest::new(RestKind::Invisible))),
-        Some(b'P') => word(c, 1, NoteEntry::Rest(Rest::new(RestKind::RepeatSign))),
+        Some(b'I') => kind(c, RestKind::Invisible),
+        Some(b'P') => kind(c, RestKind::RepeatSign),
         Some(b'W') => {
             c.bump();
             // `RWU` and `RWD` are plain `RW`.
