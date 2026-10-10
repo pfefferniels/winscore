@@ -4,7 +4,7 @@
 
 use crate::connect::{ConnectEntry, Connection, Side};
 use crate::error::{ErrorKind, InputError, Pass, Span};
-use crate::line::{item, Line};
+use crate::line::{item, Line, Reached};
 
 /// Directions as the engine codes them (also a note's stem direction).
 const ABOVE: i32 = 10;
@@ -428,7 +428,7 @@ pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry], (begin, end): (f3
         return Err(InputError::new(Pass::Slurs, Span::default(), ErrorKind::NoSuchNote(bad.first as f32)));
     }
     pairs.iter().flat_map(|c| [c.first, if c.last <= c.first { c.first + 1 } else { c.last }]).for_each(|n| {
-        line.placement_steps(n);
+        line.placement_steps(n, Reached::StemHead);
     });
     let mut work = line.work_entries();
     let note_entry: Vec<usize> = work.iter().enumerate().filter(|(_, e)| e.note.is_some()).map(|(i, _)| i).collect();

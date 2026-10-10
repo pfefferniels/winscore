@@ -330,7 +330,7 @@ impl Refit<'_> {
         if !made_beams.is_empty() || !slurs.is_empty() {
             self.restore_segments(beams);
             // 0x40CDE4, over every beam of the staff, also those outside the area.
-            stems::fit(self.rows, self.staff, self.staff_step());
+            stems::fit(self.rows, self.staff, self.staff_step(), Neighbours::defaults(self.staff.clamp(1, 255) as u8));
         }
         Ok(())
     }

@@ -120,7 +120,7 @@ pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motive
     beams::apply(&mut line, &beams)?;
     slurs::apply(&mut line, &slurs, (options.begin, options.end), options.staff_end)?;
     // 0x5253FD stores the line, then fits the stems to the beams in the item store.
-    Ok(stems::fit_items(&line.items(), i32::from(options.staff), 25.0 * options.size))
+    Ok(stems::fit_items(&line.items(), i32::from(options.staff), 25.0 * options.size, options.neighbours))
 }
 
 /// Pass 1 as the reader leaves it; errors point into the typed text.

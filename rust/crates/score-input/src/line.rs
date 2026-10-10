@@ -71,9 +71,9 @@ pub(crate) struct Note {
     spaced_from_top: bool,
     /// Cue size: P4 is stored 100 further from 0, as for grace notes.
     pub cue: bool,
-    /// The stem head's placement on another staff was dropped because that staff cannot
-    /// exist (0x41A776); the other heads keep theirs.
-    pub placement_dropped: bool,
+    /// The head (in item order) whose placement on another staff was dropped because that
+    /// staff cannot exist (0x41A776); the other heads keep theirs.
+    pub placement_dropped: Option<usize>,
     /// P5, P10 and dots of every head when they do not follow from the heads (a grace
     /// chord in the refit).
     explicit_layout: Option<Vec<HeadLayout>>,
@@ -108,7 +108,7 @@ impl Note {
             kept_layout: None,
             spaced_from_top: false,
             cue: false,
-            placement_dropped: false,
+            placement_dropped: None,
             explicit_layout: None,
         };
         note.laid_out_heads = note.heads.len();
@@ -509,7 +509,7 @@ impl Note {
                     (dots + tails + layouts[i].dots) as f32,
                     layouts[i].shift,
                     mark,
-                    if stem_head && self.placement_dropped { 0.0 } else { staff_shift },
+                    if self.placement_dropped == Some(i) { 0.0 } else { staff_shift },
                 ])
             })
             .collect()
@@ -704,6 +704,14 @@ fn uncentred(kind: RestKind) -> f32 {
     }
 }
 
+/// The head of a chord 0x41A776 is applied to: the beam builder steps to the chord's last
+/// entry, the slur's end-note lookup stays on the stem head.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Reached {
+    StemHead,
+    LastHead,
+}
+
 /// A pass-1 event with the rhythm pass 2 gave it (chords and rests only).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Timed<'a> {
@@ -882,14 +890,17 @@ impl Line {
         }
     }
 
-    /// 0x41A776 on note `number`, as a beam or slur reaches it: the steps its placement adds
-    /// to its level. A placement on a staff that cannot exist is dropped from the stem head
-    /// (its P12 = 0).
-    pub fn placement_steps(&mut self, number: usize) -> f32 {
+    /// 0x41A776 on one head of note `number` as a beam or slur reaches it: the steps the
+    /// note's placement adds to its level. A placement on a staff that cannot exist counts
+    /// as none (decision of main), and that head's P12 is dropped.
+    pub fn placement_steps(&mut self, number: usize, head: Reached) -> f32 {
         let Some(shift) = self.note(number).map(|n| n.shift) else { return 0.0 };
         self.staff_steps(shift).unwrap_or_else(|| {
             if let Some(note) = self.note_mut(number) {
-                note.placement_dropped = true;
+                note.placement_dropped = Some(match head {
+                    Reached::StemHead => 0,
+                    Reached::LastHead => note.heads.len() - 1,
+                });
             }
             0.0
         })

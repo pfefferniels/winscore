@@ -5,6 +5,7 @@
 use score_format::{Item, Word};
 
 use crate::num::{amod, par, trunc};
+use crate::staves::Neighbours;
 
 const NOTE: i32 = 1;
 const BEAM: i32 = 6;
@@ -18,10 +19,11 @@ const BEAMS_TO: f32 = 200.0;
 /// A note this far outside a beam's ends still counts as under it.
 const REACH: f32 = 0.1;
 
-/// The stems on `staff` (staff step `step`) fitted to the staff's beams, on items.
-pub(crate) fn fit_items(items: &[Item], staff: i32, step: f32) -> Vec<Item> {
+/// The stems on `staff` (staff step `step`, staves around it `neighbours`) fitted to the
+/// staff's beams, on items.
+pub(crate) fn fit_items(items: &[Item], staff: i32, step: f32, neighbours: Neighbours) -> Vec<Item> {
     let mut rows: Vec<Vec<f32>> = items.iter().map(|it| it.params().iter().map(|w| w.as_f32()).collect()).collect();
-    fit(&mut rows, staff, step);
+    fit(&mut rows, staff, step, neighbours);
     items
         .iter()
         .zip(rows)
@@ -38,7 +40,7 @@ pub(crate) fn fit_items(items: &[Item], staff: i32, step: f32) -> Vec<Item> {
 
 /// 0x40CDE4 on parameter rows: the beams of `staff` with P3 in 1..200, in item order, each
 /// fitting the notes in its x range.
-pub(crate) fn fit(rows: &mut [Vec<f32>], staff: i32, step: f32) {
+pub(crate) fn fit(rows: &mut [Vec<f32>], staff: i32, step: f32, neighbours: Neighbours) {
     let beams: Vec<Vec<f32>> = rows
         .iter()
         .filter(|r| trunc(par(r, 1)) == BEAM && r.len() >= 7 && trunc(par(r, 2)) == staff)
@@ -47,7 +49,7 @@ pub(crate) fn fit(rows: &mut [Vec<f32>], staff: i32, step: f32) {
         .collect();
     for beam in &beams {
         for note in rows.iter_mut() {
-            if let Some(length) = under_beam(beam, note, step) {
+            if let Some(length) = under_beam(beam, note, step, neighbours) {
                 fit_note(note, length);
             }
         }
@@ -55,7 +57,7 @@ pub(crate) fn fit(rows: &mut [Vec<f32>], staff: i32, step: f32) {
 }
 
 /// The stem length a note gets from `beam`, if it is one the beam fits.
-fn under_beam(beam: &[f32], note: &[f32], step: f32) -> Option<f32> {
+fn under_beam(beam: &[f32], note: &[f32], step: f32, neighbours: Neighbours) -> Option<f32> {
     if note.len() <= 4 || trunc(par(note, 1)) != NOTE || trunc(par(note, 2)) != trunc(par(beam, 2)) {
         return None;
     }
@@ -66,11 +68,19 @@ fn under_beam(beam: &[f32], note: &[f32], step: f32) -> Option<f32> {
     let direction = trunc(amod(par(note, 5), 100.0) / 10.0);
     let small = |p4: f32| trunc(p4 / 100.0).abs();
     let same_way = direction != 0 && par(note, 6) != 1.0 && trunc(par(beam, 7)) / 10 == direction;
-    // Notes moved to another staff (P12) need the staves' distance, which is not known here.
-    if !same_way || small(par(beam, 4)) != small(par(note, 4)) || par(note, 12) != 0.0 {
+    if !same_way || small(par(beam, 4)) != small(par(note, 4)) {
         return None;
     }
-    Some(stem_length(beam, note, direction == 1, step))
+    // 0x40C1C0 measures a note moved to another staff (P12) from that staff; a staff that
+    // cannot exist counts as none (decision of main).
+    let placement = match trunc(par(note, 12)) {
+        1 => neighbours.above,
+        2 => neighbours.below,
+        _ => None,
+    };
+    let mut moved = note.to_vec();
+    moved[3] = amod(par(note, 4), 100.0) + placement.unwrap_or(0.0);
+    Some(stem_length(beam, &moved, direction == 1, step))
 }
 
 fn fit_note(note: &mut Vec<f32>, length: f32) {

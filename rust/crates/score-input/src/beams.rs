@@ -5,7 +5,7 @@
 
 use crate::connect::{ConnectEntry, Connection, Side};
 use crate::error::InputError;
-use crate::line::{item, Element, Line, Note};
+use crate::line::{item, Element, Line, Note, Reached};
 use crate::marks::recompute_clearance;
 use crate::notes::{StaffShift, StemMode};
 
@@ -453,7 +453,7 @@ impl Beamer<'_> {
         let mut fewest = 99;
         let mut most = 0;
         for n in first..=last {
-            let staff_steps = self.line.placement_steps(n);
+            let staff_steps = self.line.placement_steps(n, Reached::LastHead);
             let note = match self.line.note(n) {
                 Some(note) => note,
                 None => return Vec::new(),
