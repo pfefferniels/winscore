@@ -54,3 +54,8 @@ g-p5-tuplet
 g-p5-tuplet-12
 g-p5-tuplet-5013
 g-p5-tuplet-sapp
+# Random lines with `.`/`..` and no note or chord before the previous item.
+rnd-4-66
+rnd-4-82
+rnd-4-92
+rnd-4-117

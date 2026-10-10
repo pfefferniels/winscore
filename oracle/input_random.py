@@ -98,7 +98,9 @@ def make_line(rng: random.Random) -> Line:
         rhythm = rng.choice(RHYTHMS)
         if previous and rng.random() < 0.12:
             heads = previous                     # same notes again: a tie candidate
-            line.notes.append(rng.choice([":".join(heads), ".", ".."]) if rhythm != "G" else ":".join(heads))
+            # `.`/`..` repeat the nearest note or chord before the previous item.
+            repeatable = rhythm != "G" and any(is_note(item.lstrip("OP")) for item in line.notes[:-1])
+            line.notes.append(rng.choice([":".join(heads), ".", ".."]) if repeatable else ":".join(heads))
         else:
             mode = rng.choice(["", "", "", "", "O", "P"])
             # The engine never returns from a grace chord with two heads on one letter.
