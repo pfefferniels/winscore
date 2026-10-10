@@ -210,3 +210,43 @@ Finishing a note (0x4E33A4): if no U/J was given and proximity mode is on, d = s
 - `Q-`, `Q0` and in fact `Q` + anything other than `+` end cue size; `QX` is erased by the item check.
 - Sapp's `./..` "after a measure or rest": the engine repeats the chord before the previous item, whatever that item is (g-p1-chord-repeat-direct: `C4:E/D:F/.` repeats C4:E).
 - Not on Sapp's page: `S+/S-/S0` (P12), `RWD/RWU/RFD/RFU`, `PR`, `-AL/-TE`, `T` (last item), letter accidentals beyond four letters, `REP`, `Zn` suffix, `@name n` transposition with chords and rests, `C4M` as common time.
+
+### Pass 2: rhythms
+
+One value per note, chord or rest of pass 1, in order; barlines, clefs, keys and meters take none.
+
+#### Reader (0x422D98)
+
+- `a`–`z` are stored as `A`–`Z`; `'` as `:`.
+- `T` followed by a number is rewritten to the letter form (also by 0x4AEFA0, table 0x792484): `T8` → `TE`, `T4` → `TQ`, `T2` → `TH`, `T16` → `TS`, `T32` → `TT` (g-p2-triplet-numbers, g-p2-mid-t-number).
+- Each closed item is applied at once (0x4C4148, `X` items by 0x425722, `@` by 0x424A9F). When as many values as notes have been typed, the reader ends the pass itself; further keys go to pass 3 (g-p2-mid-zero).
+- `;` after a single value with no `/` appends `X<number of notes>`: one value sets all notes (`4;` → `4X3 ;`, `8.;` → `8.X3;`; g-p2-fewer, g-p2-fill-*). With two or more values and fewer than the notes, the notes left over become grace notes, the same item as `G` (g-p2-fewer2, g-p2-fill-with-x).
+- No item check, no erasing: a bad item reaches the parser and is rejected there.
+
+#### Items (0x4D9EA0)
+
+The token is the duration in quarter notes, plus 1000 per dot. The parser dispatches on the first character: a digit or `.` (number), else the table at 0x794734 `G S T E Q H W D R X .`.
+
+| Construct | Rule | Token | Probe |
+|---|---|---|---|
+| number n (0x5194D5, decimals allowed) | 4/n quarters: `1` 4, `2` 2, `3` 1.333 (triplet half), `4` 1, `6` 0.667, `8` 0.5, `128` 0.03125; `.5` = `0.5` = 8 (breve), `2.5` 1.6, `0` gives inf (treated as grace) | 4/n | g-p2-numbers, g-p2-numbers-odd, g-p2-decimals, g-p2-zero |
+| `n:d` (or `n'd`) | d quarters divided into n | d/n | g-p2-ratio |
+| `W H Q E S D` | 4, 2, 1, 0.5, 0.25, 8 (table 0x794710: 4/value) | | g-p2-letters |
+| `T` + `S T E Q H W D` | triplet: 2/3 of the letter's value; `TT` = triplet 32nd (1/12) | | g-p2-triplet-letters |
+| `T` alone | triplet eighth (1/3). Only at the start of an item: `4T` is rejected | 0.3333 | g-p2-t-after-value |
+| `G` | grace note | 64 (type 0.0625) | g-p2-grace |
+| dots `.` after a value | each adds half of the previous addition: `4.` 1.5, `4..` 1.75, `8...` 0.9375; also after letters, `T`, `G` and ratios (`3:2.` = 1). A digit after the dot makes it a decimal point instead (`4.5` = 4/4.5) | 1000·dots + value | g-p2-dots, g-p2-letter-dots, g-p2-t-dot, g-p2-decimal-vs-dot, g-p2-ratio-dot |
+| several values in one item | added: `QE` 1.5, `HQ` 3, `Q8` 1.5, `4 8` 1.5 (a space does not separate, a `/` or `,` does); `G4` is 65 quarters, not a grace note | sum | g-p2-concat, g-p2-letter-number-mix, g-p2-g-then-value |
+| `Xn` suffix | n copies of the value | | g-p2-repeat-item, g-p2-repeat-letter |
+| `X n m`, `R?P n m` (`REP`) | group repeat as in the tokenizer | | g-p2-repeat-group, g-p2-rep |
+| `@name f` | macro; f multiplies the durations (`@Z2` doubles, `@Z.5` halves) | | g-p2-macro |
+| other first characters | rejected (`Y/4` at 1) | | g-p2-junk-first, g-p2-erase-junk |
+
+After a value, the item may continue with a letter `S T E Q H W D`, a digit or `.` (added), or `X` (repeat). Any other character ends the value; what follows it is then read again as an item, which gave an extra token in the probe (`4Y/4` → 1 1 1, `4G/4` likewise). A group repeat without its count (`X2`) uses a stale number (g-p2-x-group-no-count). These cases are better rejected by a port.
+
+#### Differences from Sapp's page
+
+- `3` is a triplet half (4/3 quarters), not a triplet quarter; `6` is the triplet quarter.
+- `T` alone is a triplet eighth; `TT` (triplet 32nd), `TW`, `TD`, the `T`+number forms and dotted triplets are not on the page.
+- Values can be added inside one item (`QE`, `4 8`); `.5` is a breve like `D`.
+- A single value fills all notes, and the pass ends by itself after the last note's value.

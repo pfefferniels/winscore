@@ -717,3 +717,347 @@ C4/CF(;
 ;
 ;
 ;
+== g-p2-numbers
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+1/2/4/8/16/32/64/128;
+;
+;
+;
+== g-p2-numbers-odd
+IN 1
+;
+C4/D/E/F/G/A;
+3/5/6/7/12/24;
+;
+;
+;
+== g-p2-dots
+IN 1
+;
+C4/D/E/F/G/A;
+4./4../2./8.../1./16.;
+;
+;
+;
+== g-p2-decimals
+IN 1
+;
+C4/D/E/F;
+.5/1.5/0.5/2.5;
+;
+;
+;
+== g-p2-ratio
+IN 1
+;
+C4/D/E/F;
+7:1.5/3:2/3'2/5:4;
+;
+;
+;
+== g-p2-letters
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+W/H/Q/E/S/D/G/Q;
+;
+;
+;
+== g-p2-letter-dots
+IN 1
+;
+C4/D/E/F;
+Q./H../E./W.;
+;
+;
+;
+== g-p2-triplet-letters
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+T/TE/TQ/TS/TH/TT/TW/TD;
+;
+;
+;
+== g-p2-triplet-numbers
+IN 1
+;
+C4/D/E/F/G;
+T8/T4/T2/T16/T32;
+;
+;
+;
+== g-p2-concat
+IN 1
+;
+C4/D/E/F;
+QE/HQ/4 8/E.;
+;
+;
+;
+== g-p2-case
+IN 1
+;
+C4/D/E/F;
+q/h/e./te;
+;
+;
+;
+== g-p2-repeat-item
+IN 1
+;
+C4/D/E/F/G/A;
+4X3/8X2/2;
+;
+;
+;
+== g-p2-repeat-letter
+IN 1
+;
+C4/D/E/F/G/A;
+QX3/EX2/H;
+;
+;
+;
+== g-p2-repeat-group
+IN 1
+;
+C4/D/E/F/G/A;
+4/8/X2 3;
+;
+;
+;
+== g-p2-rep
+IN 1
+;
+C4/D/E/F/G/A;
+4/8/REP2 3;
+;
+;
+;
+== g-p2-empty-item
+IN 1
+;
+C4/D/E/F/G;
+4//8///;
+;
+;
+;
+== g-p2-separators
+IN 1
+;
+C4/D/E/F;
+4 , 8,2 /1;
+;
+;
+;
+== g-p2-fewer
+IN 1
+;
+C4/D/E;
+4;
+;
+;
+;
+== g-p2-fewer2
+IN 1
+;
+C4/D/E;
+4/8;
+;
+;
+;
+== g-p2-one-note
+IN 1
+;
+C4;
+8;
+;
+;
+;
+== g-p2-chord-rest
+IN 1
+;
+C4:E/R/M/D;
+2/4/4;
+;
+;
+;
+== g-p2-macro
+IN 1
+;
+C4/D/E/F/G/A/B/C5/D/E/F/G;
+Z[4/8/8]/@Z/@Z2/@Z.5;
+;
+;
+;
+== g-p2-grace
+IN 1
+;
+C4/D/E/F;
+G/4/G/4;
+;
+;
+;
+== g-p2-fill-dotted
+IN 1
+;
+C4/D/E;
+8.;
+;
+;
+;
+== g-p2-fill-letter
+IN 1
+;
+C4/D/E;
+Q;
+;
+;
+;
+== g-p2-fill-with-x
+IN 1
+;
+C4/D/E;
+4X2;
+;
+;
+;
+== g-p2-trailing-junk
+IN 1
+;
+C4/D;
+4Y/4;
+;
+;
+;
+== g-p2-junk-first
+IN 1
+;
+C4/D;
+Y/4;
+;
+;
+;
+== g-p2-value-then-g
+IN 1
+;
+C4/D;
+4G/4;
+;
+;
+;
+== g-p2-g-then-value
+IN 1
+;
+C4/D;
+G4/4;
+;
+;
+;
+== g-p2-decimal-vs-dot
+IN 1
+;
+C4/D;
+4.5/4.0;
+;
+;
+;
+== g-p2-t-after-value
+IN 1
+;
+C4/D;
+4T/4;
+;
+;
+;
+== g-p2-t-dot
+IN 1
+;
+C4/D;
+TE./T.;
+;
+;
+;
+== g-p2-zero
+IN 1
+;
+C4/D;
+0/4;
+;
+;
+;
+== g-p2-ratio-dot
+IN 1
+;
+C4/D;
+3:2./4;
+;
+;
+;
+== g-p2-x-group-no-count
+IN 1
+;
+C4/D/E/F;
+4/8/X2/4;
+;
+;
+;
+== g-p2-grace-variants
+IN 1
+;
+C4/D/E/F;
+G./GX2/4;
+;
+;
+;
+== g-p2-letter-number-mix
+IN 1
+;
+C4/D;
+Q8/8Q;
+;
+;
+;
+== g-p2-erase-junk
+IN 1
+;
+C4/D/E;
+4/Y/8/2;
+;
+;
+;
+== g-p2-erase-t-after
+IN 1
+;
+C4/D/E;
+4/4T/8/2;
+;
+;
+;
+== g-p2-mid-t-number
+IN 1
+;
+C4/D/E;
+4/T8/8;
+;
+;
+;
+== g-p2-mid-zero
+IN 1
+;
+C4/D/E;
+4/0/8/2;
+;
+;
+;
+== g-p2-mid-ratio
+IN 1
+;
+C4/D/E;
+4/3:2/8;
+;
+;
+;
