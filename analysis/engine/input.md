@@ -175,7 +175,7 @@ The item parser dispatches on the first character: A–G (with the exceptions `B
 | `R…Xn` | rest repeated | | | g-p1-rest-repeat |
 | `TR`, `BA`, `AL`, `TE`, `PR` | clefs | 3000 … 3004 | code 3, P5 = 0…4. P4 = 100 (small) unless it is the first entry, or it directly follows a barline and is the first clef of the line | g-p1-clefs, g-p1-clef-after-bar |
 | `-TR`, `-BA`, `-AL`, `-TE` | input clef: only the second character counts (`B`→1, `A`→2, `T`+`E`→3, else 0. `-AA` = `-AL`) | −3000 − k | no item. The following notes are positioned as if the staff had clef k (`BA/-TR/C4` puts C4's treble position, E2, on the bass staff). The builder only sets the clef variable 0x1F95C90 and makes no work-table entry; a later key signature stores it in P6, a later real clef replaces it | g-p1-input-clef, g-p1-input-clef-alias |
-| `KnS`, `KnF`, `KnSN`, `KnFN` | n read by 0x5194D5. After S or F only `N` may follow | ±(17000 + n), N: ±(17100 + n), − for F | code 17, P5 = ±n or ±(100 + n) (cancellation). N = 0 gives no item | g-p1-keys |
+| `KnS`, `KnF`, `KnSN`, `KnFN` | n read by 0x5194D5. After S or F only `N` may follow | ±(17000 + n), N: ±(17100 + n), − for F | code 17, P5 = ±n or ±(100 + n) (cancellation), n = 0 gives no item | g-p1-keys |
 | `K` alone | key from the key-name global 0x78DE16 via 0x4E4432 (default unset). Always erased by the item check | | | g-p1-key-plain |
 | `n m` (digit first) | meter. M = 0 or missing: n and m swapped, a single number | 20000 + 100·n + m | code 18, P5 = n, P6 = m (`2` gives 0 2) | g-p1-meters |
 | `COM`, `CUT`, generally `C?M`, `C?T` | the third character decides (`C4M` is common time) | 29901, 29801 | P5/P6 = 99/1, 98/1 | g-p1-meter-c-letters |
