@@ -2597,3 +2597,145 @@ C4/D/E/F/G/A/B/C5;
 ;
 2B/1 2;
 ;
+== g-p1-state-fresh-cu
+IN 1
+;
+CU/D;
+4/4;
+;
+;
+;
+== g-p1-state-fresh-cj
+IN 1
+;
+CJ/D;
+4/4;
+;
+;
+;
+== g-p1-state-fresh-au
+IN 1
+;
+AU/D;
+4/4;
+;
+;
+;
+== g-p1-state-fresh-pb
+IN 1
+;
+PB/C;
+4/4;
+;
+;
+;
+== g-p1-state-carried-proximity
+IN 1
+;
+C6/D;
+4/4;
+;
+;
+;
+IN 2
+;
+PB/C;
+4/4;
+;
+;
+;
+== g-p1-state-carried-lprev
+IN 1
+;
+C4/A;
+4/4;
+;
+;
+;
+IN 2
+;
+GU/C;
+4/4;
+;
+;
+;
+== g-p1-macro-oct-jump
+IN 1
+;
+Z[C4/AJ/B/CU/D]/E/@Z;
+4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-oct-proximity
+IN 1
+;
+Z[PC4/B/E/G/C]/F/@Z;
+4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-oct-ordinary
+IN 1
+;
+Z[C4/E5/G/C4:E/G]/A/@Z;
+4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-oct-o
+IN 1
+;
+Z[C4/B/OB/E]/F/@Z;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-oct-before
+IN 1
+;
+C3/Z[E/G]/A/@Z;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-erase-leading-space
+IN 1
+;
+C4/ D/E;
+4/4;
+;
+;
+;
+== g-p1-chord-repeat-nothing
+IN 1
+;
+C4:E/.;
+4/4;
+;
+;
+;
+== g-p1-chord-repeat-first
+IN 1
+;
+./C4;
+4;
+;
+;
+;
+== g-p1-cautionary-chord-bar
+IN 1
+;
+C4:E(F:G/C:EF:G/M/D(/M/DF/M/D;
+4/4/4/4/4;
+;
+;
+;
+== g-p1-rest-number-threshold
+IN 1
+;
+R3/R4/R1/C4;
+4/4/4/4;
+;
+;
+;
