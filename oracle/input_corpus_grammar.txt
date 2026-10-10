@@ -2803,3 +2803,83 @@ C4/D/E/F/G/A/B/C5/D/E/F/G;
 ;
 1 3/2 4;
 ;
+== g-p1-live-mode-p
+IN 1
+;
+C4/A/PB/OC;
+4/4/4/4;
+;
+;
+;
+== g-p1-live-mode-o-after
+IN 1
+;
+C4/A/PB/OC/D;
+4/4/4/4/4;
+;
+;
+;
+== g-p1-live-mode-colon
+IN 1
+;
+C4/A/PB:D/E;
+4/4/4/4;
+;
+;
+;
+== g-p1-live-mode-first-note
+IN 1
+;
+G/PB/OC;
+4/4/4;
+;
+;
+;
+== g-p2-chord-dots-cautionary
+IN 1
+;
+OB3/OBS:A:GJ:F(F/C5;
+8/8./8;
+;
+;
+;
+== g-p2-chord-dots-plain
+IN 1
+;
+OB3/OBS:A:GJ:FF/C5;
+8/8./8;
+;
+;
+;
+== g-p4-single-then-pair
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1/-4 7;
+;
+== g-p4-pair-then-single
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+4 7/1;
+;
+== g-p4-single-then-single
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1/5;
+;
+== g-p5-single-then-pair
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1/4 7;
