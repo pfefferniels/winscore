@@ -62,8 +62,9 @@ impl Default for Passes<'_> {
 }
 
 /// Where the line goes: the staff (P2 of every item), its size factor (P5 of the staff
-/// item, 1 for a normal staff), the input range in P3 units, and the clef in force on the
-/// staff when the line starts (the engine keeps the last clef of each staff).
+/// item, 1 for a normal staff), the input range in P3 units, the clef in force on the
+/// staff when the line starts (the engine keeps the last clef of each staff), and the
+/// staff's right end (P6 of the staff item, 200 when 0), where slurs past the last note end.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Options {
     pub staff: u8,
@@ -71,13 +72,14 @@ pub struct Options {
     pub begin: f32,
     pub end: f32,
     pub clef: notes::Clef,
+    pub staff_end: f32,
 }
 
 impl Default for Options {
-    /// Staff 1 of normal size in treble clef and the range WinScore's input dialog proposes,
-    /// 2 to 200.
+    /// Staff 1 of normal size and full length in treble clef, and the range WinScore's input
+    /// dialog proposes, 2 to 200.
     fn default() -> Self {
-        Self { staff: 1, size: 1.0, begin: 2.0, end: 200.0, clef: notes::Clef::Treble }
+        Self { staff: 1, size: 1.0, begin: 2.0, end: 200.0, clef: notes::Clef::Treble, staff_end: slurs::STAFF_END }
     }
 }
 
@@ -107,7 +109,7 @@ pub fn run_with_motives(passes: &Passes, options: &Options, motives: &mut Motive
     let mut line = line::Line::new(&timed, options);
     marks::apply(&mut line, &marks)?;
     beams::apply(&mut line, &beams)?;
-    slurs::apply(&mut line, &slurs, (options.begin, options.end), slurs::STAFF_END)?;
+    slurs::apply(&mut line, &slurs, (options.begin, options.end), options.staff_end)?;
     // 0x5253FD stores the line, then fits the stems to the beams in the item store.
     Ok(stems::fit_items(&line.items(), i32::from(options.staff), 25.0 * options.size))
 }

@@ -423,9 +423,7 @@ fn repeated_letter(c: &mut Cursor, letter: u8) -> Option<Accidental> {
         3 => Accidental::Natural,
         _ => return None,
     };
-    (0..repeats).for_each(|_| {
-        c.bump();
-    });
+    c.skip(repeats);
     Some(accidental)
 }
 

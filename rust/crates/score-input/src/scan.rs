@@ -142,6 +142,10 @@ impl Cursor<'_> {
         Some(byte)
     }
 
+    pub fn skip(&mut self, count: usize) {
+        self.pos = (self.pos + count).min(self.bytes.len());
+    }
+
     pub fn eat(&mut self, byte: u8) -> bool {
         let found = self.peek() == Some(byte);
         if found {

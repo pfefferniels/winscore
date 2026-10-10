@@ -16,7 +16,7 @@ use score_format::{Item, Word};
 use crate::connect::{ConnectEntry, Connection};
 use crate::events::{Event, Head};
 use crate::line::{Line, Timed};
-use crate::notes::{Accidental, Clef, StemMode};
+use crate::notes::{Accidental, StemMode};
 use crate::num::{amod, par, trunc};
 use crate::rhythm::Rhythm;
 use crate::{beams, marks, slurs, stems, Options};
@@ -622,7 +622,7 @@ impl Stream {
             .iter()
             .map(|event| Timed { event, rhythm: if event.is_rhythmic() { rhythms.next() } else { None } })
             .collect();
-        let options = Options { staff: staff.clamp(0, 255) as u8, size: 1.0, begin: left, end: right, clef: Clef::Treble };
+        let options = Options { staff: staff.clamp(0, 255) as u8, size: 1.0, begin: left, end: right, ..Options::default() };
         let mut line = Line::new(&timed, &options);
         for (chord, run, heads) in &self.interrupted {
             if let Some(note) = line.note_mut(chord + 1) {

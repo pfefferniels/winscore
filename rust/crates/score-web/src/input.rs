@@ -60,6 +60,7 @@ fn options(file: &MusFile, line: &InputLine) -> Options {
         begin: line.begin,
         end: right_end.map_or(line.end, |right| line.end.min(right)),
         clef,
+        staff_end: right_end.unwrap_or(Options::default().staff_end),
     }
 }
 
