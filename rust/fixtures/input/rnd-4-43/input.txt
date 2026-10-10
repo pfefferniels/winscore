@@ -1,0 +1,7 @@
+IN 1
+2 150
+BA/2 2/G4/C/R/AN:DF:DF:AN/OB:F/./S+/BA/OBBB-;
+8/4/2/Q/8/8/H;
+CR 3/HW 5;
+A;
+4 6/5;

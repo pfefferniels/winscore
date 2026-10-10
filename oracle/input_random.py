@@ -118,7 +118,18 @@ def make_line(rng: random.Random) -> Line:
         line.notes.append("C4")
         line.rhythms.append("4")
         line.tails.append(0)
+    ordinary_start(line)
     return line
+
+
+def ordinary_start(line: Line) -> None:
+    """The engine starts a line in the octave mode its typing-time parse left, which
+    score-input does not imitate (D12); an `O` on the first note keeps such lines comparable."""
+    is_note = lambda item: item[:1] in LETTERS and item[:2] not in ("BA", "AL") and item not in ("COM", "CUT")  # noqa: E731
+    first = next((i for i, item in enumerate(line.notes) if is_note(item)), None)
+    uses_proximity = any(item.startswith("P") and not item.startswith("PR") for item in line.notes)
+    if first is not None and uses_proximity:
+        line.notes[first] = "O" + line.notes[first]
 
 
 def marks_for(rng: random.Random, line: Line) -> list[str]:
@@ -139,19 +150,31 @@ def marks_for(rng: random.Random, line: Line) -> list[str]:
     return marks
 
 
+def pair(rng: random.Random, a: int, b: int, tuplet: str = "") -> str:
+    """A pair as the item parser reads it: a sign on either number, sometimes a single
+    number for a pair of neighbours, sometimes a third number it ignores."""
+    sign = rng.choice(["", "", "", "+", "-"])
+    first = f"{tuplet}{a:0{2 if tuplet else 1}d}"
+    if b == a + 1 and rng.random() < 0.2:
+        return f"{sign}{first}" if rng.random() < 0.5 else f"{sign}{first} {a}"
+    text = f"{sign}{first} {b}" if rng.random() < 0.7 else f"{first} {sign}{b}"
+    return text + (f" {rng.randint(1, 9)}" if rng.random() < 0.1 else "")
+
+
 def beams_for(rng: random.Random, line: Line) -> list[str]:
     n = line.note_count
-    if rng.random() < 0.15:
-        return [f"{rng.choice([2, 3, 4])}B" + (str(rng.randint(1, 2)) if rng.random() < 0.2 else "")]
+    roll = rng.random()
+    if roll < 0.12:
+        return [rng.choice(["", "", "+", "-"]) + f"{rng.choice([2, 3, 4])}B" + (str(rng.randint(1, 2)) if rng.random() < 0.2 else "")]
+    if roll < 0.17:
+        return [rng.choice(["B", "A"])]
     runs, i = [], 0
     while i < n:
         j = i
         while j + 1 < n and line.tails[j + 1] > 0 and line.tails[i] > 0:
             j += 1
         if j > i and rng.random() < 0.7:
-            sign = rng.choice(["", "", "", "+", "-"])
-            tuplet = "3" if rng.random() < 0.1 else ""
-            runs.append(f"{sign}{tuplet}{i + 1:0{2 if tuplet else 1}d} {j + 1}")
+            runs.append(pair(rng, i + 1, j + 1, "3" if rng.random() < 0.1 else ""))
         i = j + 1
     return runs
 
@@ -164,8 +187,13 @@ def slurs_for(rng: random.Random, line: Line) -> list[str]:
             break
         a = rng.randint(1, n - 1)
         b = rng.randint(a + 1, min(n, a + 5))
-        sign = rng.choice(["", "", "", "+", "-"])
-        slurs.append(f"{sign}{a} {b}")
+        roll = rng.random()
+        if roll < 0.08:
+            slurs.append(f"0 {rng.randint(1, n)}")
+        elif roll < 0.16:
+            slurs.append(f"{rng.randint(1, n)} 99")
+        else:
+            slurs.append(pair(rng, a, b, rng.choice(["3", "5"]) if roll > 0.92 else ""))
     return slurs
 
 

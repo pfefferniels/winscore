@@ -451,7 +451,8 @@ impl Note {
                     (true, true) => STEM_DOWN,
                     (true, false) => STEM_UP,
                 };
-                let parentheses = if head.cautionary { CAUTIONARY } else { 0 };
+                // The head carrying a grace note's stem drops the parentheses.
+                let parentheses = if head.cautionary && !(self.is_grace() && i == 0) { CAUTIONARY } else { 0 };
                 HeadLayout {
                     p5: (f64::from(offsets[i]) / 1000.0 + f64::from(stem + parentheses + head.accidental.map_or(0, |a| a.code())))
                         as f32,

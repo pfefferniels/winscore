@@ -8,3 +8,21 @@ g-p1-macro-loss-k3
 g-p1-macro-loss-double-j
 g-p1-macro-loss-chord
 g-p1-macro-oct-jump
+# Deliberate (D12): the engine starts the final parse in the octave mode its typing-time
+# parse left, so a later P item changes earlier notes; score-input starts in ordinary mode.
+g-p1-live-mode-colon
+g-p1-live-mode-first-note
+g-p1-live-mode-p
+rnd-4-107
+rnd-4-125
+rnd-4-132
+rnd-4-141
+rnd-4-147
+rnd-4-153
+rnd-4-16
+rnd-4-25
+rnd-4-47
+rnd-4-55
+rnd-4-57
+rnd-4-73
+rnd-4-84

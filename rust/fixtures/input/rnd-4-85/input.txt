@@ -1,0 +1,7 @@
+IN 1
+30 200
+K1S/RF/BBB5:B:EFU:C/AL/AL/BBB5:B:EFU:C/MI;
+16/8/S;
+WS 1:2/U 1/-S 2;
+1 -2;
+1 2;

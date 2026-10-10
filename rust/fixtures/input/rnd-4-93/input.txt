@@ -1,0 +1,7 @@
+IN 1 0 0 0 180
+;
+TE/F5/OCS:B:G/DN/MI/RU/Q0/BNJ/RI/EN:CU:E:EE/S+/FF/M/S+/D/MS/ODS/SD/F(N/M/G:F:D;
+Q/2/24/2/4./4./Q/4./12/4./E/4;
+AO 4/C 7 8/HW 3:6/PL 8;
+;
+6 7/502 6/-9 10;

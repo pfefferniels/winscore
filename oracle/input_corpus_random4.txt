@@ -1,0 +1,1280 @@
+== rnd-4-0
+IN 1
+10 190
+TR/-TR/D4/D/RI/CN/OF4/R/PEF:F:AU:ES/../MH/BN;
+Q/4/2/8../Q/16/1/4/4;
+D 4:6;
+;
++3 3;
+== rnd-4-1
+IN 1 0 0 .8
+;
+4 4/R/OCS3:E:D:F/MH/C5;
+4./2/12;
+;
+;
+;
+== rnd-4-2
+IN 1 0 0 1.2
+10 190
+GN5/PF4:AS/EEE/OFU:BNJ+:ENJ:B/R/A/D;
+E/1/8./E/4./S/16;
+;
+-3 6;
++5 6/1 2/-505 6;
+== rnd-4-3
+IN 1
+30 200
+K4S/GF5:D:CS:BN/FF3/A/F3/OG(N5/D(F3/OBB4:CF:AFJ;
+S/8/H/H/H/32/G;
+;
+-1;
++3 7;
+== rnd-4-4
+IN 1
+30 200
+AL/COM/-TR/B3/OBF5/OF4/PBF:EF-/FN:E/G:D:BN:C/PE;
+4/32/4./8./S/8../Q;
+OB 6.5 7/A 2/WS 4:6;
+4 6;
++6 7 4/2 2;
+== rnd-4-5
+IN 1
+10 190
+K6S/R/PEN5/C/MD/A:E/OD:DF/RU/TE/AF/R/TR/AL/D/PA/A3:GN/MI2;
+8/E/8/G/S/16/4/16/4/4./8.;
+RI 5;
+;
+-6 8;
+== rnd-4-6
+IN 1 0 0 0 180
+2 150
+K3FN/-TE/B3/G:G-/D/M/OB/OB/PG:B:EF/E(SU/AF/M2/R/EJ/CS-:F/PES3/G(F5/OC/GS5;
+Q/4/8../T/G/1/8./S/16/8/T/H/4./T/8.;
+C- 8.25 13;
+;
+;
+== rnd-4-7
+IN 1 0 0 0 180
+2 150
+BA/C(F4/PFFFF5/G/AAA-/MR2/BF/C/AS3/D:GS/MS/RI/E5:E:AF;
+Q/1/4./2/8/T/S/16/4/8.;
+TRW 3.5 4;
+-5 9;
+7 9/5 99;
+== rnd-4-8
+IN 1 0 0 0 180
+2 150
+RU/RU/RD/D(F5/D/B3/CJ/CU+/EN+/EF;
+4./4./4./H/24/8/12/24/8./1;
+S 3:5/CR 5;
+2 6;
+4 99/+4 6;
+== rnd-4-9
+IN 1 0 0 0 180
+10 190
+K3F/2 2/PDF5/FN:G(N:F/PB3/RI/S+/../ML/../OFF/PG/SU/OD/../-AL;
+8../8../Q/4/2/S/24/Q/G/16;
+TM 3;
+5 6;
+3 4/2 7;
+== rnd-4-10
+IN 1 0 0 0 180
+2 150
+TR/AS3/GF/OA(F;
+S/8/H;
+HW 3;
+4B;
+;
+== rnd-4-11
+IN 1
+;
+4 4/CN5/G/E3:D:F:CS/C:D/B;
+4./8/8../S/8;
+-AO 4/AS 4:5;
+;
+;
+== rnd-4-12
+IN 1 0 0 1.2
+10 190
+TE/4 4/OA4/PA3/F3/ES3:G:CCCCJ;
+8../H/4/8.;
+-S 3;
+;
+0 4;
+== rnd-4-13
+IN 1
+2 150
+K2F/-BA/ODD5/G/PFF/BJ/PB5/OFN/AJ/G/EN-/C4/G(FF/R/OG/PB4+:CF/OB;
+32/8../E/1/4./Q/16/T/8../G/8/8/8/32/4.;
+WS 5/-AO 13;
+1 3/-11 13;
+;
+== rnd-4-14
+IN 1
+2 150
+TE/D4-/EN4/R2;
+8./T/2.;
+TME 1/RI 2/A 2/PZ 1;
+1 2;
+1 99;
+== rnd-4-15
+IN 1
+;
+BA/G4:E(FF:AFJ:DS/FS4/S-;
+2/T;
+AO 2;
+;
+;
+== rnd-4-16
+IN 1 0 0 0 180
+;
+K4F/G5:BFU:CS:AS/MD/OCF:EJ:G:D/MS/D3:B:AJ/RI/D(SSJ:A:CS/PFS/R/RD;
+8/E/4./2/16/S/2/2;
+HW 5;
+-304 5;
+1/1 +3;
+== rnd-4-17
+IN 1
+2 150
+BA/K6S/4 4/GF3:FN:AN/OF5/MS/AL/G/MI2/G(S5/BN3+/B/RF/RI/B5:BU/R/Q0/TE/RU/BN/RU;
+S/8../G/2/H/T/4./2/E/2/4./8/4;
+;
+306 8;
++6 7/7 8/+3 7;
+== rnd-4-18
+IN 1 0 0 .8
+10 190
+OC(S3/E/MH/E/FN-:CFU+/OBF;
+4/12/G/24/S;
+;
+-4 5 2;
+;
+== rnd-4-19
+IN 1 0 0 0 180
+;
+AL/K1S/RW/D5/ES3/ES3/ODU:G:AF/EN:DDDD+:EU:FN;
+1/H/8/E/8/T;
+;
+2 5 6;
+-2 3/1 3;
+== rnd-4-20
+IN 1 0 0 1.2
+10 190
+B3/DDD/R/RU/BA/OF(FF3/C/AF/ML/D4/FN/DS:F:B;
+8../S/16/4./8../16/8/E/12/8;
+TS 2:4/CR 5;
+;
+;
+== rnd-4-21
+IN 1
+;
+AL/RU/OFF5:BN:F:D(NJ/R/OAAAAU/E/F(F;
+2/S/8/32/8/E;
+PZ 3;
+B;
+2 3/303 4;
+== rnd-4-22
+IN 1 0 0 1.2
+;
+AL/2 2/-AL/EEE4/B(N5/G:F:A/G:F:A/AU/PC(S/G3/C/B4:E/PGN3/OAS4/M;
+8/8/Q/8../H/4./8/8../2/T/Q;
+CR 10/OB 5 10/T 10:11;
+4B;
+3 99/0 5/6 11;
+== rnd-4-23
+IN 1
+;
+BA/K1S/CN3/PG/RI/G:E:BF:GN/OE/FN/F(S/EEEE/MS/OGGGGJ;
+4/32/4./12/G/8./1/E/H;
+TM 7/TRW 2 4/WS 6:7;
+;
++3/-1 3;
+== rnd-4-24
+IN 1 0 0 .8
+10 190
+TR/12 8/BF3/E/RI/RW/CCC3/MS/R/R5/OB/GF:E/RF/E/RU;
+G/16/16/1/8./4/W/4./24/4./4/4.;
+D 1/TR 2:5;
+3B;
++3 5/3 5 7;
+== rnd-4-25
+IN 1 0 0 .8
+10 190
+AS4:A(FF+:C:B(SSU/RD/BJ/OA4/OG/MS/SO/C/ODN/../M/E/PBN5/../C(F3/.;
+T/4./32/8/T/T/S/H/H/2/E/4/8.;
+TME 2/F2 2:4/D 2/O 9 9;
+;
++10 12/+8/2 -3;
+== rnd-4-26
+IN 1 0 0 0 180
+10 190
+BA/K1F/CUT/-TR/G3/C/OCF;
+24/T/Q;
+TME 3/U 2/A 2:3/-S 3;
+B;
+-2 2/1 -3;
+== rnd-4-27
+IN 1
+2 150
+BA/EEE3/RP/BJ/PFF4/RP/PCN5/../..;
+8/1/Q/24/W/24/16/8;
+S 1/-S 2/FE 6/AO 6;
+;
+;
+== rnd-4-28
+IN 1 0 0 1.2
+;
+BA/6 8/S-/A3-/OAN/R3/PAF:B(SS:DN-:C/G:EN/DN:EN:GSJ:C/F(NJ/S-/DJ/ML2;
+32/8../W/8/G/8./Q/H;
+TR 7/CR 4/U 2:4;
+1 3;
+0 6/+6 7/4 99;
+== rnd-4-29
+IN 1
+30 200
+AL/K2S/AN4/PEEEE/MRD/S-/C/ODN;
+G/G/24/8..;
+;
+3B1;
+0 1;
+== rnd-4-30
+IN 1
+30 200
+TR/RI/OGS5:G/Q+/PC/EJ/BN4;
+2/8/H/8./Q;
+PL 3/HW 3:4;
+;
+-3 4/-2 3;
+== rnd-4-31
+IN 1 0 0 1.2
+30 200
+K2SN/BN3/RP/./B/R/OE5/M/ODN;
+16/W/2/E/4./4/T;
+;
+;
+;
+== rnd-4-32
+IN 1
+10 190
+TE/FS3/TE/RU/F5/R;
+4/4./1/2;
+TM 2/U 1:2/W 1:2;
+;
+1 2/2 99/-301 2;
+== rnd-4-33
+IN 1
+10 190
+K5S/S-/C3/E3/S+;
+32/4.;
+OB 2 2;
+;
++1 2;
+== rnd-4-34
+IN 1 0 0 0 180
+30 200
+OB4/ML/B/A(SS/F:D(S/B/BF5/GJ+;
+24/G/8./E/8/T/Q;
+TME 4;
+3 6;
+1 3/2 5;
+== rnd-4-35
+IN 1
+2 150
+BA/OCS5/A/PBN/D/PD-/M/EEEE/R/PGS/OFF4/OG:E/CS5/CS5/G/OE3-:BB;
+8./Q/S/S/T/24/4/G/8../12/8/G/H/E;
+CR 10/TS 2/TRW 10.25 13/O 5.25 5;
+3 6/8 10;
++301 3/6 9;
+== rnd-4-36
+IN 1
+;
+R/OG5:G-/OA/MI/OA/A:G(SS:GS/../DN/C5;
+2/T/8/16/1/4./8/E;
+T 4;
+2B1;
+1 99/+2 3;
+== rnd-4-37
+IN 1
+;
+TR/CUT/BF3/OFN/S+/G/../PES5:CCJ+:A:A/PB5/FF3/../RW/E/BN/./MRD/C:GN/BA/PFS4:A:GN:D;
+8/S/4./Q/16/T/8/8/2./2/1/H/24/4.;
+A 13/OB 12.5 13/WS 4:5/PL 11:13;
+-301 1/5 8;
+-11 11/9 13/9 10;
+== rnd-4-38
+IN 1 0 0 0 180
+2 150
+K4F/-BA/DN4/RP/B;
+12/2./Q;
+;
+;
+1 2/1 1;
+== rnd-4-39
+IN 1
+;
+K6S/A5:DS:D+:EU/GN/C:A:BN/BS/M/EN4/A4/C5/RD;
+8../8/4/E/16/8/8/16;
+C- 6.25 6/A 2:4;
+1/-4 7;
+6;
+== rnd-4-40
+IN 1 0 0 0 180
+2 150
+K3F/2 2/RD/PCF5/ML/PD;
+2/G/2;
+;
+;
+-1 2/0 1;
+== rnd-4-41
+IN 1 0 0 .8
+;
+2 2/AN4/RU/PCS/A(SS/B3+/CCCCU/AF/OBF/ML2/CF/CS5/G(FF:FJ:DF:E;
+4./4./12/G/H/Q/S/8../T/32/24;
+-S 6:9/C- 3 3;
+-6 10;
+-1 6;
+== rnd-4-42
+IN 1 0 0 0 180
+;
+TE/4 4/G4/PFN/MH/G5/A/OBB:EEE:E;
+4./8/G/8../8..;
+CR 3/FE 3/A 1:2;
+A;
+;
+== rnd-4-43
+IN 1
+2 150
+BA/2 2/G4/C/R/AN:DF:DF:AN/OB:F/./S+/BA/OBBB-;
+8/4/2/Q/8/8/H;
+CR 3/HW 5;
+A;
+4 6/5;
+== rnd-4-44
+IN 1 0 0 0 180
+;
+TE/ES3/ES3/A/OFN4/B/D5/BJ:G/R/FF4/BS:DF/A(SJ+/F;
+G/16/S/32/32/8../G/16/16/8/H/G;
+U 11/AS 10/AO 6;
+2 +6/8 9;
+10 -11/2 7;
+== rnd-4-45
+IN 1 0 0 0 180
+10 190
+TE/GS4/RF/E5/OA/E/SD/ODS/PDS3/CFJ/M/BF:CF-:E(S:B/BB:AF:GG:BSU/RF/CCC:D:ES+/../EN;
+1/16/1/24/S/8./Q/8./H/2/2/8./Q/4;
+;
+3 5;
+9 10/2 5;
+== rnd-4-46
+IN 1 0 0 .8
+10 190
+K5S/E5/RD/GF/BS3;
+4/16/T/1;
+TME 2;
+;
+3 99/+302 3;
+== rnd-4-47
+IN 1
+30 200
+TR/K2F/ES4/A/C/RU/RD/SD/DN/RF/PFNU:E(SS/OB/PAS4/DN4:DS+:AA:A(SS/MI/PGS:BFU:EJ+:E/BF;
+8/16/H/2/8/H/4/H/8../E/H/16/1;
+C- 10 10;
+1 2;
+0 1/-1 5/1 6;
+== rnd-4-48
+IN 1
+2 150
+FS3/F/S0;
+2/12;
+ACT 2/A 2/ACT 1:2/TR 1:2;
+;
+301 2/+1 2;
+== rnd-4-49
+IN 1
+2 150
+3 4/R/EF4/C4:DU:FS:FU/D(F/EN/AJ/ML/G(F;
+8/16/Q/1/12/8./24;
+ACT 5;
+;
+5 6/-4 5;
+== rnd-4-50
+IN 1
+2 150
+2 2/OCN3/ODF4/DF:A:CS/OA/./B4/FS/.././PCN/PCN/R/C4:E(NU+;
+Q/8/2/E/16/8/12/T/T/8../S/4/1;
+-AO 5/S 4:5;
+3B;
+;
+== rnd-4-51
+IN 1
+30 200
+TR/K6S/OFS5-/F:BS:A:AS/C/OF5-/RU/RF;
+E/1/24/12/4./4;
+-A 2:3/TME 2;
+3 4;
+;
+== rnd-4-52
+IN 1 0 0 .8
+;
+BA/3 4/OA3/RD/OA3/RW/G(S/R3/PGF/MR/F:G:B(N:E/OG/EF/E:F:F:B;
+8/2/4/2./2/2./E/S/8./8../Q;
+C 8 8/C 3.25 7/D 8;
+4 7;
++4 6 5;
+== rnd-4-53
+IN 1
+2 150
+SO/AF4/R/RP/R/SO/F:F:EF:A/ES/M/PF/MR;
+1/4/1/4/8/1/12;
+;
+;
+;
+== rnd-4-54
+IN 1
+2 150
+CUT/B(N5/G(FF:CF-/OC4/D/R/F5/..;
+H/8../32/12/2/8../Q;
+W 1:2/T 3:4/-AO 1/-A 6;
+2 5;
+4 5;
+== rnd-4-55
+IN 1
+30 200
+AL/AF5/Q-/../C(S/./CS:A:A:G(N/D5/A/RF/G/G/PAS+/E:EF/OG:E(FF:D:CF/PE/R;
+T/T/E/Q/4/8../2/4/4./8/2/32/32/4/8;
+-AO 5/AS 12:13;
+4B;
++4 6;
+== rnd-4-56
+IN 1
+;
+K4S/D(FF4/C/BN3/../AL/./TR/DJ/MD/EN3:G(SS+:FU/../OB:DU:D/ASJ/DU/OGN3:D:AN/OGN3:D:AN;
+8/8/H/S/Q/H/8../4./8/H/1/Q/1;
+PZ 13/TM 9;
+;
+;
+== rnd-4-57
+IN 1 0 0 .8
+30 200
+TR/4 4/EF5/AF3:D:G/RI/PDS/M/B/CCCC+:FNU:FS/PBN4;
+4./8/16/4./8/4/2;
+HW 2:4/TM 2/O 2.25 6/OB 6 6;
+;
+3 4;
+== rnd-4-58
+IN 1
+30 200
+BA/K5S/BN3+/OB4+:BS:GSJ:D/DN+/S-/AN4/CS5/A/MRD/A/C:A:BS:ES/S-;
+8./8/H/4/16/Q/2/32;
+;
+1 2 4;
+504 6/2 7 2/6 8;
+== rnd-4-59
+IN 1
+;
+TE/12 8/G3/E/BF:EF:DU/A+/MRD/G3/CFU/PE3/SD/BJ/A/OE-/OG(N/B5/FF:EE/F/OE4;
+8../1/T/2/1/2/12/1/24/8/E/H/S/8/12;
+A 5/C 4.5 14;
+-9 11/13 15;
+;
+== rnd-4-60
+IN 1
+2 150
+3 4/PES4/MR/EU/../R/F:CN/RD/FN/OAN/B:A(SS:BF:D/ODN:F/ODN:F/BA/Q+/ODN:F/RF;
+Q/1/8../16/24/4./32/4/Q/S/1/T/4;
+;
+3 5;
+0 4/+508 9;
+== rnd-4-61
+IN 1
+;
+K6S/OB3/OBS:A:GJ:F(F/OB5:E/PF;
+8/8./8../H;
+AO 2/-AO 3/PZ 2;
+;
+2 +4/1 3;
+== rnd-4-62
+IN 1
+;
+2 2/PB3/R/OG4:DU:E/PDF4:EF/M/FFF/ODJ/A(FF4:E/MRD/D/MI/E/R5/E/D-/RF/FF;
+S/2/H/G/G/2/S/8/24/W/8/8./4./4.;
+CR 11/-AO 5;
+306 10;
++4 8/9 99/+5;
+== rnd-4-63
+IN 1 0 0 .8
+30 200
+BA/FF4/ES/RW/B(SS/PA3:C:BS:E/GF:E+:EF/GF:E+:EF/B/./G(S/EE3/G/R/E4;
+1/16/2./S/S/Q/8/24/1/32/S/24/16/8.;
+TME 7/D 6:7/T 7;
+A;
+307 12;
+== rnd-4-64
+IN 1 0 0 0 180
+30 200
+BA/OF(SS4+/M/A4/R2/BJ/../A(F:F/C:CNU:F(NU/ODF;
+8/Q/1/T/H/8/1/G;
+PZ 5/AS 3:5/M 1:3/F2 2:4;
+;
+4 +6 4/3 4/1 4;
+== rnd-4-65
+IN 1 0 0 0 180
+10 190
+A:GU:CSU/CS/F4/C(FF5/G(N5+:F/SO/E:G(S:EN/FF/OE;
+G/Q/24/Q/8/S/8./4.;
+;
++5 7;
+3 8/0 3;
+== rnd-4-66
+IN 1 0 0 0 180
+;
+E3/../OC-;
+T/32/Q;
+TM 2;
+;
+0 1/-1 3/1 2;
+== rnd-4-67
+IN 1 0 0 .8
+30 200
+TE/F4/MR/S-/F4/PG5:F/AF+/S-/AF+/AS/G(N/OG/FF5;
+16/E/24/16/4./32/32/H/T;
+A 5:6/U 1:2/AS 6:7/TS 5:7;
++1 4/6 7;
+;
+== rnd-4-68
+IN 1 0 0 .8
+2 150
+K6S/4 4/OA4+/GS/CF:DF:A:DJ/DF3/D3/OCJ/M/OD/RU/DN/M/OFSU/PC5/MRD/DN;
+H/8/S/8./8../24/32/8/4./32/H/32;
+T 1:2;
+;
+-6 9/5 7;
+== rnd-4-69
+IN 1
+30 200
+AL/K5S/CN4/CCCC+/RI/CF4/PC/G4-/R/FF/OG/F4:EEEE+/AAA/R;
+8/S/4/2/H/24/2/32/12/8./T/4;
+C- 5.5 9/RI 7/O 7 9;
+1 2/5 9;
+302 +7/-2 4/3 8;
+== rnd-4-70
+IN 1
+;
+TR/K4S/12 8/A5/C4/BF3-/PE4:AF+:FF-/OG:G(F:EEE:CFU/D3+/PDS5-/AL/BB5/CU:A:G;
+16/H/12/T/24/8./S/4./8;
+-AO 8/-AO 6;
+;
+;
+== rnd-4-71
+IN 1
+10 190
+4 4/FN4/F5:FS:CS:CU/MR/PA/DSJ/RI/PAS4/RF/E(S:G/D5/D5/D:G/G/AAA3:C:F(F/MH;
+Q/H/8/8./4./G/2/8/12/32/G/1/G;
+TME 6/CR 9/PL 2:3;
+3 +4/6 -8;
+-504 7/1 3/5 10 3;
+== rnd-4-72
+IN 1 0 0 0 180
+10 190
+C4/CN:AJ/DF3/FF4/MH/Q-/C/AF4/PAU/C3:C/OBU/BSJ/RD/F3/D4:GF;
+4/4./Q/Q/24/4./16/T/4/E/4./T/4.;
+S 6:8/RI 3;
+10 11;
+-4 7 3/501 3/+1 4;
+== rnd-4-73
+IN 1 0 0 0 180
+30 200
+AL/-TE/E5:C:G/F5:DN:E/G4/PEF5/MRD/RP/PCF5:G/PD/OB/RF/C:BF:C:EN/PGN3/G4+/C/F(FF;
+1/H/S/S/W/32/H/8./16/8/1/16/8/8..;
+TRW 2 11;
++3 5/+10 12;
+;
+== rnd-4-74
+IN 1 0 0 1.2
+;
+TR/K5S/A(F3/M/A(FFU/MD/E5/OE(FFU/../CCCC/C4:EEE:D+:F/./OCC/ML/GF;
+Q/G/T/16/T/4/T/H/S/T;
+TRW 3 7/U 1:3;
+3 +5/-9;
++2 5/4 +8;
+== rnd-4-75
+IN 1
+2 150
+AL/CUT/OC(SS5:ES:AA/C(FF/../OC/OGS+:FS/PC/RD/PD/D/SU/ES3/MR/BF;
+12/4./12/2/Q/24/2/8/S/8./E;
+TME 9/S 2/D 4:5;
+4B;
+;
+== rnd-4-76
+IN 1
+2 150
+K4S/OD3/B(SS/CS/RF/B/PE(N4:A;
+32/8./8./4./S/4.;
+-A 5;
+301 4;
+3 5/1;
+== rnd-4-77
+IN 1 0 0 0 180
+2 150
+BA/2 2/PE4/MS/AS/R/ODF-/ODDDD/R/RD/C/D:F:A:C/GS/AN;
+S/T/2/T/G/4./8/8../G/32/E;
+F2 3:6/-AO 2;
+1 3;
+1 2;
+== rnd-4-78
+IN 1 0 0 .8
+30 200
+TR/CUT/CCCC4:FN:ASJ/G/PGF:F(NJ/OFF:E(F:C:AF/OF/AL;
+24/32/T/8/1;
+ACT 3/-AO 3/C 5 5/-A 1;
+2B;
+501 4/-3 5;
+== rnd-4-79
+IN 1
+30 200
+BA/BN5/OGJ/TR/../PAS4/GF/S-/BA/PE4:G;
+8/T/2/2/24/S;
+AO 1/HW 1:2;
+1;
+;
+== rnd-4-80
+IN 1 0 0 .8
+;
+BA/12 8/BB5/ODD/PA/FF5/RD/OE4/OB/CJ/OE5:E:G:DS/DN4;
+8./8/16/4./4/E/16/8/8../12;
+D 1:2/CR 4;
+5 9;
+7 8/8 9;
+== rnd-4-81
+IN 1
+30 200
+BA/K3S/COM/GS5/EF/A(S3/RI/OA/B(FF;
+S/S/1/2/16/4.;
+AO 2/CR 4/T 2:3;
+1 2;
++4 5;
+== rnd-4-82
+IN 1
+;
+AL/K5F/B3/../DF4:CN-:G(SS-/MS2;
+24/4./4.;
+O 1.5 1;
+;
+0 3/1 2;
+== rnd-4-83
+IN 1
+;
+TE/K3S/EN3/M/FN:DN/E5/OG4:DNU:C/C4/PAF:A:BN:DF/OE/EFU/OA5;
+24/2/8./32/1/32/16/2/8.;
+T 1:3/TR 7:9/AO 1;
+3 4 4;
+7 9 7/307 -9/5 6;
+== rnd-4-84
+IN 1 0 0 0 180
+2 150
+TE/K6F/-TR/BF5/B4:C:D/PC3:BNU/..;
+T/8/8../24;
+U 3:4/T 1:4/-AO 4;
+1 4;
+-2 4;
+== rnd-4-85
+IN 1
+30 200
+K1S/RF/BBB5:B:EFU:C/AL/AL/BBB5:B:EFU:C/MI;
+16/8/S;
+WS 1:2/U 1/-S 2;
+1 -2;
+1 2;
+== rnd-4-86
+IN 1
+2 150
+AL/PA3/RI/OB/OAJ/CN3/A:G/..;
+1/16/T/T/8../8./S;
+;
+-2 6;
+-4 4;
+== rnd-4-87
+IN 1 0 0 0 180
+30 200
+BA/K2FN/PEF3/DS:E(SS:B(N:GS/E/AF/R2/OBF/R/RU/S-/R/BN/BN/PGFU/CU/G/MD;
+2/8./12/S/2./8./4/16/4/12/H/2/8../2;
+;
+;
+4 99;
+== rnd-4-88
+IN 1 0 0 0 180
+;
+K6S/F5/A/PBS/EN4:ANU:C:B/G/PBF4:F:DFJ:CS+/R5/./DS5/BN/../CN:BS/DDDD/B4/./MS2/TR;
+8/8/H/8/12/E/W/8./8../1/4/T/8/4/16;
+PZ 11/U 12:13;
+1 2;
+302 7/10 12;
+== rnd-4-89
+IN 1 0 0 1.2
+;
+TE/3 4/SO/PDF5:G:B:BF/FF/EF/D+/AN/CN/AF+/OA;
+2/E/8../T/4./12/Q/T;
+-S 7/PL 6:7;
+;
+3 4;
+== rnd-4-90
+IN 1 0 0 1.2
+;
+COM/C4/R5/PE/A(SS5/OGF/./F/R3;
+G/2./4./4/1/12/8/1;
+F2 1:4/PL 2:3/CR 4;
+5 6 4;
+4 6;
+== rnd-4-91
+IN 1 0 0 0 180
+;
+TE/12 8/PDDD4:D:D:E/F(N5/RI/B/A:B:DU;
+1/8/4./16/32;
+PZ 2/C 1 1/WS 3:4/HW 3:4;
+3B2;
+;
+== rnd-4-92
+IN 1
+;
+AL/BS4:DDD-/../ESJ/PCS/AS/GNU/PBU;
+H/4./T/4/8./4/8..;
+D 6:7;
+;
+3 6/5 7;
+== rnd-4-93
+IN 1 0 0 0 180
+;
+TE/F5/OCS:B:G/DN/MI/RU/Q0/BNJ/RI/EN:CU:E:EE/S+/FF/M/S+/D/MS/ODS/SD/F(N/M/G:F:D;
+Q/2/24/2/4./4./Q/4./12/4./E/4;
+AO 4/C 7 8/HW 3:6/PL 8;
+;
+6 7/502 6/-9 10;
+== rnd-4-94
+IN 1 0 0 .8
+10 190
+TR/F4:EN:C:BF/MR/OAF/R5/B4/Q-/C/MI/PBB:FS:BS/FN/PD(S/MI/DU/G(S5/OA:G:F/OE/F4:E-:G+:F;
+8./32/2./8./S/8../24/1/24/8./Q/32/4;
+TME 6;
+8 +9;
+;
+== rnd-4-95
+IN 1
+;
+AL/K2S/OGS5/EF/MRD/OFS/M/PG/OG5+/OB3:C/GS/F;
+T/S/4/2/24/G/24/4;
+OB 4.25 5/-S 6:7/PZ 8/C- 8 8;
+1 2;
+-6 7;
+== rnd-4-96
+IN 1
+10 190
+A4/S-/PC(FU/F/FN4/CCCC/FFFF4/FF5/PA/OEN5/E/FF5+/./E:AFJ:D+:ES;
+8./S/G/8../16/4./T/4/Q/E/16/8../24;
+C 7.5 11/HW 1/WS 11;
+1 1/4 5;
+0 8;
+== rnd-4-97
+IN 1 0 0 .8
+2 150
+TR/PDDD4/C:AS:A:B/C:AS:A:B/FF/B:DFU/A;
+32/24/24/8/8../S;
+FE 6;
+1 6;
+2 +6 3/5 6/1 1;
+== rnd-4-98
+IN 1
+30 200
+EN3-/D/CS/SU/D/OC/MS;
+Q/4/4./Q/8;
+TM 3;
+;
+3 5/+2 4;
+== rnd-4-99
+IN 1
+2 150
+BA/S+/DN3+:F:ES:D/DU/MI/DU;
+32/4/8..;
+O 1 1;
+B;
+1 2/501 3/+2 3;
+== rnd-4-100
+IN 1
+;
+K2S/COM/F4/ODN4/FS:B:C:EN/M/OEF3/CFU:E:B-/G-/MS/G(SJ/OEF5/BF/B(SS;
+4/Q/8/8/4./S/T/G/H/24;
+TS 2/AS 1/TME 8;
+6 6;
+5 8/+4 6 2/8 +10;
+== rnd-4-101
+IN 1 0 0 0 180
+2 150
+TE/K2F/6 8/PAA3/MS/DF4/C/FF5/RI/FN3;
+12/8../8./Q/4./8;
+;
+;
+2 3/1 4/4 5;
+== rnd-4-102
+IN 1
+;
+K4F/PB4/BS/PE(FF4;
+Q/4/8;
+TM 2/FE 2:3/W 1:3/TR 3;
+;
+2 2/0 3/0 2;
+== rnd-4-103
+IN 1
+10 190
+TE/B5/RD/B5/CS/G:F/OFN/GN4/R3/OEN/OEN/R/C/RU/OB/OGGGG3:D(FF:G;
+H/8/G/2/S/T/2/2./8/4/4/G/4/H/12;
+TM 7/-S 6/FE 11/AO 10;
+2B;
+;
+== rnd-4-104
+IN 1 0 0 1.2
+30 200
+TE/R/R/PAF3/CS5/./GF/F/E4:D:E(FJ:G/R;
+8/4./Q/8/12/E/8./8/2;
+T 3/AO 3/C- 2.5 4/TS 5;
+B;
+3/2 3/4 -5;
+== rnd-4-105
+IN 1
+;
+BA/3 4/A4-/OB/ML2/C4/DDD:E/EE3/D5/D5/B(F+/B(F+/../M;
+H/32/4/G/4./24/8./E/4/4.;
+T 7:9/-A 6:9/PL 7/PL 8:10;
++6 8;
+301 5/305 6/3 4;
+== rnd-4-106
+IN 1 0 0 1.2
+;
+TE/K5F/12 8/R/OD5:CF:B/M2/AL/C(SS4/F:E(SSJ:B:G/CU:CF:CF/F/F/B/F(FF/F(FFJ:E:DNU:DN-/RF/D4;
+16/4/1/T/24/32/8/8/H/E/16/24;
+FE 8:10/TS 5:7;
+B;
+-5 9/8 9/2 6;
+== rnd-4-107
+IN 1
+30 200
+K2S/B4:GF+/BN/D/PCNJ/A/..;
+8./16/Q/H/Q/32;
+F2 2:5/U 2:5/HW 4:5/D 6;
+-1 2;
+1 6/0 1;
+== rnd-4-108
+IN 1 0 0 0 180
+2 150
+TR/E5:GN:E/GS3/OD:B:A/MH/EJ/BF/RU/CFJ:G/R/../FS/PEN:B(N/PEN:B(N/ML/OF:D:EN/R/E3/MR2/E3;
+T/S/8/E/24/8/32/4./12/16/H/S/12/4/E/G;
+TR 13/A 1:4/ACT 10;
+-10 12;
+;
+== rnd-4-109
+IN 1
+;
+K1F/2 2/R/CS5/G/GFJ/DS/TR;
+2/4./2/1/8;
+RI 4/FE 4/-A 4;
+;
+2 99/1 2;
+== rnd-4-110
+IN 1
+30 200
+PA4/G:G:CS:A/OA4/PCS/CS:D(F:B:CN;
+12/2/T/1/32;
+S 4:5/RI 5/TM 1/C- 3.25 3;
+;
+;
+== rnd-4-111
+IN 1 0 0 0 180
+2 150
+BA/6 8/PG3/RU/CF/ML2/D(N/A/RW/F;
+24/4/4/8../24/1/Q;
+TME 5/C- 3 3/-S 1/OB 1 5;
+3 4;
+0 5;
+== rnd-4-112
+IN 1
+;
+K4S/-TR/C(SS4/A:EF:G+:D-/./C:DJ/M/PB4/R/BS/OAN/OAN/OD5/-AL/FJ/E5;
+4./4/32/H/8/8/4./1/2/24/G/8;
+PL 7:10/TR 4:7;
+;
+-9;
+== rnd-4-113
+IN 1 0 0 .8
+;
+AL/K2F/BN4/D(FF3:AJ:AS:G/MR/G/FN5/PF(F3/PB/PB/../../RD/PB;
+24/T/8../8./8/16/24/S/1/4./G;
+WS 2:5/FE 2:5/ACT 7;
+A;
+6 8/+8 9/0 2;
+== rnd-4-114
+IN 1
+;
+TR/3 4/C3:BF-/CS/CS/A:G/DN+/E/OBN/ML/G;
+12/T/12/E/4/T/12/1;
+-AO 8/PZ 1;
++1 4/+6;
+501 +4/-6 8;
+== rnd-4-115
+IN 1
+;
+BA/3 4/Q0/F3/Q-;
+24;
+AS 1/S 1;
+A;
+;
+== rnd-4-116
+IN 1 0 0 .8
+30 200
+PC3/OFU/SU/OCCCCJ/R/E:FS:B/RF/Q0/GN/E/C;
+2/8./E/8/16/4/32/12/4;
+TR 6:7/WS 5:6;
+3B;
+0 1/-3 5/6 7;
+== rnd-4-117
+IN 1 0 0 .8
+30 200
+PCF4/./GF:DN:GF/D/MH2/C/OBS:BS:G/DN/BN/C5/R/FF5;
+8/2/H/T/24/24/32/8/G/8/1;
+HW 9;
+4 8;
+8 9;
+== rnd-4-118
+IN 1
+10 190
+12 8/B5/F/M/Q-/OE/B:DS/M/RF/OA/D5/PCF/PDJ;
+H/T/4/8./4./T/4/8./Q;
+;
+4 5;
+;
+== rnd-4-119
+IN 1
+30 200
+TE/K4SN/4 4/F5/B:E:C:B/D(SS3/CFJ/D4;
+8/T/8/2/2;
+;
+1 3;
+1 2/1 4;
+== rnd-4-120
+IN 1 0 0 0 180
+;
+BA/K4F/3 4/AN3/PF:E-:E(N:CCCJ-/./D(SS3;
+16/Q/8./1;
+;
+;
++501 3 3/2 4/303 3;
+== rnd-4-121
+IN 1 0 0 0 180
+30 200
+TR/K6F/D3:B/DU/DU/RI/RU/G-/R/A/G/RD/C:ANU:D:E/FFF:G:BNJ;
+8../H/24/8/16/T/2/8/16/4/8./G;
+U 6:7/AS 1:2;
+-3 7;
+1 4/6 8 6/-3 8;
+== rnd-4-122
+IN 1 0 0 0 180
+2 150
+BA/K4F/C(N4:CF-:F:F/FF4/MR/B/A/FSJ/A:A/G/DF/BN5/B5/B:F(S:DN/CCCJ/OEF;
+4/4/8/16/S/8/T/H/8./2/G/S/4;
+PZ 1/PZ 8/PZ 9;
+3 7;
+9 11/9 10;
+== rnd-4-123
+IN 1 0 0 0 180
+30 200
+TE/PGF5/S-/PF/MI2/S+/OA/F/../MR/../PGSJ/E/ODN:A:BU:FNJ/M/GJ/CCCC/PG;
+T/16/32/1/T/S/8./1/12/12/8/G;
+-AO 5/C- 3.25 10/A 8/PL 5:7;
+1 3/-305 7/9 -11;
+;
+== rnd-4-124
+IN 1 0 0 0 180
+10 190
+PCC5/TR/OG5:GN:EN:BN/OG5:GN:EN:BN/M/OG5:GN:EN:BN/MH/PG4:CS:F/OBS3;
+G/2/E/12/2/Q;
+WS 4;
++3 4;
+;
+== rnd-4-125
+IN 1
+30 200
+GS3/M/EF/B3/B3/Q0/AU:EF/BN/B/PFN5:GF:DN:GG;
+S/T/G/12/4/32/T/8.;
+O 4 7/C 5 6/AO 8;
+B;
+1 -3/2 +5;
+== rnd-4-126
+IN 1
+2 150
+K1S/FN3/FN3/E/A(S5/ODD:E(FFU:F/CN/E5/CCCC/AL/RU/D:FS:EF/EFJ/C/G/OEF/ML;
+1/8/S/E/8../2/4/T/16/T/T/8./4./Q;
+-A 7:9/O 2.5 2/AS 5:8;
+8 +11;
+;
+== rnd-4-127
+IN 1 0 0 1.2
+30 200
+AL/K5S/AS3/S0/OFF:EEE-:D/DS5:G(FF/CN3/PDJ/D/RF/PE:ESU/M/B/R/FS+/PES:FJ:GJ:CF/PEE5/A/MRD;
+1/4/32/Q/H/4./16/8./8/2/16/24/1/T;
+;
+7 10;
+4 9/11 12;
+== rnd-4-128
+IN 1 0 0 1.2
+10 190
+TE/6 8/OG(SS5/G5/PFFF/RF/RU/DS3:D:F+:ES/MRD/D/OEJ/CS:BF:FN/DN5-:CN:C/CS:ANJ:E/BA/PE3/PD:G:D(FF-:GF;
+8../24/4/8/16/S/16/Q/8/Q/E/24/E;
+T 3:5/S 4:5/WS 2:5/OB 6.25 8;
+1 2/+4/9 11;
+;
+== rnd-4-129
+IN 1
+2 150
+TR/2 2/C5/RF/PASJ:DFU/RI/G3/D4/PB/OFF3/OCN/EF4:BF/AL/PC5/D4:GNU:CCCC;
+T/4./16/16/8./1/H/1/E/8/Q/8..;
+T 5:7;
+1 3/7 8;
+;
+== rnd-4-130
+IN 1
+;
+PAN5-:BU/C/AL/./RU/E/E/CS/RI/../TR/C(N/B4/ML2;
+Q/S/8/2/4/2/E/8/32/16/4.;
+;
+6 8;
+6 9;
+== rnd-4-131
+IN 1
+;
+CN4/RF/BF/F/EF/PGN;
+12/4/12/S/Q/12;
+HW 3:5/ACT 1:2/TRW 1.25 5;
+1 3;
+3 5;
+== rnd-4-132
+IN 1 0 0 1.2
+;
+CCC4/C:D:AN:C/D4/D4/PBF/MR/PB/RF/PBF/PDS/OG5;
+1/4/8/24/G/24/2/24/4./H;
+ACT 1:2/A 3:4/TRW 2.5 3/ACT 3;
+6 7;
+;
+== rnd-4-133
+IN 1 0 0 1.2
+;
+12 8/B5/GN3/E/A:G(F:F:B(F-;
+T/8./32/Q;
+C 3 4/AO 1/OB 1.5 4;
+1 3;
+1 +3/-3 4;
+== rnd-4-134
+IN 1
+;
+PBN4/FJ/OE/A/EN;
+8../32/G/32/8..;
+;
+3B;
+3 4/2 4/1 2;
+== rnd-4-135
+IN 1
+2 150
+BA/CUT/AN3/AF+/B/DJ/MD2/RI;
+8/8../Q/8../4.;
+;
++1;
+;
+== rnd-4-136
+IN 1
+30 200
+6 8/GS5/DS:C/MS/CJ/MD/B/ANJ:ASU/PC5/F:BNU:F:GU/OAS3+/RU/F-/E3/MH2;
+1/H/G/H/8/12/4./8/4/8./Q;
+AO 7/-AO 2/C- 10 10/C 8.25 9;
+5 6;
+308 -9;
+== rnd-4-137
+IN 1
+;
+12 8/R/C3/AU:F:BSU:DN/E/ML/PF:CCC:CCCC/OCS:B:CS/OD3/./F(N/MRD/GF4/G(FF/ES/DDDD5/DDDD5/DDDD5;
+8/8/8./2/4./1/Q/S/S/H/8/8/4./8./T;
+C 4.5 12/OB 8 10/TR 4;
+310 11/13 +14;
+5/12 14/11 -13;
+== rnd-4-138
+IN 1
+;
+AL/B5:F(SS:EF:BS/OC4:C(SS:G/C/AL/PB/G3:G/RP/AAAA/DN5/DF/RU/FJ/CCU/RI/GU;
+1/4./S/8../4/2./16/E/24/2/S/G/2/8.;
+U 4:6/OB 3 11/TS 8:9/U 10;
+-3/+6 9;
+8 10/8 -9;
+== rnd-4-139
+IN 1
+;
+K4F/BF4/DN4/CS/M/PGS5:A:CJ:ANJ;
+8./G/32/2;
+AO 2;
+3B2;
+3 4;
+== rnd-4-140
+IN 1
+30 200
+BA/K4S/S+/OF5/F/MD/B5/FU/MD/DN/BF-/CF/OCCCC/RU/EFU/./AS:BF:G:AS/M/OG3;
+8/8./8/8../12/4/12/S/4./24/2/T/G;
+F2 5:7;
+1 +5/7 9;
+7 12/-4 7/2 3 1;
+== rnd-4-141
+IN 1 0 0 0 180
+10 190
+BBB4:E:B(SS:D/GF/E/DF/FS/RU/C+:F/../PB(SS:DN/OG3/OG5/M/D(S:B/CNU:D(SS:DF/PA(S4:C(FF:F;
+T/E/16/8/12/4./8./16/G/G/G/8../Q/2;
+TME 3/TR 4:5;
+;
+11 12;
+== rnd-4-142
+IN 1
+2 150
+12 8/A(N5/BN/FJ/ML/../D(SS/GSJ/GSJ/E/OG(FF:D/GS:B:F:D/B;
+Q/8./4./24/24/E/12/H/16/16/8.;
+;
+9 +11;
+-10 11/+2 4/5 10;
+== rnd-4-143
+IN 1 0 0 .8
+30 200
+AL/F5/RP/FS/FS/MS/../RF/FF-/C:A:ES:D/OGF5/D/C3:B:AS/MH2;
+4./2./4./G/24/4/8./S/H/8/8;
+CR 3/AO 1;
+-4 6;
+;
+== rnd-4-144
+IN 1
+;
+EN4:FS:A:F+/Q0/F+:F:AS/PC4/../ES4/D-/PC3/F/CF:G/MS2/C:A:G/FS4/OA4/EN/ES;
+T/E/4/4./T/16/12/24/8../32/16/G/8/16;
+CR 9;
+5 11;
+6 +9/2 +7/11 11;
+== rnd-4-145
+IN 1
+2 150
+TE/K6F/PF3/OES4/DF;
+4/8/E;
+;
+2 3;
+2 3/1 -2 4/-2 3;
+== rnd-4-146
+IN 1
+30 200
+4 4/A5/F:B:G:DS/EJ/R2/S0/CF/PA4/TR/OG(S/B4:G-:GS/OG(F4:BF:DU/A3:AN:E/G/GF:G:B(FF:FU/CC/A4;
+2/12/Q/W/16/H/G/4./12/12/8./8/32/8.;
+TRW 11.5 13/-S 5:7/C- 6 8;
+8 13;
+;
+== rnd-4-147
+IN 1 0 0 .8
+;
+-TR/R5/D3:A:AA:D/PEN4:F-:D(F:CN;
+1/2/12;
+AS 2;
+;
++1/2 99;
+== rnd-4-148
+IN 1
+2 150
+12 8/OA4-:EF/PD(N/OFN4/MS/EEE/G/F4/RD;
+12/T/4/8../H/G/8;
+M 1:2/-A 1:2/C 3.25 5/C 5.5 5;
+1 2;
+;
+== rnd-4-149
+IN 1
+;
+A4/ODN3/B(FF5:F/OD-/CF/R5/E/AF/PA/FS:E:B/MR/..;
+E/8./T/H/32/2./8../4./8./2/S;
+O 5 8/ACT 7:8;
+;
+0 9;
+== rnd-4-150
+IN 1 0 0 .8
+2 150
+R/PC5/PBF:G:AF/CJ;
+4/1/T/8;
+ACT 3/W 1:3/TM 3/-AO 3;
+;
+2 3;
+== rnd-4-151
+IN 1 0 0 .8
+30 200
+K2S/CF3/AN5:CS/MRD/E:BN:FS:D/OAS5-:B(F:BS/Q0/././R/F/M2;
+H/16/H/1/8./T/16/12;
+CR 6/PL 3:5;
+-5 7;
+0 6/0 5;
+== rnd-4-152
+IN 1 0 0 .8
+2 150
+K3S/6 8/D4/R/GF4:D:F/OG:AF-/G(S/PG(N4:FJ/A/AN3-;
+E/16/32/E/4/32/32/4.;
+AS 1:4/ACT 4/A 1:3/M 6;
+B;
+4 6;
+== rnd-4-153
+IN 1
+30 200
+TR/4 4/E3/B/F4/DS/OBF3-/Q-/B/Q-/FN/EF/PF/PBN:EN/ESJ/R/Q+/C4;
+4./E/24/E/32/S/8/8/24/8/8../4/8;
+TRW 3 3/W 6;
+A;
++6 9;
+== rnd-4-154
+IN 1
+;
+TR/4 4/PGS4/F3/./M/RU/S0/SO/DF4/CF5/PEF/MS/D-:F:G(SS;
+S/2/2/2/T/T/16/24;
+W 3:4/OB 5 5;
++4 7;
+4 7/+1 4/2 7;
+== rnd-4-155
+IN 1 0 0 0 180
+30 200
+TR/PDF3/OB/AS/OBFU/GFJ/R3/DF/PAS5:B:F:E;
+12/T/E/G/8../2./32/8..;
+HW 6/HW 6/TME 1;
+-2B;
+2 3;
+== rnd-4-156
+IN 1
+;
+K4S/CF4/EEEE4:FN/PGN5/DS5+/TE/C:D:B:A/GF/BBBB/E:B(S:DN/CF3/M2/./A(F/M/BF;
+1/32/E/32/4/2/2/1/H/8./S/Q;
+C 5 8/-AO 12/M 6;
++2 4;
+504 6;
+== rnd-4-157
+IN 1 0 0 .8
+;
+K3S/6 8/PE4/OD:B:A-/G/G(FF3/CN/MS/OG:DS:D:AN/AN/PF5/M/GF/PFU/OF/MRD/FN/BN;
+32/4./8/24/1/H/Q/24/H/4./2/4/T;
+C- 12.5 12;
++4B;
+0 10/5 6/-6 9;
+== rnd-4-158
+IN 1
+;
+TE/DF4:D:AU-/RD/BU/GS3;
+4/4./24/G;
+TME 3/TRW 1.5 1;
+;
++2 3 9/0 1/0 3;
+== rnd-4-159
+IN 1 0 0 1.2
+10 190
+AL/B5/OC3:BN:BF/GS/OBS+/R;
+8./32/H/8../8;
+HW 1:4/OB 2.25 4;
+-1 2;
+;

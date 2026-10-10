@@ -1,0 +1,7 @@
+IN 1 0 0 .8
+;
+2 2/AN4/RU/PCS/A(SS/B3+/CCCCU/AF/OBF/ML2/CF/CS5/G(FF:FJ:DF:E;
+4./4./12/G/H/Q/S/8../T/32/24;
+-S 6:9/C- 3 3;
+-6 10;
+-1 6;

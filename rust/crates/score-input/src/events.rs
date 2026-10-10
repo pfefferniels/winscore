@@ -104,6 +104,14 @@ impl Token {
         }
     }
 
+    /// The copy `=` makes: notes lose their accidental and its parentheses.
+    fn plain(&self) -> Token {
+        match self {
+            Token::Note { pitch, member } => Token::Note { pitch: Pitch { accidental: None, cautionary: false, ..*pitch }, member: *member },
+            other => other.clone(),
+        }
+    }
+
     /// The copy an `X` repeat makes: notes lose their accidental, keep their parentheses.
     fn without_accidental(&self) -> Token {
         match self {
@@ -252,7 +260,10 @@ impl Resolver<'_> {
             }
             NoteEntry::RepeatChord { keep_accidentals } => {
                 let (from, to) = self.chord_before_last_item().ok_or_else(|| error(ErrorKind::NothingToRepeat))?;
-                let block = copied(&self.tokens[from..to], *keep_accidentals);
+                let block: Vec<Token> = self.tokens[from..to]
+                    .iter()
+                    .map(|t| if *keep_accidentals { t.clone() } else { t.plain() })
+                    .collect();
                 self.tokens.extend(block);
             }
             NoteEntry::Recall { name, steps, joins } => {

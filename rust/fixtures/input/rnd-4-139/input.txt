@@ -1,0 +1,7 @@
+IN 1
+;
+K4F/BF4/DN4/CS/M/PGS5:A:CJ:ANJ;
+8./G/32/2;
+AO 2;
+3B2;
+3 4;

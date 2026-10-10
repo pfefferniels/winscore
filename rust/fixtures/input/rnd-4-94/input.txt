@@ -1,0 +1,7 @@
+IN 1 0 0 .8
+10 190
+TR/F4:EN:C:BF/MR/OAF/R5/B4/Q-/C/MI/PBB:FS:BS/FN/PD(S/MI/DU/G(S5/OA:G:F/OE/F4:E-:G+:F;
+8./32/2./8./S/8../24/1/24/8./Q/32/4;
+TME 6;
+8 +9;
+;
