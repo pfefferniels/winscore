@@ -19,6 +19,7 @@ use crate::line::{Line, Timed};
 use crate::notes::{Accidental, StemMode};
 use crate::num::{amod, par, trunc};
 use crate::rhythm::Rhythm;
+use crate::staves::Neighbours;
 use crate::{beams, marks, slurs, stems, Options};
 
 const NOTE: i32 = 1;
@@ -624,7 +625,8 @@ impl Stream {
             .iter()
             .map(|event| Timed { event, rhythm: if event.is_rhythmic() { rhythms.next() } else { None } })
             .collect();
-        let options = Options { staff: staff.clamp(0, 255) as u8, size: 1.0, begin: left, end: right, ..Options::default() };
+        let staff = staff.clamp(0, 255) as u8;
+        let options = Options { staff, size: 1.0, begin: left, end: right, neighbours: Neighbours::defaults(staff), ..Options::default() };
         let mut line = Line::new(&timed, &options);
         for (chord, run, heads) in &self.interrupted {
             if let Some(note) = line.note_mut(chord + 1) {

@@ -26,3 +26,26 @@ rnd-4-55
 rnd-4-57
 rnd-4-73
 rnd-4-84
+rnd-4-138
+# Deliberate (D12): the engine picks the dot layout of a chord from the raw P5 of its first
+# note, so a cautionary +100 gives a stem-up chord the stem-down rule; score-input uses the stem.
+rnd-4-56
+rnd-4-61
+rnd-4-87
+rnd-4-126
+# Deliberate (D12): a centred rest right after a grace note is merged into its grace chord
+# (shared P15 = -1 marker); score-input keeps the rest a rest.
+rnd-4-90
+# Pending (asked disasm-expert): beams over lines with a centred rest (RW/RP/Rn), probably
+# the same P15 = -1 marker in the beam routines.
+rnd-4-24
+rnd-4-28
+rnd-4-37
+rnd-4-63
+# Pending (asked disasm-expert): stems of S+/S- notes under beams (0x40CDE4 with P12, P12 kept
+# under forced beams).
+rnd-4-9
+rnd-4-67
+rnd-4-123
+rnd-4-128
+rnd-4-140

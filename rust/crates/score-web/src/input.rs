@@ -2,7 +2,7 @@
 
 use score_format::{Item, MusFile};
 use score_input::notes::Clef;
-use score_input::{run_with_motives, InputError, Motives, Options, Passes, StaffArgs};
+use score_input::{run_with_motives, InputError, Motives, Neighbours, Options, Passes, StaffArgs};
 use wasm_bindgen::prelude::*;
 
 use crate::Score;
@@ -61,6 +61,7 @@ fn options(file: &MusFile, line: &InputLine) -> Options {
         end: right_end.map_or(line.end, |right| line.end.min(right)),
         clef,
         staff_end: right_end.unwrap_or(Options::default().staff_end),
+        neighbours: Neighbours::from_items(&file.items, line.staff),
     }
 }
 

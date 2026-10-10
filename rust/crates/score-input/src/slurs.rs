@@ -35,12 +35,26 @@ pub(crate) struct WorkEntry {
     pub grace: bool,
     /// 1-based note number, for the entry carrying a note's stem.
     pub note: Option<usize>,
+    /// Steps from the IN staff to the staff the note is placed on (S+/S-).
+    pub staff_steps: f32,
 }
 
 impl WorkEntry {
     /// An entry that is not a note (rest, barline, clef, key, meter).
     pub fn other(code: i32, x: f32, level: i32) -> Self {
-        WorkEntry { code, x, level, stem: 0, accidental: 0, extension: 0.0, dotted: false, mark: 0.0, grace: false, note: None }
+        WorkEntry {
+            code,
+            x,
+            level,
+            stem: 0,
+            accidental: 0,
+            extension: 0.0,
+            dotted: false,
+            mark: 0.0,
+            grace: false,
+            note: None,
+            staff_steps: 0.0,
+        }
     }
 
     /// 0x53DFD6: the stem direction, or for a stemless head the side it would have.
@@ -285,8 +299,9 @@ impl SlurInput<'_> {
             typed_first = 1;
             typed_second = 1;
         }
-        let mut level1 = self.entries[a].level as f32;
-        let mut level2 = self.entries[b].level as f32;
+        // 0x41A4F9: the end notes' levels count from the staff they are placed on.
+        let mut level1 = self.entries[a].level as f32 + self.entries[a].staff_steps;
+        let mut level2 = self.entries[b].level as f32 + self.entries[b].staff_steps;
         let chord_start = self.entries.get(a + 1).is_some_and(|n| n.x == self.entries[a].x);
         let tie_mode = if chord_start { -1 } else { 0 };
 
@@ -401,9 +416,6 @@ impl SlurInput<'_> {
 }
 
 pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry], (begin, end): (f32, f32), staff_end: f32) -> Result<(), InputError> {
-    let mut work = line.work_entries();
-    let note_entry: Vec<usize> = work.iter().enumerate().filter(|(_, e)| e.note.is_some()).map(|(i, _)| i).collect();
-    let staff = line.staff;
     let pairs: Vec<Connection> = entries
         .iter()
         .filter_map(|entry| match entry {
@@ -412,9 +424,15 @@ pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry], (begin, end): (f3
         })
         .collect();
     // A start past the last note is invalid input: 0x41A14C reads the empty slot before note 1.
-    if let Some(bad) = pairs.iter().find(|c| c.first > note_entry.len() && c.first != PAST_LAST) {
+    if let Some(bad) = pairs.iter().find(|c| c.first > line.note_count() && c.first != PAST_LAST) {
         return Err(InputError::new(Pass::Slurs, Span::default(), ErrorKind::NoSuchNote(bad.first as f32)));
     }
+    pairs.iter().flat_map(|c| [c.first, if c.last <= c.first { c.first + 1 } else { c.last }]).for_each(|n| {
+        line.placement_steps(n);
+    });
+    let mut work = line.work_entries();
+    let note_entry: Vec<usize> = work.iter().enumerate().filter(|(_, e)| e.note.is_some()).map(|(i, _)| i).collect();
+    let staff = line.staff;
     let mut input = SlurInput { entries: &mut work, note_entry, staff, begin, end, staff_end };
     let made: Vec<score_format::Item> = pairs.iter().flat_map(|c| input.items(c)).collect();
     line.take_marks(&work);

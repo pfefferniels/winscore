@@ -93,18 +93,39 @@ fn endpoint(c: &mut Cursor, pass: Pass) -> Option<Endpoint> {
     Some(Endpoint::from_value(side, value))
 }
 
-/// `a b` (a third number ignored), or `a` alone; an end not after the start is resolved
-/// to the next note by the builders.
-fn pair(c: &mut Cursor, pass: Pass) -> Result<Option<Connection>, InputError> {
+/// An end 0: the builders take the next note.
+const NEXT_NOTE: Endpoint = Endpoint { side: None, note: 0, tuplet: 0, fraction: 0.0 };
+
+fn connection(a: Endpoint, b: Endpoint) -> Connection {
+    let tuplet = if b.tuplet != 0 { b.tuplet } else { a.tuplet };
+    Connection { first: a.note, last: b.note, sides: [a.side, b.side], tuplet, fractions: [a.fraction, b.fraction] }
+}
+
+/// An item of pass 4 or 5 before its partner is known.
+enum Parsed {
+    /// `a b` (a third number ignored), or `a` alone, whose end is the first number of the
+    /// next item (0, the next note, in the last item).
+    Pair(Endpoint, Option<Endpoint>),
+    Groups(Vec<Connection>),
+}
+
+impl Parsed {
+    fn first(&self) -> Option<Endpoint> {
+        match self {
+            Parsed::Pair(a, _) => Some(*a),
+            Parsed::Groups(_) => None,
+        }
+    }
+}
+
+fn pair(c: &mut Cursor, pass: Pass) -> Result<Option<Parsed>, InputError> {
     let Some(a) = endpoint(c, pass) else {
         return if c.at_end() { Ok(None) } else { Err(c.error_here(ErrorKind::ExpectedNumber)) };
     };
     let tight_plus = c.peek_raw() == Some(b'+');
     let b = endpoint(c, pass).map(|b| if tight_plus { Endpoint { side: None, ..b } } else { b });
     c.skip_rest();
-    let b = b.unwrap_or(Endpoint { side: None, note: 0, tuplet: 0, fraction: 0.0 });
-    let tuplet = if b.tuplet != 0 { b.tuplet } else { a.tuplet };
-    Ok(Some(Connection { first: a.note, last: b.note, sides: [a.side, b.side], tuplet, fractions: [a.fraction, b.fraction] }))
+    Ok(Some(Parsed::Pair(a, b)))
 }
 
 /// `Xk a b c`: the pairs (a, a + k - 1), (b, b + k - 1), ...
@@ -121,12 +142,12 @@ fn groups(c: &mut Cursor, pass: Pass) -> Result<Vec<Connection>, InputError> {
         .collect())
 }
 
-fn parse_entry(entry: &Entry, pass: Pass) -> Result<Vec<Connection>, InputError> {
+fn parse_entry(entry: &Entry, pass: Pass) -> Result<Option<Parsed>, InputError> {
     let mut c = entry.spaced_cursor(pass);
     if c.peek() == Some(b'X') {
-        return groups(&mut c, pass);
+        return groups(&mut c, pass).map(|g| Some(Parsed::Groups(g)));
     }
-    Ok(pair(&mut c, pass)?.into_iter().collect())
+    pair(&mut c, pass)
 }
 
 pub fn parse(text: &str, pass: Pass, motives: &mut Motives) -> Result<Vec<ConnectEntry>, InputError> {
@@ -137,13 +158,22 @@ pub fn parse(text: &str, pass: Pass, motives: &mut Motives) -> Result<Vec<Connec
     }
     let read = reader::read_connections(text);
     let in_typed_text = |err: InputError| InputError { span: read.origin_span(err.span), ..err };
-    let parsed: Vec<Vec<Connection>> = entries(&read.text, pass, motives)
+    let parsed: Vec<Parsed> = entries(&read.text, pass, motives)
         .map_err(in_typed_text)?
         .iter()
         .filter(|e| !e.text.trim().is_empty())
         .map(|e| parse_entry(e, pass).map_err(in_typed_text))
-        .collect::<Result<_, _>>()?;
-    Ok(parsed.into_iter().flatten().map(ConnectEntry::Pair).collect())
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .flatten()
+        .collect();
+    // 0x4DA9C3 reads a single number's partner past the `/`.
+    let next_firsts = parsed.iter().skip(1).map(Parsed::first).chain(std::iter::once(None));
+    let connections = parsed.iter().zip(next_firsts).flat_map(|(item, next)| match item {
+        Parsed::Pair(a, b) => vec![connection(*a, b.or(next).unwrap_or(NEXT_NOTE))],
+        Parsed::Groups(groups) => groups.clone(),
+    });
+    Ok(connections.map(ConnectEntry::Pair).collect())
 }
 
 /// Pass 4's automatic beams (0x4DA9C3): `B` or `A` as the first character beams by the last
@@ -213,7 +243,8 @@ mod tests {
             pairs("1 2/-4 306/7 +309/1+4;", Pass::Beams),
             [(1, 2, None, 0), (4, 6, Some(Side::Below), 3), (7, 9, Some(Side::Above), 3), (1, 4, None, 0)]
         );
-        assert_eq!(pairs("1 2 3/5/1.5 3;", Pass::Beams), [(1, 2, None, 0), (5, 0, None, 0), (1, 3, None, 0)]);
+        assert_eq!(pairs("1 2 3/5/1.5 3;", Pass::Beams), [(1, 2, None, 0), (5, 1, None, 0), (1, 3, None, 0)]);
+        assert_eq!(pairs("1/-4 7/3;", Pass::Beams), [(1, 4, Some(Side::Below), 0), (4, 7, Some(Side::Below), 0), (3, 0, None, 0)]);
         assert_eq!(pairs("1-2;", Pass::Slurs), [(12, 0, Some(Side::Below), 0)]);
         assert_eq!(pairs("X3 1 4 7;", Pass::Slurs), [(1, 3, None, 0), (4, 6, None, 0), (7, 9, None, 0)]);
     }

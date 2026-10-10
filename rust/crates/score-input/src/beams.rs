@@ -453,6 +453,7 @@ impl Beamer<'_> {
         let mut fewest = 99;
         let mut most = 0;
         for n in first..=last {
+            let staff_steps = self.line.placement_steps(n);
             let note = match self.line.note(n) {
                 Some(note) => note,
                 None => return Vec::new(),
@@ -467,7 +468,7 @@ impl Beamer<'_> {
                 most = most.max(counted);
             }
             if first_grace || counted != 0 {
-                levels.push(beam_side_level(note));
+                levels.push(beam_side_level(note) + staff_steps);
                 xs.push(note.x);
             }
             tails.push(counted);

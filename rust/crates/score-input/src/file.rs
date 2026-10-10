@@ -23,7 +23,7 @@ use std::fmt;
 use score_format::{Item, Word};
 
 use crate::notes::Clef;
-use crate::{run_with_motives, ErrorKind, InputError, Motives, Options, Pass, Passes, Span};
+use crate::{run_with_motives, ErrorKind, InputError, Motives, Neighbours, Options, Pass, Passes, Span};
 
 const PASS_COUNT: usize = 5;
 
@@ -152,7 +152,7 @@ impl InputLine {
         }
         let size = if staff.size == 0.0 { 1.0 } else { staff.size };
         let staff_end = if staff.right > 0.0 { staff.right } else { default.staff_end };
-        Options { staff: self.staff.number, size, begin, end, clef, staff_end }
+        Options { staff: self.staff.number, size, begin, end, clef, staff_end, neighbours: Neighbours::defaults(self.staff.number) }
     }
 }
 
@@ -198,7 +198,7 @@ impl InputFile {
                 items.push(line.staff.staff_item());
             }
             let clef = current_clef(&items, number);
-            let options = line.options_on(&staves[&number], clef);
+            let options = Options { neighbours: Neighbours::from_items(&items, number), ..line.options_on(&staves[&number], clef) };
             items.extend(run_with_motives(&line.passes(), &options, &mut motives)?);
         }
         Ok(items)

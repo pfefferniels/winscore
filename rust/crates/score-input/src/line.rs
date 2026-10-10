@@ -10,7 +10,7 @@ use crate::notes::{BarStyle, Clef, Direction, KeySignature, Meter, Rest, RestKin
 use crate::rhythm::Rhythm;
 use crate::slurs::WorkEntry;
 use crate::spacing::{positions, Entry, GRACE_DURATION};
-use crate::Options;
+use crate::{Neighbours, Options};
 
 /// Middle staff line: notes from here up take a down stem, and a stem reaches at least here.
 pub(crate) const MIDDLE_LINE: i32 = 7;
@@ -71,6 +71,9 @@ pub(crate) struct Note {
     spaced_from_top: bool,
     /// Cue size: P4 is stored 100 further from 0, as for grace notes.
     pub cue: bool,
+    /// The stem head's placement on another staff was dropped because that staff cannot
+    /// exist (0x41A776); the other heads keep theirs.
+    pub placement_dropped: bool,
     /// P5, P10 and dots of every head when they do not follow from the heads (a grace
     /// chord in the refit).
     explicit_layout: Option<Vec<HeadLayout>>,
@@ -105,6 +108,7 @@ impl Note {
             kept_layout: None,
             spaced_from_top: false,
             cue: false,
+            placement_dropped: false,
             explicit_layout: None,
         };
         note.laid_out_heads = note.heads.len();
@@ -375,7 +379,7 @@ impl Note {
         self.heads.iter().collect()
     }
 
-    fn work_entries(&self, number: usize) -> Vec<WorkEntry> {
+    fn work_entries(&self, number: usize, staff_steps: f32) -> Vec<WorkEntry> {
         self.ordered_heads()
             .iter()
             .enumerate()
@@ -396,6 +400,7 @@ impl Note {
                     mark: if stem_head { self.mark } else { 0.0 },
                     grace: self.is_grace(),
                     note: stem_head.then_some(number),
+                    staff_steps,
                 }
             })
             .collect()
@@ -504,7 +509,7 @@ impl Note {
                     (dots + tails + layouts[i].dots) as f32,
                     layouts[i].shift,
                     mark,
-                    staff_shift,
+                    if stem_head && self.placement_dropped { 0.0 } else { staff_shift },
                 ])
             })
             .collect()
@@ -714,6 +719,7 @@ pub(crate) struct Line {
     pub elements: Vec<Element>,
     /// Items created by passes 3-5 (marks, beams, slurs), in creation order.
     pub attachments: Vec<Item>,
+    pub neighbours: Neighbours,
 }
 
 impl Line {
@@ -769,7 +775,13 @@ impl Line {
                 (Event::Chord(_) | Event::Rest(_), None) => None,
             })
             .collect();
-        let mut line = Line { staff: f32::from(options.staff), size: options.size, elements, attachments: Vec::new() };
+        let mut line = Line {
+            staff: f32::from(options.staff),
+            size: options.size,
+            elements,
+            attachments: Vec::new(),
+            neighbours: options.neighbours,
+        };
         line.mark_clef_changes();
         line.space(options.begin, options.end);
         line
@@ -860,6 +872,29 @@ impl Line {
         })
     }
 
+    /// Scale steps a staff placement adds to a note's level in beams and slurs (0x41A776);
+    /// None for a staff that cannot exist.
+    fn staff_steps(&self, shift: StaffShift) -> Option<f32> {
+        match shift {
+            StaffShift::Main => Some(0.0),
+            StaffShift::Above => self.neighbours.above,
+            StaffShift::Below => self.neighbours.below,
+        }
+    }
+
+    /// 0x41A776 on note `number`, as a beam or slur reaches it: the steps its placement adds
+    /// to its level. A placement on a staff that cannot exist is dropped from the stem head
+    /// (its P12 = 0).
+    pub fn placement_steps(&mut self, number: usize) -> f32 {
+        let Some(shift) = self.note(number).map(|n| n.shift) else { return 0.0 };
+        self.staff_steps(shift).unwrap_or_else(|| {
+            if let Some(note) = self.note_mut(number) {
+                note.placement_dropped = true;
+            }
+            0.0
+        })
+    }
+
     /// The engine's work table as passes 4 and 5 read it: one entry per chord member.
     pub fn work_entries(&self) -> Vec<WorkEntry> {
         let mut number = 0;
@@ -868,7 +903,7 @@ impl Line {
             .flat_map(|element| match element {
                 Element::Note(note) => {
                     number += 1;
-                    note.work_entries(number)
+                    note.work_entries(number, self.staff_steps(note.shift).unwrap_or(0.0))
                 }
                 Element::Rest { x, rest, .. } => vec![WorkEntry::other(2, *x, rest_level(*rest) as i32)],
                 Element::Bar { x, .. } => vec![WorkEntry::other(14, *x, 0)],

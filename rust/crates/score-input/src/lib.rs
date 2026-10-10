@@ -37,6 +37,7 @@ pub mod rhythm;
 mod scan;
 mod slurs;
 mod spacing;
+mod staves;
 mod stems;
 
 use score_format::Item;
@@ -45,6 +46,7 @@ pub use error::{ErrorKind, InputError, Pass, Span};
 pub use file::{InputFile, InputLine, StaffArgs, Step};
 pub use motives::Motives;
 pub use refit::{refit, refit_staves, RefitError, RefitErrorKind, RefitMode, StavesRefit};
+pub use staves::{Neighbours, StaffPlace};
 
 /// The texts of the five passes, each ending with `;`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -64,8 +66,9 @@ impl Default for Passes<'_> {
 
 /// Where the line goes: the staff (P2 of every item), its size factor (P5 of the staff
 /// item, 1 for a normal staff), the input range in P3 units, the clef in force on the
-/// staff when the line starts (the engine keeps the last clef of each staff), and the
-/// staff's right end (P6 of the staff item, 200 when 0), where slurs past the last note end.
+/// staff when the line starts (the engine keeps the last clef of each staff), the staff's
+/// right end (P6 of the staff item, 200 when 0), where slurs past the last note end, and the
+/// distances to the staves above and below, for notes moved there (S+/S-).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Options {
     pub staff: u8,
@@ -74,13 +77,22 @@ pub struct Options {
     pub end: f32,
     pub clef: notes::Clef,
     pub staff_end: f32,
+    pub neighbours: Neighbours,
 }
 
 impl Default for Options {
     /// Staff 1 of normal size and full length in treble clef, and the range WinScore's input
     /// dialog proposes, 2 to 200.
     fn default() -> Self {
-        Self { staff: 1, size: 1.0, begin: 2.0, end: 200.0, clef: notes::Clef::Treble, staff_end: slurs::STAFF_END }
+        Self {
+            staff: 1,
+            size: 1.0,
+            begin: 2.0,
+            end: 200.0,
+            clef: notes::Clef::Treble,
+            staff_end: slurs::STAFF_END,
+            neighbours: Neighbours::defaults(1),
+        }
     }
 }
 
