@@ -83,7 +83,7 @@ A grace note's work-table P3 is first set to -1 (0x51E157), then overwritten in 
 
 ## Grammar
 
-How a pass text becomes items, derived from the parser routines and checked on the oracle with `experiments/inprobe.py` (it prints each pass text as 0x4AEFA0 receives it, the token list R and the saved items) on `oracle/input_corpus_grammar.txt` (blocks `== g-<pass>-<construct>`; the block name is given in the last column). The engine is the authority (D3). Where Craig Sapp's input page or Smith's help read differently, the engine's reading is given and the difference noted under each pass.
+How a pass text becomes items, derived from the parser routines and checked on the oracle with `experiments/inprobe.py` (it prints each pass text as 0x4AEFA0 receives it, the token list R and the saved items) on `oracle/input_corpus_grammar.txt` (blocks `== g-<pass>-<construct>`. The block name is given in the last column). The engine is the authority (D3). Where Craig Sapp's input page or Smith's help read differently, the engine's reading is given and the difference noted under each pass.
 
 A pass text goes through four stages:
 
@@ -106,11 +106,11 @@ An item the parser rejects goes to 0x5259E5: the pass is not taken, the reader s
 | empty item `//`, trailing `/;` | 0x524C4A, 0x4AF456 | repeats the previous item once (0x1FBB710 = -2, one more copy of the last 1 item). `C4/D/;` gives C4 D D. In pass 1 the reader removes the `/` of a final `M`, `M?` item first (see the reader) | g-p1-empty-item, g-p1-trailing-slash |
 | `X` or `Z` anywhere in an item (passes 1, 2, 4, 5) | 0x524C4A | must be followed by `[` or a digit 1–9, else the item is rejected (`RX`, `S+X`, `X0`) | g-p1-erase-rest |
 | `=` (passes 3–5) | 0x524C4A | read as `+` | |
-| `:` or `'` (pass 1) | 0x524C4A | chord separator; the notes up to the next `/` form one chord (0x1FBB718: first note token positive, the others negative) | g-p1-chord |
-| `name[`…`]` | 0x524C4A | macro definition; the name is the character before `[`. `[` restarts the item scan after it, `]` becomes a space; the content is read as ordinary items and also stored (by the reader, 0x41FAB5, as a motive file under `!tmp`) | g-p1-macro |
-| `@name` | 0x524C4A → 0x420E60 | the stored text replaces the call; a number after the name (P2, read by 0x420E60) is applied by 0x52789C in passes 1–2 and 0x4E5EA6 in passes 3–5 (per pass below) | g-p1-macro-transpose |
+| `:` or `'` (pass 1) | 0x524C4A | chord separator. The notes up to the next `/` form one chord (0x1FBB718: first note token positive, the others negative) | g-p1-chord |
+| `name[`…`]` | 0x524C4A | macro definition. The name is the character before `[`. `[` restarts the item scan after it, `]` becomes a space. The content is read as ordinary items and also stored (by the reader, 0x41FAB5, as a motive file under `!tmp`) | g-p1-macro |
+| `@name` | 0x524C4A → 0x420E60 | the stored text replaces the call. A number after the name (P2, read by 0x420E60) is applied by 0x52789C in passes 1–2 and 0x4E5EA6 in passes 3–5 (per pass below) | g-p1-macro-transpose |
 
-Repeats are applied by 0x4AF456 after the item's token was appended. `Xn` as item suffix: n copies in all of the last item. `Xn m` as an item (pass 1: also `REPn m`; `Zn m` keeps accidentals): the last n items so many times that there are m copies in all; with fewer than n items in R the pass fails (error code position − 2). Counting back, an entry is skipped when it is ≤ 0 and round(value/1000) is −1 or −7 (a chord member), so a chord counts once; any other entry counts, including barlines, rests, clefs and the 5000/6000/8000 control tokens. Chord members whose token rounds to −2 or −8 (accidental double sharp or a quarter tone, or cautionary with these) are counted as items of their own, an engine quirk. In copies made by `X`, notes lose their accidental: v → sign(v)·(1000·t + |v| mod 100) with t = trunc(|v|/1000) ∈ {1, 7} (the cautionary 7000 stays); `Z` copies unchanged.
+Repeats are applied by 0x4AF456 after the item's token was appended. `Xn` as item suffix: n copies in all of the last item. `Xn m` as an item (pass 1: also `REPn m`. `Zn m` keeps accidentals): the last n items so many times that there are m copies in all. With fewer than n items in R the pass fails (error code position − 2). Counting back, an entry is skipped when it is ≤ 0 and round(value/1000) is −1 or −7 (a chord member), so a chord counts once. Any other entry counts, including barlines, rests, clefs and the 5000/6000/8000 control tokens. Chord members whose token rounds to −2 or −8 (accidental double sharp or a quarter tone, or cautionary with these) are counted as items of their own, an engine quirk. In copies made by `X`, notes lose their accidental: v → sign(v)·(1000·t + |v| mod 100) with t = trunc(|v|/1000) ∈ {1, 7} (the cautionary 7000 stays). `Z` copies unchanged.
 
 ### Pass 1: notes
 
@@ -121,14 +121,14 @@ The reader builds the text and draws each item as soon as it is closed by `/` (o
 - `a`–`z` are stored as `A`–`Z` (0x41D5xx, KEY_CODE − 0x20).
 - `'` is stored as `:`.
 - `.` and `=` are stored as `=` after `/`, `.` or `=`, otherwise as `+`: `C4.` = `C4=` = `C4+` (octave dyad), `/.` = `/=`, `/..` = `/==` (g-p1-equals, g-p1-dots-equals).
-- `#`, `$`, `%` are not stored (they are also the key codes of End, Home and Left); `$` is kept right after `@` or `-`. `^` starts the special-key function 0x5956B0 and is not text.
+- `#`, `$`, `%` are not stored (they are also the key codes of End, Home and Left). `$` is kept right after `@` or `-`. `^` starts the special-key function 0x5956B0 and is not text.
 - **Item check.** On `/` the item's first characters go through 0x4C2912 (called from 0x4C04FB). If it fails, "**** Input error ****" is shown, `****` is written to the key buffer (0x4C355C) and the reader cuts the text back to the previous `/` (0x41E4F6 → 0x41E551): the item is erased. The last item, closed by `;`, is not checked. See the table below.
 - `;` typed after a final `M/` or `M?/` (an `M` one or two characters before the `/`) replaces that `/`, so a final barline is not repeated: `C4/M/;` is `C4/M;`, but `C4/MRD/;` keeps the slash and repeats MRD (g-p1-trailing-slash-bar*).
 - A leading `/` is not stored.
 - `Xn m` with n larger than the number of items so far: "Repeat source number too big." (0x421651), item erased (g-p1-repeat-too-long).
-- On `]` (0x41FAB5) every note of the macro definition gets its octave digit appended, computed by the octave rules: `Z[C4/G/E]` becomes `Z[C4/G4/E4]`. The digit goes after any suffix, so a `U` or `J` inside a definition is overridden (`AJ` → `AJ4`, read as A4). Typed directly, `]/@` loses its `/` (g-p1-macro-octaves; keep another item between a definition and a call).
+- On `]` (0x41FAB5) every note of the macro definition gets its octave digit appended, computed by the octave rules: `Z[C4/G/E]` becomes `Z[C4/G4/E4]`. The digit goes after any suffix, so a `U` or `J` inside a definition is overridden (`AJ` → `AJ4`, read as A4). Typed directly, `]/@` loses its `/` (g-p1-macro-octaves. Keep another item between a definition and a call).
 
-**Item check 0x4C2912 (pass 1).** c1, c2 are the first two characters of the item. A leading `-` followed by T, A or B and then R, E, L or A is skipped first (input clefs); `name[` checks that the name is A–Z and then the first item inside.
+**Item check 0x4C2912 (pass 1).** c1, c2 are the first two characters of the item. A leading `-` followed by T, A or B and then R, E, L or A is skipped first (input clefs). `name[` checks that the name is A–Z and then the first item inside.
 
 | c1 | item kept when c2 is |
 |---|---|
@@ -149,78 +149,78 @@ The reader builds the text and draws each item as soon as it is closed by `/` (o
 | a digit, `=`, `.`, `]`, `/`, `;` | anything |
 | H I J L N U V W Y, other characters | nothing (always erased) |
 
-So these are erased unless they are the last item: octave 0 or 9 right after the letter (`C0`, `B9`; `CS0` passes), `K0S`, `K8S`, `K 2 S`, `T`, `T6 8`, `REP…`, `QX`, `R0`, `R 5`, `D F`, `OPC4`, `P OE`, `-X`, `D,E` (g-p1-erase-*, g-p1-last-*).
+So these are erased unless they are the last item: octave 0 or 9 right after the letter (`C0`, `B9`. `CS0` passes), `K0S`, `K8S`, `K 2 S`, `T`, `T6 8`, `REP…`, `QX`, `R0`, `R 5`, `D F`, `OPC4`, `P OE`, `-X`, `D,E` (g-p1-erase-*, g-p1-last-*).
 
 #### Items (0x4E2CC8)
 
-The item parser dispatches on the first character: A–G (with the exceptions `BA`, `AL`, `C?M`, `C?T` checked first), then the table at 0x79490C `K M O P R S T X Z - . Q =`, then a digit (meter); anything else is rejected. Tokens:
+The item parser dispatches on the first character: A–G (with the exceptions `BA`, `AL`, `C?M`, `C?T` checked first), then the table at 0x79490C `K M O P R S T X Z - . Q =`, then a digit (meter). Anything else is rejected. Tokens:
 
 | Construct | Rule (0x4E2CC8 unless noted) | Token | Item | Probe |
 |---|---|---|---|---|
-| note `L[acc][oct][+|-][U|J…][Xn|Zn]` | letter step l: C=1 … B=7; then the suffix loop below | ±(1000 + s + 100·a + 6000·c), s = octave·7 + l | code 1, P4 from s and the clef, P5 = 10·stem + a (+100 when cautionary) | g-p1-octaves |
-| accidental `F S N`, `FF SS NN` | `F`=1, `S`=2, `N`=3; the same letter again adds 3: `FF`=4, `SS`=5, `NN`=6 (¼-tone flat). Only before the octave digit: `C4S` is rejected | a = 1…6 | P5 ones digit | g-p1-accidentals, g-p1-accidental-after-octave |
-| repeated letter | each repetition of the note letter adds 1: `BB`=1, `CCC`=2, `EEEE`=3, … up to 10 letters = 9 (¾-tone sharp); `AAF`: the letters give 1, then `F` sets 1; `GGFF` = 4 | | | g-p1-letter-accidentals(-long) |
-| `(` | cautionary: before the accidental letter and the octave (`B(F4`, `CC(`, `E(` alone, `A((`; `CF(` is rejected) | +6000 | P5 + 100 | g-p1-cautionary, g-p1-cautionary-after-accidental |
-| octave digit 0–9 | sets the octave: c0 = 7·digit (state 0x78DEC0); in proximity mode also the reference | | | |
+| note `L[acc][oct][+|-][U|J…][Xn|Zn]` | letter step l: C=1 … B=7. Then the suffix loop below | ±(1000 + s + 100·a + 6000·c), s = octave·7 + l | code 1, P4 from s and the clef, P5 = 10·stem + a (+100 when cautionary) | g-p1-octaves |
+| accidental `F S N`, `FF SS NN` | `F`=1, `S`=2, `N`=3. The same letter again adds 3: `FF`=4, `SS`=5, `NN`=6 (¼-tone flat). Only before the octave digit: `C4S` is rejected | a = 1…6 | P5 ones digit | g-p1-accidentals, g-p1-accidental-after-octave |
+| repeated letter | each repetition of the note letter adds 1: `BB`=1, `CCC`=2, `EEEE`=3, … up to 10 letters = 9 (¾-tone sharp). `AAF`: the letters give 1, then `F` sets 1. `GGFF` = 4 | | | g-p1-letter-accidentals(-long) |
+| `(` | cautionary: before the accidental letter and the octave (`B(F4`, `CC(`, `E(` alone, `A((`. `CF(` is rejected) | +6000 | P5 + 100 | g-p1-cautionary, g-p1-cautionary-after-accidental |
+| octave digit 0–9 | sets the octave: c0 = 7·digit (state 0x78DEC0). In proximity mode also the reference | | | |
 | `+` / `-` after the note | octave dyad: 0x4AF456 appends a second, chord-member token −(|t| ± 7), accidental and cautionary kept | t, −(|t|+7) | two notes at one x | g-p1-dyad |
-| `U` / `J` (repeatable, before or after the digit) | U: if l ≤ l_prev then c0 += 7; J: if l_prev ≤ l then c0 −= 7 (l_prev = letter of the previous note, 0x78DECC, not reset by IN). Disables the proximity step for this note. `CUU` jumps twice; `C4U` is C5; `CU4` is C4 | | | g-p1-jump-up, g-p1-jump-down |
-| `O`, `P` before the letter | O: ordinary mode (0x78DEC4 = −1); P: proximity mode (0x78DEC4 = last step). Only one prefix survives the item check | | | g-p1-ordinary, g-p1-proximity |
-| `Xn`, `Zn` suffix | ends the note; repeat (tokenizer) | | | g-p1-repeat-item |
-| chord `N:N:N` | see tokenizer; octaves carry from note to note inside the chord | | | g-p1-chord |
-| `.` / `=` item (typed `.`) | repeat the chord that stands before the previous item, accidentals removed; `==` (typed `..`) keeps them. Counting back from the end of R: past the last item, then the chord before it | copies | | g-p1-chord-repeat, g-p1-chord-repeat-direct |
+| `U` / `J` (repeatable, before or after the digit) | U: if l ≤ l_prev then c0 += 7. J: if l_prev ≤ l then c0 −= 7 (l_prev = letter of the previous note, 0x78DECC, not reset by IN). Disables the proximity step for this note. `CUU` jumps twice. `C4U` is C5. `CU4` is C4 | | | g-p1-jump-up, g-p1-jump-down |
+| `O`, `P` before the letter | O: ordinary mode (0x78DEC4 = −1). P: proximity mode (0x78DEC4 = last step). Only one prefix survives the item check | | | g-p1-ordinary, g-p1-proximity |
+| `Xn`, `Zn` suffix | ends the note. Repeat (tokenizer) | | | g-p1-repeat-item |
+| chord `N:N:N` | see tokenizer. Octaves carry from note to note inside the chord | | | g-p1-chord |
+| `.` / `=` item (typed `.`) | repeat the chord that stands before the previous item, accidentals removed. `==` (typed `..`) keeps them. Counting back from the end of R: past the last item, then the chord before it | copies | | g-p1-chord-repeat, g-p1-chord-repeat-direct |
 | `R` | rest | 2000 | code 2 | g-p1-rests |
-| `RI`, `RW`, `RP`, `RD`, `RU`, `RF` | table 0x7948C4 | 2001 … 2006 | RI: P6 = −1; RW: P5 = −2, P9 = −1; RP: P5 = −4, P9 = −1; RD/RU: P4 = ∓6; RF: P8 = −1 | g-p1-rests |
-| `RWD`, `RWU`, `RFD`, `RFU` | second letter after W or F | 2008, 2009, 9000, 9001 | RWD/RWU: the same item as RW (the builder's P4 = ∓6 does not survive); RFD/RFU: fermata with P4 = ∓6 | g-p1-rest-placement |
+| `RI`, `RW`, `RP`, `RD`, `RU`, `RF` | table 0x7948C4 | 2001 … 2006 | RI: P6 = −1. RW: P5 = −2, P9 = −1. RP: P5 = −4, P9 = −1. RD/RU: P4 = ∓6. RF: P8 = −1 | g-p1-rests |
+| `RWD`, `RWU`, `RFD`, `RFU` | second letter after W or F | 2008, 2009, 9000, 9001 | RWD/RWU: the same item as RW (the builder's P4 = ∓6 does not survive). RFD/RFU: fermata with P4 = ∓6 | g-p1-rest-placement |
 | `Rn` (number) | | −2000 − n | centred rest, P5 = −2, P8 = n, P9 = −1 (`R0` as last item = RW) | g-p1-rest-numbers, g-p1-last-rest-zero |
 | `R…Xn` | rest repeated | | | g-p1-rest-repeat |
-| `TR`, `BA`, `AL`, `TE`, `PR` | clefs | 3000 … 3004 | code 3, P5 = 0…4; P4 = 100 (small) unless it is the first entry, or it directly follows a barline and is the first clef of the line | g-p1-clefs, g-p1-clef-after-bar |
-| `-TR`, `-BA`, `-AL`, `-TE` | input clef: only the second character counts (`B`→1, `A`→2, `T`+`E`→3, else 0; `-AA` = `-AL`) | −3000 − k | no item; the following notes are positioned as if the staff had clef k (`BA/-TR/C4` puts C4's treble position, E2, on the bass staff) | g-p1-input-clef, g-p1-input-clef-alias |
-| `KnS`, `KnF`, `KnSN`, `KnFN` | n read by 0x5194D5; after S or F only `N` may follow | ±(17000 + n), N: ±(17100 + n), − for F | code 17, P5 = ±n or ±(100 + n) (cancellation); n = 0 gives no item | g-p1-keys |
-| `K` alone | key from the key-name global 0x78DE16 via 0x4E4432 (default unset); always erased by the item check | | | g-p1-key-plain |
-| `n m` (digit first) | meter; m = 0 or missing: n and m swapped, a single number | 20000 + 100·n + m | code 18, P5 = n, P6 = m (`2` gives 0 2) | g-p1-meters |
+| `TR`, `BA`, `AL`, `TE`, `PR` | clefs | 3000 … 3004 | code 3, P5 = 0…4. P4 = 100 (small) unless it is the first entry, or it directly follows a barline and is the first clef of the line | g-p1-clefs, g-p1-clef-after-bar |
+| `-TR`, `-BA`, `-AL`, `-TE` | input clef: only the second character counts (`B`→1, `A`→2, `T`+`E`→3, else 0. `-AA` = `-AL`) | −3000 − k | no item. The following notes are positioned as if the staff had clef k (`BA/-TR/C4` puts C4's treble position, E2, on the bass staff) | g-p1-input-clef, g-p1-input-clef-alias |
+| `KnS`, `KnF`, `KnSN`, `KnFN` | n read by 0x5194D5. After S or F only `N` may follow | ±(17000 + n), N: ±(17100 + n), − for F | code 17, P5 = ±n or ±(100 + n) (cancellation). N = 0 gives no item | g-p1-keys |
+| `K` alone | key from the key-name global 0x78DE16 via 0x4E4432 (default unset). Always erased by the item check | | | g-p1-key-plain |
+| `n m` (digit first) | meter. M = 0 or missing: n and m swapped, a single number | 20000 + 100·n + m | code 18, P5 = n, P6 = m (`2` gives 0 2) | g-p1-meters |
 | `COM`, `CUT`, generally `C?M`, `C?T` | the third character decides (`C4M` is common time) | 29901, 29801 | P5/P6 = 99/1, 98/1 | g-p1-meter-c-letters |
-| `T` (last item only) | repeats the last meter (0x78D918/0x78D91C, also set by COM/CUT; global) | | | g-p1-last-meter-t |
+| `T` (last item only) | repeats the last meter (0x78D918/0x78D91C, also set by COM/CUT. Global) | | | g-p1-last-meter-t |
 | `Tn m` (last item only) | meter n m | | | g-p1-last-meter-t-numbers |
-| `M[type][span]` | type letters: `D` or `M` = 1 (a second `D`/`M` after 1 gives 2, after another type 5), `H` 2, `L` 3, `R` 4, `S` 7, `I` 9; a digit is the span and ends the item (`M2D` = `M2`) | 4000 + 100·type + span | code 14, P4 = span, P5 = type; I: P4 = −span, no P5 | g-p1-bars, g-p1-bar-letters |
+| `M[type][span]` | type letters: `D` or `M` = 1 (a second `D`/`M` after 1 gives 2, after another type 5), `H` 2, `L` 3, `R` 4, `S` 7, `I` 9. A digit is the span and ends the item (`M2D` = `M2`) | 4000 + 100·type + span | code 14, P4 = span, P5 = type. I: P4 = −span, no P5 | g-p1-bars, g-p1-bar-letters |
 | bar span | remembered (0x78DD60, reset to 1 by each IN) | | | g-p1-bar-span, g-p1-state-carried |
-| `SU`, `SD`, `SO` | stem mode up / down / automatic for the following notes; later characters ignored | 5010, 5020, 5000 | P5 tens digit 1 / 2 / automatic | g-p1-stems |
+| `SU`, `SD`, `SO` | stem mode up / down / automatic for the following notes. Later characters ignored | 5010, 5020, 5000 | P5 tens digit 1 / 2 / automatic | g-p1-stems |
 | `S+`, `S-`, `S0` | staff placement of the following notes | 6001, 6002, 6000 | P12 = 1 / 2 / none | g-p1-staff-shift |
-| `Q+`, `Q-`, `Q0` | cue size on / off; `Q` + anything but `+` is off | 8001, 8000 | P4 + 100 on notes; with stem mode automatic, Q+ sets stems up (Q- restores the mode before) | g-p1-cue, g-p1-cue-stems, g-p1-cue-high |
+| `Q+`, `Q-`, `Q0` | cue size on / off. `Q` + anything but `+` is off | 8001, 8000 | P4 + 100 on notes. With stem mode automatic, Q+ sets stems up (Q- restores the mode before) | g-p1-cue, g-p1-cue-stems, g-p1-cue-high |
 | `X n m`, `Z n m`, `REP n m` | group repeat (tokenizer) | | | g-p1-repeat-group(-z), g-p1-rep |
 
-Suffix loop of a note (after the letter; the next non-space character c): end of item → finish; c = the current letter (or, after an accidental, that accidental letter) → see the accidental rows; `(` → cautionary; `F S N` → accidental; then, in this order and each optional: a digit, `+`/`-`, `X`/`Z` (ends the note), `U`/`J` (loops back). Any other character rejects the item.
+Suffix loop of a note (after the letter. The next non-space character c): end of item → finish. C = the current letter (or, after an accidental, that accidental letter) → see the accidental rows. `(` → cautionary. `F S N` → accidental. Then, in this order and each optional: a digit, `+`/`-`, `X`/`Z` (ends the note), `U`/`J` (loops back). Any other character rejects the item.
 
-Finishing a note (0x4E33A4): if no U/J was given and proximity mode is on, d = step_prev − (l + c0); c0 += 7 if d > 3, c0 −= 7 if d < −3 (the nearest of the two candidates, no ties are possible). Then s = c0 + l. A step below 1 is possible (`DJJ` near the bottom) and gives a token below 1000 that the builder misreads as a meter (g-p1-jump-down).
+Finishing a note (0x4E33A4): if no U/J was given and proximity mode is on, d = step_prev − (l + c0). C0 += 7 if d > 3, c0 −= 7 if d < −3 (the nearest of the two candidates, no ties are possible). Then s = c0 + l. A step below 1 is possible (`DJJ` near the bottom) and gives a token below 1000 that the builder misreads as a meter (g-p1-jump-down).
 
-**State.** Reset by each IN (0x52C6A0 and the reader): octave c0 = 28 (octave 4), ordinary mode, bar span 1; by the builder: stem mode automatic, cue off, staff placement 0, input clef = the staff's clef. Carried from earlier input: l_prev (U/J on the first note), the last meter (for `T`), the stored macros (files in `!tmp`).
+**State.** Reset by each IN (0x52C6A0 and the reader): octave c0 = 28 (octave 4), ordinary mode, bar span 1. By the builder: stem mode automatic, cue off, staff placement 0, input clef = the staff's clef. Carried from earlier input: l_prev (U/J on the first note), the last meter (for `T`), the stored macros (files in `!tmp`).
 
-**Builder (0x4ECDF8)**, as far as the tokens above need it: P4 of a note = 7·octave + l − 28 + k with k = 0 (treble, percussion), 12 (bass), 6 (alto), 8 (tenor) for the staff's or input clef; chord notes sorted by 0x54C590. Limit (read, not probed): more than 200 tokens in pass 1 is an error (0x4AEFA0 → 0x52E08D).
+**Builder (0x4ECDF8)**, as far as the tokens above need it: P4 of a note = 7·octave + l − 28 + k with k = 0 (treble, percussion), 12 (bass), 6 (alto), 8 (tenor) for the staff's or input clef. Chord notes sorted by 0x54C590. Limit (read, not probed): more than 200 tokens in pass 1 is an error (0x4AEFA0 → 0x52E08D).
 
 #### Macros in pass 1
 
-`@name n` transposes the stored notes by n steps (accidentals kept, rests unchanged): `Y[A4/B/GS]/@Y-1/@Y2` gives A4 B4 GS4 G4 A4 FS4 C5 D5 BS4. Names are any letter A–Z, including note letters (`A[C4/D]/@A`). `@name-` with no number is the plain call (0x526F23 builds a retrograde copy in the key buffer, but it does not reach R; g-p1-macro-retrograde). (g-p1-macro, g-p1-macro-transpose, g-p1-macro-names, g-p1-macro-chords)
+`@name n` transposes the stored notes by n steps (accidentals kept, rests unchanged): `Y[A4/B/GS]/@Y-1/@Y2` gives A4 B4 GS4 G4 A4 FS4 C5 D5 BS4. Names are any letter A–Z, including note letters (`A[C4/D]/@A`). `@name-` with no number is the plain call (0x526F23 builds a retrograde copy in the key buffer, but it does not reach R, g-p1-macro-retrograde). (g-p1-macro, g-p1-macro-transpose, g-p1-macro-names, g-p1-macro-chords)
 
 #### Differences from Sapp's page
 
-- `KxSF` (cancellation in flat form) is rejected; the engine's form is `KxFN` (`-17100 − x`).
+- `KxSF` (cancellation in flat form) is rejected. The engine's form is `KxFN` (`-17100 − x`).
 - `Rn` is a centred rest (P5 = −2) with the number n in P8.
 - Octave numbers 0 and 9 (and `K0`, `K8`+) are erased by the item check except in the last item.
 - `,` is a separator only after an item start that passes the item check.
-- `.`/`..` are typed forms of `=`/`==`; after a note `.` means `+` (octave dyad).
-- `Q-`, `Q0` and in fact `Q` + anything other than `+` end cue size; `QX` is erased by the item check.
+- `.`/`..` are typed forms of `=`/`==`. After a note `.` means `+` (octave dyad).
+- `Q-`, `Q0` and in fact `Q` + anything other than `+` end cue size. `QX` is erased by the item check.
 - Sapp's `./..` "after a measure or rest": the engine repeats the chord before the previous item, whatever that item is (g-p1-chord-repeat-direct: `C4:E/D:F/.` repeats C4:E).
 - Not on Sapp's page: `S+/S-/S0` (P12), `RWD/RWU/RFD/RFU`, `PR`, `-AL/-TE`, `T` (last item), letter accidentals beyond four letters, `REP`, `Zn` suffix, `@name n` transposition with chords and rests, `C4M` as common time.
 
 ### Pass 2: rhythms
 
-One value per note, chord or rest of pass 1, in order; barlines, clefs, keys and meters take none.
+One value per note, chord or rest of pass 1, in order. Barlines, clefs, keys and meters take none.
 
 #### Reader (0x422D98)
 
-- `a`–`z` are stored as `A`–`Z`; `'` as `:`.
+- `a`–`z` are stored as `A`–`Z`. `'` as `:`.
 - `T` followed by a number is rewritten to the letter form (also by 0x4AEFA0, table 0x792484): `T8` → `TE`, `T4` → `TQ`, `T2` → `TH`, `T16` → `TS`, `T32` → `TT` (g-p2-triplet-numbers, g-p2-mid-t-number).
-- Each closed item is applied at once (0x4C4148, `X` items by 0x425722, `@` by 0x424A9F). When as many values as notes have been typed, the reader ends the pass itself; further keys go to pass 3 (g-p2-mid-zero).
-- `;` after a single value with no `/` appends `X<number of notes>`: one value sets all notes (`4;` → `4X3 ;`, `8.;` → `8.X3;`; g-p2-fewer, g-p2-fill-*). With two or more values and fewer than the notes, the notes left over become grace notes, the same item as `G` (g-p2-fewer2, g-p2-fill-with-x).
+- Each closed item is applied at once (0x4C4148, `X` items by 0x425722, `@` by 0x424A9F). When as many values as notes have been typed, the reader ends the pass itself. Further keys go to pass 3 (g-p2-mid-zero).
+- `;` after a single value with no `/` appends `X<number of notes>`: one value sets all notes (`4;` → `4X3 ;`, `8.;` → `8.X3;`, g-p2-fewer, g-p2-fill-*). With two or more values and fewer than the notes, the notes left over become grace notes, the same item as `G` (g-p2-fewer2, g-p2-fill-with-x).
 - No item check, no erasing: a bad item reaches the parser and is rejected there.
 
 #### Items (0x4D9EA0)
@@ -229,42 +229,42 @@ The token is the duration in quarter notes, plus 1000 per dot. The parser dispat
 
 | Construct | Rule | Token | Probe |
 |---|---|---|---|
-| number n (0x5194D5, decimals allowed) | 4/n quarters: `1` 4, `2` 2, `3` 1.333 (triplet half), `4` 1, `6` 0.667, `8` 0.5, `128` 0.03125; `.5` = `0.5` = 8 (breve), `2.5` 1.6, `0` gives inf (treated as grace) | 4/n | g-p2-numbers, g-p2-numbers-odd, g-p2-decimals, g-p2-zero |
+| number n (0x5194D5, decimals allowed) | 4/n quarters: `1` 4, `2` 2, `3` 1.333 (triplet half), `4` 1, `6` 0.667, `8` 0.5, `128` 0.03125. `.5` = `0.5` = 8 (breve), `2.5` 1.6, `0` gives inf (treated as grace) | 4/n | g-p2-numbers, g-p2-numbers-odd, g-p2-decimals, g-p2-zero |
 | `n:d` (or `n'd`) | d quarters divided into n | d/n | g-p2-ratio |
 | `W H Q E S D` | 4, 2, 1, 0.5, 0.25, 8 (table 0x794710: 4/value) | | g-p2-letters |
-| `T` + `S T E Q H W D` | triplet: 2/3 of the letter's value; `TT` = triplet 32nd (1/12) | | g-p2-triplet-letters |
+| `T` + `S T E Q H W D` | triplet: 2/3 of the letter's value. `TT` = triplet 32nd (1/12) | | g-p2-triplet-letters |
 | `T` alone | triplet eighth (1/3). Only at the start of an item: `4T` is rejected | 0.3333 | g-p2-t-after-value |
 | `G` | grace note | 64 (type 0.0625) | g-p2-grace |
-| dots `.` after a value | each adds half of the previous addition: `4.` 1.5, `4..` 1.75, `8...` 0.9375; also after letters, `T`, `G` and ratios (`3:2.` = 1). A digit after the dot makes it a decimal point instead (`4.5` = 4/4.5) | 1000·dots + value | g-p2-dots, g-p2-letter-dots, g-p2-t-dot, g-p2-decimal-vs-dot, g-p2-ratio-dot |
-| several values in one item | added: `QE` 1.5, `HQ` 3, `Q8` 1.5, `4 8` 1.5 (a space does not separate, a `/` or `,` does); `G4` is 65 quarters, not a grace note | sum | g-p2-concat, g-p2-letter-number-mix, g-p2-g-then-value |
+| dots `.` after a value | each adds half of the previous addition: `4.` 1.5, `4..` 1.75, `8...` 0.9375. Also after letters, `T`, `G` and ratios (`3:2.` = 1). A digit after the dot makes it a decimal point instead (`4.5` = 4/4.5) | 1000·dots + value | g-p2-dots, g-p2-letter-dots, g-p2-t-dot, g-p2-decimal-vs-dot, g-p2-ratio-dot |
+| several values in one item | added: `QE` 1.5, `HQ` 3, `Q8` 1.5, `4 8` 1.5 (a space does not separate, a `/` or `,` does). `G4` is 65 quarters, not a grace note | sum | g-p2-concat, g-p2-letter-number-mix, g-p2-g-then-value |
 | `Xn` suffix | n copies of the value | | g-p2-repeat-item, g-p2-repeat-letter |
 | `X n m`, `R?P n m` (`REP`) | group repeat as in the tokenizer | | g-p2-repeat-group, g-p2-rep |
-| `@name f` | macro; f multiplies the durations (`@Z2` doubles, `@Z.5` halves) | | g-p2-macro |
+| `@name f` | macro. F multiplies the durations (`@Z2` doubles, `@Z.5` halves) | | g-p2-macro |
 | other first characters | rejected (`Y/4` at 1) | | g-p2-junk-first, g-p2-erase-junk |
 
-After a value, the item may continue with a letter `S T E Q H W D`, a digit or `.` (added), or `X` (repeat). Any other character ends the value; what follows it is then read again as an item, which gave an extra token in the probe (`4Y/4` → 1 1 1, `4G/4` likewise). A group repeat without its count (`X2`) uses a stale number (g-p2-x-group-no-count). These cases are better rejected by a port.
+After a value, the item may continue with a letter `S T E Q H W D`, a digit or `.` (added), or `X` (repeat). Any other character ends the value. What follows it is then read again as an item, which gave an extra token in the probe (`4Y/4` → 1 1 1, `4G/4` likewise). A group repeat without its count (`X2`) uses a stale number (g-p2-x-group-no-count). These cases are better rejected by a port.
 
 #### Differences from Sapp's page
 
-- `3` is a triplet half (4/3 quarters), not a triplet quarter; `6` is the triplet quarter.
-- `T` alone is a triplet eighth; `TT` (triplet 32nd), `TW`, `TD`, the `T`+number forms and dotted triplets are not on the page.
-- Values can be added inside one item (`QE`, `4 8`); `.5` is a breve like `D`.
+- `3` is a triplet half (4/3 quarters), not a triplet quarter. `6` is the triplet quarter.
+- `T` alone is a triplet eighth. `TT` (triplet 32nd), `TW`, `TD`, the `T`+number forms and dotted triplets are not on the page.
+- Values can be added inside one item (`QE`, `4 8`). `.5` is a breve like `D`.
 - A single value fills all notes, and the pass ends by itself after the last note's value.
 
 ### Pass 3: marks
 
-Each item is a mark name followed by note numbers. Notes are numbered from 1 in pass-1 order; a chord counts as one note, rests, barlines and other items are not numbered (g-p3-rest-marks, g-p3-numbering).
+Each item is a mark name followed by note numbers. Notes are numbered from 1 in pass-1 order. A chord counts as one note, rests, barlines and other items are not numbered (g-p3-rest-marks, g-p3-numbering).
 
 #### Reader (0x426950)
 
-- `a`–`z` are stored as `A`–`Z`; `'` as `:`; `~` as a space.
+- `a`–`z` are stored as `A`–`Z`. `'` as `:`. `~` as a space.
 - A letter (any character above `@`) typed after a digit, a space or `,` gets a `/` put before it, and so does `-` (the reverse-side prefix): a new mark always starts a new item. `S 1A 2` → `S 1/A 2`, `S 1-3` → `S 1/-3` (rejected), `8VA` → `8/VA` (rejected), a leading `-` gives `/-` (sweep, g-p3-minus, g-p3-long-8VA).
-- `%`, `&`, `(` are not stored (view functions, 0x52FEF6); `^` and `@` start special input.
+- `%`, `&`, `(` are not stored (view functions, 0x52FEF6). `^` and `@` start special input.
 - `+` before a mark letter is followed by an inserted `/` (`+S 2` → `+/S 2`, rejected), so `+` works only as the sign of a number.
 
 #### Items (0x4DAEB2)
 
-On the first item of the pass, 0x4DAEB2 first rewrites some longer spellings in the whole text (loop at 0x4DAF60). Then each item: an optional `-` (or `+`, or `=` read as `+`) sets "reverse side" (array 0x1AADA3C); the mark letters select a mark number m (table below); the token is 10000·m (negative for `N`). The note numbers follow, each appended to R: digits, `.`, a sign; a number followed by `:` gets +1000 (range start), except for marks 95–98. A letter or other character among the numbers rejects the item. The last number is the item's token returned to 0x4AF456.
+On the first item of the pass, 0x4DAEB2 first rewrites some longer spellings in the whole text (loop at 0x4DAF60). Then each item: an optional `-` (or `+`, or `=` read as `+`) sets "reverse side" (array 0x1AADA3C). The mark letters select a mark number m (table below). The token is 10000·m (negative for `N`). The note numbers follow, each appended to R: digits, `.`, a sign. A number followed by `:` gets +1000 (range start), except for marks 95–98. A letter or other character among the numbers rejects the item. The last number is the item's token returned to 0x4AF456.
 
 | Mark | m | Result (0x4D8460) | Probe |
 |---|---|---|---|
@@ -296,53 +296,53 @@ On the first item of the pass, 0x4DAEB2 first rewrites some longer spellings in 
 | `Nk` | −k | code-9 item with symbol k | g-p3-mark-N45 |
 | `TM` (T + any letter but S, H, R), `TMT` | 93 | code-6 tremolo, P10 = 13 (3 strokes) | g-p3-mark-TM |
 | `TME`/`TM1`, `TMS`/`TM2`, `TM3`, `TM4` | 91, 92, 93, 94 | code 6, P10 = 10 + strokes | g-p3-mark-TME |
-| `OB`, `O` | 95, 96 | code-7 octave line from the first to the second number: O P4 = 12.5, P7 = 8, P12 = −1; OB P4 = −4, P7 = −8, P12 = 1 | g-p3-span-O |
-| `C`, `C+`, `C-` | 97, 97, 98 | code-4 hairpin from the first to the second number (P3, P6 = x, P5 = 999); C- adds P7 = −1. Pairs: `C 1 2 3 4` gives two | g-p3-span-C, g-p3-span-several |
-| `TRW`, `TRFW`, `TRSW`, `TRNW` | 120 … 123 | code-7 trill line, P5 = 1, P6 = end x + 4.167; P8 = 1/2/3 for F/S/N | g-p3-span-TRW |
+| `OB`, `O` | 95, 96 | code-7 octave line from the first to the second number: O P4 = 12.5, P7 = 8, P12 = −1. OB P4 = −4, P7 = −8, P12 = 1 | g-p3-span-O |
+| `C`, `C+`, `C-` | 97, 97, 98 | code-4 hairpin from the first to the second number (P3, P6 = x, P5 = 999). C- adds P7 = −1. Pairs: `C 1 2 3 4` gives two | g-p3-span-C, g-p3-span-several |
+| `TRW`, `TRFW`, `TRSW`, `TRNW` | 120 … 123 | code-7 trill line, P5 = 1, P6 = end x + 4.167. P8 = 1/2/3 for F/S/N | g-p3-span-TRW |
 | other first letters (B E G J K L Q V X Y Z, digits) | | rejected | |
 
 Rules of the numbers (0x4D8460):
 
-- Several numbers put the mark on each note (`S 1 3 4`); `a:b` on every note from a to b (`S 1:3`, `F 1:3` gives three code-9 items, `TM 1:2` two tremolos); the two-point marks (95–98, 120–123) take numbers in pairs, `:` being only a separator there, and reject a single number (g-p3-span-one, g-p3-trill-one).
+- Several numbers put the mark on each note (`S 1 3 4`). `a:b` on every note from a to b (`S 1:3`, `F 1:3` gives three code-9 items, `TM 1:2` two tremolos). The two-point marks (95–98, 120–123) take numbers in pairs, `:` being only a separator there, and reject a single number (g-p3-span-one, g-p3-trill-one).
 - A fractional number is rounded to the nearest note for P11 marks (`A 1.4` → note 1, `S 2.6` → note 3, `T 3.5` → note 4) but places code-9, code-4 and code-7 items between the notes by linear interpolation of x (`F 1.5` at x = 26.75 between 2 and 51.5) (g-p3-fraction-round, g-p3-word-fraction, g-p3-span-fraction).
 - Numbers beyond the last note mean the last note (g-p3-beyond).
-- `-` before the mark: P11 negative (stem side) for note marks; code-9 marks go above (P4 = 14) instead of below; no effect seen on tremolos (g-p3-minus, g-p3-word-minus, g-p3-tremolo-minus).
+- `-` before the mark: P11 negative (stem side) for note marks. Code-9 marks go above (P4 = 14) instead of below. No effect seen on tremolos (g-p3-minus, g-p3-word-minus, g-p3-tremolo-minus).
 - A note has one P11: a later mark on the same note replaces the earlier (g-p3-same-note-twice). On a chord the mark goes to its first note (g-p3-chord-mark).
 - `@name n`: the stored marks with their note numbers shifted so that note 1 of the motive is note n (`Z[S 1/A 2]/@Z2` adds S 2, A 3) (g-p3-macro).
 
-**Longer spellings** (rewritten before parsing, 0x4DAF60, observed): `DC` = `C-`; `HA` = `H`; `HV` = `HW`; `PI` = `PZ`; `AR` = `AO` (so the arsis accent, m = 15, cannot be typed); `TREM` = `TM`; `TRILL` = `TR`, `TRILLW` = `TRW`; `RIT` = `R`; `DIM` = `DI`; `DN` = `D`; `UP` = `U`; `ACC` = `A`; `ACCS` = `AS`; `TE…` reads as a tremolo (`TEN` = `TM`, `TES` = `TMS`); `WES` = `W`. Rejected: `ARCO`, `PIZZ`, `TENUTO`, `STACC(ATO)`, `WEDGE`, `FERM(ATA)`, `CRESC`, `DOWN`, `ACCENT`, `ACCEL`, `ACL`. `8VA`/`8VB`/`8BA` would read as `O`/`OB`, but the reader splits them (g-p3-long-*).
+**Longer spellings** (rewritten before parsing, 0x4DAF60, observed): `DC` = `C-`, `HA` = `H`, `HV` = `HW`, `PI` = `PZ`, `AR` = `AO` (so the arsis accent, m = 15, cannot be typed), `TREM` = `TM`, `TRILL` = `TR`, `TRILLW` = `TRW`, `RIT` = `R`, `DIM` = `DI`, `DN` = `D`, `UP` = `U`, `ACC` = `A`, `ACCS` = `AS`, `WES` = `W`, and `TE…` reads as a tremolo (`TEN` = `TM`, `TES` = `TMS`). Rejected: `ARCO`, `PIZZ`, `TENUTO`, `STACC(ATO)`, `WEDGE`, `FERM(ATA)`, `CRESC`, `DOWN`, `ACCENT`, `ACCEL`, `ACL`. `8VA`/`8VB`/`8BA` would read as `O`/`OB`, but the reader splits them (g-p3-long-*).
 
 #### Differences from Sapp's page
 
-- `AR` is arco, not the arsis accent; `C+` is the same as `C`; `IM`, `MO`, `RI` are accepted because only the first letter counts there.
+- `AR` is arco, not the arsis accent. `C+` is the same as `C`. `IM`, `MO`, `RI` are accepted because only the first letter counts there.
 - `TM` alone is a three-stroke tremolo (like `TMT`, `TM3`).
-- Note numbers count notes and chords only; a fractional number is an offset only for code-9/4/7 marks.
+- Note numbers count notes and chords only. A fractional number is an offset only for code-9/4/7 marks.
 - `-` reverses note marks (P11 < 0) and moves dynamics and words above the staff.
 - Not on Sapp's page: `S2`–`S4`, `TH`, `TM4`, the long spellings, `@name n` with a note offset.
 
 ### Passes 4 and 5: beams and slurs
 
-Both passes use the item parser 0x4DA9C3; the builders are 0x413CA8 (beams) and 0x53D1E0 (slurs). Notes are numbered as in pass 3: notes and chords, not rests (g-p4-chord-rest). The reader (0x427C68) upper-cases letters; `,` separates as `/` (g-p4-comma, g-p4-lower).
+Both passes use the item parser 0x4DA9C3. The builders are 0x413CA8 (beams) and 0x53D1E0 (slurs). Notes are numbered as in pass 3: notes and chords, not rests (g-p4-chord-rest). The reader (0x427C68) upper-cases letters. `,` separates as `/` (g-p4-comma, g-p4-lower).
 
 #### Items (0x4DA9C3)
 
 | Construct | Rule | R | Result | Probe |
 |---|---|---|---|---|
-| `a b` | two numbers (0x5194D5); a third is ignored (g-p4-three-numbers) | a, b | pass 4: code-6 beam from note a to b (P3 x_a, P4/P5 the notes' P4, P6 x_b, P7 = 11 above / 21 below); pass 5: code-5 slur | g-p4-pair, g-p5-pair |
+| `a b` | two numbers (0x5194D5). A third is ignored (g-p4-three-numbers) | a, b | pass 4: code-6 beam from note a to b (P3 x_a, P4/P5 the notes' P4, P6 x_b, P7 = 11 above / 21 below). Pass 5: code-5 slur | g-p4-pair, g-p5-pair |
 | `b ≤ a`, a single number | the end is the next note: `1 1`, `4 1` (→ 4 5), `1` (→ 1 2) | | | g-p4-same, g-p4-reversed, g-p4-single, g-p5-same |
 | `+` before either number | 10000 added to a: beam above, slur arched up | a + 10000 | | g-p4-plus-*, g-p5-plus* |
 | `-` before either number | the number is negative (sign of 0x5194D5): beam below (stems down), slur down | −a or −b | | g-p4-minus-*, g-p5-minus* |
-| `k·100 + a` | pass 4: number k over the beam (P8 = k), on either number (`301 3`, `1 304`); pass 5: tuplet bracket over a…b, P8 = 3, P9 = k, where k = (n div 100) mod 100 and a = n mod 100 | | `503 7` = quintuplet over 3–7 | g-p4-number, g-p5-tuplet-* |
+| `k·100 + a` | pass 4: number k over the beam (P8 = k), on either number (`301 3`, `1 304`). Pass 5: tuplet bracket over a…b, P8 = 3, P9 = k, where k = (n div 100) mod 100 and a = n mod 100 | | `503 7` = quintuplet over 3–7 | g-p4-number, g-p5-tuplet-* |
 | `0 b`, `a 99` (pass 5) | slur from the left edge (P3 = x_b − 8) / to the right edge (P6 = 198.5) | | | g-p5-from-left, g-p5-to-right |
-| fractions | pass 4: truncated (`1.5 3` = `1 3`); pass 5: the slur end is moved between the notes | | | g-p4-fraction, g-p5-fraction |
-| `nB`, `nBp` (pass 4) | automatic beams over groups of n eighths, skipping p notes first. Found by scanning the first 10 characters of the pass for a digit followed later by `B` (not `B[` or `@…B`); the parse then ends (0x4DA9C3 returns 999). A sign before n is lost (`+2B` = `2B`). Anything after it in the pass, even `/1 2`, leaves no beams at all; a pair before it is read as the auto form (`1 2/4B` = `1B2`) | 9999, n, p | | g-p4-auto*, g-p4-auto-then-slash, g-p4-pairs-then-auto |
-| `B` or `A` alone (pass 4, first character) | automatic beams by the last meter (0x78D918/0x78D91C): `2B` for x/4, common time or no meter; `4B` for x/2 and cut time; `8B` for x/1; for x/8: `2B` if x is 2, 4 or 8, `3B` if x is 3, 6, 9 or 12; other meters: no beams | | | g-p4-auto-b, g-p4-auto-meter-* |
+| fractions | pass 4: truncated (`1.5 3` = `1 3`). Pass 5: the slur end is moved between the notes | | | g-p4-fraction, g-p5-fraction |
+| `nB`, `nBp` (pass 4) | automatic beams over groups of n eighths, skipping p notes first. Found by scanning the first 10 characters of the pass for a digit followed later by `B` (not `B[` or `@…B`). The parse then ends (0x4DA9C3 returns 999). A sign before n is lost (`+2B` = `2B`). Anything after it in the pass, even `/1 2`, leaves no beams at all. A pair before it is read as the auto form (`1 2/4B` = `1B2`) | 9999, n, p | | g-p4-auto*, g-p4-auto-then-slash, g-p4-pairs-then-auto |
+| `B` or `A` alone (pass 4, first character) | automatic beams by the last meter (0x78D918/0x78D91C): `2B` for x/4, common time or no meter. `4B` for x/2 and cut time. `8B` for x/1. For x/8: `2B` if x is 2, 4 or 8, `3B` if x is 3, 6, 9 or 12. Other meters: no beams | | | g-p4-auto-b, g-p4-auto-meter-* |
 | `@name n` | motive with note numbers shifted so that note 1 is note n (0x4E620C) | | | g-p4-macro, g-p5-macro |
-| `Xk…` | handled first by 0x4E4D40, which runs the text after it through 0x518448 and appends pairs read back with an offset k − 1; no effect in a single input (read, not examined further) | | | g-p4-x, g-p4-x-offset |
+| `Xk…` | handled first by 0x4E4D40, which runs the text after it through 0x518448 and appends pairs read back with an offset k − 1. No effect in a single input (read, not examined further) | | | g-p4-x, g-p4-x-offset |
 | `1-2` | read as the number −12 (no beam) | | | g-p4-dash |
 
 #### Differences from Sapp's page
 
 - `+2B`/`-2B`: the sign is ignored. Automatic beaming must be the only item of the pass.
-- Tuplet numbers are k·100 + start note: Sapp's `5013 17` gives a bracket numbered 50 from note 13; a quintuplet over 13–17 is `513 17`. Sapp's "X0Y" reading holds only for start notes below 10.
+- Tuplet numbers are k·100 + start note: Sapp's `5013 17` gives a bracket numbered 50 from note 13. A quintuplet over 13–17 is `513 17`. Sapp's "X0Y" reading holds only for start notes below 10.
 - Not on Sapp's page: `B`/`A` (beams by meter), numbers over beams (`k·100 + a`), the "next note" reading of `a a`, `b < a` and a single number.
