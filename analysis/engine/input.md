@@ -218,9 +218,9 @@ One value per note, chord or rest of pass 1, in order. Barlines, clefs, keys and
 #### Reader (0x422D98)
 
 - `a`–`z` are stored as `A`–`Z`. `'` as `:`.
-- `T` followed by a number is rewritten to the letter form (also by 0x4AEFA0, table 0x792484): `T8` → `TE`, `T4` → `TQ`, `T2` → `TH`, `T16` → `TS`, `T32` → `TT` (g-p2-triplet-numbers, g-p2-mid-t-number).
+- `T` followed by a number is rewritten to the letter form (also by 0x4AEFA0, table 0x792484): `T8` → `TE`, `T4` → `TQ`, `T2` → `TH`, `T16` → `TS`, `T32` → `TT` (g-p2-triplet-numbers, g-p2-mid-t-number). For `T1` and `T3` the character after the digit is replaced by a space whatever it is, so `T3/QTE` becomes the single item `TT QTE` (1/12 + 1 + 1/3); `T` before another digit stays a lone `T` (`T6` = 1/3 + 4/6 = 1 quarter) (input-marks, im2-*).
 - Each closed item is applied at once (0x4C4148, `X` items by 0x425722, `@` by 0x424A9F). When as many values as notes have been typed, the reader ends the pass itself. Further keys go to pass 3 (g-p2-mid-zero).
-- `;` after a single value with no `/` appends `X<number of notes>`: one value sets all notes (`4;` → `4X3 ;`, `8.;` → `8.X3;`, g-p2-fewer, g-p2-fill-*). With two or more values and fewer than the notes, 0x51CF40 fills the missing R entries with 64, the value of `G`, so the notes left over become grace notes (loop at 0x51D2EC; g-p2-fewer2, g-p2-fill-with-x). Values beyond the number of notes are not used.
+- `;` after a single value with no `/` appends `X<number of notes>`: one value sets all notes (`4;` → `4X3 ;`, `8.;` → `8.X3;`, g-p2-fewer, g-p2-fill-*). The test is on the text after the `T` rewrite: a body of one or two characters before `;` (0x422D98 checks characters 2 and 3 for `;`), not starting with `@`. So `16.;` and `4/;` do not fill (`4/;` is 4 and an empty item that repeats it), `T16;` does (input-marks). With two or more values and fewer than the notes, 0x51CF40 fills the missing R entries with 64, the value of `G`, so the notes left over become grace notes (loop at 0x51D2EC; g-p2-fewer2, g-p2-fill-with-x). Values beyond the number of notes are not used.
 - No item check, no erasing: a bad item reaches the parser and is rejected there.
 
 #### Items (0x4D9EA0)
@@ -235,7 +235,7 @@ The token is the duration in quarter notes, plus 1000 per dot. The parser dispat
 | `T` + `S T E Q H W D` | triplet: 2/3 of the letter's value. `TT` = triplet 32nd (1/12) | | g-p2-triplet-letters |
 | `T` alone | triplet eighth (1/3). Only at the start of an item: `4T` is rejected | 0.3333 | g-p2-t-after-value |
 | `G` | grace note | 64 (type 0.0625) | g-p2-grace |
-| dots `.` after a value | each adds half of the previous addition: `4.` 1.5, `4..` 1.75, `8...` 0.9375. Also after letters, `T`, `G` and ratios (`3:2.` = 1). A digit after the dot makes it a decimal point instead (`4.5` = 4/4.5) | 1000·dots + value | g-p2-dots, g-p2-letter-dots, g-p2-t-dot, g-p2-decimal-vs-dot, g-p2-ratio-dot |
+| dots `.` after a value | each adds half of the previous addition: `4.` 1.5, `4..` 1.75, `8...` 0.9375. Also after letters, `T`, `G` and ratios (`3:2.` = 1). A digit after the dot makes it a decimal point instead (`4.5` = 4/4.5). In a run of several values the trailing dots are blanked (loop at 0x4DA3DF) and go to the run's first value: `QE.` = Q. + E = 2, `4. 8` = 2; such a sum has no thousands digit (P9 without dots). `Q.E`, `8 ./4`, `QT` are rejected, `QTE` is accepted (input-marks) | 1000·dots + value | g-p2-dots, g-p2-letter-dots, g-p2-t-dot, g-p2-decimal-vs-dot, g-p2-ratio-dot |
 | several values in one item | added: `QE` 1.5, `HQ` 3, `Q8` 1.5, `4 8` 1.5 (a space does not separate, a `/` or `,` does). `G4` is 65 quarters, not a grace note | sum | g-p2-concat, g-p2-letter-number-mix, g-p2-g-then-value |
 | `Xn` suffix | n copies of the value | | g-p2-repeat-item, g-p2-repeat-letter |
 | `X n m`, `R?P n m` (`REP`) | group repeat as in the tokenizer | | g-p2-repeat-group, g-p2-rep |
@@ -293,7 +293,7 @@ On the first item of the pass, 0x4DAEB2 first rewrites some longer spellings in 
 | `PPP`, `PP`, `P`, `MP`, `MF`, `F`, `FF`, `FFF`, `FP`, `SF`, `SFZ` | 51, 52, 53, 54, 55, 56, 57, 58, 60, 61, 62 | code-9 item (that symbol number) at the note's x, P4 below the note (−2…−4), P15 = −0.5 | g-p3-mark-F |
 | `CR`, `DI`, `R`/`RI`, `AC` | 63, 64, 65, 68 | code-9 words cresc., dim., rit., accel., below | g-p3-mark-CR |
 | `PZ`, `AO` (also `AR`, `PI`) | 66, 67 | code-9 pizz., arco, P4 = 14 (above) | g-p3-mark-PZ |
-| `Nk` | −k | code-9 item with symbol k | g-p3-mark-N45 |
+| `Nk` | −k | code-9 item with symbol k. For k ≤ 49 it is placed like a note mark (0x4D9475's P11 branch, P4 near the head or stem end on either side, no P15), for larger k like the words (input-marks) | g-p3-mark-N45 |
 | `TM` (T + any letter but S, H, R), `TMT` | 93 | code-6 tremolo, P10 = 13 (3 strokes) | g-p3-mark-TM |
 | `TME`/`TM1`, `TMS`/`TM2`, `TM3`, `TM4` | 91, 92, 93, 94 | code 6, P10 = 10 + strokes | g-p3-mark-TME |
 | `OB`, `O` | 95, 96 | code-7 octave line from the first to the second number: O P4 = 12.5, P7 = 8, P12 = −1. OB P4 = −4, P7 = −8, P12 = 1 | g-p3-span-O |
@@ -305,7 +305,9 @@ Rules of the numbers (0x4D8460):
 
 - Several numbers put the mark on each note (`S 1 3 4`). `a:b` on every note from a to b (`S 1:3`, `F 1:3` gives three code-9 items, `TM 1:2` two tremolos). The two-point marks (95–98, 120–123) take numbers in pairs, `:` being only a separator there, and reject a single number (g-p3-span-one, g-p3-trill-one).
 - A fractional number is rounded to the nearest note for P11 marks (`A 1.4` → note 1, `S 2.6` → note 3, `T 3.5` → note 4) but places code-9, code-4 and code-7 items between the notes by linear interpolation of x (`F 1.5` at x = 26.75 between 2 and 51.5) (g-p3-fraction-round, g-p3-word-fraction, g-p3-span-fraction).
-- Numbers beyond the last note mean the last note (g-p3-beyond).
+- Numbers beyond the last note mean the last note for note marks (g-p3-beyond); a two-point mark whose end lies beyond the last note ends at the right end of the staff (`C 3 5` with 4 notes: P6 = 200 from 0x547AE0). Fractions interpolate from the truncated note number to the next note (input-marks).
+- An empty item repeats the last R entry, i.e. the last note number: `F 2//S 3` gives two F items at note 2 (input-marks).
+- Digits typed directly after a mark letter belong to the name: `S1 2` is SF on note 2 (S + any adjacent character but 2–4 = SF), `A2 3` is an accent on note 3 (input-marks).
 - `-` before the mark: P11 negative (stem side) for note marks. Code-9 marks go above (P4 = 14) instead of below. No effect seen on tremolos (g-p3-minus, g-p3-word-minus, g-p3-tremolo-minus).
 - A note has one P11: a later mark on the same note replaces the earlier (g-p3-same-note-twice). On a chord the mark goes to its first note (g-p3-chord-mark).
 - `@name n`: the stored marks with their note numbers shifted so that note 1 of the motive is note n (`Z[S 1/A 2]/@Z2` adds S 2, A 3) (g-p3-macro).
