@@ -492,6 +492,7 @@ impl Stream {
         let mut chord_number = 1;
         let mut cue = false;
         for (k, &(x, _)) in notes.iter().enumerate() {
+            let events_before = stream.events.len();
             let p5 = loop {
                 let row = &rows[stream.order[k]];
                 if row.len() < 5 {
@@ -544,7 +545,8 @@ impl Stream {
                     if member {
                         return Err(RefitErrorKind::Unsupported("a chord of cue and normal notes"));
                     }
-                    stream.events.push(Event::Cue(small));
+                    // The cue code goes before the note's stem code.
+                    stream.events.insert(events_before, Event::Cue(small));
                     cue = small;
                 }
             }

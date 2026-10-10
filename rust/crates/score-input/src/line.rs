@@ -6,7 +6,7 @@ use score_format::{Item, Word};
 use crate::chords::{accidental_offsets, dot_offsets, ChordHead};
 use crate::events::{Event, Head};
 use crate::num::amod;
-use crate::notes::{BarStyle, Clef, KeySignature, Meter, RestKind, StaffShift, StemMode};
+use crate::notes::{BarStyle, Clef, Direction, KeySignature, Meter, Rest, RestKind, StaffShift, StemMode};
 use crate::rhythm::Rhythm;
 use crate::slurs::WorkEntry;
 use crate::spacing::{positions, Entry, GRACE_DURATION};
@@ -572,13 +572,14 @@ fn second_shifts(levels: &[i32]) -> Vec<bool> {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Element {
     Note(Note),
-    Rest { x: f32, kind: RestKind, rhythm: Rhythm },
+    Rest { x: f32, rest: Rest, rhythm: Rhythm },
     /// `staves` negative for an invisible barline (P4).
     Bar { x: f32, staves: i32, style: BarStyle },
     /// `small`: a clef change within the line (P4 = 100).
     Clef { x: f32, clef: Clef, small: bool },
     Key { x: f32, key: KeySignature, clef: Clef },
-    Meter { x: f32, meter: Meter },
+    /// `quarters`: the duration a misread note token keeps in the spacing.
+    Meter { x: f32, meter: Meter, quarters: f32 },
 }
 
 impl Element {
@@ -589,7 +590,7 @@ impl Element {
             Element::Bar { .. } => vec![Entry::Bar],
             Element::Clef { .. } => vec![Entry::Clef],
             Element::Key { key, .. } => vec![Entry::Key(*key)],
-            Element::Meter { meter, .. } => vec![Entry::Meter(*meter)],
+            Element::Meter { meter, quarters, .. } => vec![Entry::Meter(*meter, *quarters)],
         }
     }
 
@@ -610,23 +611,28 @@ impl Element {
     fn items(&self, staff: f32) -> Vec<Item> {
         match self {
             Element::Note(note) => note.items(staff),
-            Element::Rest { x, kind: kind @ RestKind::Measures(_), rhythm } => vec![rest_item(*kind, *rhythm, *x, staff, -1.0)],
-            Element::Rest { x, kind, rhythm } => vec![rest_item(*kind, *rhythm, *x, staff, 0.0)],
-            Element::Bar { x, staves, style } => vec![item(&[14.0, staff, *x, *staves as f32, style.code() as f32])],
+            Element::Rest { x, rest, rhythm } => vec![rest_item(*rest, *rhythm, *x, staff, uncentred(rest.kind))],
+            Element::Bar { x, staves, style } => {
+                let p5 = if *style == BarStyle::Invisible { 0 } else { style.code() };
+                vec![item(&[14.0, staff, *x, *staves as f32, p5 as f32])]
+            }
             Element::Clef { x, clef, small } => {
                 let size = if *small { 100.0 } else { 0.0 };
                 vec![item(&[3.0, staff, *x, size, clef.code() as f32])]
             }
             Element::Key { x, key, clef } => {
                 let count = f32::from(key.count) * if key.sharps { 1.0 } else { -1.0 };
+                if count == 0.0 {
+                    return Vec::new();
+                }
                 let naturals = if key.naturals { 100.0 * count.signum() } else { 0.0 };
                 vec![item(&[17.0, staff, *x, 0.0, count + naturals, clef.code() as f32])]
             }
-            Element::Meter { x, meter } => {
+            Element::Meter { x, meter, .. } => {
                 let (top, bottom) = match meter {
                     Meter::Common => (99.0, 1.0),
                     Meter::Cut => (98.0, 1.0),
-                    Meter::Fraction(top, bottom) => (f32::from(*top), f32::from(*bottom)),
+                    Meter::Fraction(top, bottom) => (*top as f32, *bottom as f32),
                 };
                 vec![item(&[18.0, staff, *x, 0.0, top, bottom])]
             }
@@ -634,17 +640,18 @@ impl Element {
     }
 }
 
-fn rest_level(kind: RestKind) -> f32 {
-    match kind {
-        RestKind::Up => 6.0,
-        RestKind::Down => -6.0,
-        _ => 0.0,
+fn rest_level(rest: Rest) -> f32 {
+    match rest.shift {
+        Some(Direction::Up) => 6.0,
+        Some(Direction::Down) => -6.0,
+        None => 0.0,
     }
 }
 
-/// A rest item; `centre` is P9 of the rests centred in their measure (see [`centre`]).
-fn rest_item(kind: RestKind, rhythm: Rhythm, x: f32, staff: f32, centre: f32) -> Item {
-    let level = rest_level(kind);
+/// A rest item; `centre` is P9 (see [`centre`] for the rests centred in their measure).
+fn rest_item(rest: Rest, rhythm: Rhythm, x: f32, staff: f32, centre: f32) -> Item {
+    let level = rest_level(rest);
+    let kind = rest.kind;
     // P5: flags for short rests, 0 quarter, -1 half, -2 whole, -3 breve, -4 repeat sign.
     let symbol = match (kind, rhythm.head()) {
         (RestKind::Measures(n), _) if n >= BAR_REST_MEASURES => -5.0,
@@ -680,6 +687,15 @@ fn is_centred(kind: RestKind) -> bool {
     }
 }
 
+/// P9 of a rest that is not centred: -1 for a rest over several measures, else none.
+fn uncentred(kind: RestKind) -> f32 {
+    if matches!(kind, RestKind::Measures(_)) {
+        -1.0
+    } else {
+        0.0
+    }
+}
+
 /// A pass-1 event with the rhythm pass 2 gave it (chords and rests only).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Timed<'a> {
@@ -700,6 +716,8 @@ pub(crate) struct Line {
 impl Line {
     pub fn new(timed: &[Timed], options: &Options) -> Self {
         let mut stems = StemMode::Ordinary;
+        // 0x4ECDF8: Q+ turns automatic stems up, Q- restores the mode Q+ found.
+        let mut before_cue: Option<StemMode> = None;
         let mut shift = StaffShift::Main;
         let mut clef = options.clef;
         let mut cue = false;
@@ -707,22 +725,23 @@ impl Line {
             .iter()
             .filter_map(|t| match (t.event, t.rhythm) {
                 (Event::Chord(heads), Some(rhythm)) => {
-                    // 0x4ECDF8: cue notes take an up stem unless SU/SD is in force.
-                    let mode = if cue && stems == StemMode::Ordinary { StemMode::Up } else { stems };
-                    let mut note = Note::new(0.0, heads.clone(), rhythm, mode, shift);
+                    let mut note = Note::new(0.0, heads.clone(), rhythm, stems, shift);
                     if cue {
                         note.set_cue();
                     }
                     Some(Element::Note(note))
                 }
-                (Event::Rest(kind), Some(rhythm)) => Some(Element::Rest { x: 0.0, kind: *kind, rhythm }),
+                (Event::Rest(rest), Some(rhythm)) => Some(Element::Rest { x: 0.0, rest: *rest, rhythm }),
                 (Event::Bar { staves, style }, _) => Some(Element::Bar { x: 0.0, staves: *staves, style: *style }),
                 (Event::Clef(c), _) => {
                     clef = *c;
                     Some(Element::Clef { x: 0.0, clef, small: false })
                 }
                 (Event::Key(key, clef), _) => Some(Element::Key { x: 0.0, key: *key, clef: *clef }),
-                (Event::Meter(meter), _) => Some(Element::Meter { x: 0.0, meter: *meter }),
+                (Event::Meter(meter), _) => Some(Element::Meter { x: 0.0, meter: *meter, quarters: 0.0 }),
+                (Event::MisreadMeter(meter), rhythm) => {
+                    Some(Element::Meter { x: 0.0, meter: *meter, quarters: rhythm.map_or(0.0, Rhythm::quarters) })
+                }
                 (Event::Stems(mode), _) => {
                     stems = *mode;
                     None
@@ -731,8 +750,17 @@ impl Line {
                     shift = *s;
                     None
                 }
-                (Event::Cue(on), _) => {
-                    cue = *on;
+                (Event::Cue(true), _) => {
+                    before_cue = Some(stems);
+                    if stems == StemMode::Ordinary {
+                        stems = StemMode::Up;
+                    }
+                    cue = true;
+                    None
+                }
+                (Event::Cue(false), _) => {
+                    stems = before_cue.take().unwrap_or(stems);
+                    cue = false;
                     None
                 }
                 (Event::Chord(_) | Event::Rest(_), None) => None,
@@ -839,7 +867,7 @@ impl Line {
                     number += 1;
                     note.work_entries(number)
                 }
-                Element::Rest { x, kind, .. } => vec![WorkEntry::other(2, *x, rest_level(*kind) as i32)],
+                Element::Rest { x, rest, .. } => vec![WorkEntry::other(2, *x, rest_level(*rest) as i32)],
                 Element::Bar { x, .. } => vec![WorkEntry::other(14, *x, 0)],
                 Element::Clef { x, .. } => vec![WorkEntry::other(3, *x, 0)],
                 Element::Key { x, .. } => vec![WorkEntry::other(17, *x, 0)],
@@ -861,8 +889,8 @@ impl Line {
         self.elements
             .iter()
             .flat_map(|e| match e {
-                Element::Rest { x, kind, rhythm } if is_centred(*kind) => {
-                    vec![rest_item(*kind, *rhythm, *x, self.staff, centre(*kind, *x, self.size, &bars))]
+                Element::Rest { x, rest, rhythm } if is_centred(rest.kind) => {
+                    vec![rest_item(*rest, *rhythm, *x, self.staff, centre(rest.kind, *x, self.size, &bars))]
                 }
                 other => other.items(self.staff),
             })

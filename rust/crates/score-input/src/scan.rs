@@ -1,7 +1,9 @@
-//! Splitting a pass into its slash-separated entries, and a cursor for reading one entry.
+//! Splitting a pass into its entries, and a cursor for reading one entry: the tokenizer
+//! 0x524C4A as analysis/engine/input.md ("Tokenizer") describes it.
 //!
 //! The engine upper-cases what is typed, ignores line breaks (a long pass continues on the
-//! next line) and stops at the first semicolon.
+//! next line) and stops at the first semicolon. Entries are separated by `/` or `,`; a
+//! leading `/` is skipped.
 
 use crate::error::{ErrorKind, InputError, Pass, Span};
 use crate::motives::{augment, renumber, Motives};
@@ -21,7 +23,13 @@ impl Entry {
     }
 
     pub fn cursor(&self, pass: Pass) -> Cursor<'_> {
-        Cursor { bytes: self.text.as_bytes(), pos: 0, origin: self.start, pass }
+        Cursor { bytes: self.text.as_bytes(), pos: 0, origin: self.start, pass, skip_spaces: false }
+    }
+
+    /// A cursor that passes over spaces as the item parsers do (0x526EC4); a number still
+    /// ends at a space, so `3 4` is two numbers.
+    pub fn spaced_cursor(&self, pass: Pass) -> Cursor<'_> {
+        Cursor { skip_spaces: true, ..self.cursor(pass) }
     }
 
     pub fn error(&self, pass: Pass, kind: ErrorKind) -> InputError {
@@ -30,7 +38,7 @@ impl Entry {
 }
 
 /// The entries of a pass, up to its terminating semicolon. An empty pass (`;`) has none;
-/// otherwise every slash separates two entries, so `A/;` ends with an empty entry. Motive
+/// otherwise every separator separates two entries, so `A/;` ends with an empty entry. Motive
 /// definitions are entered in place and stored; recalls in passes 2-5 are replaced by the
 /// stored entries (pass 1 resolves them itself, see events.rs).
 pub(crate) fn entries(text: &str, pass: Pass, motives: &mut Motives) -> Result<Vec<Entry>, InputError> {
@@ -40,7 +48,7 @@ pub(crate) fn entries(text: &str, pass: Pass, motives: &mut Motives) -> Result<V
         return Ok(Vec::new());
     }
     let mut out = Vec::new();
-    let mut at = 0;
+    let mut at = body.find(|c: char| c != ' ').filter(|&i| body[i..].starts_with('/')).map_or(0, |i| i + 1);
     loop {
         let rest = &body[at..];
         let upper: Vec<u8> = rest.bytes().take(2).map(|b| b.to_ascii_uppercase()).collect();
@@ -54,13 +62,13 @@ pub(crate) fn entries(text: &str, pass: Pass, motives: &mut Motives) -> Result<V
             out.extend(split(inner, at + 2, Some(name)));
             at += close + 1;
             match body[at..].chars().next() {
-                Some('/') => at += 1,
+                Some('/' | ',') => at += 1,
                 None => break,
                 Some(_) => {}
             }
             continue;
         }
-        let piece_len = rest.find('/').unwrap_or(rest.len());
+        let piece_len = rest.find(is_separator).unwrap_or(rest.len());
         let piece = &rest[..piece_len];
         if pass != Pass::Notes && piece.trim_start().starts_with('@') {
             out.extend(recall(piece, at, pass, motives)?);
@@ -79,9 +87,13 @@ pub(crate) fn entries(text: &str, pass: Pass, motives: &mut Motives) -> Result<V
     Ok(out)
 }
 
+fn is_separator(c: char) -> bool {
+    matches!(c, '/' | ',')
+}
+
 fn split(text: &str, origin: usize, motive: Option<char>) -> Vec<Entry> {
     let mut start = origin;
-    text.split('/')
+    text.split(is_separator)
         .map(|piece| {
             let entry = Entry { text: joined_upper(piece), start, motive };
             start += piece.len() + 1;
@@ -110,7 +122,8 @@ pub(crate) fn recall_parts(piece: &str) -> Option<(char, i32)> {
     if !name.is_ascii_alphabetic() {
         return None;
     }
-    let number = chars.as_str().trim();
+    // `@X-` without a number is the plain recall.
+    let number = chars.as_str().trim().trim_end_matches('-');
     let value = if number.is_empty() { 0 } else { number.parse().ok()? };
     Some((name, value))
 }
@@ -120,50 +133,76 @@ fn joined_upper(piece: &str) -> String {
 }
 
 /// Reads the characters of one entry.
+#[derive(Clone)]
 pub(crate) struct Cursor<'a> {
     bytes: &'a [u8],
     pos: usize,
     origin: usize,
     pass: Pass,
+    skip_spaces: bool,
 }
 
 impl Cursor<'_> {
-    pub fn peek(&self) -> Option<u8> {
-        self.bytes.get(self.pos).copied()
+    /// Moves over spaces, if this cursor skips them.
+    fn pass_spaces(&mut self) {
+        if self.skip_spaces {
+            self.skip_spaces();
+        }
     }
 
+    pub fn peek(&self) -> Option<u8> {
+        let mut ahead = self.clone();
+        ahead.pass_spaces();
+        ahead.bytes.get(ahead.pos).copied()
+    }
+
+    /// The character `ahead` places further on (spaces counted when they are skipped).
     pub fn peek_at(&self, ahead: usize) -> Option<u8> {
-        self.bytes.get(self.pos + ahead).copied()
+        let mut c = self.clone();
+        (0..ahead).for_each(|_| {
+            c.bump();
+        });
+        c.peek()
     }
 
     pub fn bump(&mut self) -> Option<u8> {
-        let byte = self.peek()?;
+        self.pass_spaces();
+        let byte = self.bytes.get(self.pos).copied()?;
         self.pos += 1;
         Some(byte)
     }
 
+    /// Moves over `count` characters (spaces not counted when they are skipped).
     pub fn skip(&mut self, count: usize) {
-        self.pos = (self.pos + count).min(self.bytes.len());
+        (0..count).for_each(|_| {
+            self.bump();
+        });
+    }
+
+    /// Moves to the end of the entry: the parser ignores what follows.
+    pub fn skip_rest(&mut self) {
+        self.pos = self.bytes.len();
     }
 
     pub fn eat(&mut self, byte: u8) -> bool {
         let found = self.peek() == Some(byte);
         if found {
-            self.pos += 1;
+            self.bump();
         }
         found
     }
 
     pub fn eat_word(&mut self, word: &str) -> bool {
-        let found = self.bytes[self.pos..].starts_with(word.as_bytes());
+        let mut ahead = self.clone();
+        let found = word.bytes().all(|b| ahead.bump() == Some(b));
         if found {
-            self.pos += word.len();
+            *self = ahead;
         }
         found
     }
 
     pub fn at_end(&self) -> bool {
-        self.pos >= self.bytes.len()
+        self.peek().is_none()
     }
 
     pub fn rest(&self) -> &str {
@@ -171,7 +210,7 @@ impl Cursor<'_> {
     }
 
     pub fn skip_spaces(&mut self) {
-        while self.peek() == Some(b' ') {
+        while self.bytes.get(self.pos) == Some(&b' ') {
             self.pos += 1;
         }
     }
@@ -183,18 +222,20 @@ impl Cursor<'_> {
     /// A decimal digit, if one follows.
     pub fn digit(&mut self) -> Option<u8> {
         let digit = self.peek().filter(u8::is_ascii_digit)?;
-        self.pos += 1;
+        self.bump();
         Some(digit - b'0')
     }
 
     /// An unsigned integer, if one follows.
     pub fn integer(&mut self) -> Option<u32> {
+        self.pass_spaces();
         let digits = self.take_while(|b| b.is_ascii_digit());
         digits.parse().ok()
     }
 
     /// A number such as `12`, `.5` or `2.7`, if one follows.
     pub fn number(&mut self) -> Option<f32> {
+        self.pass_spaces();
         let start = self.pos;
         self.take_while(|b| b.is_ascii_digit());
         if self.peek() == Some(b'.') && self.peek_at(1).is_some_and(|b| b.is_ascii_digit()) {
@@ -210,7 +251,7 @@ impl Cursor<'_> {
 
     fn take_while(&mut self, keep: impl Fn(u8) -> bool) -> &str {
         let start = self.pos;
-        while self.peek().is_some_and(&keep) {
+        while self.bytes.get(self.pos).is_some_and(|&b| keep(b)) {
             self.pos += 1;
         }
         std::str::from_utf8(&self.bytes[start..self.pos]).unwrap_or("")
@@ -221,8 +262,10 @@ impl Cursor<'_> {
     }
 
     pub fn unexpected(&self) -> InputError {
-        let text = self.rest().chars().next().map_or_else(|| "end of entry".to_string(), String::from);
-        self.error_here(ErrorKind::Unexpected(text))
+        let mut at = self.clone();
+        at.pass_spaces();
+        let text = at.rest().chars().next().map_or_else(|| "end of entry".to_string(), String::from);
+        at.error_here(ErrorKind::Unexpected(text))
     }
 
     /// Fails unless the whole entry has been read.

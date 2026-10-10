@@ -1,14 +1,20 @@
-//! Pass 1 entries resolved into a flat sequence of events: octaves and proximity applied,
-//! levels computed for the current clef, repeats expanded.
+//! Pass 1 items turned into the engine's token list R, then into events.
+//!
+//! The item parser 0x4E2CC8 resolves octaves as it goes (its state is [`Octaves`]); 0x4AF456
+//! applies repeats to R; the builder 0x4ECDF8 reads R with the clef in force, so a repeated
+//! note is placed for the clef where the copy stands (analysis/engine/input.md, "Pass 1").
 
 use crate::error::{ErrorKind, InputError, Pass};
-use crate::motives::{transpose, Motives};
+use crate::motives::{transpose, Carried, Motives};
 use crate::notes::{
-    Accidental, BarStyle, Clef, Direction, KeySignature, Meter, NoteEntry, NoteName, OctaveMode, RestKind, Spanned, StaffShift,
-    StemMode,
+    Accidental, BarStyle, Clef, Direction, KeySignature, Meter, NoteEntry, NoteName, OctaveMark, OctaveMode, Rest, Spanned,
+    StaffShift, StemMode,
 };
 
-const MIDDLE_C_OCTAVE: i32 = 4;
+/// The parser's octave register c0 at the start of a line: octave 4.
+const START_BASE: i32 = 28;
+/// A note's step s is 7 * octave + letter (C = 1); P4 = s - 28 on a treble staff.
+const MIDDLE_C_BASE: i32 = 28;
 
 /// A note head: its staff level (P4, 1 = middle C on a treble staff) and accidental.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -29,13 +35,16 @@ impl Head {
 pub enum Event {
     /// One or more note heads sounding together, sorted from the lowest level up.
     Chord(Vec<Head>),
-    Rest(RestKind),
+    Rest(Rest),
     /// `staves` is negative for an invisible barline, as P4 stores it.
     Bar { staves: i32, style: BarStyle },
     Clef(Clef),
     /// The key signature and the clef it is drawn for: the one notes are read in.
     Key(KeySignature, Clef),
     Meter(Meter),
+    /// A token below 1000 (a note far below the staff, `X` without its count): the builder
+    /// makes a meter of it, but pass 2 gives it a rhythm, which counts in the spacing.
+    MisreadMeter(Meter),
     Stems(StemMode),
     Staff(StaffShift),
     /// Cue-size notes from here on (true) or normal ones again (false); pass 1 codes 8001
@@ -44,98 +53,118 @@ pub enum Event {
 }
 
 impl Event {
-    /// Chords and rests take a rhythm in pass 2 and a note number in passes 3-5.
+    /// Chords and rests take a rhythm in pass 2, and so does a misread meter; chords take a
+    /// note number in passes 3-5.
     pub fn is_rhythmic(&self) -> bool {
-        matches!(self, Event::Chord(_) | Event::Rest(_))
+        matches!(self, Event::Chord(_) | Event::Rest(_) | Event::MisreadMeter(_))
+    }
+}
+
+/// A note as R holds it: its step s (7 * octave + letter, C = 1), accidental and parentheses.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Pitch {
+    step: i32,
+    accidental: Option<Accidental>,
+    cautionary: bool,
+}
+
+impl Pitch {
+    /// The size of its token: 1000 + s + 100 * accidental, 6000 more in parentheses.
+    fn value(self) -> i32 {
+        1000 + self.step + 100 * self.accidental.map_or(0, Accidental::code) + if self.cautionary { 6000 } else { 0 }
+    }
+}
+
+/// One entry of R.
+#[derive(Debug, Clone, PartialEq)]
+enum Token {
+    /// `member`: a further note of a chord (a negative token).
+    Note { pitch: Pitch, member: bool },
+    Rest(Rest),
+    Bar { style: BarStyle, span: u8 },
+    Clef(Clef),
+    InputClef(Clef),
+    Key(KeySignature),
+    Meter(Meter),
+    Stems(StemMode),
+    Staff(StaffShift),
+    Cue(bool),
+    /// A token below 1000, which the builder reads as a meter.
+    Misread(i32),
+}
+
+impl Token {
+    /// Whether 0x4AF456 counts the token as an item when it counts back for a repeat: a
+    /// chord's further notes do not, unless their token rounds to -2 or -8 (an accidental
+    /// code of 5 and up; an engine quirk).
+    fn counts(&self) -> bool {
+        match self {
+            Token::Note { pitch, member: true } => !matches!((pitch.value() as f32 / 1000.0).round() as i32, 1 | 7),
+            _ => true,
+        }
     }
 
-    fn without_accidentals(&self) -> Event {
+    /// The copy an `X` repeat makes: notes lose their accidental, keep their parentheses.
+    fn without_accidental(&self) -> Token {
         match self {
-            Event::Chord(heads) => Event::Chord(heads.iter().map(|h| Head { accidental: None, cautionary: false, ..*h }).collect()),
+            Token::Note { pitch, member } => Token::Note { pitch: Pitch { accidental: None, ..*pitch }, member: *member },
             other => other.clone(),
         }
     }
 }
 
-/// Octave state while reading pass 1.
+/// The parser's octave state: the octave register c0 (0x78DEC0), the mode (0x78DEC4), the
+/// step and letter of the previous note.
 #[derive(Debug, Clone, Copy)]
-struct Pitches {
-    octave: i32,
+struct Octaves {
+    base: i32,
     proximity: bool,
-    previous: Option<i32>,
-    /// The clef levels are computed for: the staff's, or an input clef (`-TR`).
-    clef: Clef,
-    staves: u8,
+    last_step: i32,
+    /// C = 1 ... B = 7; carried over from earlier lines.
+    last_letter: i32,
 }
 
-impl Default for Pitches {
-    fn default() -> Self {
-        Self { octave: MIDDLE_C_OCTAVE, proximity: false, previous: None, clef: Clef::Treble, staves: 1 }
+impl Octaves {
+    fn new(carried: &Carried) -> Self {
+        Octaves { base: START_BASE, proximity: false, last_step: carried.last_step, last_letter: carried.last_letter }
     }
-}
 
-impl Pitches {
-    /// Diatonic number of the note (C4 = 28) after applying octave, proximity and jump rules.
-    fn resolve(&mut self, name: &NoteName) -> i32 {
+    /// The step of a note (0x4E2CC8, finished by 0x4E33A4).
+    fn step(&mut self, name: &NoteName) -> i32 {
         match name.mode {
-            Some(OctaveMode::Proximity) => self.proximity = true,
             Some(OctaveMode::Ordinary) => self.proximity = false,
+            Some(OctaveMode::Proximity) => self.proximity = true,
             None => {}
         }
-        let step = name.letter.step();
-        let diatonic = match (name.octave, self.previous, name.jump) {
-            (Some(octave), _, _) => 7 * i32::from(octave) + step,
-            (None, Some(previous), Some(direction)) => jump(previous, step, direction),
-            (None, Some(previous), None) if self.proximity => nearest(previous, step),
-            _ => 7 * self.octave + step,
-        };
-        self.octave = diatonic.div_euclid(7);
-        self.previous = Some(diatonic);
-        diatonic
-    }
-
-    fn level(&self, diatonic: i32) -> i32 {
-        diatonic - 7 * MIDDLE_C_OCTAVE + 1 + self.clef.level_offset()
-    }
-
-    /// The heads for a note name (two for a dyad), and the name with its octave made explicit.
-    fn heads(&mut self, name: &NoteName) -> (Vec<Head>, NoteName) {
-        let diatonic = self.resolve(name);
-        let head = Head { level: self.level(diatonic), accidental: name.accidental, cautionary: name.cautionary };
-        let octave = match name.dyad {
-            Some(Direction::Up) => Some(7),
-            Some(Direction::Down) => Some(-7),
-            None => None,
-        };
-        let heads = std::iter::once(head).chain(octave.map(|o| Head { level: head.level + o, ..head })).collect();
-        let explicit = NoteName { octave: Some(diatonic.div_euclid(7).clamp(0, 9) as u8), jump: None, ..*name };
-        (heads, explicit)
+        let letter = name.letter.step() + 1;
+        name.octave.iter().for_each(|mark| match mark {
+            OctaveMark::Digit(d) => self.base = 7 * i32::from(*d),
+            OctaveMark::Jump(Direction::Up) if letter <= self.last_letter => self.base += 7,
+            OctaveMark::Jump(Direction::Down) if self.last_letter <= letter => self.base -= 7,
+            OctaveMark::Jump(_) => {}
+        });
+        // A digit also moves the proximity reference to the note; a jump skips the step.
+        if self.proximity && name.octave.is_empty() {
+            let distance = self.last_step - (letter + self.base);
+            if distance > 3 {
+                self.base += 7;
+            } else if distance < -3 {
+                self.base -= 7;
+            }
+        }
+        let step = self.base + letter;
+        self.last_step = step;
+        self.last_letter = letter;
+        step
     }
 }
 
-/// The note with diatonic step `step` closest to `previous` (a fourth rather than a fifth).
-fn nearest(previous: i32, step: i32) -> i32 {
-    let up = (step - previous).rem_euclid(7);
-    if up <= 3 {
-        previous + up
-    } else {
-        previous + up - 7
-    }
-}
-
-/// The nearest note with diatonic step `step` above or below `previous`: an octave away for
-/// the same letter.
-fn jump(previous: i32, step: i32, direction: Direction) -> i32 {
-    match direction {
-        Direction::Up => previous + 1 + (step - previous - 1).rem_euclid(7),
-        Direction::Down => previous - 1 - (previous - 1 - step).rem_euclid(7),
-    }
-}
-
-/// Pass-1 state while the entries are read in order.
+/// Pass-1 state while the items are read in order.
 struct Resolver<'a> {
-    pitches: Pitches,
-    events: Vec<Event>,
+    octaves: Octaves,
+    /// The barline span, remembered from barline to barline.
+    span: u8,
+    tokens: Vec<Token>,
     motives: &'a mut Motives,
     /// The motive being defined and its entries so far (octaves made explicit).
     defining: Option<(char, Vec<NoteEntry>)>,
@@ -160,60 +189,38 @@ impl Resolver<'_> {
         Ok(())
     }
 
-    /// Resolves one entry; returns it with explicit octaves, as a motive stores it.
+    /// Reads one item into R; returns it with explicit octaves, as a motive stores it.
     fn entry(&mut self, value: &NoteEntry, span: crate::Span) -> Result<NoteEntry, InputError> {
         let error = |kind| InputError::new(Pass::Notes, span, kind);
         match value {
-            NoteEntry::Chord(names) => {
-                let (heads, explicit): (Vec<Vec<Head>>, Vec<NoteName>) = names.iter().map(|n| self.pitches.heads(n)).unzip();
-                let mut heads: Vec<Head> = heads.into_iter().flatten().collect();
-                heads.sort_by_key(|h| h.level);
-                self.events.push(Event::Chord(heads));
-                return Ok(NoteEntry::Chord(explicit));
-            }
-            NoteEntry::Rest { kind, count } => {
-                self.events.extend(std::iter::repeat_n(Event::Rest(*kind), *count as usize));
-            }
+            NoteEntry::Chord(names) => return Ok(NoteEntry::Chord(self.chord(names))),
+            NoteEntry::Rest(rest) => self.tokens.push(Token::Rest(*rest)),
             NoteEntry::Bar(bar) => {
-                self.pitches.staves = bar.staves.unwrap_or(self.pitches.staves);
-                let staves = i32::from(self.pitches.staves);
-                self.events.push(Event::Bar { staves: if bar.invisible { -staves } else { staves }, style: bar.style });
+                self.span = bar.span.unwrap_or(self.span);
+                self.tokens.push(Token::Bar { style: bar.style, span: self.span });
             }
-            NoteEntry::Clef(clef) => {
-                self.pitches.clef = *clef;
-                self.events.push(Event::Clef(*clef));
+            NoteEntry::Clef(clef) => self.tokens.push(Token::Clef(*clef)),
+            NoteEntry::InputClef(clef) => self.tokens.push(Token::InputClef(*clef)),
+            NoteEntry::Key(key) => self.tokens.push(Token::Key(*key)),
+            NoteEntry::Meter(meter) => {
+                self.motives.carried.last_meter = Some(*meter);
+                self.tokens.push(Token::Meter(*meter));
             }
-            NoteEntry::InputClef(clef) => self.pitches.clef = *clef,
-            NoteEntry::Cue(on) => self.events.push(Event::Cue(*on)),
-            NoteEntry::Key(key) => self.events.push(Event::Key(*key, self.pitches.clef)),
-            NoteEntry::Meter(meter) => self.events.push(Event::Meter(*meter)),
-            NoteEntry::Stems(mode) => self.events.push(Event::Stems(*mode)),
-            NoteEntry::Staff(shift) => self.events.push(Event::Staff(*shift)),
-            NoteEntry::RepeatPrevious => {
-                let previous =
-                    self.events.iter().rev().find(|e| e.is_rhythmic()).ok_or_else(|| error(ErrorKind::NothingToRepeat))?;
-                self.events.push(previous.without_accidentals());
+            NoteEntry::LastMeter => self.tokens.extend(self.motives.carried.last_meter.map(Token::Meter)),
+            NoteEntry::Stems(mode) => self.tokens.push(Token::Stems(*mode)),
+            NoteEntry::Staff(shift) => self.tokens.push(Token::Staff(*shift)),
+            NoteEntry::Cue(on) => self.tokens.push(Token::Cue(*on)),
+            NoteEntry::ZeroToken => self.tokens.push(Token::Misread(0)),
+            NoteEntry::Repeat { items, times, keep_accidentals } => {
+                let start = self.unit_start(*items as usize).ok_or_else(|| error(ErrorKind::NothingToRepeat))?;
+                let block = copied(&self.tokens[start..], *keep_accidentals);
+                let copies = times.saturating_sub(1) as usize;
+                self.tokens.extend(std::iter::repeat_n(block, copies).flatten());
             }
             NoteEntry::RepeatChord { keep_accidentals } => {
-                let chord = self
-                    .events
-                    .iter()
-                    .rev()
-                    .find(|e| matches!(e, Event::Chord(_)))
-                    .ok_or_else(|| error(ErrorKind::NothingToRepeat))?;
-                self.events.push(if *keep_accidentals { chord.clone() } else { chord.without_accidentals() });
-            }
-            NoteEntry::Repeat { items, times, keep_accidentals } => {
-                let items = *items as usize;
-                if items == 0 || items > self.events.len() {
-                    return Err(error(ErrorKind::NothingToRepeat));
-                }
-                let group: Vec<Event> = self.events[self.events.len() - items..]
-                    .iter()
-                    .map(|e| if *keep_accidentals { e.clone() } else { e.without_accidentals() })
-                    .collect();
-                let copies = times.saturating_sub(1) as usize;
-                self.events.extend(std::iter::repeat_n(group, copies).flatten());
+                let (from, to) = self.unit_start(2).zip(self.unit_start(1)).ok_or_else(|| error(ErrorKind::NothingToRepeat))?;
+                let block = copied(&self.tokens[from..to], *keep_accidentals);
+                self.tokens.extend(block);
             }
             NoteEntry::Recall { name, steps } => {
                 let stored = self.motives.notes(*name).ok_or_else(|| error(ErrorKind::UnknownMotive(*name)))?.to_vec();
@@ -228,16 +235,99 @@ impl Resolver<'_> {
         }
         Ok(value.clone())
     }
+
+    /// The notes of a chord, the first a positive token, the others members; a dyad adds a
+    /// member an octave away (0x4AF456). Returns the names with their octave numbers.
+    fn chord(&mut self, names: &[NoteName]) -> Vec<NoteName> {
+        names
+            .iter()
+            .enumerate()
+            .map(|(i, name)| {
+                let step = self.octaves.step(name);
+                let pitch = Pitch { step, accidental: name.accidental, cautionary: name.cautionary };
+                let member = i > 0;
+                self.tokens.push(if !member && pitch.value() < 1000 { Token::Misread(pitch.value()) } else { Token::Note { pitch, member } });
+                let octave = match name.dyad {
+                    Some(Direction::Up) => Some(7),
+                    Some(Direction::Down) => Some(-7),
+                    None => None,
+                };
+                self.tokens.extend(octave.map(|o| Token::Note { pitch: Pitch { step: step + o, ..pitch }, member: true }));
+                let digit = (step - (name.letter.step() + 1)).div_euclid(7).clamp(0, 9) as u8;
+                NoteName { octave: vec![OctaveMark::Digit(digit)], ..name.clone() }
+            })
+            .collect()
+    }
+
+    /// Where the last `units` items of R start, counting as 0x4AF456 does.
+    fn unit_start(&self, units: usize) -> Option<usize> {
+        let back = units.checked_sub(1)?;
+        self.tokens.iter().enumerate().rev().filter(|(_, t)| t.counts()).nth(back).map(|(i, _)| i)
+    }
+}
+
+fn copied(tokens: &[Token], keep_accidentals: bool) -> Vec<Token> {
+    tokens.iter().map(|t| if keep_accidentals { t.clone() } else { t.without_accidental() }).collect()
+}
+
+/// The builder's reading of R: chords from a note and its members, levels for the clef in
+/// force (a clef resets an input clef).
+fn events(tokens: &[Token], staff_clef: Clef) -> Vec<Event> {
+    let mut reading = staff_clef;
+    let mut events: Vec<Event> = Vec::new();
+    let mut after_note = false;
+    for token in tokens {
+        let was_note = std::mem::replace(&mut after_note, matches!(token, Token::Note { .. }));
+        let event = match token {
+            Token::Note { pitch, member } => {
+                let head = Head { level: pitch.step - MIDDLE_C_BASE + reading.level_offset(), accidental: pitch.accidental, cautionary: pitch.cautionary };
+                match events.last_mut() {
+                    Some(Event::Chord(heads)) if *member && was_note => {
+                        heads.push(head);
+                        heads.sort_by_key(|h| h.level);
+                        continue;
+                    }
+                    _ => Event::Chord(vec![head]),
+                }
+            }
+            Token::Rest(rest) => Event::Rest(*rest),
+            Token::Bar { style, span } => {
+                let span = i32::from(*span);
+                Event::Bar { staves: if *style == BarStyle::Invisible { -span } else { span }, style: *style }
+            }
+            Token::Clef(clef) => {
+                reading = *clef;
+                Event::Clef(*clef)
+            }
+            Token::InputClef(clef) => {
+                reading = *clef;
+                continue;
+            }
+            Token::Key(key) => Event::Key(*key, reading),
+            Token::Meter(meter) => Event::Meter(*meter),
+            Token::Stems(mode) => Event::Stems(*mode),
+            Token::Staff(shift) => Event::Staff(*shift),
+            Token::Cue(on) => Event::Cue(*on),
+            Token::Misread(value) => Event::MisreadMeter(misread_meter(*value)),
+        };
+        events.push(event);
+    }
+    events
+}
+
+/// A token below 1000 read as a meter token 20000 + 100 n + m.
+fn misread_meter(value: i32) -> Meter {
+    Meter::Fraction((value - 20000) / 100, value.rem_euclid(100))
 }
 
 pub fn resolve(entries: &[Spanned<NoteEntry>], clef: Clef, motives: &mut Motives) -> Result<Vec<Event>, InputError> {
-    let pitches = Pitches { clef, ..Pitches::default() };
-    let mut resolver = Resolver { pitches, events: Vec::new(), motives, defining: None };
-    for spanned in entries {
-        resolver.spanned(spanned)?;
-    }
+    let octaves = Octaves::new(&motives.carried);
+    let mut resolver = Resolver { octaves, span: 1, tokens: Vec::new(), motives, defining: None };
+    entries.iter().try_for_each(|spanned| resolver.spanned(spanned))?;
     resolver.finish_definition();
-    Ok(resolver.events)
+    resolver.motives.carried.last_step = resolver.octaves.last_step;
+    resolver.motives.carried.last_letter = resolver.octaves.last_letter;
+    Ok(events(&resolver.tokens, clef))
 }
 
 #[cfg(test)]
@@ -265,8 +355,15 @@ mod tests {
     }
 
     #[test]
+    fn jumps_compare_letters_with_the_previous_note() {
+        assert_eq!(levels("C4/AU/A/GU/E/EU/BUU/C4U/CU4;"), [[1], [6], [6], [12], [10], [17], [21], [8], [1]]);
+        assert_eq!(levels("OG4/AJ/A/BJ/C/CJ;"), [[5], [-1], [-1], [-7], [-13], [-20]]);
+    }
+
+    #[test]
     fn chords_are_sorted_and_clefs_shift_levels() {
         assert_eq!(levels("E4:C/BA/C4/AL/C/TE/C;"), [vec![1, 3], vec![13], vec![7], vec![9]]);
+        assert_eq!(levels("C4+/E5-;"), [vec![1, 8], vec![3, 10]]);
     }
 
     #[test]
@@ -281,5 +378,15 @@ mod tests {
             })
             .collect();
         assert_eq!(accidentals, [Some(Accidental::Sharp), None, None, None]);
+    }
+
+    #[test]
+    fn chord_repeat_takes_the_item_before_the_previous_one() {
+        assert_eq!(levels("C4:E/D:F/=/G;"), [vec![1, 3], vec![2, 4], vec![1, 3], vec![5]]);
+    }
+
+    #[test]
+    fn repeated_notes_follow_the_clef_where_they_stand() {
+        assert_eq!(levels("C4/BA/X2 2;"), [[1], [13]]);
     }
 }
