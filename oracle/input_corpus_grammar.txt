@@ -10,7 +10,7 @@ c4/d/e/m/r;
 IN 1
 ;
 /C4 / D,E , F/  G;
-4/4/4/4/4;
+4/4;
 ;
 ;
 ;
@@ -18,7 +18,7 @@ IN 1
 IN 1
 ;
 C4//D/E///F;
-4/4/4/4/4/4/4/4;
+4/4/4/4/4/4/4;
 ;
 ;
 ;
@@ -34,7 +34,7 @@ C4/D/;
 IN 1
 ;
 C0/B/C9/B/C4/D/E/F/G/A/B/C;
-4/4/4/4/4/4/4/4/4/4/4/4;
+4/4/4/4/4/4/4/4/4/4;
 ;
 ;
 ;
@@ -58,7 +58,7 @@ PC4/B/E/G/C/F/G/D/C3/A/OA/B;
 IN 1
 ;
 OPC4/B/P OE/G/PO B/D;
-4/4/4/4/4/4;
+4/4/4;
 ;
 ;
 ;
@@ -114,7 +114,7 @@ B(F4/C(S/D(N/E(/F(SS/G(FF/A((;
 IN 1
 ;
 C S 4/D F;
-4/4;
+4;
 ;
 ;
 ;
@@ -138,7 +138,7 @@ C4+/C4-/E5+/BF4+/C4+:E/C(S4-;
 IN 1
 ;
 C4:EF:G/M/./R/../M/.;
-4/4/4/4/4/4;
+4/4/4/4/4;
 ;
 ;
 ;
@@ -146,7 +146,7 @@ C4:EF:G/M/./R/../M/.;
 IN 1
 ;
 C4:E/D:F/./G/M/.;
-4/4/4/4/4/4;
+4/4/4/4/4;
 ;
 ;
 ;
@@ -170,7 +170,7 @@ R/RF/RU/RD/RI/RW/RP/C4;
 IN 1
 ;
 R3/R12/R 5/R0/C4;
-4/4/4/4/4;
+4/4/4;
 ;
 ;
 ;
@@ -202,7 +202,7 @@ TR/C4/BA/C/AL/C/TE/C/PR/C;
 IN 1
 ;
 BA/-TR/C4/E/-BA/C3/-AL/C4/-TE/C/-X/C;
-4/4/4/4/4/4/4;
+4/4/4/4/4/4;
 ;
 ;
 ;
@@ -314,7 +314,7 @@ C4X3/DFX2/R/E:GX2/F:AFZ2;
 IN 1
 ;
 C4/D/EF/X3 2/F;
-4/4/4/4/4/4/4/4;
+4/4/4/4/4/4/4;
 ;
 ;
 ;
@@ -322,7 +322,7 @@ C4/D/EF/X3 2/F;
 IN 1
 ;
 C4/D/EF/Z3 2/F;
-4/4/4/4/4/4/4/4;
+4/4/4/4/4/4/4;
 ;
 ;
 ;
@@ -578,7 +578,7 @@ C4/D/X2 1/E;
 IN 1
 ;
 C4/D/X2/E;
-4/4/4/4/4/4/4/4;
+4/4/4/4;
 ;
 ;
 ;
@@ -602,7 +602,7 @@ C4:E/R/../C4../=.=;
 IN 1
 ;
 C4/D/X5 2/E;
-4/4/4/4/4/4/4/4;
+4/4/4;
 ;
 ;
 ;
@@ -633,15 +633,7 @@ G/M/A/MH;
 IN 1
 ;
 Z[C4/AJ/PB/E5/F/C:E]/@Z;
-4/4/4/4/4/4/4/4/4/4/4/4;
-;
-;
-;
-== g-p1-too-many
-IN 1
-;
-CX99/DX99/EX5;
-;
+4/4/4/4/4/4/4/4/4/4/4;
 ;
 ;
 ;
@@ -714,6 +706,2036 @@ IN 1
 ;
 C4/CF(;
 4/4;
+;
+;
+;
+== g-p2-numbers
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+1/2/4/8/16/32/64/128;
+;
+;
+;
+== g-p2-numbers-odd
+IN 1
+;
+C4/D/E/F/G/A;
+3/5/6/7/12/24;
+;
+;
+;
+== g-p2-dots
+IN 1
+;
+C4/D/E/F/G/A;
+4./4../2./8.../1./16.;
+;
+;
+;
+== g-p2-decimals
+IN 1
+;
+C4/D/E/F;
+.5/1.5/0.5/2.5;
+;
+;
+;
+== g-p2-ratio
+IN 1
+;
+C4/D/E/F;
+7:1.5/3:2/3'2/5:4;
+;
+;
+;
+== g-p2-letters
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+W/H/Q/E/S/D/G/Q;
+;
+;
+;
+== g-p2-letter-dots
+IN 1
+;
+C4/D/E/F;
+Q./H../E./W.;
+;
+;
+;
+== g-p2-triplet-letters
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+T/TE/TQ/TS/TH/TT/TW/TD;
+;
+;
+;
+== g-p2-triplet-numbers
+IN 1
+;
+C4/D/E/F/G;
+T8/T4/T2/T16/T32;
+;
+;
+;
+== g-p2-concat
+IN 1
+;
+C4/D/E/F;
+QE/HQ/4 8/E.;
+;
+;
+;
+== g-p2-case
+IN 1
+;
+C4/D/E/F;
+q/h/e./te;
+;
+;
+;
+== g-p2-repeat-item
+IN 1
+;
+C4/D/E/F/G/A;
+4X3/8X2/2;
+;
+;
+;
+== g-p2-repeat-letter
+IN 1
+;
+C4/D/E/F/G/A;
+QX3/EX2/H;
+;
+;
+;
+== g-p2-repeat-group
+IN 1
+;
+C4/D/E/F/G/A;
+4/8/X2 3;
+;
+;
+;
+== g-p2-rep
+IN 1
+;
+C4/D/E/F/G/A;
+4/8/REP2 3;
+;
+;
+;
+== g-p2-empty-item
+IN 1
+;
+C4/D/E/F/G;
+4//8///;
+;
+;
+;
+== g-p2-separators
+IN 1
+;
+C4/D/E/F;
+4 , 8,2 /1;
+;
+;
+;
+== g-p2-fewer
+IN 1
+;
+C4/D/E;
+4;
+;
+;
+;
+== g-p2-fewer2
+IN 1
+;
+C4/D/E;
+4/8;
+;
+;
+;
+== g-p2-one-note
+IN 1
+;
+C4;
+8;
+;
+;
+;
+== g-p2-chord-rest
+IN 1
+;
+C4:E/R/M/D;
+2/4/4;
+;
+;
+;
+== g-p2-macro
+IN 1
+;
+C4/D/E/F/G/A/B/C5/D/E/F/G;
+Z[4/8/8]/@Z/@Z2/@Z.5;
+;
+;
+;
+== g-p2-grace
+IN 1
+;
+C4/D/E/F;
+G/4/G/4;
+;
+;
+;
+== g-p2-fill-dotted
+IN 1
+;
+C4/D/E;
+8.;
+;
+;
+;
+== g-p2-fill-letter
+IN 1
+;
+C4/D/E;
+Q;
+;
+;
+;
+== g-p2-fill-with-x
+IN 1
+;
+C4/D/E;
+4X2;
+;
+;
+;
+== g-p2-trailing-junk
+IN 1
+;
+C4/D;
+4Y/4;
+;
+;
+;
+== g-p2-junk-first
+IN 1
+;
+C4/D;
+Y/4;
+;
+;
+;
+== g-p2-value-then-g
+IN 1
+;
+C4/D;
+4G/4;
+;
+;
+;
+== g-p2-g-then-value
+IN 1
+;
+C4/D;
+G4/4;
+;
+;
+;
+== g-p2-decimal-vs-dot
+IN 1
+;
+C4/D;
+4.5/4.0;
+;
+;
+;
+== g-p2-t-after-value
+IN 1
+;
+C4/D;
+4T/4;
+;
+;
+;
+== g-p2-t-dot
+IN 1
+;
+C4/D;
+TE./T.;
+;
+;
+;
+== g-p2-zero
+IN 1
+;
+C4/D;
+0/4;
+;
+;
+;
+== g-p2-ratio-dot
+IN 1
+;
+C4/D;
+3:2./4;
+;
+;
+;
+== g-p2-x-group-no-count
+IN 1
+;
+C4/D/E/F;
+4/8/X2/4;
+;
+;
+;
+== g-p2-grace-variants
+IN 1
+;
+C4/D/E/F;
+G./GX2/4;
+;
+;
+;
+== g-p2-letter-number-mix
+IN 1
+;
+C4/D;
+Q8/8Q;
+;
+;
+;
+== g-p2-erase-junk
+IN 1
+;
+C4/D/E;
+4/Y/8/2;
+;
+;
+;
+== g-p2-erase-t-after
+IN 1
+;
+C4/D/E;
+4/4T/8/2;
+;
+;
+;
+== g-p2-mid-t-number
+IN 1
+;
+C4/D/E;
+4/T8/8;
+;
+;
+;
+== g-p2-mid-zero
+IN 1
+;
+C4/D/E;
+4/0/8/2;
+;
+;
+;
+== g-p2-mid-ratio
+IN 1
+;
+C4/D/E;
+4/3:2/8;
+;
+;
+;
+== g-p3-mark-A
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A 2;
+;
+;
+== g-p3-mark-AC
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+AC 2;
+;
+;
+== g-p3-mark-ACT
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACT 2;
+;
+;
+== g-p3-mark-AR
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+AR 2;
+;
+;
+== g-p3-mark-AS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+AS 2;
+;
+;
+== g-p3-mark-AO
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+AO 2;
+;
+;
+== g-p3-mark-CR
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+CR 2;
+;
+;
+== g-p3-mark-D
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+D 2;
+;
+;
+== g-p3-mark-DI
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+DI 2;
+;
+;
+== g-p3-mark-F
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F 2;
+;
+;
+== g-p3-mark-FP
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FP 2;
+;
+;
+== g-p3-mark-FF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FF 2;
+;
+;
+== g-p3-mark-FFF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FFF 2;
+;
+;
+== g-p3-mark-FE
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FE 2;
+;
+;
+== g-p3-mark-FIF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FIF 2;
+;
+;
+== g-p3-mark-FIS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FIS 2;
+;
+;
+== g-p3-mark-FIN
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FIN 2;
+;
+;
+== g-p3-mark-F0
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F0 2;
+;
+;
+== g-p3-mark-F5
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F5 2;
+;
+;
+== g-p3-mark-H
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+H 2;
+;
+;
+== g-p3-mark-HW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+HW 2;
+;
+;
+== g-p3-mark-I
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+I 2;
+;
+;
+== g-p3-mark-IM
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+IM 2;
+;
+;
+== g-p3-mark-M
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+M 2;
+;
+;
+== g-p3-mark-MF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+MF 2;
+;
+;
+== g-p3-mark-MP
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+MP 2;
+;
+;
+== g-p3-mark-MO
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+MO 2;
+;
+;
+== g-p3-mark-O
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+O 2;
+;
+;
+== g-p3-mark-OB
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+OB 2;
+;
+;
+== g-p3-mark-P
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+P 2;
+;
+;
+== g-p3-mark-PL
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PL 2;
+;
+;
+== g-p3-mark-PZ
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PZ 2;
+;
+;
+== g-p3-mark-PP
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PP 2;
+;
+;
+== g-p3-mark-PPP
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PPP 2;
+;
+;
+== g-p3-mark-R
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+R 2;
+;
+;
+== g-p3-mark-RI
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+RI 2;
+;
+;
+== g-p3-mark-S
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 2;
+;
+;
+== g-p3-mark-SF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+SF 2;
+;
+;
+== g-p3-mark-SFZ
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+SFZ 2;
+;
+;
+== g-p3-mark-S2
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S2 2;
+;
+;
+== g-p3-mark-S3
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S3 2;
+;
+;
+== g-p3-mark-S4
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S4 2;
+;
+;
+== g-p3-mark-T
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+T 2;
+;
+;
+== g-p3-mark-TS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TS 2;
+;
+;
+== g-p3-mark-TH
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TH 2;
+;
+;
+== g-p3-mark-TR
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TR 2;
+;
+;
+== g-p3-mark-TRF
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRF 2;
+;
+;
+== g-p3-mark-TRS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRS 2;
+;
+;
+== g-p3-mark-TRN
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRN 2;
+;
+;
+== g-p3-mark-TM
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TM 2;
+;
+;
+== g-p3-mark-TME
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TME 2;
+;
+;
+== g-p3-mark-TMS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TMS 2;
+;
+;
+== g-p3-mark-TMT
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TMT 2;
+;
+;
+== g-p3-mark-TM1
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TM1 2;
+;
+;
+== g-p3-mark-TM4
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TM4 2;
+;
+;
+== g-p3-mark-U
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+U 2;
+;
+;
+== g-p3-mark-W
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+W 2;
+;
+;
+== g-p3-mark-WS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+WS 2;
+;
+;
+== g-p3-mark-N45
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+N45 2;
+;
+;
+== g-p3-mark-N113
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+N113 2;
+;
+;
+== g-p3-span-C
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 1 3;
+;
+;
+== g-p3-span-Cplus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C+ 1 3;
+;
+;
+== g-p3-span-Cminus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C- 1 3;
+;
+;
+== g-p3-span-TRW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRW 1 3;
+;
+;
+== g-p3-span-TRFW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRFW 1 3;
+;
+;
+== g-p3-span-TRSW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRSW 1 3;
+;
+;
+== g-p3-span-TRNW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRNW 1 3;
+;
+;
+== g-p3-span-O
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+O 1 3;
+;
+;
+== g-p3-span-OB
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+OB 1 3;
+;
+;
+== g-p3-long-8VA
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+8VA 1 3;
+;
+;
+== g-p3-long-8VB
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+8VB 1 3;
+;
+;
+== g-p3-long-8BA
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+8BA 1 3;
+;
+;
+== g-p3-long-ARCO
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ARCO 2;
+;
+;
+== g-p3-long-DC
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+DC 1 3;
+;
+;
+== g-p3-long-HA
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+HA 2;
+;
+;
+== g-p3-long-HV
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+HV 2;
+;
+;
+== g-p3-long-PIZZ
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PIZZ 2;
+;
+;
+== g-p3-long-PI
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+PI 2;
+;
+;
+== g-p3-long-TREM
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TREM 2;
+;
+;
+== g-p3-long-TRILL
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRILL 2;
+;
+;
+== g-p3-long-TEN
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TEN 2;
+;
+;
+== g-p3-long-TENUTO
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TENUTO 2;
+;
+;
+== g-p3-long-STACC
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+STACC 2;
+;
+;
+== g-p3-long-STACCATO
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+STACCATO 2;
+;
+;
+== g-p3-long-WEDGE
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+WEDGE 2;
+;
+;
+== g-p3-long-FERM
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FERM 2;
+;
+;
+== g-p3-long-FERMATA
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+FERMATA 2;
+;
+;
+== g-p3-long-RIT
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+RIT 2;
+;
+;
+== g-p3-long-CRESC
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+CRESC 2;
+;
+;
+== g-p3-long-CRH
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+CRH 2;
+;
+;
+== g-p3-long-DN
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+DN 2;
+;
+;
+== g-p3-long-UP
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+UP 2;
+;
+;
+== g-p3-long-DOWN
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+DOWN 2;
+;
+;
+== g-p3-long-ACCENT
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACCENT 2;
+;
+;
+== g-p3-long-ACCEL
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACCEL 2;
+;
+;
+== g-p3-long-ACC
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACC 2;
+;
+;
+== g-p3-long-DIM
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+DIM 2;
+;
+;
+== g-p3-long-ACCS
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACCS 2;
+;
+;
+== g-p3-long-ACL
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+ACL 2;
+;
+;
+== g-p3-long-TRILLW
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRILLW 1 3;
+;
+;
+== g-p3-long-TEU
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TEU 2;
+;
+;
+== g-p3-long-TES
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TES 2;
+;
+;
+== g-p3-long-WES
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+WES 2;
+;
+;
+== g-p3-list
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 1 3 4;
+;
+;
+== g-p3-range
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 1:3;
+;
+;
+== g-p3-minus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+-S 2;
+;
+;
+== g-p3-plus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
++S 2;
+;
+;
+== g-p3-equals
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+=S 2;
+;
+;
+== g-p3-fraction
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A 1.5;
+;
+;
+== g-p3-span-fraction
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 1.5 3.7;
+;
+;
+== g-p3-span-one
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 1;
+;
+;
+== g-p3-trill-one
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TRW 1;
+;
+;
+== g-p3-fingering-minus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+-F3 2;
+;
+;
+== g-p3-several
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 1/A 2/F 3;
+;
+;
+== g-p3-beyond
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 9;
+;
+;
+== g-p3-range-list
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+S 1:2 4;
+;
+;
+== g-p3-minus-fraction
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A -1.5;
+;
+;
+== g-p3-plus-number
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A +2;
+;
+;
+== g-p3-word-minus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+-F 2;
+;
+;
+== g-p3-tremolo-minus
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+-TM 2;
+;
+;
+== g-p3-numbering
+IN 1
+;
+C4:E/R/D/M/E;
+4/4/4/4;
+S 1 2 3 4;
+;
+;
+== g-p3-macro
+IN 1
+;
+C4/D/E/F/G/A;
+4/4/4/4/4/4;
+Z[S 1/A 2]/@Z2;
+;
+;
+== g-p3-fraction-round
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A 1.4/S 2.6/T 3.5;
+;
+;
+== g-p3-word-fraction
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F 1.5/N45 2.5;
+;
+;
+== g-p3-rest-marks
+IN 1
+;
+C4/R/D/E;
+4/4/4/4;
+FE 2/S 2/F 2;
+;
+;
+== g-p3-word-range
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+F 1:3;
+;
+;
+== g-p3-tremolo-range
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+TM 1:2;
+;
+;
+== g-p3-span-colon
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 1:3;
+;
+;
+== g-p3-span-several
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+C 1 2 3 4;
+;
+;
+== g-p3-same-note-twice
+IN 1
+;
+C4/D/E/F;
+4/4/4/4;
+A 2/S 2;
+;
+;
+== g-p3-chord-mark
+IN 1
+;
+C4:E:G/D;
+4/4;
+S 1/F 2;
+;
+;
+== g-p4-pair
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 2;
+;
+== g-p4-pairs
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 2/3 4;
+;
+== g-p4-plus-first
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
++1 2;
+;
+== g-p4-plus-second
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 +2;
+;
+== g-p4-minus-first
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+-1 2;
+;
+== g-p4-minus-second
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 -2;
+;
+== g-p4-number
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+301 3;
+;
+== g-p4-number-second
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 304;
+;
+== g-p4-auto
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+2B;
+;
+== g-p4-auto-pickup
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+2B1;
+;
+== g-p4-auto-plus
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
++2B;
+;
+== g-p4-auto-minus
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+-2B;
+;
+== g-p4-auto-b
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+B;
+;
+== g-p4-auto-a
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+A;
+;
+== g-p4-auto-3
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+3B;
+;
+== g-p4-same
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 1;
+;
+== g-p4-reversed
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+4 1;
+;
+== g-p4-single
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1;
+;
+== g-p4-group4
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 4/5 8;
+;
+== g-p4-x
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 2/X2;
+;
+== g-p4-fraction
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1.5 3;
+;
+== g-p5-pair
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1 2;
+== g-p5-same
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1 1;
+== g-p5-plus
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
++1 2;
+== g-p5-minus
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+-1 2;
+== g-p5-from-left
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+0 1;
+== g-p5-to-right
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+3 99;
+== g-p5-tuplet
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+3011 3;
+== g-p5-tuplet-5013
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+5013 7;
+== g-p5-pairs
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1 2/3 5;
+== g-p5-plus-second
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1 +2;
+== g-p5-minus-second
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1 -2;
+== g-p5-single
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1;
+== g-p5-reversed
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+3 1;
+== g-p5-fraction
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1.5 3;
+== g-p5-x
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1 2/X2;
+== g-p4-auto-meter-68
+IN 1
+;
+6 8/C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+B;
+;
+== g-p4-auto-meter-22
+IN 1
+;
+2 2/C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+B;
+;
+== g-p4-auto-meter-54
+IN 1
+;
+5 4/C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+B;
+;
+== g-p4-lower
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+2b;
+;
+== g-p4-comma
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 2,3 4;
+;
+== g-p4-three-numbers
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 2 3;
+;
+== g-p4-dash
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1-2;
+;
+== g-p4-chord-rest
+IN 1
+;
+C4/R/D:F/M/E/F;
+8/8/8/8/8;
+;
+1 4;
+;
+== g-p4-minus-auto-number
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+-301 3;
+;
+== g-p5-tuplet-3
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+301 3;
+== g-p5-tuplet-on-note-2
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+302 4;
+== g-p5-tuplet-12
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+12013 5;
+== g-p5-three-numbers
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1 2 4;
+== g-p5-comma
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+1 2,3 4;
+== g-p5-tuplet-5
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+503 7;
+== g-p5-tuplet-2
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+203 4;
+== g-p5-tuplet-sapp
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+5013 17;
+== g-p5-tuplet-plus
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
++503 7;
+== g-p4-x-offset
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 2/3 4/X5;
+;
+== g-p4-x-first
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+X1 1 2;
+;
+== g-p4-macro
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+Z[1 2]/@Z3;
+;
+== g-p4-auto-then-pairs
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+4B/1 2;
+;
+== g-p4-pairs-then-auto
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+1 2/4B;
+;
+== g-p5-macro
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+;
+Z[1 2]/@Z3;
+== g-p4-auto-4
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+4B;
+;
+== g-p4-auto-then-slash
+IN 1
+;
+C4/D/E/F/G/A/B/C5;
+8/8/8/8/8/8/8/8;
+;
+2B/1 2;
+;
+== g-p1-state-fresh-cu
+IN 1
+;
+CU/D;
+4/4;
+;
+;
+;
+== g-p1-state-fresh-cj
+IN 1
+;
+CJ/D;
+4/4;
+;
+;
+;
+== g-p1-state-fresh-au
+IN 1
+;
+AU/D;
+4/4;
+;
+;
+;
+== g-p1-state-fresh-pb
+IN 1
+;
+PB/C;
+4/4;
+;
+;
+;
+== g-p1-state-carried-proximity
+IN 1
+;
+C6/D;
+4/4;
+;
+;
+;
+IN 2
+;
+PB/C;
+4/4;
+;
+;
+;
+== g-p1-state-carried-lprev
+IN 1
+;
+C4/A;
+4/4;
+;
+;
+;
+IN 2
+;
+GU/C;
+4/4;
+;
+;
+;
+== g-p1-macro-oct-jump
+IN 1
+;
+Z[C4/AJ/B/CU/D]/E/@Z;
+4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-oct-proximity
+IN 1
+;
+Z[PC4/B/E/G/C]/F/@Z;
+4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-oct-ordinary
+IN 1
+;
+Z[C4/E5/G/C4:E/G]/A/@Z;
+4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-oct-o
+IN 1
+;
+Z[C4/B/OB/E]/F/@Z;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-oct-before
+IN 1
+;
+C3/Z[E/G]/A/@Z;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-erase-leading-space
+IN 1
+;
+C4/ D/E;
+4/4;
+;
+;
+;
+== g-p1-chord-repeat-nothing
+IN 1
+;
+C4:E/.;
+4/4;
+;
+;
+;
+== g-p1-chord-repeat-first
+IN 1
+;
+./C4;
+4;
+;
+;
+;
+== g-p1-cautionary-chord-bar
+IN 1
+;
+C4:E(F:G/C:EF:G/M/D(/M/DF/M/D;
+4/4/4/4/4;
+;
+;
+;
+== g-p1-rest-number-threshold
+IN 1
+;
+R3/R4/R1/C4;
+4/4/4/4;
 ;
 ;
 ;
