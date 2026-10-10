@@ -41,7 +41,7 @@ def fmod32(x: float, y: float) -> float:
     return F(math.fmod(x, y))
 
 
-# ---------------------------------------------------------------- selection for J (0x49B1D8, mode 0)
+# ---------------------------------------------------------------- region selection (0x49B1D8)
 
 @dataclass
 class Selection:
@@ -49,8 +49,19 @@ class Selection:
     refs: list[tuple[int, int] | None]
 
 
-def select_box(items, lo: int, hi: int, x0: float, x1: float, right: float) -> Selection:
-    lo_x, hi_x = F(x0 - F(0.001)), F((x1 if x1 != 0 else 200.0) + F(0.001))
+def select_box(items, lo: int, hi: int, x0: float, x1: float, right: float, mode: int = 0,
+               codes: tuple[int, ...] = ()) -> Selection:
+    """0x49B1D8 with a positive end item: x parameters in [x0 - 0.001, x1 + 0.001] on staves lo..hi.
+
+    The second x parameters of codes 4 to 8 are taken when P3 is in range, and also when it is not
+    for mode 0 and -1. Modes 1 and 0x44 take P3 only. `codes` is the code filter 0x1C58560..
+    (without the 'W' rule for P5 > -2).
+    """
+    if x1 == 0:
+        x1 = 200.0
+    if x1 < x0:
+        x0, x1 = x1, x0
+    lo_x, hi_x = F(x0 - F(0.001)), F(x1 + F(0.001))
     refs: list[tuple[int, int] | None] = []
 
     def maybe(i, it, k):
@@ -59,9 +70,15 @@ def select_box(items, lo: int, hi: int, x0: float, x1: float, right: float) -> S
 
     for i, it in enumerate(items, 1):
         s, c = staff(it), code(it)
-        if not lo <= s <= hi:
+        if not lo <= s <= max(lo, hi) or (codes and c not in codes):
             continue
-        maybe(i, it, 3)
+        took = lo_x <= xpos(it) <= hi_x
+        if took:
+            refs.append((i, 3))
+            if mode in (1, 0x44):
+                continue
+        elif mode > 0 or mode == -0x43:
+            continue
         n = len(it)
         if not (n > 5 and 3 < c < 9):
             continue
@@ -93,7 +110,7 @@ def select_box(items, lo: int, hi: int, x0: float, x1: float, right: float) -> S
                             maybe(i, it, 14)
                         if n > 14 and it[14] > 0:
                             maybe(i, it, 15)
-        elif c in (7, 8) and trunc(it[6]) > 19 and it[7] > 0:
+        elif c == 7 and trunc(it[6]) > 19 and it[7] > 0:
             maybe(i, it, 8)
     return Selection(refs)
 
@@ -752,21 +769,35 @@ def justify(items, lo: int, hi: int, x_left: float, x_right: float, right: float
 
 # ---------------------------------------------------------------- LI, J, LJ (0x4B80B7)
 
-def layout_items(items, lo: int, hi: int, command: str = "LJ", right: float = 200.0,
-                 box: tuple[float, float] = (0.0, 200.0), grace: GraceSession | None = None) -> list[list[float]]:
-    """The whole command after the answer 'lo count' and yes to "Source Box O.K.?".
+@dataclass
+class LayoutPass:
+    """The items after 0x4B80B7 and the staff range it leaves in its first two arguments."""
+    items: list[list[float]]
+    lo: int                        # -1 after an aborted lineup, raised past empty bottom staves
+    hi: int                        # clamped to the highest staff present
+
+
+def layout_pass(items, lo: int, hi: int, command: str = "LJ", right: float = 200.0,
+                box: tuple[float, float] = (0.0, 200.0), grace: GraceSession | None = None,
+                clef_box: tuple[float, float] | None = None) -> LayoutPass:
+    """0x4B80B7 on staves lo..hi with the initial box (arguments 3 and 4).
 
     Pass the same `grace` session to successive calls to carry 0x89FBF0 as the engine does.
+    `clef_box` is the pair of globals P1, P2 that the clef nudge reads; LJ has the box there,
+    other callers (RIP) whatever their own parameters left.
     """
-    items, hi = prepare([list(it) for it in items], lo, hi, right, box)
-    if hi is None:
-        return items
+    items, top = prepare([list(it) for it in items], lo, hi, right, clef_box or box)
+    if top is None:
+        return LayoutPass(items, lo, hi)
+    hi = top
     x_left, x_right = box
     if command[0] == "L":
         run = Lineup(items, lo, hi, right, staff_steps(items), grace=grace or GraceSession())
         try:
             run.run()
         except LineupError as err:
+            if err.aborted:
+                return LayoutPass(items, -1, hi)
             err.items = items
             raise
         x_left, x_right, lo = run.x_left, run.x_right, run.lo
@@ -776,7 +807,13 @@ def layout_items(items, lo: int, hi: int, command: str = "LJ", right: float = 20
         if lo <= staff(it) <= hi and code(it) == 2 and par(it, 5) <= -2 and x_left <= xpos(it) <= box[1]:
             it.extend([0.0] * (9 - len(it)))
             it[8] = -1.0
-    return items
+    return LayoutPass(items, lo, hi)
+
+
+def layout_items(items, lo: int, hi: int, command: str = "LJ", right: float = 200.0,
+                 box: tuple[float, float] = (0.0, 200.0), grace: GraceSession | None = None) -> list[list[float]]:
+    """The whole command after the answer 'lo count' and yes to "Source Box O.K.?"."""
+    return layout_pass(items, lo, hi, command, right, box, grace).items
 
 
 def decorate(rng: random.Random, it: list[float]) -> list[float]:
