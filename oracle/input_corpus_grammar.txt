@@ -1,0 +1,719 @@
+== g-p1-case
+IN 1
+;
+c4/d/e/m/r;
+4/4/4/4;
+;
+;
+;
+== g-p1-separators
+IN 1
+;
+/C4 / D,E , F/  G;
+4/4/4/4/4;
+;
+;
+;
+== g-p1-empty-item
+IN 1
+;
+C4//D/E///F;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-trailing-slash
+IN 1
+;
+C4/D/;
+4/4/4;
+;
+;
+;
+== g-p1-octaves
+IN 1
+;
+C0/B/C9/B/C4/D/E/F/G/A/B/C;
+4/4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-ordinary
+IN 1
+;
+C4/B/OB/E/G/C5/A;
+4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-proximity
+IN 1
+;
+PC4/B/E/G/C/F/G/D/C3/A/OA/B;
+4/4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-mode-prefixes
+IN 1
+;
+OPC4/B/P OE/G/PO B/D;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-jump-up
+IN 1
+;
+C4/AU/A/GU/E/EU/BUU/C4U/CU4;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-jump-down
+IN 1
+;
+OG4/AJ/A/BJ/C/CJ/DJJ/E5/DJ;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-jump-proximity
+IN 1
+;
+PC4/AU/B/GJ/F/C/AJ;
+4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-accidentals
+IN 1
+;
+CS4/DF/EN/FSS/GFF/ANN/BS5;
+4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-letter-accidentals
+IN 1
+;
+BB4/CCC/EEEE/DDDDD/AAF/GGFF;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-cautionary
+IN 1
+;
+B(F4/C(S/D(N/E(/F(SS/G(FF/A((;
+4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-spaces-in-note
+IN 1
+;
+C S 4/D F;
+4/4;
+;
+;
+;
+== g-p1-chord
+IN 1
+;
+C4:E:G/D:FS:A/C'E'G/E4:C/G:B:D:F;
+4/4/4/4/4;
+;
+;
+;
+== g-p1-dyad
+IN 1
+;
+C4+/C4-/E5+/BF4+/C4+:E/C(S4-;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-chord-repeat
+IN 1
+;
+C4:EF:G/M/./R/../M/.;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-chord-repeat-direct
+IN 1
+;
+C4:E/D:F/./G/M/.;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-equals
+IN 1
+;
+C4=/D/=;
+4/4/4;
+;
+;
+;
+== g-p1-rests
+IN 1
+;
+R/RF/RU/RD/RI/RW/RP/C4;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-rest-numbers
+IN 1
+;
+R3/R12/R 5/R0/C4;
+4/4/4/4/4;
+;
+;
+;
+== g-p1-rest-placement
+IN 1
+;
+RWD/RWU/RFD/RFU/C4;
+4/4/4/4/4;
+;
+;
+;
+== g-p1-rest-repeat
+IN 1
+;
+RX3/RFX2/C4;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-clefs
+IN 1
+;
+TR/C4/BA/C/AL/C/TE/C/PR/C;
+4/4/4/4/4;
+;
+;
+;
+== g-p1-input-clef
+IN 1
+;
+BA/-TR/C4/E/-BA/C3/-AL/C4/-TE/C/-X/C;
+4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-keys
+IN 1
+;
+K2S/C4/K3F/D/K1SN/E/K4FN/F/K0S/G/K 2 S/A;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-key-plain
+IN 1
+;
+K/C4;
+4;
+;
+;
+;
+== g-p1-meters
+IN 1
+;
+3 4/C4/12 8/D/COM/E/CUT/F/2/G;
+4/4/4/4/4;
+;
+;
+;
+== g-p1-meter-t
+IN 1
+;
+3 4/C4/T/D/T6 8/E/TX/F;
+4/4/4/4;
+;
+;
+;
+== g-p1-meter-letters
+IN 1
+;
+CXM/C4/CXT/D/C:M/E;
+4/4/4;
+;
+;
+;
+== g-p1-bars
+IN 1
+;
+C4/M/D/MD/E/MH/F/ML/G/MR/A/MRD/B/MS/C/MI/D;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-bar-span
+IN 1
+;
+C4/M2/D/M/E/MD3/F/MH/G/M1/A/M;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-bar-letters
+IN 1
+;
+C4/MM/D/MDD/E/MRM/F/M2D/G/MLD/A;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-stems
+IN 1
+;
+SU/C5/SD/C4/SO/C5/C4/SUP/C4;
+4/4/4/4/4;
+;
+;
+;
+== g-p1-staff-shift
+IN 1
+;
+C4/S+/D/S-/E/S0/F;
+4/4/4/4;
+;
+;
+;
+== g-p1-cue
+IN 1
+;
+C4/Q+/D/Q-/E/Q+/F/Q0/G/Q+/A/QX/B;
+4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-cue-stems
+IN 1
+;
+SD/Q+/C4/D/Q-/E;
+4/4/4;
+;
+;
+;
+== g-p1-repeat-item
+IN 1
+;
+C4X3/DFX2/R/E:GX2/F:AFZ2;
+4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-repeat-group
+IN 1
+;
+C4/D/EF/X3 2/F;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-repeat-group-z
+IN 1
+;
+C4/D/EF/Z3 2/F;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-repeat-group-chord
+IN 1
+;
+C4:E/M/D/X3 3;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-rep
+IN 1
+;
+C4/D/REP2 3;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro
+IN 1
+;
+Z[C4/G/E]/A/A/@Z/B;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-transpose
+IN 1
+;
+Y[A4/B/GS]/@Y-1/@Y2;
+4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-erase-octave-0-9
+IN 1
+;
+C4/C0/C9/B8/C1/D;
+4/4/4/4;
+;
+;
+;
+== g-p1-last-octave-0
+IN 1
+;
+C4/C0;
+4/4;
+;
+;
+;
+== g-p1-erase-space
+IN 1
+;
+C4/D F/E;
+4/4;
+;
+;
+;
+== g-p1-last-space
+IN 1
+;
+C4/D F;
+4/4;
+;
+;
+;
+== g-p1-erase-key
+IN 1
+;
+K7S/C4/K8S/D/K0S/E;
+4/4/4;
+;
+;
+;
+== g-p1-last-key
+IN 1
+;
+C4/K0S;
+4;
+;
+;
+;
+== g-p1-erase-meter-t
+IN 1
+;
+3 4/C4/T/D;
+4/4;
+;
+;
+;
+== g-p1-last-meter-t
+IN 1
+;
+3 4/C4/T;
+4;
+;
+;
+;
+== g-p1-last-meter-t-numbers
+IN 1
+;
+C4/T6 8;
+4;
+;
+;
+;
+== g-p1-erase-rep
+IN 1
+;
+C4/D/REP2 2/E;
+4/4/4;
+;
+;
+;
+== g-p1-erase-comma
+IN 1
+;
+C4/D,E/F;
+4/4;
+;
+;
+;
+== g-p1-last-comma
+IN 1
+;
+C4/D,E;
+4/4/4;
+;
+;
+;
+== g-p1-leading-slash
+IN 1
+;
+/C4/D;
+4/4;
+;
+;
+;
+== g-p1-erase-mode-prefix
+IN 1
+;
+C4/OPB/P C/D;
+4/4;
+;
+;
+;
+== g-p1-last-mode-prefix
+IN 1
+;
+C4/OPB;
+4/4;
+;
+;
+;
+== g-p1-erase-rest
+IN 1
+;
+C4/R0/R 5/RX/D;
+4/4/4;
+;
+;
+;
+== g-p1-last-rest-zero
+IN 1
+;
+C4/R0;
+4/4;
+;
+;
+;
+== g-p1-erase-cue
+IN 1
+;
+C4/QX/D/Q=/E;
+4/4/4;
+;
+;
+;
+== g-p1-erase-letters
+IN 1
+;
+C4/H/I/J/L/N/U/V/W/Y/D;
+4/4;
+;
+;
+;
+== g-p1-meter-c-letters
+IN 1
+;
+C4/C4M/D/CAT/E/COM;
+4/4/4;
+;
+;
+;
+== g-p1-input-clef-alias
+IN 1
+;
+BA/-AA/C4/-BE/D;
+4/4;
+;
+;
+;
+== g-p1-staff-shift-letters
+IN 1
+;
+C4/S+Q/D/S-/E;
+4/4/4;
+;
+;
+;
+== g-p1-macro-retrograde
+IN 1
+;
+Z[C4/E/G]/@Z-/A;
+4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-dollar
+IN 1
+;
+Z[C4/E/G]/@Z$/A;
+4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-names
+IN 1
+;
+A[C4/D]/@A/Q[E4]/@Q;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-macro-chords
+IN 1
+;
+Z[C4:E/R/GS]/@Z1;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-repeat-edges
+IN 1
+;
+C4/D/X2 1/E;
+4/4/4;
+;
+;
+;
+== g-p1-repeat-no-count
+IN 1
+;
+C4/D/X2/E;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-repeat-big
+IN 1
+;
+C4X12;
+4/4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-dots-equals
+IN 1
+;
+C4:E/R/../C4../=.=;
+4/4/4/4/4/4;
+;
+;
+;
+== g-p1-repeat-too-long
+IN 1
+;
+C4/D/X5 2/E;
+4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-state-first-note
+IN 1
+;
+D/E/M;
+4/4;
+;
+;
+;
+== g-p1-state-carried
+IN 1
+;
+M2/C5/Q+/SU/PC4/S+/MD;
+4/4;
+;
+;
+;
+IN 2
+;
+G/M/A/MH;
+4/4;
+;
+;
+;
+== g-p1-macro-octaves
+IN 1
+;
+Z[C4/AJ/PB/E5/F/C:E]/@Z;
+4/4/4/4/4/4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-too-many
+IN 1
+;
+CX99/DX99/EX5;
+;
+;
+;
+;
+== g-p1-letter-accidentals-long
+IN 1
+;
+C4/DDDDDD/EEEEEEE/FFFFFFFF/GGGGGGGGG/AAAAAAAAAA/BNN;
+4/4/4/4/4/4/4;
+;
+;
+;
+== g-p1-comma-inside
+IN 1
+;
+C4,D,E/F;
+4/4/4/4;
+;
+;
+;
+== g-p1-trailing-slash-bar
+IN 1
+;
+C4/M/;
+4;
+;
+;
+;
+== g-p1-trailing-slash-bar2
+IN 1
+;
+C4/MD/;
+4;
+;
+;
+;
+== g-p1-trailing-slash-bar3
+IN 1
+;
+C4/MRD/;
+4;
+;
+;
+;
+== g-p1-cue-high
+IN 1
+;
+C6/Q+/C/SD/D/SO/Q-/E;
+4/4/4/4;
+;
+;
+;
+== g-p1-clef-after-bar
+IN 1
+;
+C4/M/BA/D/M/TR/E;
+4/4/4;
+;
+;
+;
+== g-p1-accidental-after-octave
+IN 1
+;
+C4/C4S;
+4/4;
+;
+;
+;
+== g-p1-cautionary-after-accidental
+IN 1
+;
+C4/CF(;
+4/4;
+;
+;
+;
