@@ -2835,3 +2835,19 @@ G/PB/OC;
 ;
 ;
 ;
+== g-p2-chord-dots-cautionary
+IN 1
+;
+OB3/OBS:A:GJ:F(F/C5;
+8/8./8;
+;
+;
+;
+== g-p2-chord-dots-plain
+IN 1
+;
+OB3/OBS:A:GJ:FF/C5;
+8/8./8;
+;
+;
+;

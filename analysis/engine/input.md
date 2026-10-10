@@ -244,6 +244,8 @@ The token is the duration in quarter notes, plus 1000 per dot. The parser dispat
 
 After a value, the item may continue with a letter `S T E Q H W D`, a digit or `.` (added), or `X` (repeat). Any other character ends the value. What follows it is then read again as an item, which gave an extra token in the probe (`4Y/4` → 1 1 1, `4G/4` likewise). A group repeat without its count (`X2`) uses a stale number (g-p2-x-group-no-count). These cases are better rejected by a port.
 
+**Dots in chords with displaced heads** (0x51C824, run by pass 2): for a dotted chord containing a displaced head (work-table P10 ≠ 0), the dot offsets added to P9 (1000, 100) are walked from the top down when the chord's first entry has P5 < 20 and from the bottom up otherwise. The test reads the raw work-table P5 of that entry, accidental digit and cautionary +100 included, so a cautionary on the chord's first note sends a stem-up chord down the stem-down rule: `OBS:A:GJ:F(F` dotted gives P9 + 0, 1100, 100, 1100 from the bottom, `OBS:A:GJ:FF` gives 1100, 0, 1100, 0 (g-p2-chord-dots-cautionary, g-p2-chord-dots-plain; found by input-lang). Probably a flaw, for main to rule on.
+
 #### Differences from Sapp's page
 
 - `3` is a triplet half (4/3 quarters), not a triplet quarter. `6` is the triplet quarter.
@@ -342,6 +344,7 @@ Both passes use the item parser 0x4DA9C3. The builders are 0x413CA8 (beams) and 
 | `@name n` | motive with note numbers shifted so that note 1 is note n (0x4E620C) | | | g-p4-macro, g-p5-macro |
 | `Xk n1 n2 …` | 0x4E4D40 turns it into the pairs (n, n + k − 1) for each n: `X3 1 4 7 10` beams 1–3, 4–6, 7–9, 10–12, `X2 1 4` beams 1–2, 4–5; it may follow other items (`1 2/X2 4 6`). The reader puts a `/` before a typed `X` and drops a typed `X1 ` altogether, so `X1 1 3` is the pair 1 3. Overlapping beams are all kept (`1 3/2 4`, `X3 1 2`) | | | g-p4-x, g-p4-x-first, g-p4-x-groups, g-p4-overlap |
 | `1-2` | read as the number −12 (no beam) | | | g-p4-dash |
+| notes with P12 (S+/S-) | 0x41A776, used by the beam builder 0x413CA8 and by the note lookup 0x41A4F9 of beams and slurs: the level gets the distance to the other staff added, (STAFF_Y0[s ± 1] − STAFF_Y0[s]) / (7·STEP) scale steps with s the IN staff (staves without a code-8 item at their default positions, staves.md). If that staff cannot exist (P12 = 2 on staff 1, P12 = 1 on staff 256) the note's P12 is set to 0 instead, so a beamed or slurred S- note on staff 1 loses its P12. In a beam whose stem direction is not given, a P12 note gets stems down for P12 = 1 and up for P12 = 2 (0x4156EC). The stem fit 0x40CDE4 was not examined for P12 | | | rnd-4-123 (input-lang) |
 | note numbers beyond the last note | 0x41A14C clamps the end to the last note but not the start, which then reads the empty slot before note 1 (x 0, level 0.5); 0x53D1E0 sees the unclamped end and draws an edge tie (P6 = right end, P8 = −2). Invalid input, not grammar (D12) | | | g-p5-tuplet, g-p5-tuplet-12, g-p5-tuplet-sapp |
 
 #### Differences from Sapp's page
