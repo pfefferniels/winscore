@@ -24,7 +24,15 @@ LOOP_LIMIT = 100_000
 
 
 class LineupError(Exception):
-    """The engine gives up (unequal staff totals, unalignable rhythm); items may be partly changed."""
+    """The engine gives up (unequal staff totals, unalignable rhythm); items may be partly changed.
+
+    `aborted` marks the two orderly exits of 0x4C9510 (unequal totals, no staff with notes): they
+    set the caller's lo to -1, and 0x4B80B7 then skips J and returns normally.
+    """
+
+    def __init__(self, message: str, aborted: bool = False):
+        super().__init__(message)
+        self.aborted = aborted
 
 
 def nint(x: float) -> int:
@@ -533,7 +541,7 @@ class Lineup:
                 if s == self.lo:
                     self.lo += 1
                     if self.lo > self.hi:
-                        raise LineupError("no staff with notes")
+                        raise LineupError("no staff with notes", aborted=True)
                 continue
             entries, positions = self.normalize(ev)
             off = self.offset[s]
@@ -548,7 +556,8 @@ class Lineup:
             if entries[-1] == BARLINE and self.x_right < positions[-1]:
                 self.x_right = positions[-1]
             if abs(ev.total - total_before) > F(0.007):
-                raise LineupError(f"staff {s} has {ev.total:.3f} beats, the one before {total_before:.3f}")
+                raise LineupError(f"staff {s} has {ev.total:.3f} beats, the one before {total_before:.3f}",
+                                 aborted=True)
             self.master = merge_markers(self.master, entries)
             self.master = DurationMerge(self.master, [e for e in entries if e > 0]).run()
         self.offset[self.hi + 1] = len(self.saved_x)
