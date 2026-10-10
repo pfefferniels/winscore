@@ -87,7 +87,7 @@ How a pass text becomes items, derived from the parser routines and checked on t
 
 A pass text goes through four stages:
 
-1. **Reader** (0x41C3B8 pass 1, 0x422D98 pass 2, 0x426950 pass 3, 0x427C68 passes 4/5) receives one key at a time and edits the text. The READ path (0x53174C) calls the same readers.
+1. **Reader** (0x41C3B8 pass 1, 0x422D98 pass 2, 0x426950 pass 3, 0x427C68 passes 4/5) receives one key at a time and edits the text. The READ path (0x53174C) calls the same readers. The probes type each character with KEY_CODE set to the character (`oracle/input_driver.py`). Some characters share their code with a virtual key (`#` End, `$` Home, `%` Left, `'` Right, `-` Insert, `.` Delete), and how the GUI's key handlers (0x58FCD0, 0x5906C7) fill KEY_CODE for them was not traced, so their reader effects below hold for the driver and may differ when typed in the program.
 2. **Tokenizer** 0x4AEFA0 → 0x4AF456 → 0x524C4A splits the text into items, gives each to the pass's item parser and appends what it returns to the token list R (f32 at 0x1FB8CC4 + 4i, count int 0x1FB8CC0).
 3. **Item parser** (0x4E2CC8, 0x4D9EA0, 0x4DAEB2, 0x4DA9C3) reads one item and returns one token (f32 0x1ADE8E0), plus the flags for dyads (0x1FBB708) and repeats (0x1FBB70C count, 0x1FBB710 times).
 4. **Builder** (0x4ECDF8, 0x51CF40, 0x4D8460, 0x413CA8, 0x53D1E0) turns R into work-table entries and items.
