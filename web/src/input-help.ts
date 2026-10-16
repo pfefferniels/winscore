@@ -629,3 +629,99 @@ export function helpFor(pass: number, text: string, caret: number, facts: Facts)
       return { title: '', hints: [] };
   }
 }
+
+// ---- passes 3-5 with a cursor on the notes ------------------------------------
+
+/** The notes a cursor in passes 3-5 has selected, and what `/` alone would place again. */
+export interface Selected {
+  from: number;
+  to: number;
+  repeat: string;
+}
+
+const MOVE_HINTS: Hint[] = [hint(['←', '→'], 'another note'), hint(['⇧←', '⇧→'], 'more notes')];
+
+function notesWord({ from, to }: Selected): string {
+  return from === to ? `note ${from}` : `notes ${from}–${to}`;
+}
+
+/** Help in pass 3 for a mark typed at the cursor. */
+function markAtCursor(pending: string, at: Selected): Help {
+  const name = pending.replace(/^[-+=]/, '');
+  const other = pending.startsWith('-') ? ', on the other side' : '';
+  if (name === '') {
+    return {
+      title: pending === '-' ? `A mark on the other side of ${notesWord(at)}` : `Marks on ${notesWord(at)}`,
+      detail: 'Type the mark and / to place it; the note numbers come from the cursor.',
+      hints: [
+        ...MARK_HINTS.slice(0, pending === '-' ? -1 : undefined),
+        ...(at.repeat ? [hint('/', `${at.repeat} here again`)] : []),
+        ...MOVE_HINTS,
+        hint('⌫', 'remove the last mark here'),
+        finishPass(3),
+      ],
+    };
+  }
+  const listed = MARKS[name] ?? (/^N\d+$/.test(name) ? `symbol ${name.slice(1)}` : null);
+  const twoPoint = listed?.includes('(from, to)') ?? false;
+  const meaning = listed?.replace(' (from, to)', '') ?? null;
+  const where = twoPoint ? `from note ${at.from} to ${at.to > at.from ? at.to : at.from + 1}` : `on ${notesWord(at)}`;
+  const longer = Object.keys(MARKS)
+    .filter((k) => k.startsWith(name) && k !== name && k.length <= name.length + 2 && !/^F\d$/.test(k))
+    .slice(0, 5);
+  return {
+    title: meaning ? `${capital(meaning)}${other} ${where}` : `Mark ${name}?`,
+    detail: meaning ? (twoPoint ? 'Shift+→ moves its end to a later note.' : undefined) : 'Not a mark name yet.',
+    hints: [
+      ...(meaning ? [hint('/', 'place it')] : []),
+      ...longer.map((k) => hint(k.slice(name.length), `${k}: ${MARKS[k]!.replace(' (from, to)', '')}`)),
+      ...MOVE_HINTS,
+      hint('␣', 'type note numbers yourself (S 2:5)'),
+    ],
+  };
+}
+
+/** Help in passes 4 and 5 for a beam or slur at the cursor. */
+function connectAtCursor(pending: string, at: Selected, facts: Facts, pass: 4 | 5): Help {
+  const what = pass === 4 ? 'Beam' : 'Slur';
+  const to = at.to > at.from ? at.to : at.from + 1;
+  const m = /^([-+=]?)(\d*)$/.exec(pending)!;
+  const side = m[1] === '-' ? (pass === 4 ? ' below' : ', curved down') : m[1] ? (pass === 4 ? ' above' : ', curved up') : '';
+  const number = m[2] ? (pass === 4 ? `, ${m[2]} over it` : `, bracket ${m[2]}`) : '';
+  const beyond = facts.notes > 0 && to > facts.notes ? (pass === 5 ? ' (to the right edge)' : '') : '';
+  return {
+    title: `${what} from note ${at.from} to ${to}${beyond}${side}${number}`,
+    detail: at.to === at.from ? `Shift+→ takes in more notes; alone it reaches the next note${pass === 5 ? ' (a tie)' : ''}.` : undefined,
+    hints: [
+      hint('/', pass === 4 ? 'draw the beam' : 'draw the slur'),
+      ...(m[1] ? [] : [hint(['+', '-'], pass === 4 ? 'above / below' : 'curved up / down')]),
+      ...(m[2] ? [] : [hint(['3', '5'], pass === 4 ? 'a number over the beam' : 'a tuplet bracket with that number')]),
+      ...(at.repeat && pending === '' ? [hint('/', `as the last one (${at.repeat || 'plain'})`)] : []),
+      ...MOVE_HINTS,
+      hint('⌫', `remove the last ${what.toLowerCase()} here`),
+      ...(pass === 4 ? [hint('2B', 'automatic beams (type it alone)')] : [hint(['0 3', '6 99'], 'from the left edge, to the right edge')]),
+      finishPass(pass),
+    ],
+  };
+}
+
+/**
+ * Help in passes 3-5, where the cursor stands on notes: `pending` is what has been
+ * typed there. Text with its own note numbers (`S 2:5`, `1 4`, `2B`) gets the help of
+ * the typed item.
+ */
+export function cursorHelp(pass: number, pending: string, at: Selected, facts: Facts): Help {
+  const text = pending.trim();
+  if (facts.notes === 0) {
+    return { title: 'No notes yet', detail: 'Marks, beams and slurs go on the notes of pass 1.', hints: [hint(['⇧↵'], 'back to the notes')] };
+  }
+  if (pass === 3) {
+    if (/^[-+=]?[A-Z]+\d*[+-]?$/.test(text) || /^[-+=]?$/.test(text)) return markAtCursor(text, at);
+    return helpFor(3, text, text.length, facts);
+  }
+  if (pass === 4 || pass === 5) {
+    if (/^[-+=]?\d*$/.test(text)) return connectAtCursor(text, at, facts, pass);
+    return helpFor(pass, text, text.length, facts);
+  }
+  return helpFor(pass, text, text.length, facts);
+}

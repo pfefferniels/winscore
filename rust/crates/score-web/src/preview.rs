@@ -1,24 +1,52 @@
 //! A line of five-pass input shown while it is typed: the items it would add,
-//! drawn against the score; the element the caret is on; and how far the
-//! passes have got.
+//! drawn against the score, and what the page needs to put a cursor among
+//! them: where each element of the line lies and what it is, which elements
+//! (pass 1) or values (pass 2) come before each item of the pass being typed,
+//! and where the staff is.
 //!
 //! The preview reads the passes as they would be inserted, with two
-//! allowances for text still being typed. While the caret is in pass 1 or 2,
+//! allowances for text still being typed. While pass 1 or 2 is being typed,
 //! notes that pass 2 has not reached yet are shown as quarters (finished as
 //! typed, they would become grace notes). And when a pass does not parse, the
-//! preview cuts it back to before the failing item, so that what was typed
-//! before it stays on the page.
+//! item that fails is cut back to what parses, or left out, so that the rest
+//! of the line stays on the page.
 
 use std::ops::Range;
 
 use score_format::{Item, MusFile};
 use score_input::notes::Clef;
-use score_input::{count_rhythms, erased_items, run_outlined, ErrorKind, InputError, Motives, Options, Outline, Passes, RhythmCount, StaffArgs};
+use score_input::{count_elements, count_rhythms, erased_items, run_outlined, ErrorKind, InputError, Motives, Options, Outline, Passes, RhythmCount, StaffArgs};
+use score_render::page::{self, page_offset};
 use score_render::{render_item, DisplayList, ItemId};
 use wasm_bindgen::prelude::*;
 
 use crate::input::{on_staff, options, pass_error, utf16_offset, InputLine, PassError, CLEF_CODE, STAFF_CODE};
 use crate::{EncodedList, Score};
+
+/// One element of the line (a note or chord, rest, barline, clef, key signature or meter).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Element {
+    /// Its items, as file indices in the score with the line appended.
+    pub items: Range<usize>,
+    /// Its value in pass 2 (from 1), if it takes one.
+    pub slot: Option<usize>,
+    /// Its number in passes 3-5 (from 1), if it is a note or chord.
+    pub note: Option<usize>,
+    /// Page x of its first item (of the element before it when it has none).
+    pub x: f64,
+    /// In words, e.g. "F♯4, quarter".
+    pub description: String,
+}
+
+/// Where the line goes on the page: y of the staff's bottom and top lines, x of the
+/// input range's ends.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Geometry {
+    pub bottom: f64,
+    pub top: f64,
+    pub begin: f64,
+    pub end: f64,
+}
 
 /// What [`preview`] shows for a line.
 #[derive(Debug, Clone, PartialEq)]
@@ -34,14 +62,15 @@ pub struct Preview {
     pub unfinished: bool,
     /// The preview had to cut a pass back to show something.
     pub partial: bool,
-    /// Notes and chords in the preview, numbered in passes 3-5.
-    pub notes: usize,
     /// Pass 2 as typed against pass 1 as typed, when both parse.
     pub rhythms: Option<RhythmCount>,
-    /// File indices of the items of the elements at the caret.
-    pub focus: Vec<usize>,
-    /// Each of those elements in words, e.g. "F♯4, quarter".
-    pub described: Vec<String>,
+    /// The line's elements in order.
+    pub elements: Vec<Element>,
+    /// For the pass being typed, before each of its items and after the last: the elements
+    /// made so far (pass 1) or the values given so far (pass 2); `None` where the text up to
+    /// there does not read. Empty for the other passes.
+    pub boundaries: Vec<Option<usize>>,
+    pub geometry: Geometry,
     /// Items of pass 1 that WinScore's reader erases (`Y`, `C0`), as UTF-16 ranges.
     pub erased: Vec<Range<usize>>,
 }
@@ -52,10 +81,7 @@ struct Run {
     outline: Vec<Outline>,
 }
 
-/// One rhythm per note, chord or rest, all the same: the pass-1 runs that look for
-/// the caret's element do not depend on pass 2.
-const EVEN: &str = "4;";
-/// Where the caret's element is looked for, at most this many elements in a pass-3 range.
+/// At most this many notes are named for a range in passes 3-5.
 const MAX_RANGE: usize = 200;
 
 fn passes(texts: &[String; 5]) -> Passes<'_> {
@@ -74,22 +100,35 @@ fn run_line(file: &MusFile, options: &Options, texts: &[String; 5], motives: &Mo
     Ok(Run { items: staff.into_iter().chain(items).collect(), outline })
 }
 
-/// Shortens a pass that fails at byte `at`: up to that point, without the separators
-/// before it, else without its last item. False when there is nothing left to cut.
+fn char_floor(text: &str, at: usize) -> usize {
+    (0..=at.min(text.len())).rev().find(|&b| text.is_char_boundary(b)).unwrap_or(0)
+}
+
+/// Shortens a pass that fails at byte `at` so that the rest of it can still be shown: the
+/// item there keeps what it has before the error, else it goes, else the pass ends at the
+/// error. False when there is nothing left to cut.
 fn cut_back(text: &mut String, at: usize) -> bool {
-    let at = (0..=at.min(text.len())).rev().find(|&b| text.is_char_boundary(b)).unwrap_or(0);
-    let separators: &[char] = &['/', ',', ':', '\'', ' ', ';'];
-    let kept = text[..at].trim_end_matches(separators);
-    let mut cut = format!("{kept};");
-    if cut == *text {
-        let kept = kept.rfind(['/', ',']).map_or("", |i| kept[..i].trim_end_matches(separators));
-        cut = format!("{kept};");
+    let body_end = text.find(';').unwrap_or(text.len());
+    let at = char_floor(text, at).min(body_end);
+    let start = text[..at].rfind(['/', ',']).map_or(0, |i| i + 1);
+    let end = text[at..body_end].find(['/', ',']).map_or(body_end, |i| at + i);
+    let kept = text[start..at].trim_end_matches([':', '\'', ' ']);
+    let shortened = (!kept.is_empty()).then(|| format!("{}{kept}{}", &text[..start], &text[end..]));
+    let without = if end < body_end {
+        format!("{}{}", &text[..start], &text[end + 1..])
+    } else if start > 0 {
+        format!("{}{}", &text[..start - 1], &text[end..])
+    } else {
+        text[end..].to_owned()
+    };
+    let ended = format!("{};", text[..at].trim_end_matches(['/', ',', ':', '\'', ' ', ';']));
+    match shortened.into_iter().chain([without, ended]).find(|cut| cut != text) {
+        Some(cut) => {
+            *text = cut;
+            true
+        }
+        None => false,
     }
-    if cut == *text {
-        return false;
-    }
-    *text = cut;
-    true
 }
 
 /// Pass 2 with a quarter for each note, chord or rest it has not reached.
@@ -103,54 +142,29 @@ fn padded(rhythms: &str, given: usize, needed: usize) -> String {
     }
 }
 
-/// The item of the pass text around byte `caret`: from after the separator before it
-/// to the separator after it.
-fn item_around(text: &str, caret: usize) -> Range<usize> {
-    let caret = caret.min(text.split(';').next().unwrap_or("").len());
-    let start = text[..caret].rfind(['/', ',']).map_or(0, |i| i + 1);
-    let end = text[caret..].find(['/', ',', ';']).map_or(text.len(), |i| caret + i);
-    start..end
+/// The texts of a pass up to each of its items and up to its end: "", "C4", "C4/D", …
+fn prefixes(text: &str) -> Vec<&str> {
+    let body = text.split(';').next().unwrap_or("");
+    if body.is_empty() {
+        return vec![""];
+    }
+    std::iter::once("").chain(body.match_indices(['/', ',']).map(|(i, _)| &body[..i])).chain([body]).collect()
 }
 
-fn closed(prefix: &str) -> String {
-    format!("{};", prefix.trim_end_matches(['/', ',', ' ']))
-}
-
-/// The pass-1 elements the item at `caret` makes, found by reading the text up to the
-/// item and up to its end.
-fn elements_at_pass_one(file: &MusFile, options: &Options, notes: &str, caret: usize, motives: &Motives) -> Range<usize> {
-    let item = item_around(notes, caret);
-    let count = |prefix: &str| {
-        let texts = [closed(prefix), EVEN.into(), ";".into(), ";".into(), ";".into()];
-        run_line(file, options, &texts, motives).map(|run| run.outline.len()).ok()
-    };
-    match (count(&notes[..item.start]), count(&notes[..item.end])) {
-        (Some(before), Some(through)) => before..through,
-        _ => 0..0,
+/// [`Preview::boundaries`] for `pass`, from the passes as typed (`typed`) and as shown (`shown`).
+fn boundaries(options: &Options, typed: &[String; 5], shown: &[String; 5], pass: usize, motives: &Motives) -> Vec<Option<usize>> {
+    match pass {
+        1 => prefixes(&typed[0]).into_iter().map(|prefix| count_elements(&format!("{prefix};"), options, motives).ok()).collect(),
+        2 => prefixes(&typed[1])
+            .into_iter()
+            .map(|prefix| {
+                let texts = [shown[0].clone(), format!("{prefix};"), ";".into(), ";".into(), ";".into()];
+                // One value alone counts as one here, though alone in the pass it sets all notes.
+                count_rhythms(&passes(&texts), options, motives).ok().map(|count| count.given.unwrap_or(1))
+            })
+            .collect(),
+        _ => Vec::new(),
     }
-}
-
-/// The pass-2 values (from 1) the item at `caret` gives; the next one on an empty item,
-/// and after the text (`past_end`).
-fn slots_at_pass_two(options: &Options, notes: &str, rhythms: &str, caret: usize, past_end: bool, motives: &Motives) -> Range<usize> {
-    let given = |text: String| {
-        let texts = [notes.to_owned(), text, ";".into(), ";".into(), ";".into()];
-        count_rhythms(&passes(&texts), options, motives).ok().map(|count| count.given)
-    };
-    let Some(all) = given(rhythms.to_owned()) else { return 0..0 };
-    if past_end {
-        let next = all.unwrap_or(1) + 1;
-        return next..next + 1;
-    }
-    if all.is_none() {
-        return 1..usize::MAX;
-    }
-    let item = item_around(rhythms, caret);
-    // One value alone in the text so far counts as one, not as all.
-    let before = given(closed(&rhythms[..item.start])).flatten().unwrap_or(1);
-    let through = given(closed(&rhythms[..item.end])).flatten().unwrap_or(1);
-    let through = through.max(before + 1);
-    before + 1..through + 1
 }
 
 /// The numbers typed in an item of passes 3-5, as numbers or `a:b` ranges.
@@ -359,26 +373,14 @@ fn clef_at(run: &Run, before: usize, staff_clef: Clef) -> Clef {
         .map_or(staff_clef, |clef| Clef::from_code(clef.param(5) as i32))
 }
 
-/// Byte offset of UTF-16 offset `units` in `text`.
-fn byte_offset(text: &str, units: usize) -> usize {
-    let mut count = 0;
-    for (byte, c) in text.char_indices() {
-        if count >= units {
-            return byte;
-        }
-        count += c.len_utf16();
-    }
-    text.len()
-}
-
-/// The preview of `line` on `file` with the caret in `pass` (1-5) at UTF-16 offset `caret`.
-pub fn preview(file: &MusFile, line: &InputLine, motives: &Motives, pass: usize, caret: usize) -> Preview {
+/// The preview of `line` on `file` while `pass` (1-5) is being typed.
+pub fn preview(file: &MusFile, line: &InputLine, motives: &Motives, pass: usize) -> Preview {
     let options = options(file, line);
     let typed: [String; 5] = line.passes.clone();
     let as_typed = run_line(file, &options, &typed, motives);
     let unfinished = as_typed.as_ref().err().is_some_and(|err| {
         let text = &typed[err.pass.number() - 1];
-        let at = (0..=err.span.start.min(text.len())).rev().find(|&b| text.is_char_boundary(b)).unwrap_or(0);
+        let at = char_floor(text, err.span.start);
         let ends_item = text[at..].trim_start().starts_with([';', '/', ',']) || text[at..].trim().is_empty();
         let short = matches!(&err.kind, ErrorKind::Unexpected(what) if what == "end of entry") || err.kind == ErrorKind::ExpectedNumber;
         short && ends_item
@@ -407,27 +409,6 @@ pub fn preview(file: &MusFile, line: &InputLine, motives: &Motives, pass: usize,
         }
     };
 
-    let typed_text = typed.get(pass.wrapping_sub(1)).map_or("", String::as_str);
-    let caret = byte_offset(typed_text, caret);
-    // A caret after the text stands on an item still to be typed.
-    let past_end = caret > typed_text.split(';').next().unwrap_or("").len();
-    let notes = run.outline.iter().filter_map(|o| o.note).count();
-    let elements: Vec<usize> = match pass {
-        _ if past_end && pass != 2 => Vec::new(),
-        1 => elements_at_pass_one(file, &options, &typed[0], caret, motives).collect(),
-        2 => {
-            let slots = slots_at_pass_two(&options, &texts[0], &typed[1], caret, past_end, motives);
-            (0..run.outline.len()).filter(|&e| run.outline[e].slot.is_some_and(|s| slots.contains(&s))).collect()
-        }
-        3..=5 => {
-            let item = &typed_text[item_around(typed_text, caret)];
-            let wanted = if pass == 3 { notes_at_pass_three(item) } else { notes_at_connect(item, pass, notes) };
-            (0..run.outline.len()).filter(|&e| run.outline[e].note.is_some_and(|n| wanted.contains(&n))).collect()
-        }
-        _ => Vec::new(),
-    };
-    let elements: Vec<&Outline> = elements.iter().filter_map(|&e| run.outline.get(e)).collect();
-
     let mut combined = file.clone();
     let first = combined.items.len();
     combined.items.extend(run.items.iter().cloned());
@@ -439,17 +420,37 @@ pub fn preview(file: &MusFile, line: &InputLine, motives: &Motives, pass: usize,
         }
     }
 
-    let focus = elements.iter().flat_map(|o| o.items.clone()).map(|i| first + i).collect();
-    let described = elements
+    let staff = doc.staves.get(i32::from(options.staff));
+    let offset = page_offset(staff.number);
+    let page_x = |p3: f32| page::x(p3) + f64::from(offset.x);
+    let geometry = Geometry {
+        bottom: staff.y(3.0) + f64::from(offset.y),
+        top: staff.y(11.0) + f64::from(offset.y),
+        begin: page_x(options.begin),
+        end: page_x(options.end),
+    };
+    let mut x = geometry.begin;
+    let elements = run
+        .outline
         .iter()
-        .map(|o| describe(&run.items[o.items.clone()], clef_at(&run, o.items.start, options.clef)))
+        .map(|o| {
+            x = run.items.get(o.items.start).filter(|_| !o.items.is_empty()).map_or(x, |item| page_x(item.param(3)));
+            Element {
+                items: first + o.items.start..first + o.items.end,
+                slot: o.slot,
+                note: o.note,
+                x,
+                description: describe(&run.items[o.items.clone()], clef_at(&run, o.items.start, options.clef)),
+            }
+        })
         .collect();
+    let boundaries = boundaries(&options, &typed, &texts, pass, motives);
     let notes_text = &typed[0];
     let erased = erased_items(notes_text)
         .into_iter()
         .map(|span| utf16_offset(notes_text, span.start)..utf16_offset(notes_text, span.end))
         .collect();
-    Preview { list, first, items: run.items, check, unfinished, partial, notes, rhythms, focus, described, erased }
+    Preview { list, first, items: run.items, check, unfinished, partial, rhythms, elements, boundaries, geometry, erased }
 }
 
 /// [`Score::preview_input`]'s result.
@@ -518,7 +519,7 @@ impl InputPreview {
     /// Notes and chords, as passes 3-5 number them.
     #[wasm_bindgen(getter)]
     pub fn notes(&self) -> usize {
-        self.0.notes
+        self.0.elements.iter().filter(|e| e.note.is_some()).count()
     }
 
     /// Notes, chords and rests that take a value in pass 2 (-1 when the passes do not parse).
@@ -537,16 +538,37 @@ impl InputPreview {
         }
     }
 
-    /// Item indices of the elements at the caret (`Uint32Array`).
+    /// The elements, five numbers each (`Float64Array`): first item, end of items, value in
+    /// pass 2 (0 for none), number in passes 3-5 (0 for none), page x.
     #[wasm_bindgen(getter)]
-    pub fn focus(&self) -> Vec<u32> {
-        self.0.focus.iter().map(|&i| i as u32).collect()
+    pub fn elements(&self) -> Vec<f64> {
+        self.0
+            .elements
+            .iter()
+            .flat_map(|e| {
+                let number = |n: Option<usize>| n.map_or(0.0, |n| n as f64);
+                [e.items.start as f64, e.items.end as f64, number(e.slot), number(e.note), e.x]
+            })
+            .collect()
     }
 
-    /// Those elements in words.
+    /// The elements in words, in order.
     #[wasm_bindgen(getter)]
-    pub fn described(&self) -> Vec<String> {
-        self.0.described.clone()
+    pub fn descriptions(&self) -> Vec<String> {
+        self.0.elements.iter().map(|e| e.description.clone()).collect()
+    }
+
+    /// [`Preview::boundaries`], -1 for `None` (`Int32Array`).
+    #[wasm_bindgen(getter)]
+    pub fn boundaries(&self) -> Vec<i32> {
+        self.0.boundaries.iter().map(|b| b.map_or(-1, |n| n as i32)).collect()
+    }
+
+    /// y of the staff's bottom and top lines, x of the input range's ends (`Float64Array`).
+    #[wasm_bindgen(getter)]
+    pub fn geometry(&self) -> Vec<f64> {
+        let g = self.0.geometry;
+        vec![g.bottom, g.top, g.begin, g.end]
     }
 
     /// Items of pass 1 the reader erases, as start and end pairs in UTF-16 units (`Uint32Array`).
@@ -558,13 +580,25 @@ impl InputPreview {
 
 #[wasm_bindgen]
 impl Score {
-    /// Shows a line of input while it is typed, without changing the score: the
-    /// items it would add, the elements at the caret (in `pass` 1-5, at UTF-16
-    /// offset `caret` of that pass's text) and how far the passes have got.
+    /// Shows a line of input while `pass` (1-5) is being typed, without changing
+    /// the score: the items it would add, where its elements lie, and how far the
+    /// passes have got.
     #[wasm_bindgen(js_name = previewInput)]
-    pub fn preview_input(&self, line: &InputLine, pass: usize, caret: usize) -> InputPreview {
-        InputPreview(preview(self.0.file(), line, self.0.motives(), pass, caret))
+    pub fn preview_input(&self, line: &InputLine, pass: usize) -> InputPreview {
+        InputPreview(preview(self.0.file(), line, self.0.motives(), pass))
     }
+}
+
+/// The notes (from 1) an item of pass 3, 4 or 5 applies to, in a line of `notes` notes
+/// (`Uint32Array`).
+#[wasm_bindgen(js_name = inputItemNotes)]
+pub fn input_item_notes(pass: usize, item: &str, notes: usize) -> Vec<u32> {
+    let found = match pass {
+        3 => notes_at_pass_three(item),
+        4 | 5 => notes_at_connect(item, pass, notes),
+        _ => Vec::new(),
+    };
+    found.into_iter().map(|n| n as u32).collect()
 }
 
 #[cfg(test)]
@@ -583,58 +617,71 @@ mod tests {
         InputLine::new(passes.map(str::to_owned).to_vec(), 1, 2.0, 200.0).unwrap_or_else(|_| panic!("five passes"))
     }
 
-    fn show(passes: [&str; 5], pass: usize, caret: usize) -> Preview {
-        preview(&file(&[&[8.0, 1.0]]), &line(passes), &Motives::new(), pass, caret)
+    fn show(passes: [&str; 5], pass: usize) -> Preview {
+        preview(&file(&[&[8.0, 1.0]]), &line(passes), &Motives::new(), pass)
+    }
+
+    fn table(shown: &Preview) -> Vec<(Range<usize>, Option<usize>, Option<usize>)> {
+        shown.elements.iter().map(|e| (e.items.clone(), e.slot, e.note)).collect()
     }
 
     #[test]
     fn notes_without_a_rhythm_show_as_quarters_while_pass_two_is_open() {
-        let typed = show(["G/A;", ";", ";", ";", ";"], 1, 1);
+        let typed = show(["G/A;", ";", ";", ";", ";"], 1);
         assert!(typed.items.iter().all(|item| item.param(7) == 1.0));
         assert_eq!(typed.rhythms, Some(RhythmCount { given: Some(0), needed: 2 }));
-        let later = show(["G/A;", ";", ";", ";", ";"], 3, 0);
+        let later = show(["G/A;", ";", ";", ";", ";"], 3);
         assert!(later.items.iter().all(|item| item.param(7) == 65.0), "finished as typed: grace notes");
-        let some = show(["G/A/B;", "8/8;", ";", ";", ";"], 2, 3);
+        let some = show(["G/A/B;", "8/8;", ";", ";", ";"], 2);
         let values: Vec<f32> = some.items.iter().map(|item| item.param(7)).collect();
         assert_eq!(values, [0.5, 0.5, 1.0]);
     }
 
     #[test]
-    fn the_caret_finds_its_note_in_every_pass() {
-        let passes = ["C4/D/R/E:G;", "4/8/8/4;", "S 3;", "2 4;", "1 2;"];
-        let at = |pass, caret| show(passes, pass, caret);
-        assert_eq!(at(1, 4).focus, [2], "the score's staff item is item 0");
-        assert_eq!(at(1, 4).described, ["D4, eighth"]);
-        assert_eq!(at(1, 9).focus, [4, 5]);
-        assert_eq!(at(1, 9).described, ["E4 G4, quarter"]);
-        assert_eq!(at(2, 5).focus, [3]);
-        assert_eq!(at(2, 5).described, ["eighth rest"]);
-        assert_eq!(at(3, 3).focus, [4, 5]);
-        assert_eq!(at(4, 2).focus, [2, 4, 5]);
-        assert_eq!(at(5, 0).focus, [1, 2]);
+    fn elements_carry_their_items_and_numbers() {
+        let shown = show(["C4/D/R/M/E:G;", "4/8/8/4;", ";", ";", ";"], 1);
+        assert_eq!(
+            table(&shown),
+            [(1..2, Some(1), Some(1)), (2..3, Some(2), Some(2)), (3..4, Some(3), None), (4..5, None, None), (5..7, Some(4), Some(3))],
+            "the score's staff item is item 0"
+        );
+        let described: Vec<&str> = shown.elements.iter().map(|e| e.description.as_str()).collect();
+        assert_eq!(described, ["C4, quarter", "D4, eighth", "eighth rest", "barline", "E4 G4, quarter"]);
+        assert!(shown.elements.windows(2).all(|pair| pair[0].x < pair[1].x));
+        assert_eq!(shown.elements[0].x, 2000.0 + 150.0 * 2.0);
     }
 
     #[test]
-    fn a_single_value_marks_every_note() {
-        let one = show(["C4/D/E;", "8;", ";", ";", ";"], 2, 1);
-        assert_eq!(one.focus, [1, 2, 3]);
-        let first_of_two = show(["C4/D/E;", "8/4;", ";", ";", ";"], 2, 1);
-        assert_eq!(first_of_two.focus, [1]);
-        let next = show(["C4/D/E;", "8/;", ";", ";", ";"], 2, 2);
-        assert_eq!(next.focus, [2]);
+    fn boundaries_count_elements_or_values_before_each_item() {
+        let notes = show(["C4/SU/D:F/X2 3/M;", ";", ";", ";", ";"], 1);
+        assert_eq!(notes.boundaries, [Some(0), Some(1), Some(1), Some(2), Some(4), Some(5)], "SU makes nothing, X2 3 two more chords");
+        let unread = show(["Z[C4/D]/E;", ";", ";", ";", ";"], 1);
+        assert_eq!(unread.boundaries, [Some(0), None, Some(2), Some(3)]);
+        let values = show(["C4/D/E/F;", "8/4X2/8;", ";", ";", ";"], 2);
+        assert_eq!(values.boundaries, [Some(0), Some(1), Some(3), Some(4)]);
+        assert_eq!(show(["C4;", ";", ";", ";", ";"], 2).boundaries, [Some(0)]);
+        assert!(show(["C4;", ";", ";", ";", ";"], 3).boundaries.is_empty());
     }
 
     #[test]
-    fn a_failing_item_is_left_out_of_the_preview() {
-        let chord = show(["C4/E:;", ";", ";", ";", ";"], 1, 5);
+    fn the_staff_is_located_on_the_page() {
+        let shown = show(["C4;", ";", ";", ";", ";"], 1);
+        let g = shown.geometry;
+        assert!(g.top > g.bottom);
+        assert_eq!((g.begin, g.end), (2000.0 + 300.0, 2000.0 + 30000.0));
+    }
+
+    #[test]
+    fn a_failing_item_is_cut_back_or_left_out() {
+        let chord = show(["C4/E:;", ";", ";", ";", ";"], 1);
         assert!(chord.partial);
         assert_eq!(chord.check.as_ref().unwrap_err().pass, 1);
         assert_eq!(chord.items.len(), 2);
         assert!(chord.unfinished);
-        let key = show(["C4/K2;", ";", ";", ";", ";"], 1, 5);
-        assert_eq!(key.items.len(), 1);
+        let key = show(["C4/K2/D;", ";", ";", ";", ";"], 1);
+        assert_eq!(key.items.len(), 2, "the items after it stay");
         assert!(key.unfinished);
-        let rhythm = show(["C4/D;", "4/Y;", ";", ";", ";"], 2, 3);
+        let rhythm = show(["C4/D;", "4/Y;", ";", ";", ";"], 2);
         assert_eq!(rhythm.items.len(), 2);
         assert_eq!(rhythm.check.as_ref().unwrap_err().pass, 2);
         assert!(!rhythm.unfinished, "Y is a mistake, not an unfinished value");
@@ -642,7 +689,7 @@ mod tests {
 
     #[test]
     fn items_the_reader_erases_are_reported() {
-        let shown = show(["C4/Y/D/E;", ";", ";", ";", ";"], 1, 0);
+        let shown = show(["C4/Y/D/E;", ";", ";", ";", ";"], 1);
         assert_eq!(shown.erased.len(), 1);
         let range = shown.erased[0].clone();
         assert_eq!(&"C4/Y/D/E;"[range], "Y/");
@@ -651,10 +698,9 @@ mod tests {
 
     #[test]
     fn a_missing_staff_comes_first() {
-        let new = preview(&file(&[]), &line(["C4;", "4;", ";", ";", ";"]), &Motives::new(), 1, 1);
+        let new = preview(&file(&[]), &line(["C4;", "4;", ";", ";", ";"]), &Motives::new(), 1);
         assert_eq!(new.items[0].code(), 8);
-        assert_eq!(new.focus, [1]);
-        assert_eq!(new.described, ["C4, quarter"]);
+        assert_eq!(table(&new), [(1..2, Some(1), Some(1))]);
         assert_eq!(new.first, 0);
         assert!(!new.list.shapes.is_empty());
     }
@@ -662,10 +708,9 @@ mod tests {
     #[test]
     fn descriptions_follow_the_clef() {
         let bass = file(&[&[8.0, 1.0], &[3.0, 1.0, 2.0, 0.0, 1.0]]);
-        let shown = preview(&bass, &line(["C4/FS2/TR/C4;", "4;", ";", ";", ";"]), &Motives::new(), 1, 4);
-        assert_eq!(shown.described, ["F♯2, quarter"]);
-        let after = preview(&bass, &line(["C4/FS2/TR/C4;", "4;", ";", ";", ";"]), &Motives::new(), 1, 12);
-        assert_eq!(after.described, ["C4, quarter"]);
+        let shown = preview(&bass, &line(["C4/FS2/TR/C4;", "4;", ";", ";", ";"]), &Motives::new(), 1);
+        let described: Vec<&str> = shown.elements.iter().map(|e| e.description.as_str()).collect();
+        assert_eq!(described, ["C4, quarter", "F♯2, quarter", "small treble clef", "C4, quarter"]);
     }
 
     #[test]
@@ -684,16 +729,17 @@ mod tests {
 
     #[test]
     fn cutting_back_keeps_what_parsed() {
-        let mut text = "C4/E:;".to_owned();
-        assert!(cut_back(&mut text, 5));
-        assert_eq!(text, "C4/E;");
-        let mut text = "C4/YY/D;".to_owned();
-        assert!(cut_back(&mut text, 3));
-        assert_eq!(text, "C4;");
-        let mut text = "C4;".to_owned();
-        assert!(cut_back(&mut text, 0));
-        assert_eq!(text, ";");
-        assert!(!cut_back(&mut text, 0));
+        let cut = |text: &str, at| {
+            let mut text = text.to_owned();
+            cut_back(&mut text, at).then_some(text)
+        };
+        assert_eq!(cut("C4/E:;", 5).as_deref(), Some("C4/E;"));
+        assert_eq!(cut("C4/E:/F;", 5).as_deref(), Some("C4/E/F;"));
+        assert_eq!(cut("C4/YY/D;", 3).as_deref(), Some("C4/D;"));
+        assert_eq!(cut("K2/D;", 2).as_deref(), Some("D;"));
+        assert_eq!(cut("C4/K2;", 5).as_deref(), Some("C4;"));
+        assert_eq!(cut("C4;", 0).as_deref(), Some(";"));
+        assert_eq!(cut(";", 0), None);
     }
 
     #[test]

@@ -130,12 +130,14 @@ function nameOf(code: number): string {
   if (!codeNames.has(code)) codeNames.set(code, codeName(code) ?? `Code ${code}`);
   return codeNames.get(code)!;
 }
-const inputMode = createInputMode(ui.inputPanel, {
+const inputMode = createInputMode(ui.inputPanel, ui.stage, {
   score: () => state.score,
   show: showInput,
   insert: insertInput,
-  closed: () => ui.viewport.focus(),
+  focusPage: () => ui.viewport.focus(),
+  clientRect: (box) => view.clientRect(box),
 });
+view.onPaint(() => inputMode.layout());
 const symbolDialog = createSymbolDialog(ui.symbolDialog);
 const textDialog = createTextDialog(ui.textDialog);
 const palette = createPalette(ui.palette, { run: runCommand, runArea, open: openDialog, supported: commandSupported });
@@ -448,13 +450,11 @@ function enterInput(staff?: number) {
 }
 
 /** Draws the line being typed over the page and scrolls to where the typing happens. */
+/** Draws the line being typed over the page and scrolls to the cursor when it moved. */
 function showInput(shown: Shown | null) {
   state.preview = shown;
   redraw();
-  if (!shown) return;
-  const focus = shown.focus.map((item) => bounds(elementsOf(shown.list, item))).reduce(union, null);
-  const box = shown.reveal === 'line' ? (focus ?? bounds(shown.list)) : shown.reveal === 'caret' ? focus : null;
-  if (box) view.reveal(box);
+  if (shown?.reveal) view.reveal(shown.reveal);
 }
 
 function insertInput(line: InputLine): boolean {
@@ -585,6 +585,18 @@ function itemAt(clientX: number, clientY: number): number | null {
 }
 
 function bindPointer() {
+  // With the input open, a click on its staff puts the cursor there.
+  ui.viewport.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (e.button !== 0 || e.ctrlKey || e.metaKey || !inputMode.isOpen) return;
+      if (inputMode.click(view.pageAt(e.clientX, e.clientY), e.shiftKey)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    },
+    { capture: true },
+  );
   bindInteraction(ui.viewport, ui.band, {
     editor: () => state.editor,
     itemAt,
@@ -655,11 +667,6 @@ function bindControls(samples: Sample[]) {
   bindCommandBar(ui.command, {
     run: runCommand,
     page: ui.viewport,
-    intercept(key) {
-      if (!inputMode.isOpen) return false;
-      inputMode.type(key);
-      return true;
-    },
   });
   ui.palette.addEventListener('click', () => ui.viewport.focus());
   window.addEventListener('keydown', (e) => {

@@ -6,8 +6,6 @@ export interface CommandBarHooks {
   run(line: string): void;
   /** Where the keyboard goes after Escape. */
   page: HTMLElement;
-  /** Takes a key typed on the page before the command bar does; true when it took it. */
-  intercept?(key: string): boolean;
 }
 
 /** Keys the page keeps for itself even though they print a character ([ and ] move staves, + and _ zoom). */
@@ -51,7 +49,6 @@ export function bindCommandBar(input: HTMLInputElement, hooks: CommandBarHooks) 
   window.addEventListener('keydown', (e) => {
     if (input.disabled || isFormField(e.target) || document.querySelector('dialog[open]') || !startsCommand(e)) return;
     e.preventDefault();
-    if (hooks.intercept?.(e.key)) return;
     input.focus();
     input.value = e.key;
     recalled = 0;

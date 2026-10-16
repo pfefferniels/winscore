@@ -36,6 +36,8 @@ export interface PageView {
   /** Engine units spanned by `px` CSS pixels at the current zoom. */
   unitsPerCss(px: number): number;
   repaint(): void;
+  /** Calls `listener` after every paint, for things placed over the page. */
+  onPaint(listener: () => void): void;
 }
 
 const EMPTY_BOX: Box = { x0: 0, y0: 0, x1: 34000, y1: 56000 };
@@ -46,6 +48,7 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
   let scene: Scene = { layers: [], paper: EMPTY_BOX, extent: EMPTY_BOX, highlights: [] };
   let zoom = 100;
   let frame = 0;
+  const painted: (() => void)[] = [];
 
   const dpr = () => window.devicePixelRatio || 1;
 
@@ -93,6 +96,7 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
       layers: scene.layers,
       highlights: scene.highlights,
     });
+    painted.forEach((listener) => listener());
   };
 
   const repaint = () => {
@@ -186,5 +190,6 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
     clientRect,
     unitsPerCss: (px: number) => px / cssPerUnit(zoom),
     repaint,
+    onPaint: (listener) => painted.push(listener),
   };
 }

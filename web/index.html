@@ -18,7 +18,7 @@
         <span class="sep"></span>
         <button id="undo" title="Undo (⌘Z / Ctrl+Z)">Undo</button>
         <button id="redo" title="Redo (⇧⌘Z / Ctrl+Y)">Redo</button>
-        <button id="input" title="Type a line of music in SCORE's five passes, shown on the page as you type (IN)">Input</button>
+        <button id="input" title="Type a line of music in SCORE's five passes, at a cursor in the music (IN)">Input</button>
         <span class="sep"></span>
         <button id="zoom-out" title="Zoom out (_)">−</button>
         <select id="zoom" title="Zoom"></select>
@@ -98,35 +98,35 @@
           <label>to <input id="input-end" type="number" min="0" max="200" step="any" value="200" /></label>
           <span id="input-status" class="muted"></span>
           <span class="spacer"></span>
-          <span class="muted keys-legend"><kbd>↵</kbd> next pass <kbd>⇧↵</kbd> back <kbd>⌘↵</kbd> insert <kbd>Esc</kbd> close</span>
+          <span class="muted keys-legend"><kbd>←</kbd><kbd>→</kbd> move <kbd>⌫</kbd> erase <kbd>↵</kbd> next pass <kbd>⇧↵</kbd> back <kbd>⌘↵</kbd> insert <kbd>Esc</kbd> close</span>
           <button id="input-insert" class="primary" type="button" title="Insert the line (⌘↵ / Ctrl+Enter)">Insert</button>
           <button id="input-close" type="button" title="Close the input; the text is kept (Esc)">Close</button>
         </div>
         <div class="input-body">
-          <div class="passes" id="input-passes">
-            <div class="pass">
-              <label for="pass-1"><b>1</b> Notes</label>
-              <input id="pass-1" data-pass="1" type="text" placeholder="C4/D/E:G/R/M/BA/K2S/3 4" spellcheck="false" autocomplete="off" />
+          <div class="passes" id="input-passes" aria-label="The line in SCORE's input language">
+            <div class="pass" id="pass-1" title="Pass 1: notes, rests, barlines, clefs, keys, meters. Click to type here.">
+              <span class="pass-name"><b>1</b> Notes</span>
+              <code class="pass-code" id="pass-code-1"></code>
               <small class="pass-error" id="pass-error-1"></small>
             </div>
-            <div class="pass">
-              <label for="pass-2"><b>2</b> Rhythms</label>
-              <input id="pass-2" data-pass="2" type="text" placeholder="4/8/8./12, or one value for all" spellcheck="false" autocomplete="off" />
+            <div class="pass" id="pass-2" title="Pass 2: one length per note, chord and rest. Click to type here.">
+              <span class="pass-name"><b>2</b> Rhythms</span>
+              <code class="pass-code" id="pass-code-2"></code>
               <small class="pass-error" id="pass-error-2"></small>
             </div>
-            <div class="pass">
-              <label for="pass-3"><b>3</b> Marks</label>
-              <input id="pass-3" data-pass="3" type="text" placeholder="A 1/S 2:4" spellcheck="false" autocomplete="off" />
+            <div class="pass" id="pass-3" title="Pass 3: marks on the notes. Click to type here.">
+              <span class="pass-name"><b>3</b> Marks</span>
+              <code class="pass-code" id="pass-code-3"></code>
               <small class="pass-error" id="pass-error-3"></small>
             </div>
-            <div class="pass">
-              <label for="pass-4"><b>4</b> Beams</label>
-              <input id="pass-4" data-pass="4" type="text" placeholder="1 2/3 6" spellcheck="false" autocomplete="off" />
+            <div class="pass" id="pass-4" title="Pass 4: beams between notes. Click to type here.">
+              <span class="pass-name"><b>4</b> Beams</span>
+              <code class="pass-code" id="pass-code-4"></code>
               <small class="pass-error" id="pass-error-4"></small>
             </div>
-            <div class="pass">
-              <label for="pass-5"><b>5</b> Slurs</label>
-              <input id="pass-5" data-pass="5" type="text" placeholder="1 4" spellcheck="false" autocomplete="off" />
+            <div class="pass" id="pass-5" title="Pass 5: slurs and ties between notes. Click to type here.">
+              <span class="pass-name"><b>5</b> Slurs</span>
+              <code class="pass-code" id="pass-code-5"></code>
               <small class="pass-error" id="pass-error-5"></small>
             </div>
           </div>

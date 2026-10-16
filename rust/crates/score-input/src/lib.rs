@@ -156,6 +156,13 @@ pub fn run_outlined(
     Ok((items, line.outline()))
 }
 
+/// The elements (notes and chords, rests, barlines, clefs, key signatures, meters) a pass-1
+/// text makes, motives as `motives` holds them: as many as [`run_outlined`] outlines.
+pub fn count_elements(notes: &str, options: &Options, motives: &Motives) -> Result<usize, InputError> {
+    let events = pass_one(notes, options, &mut motives.clone())?;
+    Ok(events.iter().filter(|e| !matches!(e, events::Event::Stems(_) | events::Event::Staff(_) | events::Event::Cue(_))).count())
+}
+
 /// The values pass 2 gives and needs for these passes, motives as `motives` holds them.
 pub fn count_rhythms(passes: &Passes, options: &Options, motives: &Motives) -> Result<RhythmCount, InputError> {
     let mut motives = motives.clone();
@@ -206,6 +213,14 @@ mod tests {
         let (items, outline) = run_outlined(&passes, &Options::default(), &mut Motives::new()).unwrap();
         assert_eq!(outline.last().unwrap().items.end, 3);
         assert_eq!(items[3].code(), 6);
+    }
+
+    #[test]
+    fn element_counts_match_the_outline() {
+        for notes in ["BA/C4:E/SU/R/M/D/Q+/E;", "C4/D/X2 3;", "K0S/C4;", ";"] {
+            let (_, outline) = run_outlined(&passes(notes, "4;"), &Options::default(), &mut Motives::new()).unwrap();
+            assert_eq!(count_elements(notes, &Options::default(), &Motives::new()).unwrap(), outline.len(), "{notes}");
+        }
     }
 
     #[test]
