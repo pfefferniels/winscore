@@ -20,6 +20,8 @@ export interface Layer {
 export interface Highlight {
   list: DisplayList;
   item: number;
+  /** Default: the selection's colour. */
+  colour?: string;
 }
 
 export interface Scene {
@@ -166,5 +168,5 @@ export function paint(ctx: CanvasRenderingContext2D, scene: Scene) {
     paintList(ctx, t, layer.list, layer.tint ?? null);
   });
   ctx.globalCompositeOperation = 'source-over';
-  scene.highlights.forEach(({ list, item }) => paintList(ctx, t, elementsOf(list, item), HIGHLIGHT));
+  scene.highlights.forEach(({ list, item, colour }) => paintList(ctx, t, elementsOf(list, item), colour ?? HIGHLIGHT));
 }

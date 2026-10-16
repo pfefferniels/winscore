@@ -379,24 +379,6 @@ button.primary:not(:disabled) {
   color: #ffffff;
 }
 
-.input-dialog {
-  width: min(720px, calc(100vw - 32px));
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.input-dialog::backdrop {
-  background: rgb(17 24 39 / 0.25);
-}
-
-.input-dialog h2 {
-  margin: 0 0 12px;
-  font-size: 15px;
-}
-
 .input-range {
   display: flex;
   gap: 16px;
@@ -412,41 +394,9 @@ button.primary:not(:disabled) {
   border-radius: 4px;
 }
 
-.passes {
-  display: grid;
-  grid-template-columns: 80px 1fr;
-  gap: 8px 12px;
-  align-items: start;
-}
-
-.passes label {
-  line-height: 30px;
-  color: var(--muted);
-}
-
-.passes input {
-  width: 100%;
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-family: ui-monospace, monospace;
-}
-
-.passes input:focus,
 .input-range input:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
-}
-
-.passes input.invalid {
-  border-color: #dc2626;
-}
-
-.pass-error {
-  display: block;
-  min-height: 0;
-  color: #b91c1c;
 }
 
 .dialog-actions {
@@ -454,6 +404,226 @@ button.primary:not(:disabled) {
   align-items: center;
   gap: 8px;
   margin-top: 16px;
+}
+
+/* Music input, docked below the page so the line shows on it while it is typed. Its
+   height stays fixed while typing, so the page does not move. */
+.input-panel {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 10px;
+  border-top: 1px solid var(--border);
+  background: #fafafa;
+}
+
+.input-head {
+  display: flex;
+  align-items: center;
+  gap: 6px 14px;
+  flex-wrap: wrap;
+}
+
+.input-head h2 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.input-head label {
+  color: var(--muted);
+}
+
+.input-head input {
+  width: 64px;
+  height: 26px;
+  margin-left: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.input-head input:focus,
+.pass input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.keys-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.keys-legend kbd:not(:first-child) {
+  margin-left: 6px;
+}
+
+.input-body {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(320px, 1.25fr);
+  gap: 12px;
+  height: min(256px, 34vh);
+}
+
+.passes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  overflow: auto;
+}
+
+.pass {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: center;
+}
+
+.pass label {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.pass label b {
+  display: inline-block;
+  width: 14px;
+  font-weight: 600;
+}
+
+.pass.active label {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.pass input {
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+}
+
+.pass.active input {
+  border-color: var(--accent);
+}
+
+.pass input.invalid {
+  border-color: #dc2626;
+}
+
+.pass-error {
+  grid-column: 2;
+  color: #b91c1c;
+}
+
+.pass-error:empty {
+  display: none;
+}
+
+.input-help {
+  min-width: 0;
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.input-help h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.input-help p {
+  margin: 0 0 6px;
+}
+
+.help-shown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #9a3412;
+  font-weight: 600;
+}
+
+.help-shown .swatch {
+  margin-left: 0;
+}
+
+.swatch.focus {
+  background: #ea580c;
+}
+
+.help-detail {
+  color: var(--muted);
+}
+
+.help-status {
+  color: var(--muted);
+}
+
+.help-status.note {
+  color: #92400e;
+}
+
+.help-status.error {
+  color: #b91c1c;
+}
+
+.help-keys {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+  margin: 8px 0 0;
+}
+
+.help-keys dt {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.help-keys dd {
+  margin: 0;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 0 5px;
+  border: 1px solid #d1d5db;
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: #f9fafb;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .input-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    height: min(400px, 40vh);
+  }
+
+  .help-keys {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
+
+  .keys-legend {
+    display: none;
+  }
 }
 
 #input-insert:not(:disabled) {

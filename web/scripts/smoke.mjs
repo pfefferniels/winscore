@@ -131,20 +131,41 @@ try {
   assert.ok(await page.isVisible('#print-page canvas'));
   await page.emulateMedia({ media: 'screen' });
 
-  // Five-pass input: a bad rhythm is marked in its pass; a valid line adds a staff and four notes.
+  // Music input: the line shows on the page as it is typed and the help follows the caret;
+  // a bad rhythm is marked in its pass; Ctrl+Enter inserts a staff and four notes.
   await page.click('#input');
+  assert.ok(await page.isVisible('#input-panel'));
   assert.equal(await page.inputValue('#input-staff'), '9');
-  await page.fill('#pass-1', 'C4/D/E/F;');
-  await page.fill('#pass-2', '4/Y;');
-  assert.match(await page.textContent('#pass-error-2'), /\S/);
+  await page.keyboard.type('G');
+  await page.waitForFunction(() => document.querySelector('#input-help .help-shown')?.textContent.includes('G4, quarter'));
+  assert.match(await page.textContent('#input-help h3'), /^Note G/);
+  assert.match(await page.textContent('#input-help .help-keys'), /octave/);
+  await page.keyboard.type('5/K2');
+  await page.waitForFunction(() => document.querySelector('#input-help h3')?.textContent === 'Key signature, 2 accidentals');
+  assert.match(await page.textContent('#input-help .help-status'), /^Not finished/);
+  assert.equal(await page.textContent('#pass-error-1'), '');
+  await page.fill('#pass-1', 'C4/D/E/F');
+  await page.fill('#pass-2', '4/Y');
+  await page.waitForFunction(() => document.getElementById('pass-error-2').textContent !== '');
   assert.ok(await page.isDisabled('#input-insert'));
-  await page.fill('#pass-2', '4/4/4/4;');
-  assert.equal(await page.textContent('#input-status'), 'Adds 5 items');
-  await page.click('#input-insert');
+  await page.fill('#pass-2', '4');
+  await page.waitForFunction(() => document.getElementById('input-status').textContent === 'Adds 5 items');
+  await page.keyboard.press('Control+Enter');
   await page.waitForFunction(() => document.getElementById('item-count').textContent === '(349)');
   assert.match(await page.textContent('#item h2'), /^Item 348 · Note \(\+4 selected\)/);
+  assert.equal(await page.inputValue('#pass-1'), '');
+  assert.equal(await page.inputValue('#input-staff'), '10');
+  await page.keyboard.press('Escape');
+  assert.ok(await page.isHidden('#input-panel'));
   await page.click('#undo');
   assert.equal(await page.textContent('#item-count'), '(344)');
+  // IN n on the command bar opens the input on staff n.
+  await page.fill('#command', 'IN 3');
+  await page.press('#command', 'Enter');
+  assert.ok(await page.isVisible('#input-panel'));
+  assert.equal(await page.inputValue('#input-staff'), '3');
+  await page.click('#input-close');
+  assert.ok(await page.isHidden('#input-panel'));
 
   // Text: the palette's Text button opens the dialog; the font goes in front as _NN.
   await page.click('#items li[data-index="2"]');
