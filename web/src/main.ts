@@ -1,5 +1,5 @@
 import './style.css';
-import init, { codeName, commandSupported, paramName, Reference as EngineList, Score, type EncodedList, type InputLine } from './wasm/score_web.js';
+import init, { codeName, commandSupported, paramName, Score, type EncodedList, type InputLine } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
 import { bindCommandBar } from './command-bar';
 import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
@@ -9,38 +9,20 @@ import { scoreEditor, type Change, type Editor, type Place } from './editor';
 import { loadFaces } from './fonts';
 import { createInputMode, type Shown } from './input-mode';
 import { bindInteraction } from './interaction';
-import { formatParam, markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
+import { createMenuBar, inMenuBar, MOD } from './menu';
+import { appMenus, type DialogKind } from './menus';
+import { filterItemList, formatParam, markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer } from './paint';
-import { createPalette, type DialogKind } from './palette';
 import { download, printPage } from './print';
 import { createSymbolDialog } from './symbol-dialog';
 import { createTextDialog, editInPlace } from './text-dialog';
 import { stepZoom, ZOOM_LEVELS } from './view';
-
-type Mode = 'rust' | 'engine' | 'overlay';
-
-interface ReferenceInfo {
-  url: string;
-  paper: string | null;
-  pageSize: [number, number] | null;
-  valid: boolean;
-  invalidReasons: string[];
-}
 
 interface Sample {
   title: string;
   /** The `.mus` bytes as base64 text. */
   url: string;
   case: string;
-  reference: ReferenceInfo | null;
-}
-
-interface Reference {
-  /** Owns the list on the wasm side, for hit-testing. */
-  engine: EngineList;
-  list: DisplayList;
-  pageSize: [number, number] | null;
-  note: string | null;
 }
 
 interface State {
@@ -48,8 +30,6 @@ interface State {
   editor: Editor | null;
   fileName: string;
   rust: DisplayList;
-  reference: Reference | null;
-  mode: Mode;
   modified: boolean;
   /** The last click on empty paper, where new items go when nothing is selected. */
   lastPaper: Point | null;
@@ -57,14 +37,14 @@ interface State {
   extent: Box | null;
   /** The line of music input being typed, drawn over the page. */
   preview: Shown | null;
+  /** Whether the side panel (selected item, item list) is shown. */
+  panel: boolean;
 }
 
 const MARGIN = 1000;
 const CLICK_TOLERANCE_PX = 4;
 /** Without an outline under the pointer, WinScore's nearest-reference-point rule applies within this radius (D8). */
 const PICK_RADIUS_PX = 12;
-const ENGINE_TINT = '#06b6d4';
-const RUST_TINT = '#e11d74';
 /** The line being typed, and in it the item at the caret. */
 const PREVIEW_TINT = '#7c3aed';
 const FOCUS_TINT = '#ea580c';
@@ -73,12 +53,10 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 
 const ui = {
   app: $<HTMLDivElement>('app'),
-  open: $<HTMLButtonElement>('open'),
+  menubar: $<HTMLElement>('menubar'),
   file: $<HTMLInputElement>('file'),
-  sample: $<HTMLSelectElement>('sample'),
-  save: $<HTMLButtonElement>('save'),
-  exportSvg: $<HTMLButtonElement>('export-svg'),
-  print: $<HTMLButtonElement>('print'),
+  doc: $<HTMLSpanElement>('doc'),
+  docState: $<HTMLSpanElement>('doc-state'),
   undo: $<HTMLButtonElement>('undo'),
   redo: $<HTMLButtonElement>('redo'),
   input: $<HTMLButtonElement>('input'),
@@ -93,33 +71,52 @@ const ui = {
   zoomIn: $<HTMLButtonElement>('zoom-in'),
   zoom: $<HTMLSelectElement>('zoom'),
   fit: $<HTMLButtonElement>('fit'),
-  mode: $<HTMLDivElement>('mode'),
-  legend: $<HTMLSpanElement>('legend'),
+  togglePanel: $<HTMLButtonElement>('toggle-panel'),
+  help: $<HTMLButtonElement>('help'),
+  shortcuts: $<HTMLDialogElement>('shortcuts-dialog'),
   status: $<HTMLSpanElement>('status'),
   stage: $<HTMLDivElement>('stage'),
   viewport: $<HTMLDivElement>('viewport'),
   content: $<HTMLDivElement>('content'),
   canvas: $<HTMLCanvasElement>('canvas'),
   dropHint: $<HTMLDivElement>('drop-hint'),
+  emptyHint: $<HTMLDivElement>('empty-hint'),
+  emptyInput: $<HTMLButtonElement>('empty-input'),
+  start: $<HTMLElement>('start'),
+  startNew: $<HTMLButtonElement>('start-new'),
+  startOpen: $<HTMLButtonElement>('start-open'),
+  startSamples: $<HTMLDivElement>('start-samples'),
+  panel: $<HTMLElement>('panel'),
   item: $<HTMLElement>('item'),
   items: $<HTMLOListElement>('items'),
   itemCount: $<HTMLSpanElement>('item-count'),
+  itemFilter: $<HTMLInputElement>('item-filter'),
+  footer: $<HTMLElement>('footer'),
   cursor: $<HTMLSpanElement>('cursor'),
   message: $<HTMLSpanElement>('message'),
-  palette: $<HTMLElement>('palette'),
 };
+
+const PANEL_KEY = 'winscore.panel';
+
+/** The remembered side panel setting; storage may be unavailable. */
+function storedPanel(): boolean {
+  try {
+    return localStorage.getItem(PANEL_KEY) !== 'hidden';
+  } catch {
+    return true;
+  }
+}
 
 const state: State = {
   score: null,
   editor: null,
   fileName: '',
   rust: EMPTY,
-  reference: null,
-  mode: 'rust',
   modified: false,
   lastPaper: null,
   extent: null,
   preview: null,
+  panel: storedPanel(),
 };
 
 const view = createPageView(ui, showZoom);
@@ -140,7 +137,7 @@ const inputMode = createInputMode(ui.inputPanel, ui.stage, {
 view.onPaint(() => inputMode.layout());
 const symbolDialog = createSymbolDialog(ui.symbolDialog);
 const textDialog = createTextDialog(ui.textDialog);
-const palette = createPalette(ui.palette, { run: runCommand, runArea, open: openDialog, supported: commandSupported });
+let samples: Sample[] = [];
 
 function showZoom(zoom: number) {
   const rounded = Math.round(zoom);
@@ -177,8 +174,9 @@ function showPrompt() {
   const question = state.editor?.prompt() ?? null;
   ui.prompt.hidden = question === null;
   ui.promptCancel.hidden = question === null;
+  ui.footer.classList.toggle('asking', question !== null);
   ui.prompt.textContent = question ?? '';
-  ui.command.placeholder = question ? 'Type the answer, or draw a box on the page' : 'Type a SCORE command, e.g. R 5, 600 5, NOTE, DE';
+  ui.command.placeholder = question ? 'Type the answer, or draw a box' : 'e.g. R 5, NOTE, DE: just type';
   if (question !== null && document.activeElement !== ui.command) ui.command.focus();
 }
 
@@ -191,35 +189,20 @@ function decodeAndFree(encoded: EncodedList): DisplayList {
 }
 
 function paperBox(): Box {
-  const size = state.reference?.pageSize;
-  const width = size?.[0] ?? state.score?.paperWidth() ?? 34000;
-  const height = size?.[1] ?? state.score?.paperHeight() ?? 56000;
+  const width = state.score?.paperWidth() ?? 34000;
+  const height = state.score?.paperHeight() ?? 56000;
   return { x0: 0, y0: 0, x1: width, y1: height };
 }
 
 function extent(paper: Box): Box {
-  const shown = [bounds(state.rust), state.reference ? bounds(state.reference.list) : null, state.preview ? bounds(state.preview.list) : null];
+  const shown = [bounds(state.rust), state.preview ? bounds(state.preview.list) : null];
   const content = shown.reduce(union, paper) ?? paper;
   return { x0: content.x0 - MARGIN, y0: content.y0 - MARGIN, x1: content.x1 + MARGIN, y1: content.y1 + MARGIN };
 }
 
-function pageLayers(): Layer[] {
-  const engine = state.reference?.list;
-  switch (state.mode) {
-    case 'rust':
-      return [{ list: state.rust }];
-    case 'engine':
-      return engine ? [{ list: engine }] : [];
-    case 'overlay':
-      return [
-        ...(engine ? [{ list: engine, tint: ENGINE_TINT, composite: 'multiply' as const }] : []),
-        { list: state.rust, tint: RUST_TINT, composite: 'multiply' as const },
-      ];
-  }
-}
-
 function layers(): Layer[] {
-  return state.preview ? [...pageLayers(), { list: state.preview.list, tint: PREVIEW_TINT }] : pageLayers();
+  const page: Layer = { list: state.rust };
+  return state.preview ? [page, { list: state.preview.list, tint: PREVIEW_TINT }] : [page];
 }
 
 function selection(): number[] {
@@ -240,33 +223,34 @@ function scene(live = false): Scene {
     paper,
     extent: state.extent,
     highlights: [
-      ...selection().flatMap((item) => shownLists().map((list) => ({ list, item }))),
+      ...selection().map((item) => ({ list: state.rust, item })),
       ...(state.preview?.focus.map((item) => ({ list: state.preview!.list, item, colour: FOCUS_TINT })) ?? []),
     ],
   };
 }
 
+const REDO_KEYS = MOD === '⌘' ? '⇧⌘Z' : 'Ctrl+Y';
+
 function refreshStatus() {
-  const items = state.score?.itemCount() ?? 0;
-  ui.status.textContent = state.score ? `${state.fileName}${state.modified ? ' (modified)' : ''} · ${items} items` : '';
-  ui.save.disabled = !state.score;
-  ui.exportSvg.disabled = !state.score;
-  ui.print.disabled = !state.score;
+  const open = state.score !== null;
+  ui.doc.hidden = !open;
+  ui.status.textContent = state.fileName;
+  ui.docState.textContent = state.modified ? 'Unsaved changes' : '';
+  ui.doc.title = state.modified ? `${state.fileName}: changed since it was opened or saved` : state.fileName;
   const undo = state.editor?.undoLabel() ?? null;
   const redo = state.editor?.redoLabel() ?? null;
   ui.undo.disabled = undo === null;
   ui.redo.disabled = redo === null;
-  ui.undo.title = undo === null ? 'Nothing to undo' : `Undo ${undo} (⌘Z / Ctrl+Z)`;
-  ui.redo.title = redo === null ? 'Nothing to redo' : `Redo ${redo} (⇧⌘Z / Ctrl+Y)`;
+  ui.undo.title = undo === null ? 'Nothing to undo' : `Undo ${undo} (${MOD}Z)`;
+  ui.redo.title = redo === null ? 'Nothing to redo' : `Redo ${redo} (${REDO_KEYS})`;
   ui.command.disabled = !state.editor;
   ui.input.disabled = !state.editor;
-  palette.refresh(selection().length > 0);
-  ui.mode.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
-    const mode = button.dataset.mode as Mode;
-    button.setAttribute('aria-checked', String(mode === state.mode));
-    button.disabled = mode !== 'rust' && !state.reference;
-  });
-  ui.legend.hidden = state.mode !== 'overlay';
+  ui.input.setAttribute('aria-pressed', String(inputMode.isOpen));
+  [ui.zoomIn, ui.zoomOut, ui.zoom, ui.fit].forEach((control) => (control.disabled = !open));
+  ui.start.hidden = open;
+  ui.panel.hidden = !open || !state.panel;
+  ui.togglePanel.disabled = !open;
+  ui.emptyHint.hidden = !open || state.score!.itemCount() > 0 || inputMode.isOpen;
 }
 
 function details(score: Score, index: number): ItemDetails | null {
@@ -302,14 +286,15 @@ function itemSummaries(score: Score): ItemSummary[] {
 function refreshItemList() {
   const items = state.score ? itemSummaries(state.score) : [];
   renderItemList(ui.items, items, handlers);
-  ui.itemCount.textContent = state.score ? `(${items.length})` : '';
+  const shown = filterItemList(ui.items, ui.itemFilter.value);
+  ui.itemCount.textContent = !state.score ? '' : shown === items.length ? String(items.length) : `${shown} of ${items.length}`;
 }
 
 /** Re-renders the parameter panel, keeping the keyboard in the field it was in. */
 function refreshPanel() {
   const shown = primary();
   const focused = ui.item.contains(document.activeElement) ? document.activeElement?.id : undefined;
-  renderItem(ui.item, state.score && shown !== null ? details(state.score, shown) : null, handlers);
+  renderItem(ui.item, state.score && shown !== null ? details(state.score, shown) : null, handlers, state.score !== null);
   markSelected(ui.items, selection());
   const field = focused ? ui.item.querySelector<HTMLInputElement>(`#${focused}`) : null;
   field?.focus();
@@ -322,15 +307,8 @@ function redraw(live = false) {
 }
 
 async function loadFontsAndRepaint() {
-  const runs = [...state.rust.texts, ...(state.reference?.list.texts ?? [])];
-  await loadFaces(runs);
+  await loadFaces(state.rust.texts);
   view.repaint();
-}
-
-/** The display lists on screen in the current mode. */
-function shownLists(): DisplayList[] {
-  const engine = state.reference ? [state.reference.list] : [];
-  return { rust: [state.rust], engine, overlay: [state.rust, ...engine] }[state.mode];
 }
 
 function selectionChanged() {
@@ -342,7 +320,7 @@ function selectionChanged() {
 /** Scrolls the selected items into view unless they are visible. */
 function revealSelection() {
   const box = selection()
-    .flatMap((item) => shownLists().map((list) => bounds(elementsOf(list, item))))
+    .map((item) => bounds(elementsOf(state.rust, item)))
     .reduce(union, null);
   if (box) view.reveal(box);
 }
@@ -383,7 +361,7 @@ function edit(action: (editor: Editor) => Change | null) {
   }
 }
 
-/** A SCORE command line from the command bar, the palette or a key; the result is scrolled into view. */
+/** A SCORE command line from the command bar, a menu, the panel or a key; the result is scrolled into view. */
 function runCommand(line: string) {
   // IN n: music input on staff n, typed in the input panel.
   const input = /^IN(?:\s+(\d+))?$/i.exec(line.trim());
@@ -447,9 +425,9 @@ async function openItem(item: number | null) {
 
 function enterInput(staff?: number) {
   inputMode.open(staff);
+  refreshStatus();
 }
 
-/** Draws the line being typed over the page and scrolls to where the typing happens. */
 /** Draws the line being typed over the page and scrolls to the cursor when it moved. */
 function showInput(shown: Shown | null) {
   state.preview = shown;
@@ -470,6 +448,10 @@ function insertInput(line: InputLine): boolean {
 
 const handlers: PanelHandlers = {
   select: (index) => select([index], true),
+  run: (command) => {
+    runCommand(command);
+    ui.viewport.focus();
+  },
   setParam: (index, n, value) => edit((editor) => editor.setParam(index, n, value)),
   setText: (index, text) => edit((editor) => editor.setText(index, text)),
   setFont(index, code) {
@@ -478,67 +460,54 @@ const handlers: PanelHandlers = {
   },
 };
 
-function readReference(json: string, pageSize: [number, number] | null, note: string | null): Reference {
-  const engine = new EngineList(json);
-  return { engine, list: decodeAndFree(engine.list()), pageSize, note };
+/** Asks before changes that were not saved are thrown away. */
+function mayDiscard(): boolean {
+  return !state.modified || window.confirm(`Discard the unsaved changes to ${state.fileName}?`);
 }
 
-function setReference(reference: Reference | null) {
-  state.reference?.engine.free();
-  state.reference = reference;
-}
-
-async function fetchReference(info: ReferenceInfo): Promise<Reference> {
-  const json = await (await fetch(info.url)).text();
-  const note = info.valid ? null : `engine reference marked invalid: ${info.invalidReasons.join('; ')}`;
-  return readReference(json, info.pageSize, note);
-}
-
-function openScore(bytes: Uint8Array, name: string, reference: Reference | null) {
-  const score = new Score(bytes);
+function openScore(score: Score, name: string) {
+  inputMode.close();
   state.score?.free();
   state.score = score;
   state.editor = scoreEditor(score);
   state.fileName = name;
   state.rust = decodeAndFree(score.render());
-  setReference(reference);
   state.modified = false;
-  const rustDraws = state.rust.shapes.length > 0;
-  state.mode = rustDraws || !reference ? 'rust' : 'engine';
+  state.lastPaper = null;
   refreshItemList();
   refreshPanel();
   inputMode.refresh();
   redraw();
   view.fitWidth();
-  const content = [bounds(state.rust), reference ? bounds(reference.list) : null].reduce(union, null);
+  const content = bounds(state.rust);
   if (content) view.scrollToTop(content.y1 + MARGIN);
   void loadFontsAndRepaint();
-  message(reference?.note ?? '');
+  report(null);
+}
+
+function newScore() {
+  if (!mayDiscard()) return;
+  openScore(Score.empty(), 'untitled.mus');
 }
 
 async function openSample(sample: Sample) {
+  if (!mayDiscard()) return;
   try {
     const base64 = (await (await fetch(sample.url)).text()).trim();
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const reference = sample.reference ? await fetchReference(sample.reference) : null;
-    openScore(bytes, sample.title, reference);
+    openScore(new Score(bytes), sample.title);
   } catch (err) {
     message(`Cannot open ${sample.title}: ${String(err)}`, true);
   }
 }
 
+function chooseFile() {
+  if (mayDiscard()) ui.file.click();
+}
+
 async function openFile(file: File) {
   try {
-    if (file.name.toLowerCase().endsWith('.json')) {
-      setReference(readReference(await file.text(), null, null));
-      state.mode = 'overlay';
-      redraw();
-      void loadFontsAndRepaint();
-      message(`Reference ${file.name} loaded`);
-      return;
-    }
-    openScore(new Uint8Array(await file.arrayBuffer()), file.name, null);
-    ui.sample.value = '';
+    openScore(new Score(new Uint8Array(await file.arrayBuffer())), file.name);
   } catch (err) {
     message(`Cannot open ${file.name}: ${String(err)}`, true);
   }
@@ -569,19 +538,27 @@ async function print() {
   }
 }
 
-function setMode(mode: Mode) {
-  state.mode = mode;
-  redraw();
+function setPanel(shown: boolean) {
+  state.panel = shown;
+  ui.panel.hidden = !shown || !state.score;
+  ui.togglePanel.setAttribute('aria-pressed', String(shown));
+  try {
+    localStorage.setItem(PANEL_KEY, shown ? 'shown' : 'hidden');
+  } catch {
+    // Without storage the setting lasts until the page is left.
+  }
 }
 
-/** The item under the pointer: a drawn outline (Rust list, then the engine list's attribution), else the nearest reference point. */
+function toggleInput() {
+  if (inputMode.isOpen) inputMode.close();
+  else enterInput();
+}
+
+/** The item under the pointer: a drawn outline, else the nearest reference point. */
 function itemAt(clientX: number, clientY: number): number | null {
   const p = view.pageAt(clientX, clientY);
-  const tolerance = view.unitsPerCss(CLICK_TOLERANCE_PX);
-  const rust = state.mode !== 'engine' ? state.score?.itemAt(p.x, p.y, tolerance, 0) : undefined;
-  const engine = state.mode !== 'rust' ? state.reference?.engine.hitTest(p.x, p.y, tolerance) : undefined;
-  const nearest = () => state.score?.itemAt(p.x, p.y, 0, view.unitsPerCss(PICK_RADIUS_PX));
-  return rust ?? engine ?? nearest() ?? null;
+  const drawn = state.score?.itemAt(p.x, p.y, view.unitsPerCss(CLICK_TOLERANCE_PX), 0);
+  return drawn ?? state.score?.itemAt(p.x, p.y, 0, view.unitsPerCss(PICK_RADIUS_PX)) ?? null;
 }
 
 function bindPointer() {
@@ -618,7 +595,7 @@ function bindPointer() {
   });
   ui.viewport.addEventListener('pointermove', (e) => {
     const p = view.pageAt(e.clientX, e.clientY);
-    ui.cursor.textContent = `x ${Math.round(p.x)}  y ${Math.round(p.y)}  (${(p.x / 4000).toFixed(3)} in, ${(p.y / 4000).toFixed(3)} in)`;
+    ui.cursor.textContent = state.score ? `x ${Math.round(p.x)}  y ${Math.round(p.y)}  (${(p.x / 4000).toFixed(2)} in, ${(p.y / 4000).toFixed(2)} in)` : '';
   });
 }
 
@@ -635,64 +612,133 @@ function bindDrop() {
     e.preventDefault();
     hint(false);
     const file = e.dataTransfer?.files[0];
-    if (file) void openFile(file);
+    if (file && mayDiscard()) void openFile(file);
   });
 }
 
-function bindControls(samples: Sample[]) {
-  ui.open.addEventListener('click', () => ui.file.click());
+/** Gives the keyboard back to the page when an action left it nowhere in particular. */
+function settleFocus() {
+  const active = document.activeElement;
+  if (!active || active === document.body || inMenuBar(active) || ui.app.querySelector('.appbar')!.contains(active)) ui.viewport.focus();
+}
+
+function bindMenus() {
+  createMenuBar(
+    ui.menubar,
+    appMenus({
+      hasScore: () => state.score !== null,
+      hasSelection: () => selection().length > 0,
+      run: runCommand,
+      runArea,
+      supported: commandSupported,
+      openDialog: (kind) => void openDialog(kind),
+      newScore,
+      open: chooseFile,
+      samples: () => samples.map((s) => ({ title: s.title, open: () => void openSample(s) })),
+      save,
+      exportSvg,
+      print: () => void print(),
+      undo: () => edit((editor) => editor.undo()),
+      redo: () => edit((editor) => editor.redo()),
+      undoLabel: () => state.editor?.undoLabel() ?? null,
+      redoLabel: () => state.editor?.redoLabel() ?? null,
+      input: () => enterInput(),
+      zoomIn: () => view.setZoom(stepZoom(view.zoom, 1)),
+      zoomOut: () => view.setZoom(stepZoom(view.zoom, -1)),
+      fitWidth: () => view.fitWidth(),
+      actualSize: () => view.setZoom(100),
+      panelShown: () => state.panel,
+      togglePanel: () => setPanel(!state.panel),
+      shortcuts: showShortcuts,
+    }),
+    settleFocus,
+  );
+}
+
+function showShortcuts() {
+  if (!ui.shortcuts.open) ui.shortcuts.showModal();
+}
+
+function bindStart() {
+  ui.startNew.addEventListener('click', newScore);
+  ui.startOpen.addEventListener('click', chooseFile);
+  ui.startSamples.replaceChildren(
+    ...samples.map((sample) => {
+      const button = Object.assign(document.createElement('button'), { type: 'button', className: 'sample', textContent: sample.title });
+      button.addEventListener('click', () => void openSample(sample));
+      return button;
+    }),
+  );
+  ui.startSamples.previousElementSibling!.toggleAttribute('hidden', samples.length === 0);
+}
+
+/** Shortcuts that act on the whole app: open, save, print, help. */
+function onAppKey(e: KeyboardEvent) {
+  if (document.querySelector('dialog[open]')) return;
+  if (e.key === 'F1') {
+    e.preventDefault();
+    showShortcuts();
+    return;
+  }
+  const command = e.metaKey || e.ctrlKey;
+  if (!command || e.altKey) return;
+  const action = { o: chooseFile, s: save, p: () => void print() }[e.key.toLowerCase()];
+  if (!action || e.shiftKey) return;
+  e.preventDefault();
+  if (state.score || e.key.toLowerCase() === 'o') action();
+}
+
+function bindControls() {
   ui.file.addEventListener('change', () => {
     const file = ui.file.files?.[0];
     if (file) void openFile(file);
     ui.file.value = '';
   });
-  ui.sample.addEventListener('change', () => {
-    const sample = samples.find((s) => s.url === ui.sample.value);
-    if (sample) void openSample(sample);
-  });
-  ui.save.addEventListener('click', save);
-  ui.exportSvg.addEventListener('click', exportSvg);
-  ui.print.addEventListener('click', () => void print());
   ui.zoomIn.addEventListener('click', () => view.setZoom(stepZoom(view.zoom, 1)));
   ui.zoomOut.addEventListener('click', () => view.setZoom(stepZoom(view.zoom, -1)));
   ui.zoom.addEventListener('change', () => view.setZoom(Number(ui.zoom.value)));
   ui.fit.addEventListener('click', () => view.fitWidth());
-  ui.mode.addEventListener('click', (e) => {
-    const mode = (e.target as HTMLElement).closest<HTMLButtonElement>('button')?.dataset.mode as Mode | undefined;
-    if (mode) setMode(mode);
-  });
   ui.undo.addEventListener('click', () => edit((editor) => editor.undo()));
-  ui.input.addEventListener('click', () => enterInput());
   ui.redo.addEventListener('click', () => edit((editor) => editor.redo()));
+  ui.input.addEventListener('click', toggleInput);
+  ui.emptyInput.addEventListener('click', () => enterInput());
+  ui.togglePanel.addEventListener('click', () => setPanel(!state.panel));
+  ui.help.addEventListener('click', showShortcuts);
+  ui.itemFilter.addEventListener('input', refreshItemList);
+  ui.itemFilter.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    ui.itemFilter.value = '';
+    refreshItemList();
+  });
+  ui.app.querySelectorAll<HTMLButtonElement>('.appbar button').forEach((button) => button.addEventListener('click', settleFocus));
+  if (MOD !== '⌘') ui.shortcuts.querySelectorAll('kbd.mod').forEach((k) => (k.textContent = 'Ctrl'));
   bindCommandBar(ui.command, {
     run: runCommand,
     page: ui.viewport,
   });
-  ui.palette.addEventListener('click', () => ui.viewport.focus());
+  window.addEventListener('keydown', onAppKey);
   window.addEventListener('keydown', (e) => {
-    if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;
+    if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey || inMenuBar(e.target)) return;
     if (e.key === '+' || e.key === '=') view.setZoom(stepZoom(view.zoom, 1));
     if (e.key === '_') view.setZoom(stepZoom(view.zoom, -1));
   });
+  bindMenus();
+  bindStart();
   bindPointer();
   bindDrop();
 }
 
-/** URL parameters for direct links and screenshots: sample, mode, zoom, select. */
-async function applyQuery(samples: Sample[]) {
+/** URL parameters for direct links and screenshots: sample (or new), zoom, select. Without one the start screen shows. */
+async function applyQuery() {
   const query = new URLSearchParams(location.search);
   const wanted = query.get('sample');
-  const sample = samples.find((s) => s.title === wanted || s.case === wanted) ?? samples.find((s) => s.title === 'carmen.mus') ?? samples[0];
-  if (sample) {
-    ui.sample.value = sample.url;
-    await openSample(sample);
-  }
-  const mode = query.get('mode') as Mode | null;
-  if (mode === 'rust' || mode === 'engine' || mode === 'overlay') setMode(mode);
+  const sample = samples.find((s) => s.title === wanted || s.case === wanted);
+  if (sample) await openSample(sample);
+  else if (query.has('new')) newScore();
   const zoom = Number(query.get('zoom'));
-  if (zoom > 0) view.setZoom(zoom);
+  if (zoom > 0 && state.score) view.setZoom(zoom);
   const selected = query.get('select');
-  if (selected !== null) select(selected.split(',').map(Number), true);
+  if (selected !== null && state.score) select(selected.split(',').map(Number), true);
   await loadFontsAndRepaint();
   ui.app.dataset.ready = 'true';
 }
@@ -725,12 +771,12 @@ async function main() {
     return;
   }
   showZoom(view.zoom);
-  const samples = await loadSamples();
-  ui.sample.replaceChildren(new Option('Samples…', ''), ...samples.map((s) => new Option(s.title, s.url)));
-  bindControls(samples);
+  samples = await loadSamples();
+  setPanel(state.panel);
+  bindControls();
   refreshStatus();
-  renderItem(ui.item, null, handlers);
-  await applyQuery(samples);
+  renderItem(ui.item, null, handlers, false);
+  await applyQuery();
 }
 
 main().catch((err) => fatal('The app failed to start.', err));

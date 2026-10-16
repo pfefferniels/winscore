@@ -11,10 +11,10 @@ import path from 'node:path';
 const [outDir = 'screenshots', ...args] = process.argv.slice(2);
 
 const DEFAULT_SHOTS = {
-  'carmen-engine': 'sample=carmen.mus&mode=engine',
-  'carmen-rust': 'sample=carmen.mus&mode=rust',
-  'carmen-overlay': 'sample=carmen.mus&mode=overlay',
-  'mozart-overlay-200': 'sample=mozart.mus&mode=overlay&zoom=200',
+  start: '',
+  carmen: 'sample=carmen.mus',
+  'mozart-200': 'sample=mozart.mus&zoom=200',
+  new: 'new',
 };
 
 const shots = args.length ? Object.fromEntries(args.map((a) => a.split(/=(.*)/s).slice(0, 2))) : DEFAULT_SHOTS;

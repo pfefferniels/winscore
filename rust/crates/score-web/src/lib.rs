@@ -19,6 +19,7 @@ pub mod placing;
 pub mod preview;
 pub mod symbols;
 
+use score_format::MusFile;
 use score_render::{DisplayList, ItemId};
 use wasm_bindgen::prelude::*;
 
@@ -106,6 +107,11 @@ impl Score {
         Ok(Score(Document::open(bytes)?))
     }
 
+    /// A new score without items.
+    pub fn empty() -> Score {
+        Score(Document::new(MusFile::empty()))
+    }
+
     #[wasm_bindgen(js_name = itemCount)]
     pub fn item_count(&self) -> usize {
         self.0.items().len()
@@ -165,28 +171,4 @@ pub fn code_name_js(code: i32) -> Option<String> {
 #[wasm_bindgen(js_name = paramName)]
 pub fn param_name(code: i32, n: usize) -> Option<String> {
     param_names::param_name(code, n).map(str::to_owned)
-}
-
-/// An engine reference display list, read from `engine.json`
-/// (`rust/fixtures/README.md`).
-#[wasm_bindgen]
-pub struct Reference(DisplayList);
-
-#[wasm_bindgen]
-impl Reference {
-    #[wasm_bindgen(constructor)]
-    pub fn new(json: &str) -> Result<Reference, JsError> {
-        Ok(Reference(score_testkit::display_from_json(json)?))
-    }
-
-    pub fn list(&self) -> EncodedList {
-        EncodedList::from(&self.0)
-    }
-
-    /// The item whose elements the fixture attributes lie nearest to page
-    /// point (`x`, `y`), within `tolerance` engine units.
-    #[wasm_bindgen(js_name = hitTest)]
-    pub fn hit_test(&self, x: f64, y: f64, tolerance: f64) -> Option<u32> {
-        hit::hit_test(&self.0, At::new(x, y), tolerance).map(|id| id.0)
-    }
 }

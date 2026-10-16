@@ -15,7 +15,7 @@ const browser = await chromium.launch();
 
 /** Opens the bundled sample by URL, or a file through the file picker. */
 async function open(page, file) {
-  await page.goto(`http://localhost:${PORT}/?mode=rust${file ? '' : '&sample=carmen.mus'}`);
+  await page.goto(`http://localhost:${PORT}/${file ? '' : '?sample=carmen.mus'}`);
   await page.waitForSelector('#app[data-ready="true"]');
   if (file) {
     await page.setInputFiles('#file', file);

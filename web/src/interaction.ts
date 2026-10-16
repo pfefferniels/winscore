@@ -164,7 +164,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
   viewport.addEventListener('dblclick', (e) => hooks.open(hooks.itemAt(e.clientX, e.clientY), e.clientX, e.clientY));
 
   window.addEventListener('keydown', (e) => {
-    if (isTyping(e.target)) return;
+    if (isTyping(e.target) || document.querySelector('dialog[open]')) return;
     const command = e.metaKey || e.ctrlKey;
     if (e.key === 'Escape' && gesture?.kind === 'drag') {
       endDrag(false);

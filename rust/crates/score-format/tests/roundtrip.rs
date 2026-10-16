@@ -66,3 +66,15 @@ fn smiths_documented_example_parses() {
     assert_eq!(file.items[2].param(5), 11.0);
     assert_eq!(file.to_bytes(), bytes);
 }
+
+#[test]
+fn empty_file_is_shaped_like_score_4s_empty_score() {
+    let empty = MusFile::empty();
+    let bytes = empty.to_bytes();
+    assert_eq!(MusFile::parse(&bytes).unwrap(), empty);
+    let original = MusFile::parse(&std::fs::read(project_root().join("SCORE 4/SCORE/SCORE.MUS")).unwrap()).unwrap();
+    assert_eq!(bytes.len(), original.to_bytes().len());
+    assert!(empty.items.is_empty() && original.items.is_empty());
+    assert_eq!(empty.trailer.version(), Some(6.0));
+    assert_eq!(empty.trailer.measurement(), original.trailer.measurement());
+}

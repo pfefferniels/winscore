@@ -45,9 +45,13 @@ pub struct Document {
 
 impl Document {
     pub fn open(bytes: &[u8]) -> Result<Self, MusError> {
-        let editor = Editor::open(bytes)?;
+        MusFile::parse(bytes).map(Self::new)
+    }
+
+    pub fn new(file: MusFile) -> Self {
+        let editor = Editor::new(file);
         let page = render_page(editor.file());
-        Ok(Self { editor, page, motives: Motives::new() })
+        Self { editor, page, motives: Motives::new() }
     }
 
     pub fn file(&self) -> &MusFile {
@@ -174,6 +178,18 @@ mod tests {
         assert_eq!(doc.item(ItemId(2)).unwrap().param(3), 1.0);
         doc.editor_mut().undo().unwrap();
         assert_eq!(doc.item(ItemId(2)).unwrap().param(3), 0.0);
+    }
+
+    #[test]
+    fn empty_document_renders_and_takes_input() {
+        let mut doc = Document::new(MusFile::empty());
+        assert!(doc.items().is_empty());
+        assert!(doc.render().shapes.iter().all(|s| s.source.is_none()));
+        let line = crate::InputLine::new(["C4/D/E/F;", "4/4/4/4;", ";", ";", ";"].map(str::to_owned).to_vec(), 1, 2.0, 200.0)
+            .unwrap_or_else(|_| panic!("five passes"));
+        let items = crate::input::line_items(doc.file(), &line, &mut Motives::new()).unwrap();
+        assert_eq!(items[0].code(), STAFF_CODE);
+        assert_eq!(MusFile::parse(&doc.save()).unwrap(), MusFile::empty());
     }
 
     #[test]
