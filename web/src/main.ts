@@ -1,5 +1,5 @@
 import './style.css';
-import init, { codeName, commandSupported, paramName, Reference as EngineList, Score, type EncodedList } from './wasm/score_web.js';
+import init, { codeName, commandSupported, paramName, Reference as EngineList, Score, type EncodedList, type InputLine } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
 import { bindCommandBar } from './command-bar';
 import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
@@ -7,7 +7,7 @@ import { fontPrefix } from './commands';
 import type { Point } from './view';
 import { scoreEditor, type Change, type Editor, type Place } from './editor';
 import { loadFaces } from './fonts';
-import { createInputDialog } from './input-dialog';
+import { createInputMode, type Shown } from './input-mode';
 import { bindInteraction } from './interaction';
 import { formatParam, markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer } from './paint';
@@ -55,6 +55,8 @@ interface State {
   lastPaper: Point | null;
   /** The scrollable page area; kept while a drag is in progress. */
   extent: Box | null;
+  /** The line of music input being typed, drawn over the page. */
+  preview: Shown | null;
 }
 
 const MARGIN = 1000;
@@ -63,6 +65,9 @@ const CLICK_TOLERANCE_PX = 4;
 const PICK_RADIUS_PX = 12;
 const ENGINE_TINT = '#06b6d4';
 const RUST_TINT = '#e11d74';
+/** The line being typed, and in it the item at the caret. */
+const PREVIEW_TINT = '#7c3aed';
+const FOCUS_TINT = '#ea580c';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -77,7 +82,7 @@ const ui = {
   undo: $<HTMLButtonElement>('undo'),
   redo: $<HTMLButtonElement>('redo'),
   input: $<HTMLButtonElement>('input'),
-  inputDialog: $<HTMLDialogElement>('input-dialog'),
+  inputPanel: $<HTMLElement>('input-panel'),
   symbolDialog: $<HTMLDialogElement>('symbol-dialog'),
   textDialog: $<HTMLDialogElement>('text-dialog'),
   band: $<HTMLDivElement>('band'),
@@ -104,7 +109,18 @@ const ui = {
   palette: $<HTMLElement>('palette'),
 };
 
-const state: State = { score: null, editor: null, fileName: '', rust: EMPTY, reference: null, mode: 'rust', modified: false, lastPaper: null, extent: null };
+const state: State = {
+  score: null,
+  editor: null,
+  fileName: '',
+  rust: EMPTY,
+  reference: null,
+  mode: 'rust',
+  modified: false,
+  lastPaper: null,
+  extent: null,
+  preview: null,
+};
 
 const view = createPageView(ui, showZoom);
 /** Names of the item codes P1 takes, looked up once each. */
@@ -114,7 +130,14 @@ function nameOf(code: number): string {
   if (!codeNames.has(code)) codeNames.set(code, codeName(code) ?? `Code ${code}`);
   return codeNames.get(code)!;
 }
-const inputDialog = createInputDialog(ui.inputDialog);
+const inputMode = createInputMode(ui.inputPanel, ui.stage, {
+  score: () => state.score,
+  show: showInput,
+  insert: insertInput,
+  focusPage: () => ui.viewport.focus(),
+  clientRect: (box) => view.clientRect(box),
+});
+view.onPaint(() => inputMode.layout());
 const symbolDialog = createSymbolDialog(ui.symbolDialog);
 const textDialog = createTextDialog(ui.textDialog);
 const palette = createPalette(ui.palette, { run: runCommand, runArea, open: openDialog, supported: commandSupported });
@@ -175,11 +198,12 @@ function paperBox(): Box {
 }
 
 function extent(paper: Box): Box {
-  const content = [bounds(state.rust), state.reference ? bounds(state.reference.list) : null].reduce(union, paper) ?? paper;
+  const shown = [bounds(state.rust), state.reference ? bounds(state.reference.list) : null, state.preview ? bounds(state.preview.list) : null];
+  const content = shown.reduce(union, paper) ?? paper;
   return { x0: content.x0 - MARGIN, y0: content.y0 - MARGIN, x1: content.x1 + MARGIN, y1: content.y1 + MARGIN };
 }
 
-function layers(): Layer[] {
+function pageLayers(): Layer[] {
   const engine = state.reference?.list;
   switch (state.mode) {
     case 'rust':
@@ -192,6 +216,10 @@ function layers(): Layer[] {
         { list: state.rust, tint: RUST_TINT, composite: 'multiply' as const },
       ];
   }
+}
+
+function layers(): Layer[] {
+  return state.preview ? [...pageLayers(), { list: state.preview.list, tint: PREVIEW_TINT }] : pageLayers();
 }
 
 function selection(): number[] {
@@ -211,7 +239,10 @@ function scene(live = false): Scene {
     layers: layers(),
     paper,
     extent: state.extent,
-    highlights: selection().flatMap((item) => shownLists().map((list) => ({ list, item }))),
+    highlights: [
+      ...selection().flatMap((item) => shownLists().map((list) => ({ list, item }))),
+      ...(state.preview?.focus.map((item) => ({ list: state.preview!.list, item, colour: FOCUS_TINT })) ?? []),
+    ],
   };
 }
 
@@ -333,6 +364,7 @@ function edited(change: Change | null, live: boolean) {
     refreshPanel();
     void loadFontsAndRepaint();
     report(change);
+    inputMode.refresh();
   }
   redraw(live);
 }
@@ -353,6 +385,12 @@ function edit(action: (editor: Editor) => Change | null) {
 
 /** A SCORE command line from the command bar, the palette or a key; the result is scrolled into view. */
 function runCommand(line: string) {
+  // IN n: music input on staff n, typed in the input panel.
+  const input = /^IN(?:\s+(\d+))?$/i.exec(line.trim());
+  if (input) {
+    enterInput(input[1] === undefined ? undefined : Number(input[1]));
+    return;
+  }
   edit((editor) => editor.execute(line));
   revealSelection();
 }
@@ -407,17 +445,27 @@ async function openItem(item: number | null) {
   ui.viewport.focus();
 }
 
-async function enterInput() {
-  if (!state.score) return;
-  const line = await inputDialog.ask(state.score);
-  if (!line) return;
-  try {
-    edit((editor) => editor.insertInput(line));
-  } finally {
-    line.free();
-  }
+function enterInput(staff?: number) {
+  inputMode.open(staff);
+}
+
+/** Draws the line being typed over the page and scrolls to where the typing happens. */
+/** Draws the line being typed over the page and scrolls to the cursor when it moved. */
+function showInput(shown: Shown | null) {
+  state.preview = shown;
+  redraw();
+  if (shown?.reveal) view.reveal(shown.reveal);
+}
+
+function insertInput(line: InputLine): boolean {
+  let inserted = false;
+  edit((editor) => {
+    const change = editor.insertInput(line);
+    inserted = change !== null;
+    return change;
+  });
   revealSelection();
-  ui.viewport.focus();
+  return inserted;
 }
 
 const handlers: PanelHandlers = {
@@ -459,6 +507,7 @@ function openScore(bytes: Uint8Array, name: string, reference: Reference | null)
   state.mode = rustDraws || !reference ? 'rust' : 'engine';
   refreshItemList();
   refreshPanel();
+  inputMode.refresh();
   redraw();
   view.fitWidth();
   const content = [bounds(state.rust), reference ? bounds(reference.list) : null].reduce(union, null);
@@ -536,6 +585,18 @@ function itemAt(clientX: number, clientY: number): number | null {
 }
 
 function bindPointer() {
+  // With the input open, a click on its staff puts the cursor there.
+  ui.viewport.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (e.button !== 0 || e.ctrlKey || e.metaKey || !inputMode.isOpen) return;
+      if (inputMode.click(view.pageAt(e.clientX, e.clientY), e.shiftKey)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    },
+    { capture: true },
+  );
   bindInteraction(ui.viewport, ui.band, {
     editor: () => state.editor,
     itemAt,
@@ -601,9 +662,12 @@ function bindControls(samples: Sample[]) {
     if (mode) setMode(mode);
   });
   ui.undo.addEventListener('click', () => edit((editor) => editor.undo()));
-  ui.input.addEventListener('click', () => void enterInput());
+  ui.input.addEventListener('click', () => enterInput());
   ui.redo.addEventListener('click', () => edit((editor) => editor.redo()));
-  bindCommandBar(ui.command, { run: runCommand, page: ui.viewport });
+  bindCommandBar(ui.command, {
+    run: runCommand,
+    page: ui.viewport,
+  });
   ui.palette.addEventListener('click', () => ui.viewport.focus());
   window.addEventListener('keydown', (e) => {
     if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;

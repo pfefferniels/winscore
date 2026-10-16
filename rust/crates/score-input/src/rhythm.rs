@@ -119,15 +119,27 @@ enum Item {
 /// become grace notes; values beyond the last note are not used, as the engine ends the
 /// pass by itself after the last note's value.
 pub fn parse(text: &str, needed: usize, motives: &mut Motives) -> Result<Vec<Rhythm>, InputError> {
-    let entries = entries(text, PASS, motives)?;
-    let items = entries.iter().map(parse_item).collect::<Result<Vec<_>, _>>()?;
-    let tokens = expand(&entries, &items)?;
+    let tokens = tokens(text, motives)?;
     let tokens = match tokens.as_slice() {
         [single] if fills_all(text) => vec![*single; needed],
         _ => tokens,
     };
     let grace = 4.0 / GRACE_PER_WHOLE;
     Ok(tokens.into_iter().chain(std::iter::repeat(grace)).take(needed).map(Rhythm::from_token).collect())
+}
+
+/// The number of values a pass gives before [`parse`] fills the notes left over; `None`
+/// when its one value sets all notes.
+pub fn given(text: &str, motives: &mut Motives) -> Result<Option<usize>, InputError> {
+    let tokens = tokens(text, motives)?;
+    Ok(if tokens.len() == 1 && fills_all(text) { None } else { Some(tokens.len()) })
+}
+
+/// The values of the pass in order, repeats applied.
+fn tokens(text: &str, motives: &mut Motives) -> Result<Vec<f32>, InputError> {
+    let entries = entries(text, PASS, motives)?;
+    let items = entries.iter().map(parse_item).collect::<Result<Vec<_>, _>>()?;
+    expand(&entries, &items)
 }
 
 /// The reader (0x422D98) appends `X<notes>` when the pass ends after one or two characters.

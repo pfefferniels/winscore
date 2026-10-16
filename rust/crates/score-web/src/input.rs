@@ -7,8 +7,8 @@ use wasm_bindgen::prelude::*;
 
 use crate::Score;
 
-const CLEF_CODE: i32 = 3;
-const STAFF_CODE: i32 = 8;
+pub(crate) const CLEF_CODE: i32 = 3;
+pub(crate) const STAFF_CODE: i32 = 8;
 
 /// A failed pass, with the error's range in UTF-16 code units of that pass's
 /// text, as browser text fields count.
@@ -21,13 +21,13 @@ pub struct PassError {
     pub message: String,
 }
 
-fn utf16_offset(text: &str, byte: usize) -> usize {
+pub(crate) fn utf16_offset(text: &str, byte: usize) -> usize {
     let byte = byte.min(text.len());
     let boundary = (0..=byte).rev().find(|&b| text.is_char_boundary(b)).unwrap_or(0);
     text[..boundary].encode_utf16().count()
 }
 
-fn pass_error(texts: &[&str; 5], err: &InputError) -> PassError {
+pub(crate) fn pass_error(texts: &[&str; 5], err: &InputError) -> PassError {
     let text = texts[err.pass.number() - 1];
     PassError {
         pass: err.pass.number(),
@@ -37,14 +37,14 @@ fn pass_error(texts: &[&str; 5], err: &InputError) -> PassError {
     }
 }
 
-fn on_staff(item: &Item, code: i32, staff: u8) -> bool {
+pub(crate) fn on_staff(item: &Item, code: i32, staff: u8) -> bool {
     item.code() == code && item.param(2) == f32::from(staff)
 }
 
 /// What the engine takes from the score for a line of input (input-lang's
 /// findings): the staff's size (P5, 0 = 1), its right end (P6) clipping the
 /// range, and the clef of the last clef item on the staff.
-fn options(file: &MusFile, line: &InputLine) -> Options {
+pub(crate) fn options(file: &MusFile, line: &InputLine) -> Options {
     let staff = file.items.iter().find(|item| on_staff(item, STAFF_CODE, line.staff));
     let size = staff.map(|s| s.param(5)).filter(|&p5| p5 != 0.0).unwrap_or(1.0);
     let right_end = staff.map(|s| s.param(6)).filter(|&p6| p6 > 0.0);
@@ -82,10 +82,10 @@ pub fn line_items(file: &MusFile, line: &InputLine, motives: &mut Motives) -> Re
 /// rhythms, marks, beams, slurs, each ending with `;`) and where it goes.
 #[wasm_bindgen]
 pub struct InputLine {
-    passes: [String; 5],
-    staff: u8,
-    begin: f32,
-    end: f32,
+    pub(crate) passes: [String; 5],
+    pub(crate) staff: u8,
+    pub(crate) begin: f32,
+    pub(crate) end: f32,
 }
 
 #[wasm_bindgen]

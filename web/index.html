@@ -18,7 +18,7 @@
         <span class="sep"></span>
         <button id="undo" title="Undo (⌘Z / Ctrl+Z)">Undo</button>
         <button id="redo" title="Redo (⇧⌘Z / Ctrl+Y)">Redo</button>
-        <button id="input" title="Enter a line of music in SCORE's five passes (IN)">Input…</button>
+        <button id="input" title="Type a line of music in SCORE's five passes, at a cursor in the music (IN)">Input</button>
         <span class="sep"></span>
         <button id="zoom-out" title="Zoom out (_)">−</button>
         <select id="zoom" title="Zoom"></select>
@@ -52,34 +52,6 @@
           </section>
         </aside>
       </main>
-      <dialog id="input-dialog" class="input-dialog">
-        <form method="dialog" id="input-form">
-          <h2>Score input</h2>
-          <div class="input-range">
-            <label>Staff <input id="input-staff" type="number" min="1" max="255" step="1" value="1" /></label>
-            <label>Input range <input id="input-begin" type="number" min="0" max="200" step="any" value="2" /></label>
-            <label>to <input id="input-end" type="number" min="0" max="200" step="any" value="200" /></label>
-          </div>
-          <div class="passes" id="input-passes">
-            <label for="pass-1">1 Notes</label>
-            <div><input id="pass-1" data-pass="1" type="text" value=";" placeholder="C4/D/E:G/R/M/BA/K2S/3 4;" spellcheck="false" autocomplete="off" /><small class="pass-error" id="pass-error-1"></small></div>
-            <label for="pass-2">2 Rhythms</label>
-            <div><input id="pass-2" data-pass="2" type="text" value=";" placeholder="4/8/8./12;" spellcheck="false" autocomplete="off" /><small class="pass-error" id="pass-error-2"></small></div>
-            <label for="pass-3">3 Marks</label>
-            <div><input id="pass-3" data-pass="3" type="text" value=";" placeholder="A 1/S 2:4;" spellcheck="false" autocomplete="off" /><small class="pass-error" id="pass-error-3"></small></div>
-            <label for="pass-4">4 Beams</label>
-            <div><input id="pass-4" data-pass="4" type="text" value=";" placeholder="1 2/3 6;" spellcheck="false" autocomplete="off" /><small class="pass-error" id="pass-error-4"></small></div>
-            <label for="pass-5">5 Slurs</label>
-            <div><input id="pass-5" data-pass="5" type="text" value=";" placeholder="1 4;" spellcheck="false" autocomplete="off" /><small class="pass-error" id="pass-error-5"></small></div>
-          </div>
-          <div class="dialog-actions">
-            <span id="input-status" class="muted"></span>
-            <span class="spacer"></span>
-            <button value="cancel" formnovalidate>Cancel</button>
-            <button id="input-insert" value="insert">Insert</button>
-          </div>
-        </form>
-      </dialog>
       <dialog id="symbol-dialog" class="symbol-dialog">
         <form method="dialog">
           <h2>Symbol library</h2>
@@ -118,6 +90,49 @@
           </div>
         </form>
       </dialog>
+      <section id="input-panel" class="input-panel" hidden aria-label="Music input">
+        <div class="input-head">
+          <h2>Input</h2>
+          <label>Staff <input id="input-staff" type="number" min="1" max="255" step="1" value="1" /></label>
+          <label>Range <input id="input-begin" type="number" min="0" max="200" step="any" value="2" /></label>
+          <label>to <input id="input-end" type="number" min="0" max="200" step="any" value="200" /></label>
+          <span id="input-status" class="muted"></span>
+          <span class="spacer"></span>
+          <span class="muted keys-legend"><kbd>←</kbd><kbd>→</kbd> move <kbd>⌫</kbd> erase <kbd>↵</kbd> next pass <kbd>⇧↵</kbd> back <kbd>⌘↵</kbd> insert <kbd>Esc</kbd> close</span>
+          <button id="input-insert" class="primary" type="button" title="Insert the line (⌘↵ / Ctrl+Enter)">Insert</button>
+          <button id="input-close" type="button" title="Close the input; the text is kept (Esc)">Close</button>
+        </div>
+        <div class="input-body">
+          <div class="passes" id="input-passes" aria-label="The line in SCORE's input language">
+            <div class="pass" id="pass-1" title="Pass 1: notes, rests, barlines, clefs, keys, meters. Click to type here.">
+              <span class="pass-name"><b>1</b> Notes</span>
+              <code class="pass-code" id="pass-code-1"></code>
+              <small class="pass-error" id="pass-error-1"></small>
+            </div>
+            <div class="pass" id="pass-2" title="Pass 2: one length per note, chord and rest. Click to type here.">
+              <span class="pass-name"><b>2</b> Rhythms</span>
+              <code class="pass-code" id="pass-code-2"></code>
+              <small class="pass-error" id="pass-error-2"></small>
+            </div>
+            <div class="pass" id="pass-3" title="Pass 3: marks on the notes. Click to type here.">
+              <span class="pass-name"><b>3</b> Marks</span>
+              <code class="pass-code" id="pass-code-3"></code>
+              <small class="pass-error" id="pass-error-3"></small>
+            </div>
+            <div class="pass" id="pass-4" title="Pass 4: beams between notes. Click to type here.">
+              <span class="pass-name"><b>4</b> Beams</span>
+              <code class="pass-code" id="pass-code-4"></code>
+              <small class="pass-error" id="pass-error-4"></small>
+            </div>
+            <div class="pass" id="pass-5" title="Pass 5: slurs and ties between notes. Click to type here.">
+              <span class="pass-name"><b>5</b> Slurs</span>
+              <code class="pass-code" id="pass-code-5"></code>
+              <small class="pass-error" id="pass-error-5"></small>
+            </div>
+          </div>
+          <div class="input-help" id="input-help" aria-live="polite"></div>
+        </div>
+      </section>
       <footer class="footer">
         <span id="prompt" class="prompt" hidden></span>
         <input id="command" class="command" type="text" placeholder="Type a SCORE command, e.g. R 5, 600 5, NOTE, DE" autocomplete="off" spellcheck="false" />

@@ -10,7 +10,7 @@ use crate::notes::{BarStyle, Clef, Direction, KeySignature, Meter, Rest, RestKin
 use crate::rhythm::Rhythm;
 use crate::slurs::WorkEntry;
 use crate::spacing::{positions, Entry, GRACE_DURATION};
-use crate::{Neighbours, Options};
+use crate::{Neighbours, Options, Outline};
 
 /// Middle staff line: notes from here up take a down stem, and a stem reaches at least here.
 pub(crate) const MIDDLE_LINE: i32 = 7;
@@ -590,6 +590,15 @@ pub(crate) enum Element {
 }
 
 impl Element {
+    /// Notes, chords and rests take a value in pass 2, and so does a misread meter.
+    fn takes_rhythm(&self) -> bool {
+        match self {
+            Element::Note(_) | Element::Rest { .. } => true,
+            Element::Meter { quarters, .. } => *quarters != 0.0,
+            Element::Bar { .. } | Element::Clef { .. } | Element::Key { .. } => false,
+        }
+    }
+
     fn spacing_entries(&self) -> Vec<Entry> {
         match self {
             Element::Note(note) => note.spacing_entries(),
@@ -931,6 +940,29 @@ impl Line {
         for (note, mark) in self.notes_mut().zip(marks) {
             note.mark = mark;
         }
+    }
+
+    /// Where each element's items lie in [`Line::items`], with its numbers in passes 2-5.
+    pub fn outline(&self) -> Vec<Outline> {
+        let mut start = 0;
+        let mut slots = 0;
+        let mut notes = 0;
+        self.elements
+            .iter()
+            .map(|element| {
+                let items = start..start + element.items(self.staff).len();
+                start = items.end;
+                let slot = element.takes_rhythm().then(|| {
+                    slots += 1;
+                    slots
+                });
+                let note = matches!(element, Element::Note(_)).then(|| {
+                    notes += 1;
+                    notes
+                });
+                Outline { items, slot, note }
+            })
+            .collect()
     }
 
     pub fn items(&self) -> Vec<Item> {

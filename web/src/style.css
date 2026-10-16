@@ -207,6 +207,7 @@ button:disabled {
   position: relative;
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 #canvas {
@@ -379,24 +380,6 @@ button.primary:not(:disabled) {
   color: #ffffff;
 }
 
-.input-dialog {
-  width: min(720px, calc(100vw - 32px));
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.input-dialog::backdrop {
-  background: rgb(17 24 39 / 0.25);
-}
-
-.input-dialog h2 {
-  margin: 0 0 12px;
-  font-size: 15px;
-}
-
 .input-range {
   display: flex;
   gap: 16px;
@@ -412,41 +395,9 @@ button.primary:not(:disabled) {
   border-radius: 4px;
 }
 
-.passes {
-  display: grid;
-  grid-template-columns: 80px 1fr;
-  gap: 8px 12px;
-  align-items: start;
-}
-
-.passes label {
-  line-height: 30px;
-  color: var(--muted);
-}
-
-.passes input {
-  width: 100%;
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-family: ui-monospace, monospace;
-}
-
-.passes input:focus,
 .input-range input:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
-}
-
-.passes input.invalid {
-  border-color: #dc2626;
-}
-
-.pass-error {
-  display: block;
-  min-height: 0;
-  color: #b91c1c;
 }
 
 .dialog-actions {
@@ -454,6 +405,312 @@ button.primary:not(:disabled) {
   align-items: center;
   gap: 8px;
   margin-top: 16px;
+}
+
+/* Music input, docked below the page so the line shows on it while it is typed. Its
+   height stays fixed while typing, so the page does not move. */
+.input-panel {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 10px;
+  border-top: 1px solid var(--border);
+  background: #fafafa;
+}
+
+.input-head {
+  display: flex;
+  align-items: center;
+  gap: 6px 14px;
+  flex-wrap: wrap;
+}
+
+.input-head h2 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.input-head label {
+  color: var(--muted);
+}
+
+.input-head input {
+  width: 64px;
+  height: 26px;
+  margin-left: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.input-head input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.keys-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.keys-legend kbd:not(:first-child) {
+  margin-left: 6px;
+}
+
+.input-body {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(320px, 1.25fr);
+  gap: 12px;
+  height: min(256px, 34vh);
+}
+
+.passes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  overflow: auto;
+}
+
+.pass {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: baseline;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pass:hover {
+  background: var(--hover);
+}
+
+.pass-name {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.pass-name b {
+  display: inline-block;
+  width: 14px;
+  font-weight: 600;
+}
+
+.pass.active {
+  border-color: var(--accent);
+  background: var(--bg);
+}
+
+.pass.active .pass-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* The pass as SCORE text: read only, typed at the cursor on the page. */
+.pass-code {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+}
+
+.pass.active .pass-code {
+  color: var(--text);
+}
+
+.pass.invalid .pass-code {
+  text-decoration: underline wavy #dc2626;
+}
+
+.code-pending,
+.code-current {
+  border-radius: 2px;
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.code-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin: 0 1px;
+  vertical-align: text-bottom;
+  background: #ea580c;
+}
+
+.pass-error {
+  grid-column: 2;
+  color: #b91c1c;
+}
+
+.pass-error:empty {
+  display: none;
+}
+
+/* The cursor on the page: a caret between items (pass 1) or a box over the notes. */
+.input-caret {
+  position: absolute;
+  border: 1.5px solid #ea580c;
+  border-radius: 4px;
+  background: rgb(234 88 12 / 0.07);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-caret.bar {
+  border: none;
+  border-radius: 1px;
+  background: #ea580c;
+  animation: caret-blink 1.1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.input-bubble {
+  position: absolute;
+  max-width: 420px;
+  padding: 5px 9px 6px;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.96);
+  box-shadow: 0 2px 8px rgb(17 24 39 / 0.12);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bubble-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.bubble-pass {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.bubble-text {
+  font-family: ui-monospace, monospace;
+  font-size: 17px;
+  font-weight: 600;
+  color: #9a3412;
+}
+
+.bubble-prompt {
+  color: var(--muted);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.bubble-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: #ea580c;
+  animation: caret-blink 1.1s steps(1) infinite;
+}
+
+.bubble-shown {
+  margin-top: 1px;
+  color: #c2410c;
+  font-size: 12px;
+}
+
+.input-help {
+  min-width: 0;
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.input-help h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.input-help p {
+  margin: 0 0 6px;
+}
+
+.help-detail {
+  color: var(--muted);
+}
+
+.help-status {
+  color: var(--muted);
+}
+
+.help-status.note {
+  color: #92400e;
+}
+
+.help-status.error {
+  color: #b91c1c;
+}
+
+.help-keys {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+  margin: 8px 0 0;
+}
+
+.help-keys dt {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.help-keys dd {
+  margin: 0;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 0 5px;
+  border: 1px solid #d1d5db;
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: #f9fafb;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .input-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    height: min(400px, 40vh);
+  }
+
+  .help-keys {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
+
+  .keys-legend {
+    display: none;
+  }
 }
 
 #input-insert:not(:disabled) {
