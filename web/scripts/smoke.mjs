@@ -1,5 +1,7 @@
 // End-to-end check of the built app (dist/) in headless Chromium: open a
 // sample, click a staff line, edit a parameter, save; start a new score.
+// Then the same app on a phone: its layout, touch gestures and music input
+// from an on-screen keyboard.
 import { chromium } from 'playwright';
 import { preview } from 'vite';
 import assert from 'node:assert/strict';
@@ -330,6 +332,96 @@ try {
   await page.click('#prompt-cancel');
   assert.ok(await page.isHidden('#prompt'));
 
+  assert.deepEqual(errors, []);
+
+  // On a phone: one Menu button for the menus, the panel hidden until asked for.
+  const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const mobile = await phone.newPage();
+  mobile.on('pageerror', (err) => errors.push(err.message));
+  const cdp = await phone.newCDPSession(mobile);
+  /** One finger (or two) at client points, as the touch screen reports them. */
+  const touch = (type, points) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points.map(([x, y], id) => ({ x, y, id })) });
+  const swipe = async (from, to, hold = 0) => {
+    await touch('touchStart', [from]);
+    if (hold) await mobile.waitForTimeout(hold);
+    for (let i = 1; i <= 6; i++) await touch('touchMove', [[from[0] + ((to[0] - from[0]) * i) / 6, from[1] + ((to[1] - from[1]) * i) / 6]]);
+    await touch('touchEnd', []);
+  };
+  const scrolled = () => mobile.evaluate(() => document.getElementById('viewport').scrollTop);
+  await mobile.goto('http://localhost:4178/?sample=mozart.mus&zoom=400&select=2');
+  await mobile.waitForSelector('#app[data-ready="true"]');
+  assert.ok(await mobile.evaluate(() => document.querySelector('.appbar').scrollWidth <= innerWidth));
+  assert.ok(await mobile.isHidden('#panel'));
+  assert.ok(await mobile.isHidden('#menu-file'));
+  assert.match(await mobile.textContent('#message'), /^Item 2 Staff/);
+
+  // A tap selects; taps down the centre column find the staff, as the clicks above did.
+  const middle = await mobile.evaluate(() => {
+    const r = document.getElementById('viewport').getBoundingClientRect();
+    return [r.left + r.width / 2, r.top + r.height / 2];
+  });
+  let staffAt = null;
+  for (let dy = -120; dy <= 120 && staffAt === null; dy += 12) {
+    await touch('touchStart', [[middle[0], middle[1] + dy]]);
+    await touch('touchEnd', []);
+    if ((await mobile.textContent('#message')).startsWith('Item 2 Staff')) staffAt = [middle[0], middle[1] + dy];
+  }
+  assert.ok(staffAt, 'a tap selects the staff');
+
+  // A finger dragged from the selected staff moves it; undo puts it back.
+  await swipe(staffAt, [staffAt[0] + 60, staffAt[1]]);
+  assert.match(await mobile.textContent('#message'), /^Drag · Item 2 Staff: 8 1 [1-9]/);
+  await mobile.locator('#undo').tap();
+  assert.match(await mobile.textContent('#message'), /^Undo Drag · Item 2 Staff: 8 1 0 /);
+
+  // Elsewhere it pans, and the selection stays; two fingers pinch the zoom.
+  const top = await scrolled();
+  await swipe([middle[0], middle[1] + 150], [middle[0], middle[1] + 30]);
+  assert.ok((await scrolled()) >= top + 100, 'a drag on the paper pans');
+  assert.match(await mobile.textContent('#message'), /Item 2 Staff/);
+  await touch('touchStart', [[middle[0] - 80, middle[1]], [middle[0] + 80, middle[1]]]);
+  for (let i = 1; i <= 6; i++) await touch('touchMove', [[middle[0] - 80 + 10 * i, middle[1]], [middle[0] + 80 - 10 * i, middle[1]]]);
+  await touch('touchEnd', []);
+  await mobile.waitForFunction(() => document.getElementById('zoom').value === '100');
+
+  // A long press and a drag select a box; a quick drag leaves the next tap a click.
+  await mobile.goto('http://localhost:4178/?sample=mozart.mus');
+  await mobile.waitForSelector('#app[data-ready="true"]');
+  const sheet = await mobile.evaluate(() => {
+    const r = document.getElementById('viewport').getBoundingClientRect();
+    return [r.left + 8, r.top + 8, r.left + r.width * 0.8, r.top + r.height * 0.9];
+  });
+  await swipe([sheet[0], sheet[1]], [sheet[2], sheet[3]], 600);
+  assert.match(await mobile.textContent('#item h2'), /\(\+\d+ selected\)/);
+
+  // The Menu button opens the menus across the screen, their titles as tabs.
+  await mobile.locator('#menu-compact').tap();
+  assert.deepEqual(await mobile.evaluate(() => [document.querySelector('.menu-popup').getBoundingClientRect().left, innerWidth - document.querySelector('.menu-popup').getBoundingClientRect().right]), [8, 8]);
+  await mobile.locator('.menu-tab[data-menu="insert"]').tap();
+  await mobile.locator('.menu-popup [data-action="input"]').tap();
+
+  // Music input takes the on-screen keyboard's text through its typing field, and the keys it lacks from buttons.
+  assert.ok(await mobile.isHidden('#footer'));
+  assert.equal(await mobile.evaluate(() => document.activeElement.id), 'input-typing');
+  await mobile.keyboard.insertText('c4');
+  await mobile.locator('.touch-keys [data-key="/"]').tap();
+  await mobile.keyboard.insertText('d/e/f');
+  await mobile.waitForFunction(() => document.getElementById('input-status').textContent === 'Adds 5 items');
+  await mobile.keyboard.press('Backspace');
+  await mobile.waitForFunction(() => document.getElementById('input-status').textContent === 'Adds 4 items');
+  assert.equal(await mobile.evaluate(() => document.activeElement.id), 'input-typing', 'the keys leave the keyboard up');
+  await mobile.locator('.touch-keys [data-key="Enter"]').tap();
+  await mobile.waitForSelector('#pass-2.active');
+  await mobile.locator('#input-shift').tap();
+  await mobile.locator('.touch-keys [data-key="Enter"]').tap();
+  await mobile.waitForSelector('#pass-1.active');
+  assert.equal(await mobile.getAttribute('#input-shift', 'aria-pressed'), 'false');
+  await mobile.locator('#pass-2').tap();
+  await mobile.waitForSelector('#pass-2.active');
+  await mobile.locator('#input-insert').tap();
+  await mobile.waitForFunction(() => document.getElementById('item-count').textContent === '348');
+  assert.equal(await mobile.evaluate(() => document.activeElement.id), 'input-typing', 'a tap on the panel leaves the keyboard up');
+  await phone.close();
   assert.deepEqual(errors, []);
 
   // Without the wasm module the page says so instead of staying blank.

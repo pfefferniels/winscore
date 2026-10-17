@@ -196,8 +196,14 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
     return;
   }
   if (!item) {
+    const touch = matchMedia('(pointer: coarse)').matches;
     section.replaceChildren(
-      ...emptyState('Nothing selected', 'Click an item on the page or in the list below. Shift-click adds to the selection; dragging over empty paper selects what is inside.'),
+      ...emptyState(
+        'Nothing selected',
+        touch
+          ? 'Tap an item on the page or in the list below. A long press adds to the selection; a long press and a drag select what is inside a box.'
+          : 'Click an item on the page or in the list below. Shift-click adds to the selection; dragging over empty paper selects what is inside.',
+      ),
     );
     return;
   }
@@ -223,4 +229,29 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
   ]);
   const head = element('header', { className: 'item-head' }, [element('h2', {}, [`Item ${item.index} · ${item.name}`, ...others]), step]);
   section.replaceChildren(head, actions(handlers), ...notes, grid, addParamRow(item, handlers));
+}
+
+/**
+ * Under the page (a narrow screen), the panel's top edge is a grip: dragging
+ * it sets how much of the height the panel takes, between a fifth and most.
+ */
+export function bindPanelGrip(panel: HTMLElement, grip: HTMLElement) {
+  grip.addEventListener('pointerdown', (e) => {
+    const area = panel.parentElement!.getBoundingClientRect();
+    const offset = e.clientY - panel.getBoundingClientRect().top;
+    grip.setPointerCapture(e.pointerId);
+    const move = (m: PointerEvent) => {
+      const share = (area.bottom - (m.clientY - offset)) / area.height;
+      panel.style.setProperty('--panel-share', `${(Math.min(0.85, Math.max(0.2, share)) * 100).toFixed(1)}%`);
+    };
+    const end = () => {
+      grip.removeEventListener('pointermove', move);
+      grip.removeEventListener('pointerup', end);
+      grip.removeEventListener('pointercancel', end);
+    };
+    grip.addEventListener('pointermove', move);
+    grip.addEventListener('pointerup', end);
+    grip.addEventListener('pointercancel', end);
+    e.preventDefault();
+  });
 }

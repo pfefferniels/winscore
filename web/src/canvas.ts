@@ -24,6 +24,8 @@ export interface PageView {
   setScene(scene: Scene): void;
   /** Zooms keeping the page point under (`clientX`, `clientY`) in place; default the viewport centre. */
   setZoom(zoom: number, anchor?: { clientX: number; clientY: number }): void;
+  /** Zooms and scrolls so that page point `at` lies under (`clientX`, `clientY`), as a pinch moves it. */
+  zoomAt(zoom: number, at: Point, anchor: { clientX: number; clientY: number }): void;
   fitWidth(): void;
   /** Scrolls so that page y `top` is at the top of the viewport. */
   scrollToTop(top: number): void;
@@ -123,10 +125,7 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
     return new DOMRect(origin.left + a.x / ratio, origin.top + a.y / ratio, (b.x - a.x) / ratio, (b.y - a.y) / ratio);
   };
 
-  const setZoom = (next: number, anchor?: { clientX: number; clientY: number }) => {
-    const rect = el.viewport.getBoundingClientRect();
-    const client = anchor ?? { clientX: rect.left + el.viewport.clientWidth / 2, clientY: rect.top + el.viewport.clientHeight / 2 };
-    const fixed = pageAt(client.clientX, client.clientY);
+  const zoomAt = (next: number, fixed: Point, client: { clientX: number; clientY: number }) => {
     zoom = Math.min(3200, Math.max(5, next));
     layout();
     const { left, top } = offsets();
@@ -136,6 +135,12 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
     el.viewport.scrollTop = top + (scene.extent.y1 - fixed.y) * s - local.y;
     onZoom(zoom);
     repaint();
+  };
+
+  const setZoom = (next: number, anchor?: { clientX: number; clientY: number }) => {
+    const rect = el.viewport.getBoundingClientRect();
+    const client = anchor ?? { clientX: rect.left + el.viewport.clientWidth / 2, clientY: rect.top + el.viewport.clientHeight / 2 };
+    zoomAt(next, pageAt(client.clientX, client.clientY), client);
   };
 
   const fitWidth = () => {
@@ -167,6 +172,7 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
       repaint();
     },
     setZoom,
+    zoomAt,
     fitWidth,
     scrollToTop(top: number) {
       el.viewport.scrollTop = offsets().top + (scene.extent.y1 - top) * cssPerUnit(zoom);

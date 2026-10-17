@@ -49,6 +49,7 @@ The page is drawn by the Rust renderer alone. The app bar holds the menus (File,
   - passes 3–5: the cursor stands on a note, Shift+←/→ selects more. A mark (`S`, `A`, `-T`, `MF`, `C` for a hairpin …) or, in passes 4–5, nothing or `+`/`-`/a number for a beam or slur over the selection is placed with `/`; the note numbers come from the cursor (`S 4:6`, `C 4 6`, `-401 6`). `/` alone places the last one again, Backspace removes the last one on the cursor's note. Text with its own numbers (`S 2:5`, `X3 1 4 7`, `2B`) is taken as typed.
   
   Enter, Tab or ↓ go to the next pass, Shift+Enter or ↑ back; ⌘/Ctrl+Enter inserts; Escape drops what is being typed, then closes (the line is kept). A click on the input staff puts the cursor there (Shift-click extends the selection). Below the page the passes are shown as SCORE text, read only, beside help on the keys that can follow what is typed; an item cut short (`K2`, `C4:`) is noted as unfinished, a mistake is marked in its pass, and items WinScore's reader would erase (`Y`, `C0`) are named. A missing staff is created as the engine's `IN n` creates it (`score_input::StaffArgs`). Insert is one undo step; the passes are then cleared for the next staff.
+- **Phones and tablets**: below 640 px wide the menus open from one Menu button (☰), across the screen with their titles as tabs; zoom is by pinching or the View menu; the side panel lies under the page, starts hidden, and its grip sets its height; the command bar shares a line with the status. On a touch screen (`pointer: coarse`) targets are larger and text fields are 16 px, which iOS does not zoom into. The page takes its own gestures (`touch-action: none`, `src/interaction.ts`): a tap selects (a finger picks within 24 px rather than 12), a drag pans and glides on, a drag from a selected item moves it, two fingers pinch the zoom around the point between them, a long press adds or removes an item and a long press with a drag draws a box, a double tap edits a text where it stands; while a group command waits for its area, one finger draws the box and a tap answers it. A group command's question does not focus the command bar there, so no keyboard covers the page. Music input takes the on-screen keyboard's text through a typing field under the keyboard button, and a row of keys gives what it lacks (⇧, ← →, `/`, ⌫, ↵ for the next pass, with ⇧ the previous); it replaces the command bar on a phone. Where an on-screen keyboard covers the page without resizing it (iOS), the app follows the visual viewport. View ▸ Keys and gestures lists the gestures.
 - URL parameters for direct links: `?sample=mozart.mus&zoom=200&select=12`, or `?new` for an empty score.
 
 ## Conventions
@@ -64,10 +65,10 @@ The page is drawn by the Rust renderer alone. The app bar holds the menus (File,
 |---|---|
 | `src/main.ts` | app state, file handling, controls |
 | `src/editor.ts` | the editing operations the UI uses, backed by score-edit through score-web |
-| `src/interaction.ts` | pointer and keyboard gestures → editor calls |
+| `src/interaction.ts` | pointer, touch and keyboard gestures → editor calls |
 | `src/command-bar.ts` | command bar: typing capture, history |
 | `src/input-mode.ts`, `src/input-draft.ts`, `src/input-help.ts` | music input at a cursor in the music: keys, caret and bubble over the page, the passes as items with a cursor, contextual help |
-| `src/menu.ts` | menu bar widget: drop-down menus, rows of buttons, keyboard navigation |
+| `src/menu.ts` | menu bar widget: drop-down menus, rows of buttons, keyboard navigation, one Menu button on a narrow screen |
 | `src/menus.ts` | the app's menus and the SCORE commands they send |
 | `src/commands.ts` | WinScore's command table and font menu |
 | `src/text-dialog.ts`, `src/symbol-dialog.ts` | text and symbol dialogs, in-place text editing |
@@ -75,7 +76,7 @@ The page is drawn by the Rust renderer alone. The app bar holds the menus (File,
 | `src/paint.ts` | display-list painter |
 | `src/display.ts` | decoding of score-web's flat display-list encoding |
 | `src/view.ts` | page ↔ device transform, zoom levels |
-| `src/panel.ts` | side panel: the selected item's actions and parameters, the item list |
+| `src/panel.ts` | side panel: the selected item's actions and parameters, the item list, the grip that sizes it under the page |
 | `src/fonts.ts`, `src/fonts.css` | engine font names → bundled faces |
 | `scripts/` | wasm build, asset copy, screenshots |
 
