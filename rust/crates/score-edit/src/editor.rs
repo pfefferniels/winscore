@@ -241,14 +241,21 @@ impl Editor {
 
     /// Sets parameter `n` (1-based) of any item, selected or not.
     pub fn set_param(&mut self, id: ItemId, n: usize, value: f32) -> Result<Change, EditError> {
-        if !(1..=MAX_PARAM).contains(&n) {
+        self.set_params(id, &[(n, value)])
+    }
+
+    /// Sets several parameters of item `id` as one undo step, named after
+    /// them ("Set P6, P7, P9"), in the order given.
+    pub fn set_params(&mut self, id: ItemId, values: &[(usize, f32)]) -> Result<Change, EditError> {
+        if let Some(&(n, _)) = values.iter().find(|(n, _)| !(1..=MAX_PARAM).contains(n)) {
             return Err(EditError::NoSuchParam(n as f32));
         }
         let item = self.doc.item(id).ok_or(EditError::NoSuchId(id))?;
         let mut draft = Draft::of(item);
-        draft.set(n, value);
+        values.iter().for_each(|&(n, value)| draft.set(n, value));
         let stored = draft.to_item();
-        self.act(&format!("Set P{n}"), |run| {
+        let names: Vec<String> = values.iter().map(|(n, _)| format!("P{n}")).collect();
+        self.act(&format!("Set {}", names.join(", ")), |run| {
             run.tx.replace(id, stored);
             Ok(())
         })

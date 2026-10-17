@@ -154,6 +154,26 @@ try {
   await page.click('#undo');
   assert.equal(await page.inputValue('#p4'), '24');
 
+  // The panel's settings read and write a note's packed parameters: item 4 is
+  // a beamed sixteenth G2 (P4 3), stem up (P5 10), after a bass clef.
+  const params = (...ns) => Promise.all(ns.map(async (n) => (await page.inputValue(`#all-p${n}`)) || '0'));
+  await page.click('#items li[data-index="4"]');
+  assert.equal(await page.inputValue('#f-pitch'), 'G2');
+  await page.fill('#f-pitch', 'F#3');
+  await page.press('#f-pitch', 'Enter');
+  assert.equal(await page.inputValue('#f-pitch'), 'F♯3');
+  assert.deepEqual(await params(4, 5), ['9', '12']);
+  assert.match(await page.getAttribute('#undo', 'title'), /^Undo Set P4, P5 /);
+  await page.click('#f-stem-2');
+  assert.deepEqual(await params(5), ['22']);
+  await page.selectOption('#f-value', { label: 'Eighth' });
+  assert.deepEqual(await params(6, 7, 9), ['0', '0.5', '0']);
+  await page.click('#f-dots-1');
+  assert.deepEqual(await params(7, 9), ['0.75', '10']);
+  for (let i = 0; i < 4; i++) await page.click('#undo');
+  assert.deepEqual(await params(4, 5, 7), ['3', '10', '0.25']);
+  await page.click('#items li[data-index="2"]');
+
   // The menus send WinScore's toolbar commands; TREB appends a treble clef and selects it.
   await menu('insert', 'TREB');
   assert.equal(await page.textContent('#item-count'), '345');

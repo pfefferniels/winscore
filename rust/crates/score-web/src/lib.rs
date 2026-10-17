@@ -154,6 +154,12 @@ impl Score {
         })
     }
 
+    /// The clef item in force at item `index` (see [`Document::clef_at`]).
+    #[wasm_bindgen(js_name = clefAt)]
+    pub fn clef_at(&self, index: u32) -> Option<u32> {
+        self.0.clef_at(ItemId(index)).map(|clef| clef.0)
+    }
+
     /// The `.mus` file bytes.
     pub fn save(&self) -> Vec<u8> {
         self.0.save()

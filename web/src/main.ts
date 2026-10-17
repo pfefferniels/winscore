@@ -1,5 +1,5 @@
 import './style.css';
-import init, { codeName, commandSupported, paramName, Score, type EncodedList, type InputLine } from './wasm/score_web.js';
+import init, { codeName, commandSupported, librarySymbols, paramName, Score, type EncodedList, type InputLine } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
 import { bindCommandBar } from './command-bar';
 import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
@@ -7,6 +7,7 @@ import { fontPrefix } from './commands';
 import type { Point } from './view';
 import { scoreEditor, type Change, type Editor, type Place } from './editor';
 import { loadFaces } from './fonts';
+import type { Context } from './item-fields';
 import { createInputMode, type Shown } from './input-mode';
 import { bindInteraction } from './interaction';
 import { createMenuBar, inMenuBar, MOD } from './menu';
@@ -253,6 +254,33 @@ function refreshStatus() {
   ui.emptyHint.hidden = !open || state.score!.itemCount() > 0 || inputMode.isOpen;
 }
 
+/** Highest parameter number an edit may set. */
+const MAX_PARAM = 45;
+
+/** The help's labels of P1 … up to the last one it describes for `code`. */
+function paramNames(code: number): (string | null)[] {
+  const names = Array.from({ length: MAX_PARAM }, (_, i) => paramName(code, i + 1) ?? null);
+  while (names.length > 0 && names.at(-1) === null) names.pop();
+  return names;
+}
+
+let symbolNames: Map<number, string> | null = null;
+
+function symbolName(n: number): string | null {
+  symbolNames ??= new Map(JSON.parse(librarySymbols()) as [number, string][]);
+  return symbolNames.get(n)?.trim() || null;
+}
+
+/** P4 and P5 of the clef in force at item `index`. */
+function clefAt(score: Score, index: number): Context['clef'] {
+  const clef = score.clefAt(index);
+  const info = clef === undefined ? undefined : score.item(clef);
+  if (!info) return null;
+  const params = info.params;
+  info.free();
+  return { p4: params[3] ?? 0, p5: params[4] ?? 0 };
+}
+
 function details(score: Score, index: number): ItemDetails | null {
   const info = score.item(index);
   if (!info) return null;
@@ -265,7 +293,8 @@ function details(score: Score, index: number): ItemDetails | null {
       staff: params[1] ?? 0,
       p3: params[2] ?? 0,
       params,
-      paramNames: Array.from(params, (_, i) => paramName(info.code, i + 1) ?? null),
+      paramNames: paramNames(info.code),
+      context: { clef: info.code === 1 ? clefAt(score, index) : null, symbolName },
       text: info.text ?? null,
       drawn: bounds(elementsOf(state.rust, index)) !== null,
       others: selection().filter((i) => i !== index).length,
@@ -296,9 +325,9 @@ function refreshPanel() {
   const focused = ui.item.contains(document.activeElement) ? document.activeElement?.id : undefined;
   renderItem(ui.item, state.score && shown !== null ? details(state.score, shown) : null, handlers, state.score !== null);
   markSelected(ui.items, selection());
-  const field = focused ? ui.item.querySelector<HTMLInputElement>(`#${focused}`) : null;
+  const field = focused ? ui.item.querySelector<HTMLElement>(`#${focused}`) : null;
   field?.focus();
-  field?.select();
+  if (field instanceof HTMLInputElement && field.type === 'text') field.select();
 }
 
 function redraw(live = false) {
@@ -452,7 +481,11 @@ const handlers: PanelHandlers = {
     runCommand(command);
     ui.viewport.focus();
   },
-  setParam: (index, n, value) => edit((editor) => editor.setParam(index, n, value)),
+  setParams: (index, changes) => edit((editor) => editor.setParams(index, changes)),
+  async pickSymbol(index) {
+    const symbol = await symbolDialog.choose();
+    if (symbol !== null) edit((editor) => editor.setParams(index, [[5, symbol]]));
+  },
   setText: (index, text) => edit((editor) => editor.setText(index, text)),
   setFont(index, code) {
     state.editor?.select([index]);
