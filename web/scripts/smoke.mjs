@@ -175,6 +175,28 @@ try {
   assert.deepEqual(await params(7, 9), ['0.75', '10']);
   for (let i = 0; i < 4; i++) await page.click('#undo');
   assert.deepEqual(await params(4, 5, 7), ['3', '10', '0.25']);
+
+  // Several selected items are edited together: shared settings show what they agree on, "Mixed"
+  // where they differ, and a change goes to every one as one undo step; ↑/↓ step each on its own.
+  await page.click('#items li[data-index="7"]', { modifiers: ['Shift'] });
+  assert.match(await page.textContent('#item h2'), /^2 items/);
+  assert.equal(await page.inputValue('#f-pitch'), '');
+  assert.equal(await page.getAttribute('#f-pitch', 'placeholder'), 'Mixed');
+  await page.selectOption('#f-value', { label: 'Eighth' });
+  assert.equal(await page.inputValue('#all-p7'), '0.5');
+  assert.match(await page.getAttribute('#undo', 'title'), /^Undo Set .* of 2 items /);
+  await page.click('#undo');
+  const before = await params(4);
+  await page.focus('#f-pitch');
+  await page.keyboard.press('ArrowUp');
+  await page.click('#undo');
+  assert.deepEqual(await params(4), before);
+  // A mixed selection offers the kinds as buttons that narrow it to one.
+  await page.click('#items li[data-index="3"]', { modifiers: ['Shift'] });
+  assert.match(await page.textContent('#item h2'), /^3 items/);
+  assert.equal(await page.locator('.item-kinds button').count(), 2);
+  await page.click('.item-kinds button:has-text("Note")');
+  assert.match(await page.textContent('#item h2'), /^2 items · Note/);
   await page.click('#items li[data-index="2"]');
 
   // The menus send WinScore's toolbar commands; TREB appends a treble clef and selects it.
@@ -291,7 +313,7 @@ try {
   await page.waitForFunction(() => document.getElementById('pass-code-3').textContent === 'S 2;');
   await page.keyboard.press('Control+Enter');
   await page.waitForFunction(() => document.getElementById('item-count').textContent === '349');
-  assert.match(await page.textContent('#item h2'), /^Item 348 · Note \(\+4 selected\)/);
+  assert.match(await page.textContent('#item h2'), /^5 items/);
   assert.equal(await page.textContent('#pass-code-1'), ';');
   assert.equal(await page.inputValue('#input-staff'), '10');
   await page.keyboard.press('Escape');
@@ -375,7 +397,7 @@ try {
     await page.mouse.up();
   };
   await drawBox();
-  assert.match(await page.textContent('#item h2'), /\(\+\d+ selected\)/);
+  assert.match(await page.textContent('#item h2'), /^\d+ items/);
   await page.keyboard.press('Escape');
 
   // While a group command waits for its area, the box answers it (editor-core's draw_box).
@@ -497,7 +519,7 @@ try {
     return [r.left + 8, r.top + 8, r.left + r.width * 0.8, r.top + r.height * 0.9];
   });
   await swipe([sheet[0], sheet[1]], [sheet[2], sheet[3]], 600);
-  assert.match(await mobile.textContent('#item h2'), /\(\+\d+ selected\)/);
+  assert.match(await mobile.textContent('#item h2'), /^\d+ items/);
 
   // The Menu button opens the menus across the screen, their titles as tabs.
   await mobile.locator('#menu-compact').tap();

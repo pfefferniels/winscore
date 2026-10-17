@@ -371,6 +371,22 @@ fn set_params_is_one_undo_step() {
 }
 
 #[test]
+fn params_of_several_items_are_one_undo_step() {
+    let mut e = small();
+    let (first, second) = (e.id_at(1).unwrap(), e.id_at(2).unwrap());
+    e.select(&[first, second]);
+    e.set_params_of(&[(first, vec![(4, 8.0), (7, 0.5)]), (second, vec![(4, 9.0), (9, 1.0)])]).unwrap();
+    assert_eq!([p(&e, first, 4), p(&e, first, 7), p(&e, second, 4), p(&e, second, 9)], [8.0, 0.5, 9.0, 1.0]);
+    assert_eq!(e.undo_label(), Some("Set P4, P7, P9 of 2 items"));
+    assert_eq!(e.selection(), [first, second]);
+    e.undo();
+    assert_eq!([p(&e, first, 4), p(&e, second, 4), p(&e, second, 9)], [6.0, 7.0, 0.0]);
+    let wrong = e.set_params_of(&[(first, vec![(4, 3.0)]), (second, vec![(0, 1.0)])]);
+    assert_eq!(wrong, Err(EditError::NoSuchParam(0.0)));
+    assert_eq!(p(&e, first, 4), 6.0);
+}
+
+#[test]
 fn inserted_items_append_and_select() {
     let mut e = small();
     let note = e.item(e.id_at(1).unwrap()).unwrap().clone();

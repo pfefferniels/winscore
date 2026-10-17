@@ -1404,6 +1404,18 @@ export function sectionsFor(code: number): Section[] {
   return BY_CODE[code] ?? GENERIC;
 }
 
+/**
+ * The settings that items of every one of `codes` have, the very same ones
+ * (a staff, a position), in the first code's sections and order.
+ */
+export function sharedSections(codes: number[]): Section[] {
+  const [first = GENERIC, ...rest] = codes.map(sectionsFor);
+  const everywhere = (s: Setting) => rest.every((sections) => sections.some((section) => section.settings.includes(s)));
+  return first
+    .map((section) => ({ title: section.title, settings: section.settings.filter(everywhere) }))
+    .filter((section) => section.settings.length > 0);
+}
+
 /** Whether a value matches an option, allowing for single precision (P5 = 0.88). */
 export function sameValue(a: number, b: number): boolean {
   return a === b || Math.abs(a - b) < 1e-4;

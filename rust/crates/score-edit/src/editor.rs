@@ -256,16 +256,40 @@ impl Editor {
     /// Sets several parameters of item `id` as one undo step, named after
     /// them ("Set P6, P7, P9"), in the order given.
     pub fn set_params(&mut self, id: ItemId, values: &[(usize, f32)]) -> Result<Change, EditError> {
-        if let Some(&(n, _)) = values.iter().find(|(n, _)| !(1..=MAX_PARAM).contains(n)) {
-            return Err(EditError::NoSuchParam(n as f32));
+        self.set_params_of(&[(id, values.to_vec())])
+    }
+
+    /// Sets parameters of several items, each with values of its own, as one
+    /// undo step: a setting changed for a whole selection. Each item comes
+    /// once. The step is named after the parameters in the order they first
+    /// come, and how many items there are when more than one ("Set P7, P9
+    /// of 12 items"). On an error nothing changes.
+    pub fn set_params_of(&mut self, edits: &[(ItemId, Vec<(usize, f32)>)]) -> Result<Change, EditError> {
+        let mut numbers: Vec<usize> = Vec::new();
+        let mut stored = Vec::with_capacity(edits.len());
+        for (id, values) in edits {
+            if let Some(&(n, _)) = values.iter().find(|(n, _)| !(1..=MAX_PARAM).contains(n)) {
+                return Err(EditError::NoSuchParam(n as f32));
+            }
+            let item = self.doc.item(*id).ok_or(EditError::NoSuchId(*id))?;
+            let mut draft = Draft::of(item);
+            values.iter().for_each(|&(n, value)| draft.set(n, value));
+            stored.push((*id, draft.to_item()));
+            for &(n, _) in values {
+                if !numbers.contains(&n) {
+                    numbers.push(n);
+                }
+            }
         }
-        let item = self.doc.item(id).ok_or(EditError::NoSuchId(id))?;
-        let mut draft = Draft::of(item);
-        values.iter().for_each(|&(n, value)| draft.set(n, value));
-        let stored = draft.to_item();
-        let names: Vec<String> = values.iter().map(|(n, _)| format!("P{n}")).collect();
-        self.act(&format!("Set {}", names.join(", ")), |run| {
-            run.tx.replace(id, stored);
+        let names: Vec<String> = numbers.iter().map(|n| format!("P{n}")).collect();
+        let label = match edits.len() {
+            1 => format!("Set {}", names.join(", ")),
+            count => format!("Set {} of {count} items", names.join(", ")),
+        };
+        self.act(&label, |run| {
+            for (id, item) in stored {
+                run.tx.replace(id, item);
+            }
             Ok(())
         })
     }
