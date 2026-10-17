@@ -1728,6 +1728,23 @@ button.danger:hover {
     line-height: 36px;
   }
 
+  .settings input[type='text'],
+  .settings select,
+  .with-button button,
+  .segmented button,
+  .setting-control.toggle {
+    height: 36px;
+  }
+
+  .setting-label {
+    line-height: 36px;
+  }
+
+  .setting-control.toggle input {
+    width: 20px;
+    height: 20px;
+  }
+
   .item-list li {
     padding-top: 9px;
     padding-bottom: 9px;
