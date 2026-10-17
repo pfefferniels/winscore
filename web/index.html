@@ -7,47 +7,88 @@
   </head>
   <body>
     <div id="app" class="app">
-      <header class="toolbar">
-        <span class="brand">WinScore Web</span>
-        <button id="open" title="Open a .mus file (or an engine.json reference)">Open…</button>
-        <input id="file" type="file" accept=".mus,.MUS,.json" hidden />
-        <select id="sample" title="Bundled samples"></select>
-        <button id="save" title="Save the score as .mus">Save</button>
-        <button id="export-svg" title="Export the page as SVG (as printed, without staff numbers)">SVG</button>
-        <button id="print" title="Print the page (as printed, without staff numbers)">Print</button>
-        <span class="sep"></span>
-        <button id="undo" title="Undo (⌘Z / Ctrl+Z)">Undo</button>
-        <button id="redo" title="Redo (⇧⌘Z / Ctrl+Y)">Redo</button>
-        <button id="input" title="Type a line of music in SCORE's five passes, at a cursor in the music (IN)">Input</button>
-        <span class="sep"></span>
-        <button id="zoom-out" title="Zoom out (_)">−</button>
-        <select id="zoom" title="Zoom"></select>
-        <button id="zoom-in" title="Zoom in (+)">+</button>
-        <button id="fit" title="Fit page width">Fit</button>
-        <span class="sep"></span>
-        <div class="segmented" id="mode" role="radiogroup" title="What to show">
-          <button data-mode="rust" role="radio">Rust</button>
-          <button data-mode="engine" role="radio">Engine</button>
-          <button data-mode="overlay" role="radio">Overlay</button>
-        </div>
-        <span id="legend" class="legend" hidden>
-          <i class="swatch engine"></i>engine only <i class="swatch rust"></i>Rust only <i class="swatch both"></i>both
+      <header class="appbar">
+        <span class="brand" title="WinScore Web">
+          <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /></svg>
         </span>
+        <nav class="menubar" id="menubar" aria-label="Menu"></nav>
+        <span class="sep"></span>
+        <button id="undo" class="icon" type="button" title="Undo (⌘Z / Ctrl+Z)" aria-label="Undo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></svg>
+        </button>
+        <button id="redo" class="icon" type="button" title="Redo (⇧⌘Z / Ctrl+Y)" aria-label="Redo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5" /><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" /></svg>
+        </button>
+        <span class="sep"></span>
+        <button id="input" class="accent" type="button" aria-pressed="false" title="Type a line of music in SCORE's five passes, at a cursor in the music (IN)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M8 13h.01M12 13h.01M16 13h.01M7 16h10" /></svg>
+          <span>Input music</span>
+        </button>
         <span class="spacer"></span>
-        <span id="status" class="status"></span>
+        <span class="doc" id="doc" hidden><span id="status" class="doc-name"></span><span id="doc-state" class="doc-state"></span></span>
+        <span class="spacer"></span>
+        <div class="zoom" role="group" aria-label="Zoom">
+          <button id="zoom-out" class="icon" type="button" title="Zoom out (_)" aria-label="Zoom out">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>
+          </button>
+          <select id="zoom" title="Zoom" aria-label="Zoom level"></select>
+          <button id="zoom-in" class="icon" type="button" title="Zoom in (+)" aria-label="Zoom in">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14" /></svg>
+          </button>
+          <button id="fit" class="icon" type="button" title="Fit page width" aria-label="Fit page width">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 8 4 4-4 4M6 8l-4 4 4 4M2 12h20" /></svg>
+          </button>
+        </div>
+        <span class="sep"></span>
+        <button id="toggle-panel" class="icon" type="button" aria-pressed="true" title="Show or hide the side panel" aria-label="Side panel">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" /></svg>
+        </button>
+        <button id="help" class="icon" type="button" title="Keyboard shortcuts (F1)" aria-label="Keyboard shortcuts">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" /><path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 1.9-2.8 2.6-2.8 2.6M12 17h.01" /></svg>
+        </button>
+        <input id="file" type="file" accept=".mus,.MUS" hidden />
       </header>
-      <nav class="palette" id="palette" aria-label="Item and edit commands"></nav>
       <main class="main">
         <div class="stage" id="stage">
           <canvas id="canvas"></canvas>
           <div class="viewport" id="viewport" tabindex="0" aria-label="Page"><div class="content" id="content"></div></div>
-          <div class="drop-hint" id="drop-hint" hidden>Drop a .mus file or an engine.json</div>
+          <div class="drop-hint" id="drop-hint" hidden>Drop a .mus file to open it</div>
           <div class="band" id="band" hidden></div>
+          <div class="empty-hint" id="empty-hint" hidden>
+            <div>
+              <strong>This score is empty.</strong>
+              <span class="muted">Type music onto a new staff, or add staves, clefs and notes from the Insert menu.</span>
+            </div>
+            <button id="empty-input" class="accent" type="button">Input music</button>
+          </div>
+          <section class="start" id="start" hidden aria-label="Start">
+            <div class="start-card">
+              <h1>WinScore Web</h1>
+              <p class="muted">Leland Smith's SCORE, in the browser: open, engrave and save <code>.mus</code> files.</p>
+              <div class="start-actions">
+                <button id="start-new" class="tile" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z" /><path d="M14 3v5h5M12 11v6M9 14h6" /></svg>
+                  <strong>New score</strong>
+                  <span class="muted">Start from an empty page</span>
+                </button>
+                <button id="start-open" class="tile" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19V6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v2" /><path d="M3 19l2.6-7.1A1.5 1.5 0 0 1 7 11h13.5a1 1 0 0 1 .95 1.3L19.4 19z" /></svg>
+                  <strong>Open…</strong>
+                  <span class="muted">A .mus file from your computer, or drop one here</span>
+                </button>
+              </div>
+              <h2>Samples</h2>
+              <div class="start-samples" id="start-samples"></div>
+            </div>
+          </section>
         </div>
-        <aside class="panel">
-          <section class="item" id="item"></section>
+        <aside class="panel" id="panel">
+          <section class="item" id="item" aria-label="Selected item"></section>
           <section class="items">
-            <h2>Items <span id="item-count" class="muted"></span></h2>
+            <div class="items-head">
+              <h2>Items <span id="item-count" class="count"></span></h2>
+              <input id="item-filter" type="search" placeholder="Filter: note, text, 16 …" autocomplete="off" spellcheck="false" aria-label="Filter items" />
+            </div>
             <ol id="items" class="item-list"></ol>
           </section>
         </aside>
@@ -133,14 +174,69 @@
           <div class="input-help" id="input-help" aria-live="polite"></div>
         </div>
       </section>
-      <footer class="footer">
+      <footer class="footer" id="footer">
         <span id="prompt" class="prompt" hidden></span>
-        <input id="command" class="command" type="text" placeholder="Type a SCORE command, e.g. R 5, 600 5, NOTE, DE" autocomplete="off" spellcheck="false" />
+        <label class="command-field">
+          <span class="command-label">Command</span>
+          <input id="command" class="command" type="text" placeholder="e.g. R 5, NOTE, DE: just type" autocomplete="off" spellcheck="false" />
+        </label>
         <button id="prompt-cancel" type="button" hidden title="End the group edit without a change">Cancel</button>
         <span id="message" class="message"></span>
         <span class="spacer"></span>
         <span id="cursor" class="muted cursor"></span>
       </footer>
+      <dialog id="shortcuts-dialog" class="shortcuts-dialog">
+        <form method="dialog">
+          <h2>Keyboard and mouse</h2>
+          <div class="shortcuts">
+            <section>
+              <h3>Select</h3>
+              <dl>
+                <dt>Click</dt><dd>Select an item</dd>
+                <dt><kbd>⇧</kbd> click</dt><dd>Add or remove an item</dd>
+                <dt>Drag on empty paper</dt><dd>Select the items in a box</dd>
+                <dt><kbd>↵</kbd> / <kbd>⇧</kbd><kbd>↵</kbd></dt><dd>Next / previous item</dd>
+                <dt><kbd>Esc</kbd></dt><dd>Select nothing</dd>
+                <dt>Double click</dt><dd>Edit a text where it stands</dd>
+              </dl>
+            </section>
+            <section>
+              <h3>Edit the selection</h3>
+              <dl>
+                <dt>Drag</dt><dd>Move (<kbd>⇧</kbd> keeps one axis, <kbd>Esc</kbd> cancels)</dd>
+                <dt><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd>One step</dd>
+                <dt><kbd>PgUp</kbd><kbd>PgDn</kbd></dt><dd>Four steps up or down</dd>
+                <dt><kbd>Home</kbd><kbd>End</kbd></dt><dd>Ten steps left or right</dd>
+                <dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>One staff up or down</dd>
+                <dt><kbd>Del</kbd></dt><dd>Delete</dd>
+              </dl>
+            </section>
+            <section>
+              <h3>Commands</h3>
+              <dl>
+                <dt>Type anywhere</dt><dd>Goes to the command bar; <kbd>↵</kbd> runs a SCORE command on the selection</dd>
+                <dt><kbd>↑</kbd><kbd>↓</kbd> in the bar</dt><dd>Earlier commands</dd>
+                <dt><code>IN 3</code></dt><dd>Music input on staff 3</dd>
+              </dl>
+            </section>
+            <section>
+              <h3>File and view</h3>
+              <dl>
+                <dt><kbd class="mod">⌘</kbd><kbd>Z</kbd> / <kbd class="mod">⌘</kbd><kbd>⇧</kbd><kbd>Z</kbd></dt><dd>Undo / redo</dd>
+                <dt><kbd class="mod">⌘</kbd><kbd>O</kbd> <kbd class="mod">⌘</kbd><kbd>S</kbd> <kbd class="mod">⌘</kbd><kbd>P</kbd></dt><dd>Open, save, print</dd>
+                <dt><kbd>+</kbd> <kbd>_</kbd></dt><dd>Zoom in, out</dd>
+                <dt><kbd class="mod">⌘</kbd> wheel</dt><dd>Zoom at the pointer</dd>
+                <dt><kbd class="mod">⌘</kbd> drag, middle drag</dt><dd>Pan</dd>
+              </dl>
+            </section>
+          </div>
+          <div class="dialog-actions">
+            <span class="muted">Music input has its own keys, shown beside it while you type.</span>
+            <span class="spacer"></span>
+            <button value="close" class="primary">Close</button>
+          </div>
+        </form>
+      </dialog>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

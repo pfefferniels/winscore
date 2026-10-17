@@ -233,7 +233,19 @@ impl Iterator for Items<'_> {
     }
 }
 
+/// Program version WinScore 5 writes into the trailer.
+const WINSCORE_VERSION: f32 = 6.0;
+/// Trailer words before the end marker, the count itself included.
+const TRAILER_WORDS: f32 = 5.0;
+
 impl MusFile {
+    /// A file without items, for a new score: the trailer of SCORE 4's empty
+    /// `SCORE.MUS` with WinScore 5's program version, inches, and no serial.
+    pub fn empty() -> Self {
+        let words = [0.0, 0.0, WINSCORE_VERSION, 0.0, TRAILER_WORDS].map(Word::from_f32).to_vec();
+        Self { width: CountWidth::Short, items: Vec::new(), trailer: Trailer { words } }
+    }
+
     pub fn parse(bytes: &[u8]) -> Result<Self, MusError> {
         let (width, count) = header_width(bytes)?;
         let all = words(&bytes[width.bytes()..width.bytes() + 4 * count]);

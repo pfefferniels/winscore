@@ -8,6 +8,7 @@ import { InputLine, inputItemNotes, type Score } from './wasm/score_web.js';
 import { decode, type Box, type DisplayList } from './display';
 import { Draft, PASS_COUNT } from './input-draft';
 import { cursorHelp, helpFor, type Help } from './input-help';
+import { inMenuBar } from './menu';
 import type { Point } from './view';
 
 /** What the page shows of the line being typed. */
@@ -374,7 +375,7 @@ export function createInputMode(panel: HTMLElement, overlay: HTMLElement, hooks:
   };
 
   const onKey = (e: KeyboardEvent) => {
-    if (!open || isFormField(e.target) || document.querySelector('dialog[open]')) return;
+    if (!open || isFormField(e.target) || inMenuBar(e.target) || document.querySelector('dialog[open]')) return;
     const command = e.metaKey || e.ctrlKey;
     switch (e.key) {
       case 'Enter':

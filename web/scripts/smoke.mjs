@@ -1,5 +1,5 @@
 // End-to-end check of the built app (dist/) in headless Chromium: open a
-// sample, click a staff line, edit a parameter, save.
+// sample, click a staff line, edit a parameter, save; start a new score.
 import { chromium } from 'playwright';
 import { preview } from 'vite';
 import assert from 'node:assert/strict';
@@ -11,7 +11,67 @@ try {
   const page = await browser.newPage({ viewport: { width: 1400, height: 900 }, acceptDownloads: true });
   const errors = [];
   page.on('pageerror', (err) => errors.push(err.message));
-  await page.goto('http://localhost:4178/?sample=mozart.mus&mode=rust&zoom=400');
+  /** Runs the entry `action` (its `data-action`) of menu `menu`. */
+  const menu = async (name, action) => {
+    await page.click(`#menu-${name}`);
+    await page.click(`.menu-popup [data-action="${action}"]`);
+  };
+
+  // Without a sample in the URL the start screen offers a new score, a file and the samples.
+  await page.goto('http://localhost:4178/');
+  await page.waitForSelector('#app[data-ready="true"]');
+  assert.ok(await page.isVisible('#start'));
+  assert.ok(await page.isHidden('#panel'));
+  assert.ok(await page.isDisabled('#input'));
+  assert.ok(await page.isVisible('.start-samples button:text-is("mozart.mus")'));
+
+  // A new score is empty; music input on it creates staff 1 as the engine's IN 1 does.
+  await page.click('#start-new');
+  assert.ok(await page.isHidden('#start'));
+  assert.equal(await page.textContent('#status'), 'untitled.mus');
+  assert.equal(await page.textContent('#item-count'), '0');
+  assert.ok(await page.isVisible('#empty-hint'));
+  await page.click('#empty-input');
+  assert.ok(await page.isHidden('#empty-hint'));
+  assert.equal(await page.getAttribute('#input', 'aria-pressed'), 'true');
+  assert.equal(await page.inputValue('#input-staff'), '1');
+  await page.keyboard.type('C4/D/E/F');
+  await page.waitForFunction(() => document.getElementById('input-status').textContent === 'Adds 5 items');
+  await page.keyboard.press('Control+Enter');
+  await page.waitForFunction(() => document.getElementById('item-count').textContent === '5');
+  await page.click('#input');
+  assert.ok(await page.isHidden('#input-panel'));
+  assert.equal(await page.textContent('#doc-state'), 'Unsaved changes');
+  const [fresh] = await Promise.all([page.waitForEvent('download'), menu('file', 'save')]);
+  assert.equal(fresh.suggestedFilename(), 'untitled.mus');
+  const freshBytes = fs.readFileSync(await fresh.path());
+  assert.equal(freshBytes.readUInt16LE(0) * 4 + 2, freshBytes.length);
+  assert.equal(await page.textContent('#doc-state'), '');
+
+  // Opening another score asks before unsaved changes are thrown away.
+  await page.click('#items li[data-index="1"]');
+  await page.keyboard.press('Delete');
+  assert.equal(await page.textContent('#item-count'), '4');
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await menu('file', 'new');
+  assert.equal(await page.textContent('#item-count'), '4');
+  page.once('dialog', (dialog) => dialog.accept());
+  await menu('file', 'new');
+  assert.equal(await page.textContent('#item-count'), '0');
+
+  // Menus work from the keyboard: ↓ opens, arrows move, Escape closes.
+  await page.focus('#menu-file');
+  await page.keyboard.press('ArrowDown');
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.action), 'new');
+  await page.keyboard.press('ArrowDown');
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.action), 'open');
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.getAttribute('#menu-edit', 'aria-expanded'), 'true');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.menu-popup').count(), 0);
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'menu-edit');
+
+  await page.goto('http://localhost:4178/?sample=mozart.mus&zoom=400');
   await page.waitForSelector('#app[data-ready="true"]');
 
   // At 400 % the staff does not fit, so selecting it from the list scrolls it
@@ -20,7 +80,7 @@ try {
   await page.click('#items li[data-index="2"]');
   assert.equal(await page.textContent('#item h2'), 'Item 2 · Staff');
   await page.keyboard.press('Escape');
-  assert.equal(await page.textContent('#item h2'), 'No item selected');
+  assert.equal(await page.textContent('#item h2'), 'Nothing selected');
   const centre = await page.evaluate(() => {
     const r = document.getElementById('viewport').getBoundingClientRect();
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
@@ -32,7 +92,7 @@ try {
     titles.push(await page.textContent('#item h2'));
   }
   assert.ok(titles.includes('Item 2 · Staff'), `clicks selected ${[...new Set(titles)]}`);
-  assert.ok(titles.includes('No item selected'));
+  assert.ok(titles.includes('Nothing selected'));
   const onStaff = { x: centre.x, y: centre.y + offsets[titles.indexOf('Item 2 · Staff')] };
   await page.click('#items li[data-index="2"]');
   assert.match(await page.textContent('#cursor'), /^x \d+ {2}y \d+/);
@@ -88,42 +148,57 @@ try {
   assert.equal(await page.textContent('#item h2'), 'Item 3 · Clef');
   await page.click('#items li[data-index="2"]');
 
-  // The palette sends WinScore's toolbar commands; TREB appends a treble clef and selects it.
-  await page.click('#palette button:text-is("Treble")');
-  assert.equal(await page.textContent('#item-count'), '(345)');
+  // The panel's buttons send WinScore's edit-mode commands to the selection.
+  await page.click('#item [data-command="U1"]');
+  assert.equal(await page.inputValue('#p4'), '25');
+  await page.click('#undo');
+  assert.equal(await page.inputValue('#p4'), '24');
+
+  // The menus send WinScore's toolbar commands; TREB appends a treble clef and selects it.
+  await menu('insert', 'TREB');
+  assert.equal(await page.textContent('#item-count'), '345');
   assert.match(await page.textContent('#item h2'), /^Item 344 · Clef/);
   await page.keyboard.press('Control+z');
-  assert.equal(await page.textContent('#item-count'), '(344)');
+  assert.equal(await page.textContent('#item-count'), '344');
   await page.click('#items li[data-index="2"]');
+
+  // The item list filters by kind or number.
+  await page.fill('#item-filter', 'clef');
+  assert.match(await page.textContent('#item-count'), /^\d+ of 344$/);
+  assert.ok(await page.isHidden('#items li[data-index="2"]'));
+  await page.fill('#item-filter', '8');
+  assert.ok(await page.isVisible('#items li[data-index="2"]'));
+  await page.press('#item-filter', 'Escape');
+  assert.equal(await page.textContent('#item-count'), '344');
 
   // Delete and undo it.
   await page.click('#items li[data-index="3"]');
   assert.equal(await page.textContent('#item h2'), 'Item 3 · Clef');
   await page.keyboard.press('Delete');
-  assert.equal(await page.textContent('#item-count'), '(343)');
+  assert.equal(await page.textContent('#item-count'), '343');
   await page.keyboard.press('Control+z');
-  assert.equal(await page.textContent('#item-count'), '(344)');
+  assert.equal(await page.textContent('#item-count'), '344');
   assert.equal(await page.textContent('#item h2'), 'Item 3 · Clef');
 
   await page.click('#items li[data-index="2"]');
   await page.fill('#p5', '1.2');
   await page.press('#p5', 'Enter');
-  assert.match(await page.textContent('#status'), /modified/);
+  assert.equal(await page.textContent('#doc-state'), 'Unsaved changes');
   assert.equal(await page.inputValue('#p5'), '1.2');
 
-  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#save')]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.keyboard.press('Control+s')]);
   const saved = fs.readFileSync(await download.path());
   const original = fs.readFileSync('../WINSCORE 5.01/winscore/mozart.mus');
   assert.equal(saved.length, original.length);
   assert.notDeepEqual(saved, original);
 
   // SVG export downloads the printed page; Print paints it alone for the print stylesheet.
-  const [svgDownload] = await Promise.all([page.waitForEvent('download'), page.click('#export-svg')]);
+  const [svgDownload] = await Promise.all([page.waitForEvent('download'), menu('file', 'export-svg')]);
   assert.equal(svgDownload.suggestedFilename(), 'mozart.svg');
   const svg = fs.readFileSync(await svgDownload.path(), 'utf8');
   assert.match(svg, /^<svg[^>]*width="8.5in"/);
   await page.evaluate(() => (window.print = () => (document.body.dataset.printed = 'yes')));
-  await page.click('#print');
+  await menu('file', 'print');
   await page.waitForSelector('body[data-printed="yes"]', { state: 'attached' });
   assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('#print-page canvas')].map((c) => [c.width, c.height])), [[2550, 4200]]);
   await page.emulateMedia({ media: 'print' });
@@ -160,14 +235,14 @@ try {
   await page.keyboard.type('S/');
   await page.waitForFunction(() => document.getElementById('pass-code-3').textContent === 'S 2;');
   await page.keyboard.press('Control+Enter');
-  await page.waitForFunction(() => document.getElementById('item-count').textContent === '(349)');
+  await page.waitForFunction(() => document.getElementById('item-count').textContent === '349');
   assert.match(await page.textContent('#item h2'), /^Item 348 · Note \(\+4 selected\)/);
   assert.equal(await page.textContent('#pass-code-1'), ';');
   assert.equal(await page.inputValue('#input-staff'), '10');
   await page.keyboard.press('Escape');
   assert.ok(await page.isHidden('#input-panel'));
   await page.click('#undo');
-  assert.equal(await page.textContent('#item-count'), '(344)');
+  assert.equal(await page.textContent('#item-count'), '344');
   // IN n on the command bar opens the input on staff n.
   await page.fill('#command', 'IN 3');
   await page.press('#command', 'Enter');
@@ -176,13 +251,13 @@ try {
   await page.click('#input-close');
   assert.ok(await page.isHidden('#input-panel'));
 
-  // Text: the palette's Text button opens the dialog; the font goes in front as _NN.
+  // Text: Insert ▸ Text opens the dialog; the font goes in front as _NN.
   await page.click('#items li[data-index="2"]');
-  await page.click('#palette button:text-is("Text")');
+  await menu('insert', 'text');
   await page.fill('#text-value', 'Allegro');
   await page.selectOption('#text-font', '1');
   await page.click('#text-insert');
-  await page.waitForFunction(() => document.getElementById('item-count').textContent === '(345)');
+  await page.waitForFunction(() => document.getElementById('item-count').textContent === '345');
   assert.match(await page.textContent('#item h2'), /^Item 344 · Text/);
   assert.equal(await page.inputValue('#item-text'), '_01Allegro');
   await page.fill('#item-text', '_01Allegro vivace');
@@ -191,34 +266,34 @@ try {
   assert.equal(await page.inputValue('#item-text'), '_01Allegro vivace');
   await page.click('#undo');
   await page.click('#undo');
-  assert.equal(await page.textContent('#item-count'), '(344)');
+  assert.equal(await page.textContent('#item-count'), '344');
 
   // Symbol picker: a searchable grid of library symbols drawn by the renderer.
   await page.click('#items li[data-index="2"]');
-  await page.click('#palette button:text-is("Symbol")');
+  await menu('insert', 'symbol');
   await page.waitForSelector('#symbol-grid .symbol-cell');
   const symbol = await page.getAttribute('#symbol-grid .symbol-cell:nth-child(2)', 'data-number');
   await page.fill('#symbol-search', 'no symbol is called this');
   assert.equal(await page.textContent('#symbol-count'), '0 symbols');
   await page.fill('#symbol-search', '');
   await page.click('#symbol-grid .symbol-cell:nth-child(2)');
-  await page.waitForFunction(() => document.getElementById('item-count').textContent === '(345)');
+  await page.waitForFunction(() => document.getElementById('item-count').textContent === '345');
   assert.match(await page.textContent('#item h2'), /^Item 344 · Symbol/);
   assert.equal(await page.inputValue('#p5'), symbol);
   await page.click('#undo');
 
   // Group edit: the command asks for the area, then the destination; Cancel ends it.
-  await page.click('#palette button:text-is("Move area")');
+  await menu('edit', 'M');
   assert.match(await page.textContent('#prompt'), /^Enter staff, left position/);
   await page.keyboard.type('1 0 200 2');
   await page.keyboard.press('Enter');
   assert.match(await page.textContent('#prompt'), /^Enter destination staff/);
   await page.click('#prompt-cancel');
   assert.ok(await page.isHidden('#prompt'));
-  assert.equal(await page.textContent('#item-count'), '(344)');
+  assert.equal(await page.textContent('#item-count'), '344');
 
   // Layout: LJ asks for the system, answered on the command bar; the result is one undo step.
-  await page.click('#palette button:text-is("LJ")');
+  await menu('layout', 'LJ');
   assert.match(await page.textContent('#prompt'), /Lowest Staff/);
   await page.keyboard.type('1 2');
   await page.keyboard.press('Enter');
@@ -232,7 +307,7 @@ try {
   await page.click('#undo');
 
   // A box drawn over empty paper selects the items inside it (fresh view: scrolled to the music).
-  await page.goto('http://localhost:4178/?sample=mozart.mus&mode=rust');
+  await page.goto('http://localhost:4178/?sample=mozart.mus');
   await page.waitForSelector('#app[data-ready="true"]');
   const area = await page.evaluate(() => {
     const r = document.getElementById('viewport').getBoundingClientRect();
@@ -249,7 +324,7 @@ try {
   await page.keyboard.press('Escape');
 
   // While a group command waits for its area, the box answers it (editor-core's draw_box).
-  await page.click('#palette button:text-is("Move area")');
+  await menu('edit', 'M');
   await drawBox();
   assert.match(await page.textContent('#prompt'), /^Enter destination staff/);
   await page.click('#prompt-cancel');

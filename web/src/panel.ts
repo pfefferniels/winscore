@@ -1,4 +1,5 @@
-// The side panel: the item list and the parameters of the selected item.
+// The side panel: the selected item, with buttons for what can be done to
+// it and its parameters, and below it the list of all items.
 import { fillFontMenu } from './text-dialog';
 
 export interface ItemSummary {
@@ -22,6 +23,8 @@ export interface ItemDetails extends ItemSummary {
 
 export interface PanelHandlers {
   select(index: number): void;
+  /** Runs a SCORE command on the selection. */
+  run(command: string): void;
   setParam(index: number, n: number, value: number): void;
   /** Replaces a text item's characters. */
   setText(index: number, text: string): void;
@@ -57,9 +60,31 @@ function itemRow(item: ItemSummary, handlers: PanelHandlers): HTMLLIElement {
     element('span', { className: 'where' }, [`${formatParam(item.staff)} · ${formatParam(item.p3)}`]),
   ]);
   row.dataset.index = String(item.index);
+  row.dataset.code = String(item.code);
+  row.dataset.name = item.name;
   row.dataset.key = rowKey(item);
   row.addEventListener('click', () => handlers.select(item.index));
   return row;
+}
+
+/**
+ * Whether a row matches the filter: a number matches the item's code or
+ * index, a word the name of its kind.
+ */
+function matches(row: HTMLLIElement, query: string): boolean {
+  if (!query) return true;
+  if (/^\d+$/.test(query)) return row.dataset.code === query || row.dataset.index === query;
+  return (row.dataset.name ?? '').toLowerCase().includes(query.toLowerCase());
+}
+
+/** Shows only the rows that match `query`; returns how many do. */
+export function filterItemList(list: HTMLOListElement, query: string): number {
+  let shown = 0;
+  for (const row of list.children as HTMLCollectionOf<HTMLLIElement>) {
+    row.hidden = !matches(row, query.trim());
+    if (!row.hidden) shown++;
+  }
+  return shown;
 }
 
 /** Brings the list up to date, rebuilding only the rows that changed (a page has a thousand items or more). */
@@ -134,11 +159,45 @@ function textEditor(item: ItemDetails, text: string, handlers: PanelHandlers): H
   return element('div', { className: 'text-editor' }, [input, font]);
 }
 
-export function renderItem(section: HTMLElement, item: ItemDetails | null, handlers: PanelHandlers) {
+/** A button that sends `command` to the selection. */
+function commandButton(label: string, command: string, title: string, handlers: PanelHandlers, className = ''): HTMLButtonElement {
+  const button = element('button', { type: 'button', textContent: label, title: `${title} (${command})`, className });
+  button.dataset.command = command;
+  button.addEventListener('click', () => handlers.run(command));
+  return button;
+}
+
+/** What can be done to the selection: WinScore's edit-mode buttons. */
+function actions(handlers: PanelHandlers): HTMLElement {
+  const nudge = element('div', { className: 'nudge' }, [
+    commandButton('←', 'L1', 'Left one step, also ←', handlers),
+    commandButton('→', 'R1', 'Right one step, also →', handlers),
+    commandButton('↑', 'U1', 'Up one step, also ↑', handlers),
+    commandButton('↓', 'D1', 'Down one step, also ↓', handlers),
+  ]);
+  nudge.setAttribute('role', 'group');
+  nudge.setAttribute('aria-label', 'Move');
+  return element('div', { className: 'item-actions' }, [
+    nudge,
+    commandButton('Flip', 'FLI', 'Flip the stem, curve or symbol', handlers),
+    commandButton('Center', 'CN', 'Center on the nearest note or rest', handlers),
+  ]);
+}
+
+const TRASH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" /></svg>';
+
+function emptyState(title: string, text: string): HTMLElement[] {
+  return [element('h2', {}, [title]), element('p', { className: 'muted hint' }, [text])];
+}
+
+export function renderItem(section: HTMLElement, item: ItemDetails | null, handlers: PanelHandlers, hasScore = true) {
+  if (!hasScore) {
+    section.replaceChildren(...emptyState('No score open', 'Start a new score or open one from the File menu.'));
+    return;
+  }
   if (!item) {
     section.replaceChildren(
-      element('h2', {}, ['No item selected']),
-      element('p', { className: 'muted' }, ['Click an item on the page or in the list below.']),
+      ...emptyState('Nothing selected', 'Click an item on the page or in the list below. Shift-click adds to the selection; dragging over empty paper selects what is inside.'),
     );
     return;
   }
@@ -154,5 +213,14 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
     ...(item.drawn ? [] : [element('p', { className: 'muted' }, ['The Rust renderer does not draw this item yet.'])]),
   ];
   const others = item.others > 0 ? [element('span', { className: 'muted' }, [` (+${item.others} selected)`])] : [];
-  section.replaceChildren(element('h2', {}, [`Item ${item.index} · ${item.name}`, ...others]), ...notes, grid, addParamRow(item, handlers));
+  const remove = commandButton('', 'DE', 'Delete, also Del', handlers, 'danger');
+  remove.innerHTML = TRASH;
+  remove.setAttribute('aria-label', 'Delete');
+  const step = element('div', { className: 'item-step' }, [
+    remove,
+    commandButton('‹', 'B', 'Previous item, also Shift+Enter', handlers),
+    commandButton('›', 'NEX', 'Next item, also Enter', handlers),
+  ]);
+  const head = element('header', { className: 'item-head' }, [element('h2', {}, [`Item ${item.index} · ${item.name}`, ...others]), step]);
+  section.replaceChildren(head, actions(handlers), ...notes, grid, addParamRow(item, handlers));
 }
