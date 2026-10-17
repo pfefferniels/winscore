@@ -21,8 +21,8 @@ export interface Editor {
   /** Selected item indices, the primary (last clicked) one last. */
   selection(): number[];
   select(items: number[]): void;
-  /** Sets parameters [n, value] of an item, as one undo step. */
-  setParams(item: number, changes: [n: number, value: number][]): Change | null;
+  /** Sets parameters [n, value] of items, each with values of its own, as one undo step. */
+  setParamsOf(edits: [item: number, changes: [n: number, value: number][]][]): Change | null;
   /** Moves the selection by P3 spaces and P4 scale steps. */
   moveSelection(dp3: number, dp4: number): Change | null;
   /** [ and ]: the selection one staff up (+1) or down (−1). */
@@ -89,8 +89,16 @@ export function scoreEditor(score: Score): Editor {
   return {
     selection: () => Array.from(score.selection()),
     select: (items) => score.select(Uint32Array.from(items)),
-    setParams: (item, changes) =>
-      change(score.setParams(item, Uint32Array.from(changes, ([n]) => n), Float32Array.from(changes, ([, value]) => value))),
+    setParamsOf(edits) {
+      const flat = edits.flatMap(([item, changes]) => changes.map(([n, value]) => [item, n, value] as const));
+      return change(
+        score.setParamsOf(
+          Uint32Array.from(flat, ([item]) => item),
+          Uint32Array.from(flat, ([, n]) => n),
+          Float32Array.from(flat, ([, , value]) => value),
+        ),
+      );
+    },
     moveSelection: (dp3, dp4) => change(score.moveSelection(dp3, dp4)),
     moveStaff: (step) => change(score.moveStaff(step)),
     deleteSelection: () => change(score.deleteSelection()),

@@ -15,7 +15,7 @@ import { createInputMode, type Shown } from './input-mode';
 import { bindInteraction } from './interaction';
 import { createMenuBar, inMenuBar, MOD } from './menu';
 import { appMenus, type DialogKind } from './menus';
-import { bindPanelGrip, filterItemList, formatParam, markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
+import { bindPanelGrip, filterItemList, formatParam, markSelected, renderItemList, renderSelection, shownItems, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer, Overlay } from './paint';
 import { download, printPage } from './print';
 import { createSymbolDialog } from './symbol-dialog';
@@ -133,6 +133,7 @@ const ui = {
   items: $<HTMLOListElement>('items'),
   itemCount: $<HTMLSpanElement>('item-count'),
   itemFilter: $<HTMLInputElement>('item-filter'),
+  selectShown: $<HTMLButtonElement>('items-select'),
   footer: $<HTMLElement>('footer'),
   cursor: $<HTMLSpanElement>('cursor'),
   message: $<HTMLSpanElement>('message'),
@@ -263,7 +264,7 @@ function selection(): number[] {
   return state.editor?.selection() ?? [];
 }
 
-/** The item whose parameters the panel shows: the last one selected. */
+/** The primary item of the selection: the last one selected. */
 function primary(): number | null {
   return selection().at(-1) ?? null;
 }
@@ -349,11 +350,17 @@ function refreshStatus() {
 /** Highest parameter number an edit may set. */
 const MAX_PARAM = 45;
 
+/** The help's labels by item code, looked up once each. */
+const paramLabels = new Map<number, (string | null)[]>();
+
 /** The help's labels of P1 … up to the last one it describes for `code`. */
 function paramNames(code: number): (string | null)[] {
-  const names = Array.from({ length: MAX_PARAM }, (_, i) => paramName(code, i + 1) ?? null);
-  while (names.length > 0 && names.at(-1) === null) names.pop();
-  return names;
+  if (!paramLabels.has(code)) {
+    const names = Array.from({ length: MAX_PARAM }, (_, i) => paramName(code, i + 1) ?? null);
+    while (names.length > 0 && names.at(-1) === null) names.pop();
+    paramLabels.set(code, names);
+  }
+  return paramLabels.get(code)!;
 }
 
 let symbolNames: Map<number, string> | null = null;
@@ -373,7 +380,8 @@ function clefAt(score: Score, index: number): Context['clef'] {
   return { p4: params[3] ?? 0, p5: params[4] ?? 0 };
 }
 
-function details(score: Score, index: number): ItemDetails | null {
+/** What the panel shows of item `index`; whether it is drawn only when it is `alone` in the selection. */
+function details(score: Score, index: number, alone: boolean): ItemDetails | null {
   const info = score.item(index);
   if (!info) return null;
   try {
@@ -388,8 +396,7 @@ function details(score: Score, index: number): ItemDetails | null {
       paramNames: paramNames(info.code),
       context: { clef: info.code === 1 ? clefAt(score, index) : null, symbolName },
       text: info.text ?? null,
-      drawn: bounds(elementsOf(state.rust, index)) !== null,
-      others: selection().filter((i) => i !== index).length,
+      drawn: alone ? bounds(elementsOf(state.rust, index)) !== null : undefined,
     };
   } finally {
     info.free();
@@ -413,9 +420,11 @@ function refreshItemList() {
 
 /** Re-renders the parameter panel, keeping the keyboard in the field it was in. */
 function refreshPanel() {
-  const shown = primary();
+  const score = state.score;
+  const items = selection();
+  const shown = score ? items.flatMap((index) => details(score, index, items.length === 1) ?? []) : [];
   const focused = ui.item.contains(document.activeElement) ? document.activeElement?.id : undefined;
-  renderItem(ui.item, state.score && shown !== null ? details(state.score, shown) : null, handlers, state.score !== null);
+  renderSelection(ui.item, shown, handlers, score !== null);
   markSelected(ui.items, selection());
   const field = focused ? ui.item.querySelector<HTMLElement>(`#${focused}`) : null;
   field?.focus();
@@ -604,18 +613,23 @@ function insertInput(line: InputLine): boolean {
 
 const handlers: PanelHandlers = {
   select: (index) => select([index], true),
+  selectItems: (items) => select(items),
+  toggle(index) {
+    const items = selection();
+    select(items.includes(index) ? items.filter((i) => i !== index) : [...items, index]);
+  },
   run: (command) => {
     runCommand(command);
     ui.viewport.focus();
   },
-  setParams: (index, changes) => edit((editor) => editor.setParams(index, changes)),
-  async pickSymbol(index) {
+  setParams: (edits) => edit((editor) => editor.setParamsOf(edits)),
+  async pickSymbol(items) {
     const symbol = await symbolDialog.choose();
-    if (symbol !== null) edit((editor) => editor.setParams(index, [[5, symbol]]));
+    if (symbol !== null) edit((editor) => editor.setParamsOf(items.map((index) => [index, [[5, symbol]]])));
   },
   setText: (index, text) => edit((editor) => editor.setText(index, text)),
-  setFont(index, code) {
-    state.editor?.select([index]);
+  setFont(items, code) {
+    state.editor?.select(items);
     runCommand(`FNT${fontPrefix(code).slice(1)}`);
   },
 };
@@ -1077,6 +1091,7 @@ function bindControls() {
     ui.itemFilter.value = '';
     refreshItemList();
   });
+  ui.selectShown.addEventListener('click', () => select(shownItems(ui.items)));
   ui.app.querySelectorAll<HTMLButtonElement>('.appbar button').forEach((button) => button.addEventListener('click', settleFocus));
   if (MOD !== '⌘') ui.shortcuts.querySelectorAll('kbd.mod').forEach((k) => (k.textContent = 'Ctrl'));
   bindCommandBar(ui.command, {
@@ -1144,7 +1159,7 @@ async function main() {
   setPanel(state.panel);
   bindControls();
   refreshStatus();
-  renderItem(ui.item, null, handlers, false);
+  renderSelection(ui.item, [], handlers, false);
   await applyQuery();
 }
 

@@ -1248,6 +1248,32 @@ kbd {
   margin-bottom: 12px;
 }
 
+.item-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.item-kinds button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.item-kinds .count {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.panel .hint.batch-hint {
+  margin-bottom: 10px;
+}
+
 .nudge {
   display: inline-flex;
 }
@@ -1361,6 +1387,20 @@ button.danger:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.setting-some {
+  display: block;
+  margin-top: -4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.settings input.mixed::placeholder,
+.params input.mixed::placeholder {
+  color: var(--muted);
+  font-style: italic;
 }
 
 .setting-control {
@@ -1545,6 +1585,11 @@ button.danger:hover {
   border-radius: 6px;
 }
 
+.items-head button {
+  flex: none;
+  padding: 0 8px;
+}
+
 .items-head input:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
@@ -1707,6 +1752,13 @@ button.danger:hover {
     width: 36px;
   }
 
+  .item-kinds button {
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 18px;
+    font-size: 13px;
+  }
+
   .nudge button {
     width: 40px;
   }
@@ -1715,6 +1767,7 @@ button.danger:hover {
   .add-param input,
   .text-editor input,
   .items-head input,
+  .items-head button,
   .input-head input,
   .input-range input,
   .text-fields > input,

@@ -5,6 +5,8 @@
 //! ("Move", "R 5"), empty when it changed nothing, and what the engine would
 //! have reported, if anything. Call [`Score::render`] to see the result.
 
+use std::collections::HashMap;
+
 use score_edit::clipboard::Placement;
 use score_edit::{Change, EditError};
 use score_format::{CountWidth, Item, MusFile};
@@ -86,6 +88,27 @@ impl Score {
         let id = self.0.id(ItemId(index))?;
         let pairs: Vec<(usize, f32)> = numbers.into_iter().map(|n| n as usize).zip(values).collect();
         let result = self.0.editor_mut().set_params(id, &pairs);
+        self.finish(result)
+    }
+
+    /// Sets parameters of several items as one undo step: change `i` sets
+    /// parameter `numbers[i]` (1-based) of item `indices[i]` to `values[i]`.
+    #[wasm_bindgen(js_name = setParamsOf)]
+    pub fn set_params_of(&mut self, indices: Vec<u32>, numbers: Vec<u32>, values: Vec<f32>) -> Result<Outcome, JsError> {
+        if indices.len() != values.len() || numbers.len() != values.len() {
+            return Err(JsError::new("setParamsOf: as many items and parameter numbers as values"));
+        }
+        let mut edits: Vec<(score_edit::ItemId, Vec<(usize, f32)>)> = Vec::new();
+        let mut slot: HashMap<score_edit::ItemId, usize> = HashMap::new();
+        for ((index, n), value) in indices.into_iter().zip(numbers).zip(values) {
+            let id = self.0.id(ItemId(index))?;
+            let at = *slot.entry(id).or_insert_with(|| {
+                edits.push((id, Vec::new()));
+                edits.len() - 1
+            });
+            edits[at].1.push((n as usize, value));
+        }
+        let result = self.0.editor_mut().set_params_of(&edits);
         self.finish(result)
     }
 

@@ -1,8 +1,10 @@
-// The side panel: the selected item, with buttons for what can be done to
-// it, its settings (item-fields.ts) and all its parameters, and below it the
-// list of all items.
+// The side panel: the selection, with buttons for what can be done to it,
+// its settings (item-fields.ts) and all its parameters, and below it the
+// list of all items. Several selected items are edited together: a setting
+// shows their value where they agree and "Mixed" where they do not, and a
+// change sets it in every one of them as one undo step.
 import { fillFontMenu } from './text-dialog';
-import { sameValue, sectionsFor } from './item-fields';
+import { sameValue, sharedSections } from './item-fields';
 import type { Change, ChoiceSetting, Context, NumberSetting, P, PairSetting, Setting } from './item-fields';
 
 export interface ItemSummary {
@@ -20,24 +22,29 @@ export interface ItemDetails extends ItemSummary {
   /** What its settings read from the rest of the score. */
   context: Context;
   text: string | null;
-  /** Whether the Rust renderer drew anything for this item. */
-  drawn: boolean;
-  /** How many other items are selected with it. */
-  others: number;
+  /** Whether the Rust renderer drew anything for this item; asked only when it is selected alone. */
+  drawn?: boolean;
 }
+
+/** The changes to one item, by index. */
+export type ItemChanges = [index: number, changes: Change[]];
 
 export interface PanelHandlers {
   select(index: number): void;
+  /** Adds an item to the selection or takes it out. */
+  toggle(index: number): void;
+  /** Selects these items, the last one primary. */
+  selectItems(items: number[]): void;
   /** Runs a SCORE command on the selection. */
   run(command: string): void;
-  /** Sets parameters of item `index` as one undo step. */
-  setParams(index: number, changes: Change[]): void;
-  /** Picks a library symbol for a code-9 item in the symbol dialog. */
-  pickSymbol(index: number): void;
+  /** Sets parameters of items, each with changes of its own, as one undo step. */
+  setParams(edits: ItemChanges[]): void;
+  /** Picks a library symbol for code-9 items in the symbol dialog. */
+  pickSymbol(items: number[]): void;
   /** Replaces a text item's characters. */
   setText(index: number, text: string): void;
-  /** Gives a text item one of WinScore's fonts (`_NN`). */
-  setFont(index: number, code: number): void;
+  /** Gives text items one of WinScore's fonts (`_NN`). */
+  setFont(items: number[], code: number): void;
 }
 
 /** A float parameter as SCORE shows it: up to seven significant digits. */
@@ -71,7 +78,7 @@ function itemRow(item: ItemSummary, handlers: PanelHandlers): HTMLLIElement {
   row.dataset.code = String(item.code);
   row.dataset.name = item.name;
   row.dataset.key = rowKey(item);
-  row.addEventListener('click', () => handlers.select(item.index));
+  row.addEventListener('click', (e) => (e.shiftKey || e.metaKey || e.ctrlKey ? handlers.toggle(item.index) : handlers.select(item.index)));
   return row;
 }
 
@@ -93,6 +100,11 @@ export function filterItemList(list: HTMLOListElement, query: string): number {
     if (!row.hidden) shown++;
   }
   return shown;
+}
+
+/** The items whose rows the filter shows. */
+export function shownItems(list: HTMLOListElement): number[] {
+  return [...(list.children as HTMLCollectionOf<HTMLLIElement>)].filter((row) => !row.hidden).map((row) => Number(row.dataset.index));
 }
 
 /** Brings the list up to date, rebuilding only the rows that changed (a page has a thousand items or more). */
@@ -125,10 +137,41 @@ function reader(params: Float32Array): P {
   return (n) => Number(formatParam(params[n - 1] ?? 0));
 }
 
-/** Sends the changes that change something. */
-function apply(item: ItemDetails, p: P, changes: Change[], handlers: PanelHandlers) {
-  const real = changes.filter(([n, v]) => Number.isFinite(v) && Math.fround(v) !== Math.fround(p(n)));
-  if (real.length > 0) handlers.setParams(item.index, real);
+/** A selected item with its parameters as the settings read them. */
+interface Member {
+  item: ItemDetails;
+  p: P;
+}
+
+/** What all `values` are, or null where they differ. */
+function common<T>(values: T[], same: (a: T, b: T) => boolean = (a, b) => a === b): T | null {
+  const [first] = values;
+  return first !== undefined && values.every((v) => same(v, first)) ? first : null;
+}
+
+/** Equal values of a setting; one that cannot read an item gives NaN, equal to NaN. */
+const sameNumber = (a: number, b: number) => sameValue(a, b) || (Number.isNaN(a) && Number.isNaN(b));
+
+/** How a field shows a setting whose value differs between the selected items. */
+function showMixed(input: HTMLInputElement) {
+  input.placeholder = 'Mixed';
+  input.classList.add('mixed');
+}
+
+/**
+ * Sends, as one step, what `edit` changes in each item that changes
+ * something; false, sending nothing, when it cannot be read for one of them.
+ */
+function apply(members: Member[], edit: (p: P, ctx: Context) => Change[] | null, handlers: PanelHandlers): boolean {
+  const edits: ItemChanges[] = [];
+  for (const { item, p } of members) {
+    const changes = edit(p, item.context);
+    if (!changes) return false;
+    const real = changes.filter(([n, v]) => Number.isFinite(v) && Math.fround(v) !== Math.fround(p(n)));
+    if (real.length > 0) edits.push([item.index, real]);
+  }
+  if (edits.length > 0) handlers.setParams(edits);
+  return true;
 }
 
 /** Rounds away the binary noise of stepping by tenths. */
@@ -169,31 +212,38 @@ function editField(id: string, shown: string, set: (text: string) => boolean, st
   return input;
 }
 
-function numberInput(s: NumberSetting, item: ItemDetails, p: P, handlers: PanelHandlers): HTMLInputElement {
-  const value = s.get(p);
+/** A typed value goes to every item; ↑/↓ step each from its own. */
+function numberInput(s: NumberSetting, members: Member[], handlers: PanelHandlers): HTMLInputElement {
+  const value = common(members.map(({ p }) => s.get(p)), sameNumber);
   const input = editField(
     s.id,
-    formatParam(value),
+    value === null ? '' : formatParam(value),
     (text) => {
       const parsed = Number.parseFloat(text);
-      if (!Number.isFinite(parsed)) return false;
-      apply(item, p, s.set(parsed, p), handlers);
-      return true;
+      return Number.isFinite(parsed) && apply(members, (p) => s.set(parsed, p), handlers);
     },
-    (delta) => apply(item, p, s.set(tidy(value + delta * s.step), p), handlers),
+    (delta) => apply(members, (p) => s.set(tidy(s.get(p) + delta * s.step), p), handlers),
   );
   input.inputMode = 'decimal';
+  if (value === null) showMixed(input);
   return input;
+}
+
+/** The reading under a number field, where the items agree on it. */
+function numberNote(s: NumberSetting, members: Member[]): string | null {
+  return common(members.map(({ item, p }) => s.note?.(s.get(p), p, item.context) ?? null));
 }
 
 function note(text: string | null | undefined): HTMLElement[] {
   return text ? [element('span', { className: 'setting-note' }, [text])] : [];
 }
 
-function choiceControl(s: ChoiceSetting, item: ItemDetails, p: P, handlers: PanelHandlers): HTMLElement {
-  const current = s.get(p);
-  const chosen = s.options.findIndex((o) => sameValue(o.value, current));
-  const pick = (i: number) => apply(item, p, s.set(s.options[i]!.value, p), handlers);
+function choiceControl(s: ChoiceSetting, members: Member[], handlers: PanelHandlers): HTMLElement {
+  const current = common(members.map(({ p }) => s.get(p)), sameNumber);
+  const chosen = current === null ? -1 : s.options.findIndex((o) => sameValue(o.value, current));
+  // What a value that is none of the options reads as, where the items agree on it.
+  const other = current === null ? null : common(members.map(({ p }) => s.other?.(p) ?? null));
+  const pick = (i: number) => apply(members, (p) => s.set(s.options[i]!.value, p), handlers);
   if (s.buttons) {
     const buttons = s.options.map((o, i) => {
       const button = element('button', { type: 'button', id: `${s.id}-${i}`, textContent: o.label, className: i === chosen ? 'on' : '' });
@@ -203,10 +253,13 @@ function choiceControl(s: ChoiceSetting, item: ItemDetails, p: P, handlers: Pane
     });
     const group = element('div', { className: 'segmented' }, buttons);
     group.setAttribute('role', 'group');
-    return element('div', { className: 'setting-control' }, [group, ...note(chosen < 0 ? s.other?.(p) : null)]);
+    return element('div', { className: 'setting-control' }, [group, ...note(chosen >= 0 ? null : current === null ? 'Mixed' : other)]);
   }
   const select = element('select', { id: s.id });
-  if (chosen < 0) select.append(new Option(s.other?.(p) ?? `Other (${formatParam(current)})`, '', true, true));
+  if (chosen < 0) {
+    const shown = current === null ? 'Mixed' : (other ?? (s.other ? 'Mixed' : `Other (${formatParam(current)})`));
+    select.append(new Option(shown, '', true, true));
+  }
   select.append(...s.options.map((o, i) => new Option(o.label, String(i), false, i === chosen)));
   if (chosen < 0) select.options[0]!.disabled = true;
   select.addEventListener('change', () => pick(Number(select.value)));
@@ -214,71 +267,82 @@ function choiceControl(s: ChoiceSetting, item: ItemDetails, p: P, handlers: Pane
 }
 
 /** The control of one setting, and the element its label points at. */
-function control(s: Exclude<Setting, PairSetting>, item: ItemDetails, p: P, handlers: PanelHandlers): HTMLElement {
+function control(s: Exclude<Setting, PairSetting>, members: Member[], handlers: PanelHandlers): HTMLElement {
   switch (s.kind) {
     case 'number': {
-      const input = numberInput(s, item, p, handlers);
-      const pick = s.pick === 'symbol' ? [chooseButton(item, handlers)] : [];
+      const input = numberInput(s, members, handlers);
+      const pick = s.pick === 'symbol' ? [chooseButton(members, handlers)] : [];
       const row = pick.length ? [element('div', { className: 'with-button' }, [input, ...pick])] : [input];
-      return element('div', { className: 'setting-control' }, [...row, ...note(s.note?.(s.get(p), p, item.context))]);
+      return element('div', { className: 'setting-control' }, [...row, ...note(numberNote(s, members))]);
     }
     case 'choice':
-      return choiceControl(s, item, p, handlers);
+      return choiceControl(s, members, handlers);
     case 'toggle': {
-      const box = element('input', { type: 'checkbox', id: s.id, checked: s.get(p) });
-      box.addEventListener('change', () => apply(item, p, s.set(box.checked, p), handlers));
+      const on = common(members.map(({ p }) => s.get(p)));
+      const box = element('input', { type: 'checkbox', id: s.id, checked: on === true, indeterminate: on === null });
+      box.addEventListener('change', () => apply(members, (p) => s.set(box.checked, p), handlers));
       return element('div', { className: 'setting-control toggle' }, [box]);
     }
     case 'text': {
-      const ctx = item.context;
+      const shown = common(members.map(({ item, p }) => s.show(p, item.context)));
       const input = editField(
         s.id,
-        s.show(p, ctx),
-        (text) => {
-          const changes = s.parse(text, p, ctx);
-          if (changes) apply(item, p, changes, handlers);
-          return changes !== null;
-        },
-        (delta) => apply(item, p, s.step(delta, p, ctx), handlers),
+        shown ?? '',
+        (text) => apply(members, (p, ctx) => s.parse(text, p, ctx), handlers),
+        (delta) => apply(members, (p, ctx) => s.step(delta, p, ctx), handlers),
       );
-      if (s.placeholder) input.placeholder = s.placeholder;
-      return element('div', { className: 'setting-control' }, [input, ...note(s.note?.(p, ctx))]);
+      if (shown === null) showMixed(input);
+      else if (s.placeholder) input.placeholder = s.placeholder;
+      const reading = common(members.map(({ item, p }) => s.note?.(p, item.context) ?? null));
+      return element('div', { className: 'setting-control' }, [input, ...note(reading)]);
     }
   }
 }
 
-function chooseButton(item: ItemDetails, handlers: PanelHandlers): HTMLButtonElement {
+function chooseButton(members: Member[], handlers: PanelHandlers): HTMLButtonElement {
   const button = element('button', { type: 'button', textContent: 'Choose…', title: 'Pick the symbol from the libraries' });
-  button.addEventListener('click', () => handlers.pickSymbol(item.index));
+  button.addEventListener('click', () => handlers.pickSymbol(members.map(({ item }) => item.index)));
   return button;
 }
 
-function pairControl(s: PairSetting, item: ItemDetails, p: P, handlers: PanelHandlers): HTMLElement {
+function pairControl(s: PairSetting, members: Member[], handlers: PanelHandlers): HTMLElement {
   const halves = s.fields.map((f) =>
     element('div', { className: 'pair-half' }, [
-      numberInput(f, item, p, handlers),
-      element('label', { htmlFor: f.id, className: 'setting-note' }, [[f.label, f.note?.(f.get(p), p, item.context)].filter(Boolean).join(' · ')]),
+      numberInput(f, members, handlers),
+      element('label', { htmlFor: f.id, className: 'setting-note' }, [[f.label, numberNote(f, members)].filter(Boolean).join(' · ')]),
     ]),
   );
   return element('div', { className: 'setting-control pair' }, halves);
 }
 
-/** Label and control of one setting: a row of the settings grid. */
-function settingRow(s: Setting, item: ItemDetails, p: P, handlers: PanelHandlers): HTMLElement[] {
+/**
+ * Label and control of one setting: a row of the settings grid. `of` is how
+ * many items are selected; under the label, how many of them the setting
+ * fits when not all.
+ */
+function settingRow(s: Setting, members: Member[], of: number, handlers: PanelHandlers): HTMLElement[] {
   const target = s.kind === 'pair' ? s.fields[0].id : s.kind === 'choice' && s.buttons ? '' : s.id;
-  const label = element('label', { className: 'setting-label', title: s.help ?? s.label }, [s.label]);
+  const some = members.length < of;
+  const title = [s.help ?? s.label, some ? `Applies to the ${members.length} of the ${of} selected items it fits.` : ''].filter(Boolean).join(' ');
+  const label = element('label', { className: 'setting-label', title }, [
+    s.label,
+    ...(some ? [element('span', { className: 'setting-some' }, [`${members.length} of ${of}`])] : []),
+  ]);
   if (target) label.htmlFor = target;
-  const body = s.kind === 'pair' ? pairControl(s, item, p, handlers) : control(s, item, p, handlers);
+  const body = s.kind === 'pair' ? pairControl(s, members, handlers) : control(s, members, handlers);
   if (s.help) body.title = s.help;
   return [label, body];
 }
 
-function sections(item: ItemDetails, handlers: PanelHandlers): HTMLElement[] {
-  const p = reader(item.params);
-  return sectionsFor(item.code).flatMap((section) => {
-    const shown = section.settings.filter((s) => s.when?.(p) ?? true);
-    if (shown.length === 0) return [];
-    const rows = shown.flatMap((s) => settingRow(s, item, p, handlers));
+/** The settings the selected items share, each for the items it fits. */
+function sections(members: Member[], handlers: PanelHandlers): HTMLElement[] {
+  const codes = [...new Set(members.map(({ item }) => item.code))];
+  return sharedSections(codes).flatMap((section) => {
+    const rows = section.settings.flatMap((s) => {
+      const fit = members.filter(({ p }) => s.when?.(p) ?? true);
+      return fit.length > 0 ? settingRow(s, fit, members.length, handlers) : [];
+    });
+    if (rows.length === 0) return [];
     return [element('section', { className: 'settings' }, [element('h3', {}, [section.title]), element('div', { className: 'settings-grid' }, rows)])];
   });
 }
@@ -307,23 +371,23 @@ const MAX_PARAM = 45;
 /**
  * Every parameter P1…Pn as SCORE stores it, with the help's label, and those
  * the help describes but the item does not store; below them any other
- * parameter by number.
+ * parameter by number. For several items, a value set here goes to each, and
+ * a label shows where their kinds agree on it.
  */
-function allParams(item: ItemDetails, handlers: PanelHandlers): HTMLDetailsElement {
-  const p = reader(item.params);
-  const count = Math.max(item.params.length, item.paramNames.length);
+function allParams(members: Member[], handlers: PanelHandlers): HTMLDetailsElement {
+  const count = Math.max(...members.map(({ item }) => Math.max(item.params.length, item.paramNames.length)));
   const rows = Array.from({ length: count }, (_, i) => {
     const n = i + 1;
-    const stored = n <= item.params.length;
-    const input = editField(`all-p${n}`, stored ? formatParam(p(n)) : '', (text) => {
+    const stored = members.some(({ item }) => n <= item.params.length);
+    const value = common(members.map(({ p }) => p(n)));
+    const input = editField(`all-p${n}`, stored && value !== null ? formatParam(value) : '', (text) => {
       const parsed = Number.parseFloat(text);
-      if (!Number.isFinite(parsed)) return false;
-      apply(item, p, [[n, parsed]], handlers);
-      return true;
+      return Number.isFinite(parsed) && apply(members, () => [[n, parsed]], handlers);
     });
     input.inputMode = 'decimal';
     if (!stored) input.placeholder = '0';
-    const name = item.paramNames[i];
+    else if (value === null) showMixed(input);
+    const name = common(members.map(({ item }) => item.paramNames[i] ?? null));
     const cell = element('div', { className: 'param' }, [input, ...(name ? [element('span', { className: 'param-name' }, [name])] : [])]);
     return [element('label', { htmlFor: input.id }, [`P${n}`]), cell];
   });
@@ -333,7 +397,7 @@ function allParams(item: ItemDetails, handlers: PanelHandlers): HTMLDetailsEleme
   set.addEventListener('click', () => {
     const n = Number.parseInt(number.value, 10);
     const v = Number.parseFloat(value.value);
-    if (n >= 1 && n <= MAX_PARAM && Number.isFinite(v)) apply(item, p, [[n, v]], handlers);
+    if (n >= 1 && n <= MAX_PARAM && Number.isFinite(v)) apply(members, () => [[n, v]], handlers);
   });
   const other = element('div', { className: 'add-param', title: 'Any other parameter, by number' }, [number, value, set]);
   const details = element('details', { className: 'all-params', open: allParamsOpen() }, [
@@ -345,6 +409,16 @@ function allParams(item: ItemDetails, handlers: PanelHandlers): HTMLDetailsEleme
   return details;
 }
 
+/** WinScore's font menu, for text items. */
+function fontMenu(items: number[], handlers: PanelHandlers): HTMLSelectElement {
+  const font = element('select', { id: 'item-font', title: "WinScore's font menu (FNTnn)" });
+  fillFontMenu(font, 'Font…');
+  font.addEventListener('change', () => {
+    if (Number(font.value) >= 0) handlers.setFont(items, Number(font.value));
+  });
+  return font;
+}
+
 /** The characters of a text item, editable, and a font menu for it. */
 function textEditor(item: ItemDetails, text: string, handlers: PanelHandlers): HTMLElement {
   const input = element('input', { type: 'text', value: text, id: 'item-text', spellcheck: false, title: 'Text (P12 characters); Enter sets it' });
@@ -352,12 +426,7 @@ function textEditor(item: ItemDetails, text: string, handlers: PanelHandlers): H
     if (e.key === 'Enter' && input.value !== text) handlers.setText(item.index, input.value);
     if (e.key === 'Escape') input.value = text;
   });
-  const font = element('select', { id: 'item-font', title: "WinScore's font menu (FNTnn)" });
-  fillFontMenu(font, 'Font…');
-  font.addEventListener('change', () => {
-    if (Number(font.value) >= 0) handlers.setFont(item.index, Number(font.value));
-  });
-  return element('div', { className: 'text-editor' }, [input, font]);
+  return element('div', { className: 'text-editor' }, [input, fontMenu([item.index], handlers)]);
 }
 
 /** A button that sends `command` to the selection. */
@@ -391,12 +460,40 @@ function emptyState(title: string, text: string): HTMLElement[] {
   return [element('h2', {}, [title]), element('p', { className: 'muted hint' }, [text])];
 }
 
-export function renderItem(section: HTMLElement, item: ItemDetails | null, handlers: PanelHandlers, hasScore = true) {
+/**
+ * What a selection of several items says of itself: how many, and when they
+ * are of different kinds, a button per kind that selects only those.
+ */
+function selectionHead(members: Member[], step: HTMLElement, handlers: PanelHandlers): HTMLElement[] {
+  const kinds = new Map<number, ItemDetails[]>();
+  for (const { item } of members) kinds.set(item.code, [...(kinds.get(item.code) ?? []), item]);
+  const only = kinds.size === 1 ? [element('span', { className: 'muted' }, [` · ${members[0]!.item.name}`])] : [];
+  const head = element('header', { className: 'item-head' }, [element('h2', {}, [`${members.length} items`, ...only]), step]);
+  if (kinds.size === 1) return [head];
+  const chips = [...kinds.values()].map((items) => {
+    const { name } = items[0]!;
+    const button = element('button', { type: 'button', title: `Select only the ${items.length} of kind ${name}` }, [
+      element('span', {}, [name]),
+      element('span', { className: 'count' }, [String(items.length)]),
+    ]);
+    button.addEventListener('click', () => handlers.selectItems(items.map((item) => item.index)));
+    return button;
+  });
+  const row = element('div', { className: 'item-kinds' }, chips);
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', 'Select only one kind');
+  return [head, row];
+}
+
+/** The panel for the selected items, the primary one last. */
+export function renderSelection(section: HTMLElement, items: ItemDetails[], handlers: PanelHandlers, hasScore = true) {
   if (!hasScore) {
     section.replaceChildren(...emptyState('No score open', 'Start a new score or open one from the File menu.'));
     return;
   }
-  if (!item) {
+  const members = items.map((item) => ({ item, p: reader(item.params) }));
+  const item = members.length === 1 ? members[0]!.item : null;
+  if (members.length === 0) {
     const touch = matchMedia('(pointer: coarse)').matches;
     section.replaceChildren(
       ...emptyState(
@@ -408,11 +505,15 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
     );
     return;
   }
-  const notes: HTMLElement[] = [
-    ...(item.text !== null ? [textEditor(item, item.text, handlers)] : []),
-    ...(item.drawn ? [] : [element('p', { className: 'muted' }, ['The Rust renderer does not draw this item yet.'])]),
-  ];
-  const others = item.others > 0 ? [element('span', { className: 'muted' }, [` (+${item.others} selected)`])] : [];
+  const notes: HTMLElement[] = item
+    ? [
+        ...(item.text !== null ? [textEditor(item, item.text, handlers)] : []),
+        ...(item.drawn === false ? [element('p', { className: 'muted' }, ['The Rust renderer does not draw this item yet.'])] : []),
+      ]
+    : [
+        element('p', { className: 'muted hint batch-hint' }, ['A setting changed here changes in all of them; ↑/↓ step each from its own value.']),
+        ...(items.every((i) => i.text !== null) ? [element('div', { className: 'text-editor' }, [fontMenu(items.map((i) => i.index), handlers)])] : []),
+      ];
   const remove = commandButton('', 'DE', 'Delete, also Del', handlers, 'danger');
   remove.innerHTML = TRASH;
   remove.setAttribute('aria-label', 'Delete');
@@ -421,8 +522,10 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
     commandButton('‹', 'B', 'Previous item, also Shift+Enter', handlers),
     commandButton('›', 'NEX', 'Next item, also Enter', handlers),
   ]);
-  const head = element('header', { className: 'item-head' }, [element('h2', {}, [`Item ${item.index} · ${item.name}`, ...others]), step]);
-  section.replaceChildren(head, actions(handlers), ...notes, ...sections(item, handlers), allParams(item, handlers));
+  const head = item
+    ? [element('header', { className: 'item-head' }, [element('h2', {}, [`Item ${item.index} · ${item.name}`]), step])]
+    : selectionHead(members, step, handlers);
+  section.replaceChildren(...head, actions(handlers), ...notes, ...sections(members, handlers), allParams(members, handlers));
 }
 
 /**
