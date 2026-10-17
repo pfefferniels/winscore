@@ -1,6 +1,9 @@
 // The side panel: the selected item, with buttons for what can be done to
-// it and its parameters, and below it the list of all items.
+// it, its settings (item-fields.ts) and all its parameters, and below it the
+// list of all items.
 import { fillFontMenu } from './text-dialog';
+import { sameValue, sectionsFor } from './item-fields';
+import type { Change, ChoiceSetting, Context, NumberSetting, P, PairSetting, Setting } from './item-fields';
 
 export interface ItemSummary {
   index: number;
@@ -12,8 +15,10 @@ export interface ItemSummary {
 
 export interface ItemDetails extends ItemSummary {
   params: Float32Array;
-  /** What each parameter means, from the WinScore help; null where it says nothing. */
+  /** What parameters P1, P2, … mean, from the WinScore help; null where it says nothing. */
   paramNames: (string | null)[];
+  /** What its settings read from the rest of the score. */
+  context: Context;
   text: string | null;
   /** Whether the Rust renderer drew anything for this item. */
   drawn: boolean;
@@ -25,7 +30,10 @@ export interface PanelHandlers {
   select(index: number): void;
   /** Runs a SCORE command on the selection. */
   run(command: string): void;
-  setParam(index: number, n: number, value: number): void;
+  /** Sets parameters of item `index` as one undo step. */
+  setParams(index: number, changes: Change[]): void;
+  /** Picks a library symbol for a code-9 item in the symbol dialog. */
+  pickSymbol(index: number): void;
   /** Replaces a text item's characters. */
   setText(index: number, text: string): void;
   /** Gives a text item one of WinScore's fonts (`_NN`). */
@@ -108,40 +116,233 @@ export function markSelected(list: HTMLOListElement, items: number[]) {
   rows.at(-1)?.scrollIntoView({ block: 'nearest' });
 }
 
-function paramInput(item: ItemDetails, n: number, value: number, handlers: PanelHandlers): HTMLInputElement {
-  const shown = formatParam(value);
-  const input = element('input', { type: 'text', inputMode: 'decimal', value: shown, id: `p${n}` });
+/**
+ * An item's parameters as SCORE shows them, to seven significant digits, so
+ * that what settings derive from them (201.31 less its hundreds) has no
+ * single-precision noise; unset ones are 0.
+ */
+function reader(params: Float32Array): P {
+  return (n) => Number(formatParam(params[n - 1] ?? 0));
+}
+
+/** Sends the changes that change something. */
+function apply(item: ItemDetails, p: P, changes: Change[], handlers: PanelHandlers) {
+  const real = changes.filter(([n, v]) => Number.isFinite(v) && Math.fround(v) !== Math.fround(p(n)));
+  if (real.length > 0) handlers.setParams(item.index, real);
+}
+
+/** Rounds away the binary noise of stepping by tenths. */
+const tidy = (v: number) => Math.round(v * 1e6) / 1e6;
+
+/**
+ * A text field that sets something on Enter or when left, steps with ↑/↓
+ * (Shift: ten steps) and goes back to what it showed on Escape. Leaving it
+ * sets the value after the keyboard has moved on, so the panel drawn anew
+ * puts it in the next field.
+ */
+function editField(id: string, shown: string, set: (text: string) => boolean, step?: (delta: number) => void): HTMLInputElement {
+  const input = element('input', { type: 'text', value: shown, id, spellcheck: false, autocomplete: 'off' });
+  // The panel is drawn anew after a change; a blur of this field on its way out must not set it twice.
+  let done = false;
   const commit = () => {
-    const parsed = Number.parseFloat(input.value);
-    if (input.value === shown || !Number.isFinite(parsed)) {
-      input.value = shown;
-      return;
-    }
-    handlers.setParam(item.index, n, parsed);
+    if (done || input.value === shown) return;
+    if (set(input.value)) done = true;
+    else input.classList.add('invalid');
   };
-  input.addEventListener('input', () => input.classList.toggle('changed', input.value !== shown));
-  input.addEventListener('blur', commit);
+  input.addEventListener('input', () => {
+    input.classList.toggle('changed', input.value !== shown);
+    input.classList.remove('invalid');
+  });
+  input.addEventListener('blur', () => setTimeout(commit));
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') commit();
-    if (e.key === 'Escape') {
+    else if (e.key === 'Escape') {
       input.value = shown;
-      input.classList.remove('changed');
+      input.classList.remove('changed', 'invalid');
       input.blur();
-    }
+    } else if (step && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault();
+      step((e.key === 'ArrowUp' ? 1 : -1) * (e.shiftKey ? 10 : 1));
+    } else return;
+    e.stopPropagation();
   });
   return input;
 }
 
-function addParamRow(item: ItemDetails, handlers: PanelHandlers): HTMLElement {
-  const number = element('input', { type: 'number', min: '1', step: '1', placeholder: 'P', value: String(item.params.length + 1) });
-  const value = element('input', { type: 'text', inputMode: 'decimal', placeholder: 'value' });
+function numberInput(s: NumberSetting, item: ItemDetails, p: P, handlers: PanelHandlers): HTMLInputElement {
+  const value = s.get(p);
+  const input = editField(
+    s.id,
+    formatParam(value),
+    (text) => {
+      const parsed = Number.parseFloat(text);
+      if (!Number.isFinite(parsed)) return false;
+      apply(item, p, s.set(parsed, p), handlers);
+      return true;
+    },
+    (delta) => apply(item, p, s.set(tidy(value + delta * s.step), p), handlers),
+  );
+  input.inputMode = 'decimal';
+  return input;
+}
+
+function note(text: string | null | undefined): HTMLElement[] {
+  return text ? [element('span', { className: 'setting-note' }, [text])] : [];
+}
+
+function choiceControl(s: ChoiceSetting, item: ItemDetails, p: P, handlers: PanelHandlers): HTMLElement {
+  const current = s.get(p);
+  const chosen = s.options.findIndex((o) => sameValue(o.value, current));
+  const pick = (i: number) => apply(item, p, s.set(s.options[i]!.value, p), handlers);
+  if (s.buttons) {
+    const buttons = s.options.map((o, i) => {
+      const button = element('button', { type: 'button', id: `${s.id}-${i}`, textContent: o.label, className: i === chosen ? 'on' : '' });
+      button.setAttribute('aria-pressed', String(i === chosen));
+      button.addEventListener('click', () => pick(i));
+      return button;
+    });
+    const group = element('div', { className: 'segmented' }, buttons);
+    group.setAttribute('role', 'group');
+    return element('div', { className: 'setting-control' }, [group, ...note(chosen < 0 ? s.other?.(p) : null)]);
+  }
+  const select = element('select', { id: s.id });
+  if (chosen < 0) select.append(new Option(s.other?.(p) ?? `Other (${formatParam(current)})`, '', true, true));
+  select.append(...s.options.map((o, i) => new Option(o.label, String(i), false, i === chosen)));
+  if (chosen < 0) select.options[0]!.disabled = true;
+  select.addEventListener('change', () => pick(Number(select.value)));
+  return select;
+}
+
+/** The control of one setting, and the element its label points at. */
+function control(s: Exclude<Setting, PairSetting>, item: ItemDetails, p: P, handlers: PanelHandlers): HTMLElement {
+  switch (s.kind) {
+    case 'number': {
+      const input = numberInput(s, item, p, handlers);
+      const pick = s.pick === 'symbol' ? [chooseButton(item, handlers)] : [];
+      const row = pick.length ? [element('div', { className: 'with-button' }, [input, ...pick])] : [input];
+      return element('div', { className: 'setting-control' }, [...row, ...note(s.note?.(s.get(p), p, item.context))]);
+    }
+    case 'choice':
+      return choiceControl(s, item, p, handlers);
+    case 'toggle': {
+      const box = element('input', { type: 'checkbox', id: s.id, checked: s.get(p) });
+      box.addEventListener('change', () => apply(item, p, s.set(box.checked, p), handlers));
+      return element('div', { className: 'setting-control toggle' }, [box]);
+    }
+    case 'text': {
+      const ctx = item.context;
+      const input = editField(
+        s.id,
+        s.show(p, ctx),
+        (text) => {
+          const changes = s.parse(text, p, ctx);
+          if (changes) apply(item, p, changes, handlers);
+          return changes !== null;
+        },
+        (delta) => apply(item, p, s.step(delta, p, ctx), handlers),
+      );
+      if (s.placeholder) input.placeholder = s.placeholder;
+      return element('div', { className: 'setting-control' }, [input, ...note(s.note?.(p, ctx))]);
+    }
+  }
+}
+
+function chooseButton(item: ItemDetails, handlers: PanelHandlers): HTMLButtonElement {
+  const button = element('button', { type: 'button', textContent: 'Choose…', title: 'Pick the symbol from the libraries' });
+  button.addEventListener('click', () => handlers.pickSymbol(item.index));
+  return button;
+}
+
+function pairControl(s: PairSetting, item: ItemDetails, p: P, handlers: PanelHandlers): HTMLElement {
+  const halves = s.fields.map((f) =>
+    element('div', { className: 'pair-half' }, [
+      numberInput(f, item, p, handlers),
+      element('label', { htmlFor: f.id, className: 'setting-note' }, [[f.label, f.note?.(f.get(p), p, item.context)].filter(Boolean).join(' · ')]),
+    ]),
+  );
+  return element('div', { className: 'setting-control pair' }, halves);
+}
+
+/** Label and control of one setting: a row of the settings grid. */
+function settingRow(s: Setting, item: ItemDetails, p: P, handlers: PanelHandlers): HTMLElement[] {
+  const target = s.kind === 'pair' ? s.fields[0].id : s.kind === 'choice' && s.buttons ? '' : s.id;
+  const label = element('label', { className: 'setting-label', title: s.help ?? s.label }, [s.label]);
+  if (target) label.htmlFor = target;
+  const body = s.kind === 'pair' ? pairControl(s, item, p, handlers) : control(s, item, p, handlers);
+  if (s.help) body.title = s.help;
+  return [label, body];
+}
+
+function sections(item: ItemDetails, handlers: PanelHandlers): HTMLElement[] {
+  const p = reader(item.params);
+  return sectionsFor(item.code).flatMap((section) => {
+    const shown = section.settings.filter((s) => s.when?.(p) ?? true);
+    if (shown.length === 0) return [];
+    const rows = shown.flatMap((s) => settingRow(s, item, p, handlers));
+    return [element('section', { className: 'settings' }, [element('h3', {}, [section.title]), element('div', { className: 'settings-grid' }, rows)])];
+  });
+}
+
+const ALL_PARAMS_KEY = 'winscore.allParams';
+
+function allParamsOpen(): boolean {
+  try {
+    return localStorage.getItem(ALL_PARAMS_KEY) === 'open';
+  } catch {
+    return false;
+  }
+}
+
+function rememberAllParams(open: boolean) {
+  try {
+    localStorage.setItem(ALL_PARAMS_KEY, open ? 'open' : 'closed');
+  } catch {
+    // The setting is a convenience; without storage it is not kept.
+  }
+}
+
+/** Highest parameter number an edit may set; the engine ignores `46 v` and above. */
+const MAX_PARAM = 45;
+
+/**
+ * Every parameter P1…Pn as SCORE stores it, with the help's label, and those
+ * the help describes but the item does not store; below them any other
+ * parameter by number.
+ */
+function allParams(item: ItemDetails, handlers: PanelHandlers): HTMLDetailsElement {
+  const p = reader(item.params);
+  const count = Math.max(item.params.length, item.paramNames.length);
+  const rows = Array.from({ length: count }, (_, i) => {
+    const n = i + 1;
+    const stored = n <= item.params.length;
+    const input = editField(`all-p${n}`, stored ? formatParam(p(n)) : '', (text) => {
+      const parsed = Number.parseFloat(text);
+      if (!Number.isFinite(parsed)) return false;
+      apply(item, p, [[n, parsed]], handlers);
+      return true;
+    });
+    input.inputMode = 'decimal';
+    if (!stored) input.placeholder = '0';
+    const name = item.paramNames[i];
+    const cell = element('div', { className: 'param' }, [input, ...(name ? [element('span', { className: 'param-name' }, [name])] : [])]);
+    return [element('label', { htmlFor: input.id }, [`P${n}`]), cell];
+  });
+  const number = element('input', { type: 'number', min: '1', max: String(MAX_PARAM), step: '1', placeholder: 'P', id: 'all-other-n' });
+  const value = element('input', { type: 'text', inputMode: 'decimal', placeholder: 'value', id: 'all-other-v' });
   const set = element('button', { type: 'button' }, ['Set']);
   set.addEventListener('click', () => {
     const n = Number.parseInt(number.value, 10);
     const v = Number.parseFloat(value.value);
-    if (n >= 1 && Number.isFinite(v)) handlers.setParam(item.index, n, v);
+    if (n >= 1 && n <= MAX_PARAM && Number.isFinite(v)) apply(item, p, [[n, v]], handlers);
   });
-  return element('div', { className: 'add-param' }, [number, value, set]);
+  const other = element('div', { className: 'add-param', title: 'Any other parameter, by number' }, [number, value, set]);
+  const details = element('details', { className: 'all-params', open: allParamsOpen() }, [
+    element('summary', {}, ['All parameters']),
+    element('div', { className: 'params' }, rows.flat()),
+    other,
+  ]);
+  details.addEventListener('toggle', () => rememberAllParams(details.open));
+  return details;
 }
 
 /** The characters of a text item, editable, and a font menu for it. */
@@ -207,13 +408,6 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
     );
     return;
   }
-  const row = (value: number, i: number) => {
-    const name = item.paramNames[i];
-    const cell = element('div', { className: 'param' }, [paramInput(item, i + 1, value, handlers)]);
-    if (name) cell.append(element('span', { className: 'param-name' }, [name]));
-    return [element('label', { htmlFor: `p${i + 1}` }, [`P${i + 1}`]), cell];
-  };
-  const grid = element('div', { className: 'params' }, Array.from(item.params, row).flat());
   const notes: HTMLElement[] = [
     ...(item.text !== null ? [textEditor(item, item.text, handlers)] : []),
     ...(item.drawn ? [] : [element('p', { className: 'muted' }, ['The Rust renderer does not draw this item yet.'])]),
@@ -228,7 +422,7 @@ export function renderItem(section: HTMLElement, item: ItemDetails | null, handl
     commandButton('›', 'NEX', 'Next item, also Enter', handlers),
   ]);
   const head = element('header', { className: 'item-head' }, [element('h2', {}, [`Item ${item.index} · ${item.name}`, ...others]), step]);
-  section.replaceChildren(head, actions(handlers), ...notes, grid, addParamRow(item, handlers));
+  section.replaceChildren(head, actions(handlers), ...notes, ...sections(item, handlers), allParams(item, handlers));
 }
 
 /**

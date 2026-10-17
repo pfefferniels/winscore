@@ -1280,7 +1280,7 @@ button.danger:hover {
 .item {
   padding: 12px;
   border-bottom: 1px solid var(--border);
-  max-height: 55%;
+  max-height: 62%;
   overflow: auto;
 }
 
@@ -1324,13 +1324,159 @@ button.danger:hover {
   outline-offset: -1px;
 }
 
-.params input.changed {
+.params input.changed,
+.settings input.changed {
   border-color: var(--accent);
+}
+
+.params input.invalid,
+.settings input.invalid {
+  border-color: var(--danger);
+  outline-color: var(--danger);
+}
+
+.settings {
+  margin-top: 14px;
+}
+
+.settings h3,
+.all-params summary {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 6px 8px;
+  align-items: start;
+}
+
+.setting-label {
+  line-height: 26px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setting-control {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings input[type='text'],
+.settings select {
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.settings input[type='text']:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.setting-note {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.setting-control.toggle {
+  height: 26px;
+  justify-content: center;
+}
+
+.setting-control.toggle input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.setting-control.pair {
+  flex-direction: row;
+  gap: 6px;
+}
+
+.pair-half {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.with-button {
+  display: flex;
+  gap: 4px;
+}
+
+.with-button button {
+  height: 26px;
+  padding: 0 8px;
+}
+
+.segmented {
+  display: flex;
+}
+
+.segmented button {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 0;
+  margin-left: -1px;
+  white-space: nowrap;
+}
+
+.segmented button:first-child {
+  border-radius: 4px 0 0 4px;
+  margin-left: 0;
+}
+
+.segmented button:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.segmented button.on {
+  position: relative;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.all-params {
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.all-params summary {
+  margin: 0;
+  cursor: pointer;
+}
+
+.all-params[open] summary {
+  margin-bottom: 8px;
 }
 
 .text-editor {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 6px;
   margin-bottom: 10px;
 }

@@ -279,6 +279,19 @@ fn set_param_works_without_selection() {
 }
 
 #[test]
+fn set_params_is_one_undo_step() {
+    let mut e = small();
+    let note = e.id_at(2).unwrap();
+    e.set_params(note, &[(6, 0.0), (7, 0.5), (9, 1.0)]).unwrap();
+    assert_eq!([p(&e, note, 7), p(&e, note, 9)], [0.5, 1.0]);
+    assert_eq!(e.undo_label(), Some("Set P6, P7, P9"));
+    e.undo();
+    assert_eq!([p(&e, note, 7), p(&e, note, 9)], [1.0, 0.0]);
+    assert_eq!(e.set_params(note, &[(5, 20.0), (46, 1.0)]), Err(EditError::NoSuchParam(46.0)));
+    assert_eq!(p(&e, note, 5), 10.0);
+}
+
+#[test]
 fn inserted_items_append_and_select() {
     let mut e = small();
     let note = e.item(e.id_at(1).unwrap()).unwrap().clone();
