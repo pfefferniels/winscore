@@ -19,6 +19,7 @@ Material for understanding Leland Smith's music engraving program SCORE and its 
 | `analysis/scripts/`, `analysis/ghidra_scripts/` | the scripts that produced the above |
 | `oracle/` | the original engine running under emulation, as a test reference |
 | `rust/` | the port; so far `score-format` (`.mus` read/write, `.DRW` float variant) |
+| `web/` | the editor in the browser (Rust via WebAssembly), published at https://pfefferniels.github.io/winscore/ |
 
 ## Status
 

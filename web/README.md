@@ -16,6 +16,8 @@ npm install
 npm run dev        # builds the wasm, copies the samples, serves http://localhost:5173
 ```
 
+**Published** at https://pfefferniels.github.io/winscore/: `.github/workflows/web.yml` runs the Rust tests, the build and the smoke test on every push and deploys `dist/` from `main` to GitHub Pages.
+
 `npm run build` writes a self-contained static site to `web/dist/` (relative paths; wasm, fonts and samples included). `npm run preview` serves it at http://localhost:4173.
 
 Environment variables: `CARGO_TARGET_DIR` (default `rust/target`), `WASM_PROFILE` (default `release`).
