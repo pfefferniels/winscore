@@ -3,8 +3,9 @@
 // with a pen one device pixel wide; filled objects with the even-odd rule
 // (PolyPolygon, ALTERNATE) and outlined with that same pen; text on the
 // baseline at the engine's y + 96, stretched to the run's average width.
-// Drawing happens in device pixels so lines stay crisp at any
-// devicePixelRatio.
+// Drawing happens in device pixels so horizontal and vertical lines stay
+// crisp at any devicePixelRatio; curves are antialiased rather than
+// snapped to pixels as GDI draws them.
 import { elementsOf, type Box, type DisplayList, type Shape, type TextRun } from './display';
 import { ascent, cssFont, stretch } from './fonts';
 import { toDevice, type Transform } from './view';
@@ -50,10 +51,24 @@ function rgb([r, g, b]: [number, number, number]): string {
   return `rgb(${r} ${g} ${b})`;
 }
 
-/** Points snapped to device pixel centres, where a one-pixel pen is crisp. */
+/** Whether every segment of `path` (with its closing one) is horizontal or vertical. */
+function isRectilinear(path: Int32Array, close: boolean): boolean {
+  for (let i = 2; i + 1 < path.length; i += 2) {
+    if (path[i] !== path[i - 2] && path[i + 1] !== path[i - 1]) return false;
+  }
+  const last = path.length - 2;
+  return !close || path[0] === path[last] || path[1] === path[last + 1];
+}
+
+/**
+ * Horizontal and vertical paths (staff lines, stems, barlines, the frame) are
+ * snapped to device pixel centres, where a one-pixel pen is crisp. Curved and
+ * slanted outlines keep their exact positions and are antialiased: snapped to
+ * the pixel grid, noteheads, dots and slurs would turn into steps.
+ */
 function tracePath(ctx: CanvasRenderingContext2D, t: Transform, path: Int32Array, close: boolean) {
   const at = (i: number) => toDevice(t, path[i]!, path[i + 1]!);
-  const snap = (v: number) => Math.round(v - 0.5) + 0.5;
+  const snap = isRectilinear(path, close) ? (v: number) => Math.round(v - 0.5) + 0.5 : (v: number) => v;
   const first = at(0);
   ctx.moveTo(snap(first.x), snap(first.y));
   for (let i = 2; i + 1 < path.length; i += 2) {
