@@ -12,7 +12,7 @@ import { createInputMode, type Shown } from './input-mode';
 import { bindInteraction } from './interaction';
 import { createMenuBar, inMenuBar, MOD } from './menu';
 import { appMenus, type DialogKind } from './menus';
-import { filterItemList, formatParam, markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
+import { bindPanelGrip, filterItemList, formatParam, markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer } from './paint';
 import { download, printPage } from './print';
 import { createSymbolDialog } from './symbol-dialog';
@@ -46,6 +46,9 @@ const MARGIN = 1000;
 const CLICK_TOLERANCE_PX = 4;
 /** Without an outline under the pointer, WinScore's nearest-reference-point rule applies within this radius (D8). */
 const PICK_RADIUS_PX = 12;
+/** A finger covers more than a mouse pointer: it picks from further away. */
+const TOUCH_TOLERANCE_PX = 10;
+const TOUCH_PICK_RADIUS_PX = 24;
 /** The line being typed, and in it the item at the caret. */
 const PREVIEW_TINT = '#7c3aed';
 const FOCUS_TINT = '#ea580c';
@@ -88,6 +91,7 @@ const ui = {
   startOpen: $<HTMLButtonElement>('start-open'),
   startSamples: $<HTMLDivElement>('start-samples'),
   panel: $<HTMLElement>('panel'),
+  panelGrip: $<HTMLDivElement>('panel-grip'),
   item: $<HTMLElement>('item'),
   items: $<HTMLOListElement>('items'),
   itemCount: $<HTMLSpanElement>('item-count'),
@@ -98,13 +102,19 @@ const ui = {
 };
 
 const PANEL_KEY = 'winscore.panel';
+/** The width below which the stylesheet lays the app out for a phone: the panel goes under the page. */
+const NARROW = '(max-width: 640px)';
+/** A touch screen. */
+const COARSE = '(pointer: coarse)';
 
-/** The remembered side panel setting; storage may be unavailable. */
+/** The remembered side panel setting; storage may be unavailable. A phone starts without it, to leave the page room. */
 function storedPanel(): boolean {
+  const fallback = !matchMedia(NARROW).matches;
   try {
-    return localStorage.getItem(PANEL_KEY) !== 'hidden';
+    const stored = localStorage.getItem(PANEL_KEY);
+    return stored === null ? fallback : stored !== 'hidden';
   } catch {
-    return true;
+    return fallback;
   }
 }
 
@@ -178,7 +188,8 @@ function showPrompt() {
   ui.footer.classList.toggle('asking', question !== null);
   ui.prompt.textContent = question ?? '';
   ui.command.placeholder = question ? 'Type the answer, or draw a box' : 'e.g. R 5, NOTE, DE: just type';
-  if (question !== null && document.activeElement !== ui.command) ui.command.focus();
+  // A touch screen would bring up its keyboard over the page the box is drawn on.
+  if (question !== null && document.activeElement !== ui.command && !matchMedia(COARSE).matches) ui.command.focus();
 }
 
 function decodeAndFree(encoded: EncodedList): DisplayList {
@@ -247,6 +258,7 @@ function refreshStatus() {
   ui.command.disabled = !state.editor;
   ui.input.disabled = !state.editor;
   ui.input.setAttribute('aria-pressed', String(inputMode.isOpen));
+  ui.app.classList.toggle('inputting', inputMode.isOpen);
   [ui.zoomIn, ui.zoomOut, ui.zoom, ui.fit].forEach((control) => (control.disabled = !open));
   ui.start.hidden = open;
   ui.panel.hidden = !open || !state.panel;
@@ -575,6 +587,8 @@ function setPanel(shown: boolean) {
   state.panel = shown;
   ui.panel.hidden = !shown || !state.score;
   ui.togglePanel.setAttribute('aria-pressed', String(shown));
+  // The list could not scroll to the selection while it was hidden.
+  if (shown) markSelected(ui.items, selection());
   try {
     localStorage.setItem(PANEL_KEY, shown ? 'shown' : 'hidden');
   } catch {
@@ -588,18 +602,18 @@ function toggleInput() {
 }
 
 /** The item under the pointer: a drawn outline, else the nearest reference point. */
-function itemAt(clientX: number, clientY: number): number | null {
+function itemAt(clientX: number, clientY: number, coarse = false): number | null {
   const p = view.pageAt(clientX, clientY);
-  const drawn = state.score?.itemAt(p.x, p.y, view.unitsPerCss(CLICK_TOLERANCE_PX), 0);
-  return drawn ?? state.score?.itemAt(p.x, p.y, 0, view.unitsPerCss(PICK_RADIUS_PX)) ?? null;
+  const drawn = state.score?.itemAt(p.x, p.y, view.unitsPerCss(coarse ? TOUCH_TOLERANCE_PX : CLICK_TOLERANCE_PX), 0);
+  return drawn ?? state.score?.itemAt(p.x, p.y, 0, view.unitsPerCss(coarse ? TOUCH_PICK_RADIUS_PX : PICK_RADIUS_PX)) ?? null;
 }
 
 function bindPointer() {
-  // With the input open, a click on its staff puts the cursor there.
+  // With the input open, a click on its staff puts the cursor there (a tap does, below, once it is not a scroll).
   ui.viewport.addEventListener(
     'pointerdown',
     (e) => {
-      if (e.button !== 0 || e.ctrlKey || e.metaKey || !inputMode.isOpen) return;
+      if (e.pointerType === 'touch' || e.button !== 0 || e.ctrlKey || e.metaKey || !inputMode.isOpen) return;
       if (inputMode.click(view.pageAt(e.clientX, e.clientY), e.shiftKey)) {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -611,6 +625,10 @@ function bindPointer() {
     editor: () => state.editor,
     itemAt,
     pageAt: (x, y) => view.pageAt(x, y),
+    zoom: () => view.zoom,
+    zoomAt: (zoom, at, clientX, clientY) => view.zoomAt(zoom, at, { clientX, clientY }),
+    inputTap: (x, y) => inputMode.isOpen && inputMode.click(view.pageAt(x, y), false),
+    holdsKeyboard: () => inputMode.holdsKeyboard,
     selected: selectionChanged,
     edited,
     failed,
@@ -630,6 +648,23 @@ function bindPointer() {
     const p = view.pageAt(e.clientX, e.clientY);
     ui.cursor.textContent = state.score ? `x ${Math.round(p.x)}  y ${Math.round(p.y)}  (${(p.x / 4000).toFixed(2)} in, ${(p.y / 4000).toFixed(2)} in)` : '';
   });
+}
+
+/**
+ * Keeps the app in the part of the window an on-screen keyboard leaves
+ * visible: iOS lays the page out under the keyboard rather than resizing it.
+ * A page the reader zoomed into is left as it is.
+ */
+function followVisualViewport() {
+  const visible = window.visualViewport;
+  if (!visible) return;
+  const fit = () => {
+    const covered = Math.abs(visible.scale - 1) < 0.01 && visible.height < document.documentElement.clientHeight - 1;
+    ui.app.style.top = covered ? `${visible.offsetTop}px` : '';
+    ui.app.style.height = covered ? `${visible.height}px` : '';
+  };
+  visible.addEventListener('resize', fit);
+  visible.addEventListener('scroll', fit);
 }
 
 function bindDrop() {
@@ -689,7 +724,10 @@ function bindMenus() {
 }
 
 function showShortcuts() {
-  if (!ui.shortcuts.open) ui.shortcuts.showModal();
+  if (ui.shortcuts.open) return;
+  ui.shortcuts.showModal();
+  // Opened on its Close button, the dialog would start scrolled to the end on a small screen.
+  ui.shortcuts.scrollTop = 0;
 }
 
 function bindStart() {
@@ -759,6 +797,8 @@ function bindControls() {
   bindStart();
   bindPointer();
   bindDrop();
+  bindPanelGrip(ui.panel, ui.panelGrip);
+  followVisualViewport();
 }
 
 /** URL parameters for direct links and screenshots: sample (or new), zoom, select. Without one the start screen shows. */

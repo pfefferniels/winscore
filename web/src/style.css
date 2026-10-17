@@ -131,6 +131,7 @@ svg {
 
 button.icon {
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
   width: 32px;
@@ -237,6 +238,53 @@ button.icon[aria-pressed='true'] {
   gap: 1px;
 }
 
+/* On a narrow screen one Menu button stands for the titles, which become tabs in the menu. */
+.menu-compact,
+.menu-tabs {
+  display: none;
+}
+
+.appbar .menu-compact {
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.menu-compact svg {
+  width: 18px;
+  height: 18px;
+}
+
+.appbar .menu-compact.open {
+  background: var(--active);
+}
+
+.menu-tabs {
+  position: sticky;
+  top: -5px;
+  z-index: 1;
+  gap: 2px;
+  margin: -5px -5px 4px;
+  padding: 5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.appbar .menu-tab {
+  flex: 1;
+  min-width: 0;
+  padding: 0 4px;
+  border-radius: 6px;
+}
+
+.appbar .menu-tab[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .menu {
   position: relative;
 }
@@ -259,6 +307,7 @@ button.icon[aria-pressed='true'] {
   flex-direction: column;
   min-width: 250px;
   max-height: calc(100vh - 64px);
+  max-height: calc(100dvh - 64px);
   overflow: auto;
   padding: 5px;
   border: 1px solid var(--border);
@@ -396,6 +445,11 @@ button.icon[aria-pressed='true'] {
   inset: 0;
   overflow: auto;
   cursor: default;
+  /* Fingers pan, pinch and press with the page's own gestures (interaction.ts). */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .content {
@@ -609,7 +663,7 @@ button.icon[aria-pressed='true'] {
 
 .shortcuts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
   gap: 18px 28px;
 }
 
@@ -633,6 +687,16 @@ button.icon[aria-pressed='true'] {
 
 .shortcuts dd {
   margin: 0;
+}
+
+.touch-only {
+  display: none;
+}
+
+@media (any-pointer: coarse) {
+  .touch-only {
+    display: block;
+  }
 }
 
 .symbol-search {
@@ -676,7 +740,7 @@ button.icon[aria-pressed='true'] {
 
 .text-fields {
   display: grid;
-  grid-template-columns: 64px 1fr;
+  grid-template-columns: 64px minmax(0, 1fr);
   gap: 10px 12px;
   align-items: center;
 }
@@ -687,6 +751,7 @@ button.icon[aria-pressed='true'] {
 
 .text-fields > input,
 .text-fields > select {
+  min-width: 0;
   height: 30px;
   padding: 0 8px;
   border: 1px solid var(--border);
@@ -1036,6 +1101,62 @@ kbd {
   }
 }
 
+/* Keys an on-screen keyboard lacks, shown on touch screens; the first takes the keyboard. */
+.touch-keys {
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.touch-keys button {
+  min-width: 42px;
+  padding: 0 8px;
+  font-size: 16px;
+}
+
+.touch-keys button[aria-pressed='true'],
+.typing-key:focus-within {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+/* The typing field lies invisible over the keyboard button: a tap on it brings up the keyboard. */
+.typing-key {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.typing-key svg {
+  width: 20px;
+  height: 20px;
+}
+
+.typing-key input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font-size: 16px;
+  cursor: pointer;
+}
+
 #input-insert:not(:disabled) {
   background: var(--accent);
   border-color: var(--accent);
@@ -1049,6 +1170,27 @@ kbd {
   flex-direction: column;
   min-height: 0;
   background: var(--bg);
+}
+
+.panel-grip {
+  display: none;
+  flex: none;
+  position: relative;
+  height: 16px;
+  margin-bottom: -8px;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.panel-grip::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: calc(50% - 18px);
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #d1d5db;
 }
 
 .panel h2 {
@@ -1144,7 +1286,7 @@ button.danger:hover {
 
 .params {
   display: grid;
-  grid-template-columns: 44px 1fr;
+  grid-template-columns: 44px minmax(0, 1fr);
   gap: 4px 8px;
   align-items: center;
 }
@@ -1168,6 +1310,8 @@ button.danger:hover {
 }
 
 .params input {
+  width: 100%;
+  min-width: 0;
   height: 26px;
   padding: 0 6px;
   border: 1px solid var(--border);
@@ -1514,6 +1658,322 @@ button.danger:hover {
 
   .command {
     width: 180px;
+  }
+}
+
+/* Touch screens: targets a finger can hit, and text fields at 16px, which
+   iOS does not zoom into when they take the keyboard. */
+@media (pointer: coarse) {
+  button,
+  select {
+    height: 36px;
+  }
+
+  input,
+  select {
+    font-size: 16px;
+  }
+
+  .appbar {
+    height: 52px;
+  }
+
+  button.icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .appbar .accent,
+  .appbar .menu-title {
+    height: 40px;
+  }
+
+  .appbar .menu-compact {
+    width: 40px;
+    height: 40px;
+  }
+
+  .menu-popup .menu-item {
+    height: 42px;
+  }
+
+  .menu-chips .menu-chip {
+    height: 36px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .item-step button {
+    width: 36px;
+  }
+
+  .nudge button {
+    width: 40px;
+  }
+
+  .params input,
+  .add-param input,
+  .text-editor input,
+  .items-head input,
+  .input-head input,
+  .input-range input,
+  .text-fields > input,
+  .text-fields > select,
+  .symbol-search input,
+  .command {
+    height: 36px;
+  }
+
+  .params label {
+    line-height: 36px;
+  }
+
+  .settings input[type='text'],
+  .settings select,
+  .with-button button,
+  .segmented button,
+  .setting-control.toggle {
+    height: 36px;
+  }
+
+  .setting-label {
+    line-height: 36px;
+  }
+
+  .setting-control.toggle input {
+    width: 20px;
+    height: 20px;
+  }
+
+  .item-list li {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
+  .pass {
+    padding: 7px 8px;
+  }
+
+  .start-samples .sample {
+    height: 40px;
+  }
+
+  .touch-keys {
+    display: flex;
+  }
+
+  .keys-legend {
+    display: none;
+  }
+}
+
+/* A phone: one Menu button, the panel under the page (its height set with
+   the grip), the command bar beside the message, and the music input in
+   place of the command bar. */
+@media (max-width: 640px) {
+  .appbar {
+    gap: 4px;
+    padding: 0 6px;
+  }
+
+  .brand,
+  .appbar .sep,
+  .zoom,
+  .appbar .menu-title {
+    display: none;
+  }
+
+  .menu-compact,
+  .menu-tabs {
+    display: flex;
+  }
+
+  .menubar {
+    gap: 0;
+  }
+
+  .appbar .menu-compact {
+    flex: none;
+  }
+
+  .appbar .accent {
+    flex: none;
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .doc {
+    display: inline-flex;
+  }
+
+  /* "Unsaved changes" as a dot; the name's tooltip says it. */
+  .doc-state {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    background: #f59e0b;
+    font-size: 0;
+  }
+
+  .menu-popup {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    min-width: 0;
+  }
+
+  .menu-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .menu-chips {
+    flex-wrap: wrap;
+  }
+
+  .main {
+    flex-direction: column;
+  }
+
+  .panel {
+    flex: none;
+    width: auto;
+    height: var(--panel-share, 45%);
+    border-top: 1px solid var(--border);
+    border-left: none;
+  }
+
+  .panel-grip {
+    display: block;
+  }
+
+  .item {
+    max-height: 60%;
+  }
+
+  .footer {
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    padding: 6px 8px;
+  }
+
+  .footer .spacer,
+  .cursor {
+    display: none;
+  }
+
+  .command-field {
+    flex: 1 1 50%;
+    min-width: 0;
+  }
+
+  .command {
+    width: 100%;
+  }
+
+  .message {
+    display: -webkit-box;
+    flex: 1 1 40%;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 12px;
+    line-height: 16px;
+    white-space: normal;
+  }
+
+  .prompt {
+    flex-basis: 100%;
+    order: -1;
+    white-space: normal;
+  }
+
+  .app.inputting .footer {
+    display: none;
+  }
+
+  .input-panel {
+    flex: 0 0 46%;
+    min-height: 0;
+    gap: 6px;
+    padding: 6px 8px 8px;
+  }
+
+  .input-head {
+    gap: 6px 10px;
+  }
+
+  .input-head h2 {
+    display: none;
+  }
+
+  .input-head input {
+    width: 52px;
+  }
+
+  .input-head .spacer {
+    display: none;
+  }
+
+  #input-insert {
+    margin-left: auto;
+  }
+
+  .input-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 8px;
+    height: auto;
+    min-height: 0;
+  }
+
+  .passes {
+    flex: 0 1 auto;
+    min-height: 0;
+  }
+
+  .input-help {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  .input-bubble {
+    max-width: calc(100% - 8px);
+  }
+
+  .symbol-dialog,
+  .text-dialog,
+  .shortcuts-dialog {
+    padding: 16px;
+  }
+
+  .input-range {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
+  .dialog-actions {
+    flex-wrap: wrap;
+  }
+
+  .dialog-actions > .muted {
+    flex-basis: 100%;
+  }
+
+  .empty-hint {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+}
+
+/* The smallest phones: shortcuts and gestures stay in the View menu. */
+@media (max-width: 400px) {
+  #help {
+    display: none;
   }
 }
 

@@ -4,6 +4,10 @@
 // 2-5) shows where the keys go, and a bubble beside it shows what is being
 // typed. The panel below the page shows the passes as SCORE text, for
 // reference, and help on the keys that can follow.
+//
+// On a touch screen the keys come from the on-screen keyboard through a
+// typing field (an invisible text field under the keyboard button), and a
+// row of buttons gives the keys it lacks: arrows, Shift, `/`, ⌫ and ↵.
 import { InputLine, inputItemNotes, type Score } from './wasm/score_web.js';
 import { decode, type Box, type DisplayList } from './display';
 import { Draft, PASS_COUNT } from './input-draft';
@@ -35,6 +39,8 @@ export interface InputHooks {
 
 export interface InputMode {
   readonly isOpen: boolean;
+  /** Whether the typing field has the keyboard (a touch screen's on-screen keyboard is up for it). */
+  readonly holdsKeyboard: boolean;
   /** Opens the input, on `staff` if given; a line typed earlier is kept. */
   open(staff?: number): void;
   close(): void;
@@ -42,11 +48,13 @@ export interface InputMode {
   refresh(): void;
   /** Places the caret and bubble again after the page moved. */
   layout(): void;
-  /** A click at page point `at`: true when it fell on the input staff and moved the cursor. */
+  /** A click at page point `at`: true when it fell on the input staff and moved the cursor; a latched ⇧ extends. */
   click(at: Point, extend: boolean): boolean;
 }
 
 const PASS_NAMES = ['Notes', 'Rhythms', 'Marks', 'Beams', 'Slurs'];
+/** What the typing field holds between keys, so that ⌫ always has something to delete. */
+const TYPING_REST = '\u200b';
 const PROMPTS = ['type a note, rest, barline …', 'type a length', 'type a mark', 'beam: / or + - or a number', 'slur: / or + - or a number'];
 
 /** One element of the line, as the preview lists them. */
@@ -78,6 +86,12 @@ function brief(message: string): string {
 
 function isFormField(target: EventTarget | null): boolean {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
+}
+
+interface Modifiers {
+  shift: boolean;
+  command: boolean;
+  alt: boolean;
 }
 
 function readLayout(elements: Float64Array, descriptions: string[], boundaries: Int32Array, geometry: Float64Array, notes: number, needed: number, given: number): Layout {
@@ -127,6 +141,8 @@ export function createInputMode(panel: HTMLElement, overlay: HTMLElement, hooks:
   const insertButton = field<HTMLButtonElement>('input-insert');
   const closeButton = field<HTMLButtonElement>('input-close');
   const help = field<HTMLElement>('input-help');
+  const typing = field<HTMLInputElement>('input-typing');
+  const shiftKey = field<HTMLButtonElement>('input-shift');
 
   const caret = Object.assign(document.createElement('div'), { className: 'input-caret', hidden: true });
   const bubble = Object.assign(document.createElement('div'), { className: 'input-bubble', hidden: true });
@@ -141,6 +157,10 @@ export function createInputMode(panel: HTMLElement, overlay: HTMLElement, hooks:
   let cursorBox: Box | null = null;
   let barCaret = true;
   let failure: { pass: number; start: number; end: number } | null = null;
+  /** Whether the keys come from the typing field (a touch screen), so that it keeps the keyboard. */
+  let touchTyping = false;
+  /** What the typing field held after the last keys were read from it. */
+  let typed = TYPING_REST;
 
   const itemNotes = (pass: number, item: string) => Array.from(inputItemNotes(pass, item, draft.notes));
 
@@ -365,40 +385,50 @@ export function createInputMode(panel: HTMLElement, overlay: HTMLElement, hooks:
     schedule();
   };
 
+  /** Gives the keyboard to the typing field once a touch screen types there, else to the page. */
+  const focus = () => {
+    if (touchTyping) typing.focus({ preventScroll: true });
+    else hooks.focusPage();
+  };
+
   const close = () => {
     if (!open) return;
     open = false;
+    touchTyping = false;
     panel.hidden = true;
     place();
     hooks.show(null);
     hooks.focusPage();
   };
 
-  const onKey = (e: KeyboardEvent) => {
-    if (!open || isFormField(e.target) || inMenuBar(e.target) || document.querySelector('dialog[open]')) return;
-    const command = e.metaKey || e.ctrlKey;
-    switch (e.key) {
+  /** ⇧ on the touch keys: latched for the next key or tap. */
+  const latched = () => shiftKey.getAttribute('aria-pressed') === 'true';
+  const latch = (on: boolean) => shiftKey.setAttribute('aria-pressed', String(on));
+
+  /** One key, from the keyboard or the touch keys; false when it is not one of the input's. */
+  const press = (key: string, mods: Modifiers): boolean => {
+    switch (key) {
       case 'Enter':
-        if (command) insert();
-        else draft.goto(draft.pass + (e.shiftKey ? -1 : 1));
+        if (mods.command) insert();
+        else draft.goto(draft.pass + (mods.shift ? -1 : 1));
         break;
       case 'Tab':
-        draft.goto(draft.pass + (e.shiftKey ? -1 : 1));
+        draft.goto(draft.pass + (mods.shift ? -1 : 1));
         break;
       case 'ArrowUp':
       case 'ArrowDown':
-        draft.goto(draft.pass + (e.key === 'ArrowUp' ? -1 : 1));
+        draft.goto(draft.pass + (key === 'ArrowUp' ? -1 : 1));
         break;
       case 'ArrowLeft':
       case 'ArrowRight':
-        draft.move(e.key === 'ArrowLeft' ? -1 : 1, e.shiftKey);
+        draft.move(key === 'ArrowLeft' ? -1 : 1, mods.shift);
         break;
       case 'Home':
       case 'End':
-        draft.moveTo(e.key === 'End', e.shiftKey);
+        draft.moveTo(key === 'End', mods.shift);
         break;
       case 'Backspace':
-        draft.erase(itemNotes, command || e.altKey);
+        draft.erase(itemNotes, mods.command || mods.alt);
         break;
       case 'Delete':
         draft.remove(itemNotes);
@@ -408,15 +438,76 @@ export function createInputMode(panel: HTMLElement, overlay: HTMLElement, hooks:
         else close();
         break;
       default:
-        if (e.key.length !== 1 || command || e.altKey) return;
-        if (draft.type(e.key) === 'pass') draft.goto(draft.pass + 1);
+        if (key.length !== 1 || mods.command || mods.alt) return false;
+        if (draft.type(key) === 'pass') draft.goto(draft.pass + 1);
     }
-    e.preventDefault();
-    e.stopImmediatePropagation();
     reveal = true;
     schedule();
+    return true;
+  };
+
+  const modifiers = (e: KeyboardEvent): Modifiers => ({ shift: e.shiftKey, command: e.metaKey || e.ctrlKey, alt: e.altKey });
+
+  const onKey = (e: KeyboardEvent) => {
+    if (!open || isFormField(e.target) || inMenuBar(e.target) || document.querySelector('dialog[open]')) return;
+    if (!press(e.key, modifiers(e))) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
   };
   window.addEventListener('keydown', onKey, true);
+
+  /**
+   * Reads what an on-screen keyboard put in the typing field: characters
+   * added are typed, characters deleted are ⌫. Keyboards that compose words
+   * replace text as they go, so the field is compared with what it held.
+   */
+  const readTyping = (composing: boolean) => {
+    const now = typing.value;
+    let same = 0;
+    while (same < Math.min(now.length, typed.length) && now[same] === typed[same]) same++;
+    const none: Modifiers = { shift: false, command: false, alt: false };
+    for (let i = same; i < typed.length; i++) press('Backspace', none);
+    for (const key of now.slice(same)) press(key, none);
+    typed = now;
+    if (composing) return;
+    typing.value = TYPING_REST;
+    typed = TYPING_REST;
+  };
+
+  typing.value = TYPING_REST;
+  typing.addEventListener('focus', () => {
+    touchTyping = true;
+    typing.value = typed = TYPING_REST;
+  });
+  typing.addEventListener('input', (e) => readTyping((e as InputEvent).isComposing));
+  typing.addEventListener('compositionend', () => readTyping(false));
+  // Keys that do not type a character; ⌫ deletes from the field and is read from there.
+  typing.addEventListener('keydown', (e) => {
+    if (e.isComposing || !open) return;
+    const mods = modifiers(e);
+    const own = e.key === 'Backspace' ? mods.command || mods.alt : e.key.length > 1 && e.key !== 'Unidentified' && e.key !== 'Process';
+    if (!own || !press(e.key, mods)) return;
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  // Taps on the panel's keys, buttons and passes leave the keyboard with the typing field.
+  const keepKeyboard = (e: Event) => {
+    if (touchTyping && !isFormField(e.target)) e.preventDefault();
+  };
+  panel.addEventListener('pointerdown', keepKeyboard);
+  panel.addEventListener('mousedown', keepKeyboard);
+  panel.querySelectorAll<HTMLButtonElement>('.touch-keys button[data-key]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.key!;
+      if (key === 'Shift') {
+        latch(!latched());
+        return;
+      }
+      press(key, { shift: latched(), command: false, alt: false });
+      latch(false);
+    });
+  });
 
   [staff, begin, end].forEach((input) => {
     input.addEventListener('input', () => {
@@ -426,14 +517,14 @@ export function createInputMode(panel: HTMLElement, overlay: HTMLElement, hooks:
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === 'Escape') {
         e.preventDefault();
-        hooks.focusPage();
+        focus();
       }
     });
   });
   rows.forEach((row, p) =>
     row.addEventListener('click', () => {
       draft.goto(p);
-      hooks.focusPage();
+      focus();
       reveal = true;
       schedule();
     }),
@@ -444,13 +535,16 @@ export function createInputMode(panel: HTMLElement, overlay: HTMLElement, hooks:
   }
   insertButton.addEventListener('click', () => {
     insert();
-    hooks.focusPage();
+    focus();
   });
   closeButton.addEventListener('click', close);
 
   return {
     get isOpen() {
       return open;
+    },
+    get holdsKeyboard() {
+      return open && document.activeElement === typing;
     },
     open(target) {
       const score = hooks.score();
@@ -460,7 +554,9 @@ export function createInputMode(panel: HTMLElement, overlay: HTMLElement, hooks:
       open = true;
       panel.hidden = false;
       reveal = true;
-      hooks.focusPage();
+      // A touch screen types through the on-screen keyboard, which the typing field brings up.
+      touchTyping ||= matchMedia('(pointer: coarse)').matches;
+      focus();
       schedule();
     },
     close,
@@ -468,9 +564,10 @@ export function createInputMode(panel: HTMLElement, overlay: HTMLElement, hooks:
       if (open) schedule();
     },
     layout: place,
-    click(at, extend) {
+    click(at, shift) {
       const l = layout;
       if (!open || !l) return false;
+      const extend = shift || latched();
       const space = spacing(l);
       if (at.y < l.bottom - 4 * space || at.y > l.top + 4 * space || at.x < l.begin - 6 * space || at.x > l.end + 6 * space) return false;
       const nearest = (candidates: Element[]) =>
@@ -493,7 +590,8 @@ export function createInputMode(panel: HTMLElement, overlay: HTMLElement, hooks:
         const target = nearest(l.elements.filter((e) => e.note > 0));
         if (target) draft.place(target.note, extend);
       }
-      hooks.focusPage();
+      latch(false);
+      focus();
       schedule();
       return true;
     },

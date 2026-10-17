@@ -4,6 +4,10 @@
 // letter to the next entry starting with it, Enter runs an entry, Escape or a
 // click elsewhere closes. Entries are read again each time their menu opens,
 // so labels and enabled states follow the app.
+//
+// On a narrow screen the stylesheet hides the titles and shows one Menu
+// button instead; its menus open across the width of the screen, with the
+// titles as tabs along their top.
 
 export interface Action {
   label: string | (() => string);
@@ -43,6 +47,8 @@ export const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
 
 const labelOf = (action: Action) => (typeof action.label === 'function' ? action.label() : action.label);
 
+const MENU_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>';
+
 function span(className: string, text: string): HTMLSpanElement {
   return Object.assign(document.createElement('span'), { className, textContent: text });
 }
@@ -55,6 +61,25 @@ export function createMenuBar(bar: HTMLElement, menus: Menu[], ran: () => void):
   bar.setAttribute(MENUBAR, '');
   bar.setAttribute('role', 'menubar');
   let current: { index: number; popup: HTMLElement } | null = null;
+  /** The menu the Menu button opens: the one open last. */
+  let last = 0;
+
+  const compact = Object.assign(document.createElement('button'), { type: 'button', className: 'menu-compact', id: 'menu-compact', title: 'Menus', innerHTML: MENU_ICON });
+  compact.setAttribute('aria-label', 'Menu');
+  compact.setAttribute('role', 'menuitem');
+  compact.setAttribute('aria-haspopup', 'menu');
+  compact.setAttribute('aria-expanded', 'false');
+  compact.addEventListener('click', (e) => (current ? close(true) : open(last, e.detail === 0)));
+  compact.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') open(last, true);
+    else if (e.key === 'Escape' && current) close(true);
+    else return;
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  bar.append(compact);
+  /** Whether the menus open from the Menu button rather than their titles. */
+  const isCompact = () => compact.offsetParent !== null;
 
   const titles = menus.map((menu, index) => {
     const wrapper = Object.assign(document.createElement('div'), { className: 'menu' });
@@ -64,8 +89,9 @@ export function createMenuBar(bar: HTMLElement, menus: Menu[], ran: () => void):
     title.setAttribute('aria-expanded', 'false');
     // detail 0: a click made with Enter or Space, which moves into the menu.
     title.addEventListener('click', (e) => (current?.index === index ? close(true) : open(index, e.detail === 0)));
-    title.addEventListener('pointerenter', () => {
-      if (current && current.index !== index) open(index, false);
+    // Only a mouse moves from title to title; a tap on another title opens it with its click.
+    title.addEventListener('pointerenter', (e) => {
+      if (e.pointerType === 'mouse' && current && current.index !== index) open(index, false);
     });
     title.addEventListener('keydown', (e) => {
       const step = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
@@ -98,7 +124,24 @@ export function createMenuBar(bar: HTMLElement, menus: Menu[], ran: () => void):
     popup.remove();
     titles[index]!.setAttribute('aria-expanded', 'false');
     titles[index]!.classList.remove('open');
-    if (refocus) titles[index]!.focus();
+    compact.setAttribute('aria-expanded', 'false');
+    compact.classList.remove('open');
+    if (refocus) (isCompact() ? compact : titles[index]!).focus();
+  }
+
+  /** The titles as tabs, which the stylesheet shows on a narrow screen. */
+  function tabs(index: number): HTMLElement {
+    const strip = Object.assign(document.createElement('div'), { className: 'menu-tabs' });
+    strip.append(
+      ...menus.map((menu, i) => {
+        const tab = Object.assign(document.createElement('button'), { type: 'button', className: 'menu-tab', textContent: menu.label, tabIndex: -1 });
+        tab.setAttribute('aria-pressed', String(i === index));
+        tab.dataset.menu = menu.id;
+        tab.addEventListener('click', () => open(i, false));
+        return tab;
+      }),
+    );
+    return strip;
   }
 
   function actionButton(action: Action, chip: boolean): HTMLButtonElement {
@@ -199,15 +242,26 @@ export function createMenuBar(bar: HTMLElement, menus: Menu[], ran: () => void):
     const popup = Object.assign(document.createElement('div'), { className: 'menu-popup', tabIndex: -1 });
     popup.setAttribute('role', 'menu');
     popup.setAttribute('aria-labelledby', title.id);
-    popup.append(...menus[index]!.entries().map(entry));
+    popup.append(tabs(index), ...menus[index]!.entries().map(entry));
     popup.addEventListener('keydown', (e) => onKey(e, popup));
     title.after(popup);
-    // Keep the menu on screen when its title is near the right edge.
-    const overflow = popup.getBoundingClientRect().right - (window.innerWidth - 8);
-    if (overflow > 0) popup.style.left = `${-overflow}px`;
+    if (isCompact()) {
+      // Across the screen below the bar, as far down as the window (less an on-screen keyboard) shows.
+      const top = compact.getBoundingClientRect().bottom + 6;
+      const visible = window.visualViewport;
+      const bottom = visible ? visible.offsetTop + visible.height : window.innerHeight;
+      Object.assign(popup.style, { top: `${top}px`, maxHeight: `${bottom - top - 8}px` });
+      compact.setAttribute('aria-expanded', 'true');
+      compact.classList.add('open');
+    } else {
+      // Keep the menu on screen when its title is near the right edge.
+      const overflow = popup.getBoundingClientRect().right - (window.innerWidth - 8);
+      if (overflow > 0) popup.style.left = `${-overflow}px`;
+    }
     title.setAttribute('aria-expanded', 'true');
     title.classList.add('open');
     current = { index, popup };
+    last = index;
     if (focusFirst) lines(popup)[0]?.[0]?.focus();
     else popup.focus();
   }

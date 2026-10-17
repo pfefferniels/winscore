@@ -189,7 +189,7 @@ export function appMenus(hooks: MenuHooks): Menu[] {
       'separator',
       { label: 'Side panel', id: 'panel', run: hooks.togglePanel, checked: hooks.panelShown, enabled: scored },
       'separator',
-      { label: 'Keyboard shortcuts', hint: 'F1', id: 'shortcuts', run: hooks.shortcuts },
+      { label: 'Keys and gestures', hint: 'F1', id: 'shortcuts', run: hooks.shortcuts },
     ],
   };
 

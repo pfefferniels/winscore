@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#f8f9fb" />
     <title>WinScore Web</title>
   </head>
   <body>
@@ -43,7 +44,7 @@
         <button id="toggle-panel" class="icon" type="button" aria-pressed="true" title="Show or hide the side panel" aria-label="Side panel">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" /></svg>
         </button>
-        <button id="help" class="icon" type="button" title="Keyboard shortcuts (F1)" aria-label="Keyboard shortcuts">
+        <button id="help" class="icon" type="button" title="Keys and gestures (F1)" aria-label="Keys and gestures">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" /><path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 1.9-2.8 2.6-2.8 2.6M12 17h.01" /></svg>
         </button>
         <input id="file" type="file" accept=".mus,.MUS" hidden />
@@ -83,6 +84,7 @@
           </section>
         </div>
         <aside class="panel" id="panel">
+          <div class="panel-grip" id="panel-grip" title="Drag to resize the panel" aria-hidden="true"></div>
           <section class="item" id="item" aria-label="Selected item"></section>
           <section class="items">
             <div class="items-head">
@@ -143,6 +145,18 @@
           <button id="input-insert" class="primary" type="button" title="Insert the line (⌘↵ / Ctrl+Enter)">Insert</button>
           <button id="input-close" type="button" title="Close the input; the text is kept (Esc)">Close</button>
         </div>
+        <div class="touch-keys" role="group" aria-label="Keys">
+          <label class="typing-key" title="Type with the on-screen keyboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M8 13h.01M12 13h.01M16 13h.01M7 16h10" /></svg>
+            <input id="input-typing" type="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-label="Type music" />
+          </label>
+          <button id="input-shift" type="button" data-key="Shift" aria-pressed="false" title="Shift for the next key: with ← → it selects more notes, with ↵ it goes back a pass, with a tap it extends to that note">⇧</button>
+          <button type="button" data-key="ArrowLeft" title="Back one item or note" aria-label="Left">←</button>
+          <button type="button" data-key="ArrowRight" title="On one item or note" aria-label="Right">→</button>
+          <button type="button" data-key="/" title="End the item (/)">/</button>
+          <button type="button" data-key="Backspace" title="Take back one character, or the last mark on the note" aria-label="Backspace">⌫</button>
+          <button type="button" data-key="Enter" title="Next pass (with ⇧: back one)" aria-label="Next pass">↵</button>
+        </div>
         <div class="input-body">
           <div class="passes" id="input-passes" aria-label="The line in SCORE's input language">
             <div class="pass" id="pass-1" title="Pass 1: notes, rests, barlines, clefs, keys, meters. Click to type here.">
@@ -187,8 +201,20 @@
       </footer>
       <dialog id="shortcuts-dialog" class="shortcuts-dialog">
         <form method="dialog">
-          <h2>Keyboard and mouse</h2>
+          <h2>Keys and gestures</h2>
           <div class="shortcuts">
+            <section class="touch-only">
+              <h3>Touch</h3>
+              <dl>
+                <dt>Tap</dt><dd>Select an item</dd>
+                <dt>Drag</dt><dd>Scroll the page; from a selected item, move it</dd>
+                <dt>Pinch</dt><dd>Zoom</dd>
+                <dt>Long press</dt><dd>Add or remove an item</dd>
+                <dt>Long press, drag</dt><dd>Select the items in a box</dd>
+                <dt>Double tap</dt><dd>Edit a text where it stands</dd>
+                <dt>Group commands</dt><dd>One finger draws the box, two scroll</dd>
+              </dl>
+            </section>
             <section>
               <h3>Select</h3>
               <dl>
