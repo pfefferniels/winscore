@@ -59,6 +59,18 @@ impl Score {
         self.finish(result)
     }
 
+    /// Sets parameters `numbers` (1-based) of item `index` to `values`, as one undo step.
+    #[wasm_bindgen(js_name = setParams)]
+    pub fn set_params(&mut self, index: u32, numbers: Vec<u32>, values: Vec<f32>) -> Result<Outcome, JsError> {
+        if numbers.len() != values.len() {
+            return Err(JsError::new("setParams: as many values as parameter numbers"));
+        }
+        let id = self.0.id(ItemId(index))?;
+        let pairs: Vec<(usize, f32)> = numbers.into_iter().map(|n| n as usize).zip(values).collect();
+        let result = self.0.editor_mut().set_params(id, &pairs);
+        self.finish(result)
+    }
+
     /// Moves the selection by `dp3` P3 spaces and `dp4` scale steps.
     #[wasm_bindgen(js_name = moveSelection)]
     pub fn move_selection(&mut self, dp3: f32, dp4: f32) -> Result<Outcome, JsError> {

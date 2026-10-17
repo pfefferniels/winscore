@@ -15,6 +15,7 @@ use crate::hit::{hit_test, At};
 pub const TEXT_CODE: i32 = 16;
 
 const STAFF_CODE: i32 = 8;
+const CLEF_CODE: i32 = 3;
 
 fn render_page(file: &MusFile) -> DisplayList {
     render(&score_render::Document::new(file))
@@ -64,6 +65,18 @@ impl Document {
 
     pub fn item(&self, index: ItemId) -> Option<&Item> {
         self.items().get(index.0 as usize)
+    }
+
+    /// The clef in force at item `index`: of the clefs on its staff not right
+    /// of it, the one with the greatest P3, the later in the file on a tie.
+    pub fn clef_at(&self, index: ItemId) -> Option<ItemId> {
+        let item = self.item(index)?;
+        let (staff, x) = (item.param(2), item.param(3));
+        let clefs = self.items().iter().enumerate().filter(|&(i, clef)| {
+            i != index.0 as usize && clef.code() == CLEF_CODE && clef.param(2) == staff && clef.param(3) <= x
+        });
+        let (i, _) = clefs.max_by(|(i, a), (j, b)| a.param(3).total_cmp(&b.param(3)).then(i.cmp(j)))?;
+        Some(ItemId(i as u32))
     }
 
     pub fn paper(&self) -> Paper {
@@ -166,6 +179,16 @@ mod tests {
         let staff = doc.page().shapes.iter().find(|s| s.source.is_some()).expect("carmen renders staves");
         let index = doc.hit(At::from(staff.paths[0][0]), 2.0).unwrap();
         assert_eq!(doc.item(index).unwrap().code(), 8);
+    }
+
+    #[test]
+    fn the_clef_in_force_is_the_nearest_one_to_the_left_on_the_staff() {
+        let doc = Document::open(&sample("mozart.mus")).unwrap();
+        let (clef, note, staff) = (ItemId(3), ItemId(4), ItemId(2));
+        assert_eq!([doc.item(clef).unwrap().code(), doc.item(note).unwrap().code()], [CLEF_CODE, 1]);
+        assert_eq!(doc.clef_at(note), Some(clef));
+        assert_eq!(doc.clef_at(staff), None);
+        assert_eq!(doc.clef_at(ItemId(u32::MAX)), None);
     }
 
     #[test]
