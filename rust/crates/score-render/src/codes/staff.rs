@@ -38,6 +38,13 @@ impl Lines {
     }
 }
 
+/// The lines P7 asks for: the lowest, counted from the bottom line of a
+/// normal staff (0), and how many, for an editor's guides along them.
+pub fn drawn_lines(p7: f32) -> (i32, i32) {
+    let lines = if p7 < 0.0 { Lines::NORMAL } else { Lines::from_p7(p7) };
+    (lines.first, lines.count)
+}
+
 /// Staff 0 exists in the table but is never drawn.
 const FIRST_DRAWN_STAFF: i32 = 1;
 

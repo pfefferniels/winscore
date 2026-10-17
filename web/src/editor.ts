@@ -49,6 +49,17 @@ export interface Editor {
   /** Moves it with the cursor, keeping the grab offset; `constrain` is WinScore's Shift rule. */
   dragTo(at: Point, constrain: boolean): void;
   dragEnd(commit: boolean): Change | null;
+  /** The handles of an item as score-web describes them (JSON, see handles.ts). */
+  handles(item: number): string;
+  /** Takes hold of handle `handle` of `item` at a page point; false if it has none such. */
+  handleBegin(item: number, handle: number, at: Point): boolean;
+  /** Drags it, setting what it changes live; returns the words for the values. */
+  handleTo(at: Point, constrain: boolean, tolerance: number): string;
+  handleEnd(commit: boolean): Change | null;
+  /** Six numbers per item for guides: code, staff, reference x and y, level, centre x. */
+  anchors(): Float32Array;
+  /** Seven numbers per staff: number, left and right x, y of level 0, scale step, lowest line's level, lines. */
+  staves(): Float32Array;
   undo(): Change | null;
   redo(): Change | null;
   undoLabel(): string | null;
@@ -87,6 +98,12 @@ export function scoreEditor(score: Score): Editor {
     dragBegin: (at) => score.dragBeginAt(at.x, at.y),
     dragTo: (at, constrain) => score.dragToPoint(at.x, at.y, constrain),
     dragEnd: (commit) => change(score.dragEnd(commit)),
+    handles: (item) => score.handles(item),
+    handleBegin: (item, handle, at) => score.handleBegin(item, handle, at.x, at.y),
+    handleTo: (at, constrain, tolerance) => score.handleTo(at.x, at.y, constrain, tolerance),
+    handleEnd: (commit) => change(score.handleEnd(commit)),
+    anchors: () => score.guideAnchors(),
+    staves: () => score.staffGeometry(),
     undo: () => stepped(score.undo() ? `Undo ${score.redoLabel()}` : null),
     redo: () => stepped(score.redo() ? `Redo ${score.undoLabel()}` : null),
     undoLabel: () => score.undoLabel() ?? null,

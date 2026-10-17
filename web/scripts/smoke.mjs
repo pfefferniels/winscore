@@ -1,5 +1,6 @@
 // End-to-end check of the built app (dist/) in headless Chromium: open a
-// sample, click a staff line, edit a parameter, save; start a new score.
+// sample, click a staff line, edit a parameter, drag handles and guides,
+// save; start a new score.
 // Then the same app on a phone: its layout, touch gestures and music input
 // from an on-screen keyboard.
 import { chromium } from 'playwright';
@@ -351,6 +352,58 @@ try {
   assert.match(await page.textContent('#prompt'), /^Enter destination staff/);
   await page.click('#prompt-cancel');
   assert.ok(await page.isHidden('#prompt'));
+
+  // Handles: the page lists the selected item's handles (data-handles, client pixels). A slur's
+  // curve handle sets its curvature live and as one undo step; Escape cancels a handle drag.
+  const viewportData = async (name) => JSON.parse((await page.getAttribute('#viewport', `data-${name}`)) || 'null');
+  await page.goto('http://localhost:4178/?sample=mozart.mus&zoom=300&select=38');
+  await page.waitForSelector('#app[data-ready="true"]');
+  const slurHandles = await viewportData('handles');
+  assert.deepEqual(slurHandles.map((h) => h.label), ['Start', 'End', 'Curve']);
+  const curve = slurHandles.find((h) => h.label === 'Curve');
+  assert.equal(await page.inputValue('#p7'), '4');
+  await page.mouse.move(curve.x, curve.y);
+  await page.mouse.down();
+  await page.mouse.move(curve.x, curve.y - 30, { steps: 6 });
+  await page.keyboard.press('Escape');
+  await page.mouse.up();
+  assert.equal(await page.inputValue('#p7'), '4');
+  assert.ok(await page.isDisabled('#undo'));
+  await page.mouse.move(curve.x, curve.y);
+  await page.mouse.down();
+  await page.mouse.move(curve.x, curve.y - 30, { steps: 6 });
+  await page.mouse.up();
+  assert.match(await page.textContent('#message'), /^Curve · Item 38 /);
+  assert.ok(Number(await page.inputValue('#p7')) > 5, 'the curve rose');
+  assert.match(await page.getAttribute('#undo', 'title'), /^Undo Curve /);
+  await page.click('#undo');
+  assert.equal(await page.inputValue('#p7'), '4');
+
+  // Guides: the p on staff 2 dragged down snaps to the level of the cresc. on staff 4 and says so;
+  // with Ctrl held while dragging nothing snaps.
+  await page.goto('http://localhost:4178/?sample=mozart.mus&zoom=200&select=78');
+  await page.waitForSelector('#app[data-ready="true"]');
+  const dynamic = await viewportData('selection');
+  const grab = { x: dynamic.x + dynamic.width / 2, y: dynamic.y + dynamic.height / 2 };
+  await page.mouse.move(grab.x, grab.y);
+  await page.mouse.down();
+  await page.mouse.move(grab.x, grab.y + 10, { steps: 4 });
+  await page.mouse.move(grab.x + 2, grab.y + 24, { steps: 4 });
+  const guides = await viewportData('guides');
+  assert.ok(guides.some((g) => g.axis === 'y' && g.music && /as on staff 4/.test(g.label)), JSON.stringify(guides));
+  await page.mouse.up();
+  assert.equal(await page.inputValue('#p4'), '-5');
+  await page.click('#undo');
+  await page.mouse.move(grab.x, grab.y);
+  await page.mouse.down();
+  await page.keyboard.down('Control');
+  await page.mouse.move(grab.x, grab.y + 10, { steps: 4 });
+  await page.mouse.move(grab.x + 2, grab.y + 24, { steps: 4 });
+  assert.deepEqual(await viewportData('guides'), []);
+  await page.mouse.up();
+  await page.keyboard.up('Control');
+  assert.notEqual(await page.inputValue('#p4'), '-5');
+  await page.click('#undo');
 
   assert.deepEqual(errors, []);
 

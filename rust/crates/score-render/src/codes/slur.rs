@@ -13,7 +13,7 @@ use crate::canvas::{BufferPoint, Canvas, Pen};
 use crate::codes::number::{draw_number, number_font_loaded, NumberCall};
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
-use crate::geometry::rotate_points_radians;
+use crate::geometry::{rotate_points_radians, turned};
 use crate::page::P3_UNIT;
 use crate::symbols::{draw_clef, ItemContext};
 use crate::text::Font;
@@ -44,6 +44,39 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         1..=9 => ending(doc, item, &params, canvas),
         _ => slur(doc, item, &params, canvas),
     }
+}
+
+/// Where the parts of a code-5 item lie (internal coordinates), for an
+/// editor's handles on them: the ends of its chord and the point its P7
+/// raises, the peak of a slur or the middle of a bracket's line. Half and
+/// partial slurs are taken whole.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Shape {
+    pub left: Pos,
+    pub right: Pos,
+    pub peak: Pos,
+}
+
+pub fn shape(doc: &Document<'_>, item: ItemRef<'_>) -> Shape {
+    let params = Params::new(doc, item);
+    if (1..=9).contains(&params.p8_int) {
+        let staff = doc.staff_of(item);
+        let bottom = doc.position(item).y;
+        let top = real(bottom + real(staff.step * params.p7 * constant(7.0)));
+        let right = real(params.p6 * P3_UNIT);
+        let dy = real(staff.y(f64::from(item.p(5))) - bottom);
+        return Shape {
+            left: Pos::new(params.x, bottom),
+            right: Pos::new(right, bottom + dy),
+            peak: Pos::new((params.x + right) / 2.0, top + dy / 2.0),
+        };
+    }
+    let slur = Slur::new(doc, item, &params);
+    let pivot = Pos::new(slur.xl, slur.y0);
+    // The curve is built level and turned counter-clockwise through this angle.
+    let angle = if slur.dy == 0.0 { 0.0 } else { real(slur.dy.atan2(slur.length0)) };
+    let at = |along: f64, up: f64| turned(Pos::new(slur.xl + along, slur.y0 + up), pivot, -angle.to_degrees());
+    Shape { left: pivot, right: at(slur.length, 0.0), peak: at(slur.centre * slur.length, slur.height) }
 }
 
 /// P8 = 3: a tuplet bracket; every other P8 from 1 to 9 is an ending.

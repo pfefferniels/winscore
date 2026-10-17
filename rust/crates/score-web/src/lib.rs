@@ -10,6 +10,8 @@ pub mod codes;
 pub mod document;
 pub mod editing;
 pub mod encode;
+pub mod guides;
+pub mod handles;
 pub mod hit;
 pub mod input;
 pub mod live;

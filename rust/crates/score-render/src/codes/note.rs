@@ -328,6 +328,23 @@ fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
     length
 }
 
+/// Where a note's stem ends (internal coordinates) and how far the end
+/// moves up for one more scale step of P8 (negative for a stem down), for
+/// an editor's handle on it; `None` without a stem.
+pub fn stem_end(doc: &Document<'_>, item: ItemRef<'_>) -> Option<(Pos, f64)> {
+    let note = Note::new(doc, item)?;
+    if note.stem == Stem::None || !has_stem(head::unparenthesised(ip(item, 6))) {
+        return None;
+    }
+    let per_step = real(note.unit * constant(STEPS));
+    let length = real((tail_room(&note) + constant(STEPS) + stem_extension(item)) * per_step);
+    Some(if note.stem.is_down() {
+        (Pos::new(note.origin.x, note.origin.y - length), -per_step)
+    } else {
+        (Pos::new(real(note.origin.x + note.drawn_head_width()), note.origin.y + length), per_step)
+    })
+}
+
 /// Whole notes, breves and library heads 100–198 (but 139) have no stem.
 fn has_stem(head_type: i32) -> bool {
     match head_type {

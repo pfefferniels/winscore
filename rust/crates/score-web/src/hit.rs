@@ -28,13 +28,13 @@ impl From<Point> for At {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-struct Bounds {
-    min: At,
-    max: At,
+pub(crate) struct Bounds {
+    pub min: At,
+    pub max: At,
 }
 
 impl Bounds {
-    fn of(points: impl IntoIterator<Item = At>) -> Option<Self> {
+    pub(crate) fn of(points: impl IntoIterator<Item = At>) -> Option<Self> {
         points.into_iter().fold(None, |bounds, p| {
             Some(match bounds {
                 None => Bounds { min: p, max: p },
@@ -117,7 +117,7 @@ const CELL_DESCENT: f64 = 0.25;
 /// The box of a placed string: from its origin on the baseline (the engine's
 /// y + 96, analysis/engine/display.md), one cell ascent up, one descent down,
 /// and one average width per character across. Rotation is ignored.
-fn text_bounds(run: &TextRun, origin: Point, text: &str) -> Bounds {
+pub(crate) fn text_bounds(run: &TextRun, origin: Point, text: &str) -> Bounds {
     let height = f64::from(run.height);
     let advance = if run.width > 0.0 { f64::from(run.width) } else { height / 2.0 };
     let baseline = At::from(origin);
@@ -126,6 +126,18 @@ fn text_bounds(run: &TextRun, origin: Point, text: &str) -> Bounds {
         min: At::new(baseline.x, baseline.y - CELL_DESCENT * height),
         max: At::new(baseline.x + width, baseline.y + CELL_ASCENT * height),
     }
+}
+
+/// The box around everything a display list draws.
+pub(crate) fn list_bounds(list: &DisplayList) -> Option<Bounds> {
+    let shapes = list.shapes.iter().flat_map(|s| s.paths.iter().flatten().copied().map(At::from));
+    let texts = list.texts.iter().flat_map(|run| {
+        run.strings.iter().flat_map(|s| {
+            let b = text_bounds(run, s.origin, &s.text);
+            [b.min, b.max]
+        })
+    });
+    Bounds::of(shapes.chain(texts))
 }
 
 fn text_candidates(p: At, run: &TextRun) -> impl Iterator<Item = Candidate> + '_ {

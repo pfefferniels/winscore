@@ -141,6 +141,17 @@ function textBounds(run: TextRun): Box | null {
     .reduce<Box | null>(union, null);
 }
 
+/** The box of every item index below `count` that `list` draws, in one pass; null for items it does not draw. */
+export function itemBoxes(list: DisplayList, count: number): (Box | null)[] {
+  const boxes: (Box | null)[] = new Array<Box | null>(count).fill(null);
+  const grow = (item: number | null, box: Box | null) => {
+    if (item !== null && item < count) boxes[item] = union(boxes[item] ?? null, box);
+  };
+  list.shapes.forEach((s) => s.paths.forEach((path) => grow(s.source, pathBounds(path))));
+  list.texts.forEach((run) => grow(run.source, textBounds(run)));
+  return boxes;
+}
+
 export function bounds(list: DisplayList): Box | null {
   const shapes = list.shapes.flatMap((s) => s.paths.map(pathBounds));
   const texts = list.texts.map(textBounds);

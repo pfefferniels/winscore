@@ -24,11 +24,15 @@ export interface Highlight {
   colour?: string;
 }
 
+/** Drawn over the page in device pixels, after the highlights: handles, guides, readouts. */
+export type Overlay = (ctx: CanvasRenderingContext2D, t: Transform) => void;
+
 export interface Scene {
   transform: Transform;
   paper: Box;
   layers: Layer[];
   highlights: Highlight[];
+  overlays?: Overlay[];
 }
 
 const BACKGROUND = '#ffffff';
@@ -169,4 +173,9 @@ export function paint(ctx: CanvasRenderingContext2D, scene: Scene) {
   });
   ctx.globalCompositeOperation = 'source-over';
   scene.highlights.forEach(({ list, item, colour }) => paintList(ctx, t, elementsOf(list, item), colour ?? HIGHLIGHT));
+  scene.overlays?.forEach((overlay) => {
+    ctx.save();
+    overlay(ctx, t);
+    ctx.restore();
+  });
 }

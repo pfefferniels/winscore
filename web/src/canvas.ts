@@ -2,7 +2,7 @@
 // whose content div has the size of the zoomed page. Scrolling and zooming
 // repaint the canvas; nothing is drawn outside the visible area.
 import type { Box } from './display';
-import { paint, type Highlight, type Layer } from './paint';
+import { paint, type Highlight, type Layer, type Overlay } from './paint';
 import { contentSize, cssPerUnit, toDevice, toPage, transform, type Point, type Transform } from './view';
 
 export interface Scene {
@@ -10,6 +10,7 @@ export interface Scene {
   paper: Box;
   extent: Box;
   highlights: Highlight[];
+  overlays?: Overlay[];
 }
 
 export interface Elements {
@@ -37,6 +38,12 @@ export interface PageView {
   clientRect(box: Box): DOMRect;
   /** Engine units spanned by `px` CSS pixels at the current zoom. */
   unitsPerCss(px: number): number;
+  /** The part of the page the viewport shows, in page coordinates. */
+  visibleBox(): Box;
+  /** The page → device pixel transform of the canvas now. */
+  transform(): Transform;
+  /** Device pixels of the canvas under a client position. */
+  deviceAt(clientX: number, clientY: number): Point;
   repaint(): void;
   /** Calls `listener` after every paint, for things placed over the page. */
   onPaint(listener: () => void): void;
@@ -97,6 +104,7 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
       paper: scene.paper,
       layers: scene.layers,
       highlights: scene.highlights,
+      overlays: scene.overlays,
     });
     painted.forEach((listener) => listener());
   };
@@ -195,6 +203,17 @@ export function createPageView(el: Elements, onZoom: (zoom: number) => void): Pa
     pageAt,
     clientRect,
     unitsPerCss: (px: number) => px / cssPerUnit(zoom),
+    transform: currentTransform,
+    deviceAt(clientX: number, clientY: number) {
+      const p = clientToViewport(clientX, clientY);
+      return { x: p.x * dpr(), y: p.y * dpr() };
+    },
+    visibleBox() {
+      const rect = el.viewport.getBoundingClientRect();
+      const a = pageAt(rect.left, rect.top);
+      const b = pageAt(rect.left + el.viewport.clientWidth, rect.top + el.viewport.clientHeight);
+      return { x0: a.x, y0: b.y, x1: b.x, y1: a.y };
+    },
     repaint,
     onPaint: (listener) => painted.push(listener),
   };

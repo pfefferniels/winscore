@@ -76,12 +76,20 @@ struct Drag {
     constraint: Constraint,
 }
 
+/// One item's parameters being set live, as a handle on it is dragged.
+#[derive(Debug, Clone, PartialEq)]
+struct Adjust {
+    id: ItemId,
+    start: Item,
+}
+
 #[derive(Debug, Clone)]
 pub struct Editor {
     doc: Document,
     session: Session,
     history: History,
     drag: Option<Drag>,
+    adjust: Option<Adjust>,
 }
 
 impl Editor {
@@ -93,7 +101,7 @@ impl Editor {
         let mut tx = Transaction::new(&mut doc);
         Run { session: &mut session, tx: &mut tx }.refresh_drawn();
         tx.commit();
-        Self { doc, session, history: History::default(), drag: None }
+        Self { doc, session, history: History::default(), drag: None, adjust: None }
     }
 
     pub fn open(bytes: &[u8]) -> Result<Self, MusError> {
@@ -410,6 +418,52 @@ impl Editor {
         if self.drag.is_some() {
             self.drag_end(false);
         }
+        if self.adjust.is_some() {
+            self.adjust_end(false, "");
+        }
+    }
+
+    // -- adjusting one item ---------------------------------------------------
+
+    /// Starts setting parameters of item `id` live, as a handle on it is
+    /// dragged; [`Editor::adjust_to`] sets them without an undo step.
+    pub fn adjust_begin(&mut self, id: ItemId) -> Result<(), EditError> {
+        self.cancel_drag();
+        let start = self.doc.item(id).ok_or(EditError::NoSuchId(id))?.clone();
+        self.adjust = Some(Adjust { id, start });
+        Ok(())
+    }
+
+    /// The item being adjusted as it was when [`Editor::adjust_begin`] took hold of it.
+    pub fn adjust_start(&self) -> Option<(ItemId, &Item)> {
+        self.adjust.as_ref().map(|a| (a.id, &a.start))
+    }
+
+    /// Gives the item being adjusted its starting parameters with `values` set.
+    pub fn adjust_to(&mut self, values: &[(usize, f32)]) -> Change {
+        let Some(adjust) = &self.adjust else { return Change::default() };
+        let mut draft = Draft::of(&adjust.start);
+        values.iter().filter(|(n, _)| (1..=MAX_PARAM).contains(n)).for_each(|&(n, value)| draft.set(n, value));
+        let edits: Vec<Edit> = replacement(&self.doc, adjust.id, draft.to_item()).into_iter().collect();
+        self.doc.apply_all(&edits);
+        Change::new(&edits, self.selection())
+    }
+
+    /// Ends an adjustment: `commit` keeps the parameters as one undo step
+    /// called `label`, otherwise the item gets its starting ones back.
+    pub fn adjust_end(&mut self, commit: bool, label: &str) -> Change {
+        let Some(adjust) = self.adjust.take() else { return Change::default() };
+        let Some(adjusted) = self.doc.item(adjust.id).cloned() else { return Change::default() };
+        let back: Vec<Edit> = replacement(&self.doc, adjust.id, adjust.start).into_iter().collect();
+        self.doc.apply_all(&back);
+        if !commit {
+            return Change::new(&back, self.selection());
+        }
+        self.act(label, |run| {
+            run.tx.replace(adjust.id, adjusted);
+            Ok(())
+        })
+        .unwrap_or_default()
     }
 
     // -- undo -----------------------------------------------------------------

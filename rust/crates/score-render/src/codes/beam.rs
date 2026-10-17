@@ -45,6 +45,13 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     }
 }
 
+/// The ends of a beam's main edge, the one at the end of the stems
+/// (internal coordinates), for an editor's handles on them.
+pub fn ends(doc: &Document<'_>, item: ItemRef<'_>) -> (Pos, Pos) {
+    let edge = Beam::of_item(doc, item).main.edge;
+    (edge.left, edge.right)
+}
+
 /// The font a beam leaves loaded: its tuplet number's (see [`crate::text::font_loaded`]).
 pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     let beam = Beam::of_item(doc, item);
