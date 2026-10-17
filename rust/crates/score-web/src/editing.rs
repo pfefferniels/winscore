@@ -5,7 +5,9 @@
 //! ("Move", "R 5"), empty when it changed nothing, and what the engine would
 //! have reported, if anything. Call [`Score::render`] to see the result.
 
+use score_edit::clipboard::Placement;
 use score_edit::{Change, EditError};
+use score_format::{CountWidth, Item, MusFile};
 use score_render::ItemId;
 use wasm_bindgen::prelude::*;
 
@@ -16,6 +18,16 @@ use crate::Score;
 
 fn indices(items: &[ItemId]) -> Vec<u32> {
     items.iter().map(|id| id.0).collect()
+}
+
+/// `items` as a `.mus` file of their own, the form copied items travel in.
+fn clip_file(items: Vec<Item>) -> Vec<u8> {
+    let file = MusFile { items, ..MusFile::empty() };
+    let bytes = file.to_bytes();
+    if (bytes.len() - 2) / 4 <= usize::from(u16::MAX) {
+        return bytes;
+    }
+    MusFile { width: CountWidth::Long, ..file }.to_bytes()
 }
 
 /// What an action did.
@@ -35,6 +47,12 @@ impl Score {
 
     fn finish(&self, result: Result<Change, EditError>) -> Result<Outcome, JsError> {
         Ok(self.outcome(&result?))
+    }
+
+    fn paste(&mut self, bytes: &[u8], place: Placement) -> Result<Outcome, JsError> {
+        let items = MusFile::parse(bytes)?.items;
+        let result = self.0.editor_mut().paste(&items, place);
+        self.finish(result)
     }
 }
 
@@ -107,6 +125,49 @@ impl Score {
         if result.is_ok() {
             self.0.set_motives(motives);
         }
+        self.finish(result)
+    }
+
+    /// The selected items in file order as a `.mus` file of their own, for
+    /// the clipboard (empty without a selection); PST pastes them as well.
+    #[wasm_bindgen(js_name = copySelection)]
+    pub fn copy_selection(&mut self) -> Vec<u8> {
+        let items = self.0.editor_mut().copy_selection();
+        if items.is_empty() {
+            Vec::new()
+        } else {
+            clip_file(items)
+        }
+    }
+
+    /// Deletes the selection as one undo step, keeping it for PST; take it
+    /// for the clipboard with [`Score::copy_selection`] first.
+    #[wasm_bindgen(js_name = cutSelection)]
+    pub fn cut_selection(&mut self) -> Result<Outcome, JsError> {
+        let result = self.0.editor_mut().cut_selection();
+        self.finish(result)
+    }
+
+    /// Copies of the items in `bytes` (from [`Score::copy_selection`], of
+    /// this score or another) where they were copied from, as one undo step,
+    /// selected; where they would lie exactly on the same items, they move
+    /// ten P3 spaces to the right, as often as needed.
+    #[wasm_bindgen(js_name = pasteInPlace)]
+    pub fn paste_in_place(&mut self, bytes: &[u8]) -> Result<Outcome, JsError> {
+        self.paste(bytes, Placement::InPlace)
+    }
+
+    /// The same with their lowest staff on `staff` and their leftmost P3 at `p3`.
+    #[wasm_bindgen(js_name = pasteAt)]
+    pub fn paste_at(&mut self, bytes: &[u8], staff: f32, p3: f32) -> Result<Outcome, JsError> {
+        self.paste(bytes, Placement::At { staff, p3 })
+    }
+
+    /// Copies of the selection ten P3 spaces to the right (further past
+    /// earlier copies), selected, without touching the clipboard.
+    #[wasm_bindgen(js_name = duplicateSelection)]
+    pub fn duplicate_selection(&mut self) -> Result<Outcome, JsError> {
+        let result = self.0.editor_mut().duplicate_selection();
         self.finish(result)
     }
 
@@ -261,6 +322,23 @@ mod tests {
         assert!(!lj.label.is_empty() || lj.message.is_some(), "{lj:?}");
         let lja = score.execute("LJA").unwrap_or_else(|_| panic!("LJA"));
         assert!(lja.label.is_empty() || lja.label == "LJA", "{lja:?}");
+    }
+
+    #[test]
+    fn copied_items_paste_into_another_score() {
+        let mut score = mozart();
+        score.select(vec![2, 4]);
+        let bytes = score.copy_selection();
+        assert_eq!(MusFile::parse(&bytes).unwrap().items.len(), 2);
+        let mut other = Score::empty();
+        let pasted = other.paste_at(&bytes, 3.0, 20.0).unwrap_or_else(|_| panic!("paste"));
+        assert_eq!(pasted.label, "Paste");
+        assert_eq!(other.selection(), [0, 1]);
+        let (staff, note) = (other.0.item(ItemId(0)).unwrap(), other.0.item(ItemId(1)).unwrap());
+        assert_eq!([staff.param(2), staff.param(3)], [3.0, 20.0]);
+        assert_eq!(note.param(4), score.0.item(ItemId(4)).unwrap().param(4));
+        score.select(vec![]);
+        assert!(score.copy_selection().is_empty());
     }
 
     #[test]

@@ -36,6 +36,8 @@ export interface Hooks {
   box(from: Point, to: Point): void;
   /** A click on empty paper, for placing new items. */
   clickedPaper(at: Point): void;
+  /** A click or tap that became neither a drag nor a box, on an item or not: where a paste goes. */
+  clicked(at: Point): void;
   /** A double click; `item` is what lies under it. */
   open(item: number | null, clientX: number, clientY: number): void;
 }
@@ -225,6 +227,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       return;
     }
     if (gesture?.kind === 'drag') endDrag(true);
+    if (gesture?.kind === 'press' || (gesture?.kind === 'box' && !gesture.drawn)) hooks.clicked(hooks.pageAt(e.clientX, e.clientY));
     if (gesture?.kind === 'box') endBox(gesture, e.clientX, e.clientY);
     gesture = null;
   };
@@ -371,6 +374,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     if (!editor || hooks.inputTap(e.clientX, e.clientY)) return;
     const previous = lastTap;
     lastTap = { x: e.clientX, y: e.clientY, t: e.timeStamp };
+    hooks.clicked(hooks.pageAt(e.clientX, e.clientY));
     if (touch.hit === null) {
       if (editor.selection().length > 0) {
         editor.select([]);

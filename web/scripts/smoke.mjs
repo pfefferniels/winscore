@@ -202,6 +202,38 @@ try {
   assert.equal(await page.textContent('#item-count'), '344');
   assert.equal(await page.textContent('#item h2'), 'Item 3 · Clef');
 
+  // Ctrl+C and Ctrl+V: the copy lands beside its original, selected, as one undo step; after a click
+  // on the page it lands there. Edit ▸ Duplicate copies without the clipboard. Another tab pastes
+  // from the system clipboard, in place.
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.click('#items li[data-index="4"]');
+  const noteP3 = Number(await page.inputValue('#p3'));
+  await page.keyboard.press('Control+c');
+  assert.equal(await page.textContent('#message'), 'Copied 1 item');
+  await page.keyboard.press('Control+v');
+  assert.equal(await page.textContent('#item-count'), '345');
+  assert.equal(await page.textContent('#item h2'), 'Item 344 · Note');
+  assert.ok(Math.abs(Number(await page.inputValue('#p3')) - (noteP3 + 10)) < 1e-6);
+  assert.match(await page.getAttribute('#undo', 'title'), /^Undo Paste /);
+  await page.mouse.click(onStaff.x, onStaff.y);
+  const clickedX = Number(/^x (\d+)/.exec(await page.textContent('#cursor'))[1]);
+  await page.keyboard.press('Control+v');
+  assert.equal(await page.textContent('#item h2'), 'Item 345 · Note');
+  assert.ok(Math.abs(Number(await page.inputValue('#p3')) - (clickedX - 2000) / 150) < 0.02);
+  await menu('edit', 'duplicate');
+  assert.equal(await page.textContent('#item-count'), '347');
+  const otherTab = await browser.newPage({ permissions: ['clipboard-read', 'clipboard-write'] });
+  await otherTab.goto('http://localhost:4178/?new');
+  await otherTab.waitForSelector('#app[data-ready="true"]');
+  await otherTab.focus('#viewport');
+  await otherTab.keyboard.press('Control+v');
+  assert.equal(await otherTab.textContent('#item h2'), 'Item 0 · Note');
+  assert.ok(Math.abs(Number(await otherTab.inputValue('#p3')) - noteP3) < 1e-6);
+  await otherTab.close();
+  await page.bringToFront();
+  for (let i = 0; i < 3; i++) await page.keyboard.press('Control+z');
+  assert.equal(await page.textContent('#item-count'), '344');
+
   await page.click('#items li[data-index="2"]');
   await page.fill('#p5', '1.2');
   await page.press('#p5', 'Enter');

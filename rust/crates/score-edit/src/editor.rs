@@ -6,6 +6,7 @@ use score_layout::{Command as LayoutCommand, Options, StaffRange};
 use score_render::staff::Staff;
 use score_render::Document as RenderDocument;
 
+use crate::clipboard::{self, Placement};
 use crate::command::moves::{shift, Axis};
 use crate::command::Run;
 use crate::document::{Document, Edit, ItemId, Transaction};
@@ -340,6 +341,51 @@ impl Editor {
     /// Appends items (from the music input passes, say) and selects them.
     pub fn insert_items(&mut self, items: Vec<Item>) -> Result<Change, EditError> {
         self.act("Insert", |run| run.append_items(items))
+    }
+
+    // -- copy and paste -------------------------------------------------------
+
+    /// The selected items in file order, kept for PST: what the shell puts
+    /// on its clipboard.
+    pub fn copy_selection(&mut self) -> Vec<Item> {
+        let items = self.selected_items();
+        self.session.clipboard = items.clone();
+        items
+    }
+
+    /// Copies the selection and deletes it (UND brings it back as well).
+    pub fn cut_selection(&mut self) -> Result<Change, EditError> {
+        let items = self.selected_items();
+        self.act("Cut", |run| {
+            run.session.clipboard = items;
+            run.delete_selected(None)
+        })
+    }
+
+    /// Copies of `items` (from [`Editor::copy_selection`], of this score or
+    /// another) at `place`, appended and selected; where they would lie
+    /// exactly on the same items, they move [`clipboard::STEP`] to the right.
+    pub fn paste(&mut self, items: &[Item], place: Placement) -> Result<Change, EditError> {
+        self.insert_copies("Paste", items, place)
+    }
+
+    /// Copies of the selection, [`clipboard::STEP`] to the right (or further,
+    /// past earlier copies), selected; the clipboard stays as it is.
+    pub fn duplicate_selection(&mut self) -> Result<Change, EditError> {
+        self.insert_copies("Duplicate", &self.selected_items(), Placement::InPlace)
+    }
+
+    fn insert_copies(&mut self, label: &str, items: &[Item], place: Placement) -> Result<Change, EditError> {
+        if items.is_empty() {
+            return Ok(Change { selection: self.selection().to_vec(), ..Change::default() });
+        }
+        let copies = clipboard::placed(items, place, &self.doc.file().items);
+        self.act(label, |run| run.append_items(copies))
+    }
+
+    fn selected_items(&self) -> Vec<Item> {
+        let selected = self.selection();
+        self.doc.entries().filter(|(id, _)| selected.contains(id)).map(|(_, item)| item.clone()).collect()
     }
 
     // -- dragging -------------------------------------------------------------
