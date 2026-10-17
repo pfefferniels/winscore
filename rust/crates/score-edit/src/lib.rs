@@ -11,6 +11,7 @@
 //! WinScore's own engine run under emulation (`oracle/edit_driver.py`, cases
 //! in `tests/engine_cases.txt`); `COMMANDS.md` lists what is covered.
 
+pub mod clipboard;
 pub mod command;
 pub mod conditional;
 pub mod document;

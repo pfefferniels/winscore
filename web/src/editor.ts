@@ -38,6 +38,16 @@ export interface Editor {
   setText(item: number, text: string): Change | null;
   /** A code-9 item showing a library symbol, selected. */
   insertSymbol(symbol: number, place: Place): Change | null;
+  /** The selected items in file order as a `.mus` file of their own, for the clipboard; empty without a selection. */
+  copySelection(): Uint8Array;
+  /** Deletes the selection; take it for the clipboard with `copySelection` first. */
+  cutSelection(): Change | null;
+  /** Copies of items from `copySelection` (of any score) where they were copied from, selected; ten P3 spaces on while they would lie exactly on the same items. */
+  pasteInPlace(items: Uint8Array): Change | null;
+  /** The same with their lowest staff on the place's staff and their left edge at its P3. */
+  pasteAt(items: Uint8Array, place: Place): Change | null;
+  /** Copies of the selection ten P3 spaces to the right (further past earlier copies), selected. */
+  duplicateSelection(): Change | null;
   /** A box drawn on the page: answers a waiting group command, or selects what is inside. */
   drawBox(from: Point, to: Point): Change | null;
   /** The question a group command waits to have answered on the command bar. */
@@ -78,6 +88,11 @@ export function scoreEditor(score: Score): Editor {
     insertText: (text, params) => change(score.insertText(text, Float32Array.from(params))),
     setText: (item, text) => change(score.setText(item, text)),
     insertSymbol: (symbol, place) => change(score.insertSymbol(symbol, place.staff, place.p3, place.p4)),
+    copySelection: () => score.copySelection(),
+    cutSelection: () => change(score.cutSelection()),
+    pasteInPlace: (items) => change(score.pasteInPlace(items)),
+    pasteAt: (items, place) => change(score.pasteAt(items, place.staff, place.p3)),
+    duplicateSelection: () => change(score.duplicateSelection()),
     drawBox: (from, to) => change(score.drawBox(from.x, from.y, to.x, to.y)),
     prompt: () => score.prompt() ?? null,
     placeAt(at) {

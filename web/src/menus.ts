@@ -24,6 +24,12 @@ export interface MenuHooks {
   print(): void;
   undo(): void;
   redo(): void;
+  cut(): void;
+  copy(): void;
+  paste(): void;
+  /** Whether something was copied to paste. */
+  canPaste(): boolean;
+  duplicate(): void;
   undoLabel(): string | null;
   redoLabel(): string | null;
   input(): void;
@@ -69,6 +75,7 @@ function row(label: string, actions: (Action | null)[]): Entry {
 
 export function appMenus(hooks: MenuHooks): Menu[] {
   const scored = () => hooks.hasScore();
+  const selected = () => hooks.hasScore() && hooks.hasSelection();
   const cmd = (id: number, label: string, send?: Send, hint?: string) => scoreCommand(hooks, id, label, send, hint);
   const dialog = (kind: DialogKind, label: string, title: string): Action => ({
     label,
@@ -113,6 +120,18 @@ export function appMenus(hooks: MenuHooks): Menu[] {
           run: hooks.redo,
           enabled: () => hooks.redoLabel() !== null,
         },
+        'separator',
+        { label: 'Cut', hint: `${MOD}X`, title: 'Copy the selected items and delete them', id: 'cut', run: hooks.cut, enabled: selected },
+        { label: 'Copy', hint: `${MOD}C`, title: 'Copy the selected items, to paste them here or into another score', id: 'copy', run: hooks.copy, enabled: selected },
+        {
+          label: 'Paste',
+          hint: `${MOD}V`,
+          title: 'Paste the copied items where you clicked last, else where they were copied (beside them if they are still there)',
+          id: 'paste',
+          run: hooks.paste,
+          enabled: () => scored() && hooks.canPaste(),
+        },
+        { label: 'Duplicate', hint: `${MOD}D`, title: 'Copies of the selected items, ten spaces to the right', id: 'duplicate', run: hooks.duplicate, enabled: selected },
         'separator',
         cmd(32704, 'Delete', 'selection', 'Del'),
         cmd(32779, 'Undelete', 'area'),

@@ -2,10 +2,11 @@
 
 use std::path::PathBuf;
 
+use score_edit::clipboard::Placement;
 use score_edit::group::{Region, TRANSPOSITION_PROMPT};
 use score_edit::score_layout::{Command as LayoutCommand, Options, StaffRange};
 use score_edit::transpose::Transposition;
-use score_edit::{EditError, Editor, ItemId};
+use score_edit::{Change, EditError, Editor, ItemId};
 
 fn sample(name: &str) -> Vec<u8> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
@@ -252,6 +253,59 @@ fn copy_continue_reports_the_copy_and_selects_it() {
     assert_eq!(change.selection, change.inserted);
     assert_eq!(p(&e, note, 3), 100.0);
     assert_eq!(p(&e, change.inserted[0], 3), 110.0);
+}
+
+#[test]
+fn copies_paste_beside_or_at_a_place_in_one_step() {
+    let mut e = small();
+    let (a, b) = (e.id_at(1).unwrap(), e.id_at(2).unwrap());
+    e.select(&[b, a]);
+    let copied = e.copy_selection();
+    assert_eq!(copied.iter().map(|item| item.param(3)).collect::<Vec<_>>(), [100.0, 120.0]);
+    assert!(!e.can_undo());
+    let x = |e: &Editor, change: &Change| change.inserted.iter().map(|&id| p(e, id, 3)).collect::<Vec<_>>();
+    let beside = e.paste(&copied, Placement::InPlace).unwrap();
+    assert_eq!(e.undo_label(), Some("Paste"));
+    assert_eq!(e.selection(), beside.inserted);
+    assert_eq!(x(&e, &beside), [110.0, 130.0]);
+    let further = e.paste(&copied, Placement::InPlace).unwrap();
+    assert_eq!(x(&e, &further), [120.0, 140.0]);
+    let at = e.paste(&copied, Placement::At { staff: 2.0, p3: 50.0 }).unwrap();
+    let placed: Vec<[f32; 3]> = at.inserted.iter().map(|&id| [p(&e, id, 2), p(&e, id, 3), p(&e, id, 4)]).collect();
+    assert_eq!(placed, [[2.0, 50.0, 6.0], [2.0, 70.0, 7.0]]);
+    (0..3).for_each(|_| assert!(e.undo().is_some()));
+    assert_eq!(e.document().len(), 3);
+    assert!(e.paste(&[], Placement::InPlace).unwrap().is_empty());
+    let mut other = editor_with(&[&[8.0, 1.0, 0.0]]);
+    let into_other = other.paste(&copied, Placement::InPlace).unwrap();
+    assert_eq!(x(&other, &into_other), [100.0, 120.0]);
+}
+
+#[test]
+fn cut_deletes_and_pst_pastes_what_was_cut() {
+    let mut e = small();
+    e.select(&[e.id_at(2).unwrap()]);
+    e.cut_selection().unwrap();
+    assert_eq!(e.undo_label(), Some("Cut"));
+    assert_eq!(e.document().len(), 2);
+    assert!(e.selection().is_empty());
+    let change = e.execute("PST").unwrap();
+    assert_eq!(p(&e, change.inserted[0], 3), 120.0);
+}
+
+#[test]
+fn duplicates_go_beside_and_leave_the_clipboard_alone() {
+    let mut e = small();
+    e.select(&[e.id_at(1).unwrap()]);
+    let change = e.duplicate_selection().unwrap();
+    assert_eq!(e.undo_label(), Some("Duplicate"));
+    assert_eq!(e.selection(), change.inserted);
+    assert_eq!(p(&e, change.inserted[0], 3), 110.0);
+    let again = e.duplicate_selection().unwrap();
+    assert_eq!(p(&e, again.inserted[0], 3), 120.0);
+    e.clear_selection();
+    assert!(e.duplicate_selection().unwrap().is_empty());
+    assert!(e.execute("PST").unwrap().is_empty());
 }
 
 #[test]

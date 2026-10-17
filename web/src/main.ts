@@ -1,6 +1,7 @@
 import './style.css';
 import init, { codeName, commandSupported, librarySymbols, paramName, Score, type EncodedList, type InputLine } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
+import { bindClipboard } from './clipboard';
 import { bindCommandBar } from './command-bar';
 import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
 import { fontPrefix } from './commands';
@@ -34,6 +35,8 @@ interface State {
   modified: boolean;
   /** The last click on empty paper, where new items go when nothing is selected. */
   lastPaper: Point | null;
+  /** Where pastes go: the last click on the page since the copy, if any. */
+  pasteAt: Point | null;
   /** The scrollable page area; kept while a drag is in progress. */
   extent: Box | null;
   /** The line of music input being typed, drawn over the page. */
@@ -125,6 +128,7 @@ const state: State = {
   rust: EMPTY,
   modified: false,
   lastPaper: null,
+  pasteAt: null,
   extent: null,
   preview: null,
   panel: storedPanel(),
@@ -434,6 +438,38 @@ function placeForNew(): Place {
   return clicked ?? { staff: state.score?.highestStaff() ?? 1, p3: 100, p4: 0 };
 }
 
+/** ⌘C, ⌘X: the selected items for the clipboard; a cut deletes them too. Pastes then go to their own place until the next click. */
+function copySelection(cut: boolean): Uint8Array {
+  const editor = state.editor;
+  const count = selection().length;
+  if (!editor || count === 0) return new Uint8Array();
+  const items = editor.copySelection();
+  state.pasteAt = null;
+  if (cut) edit((ed) => ed.cutSelection());
+  else message(`Copied ${count} ${count === 1 ? 'item' : 'items'}`);
+  return items;
+}
+
+/** ⌘V: copies where the page was last clicked since the copy, else where they were copied from (beside the originals if they are still there). */
+function paste(items: Uint8Array) {
+  const place = state.pasteAt ? state.editor?.placeAt(state.pasteAt) : null;
+  edit((editor) => (place ? editor.pasteAt(items, place) : editor.pasteInPlace(items)));
+  revealSelection();
+}
+
+function duplicate() {
+  edit((editor) => editor.duplicateSelection());
+  revealSelection();
+}
+
+const clipboard = bindClipboard({
+  ready: () => state.editor !== null,
+  copy: () => copySelection(false),
+  cut: () => copySelection(true),
+  paste,
+  duplicate,
+});
+
 async function openDialog(kind: DialogKind) {
   if (!state.editor) return;
   const place = placeForNew();
@@ -519,6 +555,7 @@ function openScore(score: Score, name: string) {
   state.rust = decodeAndFree(score.render());
   state.modified = false;
   state.lastPaper = null;
+  state.pasteAt = null;
   refreshItemList();
   refreshPanel();
   inputMode.refresh();
@@ -638,6 +675,7 @@ function bindPointer() {
       selectionChanged();
     },
     clickedPaper: (at) => (state.lastPaper = at),
+    clicked: (at) => (state.pasteAt = at),
     open: (item) => void openItem(item),
   });
   ui.promptCancel.addEventListener('click', () => {
@@ -708,6 +746,11 @@ function bindMenus() {
       print: () => void print(),
       undo: () => edit((editor) => editor.undo()),
       redo: () => edit((editor) => editor.redo()),
+      cut: clipboard.cut,
+      copy: clipboard.copy,
+      paste: clipboard.paste,
+      canPaste: () => clipboard.full,
+      duplicate,
       undoLabel: () => state.editor?.undoLabel() ?? null,
       redoLabel: () => state.editor?.redoLabel() ?? null,
       input: () => enterInput(),
