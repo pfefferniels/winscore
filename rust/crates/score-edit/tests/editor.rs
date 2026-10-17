@@ -50,6 +50,31 @@ fn a_drag_keeps_its_grab_offset_and_snaps_notes() {
 }
 
 #[test]
+fn an_adjustment_sets_parameters_live_and_keeps_them_as_one_step() {
+    let mut e = small();
+    let note = e.id_at(1).unwrap();
+    e.adjust_begin(note).unwrap();
+    e.adjust_to(&[(8, 1.0)]);
+    let change = e.adjust_to(&[(8, 2.5)]);
+    assert_eq!(change.modified, [note]);
+    assert_eq!(p(&e, note, 8), 2.5);
+    assert_eq!(e.undo_label(), None);
+    e.adjust_end(true, "Stem");
+    assert_eq!(e.undo_label(), Some("Stem"));
+    e.undo();
+    assert_eq!(p(&e, note, 8), 0.0);
+
+    e.adjust_begin(note).unwrap();
+    e.adjust_to(&[(8, 4.0)]);
+    e.adjust_end(false, "Stem");
+    assert_eq!((p(&e, note, 8), e.undo_label()), (0.0, None));
+    e.adjust_begin(note).unwrap();
+    e.adjust_to(&[(8, 4.0)]);
+    e.select(&[note]);
+    assert_eq!(p(&e, note, 8), 0.0, "selecting ends an unfinished adjustment without a change");
+}
+
+#[test]
 fn text_entry_and_new_characters_keep_count_and_length() {
     let mut e = small();
     let change = e.insert_text("_00Hello", &[1.0, 50.0, 10.0]).unwrap();

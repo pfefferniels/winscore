@@ -3,22 +3,24 @@ import init, { codeName, commandSupported, librarySymbols, paramName, Score, typ
 import { createPageView, type Scene } from './canvas';
 import { bindClipboard } from './clipboard';
 import { bindCommandBar } from './command-bar';
-import { bounds, decode, elementsOf, EMPTY, union, type Box, type DisplayList } from './display';
+import { bounds, decode, elementsOf, EMPTY, itemBoxes, union, type Box, type DisplayList } from './display';
 import { fontPrefix } from './commands';
 import type { Point } from './view';
 import { scoreEditor, type Change, type Editor, type Place } from './editor';
 import { loadFaces } from './fonts';
+import { buildField, codeOf, moveProbes, paintGuides, snap, wantsForHandle, wantsForMove, type Field, type Guide, type Probes, type ScoreFacts } from './guides';
+import { cursorFor, decodeHandles, devicePoint, handleAt as handleUnder, paintHandles, paintPill, visibleHandles, type Handle, type HandleSet } from './handles';
 import type { Context } from './item-fields';
 import { createInputMode, type Shown } from './input-mode';
 import { bindInteraction } from './interaction';
 import { createMenuBar, inMenuBar, MOD } from './menu';
 import { appMenus, type DialogKind } from './menus';
 import { bindPanelGrip, filterItemList, formatParam, markSelected, renderItem, renderItemList, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
-import type { Layer } from './paint';
+import type { Layer, Overlay } from './paint';
 import { download, printPage } from './print';
 import { createSymbolDialog } from './symbol-dialog';
 import { createTextDialog, editInPlace } from './text-dialog';
-import { stepZoom, ZOOM_LEVELS } from './view';
+import { stepZoom, toDevice, ZOOM_LEVELS } from './view';
 
 interface Sample {
   title: string;
@@ -43,6 +45,32 @@ interface State {
   preview: Shown | null;
   /** Whether the side panel (selected item, item list) is shown. */
   panel: boolean;
+  /** The handles of the selected item while it is the only one selected. */
+  handles: HandleSet | null;
+  /** The handle under the mouse. */
+  hover: number | null;
+  /** A move or handle drag in progress, with its guides. */
+  drag: Drag | null;
+}
+
+/** A move of the selection or a drag of one of its handles. */
+interface Drag {
+  /** The handle held; null when the items themselves move. */
+  handle: Handle | null;
+  /** Where the drag took hold, page coordinates. */
+  from: Point;
+  field: Field;
+  probes: Probes;
+  /** The dragged thing's extent when the drag began. */
+  span: Box;
+  /** The axes guides may snap. */
+  axes: { x: boolean; y: boolean };
+  guides: Guide[];
+  /** What the values are now, shown by the cursor. */
+  readout: string;
+  /** The held handle's place now, and the cursor's (page coordinates). */
+  at: Point;
+  cursor: Point;
 }
 
 const MARGIN = 1000;
@@ -55,6 +83,12 @@ const TOUCH_PICK_RADIUS_PX = 24;
 /** The line being typed, and in it the item at the caret. */
 const PREVIEW_TINT = '#7c3aed';
 const FOCUS_TINT = '#ea580c';
+/** Guides pull a dragged thing from this far, in CSS pixels (a finger from further). */
+const SNAP_PX = 6;
+const TOUCH_SNAP_PX = 10;
+/** A handle is taken from this far, in CSS pixels. */
+const HANDLE_PX = 8;
+const TOUCH_HANDLE_PX = 22;
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -132,6 +166,9 @@ const state: State = {
   extent: null,
   preview: null,
   panel: storedPanel(),
+  handles: null,
+  hover: null,
+  drag: null,
 };
 
 const view = createPageView(ui, showZoom);
@@ -150,6 +187,7 @@ const inputMode = createInputMode(ui.inputPanel, ui.stage, {
   clientRect: (box) => view.clientRect(box),
 });
 view.onPaint(() => inputMode.layout());
+view.onPaint(describeSelection);
 const symbolDialog = createSymbolDialog(ui.symbolDialog);
 const textDialog = createTextDialog(ui.textDialog);
 let samples: Sample[] = [];
@@ -230,6 +268,35 @@ function primary(): number | null {
   return selection().at(-1) ?? null;
 }
 
+const touchScreen = () => matchMedia(COARSE).matches;
+const dpr = () => window.devicePixelRatio || 1;
+
+/** Handles, guides and the readout over the page. */
+function overlays(): Overlay[] {
+  const drawn: Overlay[] = [];
+  const shown = state.handles && !inputMode.isOpen && state.editor?.prompt() == null;
+  if (shown && (!state.drag || state.drag.handle)) {
+    drawn.push((ctx, t) => {
+      const drag = state.drag;
+      const active = drag?.handle ? { index: drag.handle.index, at: drag.at } : null;
+      if (state.handles) paintHandles(ctx, t, { set: state.handles, hover: drag ? null : state.hover, active, coarse: touchScreen(), dpr: dpr() });
+    });
+  }
+  if (state.drag) {
+    drawn.push((ctx, t) => {
+      const drag = state.drag;
+      if (!drag) return;
+      paintGuides(ctx, t, drag.guides, dpr());
+      if (drag.readout) {
+        const p = toDevice(t, drag.cursor.x, drag.cursor.y);
+        const away = (touchScreen() ? 40 : 16) * dpr();
+        paintPill(ctx, drag.readout, { x: p.x + away, y: p.y + away }, dpr());
+      }
+    });
+  }
+  return drawn;
+}
+
 /** What the page view shows; `live` (a drag in progress) keeps the scrollable area as it was. */
 function scene(live = false): Scene {
   const paper = paperBox();
@@ -242,7 +309,16 @@ function scene(live = false): Scene {
       ...selection().map((item) => ({ list: state.rust, item })),
       ...(state.preview?.focus.map((item) => ({ list: state.preview!.list, item, colour: FOCUS_TINT })) ?? []),
     ],
+    overlays: overlays(),
   };
+}
+
+/** The handles of the selected item when it is the only one. */
+function refreshHandles() {
+  const items = selection();
+  const editor = state.editor;
+  state.handles = editor && items.length === 1 ? decodeHandles(items[0]!, editor.handles(items[0]!)) : null;
+  if (state.hover !== null && !state.handles?.handles[state.hover]) state.hover = null;
 }
 
 const REDO_KEYS = MOD === '⌘' ? '⇧⌘Z' : 'Ctrl+Y';
@@ -357,6 +433,7 @@ async function loadFontsAndRepaint() {
 }
 
 function selectionChanged() {
+  refreshHandles();
   refreshPanel();
   redraw();
   report(null);
@@ -381,7 +458,9 @@ function edited(change: Change | null, live: boolean) {
   const score = state.score;
   if (!score) return;
   state.rust = decodeAndFree(live ? score.renderSelection() : score.render());
+  if (live && state.drag && !state.drag.handle) state.drag.readout = moveReadout();
   if (!live) {
+    refreshHandles();
     state.modified ||= change !== null;
     refreshItemList();
     refreshPanel();
@@ -556,6 +635,8 @@ function openScore(score: Score, name: string) {
   state.modified = false;
   state.lastPaper = null;
   state.pasteAt = null;
+  state.handles = null;
+  state.drag = null;
   refreshItemList();
   refreshPanel();
   inputMode.refresh();
@@ -638,6 +719,165 @@ function toggleInput() {
   else enterInput();
 }
 
+/** What the guides read from the score now. */
+function scoreFacts(editor: Editor): ScoreFacts {
+  return { anchors: editor.anchors(), staves: editor.staves(), boxes: itemBoxes(state.rust, state.score?.itemCount() ?? 0) };
+}
+
+/** How near (page units) a guide pulls. */
+function snapTolerance(): number {
+  return view.unitsPerCss(touchScreen() ? TOUCH_SNAP_PX : SNAP_PX);
+}
+
+/** The handle of the selected item under a client position. */
+function handleAt(clientX: number, clientY: number, finger = false): Handle | null {
+  if (!state.handles || inputMode.isOpen || state.editor?.prompt() != null) return null;
+  const radius = (finger || touchScreen() ? TOUCH_HANDLE_PX : HANDLE_PX) * dpr();
+  return handleUnder(state.handles, view.transform(), dpr(), view.deviceAt(clientX, clientY), radius);
+}
+
+/** The primary item's place while it moves: P3 and P4. */
+function moveReadout(): string {
+  const index = primary();
+  const info = index === null ? undefined : state.score?.item(index);
+  if (!info) return '';
+  const [, , p3 = 0, p4 = 0] = info.params;
+  info.free();
+  const shown = (v: number) => formatParam(Math.round(v * 100) / 100);
+  return `P3 ${shown(p3)} · P4 ${shown(p4)}`;
+}
+
+/** The axes along which guides may pull a handle: those it moves on, unless its frame is turned. */
+function handleAxes(h: Handle): { x: boolean; y: boolean } {
+  if (!h.follows) return { x: false, y: false };
+  if (h.axis === 'both') return { x: true, y: true };
+  const square = Math.abs(h.turn % 360) < 1e-6;
+  return { x: square && h.axis === 'x', y: square && h.axis === 'y' };
+}
+
+function beginHandle(index: number, clientX: number, clientY: number): boolean {
+  const set = state.handles;
+  const editor = state.editor;
+  const h = set?.handles[index];
+  if (!set || !editor || !h) return false;
+  const at = view.pageAt(clientX, clientY);
+  try {
+    if (!editor.handleBegin(set.item, index, at)) return false;
+  } catch (err) {
+    failed(err);
+    return false;
+  }
+  const facts = scoreFacts(editor);
+  const code = codeOf(facts, set.item);
+  const others = set.handles.filter((o) => o.kind === 'end' && o !== h).map((o) => o.at);
+  const span = { x0: h.at.x, x1: h.at.x, y0: h.at.y, y1: h.at.y };
+  const wants = wantsForHandle(code, h.kind, h.label, others, h.at.y);
+  const field = buildField(facts, { item: set.item, moving: new Set([set.item]), span }, wants, view.visibleBox());
+  const point = (value: number) => [{ value, kind: 'point' as const }];
+  state.drag = { handle: h, from: at, field, probes: { x: point(h.at.x), y: point(h.at.y) }, span, axes: handleAxes(h), guides: [], readout: h.label, at: h.at, cursor: at };
+  state.hover = null;
+  redraw(true);
+  return true;
+}
+
+/** Snaps the travel from the drag's grab to page point `to` onto its guides, unless `free`. */
+function snapped(drag: Drag, to: Point, free: boolean): Point {
+  let travel = { x: to.x - drag.from.x, y: to.y - drag.from.y };
+  drag.guides = [];
+  if (!free) {
+    const pulled = snap(drag.field, drag.probes, travel, snapTolerance(), drag.axes, drag.span);
+    travel = pulled.travel;
+    drag.guides = pulled.guides;
+  }
+  drag.cursor = to;
+  return travel;
+}
+
+function dragHandle(clientX: number, clientY: number, constrain: boolean, free: boolean) {
+  const drag = state.drag;
+  const editor = state.editor;
+  if (!drag?.handle || !editor) return;
+  const travel = snapped(drag, view.pageAt(clientX, clientY), free);
+  drag.readout = editor.handleTo({ x: drag.from.x + travel.x, y: drag.from.y + travel.y }, constrain, snapTolerance());
+  drag.at = { x: drag.handle.at.x + travel.x, y: drag.handle.at.y + travel.y };
+  edited(null, true);
+}
+
+function endHandle(commit: boolean) {
+  const editor = state.editor;
+  state.drag = null;
+  if (editor) edit((ed) => ed.handleEnd(commit));
+}
+
+function beginMove(at: Point) {
+  const editor = state.editor;
+  const item = primary();
+  if (!editor || item === null) return;
+  const facts = scoreFacts(editor);
+  const items = selection();
+  const span = items.map((i) => facts.boxes[i] ?? null).reduce(union, null);
+  if (!span) return;
+  const code = codeOf(facts, item);
+  const field = buildField(facts, { item, moving: new Set(items), span }, wantsForMove(code), view.visibleBox());
+  const vertical = code !== 8 && code !== 14;
+  state.drag = { handle: null, from: at, field, probes: moveProbes(facts, item, span), span, axes: { x: true, y: vertical }, guides: [], readout: '', at, cursor: at };
+}
+
+function moveTo(at: Point, free: boolean): Point {
+  const drag = state.drag;
+  if (!drag || drag.handle) return at;
+  const travel = snapped(drag, at, free);
+  return { x: drag.from.x + travel.x, y: drag.from.y + travel.y };
+}
+
+let described: { list: DisplayList; items: string; box: Box | null } | null = null;
+
+/** The box around the selected items, worked out once per rendering and selection. */
+function selectionBox(): Box | null {
+  const items = selection();
+  const key = items.join(',');
+  if (described?.list !== state.rust || described.items !== key) {
+    const wanted = new Set(items);
+    const mine = (source: number | null) => source !== null && wanted.has(source);
+    const box = bounds({ shapes: state.rust.shapes.filter((s) => mine(s.source)), texts: state.rust.texts.filter((r) => mine(r.source)) });
+    described = { list: state.rust, items: key, box };
+  }
+  return described.box;
+}
+
+/**
+ * Where the selection and its handles are on the screen, as data attributes
+ * of the page (client pixels): `data-selection` its box, `data-handles` the
+ * handles with their kind and label, `data-guides` the guides of a drag in
+ * progress. For tests and the browser's inspector.
+ */
+function describeSelection() {
+  const box = selectionBox();
+  const rect = box ? view.clientRect(box) : null;
+  ui.viewport.dataset.selection = rect ? JSON.stringify({ x: rect.x, y: rect.y, width: rect.width, height: rect.height }) : '';
+  const set = state.handles;
+  const t = view.transform();
+  const shown = set && !inputMode.isOpen ? visibleHandles(set, t, dpr()) : [];
+  const origin = ui.viewport.getBoundingClientRect();
+  ui.viewport.dataset.handles = JSON.stringify(
+    shown.map((h) => {
+      const p = devicePoint(h, t, dpr());
+      return { kind: h.kind, label: h.label, x: origin.left + p.x / dpr(), y: origin.top + p.y / dpr() };
+    }),
+  );
+  ui.viewport.dataset.guides = JSON.stringify(state.drag?.guides.map((g) => ({ axis: g.axis, label: g.label ?? null, music: g.music })) ?? []);
+}
+
+/** Over a handle the cursor says what it does and the handle names itself. */
+function hover(clientX: number, clientY: number) {
+  const h = handleAt(clientX, clientY);
+  const index = h?.index ?? null;
+  ui.viewport.style.cursor = h && state.handles ? cursorFor(h, state.handles) : '';
+  if (index === state.hover) return;
+  state.hover = index;
+  view.repaint();
+}
+
 /** The item under the pointer: a drawn outline, else the nearest reference point. */
 function itemAt(clientX: number, clientY: number, coarse = false): number | null {
   const p = view.pageAt(clientX, clientY);
@@ -677,6 +917,19 @@ function bindPointer() {
     clickedPaper: (at) => (state.lastPaper = at),
     clicked: (at) => (state.pasteAt = at),
     open: (item) => void openItem(item),
+    handleAt: (x, y, finger) => handleAt(x, y, finger)?.index ?? null,
+    handleBegin: beginHandle,
+    handleTo: dragHandle,
+    handleEnd: endHandle,
+    moveBegin: beginMove,
+    moveTo,
+    moveEnd: () => (state.drag = null),
+    hover,
+  });
+  ui.viewport.addEventListener('pointerleave', () => {
+    if (state.hover === null) return;
+    state.hover = null;
+    view.repaint();
   });
   ui.promptCancel.addEventListener('click', () => {
     edit((editor) => editor.execute('X'));

@@ -64,6 +64,51 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     draw(&Params::of(item), doc.position(item), &doc.staff_of(item), canvas);
 }
 
+/// Where the parts of a code-4 item lie before its rotation (internal
+/// coordinates), for an editor's handles on them.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Shape {
+    pub left: Pos,
+    pub right: Pos,
+    /// Whether the right end's level is P5; dotted and wavy lines and
+    /// hairpins stay at the level of P4.
+    pub right_level: bool,
+    /// Half the spread at a hairpin's open end, and whether it opens to the right.
+    pub hairpin: Option<(f64, bool)>,
+    /// Degrees clockwise about the left end.
+    pub rotation: f32,
+}
+
+/// The [`Shape`] of a code-4 item; `None` for vertical, upward wavy and
+/// multipoint lines, whose ends are not P3/P4 and P6/P5.
+pub fn shape(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Shape> {
+    let staff = doc.staff_of(item);
+    let line = Line::new(&Params::of(item), doc.position(item), &staff, staff.step, 0);
+    let p = &line.p;
+    let flat = |right_level: bool, rotation: f32| {
+        let right = Pos::new(line.right_x, if right_level { staff.y(f64::from(p.p(5))) } else { line.left.y });
+        Some(Shape { left: line.left, right, right_level, hairpin: None, rotation })
+    };
+    if line.ip5 >= HAIRPIN {
+        let p7 = match p.p(7) {
+            0.0 => 2.3_f32,
+            -1.0 => -2.3_f32,
+            v => v,
+        };
+        let half = real(f64::from(p7.abs()) * line.step() * 3.5);
+        return Some(Shape { hairpin: Some((half, p7 > 0.0)), ..flat(false, line.rotation())? });
+    }
+    let upward = p.p(6) == 0.0 || p.p(6) == p.p(3);
+    match line.ip7 {
+        0 => flat(true, line.rotation()),
+        QUICK_VERTICAL => None,
+        k if k >= MULTIPOINT => None,
+        _ if upward => None,
+        k if k > 0 => flat(p.p(13) == 0.0, p.p(13)),
+        _ => flat(false, p.p(13)),
+    }
+}
+
 /// P5 at or above this makes a hairpin.
 const HAIRPIN: i32 = 999;
 const QUICK_VERTICAL: i32 = -5;

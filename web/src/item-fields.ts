@@ -254,7 +254,7 @@ function parsePitch(text: string, p: P, ctx: Context): Change[] | null {
 const ORDINALS = ['', '1st', '2nd', '3rd', '4th'];
 
 /** Where a level lies on a five-line staff, e.g. "middle line", "2 ledger lines below". */
-function staffPlace(lvl: number): string {
+export function staffPlace(lvl: number): string {
   const l = Math.round(lvl);
   if (l === 3) return 'bottom line';
   if (l === 7) return 'middle line';

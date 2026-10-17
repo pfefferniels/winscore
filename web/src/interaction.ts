@@ -3,13 +3,15 @@
 // keeps one axis, Escape cancels), dragging over empty paper draws a box
 // (WinScore's mouse-drawn area), Ctrl/⌘-drag or the middle button pans, a
 // double click opens an item, and WinScore's edit-mode keys move or delete
-// the selection.
+// the selection. A handle of the selected item (its ends, size, rotation,
+// curve …) is dragged instead of the item when the press is on it; moves
+// and handle drags snap onto guides unless ⌘/Ctrl is held.
 //
 // Touch: a tap selects, a finger dragged pans (and glides on), except from
-// an item already selected, which it moves; two fingers pinch to zoom; a
-// long press adds or removes an item, and dragging on from it draws a box;
-// a double tap opens an item. While a group command waits for its area, one
-// finger draws the box and a tap answers it.
+// an item already selected, which it moves, or from one of its handles; two
+// fingers pinch to zoom; a long press adds or removes an item, and dragging
+// on from it draws a box; a double tap opens an item. While a group command
+// waits for its area, one finger draws the box and a tap answers it.
 import type { Change, Editor } from './editor';
 import type { Point } from './view';
 
@@ -40,6 +42,20 @@ export interface Hooks {
   clicked(at: Point): void;
   /** A double click; `item` is what lies under it. */
   open(item: number | null, clientX: number, clientY: number): void;
+  /** The handle of the selected item under a client position, if any; `coarse` for a finger. */
+  handleAt(clientX: number, clientY: number, coarse?: boolean): number | null;
+  /** Takes hold of a handle at a client position; false if it cannot be dragged. */
+  handleBegin(handle: number, clientX: number, clientY: number): boolean;
+  /** Drags the handle held; `constrain` is Shift, `free` (⌘/Ctrl) leaves the guides out. */
+  handleTo(clientX: number, clientY: number, constrain: boolean, free: boolean): void;
+  handleEnd(commit: boolean): void;
+  /** A move of the selection takes hold at a page point. */
+  moveBegin(at: Point): void;
+  /** Where the selection goes for the cursor at `at`: onto a guide nearby unless `free`. */
+  moveTo(at: Point, free: boolean): Point;
+  moveEnd(): void;
+  /** The mouse or pen moved over the page with no gesture in progress. */
+  hover(clientX: number, clientY: number): void;
 }
 
 const DRAG_THRESHOLD_PX = 4;
@@ -72,10 +88,11 @@ interface Sample {
 type Gesture =
   | { kind: 'press'; x: number; y: number; onItem: boolean }
   | { kind: 'drag' }
+  | { kind: 'handle' }
   | { kind: 'box'; x: number; y: number; drawn: boolean }
   | { kind: 'pan'; x: number; y: number; left: number; top: number; samples?: Sample[] }
   /** A finger down that has not moved yet; `held` after a long press. */
-  | { kind: 'touch'; x: number; y: number; hit: number | null; onSelected: boolean; held: boolean; timer: number }
+  | { kind: 'touch'; x: number; y: number; hit: number | null; handle: number | null; onSelected: boolean; held: boolean; timer: number }
   | { kind: 'pinch'; distance: number; zoom: number; at: Point };
 
 type Touch = Extract<Gesture, { kind: 'touch' }>;
@@ -100,7 +117,8 @@ function showBand(band: HTMLElement, from: { x: number; y: number }, to: { x: nu
 
 export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks: Hooks) {
   let gesture: Gesture | null = null;
-  let pending: { at: Point; constrain: boolean } | null = null;
+  let pending: { at: Point; constrain: boolean; free: boolean } | null = null;
+  let pendingHandle: { x: number; y: number; constrain: boolean; free: boolean } | null = null;
   /** Fingers on the page, by pointer id. */
   const touches = new Map<number, { x: number; y: number }>();
   /** The finger a one-finger touch gesture follows. */
@@ -123,7 +141,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
   const flushDrag = () => {
     const editor = hooks.editor();
     if (!pending || !editor) return;
-    editor.dragTo(pending.at, pending.constrain);
+    editor.dragTo(hooks.moveTo(pending.at, pending.free), pending.constrain);
     pending = null;
     hooks.edited(null, true);
   };
@@ -132,14 +150,45 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     if (gesture?.kind !== 'drag') return;
     flushDrag();
     gesture = null;
+    hooks.moveEnd();
     run((editor) => editor.dragEnd(commit));
   };
 
   /** Moves the dragged selection to a client position at the next frame. */
-  const dragTo = (clientX: number, clientY: number, constrain: boolean) => {
+  const dragTo = (clientX: number, clientY: number, constrain: boolean, free: boolean) => {
     const scheduled = pending !== null;
-    pending = { at: hooks.pageAt(clientX, clientY), constrain };
+    pending = { at: hooks.pageAt(clientX, clientY), constrain, free };
     if (!scheduled) requestAnimationFrame(flushDrag);
+  };
+
+  /** Takes hold of the selection where a press began: a move with guides. */
+  const beginDrag = (x: number, y: number) => {
+    const at = hooks.pageAt(x, y);
+    hooks.editor()?.dragBegin(at);
+    hooks.moveBegin(at);
+    gesture = { kind: 'drag' };
+  };
+
+  const flushHandle = () => {
+    if (!pendingHandle) return;
+    const { x, y, constrain, free } = pendingHandle;
+    pendingHandle = null;
+    hooks.handleTo(x, y, constrain, free);
+  };
+
+  /** Drags the handle held to a client position at the next frame. */
+  const handleTo = (x: number, y: number, constrain: boolean, free: boolean) => {
+    const scheduled = pendingHandle !== null;
+    pendingHandle = { x, y, constrain, free };
+    if (!scheduled) requestAnimationFrame(flushHandle);
+  };
+
+  const endHandle = (commit: boolean) => {
+    if (gesture?.kind !== 'handle') return;
+    if (commit) flushHandle();
+    pendingHandle = null;
+    gesture = null;
+    hooks.handleEnd(commit);
   };
 
   const select = (editor: Editor, items: number[]) => {
@@ -181,6 +230,13 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       return;
     }
     if (e.button !== 0 || !editor) return;
+    // A handle takes the press even with Shift, which then constrains its drag.
+    const handle = editor.prompt() === null ? hooks.handleAt(e.clientX, e.clientY) : null;
+    if (handle !== null && hooks.handleBegin(handle, e.clientX, e.clientY)) {
+      gesture = { kind: 'handle' };
+      viewport.setPointerCapture(e.pointerId);
+      return;
+    }
     const hit = editor.prompt() === null ? hooks.itemAt(e.clientX, e.clientY) : null;
     const current = editor.selection();
     if (hit === null) {
@@ -202,7 +258,14 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       touchMove(e);
       return;
     }
-    if (!gesture) return;
+    if (!gesture) {
+      hooks.hover(e.clientX, e.clientY);
+      return;
+    }
+    if (gesture.kind === 'handle') {
+      handleTo(e.clientX, e.clientY, e.shiftKey, e.metaKey || e.ctrlKey);
+      return;
+    }
     if (gesture.kind === 'pan') {
       viewport.scrollLeft = gesture.left - (e.clientX - gesture.x);
       viewport.scrollTop = gesture.top - (e.clientY - gesture.y);
@@ -215,10 +278,9 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     }
     if (gesture.kind === 'press') {
       if (!gesture.onItem || Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) < DRAG_THRESHOLD_PX) return;
-      hooks.editor()?.dragBegin(hooks.pageAt(gesture.x, gesture.y));
-      gesture = { kind: 'drag' };
+      beginDrag(gesture.x, gesture.y);
     }
-    if (gesture.kind === 'drag') dragTo(e.clientX, e.clientY, e.shiftKey);
+    if (gesture.kind === 'drag') dragTo(e.clientX, e.clientY, e.shiftKey, e.metaKey || e.ctrlKey);
   });
 
   const release = (e: PointerEvent) => {
@@ -228,6 +290,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     }
     if (gesture?.kind === 'drag') endDrag(true);
     if (gesture?.kind === 'press' || (gesture?.kind === 'box' && !gesture.drawn)) hooks.clicked(hooks.pageAt(e.clientX, e.clientY));
+    if (gesture?.kind === 'handle') endHandle(true);
     if (gesture?.kind === 'box') endBox(gesture, e.clientX, e.clientY);
     gesture = null;
   };
@@ -238,6 +301,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     if (gesture?.kind === 'touch') clearTimeout(gesture.timer);
     if (gesture?.kind === 'box') showBand(band, gesture, null);
     endDrag(false);
+    endHandle(false);
     gesture = null;
   });
   viewport.addEventListener('dblclick', (e) => {
@@ -316,7 +380,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     if (hooks.holdsKeyboard()) e.preventDefault();
     touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
     viewport.setPointerCapture(e.pointerId);
-    if (touches.size === 2 && gesture?.kind !== 'drag') {
+    if (touches.size === 2 && gesture?.kind !== 'drag' && gesture?.kind !== 'handle') {
       abandon();
       startPinch();
       return;
@@ -329,7 +393,9 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       return;
     }
     const hit = editor ? hooks.itemAt(e.clientX, e.clientY, true) : null;
-    const touch: Touch = { kind: 'touch', x: e.clientX, y: e.clientY, hit, onSelected: hit !== null && editor!.selection().includes(hit), held: false, timer: 0 };
+    const handle = editor ? hooks.handleAt(e.clientX, e.clientY, true) : null;
+    const onSelected = hit !== null && editor!.selection().includes(hit);
+    const touch: Touch = { kind: 'touch', x: e.clientX, y: e.clientY, hit, handle, onSelected, held: false, timer: 0 };
     touch.timer = window.setTimeout(() => {
       if (gesture !== touch || !editor) return;
       touch.held = true;
@@ -353,12 +419,12 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       if (Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) < TOUCH_SLOP_PX) return;
       clearTimeout(gesture.timer);
       if (gesture.held) gesture = { kind: 'box', x: gesture.x, y: gesture.y, drawn: true };
-      else if (gesture.onSelected) {
-        hooks.editor()?.dragBegin(hooks.pageAt(gesture.x, gesture.y));
-        gesture = { kind: 'drag' };
-      } else gesture = panFrom(e.pointerId, { x: gesture.x, y: gesture.y }, e.timeStamp);
+      else if (gesture.handle !== null && hooks.handleBegin(gesture.handle, gesture.x, gesture.y)) gesture = { kind: 'handle' };
+      else if (gesture.onSelected) beginDrag(gesture.x, gesture.y);
+      else gesture = panFrom(e.pointerId, { x: gesture.x, y: gesture.y }, e.timeStamp);
     }
-    if (gesture.kind === 'pan') {
+    if (gesture.kind === 'handle') handleTo(e.clientX, e.clientY, false, false);
+    else if (gesture.kind === 'pan') {
       viewport.scrollLeft = gesture.left - (e.clientX - gesture.x);
       viewport.scrollTop = gesture.top - (e.clientY - gesture.y);
       gesture.samples?.push({ x: e.clientX, y: e.clientY, t: e.timeStamp });
@@ -366,12 +432,13 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     } else if (gesture.kind === 'box') {
       gesture.drawn ||= Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) >= TOUCH_SLOP_PX;
       if (gesture.drawn) showBand(band, gesture, { x: e.clientX, y: e.clientY });
-    } else if (gesture.kind === 'drag') dragTo(e.clientX, e.clientY, false);
+    } else if (gesture.kind === 'drag') dragTo(e.clientX, e.clientY, false, false);
   };
 
   const tap = (touch: Touch, e: PointerEvent) => {
     const editor = hooks.editor();
-    if (!editor || hooks.inputTap(e.clientX, e.clientY)) return;
+    // A tap on a handle keeps the selection it belongs to.
+    if (!editor || touch.handle !== null || hooks.inputTap(e.clientX, e.clientY)) return;
     const previous = lastTap;
     lastTap = { x: e.clientX, y: e.clientY, t: e.timeStamp };
     hooks.clicked(hooks.pageAt(e.clientX, e.clientY));
@@ -406,6 +473,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     } else if (gesture.kind === 'pan' && gesture.samples) startGlide(gesture.samples, e.timeStamp);
     else if (gesture.kind === 'box') endBox(gesture, e.clientX, e.clientY);
     else if (gesture.kind === 'drag') endDrag(true);
+    else if (gesture.kind === 'handle') endHandle(true);
     gesture = null;
   };
 
@@ -414,6 +482,10 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     const command = e.metaKey || e.ctrlKey;
     if (e.key === 'Escape' && gesture?.kind === 'drag') {
       endDrag(false);
+      return;
+    }
+    if (e.key === 'Escape' && gesture?.kind === 'handle') {
+      endHandle(false);
       return;
     }
     if (e.key === 'Escape' && gesture?.kind === 'box') {

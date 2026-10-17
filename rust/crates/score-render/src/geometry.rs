@@ -2,7 +2,7 @@
 
 use crate::canvas::{BufferPoint, Pen};
 use crate::display::Point;
-use crate::units::{real, trunc};
+use crate::units::{real, trunc, Pos};
 
 /// Degrees per radian as the REAL*4 constant at 0x75FC6C.
 const DEGREES_PER_RADIAN: f32 = 57.295_776;
@@ -13,6 +13,14 @@ const DEGREES_PER_RADIAN: f32 = 57.295_776;
 /// slurs, EPS and text with the points added since a given buffer index.
 pub fn rotate_points(points: &mut [BufferPoint], centre: Point, degrees: f32) {
     turn(points, centre, real(f64::from(degrees) / f64::from(DEGREES_PER_RADIAN)));
+}
+
+/// One point turned clockwise by `degrees` about `centre`, unrounded: where
+/// [`rotate_points`] puts it, for code that asks where a part of an item lies.
+pub fn turned(p: Pos, centre: Pos, degrees: f64) -> Pos {
+    let (sin, cos) = degrees.to_radians().sin_cos();
+    let (dx, dy) = (p.x - centre.x, p.y - centre.y);
+    Pos::new(cos * dx + sin * dy + centre.x, cos * dy - sin * dx + centre.y)
 }
 
 /// rotate_points 0x42A5F4 called with a start index of 0 or below (as
@@ -124,5 +132,11 @@ mod tests {
         let mut points = [BufferPoint { at: Point::new(110, 100), pen: Pen::Stroke }];
         rotate_points(&mut points, Point::new(100, 100), 90.0);
         assert_eq!(points[0].at, Point::new(99, 90));
+    }
+
+    #[test]
+    fn a_turned_point_lands_where_rotate_points_puts_it() {
+        let p = turned(Pos::new(110.0, 100.0), Pos::new(100.0, 100.0), 90.0);
+        assert!((p.x - 100.0).abs() < 1e-9 && (p.y - 90.0).abs() < 1e-9, "{p:?}");
     }
 }

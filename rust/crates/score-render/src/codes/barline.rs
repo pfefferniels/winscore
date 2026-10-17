@@ -78,6 +78,36 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     rest::font_loaded(doc, item.changed(&sign))
 }
 
+/// Where a barline runs (internal coordinates), from the bottom of its own
+/// staff to the top of the highest staff it spans, and that span, as
+/// [`render`] places it, for an editor's handle on its top.
+pub fn reach(doc: &Document<'_>, item: ItemRef<'_>) -> (Pos, Pos, i32) {
+    let low = doc.staff_of(item);
+    let span = match trunc(f64::from(item.p(4))) {
+        999 => doc.staves.highest().unwrap_or(item.staff()) - item.staff() + 1,
+        span => span.abs(),
+    };
+    let span = span.min(LAST_STAFF - low.number + 1).max(1);
+    let kind = if item.p(4) < 0.0 { DASHED } else { trunc(f64::from(item.p(5))) };
+    let (bottom_level, top_level) = match kind {
+        SQUARE_BRACKET => (7.0, 7.0),
+        k if k >= BRACKET => (1.0, 13.0),
+        _ => (3.0, 11.0),
+    };
+    let level = |n: usize, default: f64| match item.p(n) {
+        _ if item.ip(4) == 999 => default,
+        0.0 => default,
+        p => f64::from(p),
+    };
+    let x = doc.position(item).x;
+    let x = match (item.p(7), item.p(15)) {
+        (p7, p15) if p7 != 0.0 && p15 == 0.0 => real(f64::from(p7) * P3_UNIT + x),
+        _ => x,
+    };
+    let high = doc.staves.get(low.number + span - 1);
+    (Pos::new(x, low.y(level(10, bottom_level))), Pos::new(x, high.y(level(11, top_level))), span)
+}
+
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let mut kind = trunc(f64::from(item.p(5)));
     if kind == TWO_BAR_REPEAT {

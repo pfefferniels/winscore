@@ -42,6 +42,8 @@ pub struct Document {
     page: DisplayList,
     /// Motives of the music input, kept across lines as the engine keeps them.
     motives: Motives,
+    /// The handle a drag holds, if any.
+    pub(crate) grab: Option<crate::handles::Grab>,
 }
 
 impl Document {
@@ -52,7 +54,7 @@ impl Document {
     pub fn new(file: MusFile) -> Self {
         let editor = Editor::new(file);
         let page = render_page(editor.file());
-        Self { editor, page, motives: Motives::new() }
+        Self { editor, page, motives: Motives::new(), grab: None }
     }
 
     pub fn file(&self) -> &MusFile {
