@@ -43,7 +43,7 @@ Use these instead of writing local copies; ask render-core for anything else tha
 | `geometry` | `rotate_points` (0x42A5F4, degrees clockwise), `rotate_points_radians` (its k0 <= 0 entry, radians counter-clockwise), `thicken` (0x42A8AE); `print_width`, `PRINT_PIXEL`, `HAIRLINE` for the refined style |
 | `trig` | `CIRCLE`: the engine's table of 100·sin/100·cos per degree |
 | `symbols` | `SymbolLibrary` (`doc.symbols()`), `draw_symbol` (core), `draw_library_symbol` (draw_symbol 0x4293F0), `draw_clef` (0x431AE0), `ItemContext` (the item globals these read) |
-| `codes::boxes` | `draw_box` (0x433530) with a `BoxCall` |
+| `codes::boxes` | `draw_box` (0x433530) with a `BoxCall`; `draw_styled_box` in the document's style (print widths instead of rings) |
 | `codes::number` | `draw_number` (0x4F65A8) with a `NumberCall` |
 | `codes::line` | `draw` (draw_line 0x439963) with a `Params` array, in the document's style |
 | `codes::rest` | `draw` (draw_rest at an explicit X_POS) |
