@@ -1,7 +1,8 @@
-// End-to-end check of the AI command in the built app (dist/), with Jev and
-// Claude answered by canned replies at the network: a lasso opens the
-// field, what Jev reads is shown while typing, Enter edits the score as one
-// undo step, a slider re-does it, and a command Jev cannot read goes to Claude.
+// End-to-end check of the command field in the built app (dist/), with Jev
+// and Claude answered by canned replies at the network: a selection brings
+// the field, typing on the page goes into it, what Jev reads is shown while
+// typing, Enter edits the score as one undo step, a slider re-does it, and a
+// command Jev cannot read goes to Claude.
 //
 // usage: npm run build && node scripts/ai-smoke.mjs
 // CHROMIUM=/path/to/chrome uses that browser instead of Playwright's own.
@@ -116,27 +117,31 @@ try {
     return JSON.parse(await page.getAttribute('#viewport', 'data-selection'));
   };
 
-  // The box of the notes, then a lasso around it.
+  // The box of the notes; Escape on the page deselects them, and the field goes.
   await page.fill('#item-filter', 'note');
   const box = await selectedBox(() => page.click('#items-select'));
-  await page.keyboard.press('Escape');
   await page.fill('#item-filter', '');
+  await page.waitForSelector('.ai-prompt:not([hidden])');
+  await page.focus('#viewport');
+  await page.keyboard.press('Escape');
+  assert.ok(await page.isHidden('.ai-prompt'), 'no selection, no field');
+
+  // A box drawn around the notes selects them, and the field stands by them without taking the keyboard.
   const [x0, y0, x1, y1] = [box.x - 30, box.y - 30, box.x + box.width + 30, box.y + box.height + 30];
-  await page.keyboard.down('Alt');
   await page.mouse.move(x0, y0);
   await page.mouse.down();
-  for (const [x, y] of [[x1, y0], [x1, y1], [x0, y1], [x0, y0 + 5]]) await page.mouse.move(x, y, { steps: 6 });
+  await page.mouse.move(x1, y1, { steps: 6 });
   await page.mouse.up();
-  await page.keyboard.up('Alt');
   await page.waitForSelector('.ai-prompt:not([hidden])');
-  assert.match(await page.textContent('.ai-status'), /8 notes/);
-  assert.equal(await page.evaluate(() => document.activeElement?.className), 'ai-input');
+  assert.notEqual(await page.evaluate(() => document.activeElement?.className), 'ai-input');
+  assert.equal(await page.textContent('.ai-status'), '', 'the field says nothing before a command');
   for (let i = 0; i < 100 && warmUps === 0; i++) await page.waitForTimeout(20);
   assert.equal(warmUps, 1, 'the field opens the connection to Jev');
 
-  const ask = async (text) => {
+  const read = () => page.waitForFunction(() => /→|Claude write/.test(document.querySelector('.ai-status').textContent));
+  const command = async (text) => {
     await page.fill('.ai-input', text);
-    await page.waitForFunction(() => /→|asks Claude/.test(document.querySelector('.ai-status').textContent));
+    await read();
   };
   const enter = async () => {
     await page.press('.ai-input', 'Enter');
@@ -149,8 +154,11 @@ try {
     return (n) => params[n - 1] ?? 0;
   };
 
-  // What Jev read shows before Enter; Enter edits the score as one undo step.
-  await ask('remove the stems');
+  // Typed on the page, the command goes into the field; what Jev read shows before Enter, and Enter edits the score as one undo step.
+  await page.keyboard.type('remove the stems');
+  assert.equal(await page.inputValue('.ai-input'), 'remove the stems');
+  assert.equal(await page.inputValue('#command'), '', 'not the command bar');
+  await read();
   assert.match(await page.textContent('.ai-reading'), /Remove stems · 8 items/);
   assert.match(await page.textContent('.ai-source'), /^Jev 90 %/);
   assert.equal(jevRequests.at(-1).model, 'jev-latest');
@@ -162,7 +170,7 @@ try {
   assert.equal(await page.inputValue('.ai-input'), '');
 
   // Beams in pairs, then fours with the slider: still one undo step.
-  await ask('beam always 2 notes');
+  await command('beam always 2 notes');
   await enter();
   assert.equal(await page.textContent('#item-count'), '13');
   const size = page.locator('.ai-knob input[aria-label="Notes per beam"]');
@@ -172,7 +180,7 @@ try {
   assert.match(await page.getAttribute('#undo', 'title'), /“beam always 2 notes”/);
 
   // Sizes growing from left to right, with three sliders.
-  await ask('make note size gradually bigger');
+  await command('make note size gradually bigger');
   assert.match(await page.textContent('.ai-reading'), /Size grows/);
   await enter();
   assert.equal(await page.locator('.ai-knob').count(), 3);
@@ -182,9 +190,9 @@ try {
   const grown = await shownParams();
   assert.equal(grown(15), 3, 'the last note reaches the final size');
 
-  // Jev is not sure: Enter asks Claude, whose script runs the same way.
-  await ask('make the last note an x head');
-  assert.match(await page.textContent('.ai-reading'), /not one of Jev’s actions: ↵ asks Claude/);
+  // Jev is not sure: Enter has Claude write the edit, which runs the same way.
+  await command('make the last note an x head');
+  assert.match(await page.textContent('.ai-reading'), /not one of Jev’s actions: ↵ has Claude write it/);
   await enter();
   assert.match(await page.textContent('.ai-status'), /✓ Last note with an X head/);
   assert.match(await page.textContent('.ai-source'), /^Claude/);
@@ -194,48 +202,33 @@ try {
 
   // A SCORE command needs no model.
   const before = jevRequests.length;
-  await ask('FLI');
+  await command('FLI');
   assert.match(await page.textContent('.ai-reading'), /SCORE: FLI/);
   assert.equal(jevRequests.length, before);
 
-  // Escape closes the field; undo takes back one command at a time.
+  // Escape gives the keyboard back to the page, the field staying by the selection; undo takes back one command at a time.
   await page.press('.ai-input', 'Escape');
-  assert.ok(await page.isHidden('.ai-prompt'));
+  assert.equal(await page.inputValue('.ai-input'), '');
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 'viewport');
+  assert.ok(await page.isVisible('.ai-prompt'));
   await page.keyboard.press('Control+z');
   await page.keyboard.press('Control+z');
   await page.keyboard.press('Control+z');
   assert.equal(await page.textContent('#item-count'), '9');
   assert.match(await page.getAttribute('#undo', 'title'), /“remove the stems”/);
 
-  // A lasso around empty space on the staff, from its last quarter to past the paper's
-  // edge (a tenth of the staff beyond its end), at any zoom: the notes typed go there.
-  const staff = await selectedBox(() => page.click('#items li[data-index="0"]'));
-  assert.ok(staff.width > box.width, `the staff's box ${JSON.stringify(staff)} is wider than the notes' ${JSON.stringify(box)}`);
-  await page.keyboard.press('Escape');
-  const [r0, r1] = [staff.x + 0.75 * staff.width, staff.x + 1.1 * staff.width];
-  await page.keyboard.down('Alt');
-  await page.mouse.move(r0, y0);
-  await page.mouse.down();
-  for (const [x, y] of [[r1, y0], [r1, y1], [r0, y1]]) await page.mouse.move(x, y, { steps: 4 });
-  await page.mouse.up();
-  await page.keyboard.up('Alt');
+  // With the staff selected, music goes after the music on it.
+  const p3s = async (rows) => (await page.$$eval(rows, (list) => list.map((li) => Number(li.querySelector('.where').textContent.split(' · ')[1]))));
+  const last = Math.max(...(await p3s('#items li[data-code="1"]')));
+  await page.click('#items li[data-index="0"]');
   await page.waitForSelector('.ai-prompt:not([hidden])');
-  assert.match(await page.textContent('.ai-status'), /Empty space on staff 1/);
-  await ask('add notes c g d/f/a');
+  await command('add notes c g d/f/a');
   assert.match(await page.textContent('.ai-reading'), /Add c g d\/f\/a/);
   await enter();
   assert.equal(await page.textContent('#item-count'), '14');
-  await page.press('.ai-input', 'Escape');
-
-  // The Ask button arms the lasso for one drag.
-  await page.click('#ask');
-  assert.equal(await page.getAttribute('#ask', 'aria-pressed'), 'true');
-  await page.mouse.move(x0, y0);
-  await page.mouse.down();
-  for (const [x, y] of [[x1, y0], [x1, y1], [x0, y1]]) await page.mouse.move(x, y, { steps: 4 });
-  await page.mouse.up();
-  await page.waitForSelector('.ai-prompt:not([hidden])');
-  assert.equal(await page.getAttribute('#ask', 'aria-pressed'), 'false');
+  const added = await p3s('#items li.selected[data-code="1"]');
+  assert.equal(added.length, 5);
+  assert.ok(Math.min(...added) > last, `the new notes (${added}) come after the last one (${last})`);
 
   assert.deepEqual(errors, []);
   console.log('ai smoke: ok');

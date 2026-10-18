@@ -57,18 +57,18 @@ export interface Script {
   steps: Step[];
 }
 
-/** Where new things go: a staff and a stretch of it in P3, from the lasso. */
+/** Where new things go: a staff and a stretch of it in P3, by the selection. */
 export interface Region {
-  /** The staff at the lasso's middle, where music goes. */
+  /** The staff where music goes. */
   staff: number;
-  /** The lowest and highest staff the lasso reached. */
+  /** The lowest and highest staff the selection reaches. */
   bottom: number;
   top: number;
   from: number;
   to: number;
 }
 
-/** What a command is about: items by identity (null: the whole score), and the region drawn. */
+/** What a command is about: items by identity (null: the whole score), and where music it adds goes. */
 export interface Scope {
   keys: number[] | null;
   region: Region | null;
@@ -420,7 +420,7 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
     case 'insert': {
       const region = scope.region;
       const staff = step.staff ?? region?.staff;
-      if (staff === undefined) throw new Error('Draw a lasso where the music goes');
+      if (staff === undefined) throw new Error('Select the staff the music goes on');
       const from = step.from ?? region?.from ?? 10;
       const to = step.to ?? region?.to ?? 190;
       const rhythms = step.rhythms?.replace(/;$/, '').trim() ? step.rhythms : quartersFor(step.notes);

@@ -1,12 +1,12 @@
-// The AI command: a small field by the music a lasso (or the selection) took
-// in. What is typed goes to Jev while it is typed; Enter edits the score at
-// once with what Jev read, or asks Claude when Jev is not sure. Numbers the
-// command leaves open appear as sliders under the field; dragging one
+// The command field: it stands by the selection while there is one, and what
+// is typed on the page goes into it. A command in words goes to Jev while it
+// is typed; Enter edits the score at once with what Jev read, or has Claude
+// write the edit when Jev is not sure. A SCORE command runs as it is. Numbers
+// the command leaves open appear as sliders under the field; dragging one
 // re-does the edit with the new value, live, as the same undo step.
 import type { Box } from './display';
 import type { Editor } from './editor';
 import { onlyParams, reach, run, type Access, type Knob, type Scope, type Script } from './ai-script';
-import { counted as countedItems } from './ai-intent';
 import {
   askClaude,
   askJev,
@@ -40,8 +40,8 @@ export interface PromptHooks {
   edited(live: boolean, params: boolean): void;
   /** Undoes (or redoes) the last edit of the score. */
   undo(redo: boolean): void;
-  /** The prompt closed. */
-  closed(): void;
+  /** The field gave the keyboard back to the page. */
+  left(): void;
 }
 
 /** A reading of the typed command, ready to run. */
@@ -77,17 +77,23 @@ const format = (v: number) => (Math.abs(v) >= 10 ? v.toFixed(0) : String(Math.ro
 /** A SCORE command typed as such: upper-case words and numbers (R 5, FLI, 600 5). */
 const looksLikeScore = (text: string) => /^[A-Z][A-Z0-9]*(\s+[-+]?[\d.]+)*$|^[-+]?[\d.]+(\s+[-+]?[\d.]+)+$/.test(text.trim());
 
+/** Whether two scopes are about the same items. */
+const sameItems = (a: Scope, b: Scope) => {
+  const sorted = (s: Scope) => String([...(s.keys ?? [])].sort((x, y) => x - y));
+  return sorted(a) === sorted(b);
+};
+
 export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
-  const input = el('input', { className: 'ai-input', type: 'text', placeholder: 'Tell the music what to do…', autocomplete: 'off', spellcheck: false });
-  input.setAttribute('aria-label', 'AI command');
+  const input = el('input', { className: 'ai-input', type: 'text', placeholder: 'Command, e.g. stems up', autocomplete: 'off', spellcheck: false });
+  input.setAttribute('aria-label', 'Command for the selection');
   const gear = el('button', { className: 'ai-gear', type: 'button', title: 'Models and keys', textContent: '⚙' });
   gear.setAttribute('aria-label', 'Models and keys');
   const status = el('div', { className: 'ai-status' });
   const knobs = el('div', { className: 'ai-knobs' });
   const settings = el('form', { className: 'ai-settings', hidden: true });
-  const box = el('div', { className: 'ai-prompt', hidden: true }, el('div', { className: 'ai-row' }, el('span', { className: 'ai-mark', textContent: '✦' }), input, gear), status, knobs, settings);
-  box.setAttribute('role', 'dialog');
-  box.setAttribute('aria-label', 'AI command');
+  const box = el('div', { className: 'ai-prompt', hidden: true }, el('div', { className: 'ai-row' }, el('span', { className: 'ai-mark', textContent: '›' }), input, gear), status, knobs, settings);
+  box.setAttribute('role', 'group');
+  box.setAttribute('aria-label', 'Command');
   host.append(box);
 
   let scope: Scope | null = null;
@@ -105,6 +111,16 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   const claudeKey = (about: About) => `${readingKey(about)}|${scope?.keys?.join(',') ?? 'all'}|${JSON.stringify(scope?.region ?? null)}`;
   /** The command Claude is writing an edit for. */
   let writing: string | null = null;
+  /** Set while the page takes in an edit of this field: the selection it then follows is the command's. */
+  let own = false;
+  const edited = (live: boolean, params: boolean) => {
+    own = true;
+    try {
+      hooks.edited(live, params);
+    } finally {
+      own = false;
+    }
+  };
 
   void serverKeys().then((keys) => {
     server = keys;
@@ -118,13 +134,10 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     status.replaceChildren(el('span', { className: 'ai-reading', textContent: text }), source ? el('span', { className: 'ai-source', textContent: source }) : '');
   };
 
-  /** What the field says before anything is typed: what the command is about. */
+  /** Before anything is typed the field says nothing. */
   function idle() {
-    const about = scope && hooks.about('', scope);
-    const what = about ? [...about.counts].sort((a, b) => b[1] - a[1]).map(([code, n]) => countedItems(code, n)).join(', ') : '';
-    const region = scope?.region ? `Empty space on staff ${scope.region.staff}` : 'Nothing';
-    const models = links.jev || links.claude ? '' : ' · set up a model with ⚙';
-    show(`${what || (scope?.keys === null ? 'The whole score' : region)}${models}`);
+    status.className = 'ai-status';
+    status.replaceChildren();
   }
 
   function place() {
@@ -168,7 +181,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
         if (result) memo.set(readingKey(about), result);
         if (input.value.trim() === text) {
           if (result) showReading(result);
-          else show(`${UNREAD[jev.why ?? 'unsure']}${links.claude ? ': ↵ asks Claude' : '; Claude could write it (⚙)'}`, '', `Jev · ${Math.round(jev.ms)} ms`);
+          else show(`${UNREAD[jev.why ?? 'unsure']}${links.claude ? ': ↵ has Claude write it' : '; Claude could write it (⚙)'}`, '', `Jev · ${Math.round(jev.ms)} ms`);
         }
         return result;
       })
@@ -202,7 +215,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       return;
     }
     if (!links.jev) {
-      show(links.claude ? '↵ asks Claude' : 'No model to ask: set one up with ⚙', links.claude ? '' : 'error');
+      show(links.claude ? '↵ has Claude write it' : 'Commands in words need a model: set one up with ⚙', links.claude ? '' : 'error');
       return;
     }
     show('…', 'busy');
@@ -219,17 +232,15 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     try {
       const ran = run(r.script, access, scope, label, values);
       applied = { script: r.script, scope, label, mark: ran.mark, depth: editor.mark(), values };
-      hooks.edited(false, false);
-      show(ran.changed ? `✓ ${r.script.summary}` : `${r.script.summary}: nothing changed`, ran.changed ? 'done' : 'error', r.source);
-      // The next command is about what this one changed, or what it was about.
-      if (ran.touched.length) scope = { ...scope, keys: ran.touched };
       input.value = '';
       reading = null;
+      show(ran.changed ? `✓ ${r.script.summary}` : `${r.script.summary}: nothing changed`, ran.changed ? 'done' : 'error', r.source);
       showKnobs(r.script.knobs);
     } catch (err) {
-      hooks.edited(false, false);
       show(err instanceof Error ? err.message : String(err), 'error', r.source);
     }
+    // The command leaves what it changed selected, and the next one is about that.
+    edited(false, false);
     place();
   }
 
@@ -248,7 +259,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     const about = hooks.about(text, scope);
     if (writing === text) return;
     if (!about || !links.claude) {
-      show(links.jev ? 'Jev could not read this, and no Claude key is set (⚙)' : 'No model to ask: set one up with ⚙', 'error');
+      show(links.jev ? 'Jev could not read this, and no Claude key is set (⚙)' : 'Commands in words need a model: set one up with ⚙', 'error');
       return;
     }
     show('Claude is writing the edit…', 'busy');
@@ -286,7 +297,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       show(err instanceof Error ? err.message : String(err), 'error');
     }
     applied.depth = editor.mark();
-    hooks.edited(live, onlyParams(applied.script));
+    edited(live, onlyParams(applied.script));
   }
 
   function showKnobs(list: Knob[]) {
@@ -354,48 +365,67 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       void enter();
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      close();
+      leave();
     }
   });
   box.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close();
+    if (e.key === 'Escape') leave();
     e.stopPropagation();
   });
   gear.addEventListener('click', () => (settings.hidden ? showSettings() : ((settings.hidden = true), place())));
 
-  function open(next: Scope, around: Box | null) {
+  /** Escape: the text and the settings go, and the keyboard goes back to the page (where Escape then deselects). */
+  function leave() {
     pending?.controller.abort();
     pending = null;
-    scope = next;
-    anchor = around;
-    applied = null;
-    reading = null;
+    clearTimeout(typingTimer);
     input.value = '';
+    reading = null;
     settings.hidden = true;
-    showKnobs([]);
-    box.hidden = false;
     idle();
     place();
-    input.focus();
-    if (links.jev) warmJev(links.jev);
+    hooks.left();
   }
 
+  /** Stands by the selection: other items make a new scope, and the last command's sliders go. */
+  function follow(next: Scope, around: Box) {
+    const same = !box.hidden && (own || (scope !== null && sameItems(scope, next)));
+    scope = next;
+    anchor = around;
+    if (box.hidden) {
+      box.hidden = false;
+      settings.hidden = true;
+      if (links.jev) warmJev(links.jev);
+    }
+    if (!same) {
+      applied = null;
+      showKnobs([]);
+      typed();
+    }
+    place();
+  }
+
+  /** Nothing is selected: the field goes, and what was typed in it. */
   function close() {
     if (box.hidden) return;
+    const focused = box.contains(document.activeElement);
     pending?.controller.abort();
     pending = null;
     clearTimeout(typingTimer);
     box.hidden = true;
+    input.value = '';
+    reading = null;
     applied = null;
     scope = null;
-    hooks.closed();
+    if (focused) hooks.left();
   }
 
   return {
-    open,
+    follow,
     close,
-    get isOpen() {
-      return !box.hidden;
+    /** The field while it stands by a selection: what is typed on the page goes there. */
+    get field() {
+      return box.hidden ? null : input;
     },
     /** Keeps the field by its music while the page scrolls and zooms. */
     place,
