@@ -19,7 +19,7 @@ use crate::symbols::{draw_library_symbol, ItemContext, SymbolCall};
 use crate::text::{self, draw_text, TextCall};
 use crate::units::{amod, real, trunc, Pos};
 
-use super::{draw_styled_box, BoxCall};
+use super::{draw_box, BoxCall};
 
 /// The item's parameters as draw_box_negative reads them, after the
 /// dictionary lookup.
@@ -300,7 +300,7 @@ pub(super) fn draw_guitar_grid(doc: &Document<'_>, item: ItemRef<'_>, canvas: &m
             draw_nut(canvas, &mut g);
         }
         if chord.p13 != 0.0 {
-            draw_fingering(doc, canvas, &g, call, p6, &chord);
+            draw_fingering(canvas, &g, call, p6, &chord);
         }
         grid = Some(g);
     }
@@ -461,10 +461,10 @@ fn draw_nut(canvas: &mut Canvas<'_>, grid: &mut Grid) {
 }
 
 /// The frets of P13 (one digit per string): a filled dot in the fret, an
-/// open circle (8) or a cross (9) above the nut. The screen draws them with
-/// 10 degrees per side; print, and so the refined style, draws them round
-/// unless there are finger numbers (P18).
-fn draw_fingering(doc: &Document<'_>, canvas: &mut Canvas<'_>, grid: &Grid, call: &BoxCall, p6: f64, chord: &Chord) {
+/// open circle (8) or a cross (9) above the nut. They are drawn as print
+/// draws them: round, or with 10 degrees per side when there are finger
+/// numbers (P18), as the engine's screen draws them always.
+fn draw_fingering(canvas: &mut Canvas<'_>, grid: &Grid, call: &BoxCall, p6: f64, chord: &Chord) {
     let mut digits = trunc(f64::from(chord.p13));
     let mut divisor = if grid.gaps < 5 { 10i32.pow(grid.gaps as u32) } else { 100_000 };
     let dot_size = if p6 != 0.0 { real(p6 * c(1.3)) } else { c(1.3) };
@@ -491,11 +491,11 @@ fn draw_fingering(doc: &Document<'_>, canvas: &mut Canvas<'_>, grid: &Grid, call
                     ip9: 0,
                     ip10: 0,
                     ip11: 360,
-                    ip12: if doc.refined() && chord.p18 == 0.0 { 1 } else { 10 },
+                    ip12: if chord.p18 == 0.0 { 1 } else { 10 },
                     fill: !open,
                     ..*call
                 };
-                draw_styled_box(doc, canvas, Pos::new(x, y), grid.step, &dot);
+                draw_box(canvas, Pos::new(x, y), grid.step, &dot);
             }
         }
         digits %= divisor;
