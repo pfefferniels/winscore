@@ -12,9 +12,9 @@
 // Both are reached through the dev or preview server (ai-proxy.ts, keys from
 // the environment) or directly from the page with keys kept in this browser.
 import type Anthropic from '@anthropic-ai/sdk';
-import { MEASURES, TARGETS, scriptFor, type Action, type Intent } from './ai-intent';
+import { chainable, MEASURES, TARGETS, scriptFor, type Action, type Intent } from './ai-intent';
 import { namedSettings, plain, type Filter, type Region, type Script, type Step } from './ai-script';
-import { INTERVALS, RHYTHMS, musicIn, numberOf, numberWords, rhythmsFor } from './ai-values';
+import { INTERVALS, RHYTHMS, musicIn, namesCount, namesOption, numberOf, numberWords, rhythmsFor } from './ai-values';
 
 // ---------------------------------------------------------------------------
 // Settings and connections
@@ -138,7 +138,7 @@ const ACTIONS: Record<Action | 'other', string> = {
   align: 'Put the items at one height, in a straight row',
   number: 'Set a named property to a number the command gives, such as size 1.5 or stem length 3',
   command: 'A command in the SCORE program’s own language, short upper-case words and numbers such as FLI or R 5',
-  other: 'Something else, or several of these at once',
+  other: 'Something else',
 };
 
 const DIRECTIONS = { none: 'no direction is given', up: 'up, higher, raise', down: 'down, lower', left: 'left, earlier, backwards', right: 'right, later, forwards' };
@@ -153,7 +153,15 @@ const SURE = 0.5;
 /** Answers that only narrow a reading (a note value for new notes, a property for removing) need more. */
 const QUITE_SURE = 0.75;
 
-const GROUPS = { '2': 'pairs, twos, two notes per beam', '3': 'threes, three notes per beam', '4': 'fours, four notes per beam', '6': 'six notes per beam', '8': 'eight notes per beam', runs: 'every run of notes up to the next barline, or no number of notes is given' };
+// Jev leans to the first option: "no number" goes first, so a number must be named to be chosen.
+const GROUPS = {
+  runs: 'no number of notes per beam is given: every run of notes up to the next barline',
+  '2': 'pairs, twos, two notes per beam',
+  '3': 'threes, three notes per beam',
+  '4': 'fours, four notes per beam',
+  '6': 'sixes, six notes per beam',
+  '8': 'eights, eight notes per beam',
+};
 
 type Question = { type: 'choice'; instructions: string; criteria: Record<string, string | null> } | { type: 'noul'; instructions: string };
 
@@ -214,7 +222,20 @@ function jevQuestions(about: About): Record<string, Question> {
       criteria: { none: 'none is named', ...Object.fromEntries(Object.keys(INTERVALS).map((k) => [k, `a ${k}`])) },
     },
     group: { type: 'choice', instructions: 'How many notes does the `command` want under each beam?', criteria: GROUPS },
+    then: {
+      type: 'choice',
+      instructions: 'Besides its main action, does the `command` ask for a second, different thing? Which?',
+      criteria: { none: 'only one thing is asked', ...Object.fromEntries(Object.entries(ACTIONS).filter(([id]) => id !== 'other')) },
+    },
   };
+  if (about.counts.has(1)) {
+    questions.also = {
+      type: 'choice',
+      instructions:
+        'Does the `command` give the notes a new property alongside its main action, such as a note value in "8th beam" or "sixteenths beamed in fours"? Which? Choose none when it only names which notes it acts on, as in "beam the eighths".',
+      criteria: capped(optionCriteria(1)),
+    };
+  }
   for (const code of codes) {
     const criteria = optionCriteria(code);
     if (Object.keys(criteria).length > 1) {
@@ -265,9 +286,53 @@ export interface JevReading {
   ms: number;
 }
 
+/** What each chainable action reads from answers the two actions of a chain would share. */
+const READS: Partial<Record<Action, string[]>> = {
+  beam: ['amount'],
+  option: ['property'],
+  number: ['amount'],
+  bigger: ['measure', 'amount'],
+  smaller: ['measure', 'amount'],
+  grow: ['measure', 'amount'],
+  shrink: ['measure', 'amount'],
+  move: ['direction', 'amount'],
+};
+
+/** Actions a property given alongside ("8th beam") goes with. */
+const ALONGSIDE = new Set<Action>(['beam']);
+
+/**
+ * The command's intent: its action, and a second one when Jev hears one
+ * that can safely run with it (else Claude writes it), or a property given
+ * alongside ("8th beam") when the command names it.
+ */
 function readAnswers(about: About, answers: Record<string, ChoiceAnswer>): Intent | Unread {
+  const action = answers.action?.choice as Action | 'other' | undefined;
+  const first = readAction(about, answers, action);
+  if (typeof first === 'string') return first;
+  const then = answers.then;
+  const second = then && then.choice !== 'none' && then.confidence >= QUITE_SURE ? (then.choice as Action) : null;
+  if (second && second !== first.action) {
+    // Both read the same answers: only actions that take different ones, on the notes or everything, go together.
+    const shared = (READS[first.action] ?? []).some((r) => (READS[second] ?? []).includes(r));
+    if (!chainable(first.action) || !chainable(second) || shared || !['all', 'notes'].includes(first.target)) return 'detail';
+    const other = readAction(about, answers, second);
+    if (typeof other === 'string') return other;
+    const ids = new Set(scriptFor(first).knobs.map((k) => k.id));
+    if (scriptFor(other).knobs.some((k) => ids.has(k.id))) return 'detail';
+    return { ...first, then: other };
+  }
+  const also = answers.also;
+  if (ALONGSIDE.has(first.action) && also && also.choice !== 'none' && also.confidence >= QUITE_SURE) {
+    const [setting, option] = also.choice.split(': ');
+    if (setting && option && namesOption(about.text, option)) return { ...first, then: { action: 'option', target: 'notes', setting, option } };
+  }
+  return first;
+}
+
+/** The intent of one action the command asks for, from the answers. */
+function readAction(about: About, answers: Record<string, ChoiceAnswer>, action: Action | 'other' | undefined): Intent | Unread {
   const choice = (id: string) => answers[id]?.choice;
-  const action = choice('action') as Action | 'other' | undefined;
   if (!action || action === 'other') return 'other';
   // Some items picked out by place ("the last note", "every other one"): Claude writes that.
   if (choice('which') === 'some' && answers.which!.confidence >= SURE) return 'some';
@@ -306,7 +371,8 @@ function readAnswers(about: About, answers: Record<string, ChoiceAnswer>): Inten
       return intent;
     }
     case 'beam': {
-      const group = choice('group');
+      // Without a count in the command Jev takes the selection's size ("beam them", 8 notes selected: eights).
+      const group = namesCount(about.text) ? choice('group') : undefined;
       intent.amount = group && group !== 'runs' ? Number(group) : number('amount');
       return intent;
     }

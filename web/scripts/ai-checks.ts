@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
 import { compile } from '../src/ai-expr';
-import { musicIn, numbersIn, quartersFor } from '../src/ai-values';
+import { musicIn, namesCount, numbersIn, quartersFor } from '../src/ai-values';
 import { scriptFor } from '../src/ai-intent';
 import { run, type Access, type Scope, type Script } from '../src/ai-script';
 import { SCRIPT_SCHEMA } from '../src/ai-models';
@@ -25,6 +25,7 @@ assert.equal(compile('false || TRUE')({}), 1);
 
 // Values lifted from commands.
 assert.deepEqual(numbersIn('size 1.5, move up 2 steps, 50%'), [1.5, 2, 0.5]);
+assert.deepEqual(numbersIn('8th beam in 4s, size 2.'), [2], 'ordinals and plurals are not numbers');
 assert.equal(musicIn('add notes c g d/f/a')?.notes, 'PC5/G/D:F:A');
 assert.equal(musicIn('add notes c g d/f/a')?.typed, 'c g d/f/a');
 assert.equal(musicIn('put f#4 bb4 r e4')?.notes, 'FS4/BF4/R/E4');
@@ -34,6 +35,7 @@ assert.equal(musicIn('add c e g as eighths')?.notes, 'PC5/E/G', '"as" is a word'
 assert.equal(musicIn('add fis4 bes gn4')?.notes, 'FS4/BF/GN4');
 assert.equal(musicIn('remove the stems'), null);
 assert.equal(quartersFor('PC5/G/M/D:F:A;'), '4/4/4');
+assert.deepEqual(['beam them', '8th beam', 'beam the eighths', 'beam in pairs', 'beam always 2 notes', 'groups of four', 'beam in eights', 'beam in 4s'].map(namesCount), [false, false, false, true, true, true, true, true]);
 
 // Claude's schema: structured output allows few union-typed fields (16) and
 // wants every object closed with all its fields required.
@@ -159,6 +161,15 @@ const dyadAccess: Access = { ...access, editor: dyadEditor, params: (index) => {
 }, staves: () => dyads.staffGeometry(), summaries: () => dyads.itemSummaries() };
 run({ summary: 'add', knobs: [], steps: [{ do: 'insert', notes: 'C4:E/D:F/E', rhythms: '4/4/4' }] }, dyadAccess, { keys: [], region }, '“add”');
 const all: Scope = { keys: dyadEditor.keys().slice(1), region };
+
+// Two actions chained ("8th beam"): the value first, so the beam finds short notes.
+const chain = scriptFor({ action: 'beam', target: 'notes', amount: 2, then: { action: 'option', target: 'notes', setting: 'Value', option: 'Eighth' } });
+assert.deepEqual(chain.steps.map((step) => step.do), ['setting', 'beam']);
+const chained = run(chain, dyadAccess, all, '“8th beam”');
+const dyadItems = () => dyadEditor.keys().map((_, i) => dyadAccess.params(i)!);
+assert.equal(dyadItems().filter((q) => q[0] === 6).length, 1, 'one beam over the first two chords');
+assert.ok(dyadItems().filter((q) => q[0] === 1).every((q) => q[6] === 0.5), 'all eighths');
+dyadEditor.rollback(chained.mark);
 const bottoms = run({ summary: 'bottoms', knobs: [], steps: [{ do: 'select', items: { codes: [1], where: 'level == chord_low && chord_size > 1' } }] }, dyadAccess, all, '“bottoms”');
 assert.equal(bottoms.touched.length, 2, 'the bottom notes of the two chords, not the lone E');
 const low = run({ summary: 'low', knobs: [], steps: [{ do: 'select', items: { codes: [1], where: 'level < mean_level' } }] }, dyadAccess, all, '“low”');

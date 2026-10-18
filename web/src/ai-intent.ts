@@ -142,7 +142,32 @@ export interface Intent {
   /** number: the value; command: the line. */
   value?: number;
   line?: string;
+  /** A second action the command asks for ("staccato and stems up"). */
+  then?: Intent;
 }
+
+/** Where an action goes when two are chained: values first (beams need short notes), then beams, sizes, stems (a beam refits them), places. */
+const CHAIN_ORDER: Partial<Record<Action, number>> = {
+  option: 0,
+  number: 0,
+  unbeam: 1,
+  beam: 1,
+  bigger: 2,
+  smaller: 2,
+  grow: 2,
+  shrink: 2,
+  'stems-auto': 3,
+  'stems-up': 3,
+  'stems-down': 3,
+  flip: 3,
+  move: 4,
+  align: 4,
+};
+
+/** Whether an action can be chained with another: never one that deletes, adds or runs a SCORE line. */
+export const chainable = (action: Action) => CHAIN_ORDER[action] !== undefined;
+
+const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 
 /** Settings "bigger" changes along with a measure's own: a box grows in height as in width. */
 const SIZE_EXTRA: Record<string, { codes: number[]; setting: string }[]> = {
@@ -169,8 +194,14 @@ const knob = (id: string, label: string, value: number, min: number, max: number
 
 const round = (v: number) => Math.round(v * 100) / 100;
 
-/** The edit script for an intent. */
+/** The edit script for an intent, and for its second action after or before it. */
 export function scriptFor(intent: Intent): Script {
+  if (!intent.then) return scriptForOne(intent);
+  const [a, b] = [{ ...intent, then: undefined }, intent.then].sort((x, y) => CHAIN_ORDER[x.action]! - CHAIN_ORDER[y.action]!).map(scriptForOne);
+  return { summary: `${a!.summary}, ${lowerFirst(b!.summary)}`, knobs: [...a!.knobs, ...b!.knobs], steps: [...a!.steps, ...b!.steps] };
+}
+
+function scriptForOne(intent: Intent): Script {
   const target = targetById(intent.target);
   const items = filterOf(target);
   const noun = target.noun;
