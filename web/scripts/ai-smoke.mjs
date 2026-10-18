@@ -31,15 +31,20 @@ const CLAUDE = {
 
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'POST, OPTIONS' };
 const jevRequests = [];
+let warmUps = 0;
 
 function jevAnswers(body) {
   const picks = JEV[body.state.command] ?? { action: 'other' };
   const answers = {};
   for (const [id, q] of Object.entries(body.questions)) {
+    if (q.type === 'noul') {
+      answers[id] = { type: 'noul', noul: 0.9 };
+      continue;
+    }
     const keys = Object.keys(q.criteria);
     const choice = picks[id] ?? (keys.includes('none') ? 'none' : keys[0]);
     assert.ok(keys.includes(choice), `${id}: ${choice} is among ${keys.join(', ')}`);
-    answers[id] = { type: 'choice', choice, probabilities: { [choice]: 0.94 }, confidence: id === 'action' && choice === 'other' ? 0.3 : 0.9 };
+    answers[id] = { type: 'choice', choice, probabilities: { [choice]: 0.94 }, confidence: 0.9 };
   }
   return { model: 'jev-1.13.0', answers, usage: { input_tokens: 300, output_tokens: 20 } };
 }
@@ -67,7 +72,8 @@ try {
   await page.route('https://api.typesafe.ai/v1/systemone', async (route) => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
     const body = route.request().postDataJSON();
-    jevRequests.push(body);
+    if (body.state === 'warm-up') warmUps++;
+    else jevRequests.push(body);
     await route.fulfill({ status: 200, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(jevAnswers(body)) });
   });
   let claudeRequest = null;
@@ -106,10 +112,12 @@ try {
   await page.waitForSelector('.ai-prompt:not([hidden])');
   assert.match(await page.textContent('.ai-status'), /8 notes/);
   assert.equal(await page.evaluate(() => document.activeElement?.className), 'ai-input');
+  for (let i = 0; i < 100 && warmUps === 0; i++) await page.waitForTimeout(20);
+  assert.equal(warmUps, 1, 'the field opens the connection to Jev');
 
   const ask = async (text) => {
     await page.fill('.ai-input', text);
-    await page.waitForFunction(() => /→|not sure/.test(document.querySelector('.ai-status').textContent));
+    await page.waitForFunction(() => /→|asks Claude/.test(document.querySelector('.ai-status').textContent));
   };
   const enter = async () => {
     await page.press('.ai-input', 'Enter');
@@ -157,7 +165,7 @@ try {
 
   // Jev is not sure: Enter asks Claude, whose script runs the same way.
   await ask('make the last note an x head');
-  assert.match(await page.textContent('.ai-reading'), /Jev is not sure/);
+  assert.match(await page.textContent('.ai-reading'), /not one of Jev’s actions: ↵ asks Claude/);
   await enter();
   assert.match(await page.textContent('.ai-status'), /✓ Last note with an X head/);
   assert.match(await page.textContent('.ai-source'), /^Claude/);

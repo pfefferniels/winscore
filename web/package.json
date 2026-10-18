@@ -15,6 +15,7 @@
     "smoke": "node scripts/smoke.mjs",
     "smoke:ai": "node scripts/ai-smoke.mjs",
     "check:ai": "node scripts/ai-check.mjs",
+    "eval:jev": "node scripts/ai-check.mjs jev-eval.ts",
     "perf": "node scripts/perf.mjs"
   },
   "devDependencies": {

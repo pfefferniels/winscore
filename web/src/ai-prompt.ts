@@ -19,6 +19,8 @@ import {
   saveSettings,
   serverKeys,
   TYPESAFE_URL,
+  UNREAD,
+  warmJev,
   type About,
   type Catalog,
   type Connections,
@@ -108,6 +110,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     server = keys;
     links = connections(loadSettings(), server);
     if (!box.hidden && !input.value) idle();
+    if (!box.hidden && links.jev) warmJev(links.jev);
   });
 
   const show = (text: string, kind: '' | 'busy' | 'done' | 'error' = '', source = '') => {
@@ -165,7 +168,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
         if (result) memo.set(readingKey(about), result);
         if (input.value.trim() === text) {
           if (result) showReading(result);
-          else show(links.claude ? 'Jev is not sure: ↵ asks Claude' : `Jev is not sure (${jev.action}, ${Math.round(jev.confidence * 100)} %)`, '', `Jev · ${Math.round(jev.ms)} ms`);
+          else show(`${UNREAD[jev.why ?? 'unsure']}${links.claude ? ': ↵ asks Claude' : '; Claude could write it (⚙)'}`, '', `Jev · ${Math.round(jev.ms)} ms`);
         }
         return result;
       })
@@ -374,6 +377,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     idle();
     place();
     input.focus();
+    if (links.jev) warmJev(links.jev);
   }
 
   function close() {

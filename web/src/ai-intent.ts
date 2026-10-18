@@ -104,16 +104,18 @@ export interface Measure {
   scale: 'times' | 'plus';
   /** As said in a summary. */
   noun: string;
+  more: string;
+  less: string;
 }
 
 export const MEASURES: Record<string, Measure> = {
-  size: { setting: 'Size', scale: 'times', noun: 'size' },
-  'stem length': { setting: 'Stem length', scale: 'plus', noun: 'stem length' },
-  thickness: { setting: 'Thickness', scale: 'times', noun: 'thickness' },
-  width: { setting: 'Width', scale: 'times', noun: 'width' },
-  height: { setting: 'Height', scale: 'times', noun: 'height' },
-  spacing: { setting: 'Spacing', scale: 'times', noun: 'spacing' },
-  'mark size': { setting: 'Mark size', scale: 'times', noun: 'mark size' },
+  size: { setting: 'Size', scale: 'times', noun: 'size', more: 'Bigger', less: 'Smaller' },
+  'stem length': { setting: 'Stem length', scale: 'plus', noun: 'stem length', more: 'Longer stems', less: 'Shorter stems' },
+  thickness: { setting: 'Thickness', scale: 'times', noun: 'thickness', more: 'Thicker', less: 'Thinner' },
+  width: { setting: 'Width', scale: 'times', noun: 'width', more: 'Wider', less: 'Narrower' },
+  height: { setting: 'Height', scale: 'times', noun: 'height', more: 'Taller', less: 'Lower' },
+  spacing: { setting: 'Spacing', scale: 'times', noun: 'spacing', more: 'Wider spacing', less: 'Tighter spacing' },
+  'mark size': { setting: 'Mark size', scale: 'times', noun: 'mark size', more: 'Bigger marks', less: 'Smaller marks' },
 };
 
 export interface Intent {
@@ -198,14 +200,14 @@ export function scriptFor(intent: Intent): Script {
       if (measure.scale === 'plus') {
         const by = intent.amount ?? (up ? 2 : -2);
         return {
-          summary: `${measure.noun} ${up ? '+' : '−'}`,
+          summary: up ? measure.more : measure.less,
           knobs: [knob('by', `Change in steps`, by, -10, 10, 0.5)],
           steps: [{ do: 'setting', items: scope, setting: measure.setting, value: 'value + by' }],
         };
       }
       const factor = intent.amount ?? (up ? 1.25 : 0.8);
       return {
-        summary: `${measure.noun} ×`,
+        summary: up ? measure.more : measure.less,
         knobs: [knob('factor', `${capital(measure.noun)} ×`, factor, 0.1, 4, 0.05)],
         steps: [{ do: 'setting', items: scope, setting: measure.setting, value: 'round((value == 0 ? 1 : value) * factor * 100) / 100' }],
       };

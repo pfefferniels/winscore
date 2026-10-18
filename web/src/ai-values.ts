@@ -4,15 +4,27 @@
 // pre-parsed extraction pattern has it; what the command means is left to
 // the models.
 
-/** The numbers in the text, as written ("1.5", "-2", "50%" as 0.5). */
-export function numbersIn(text: string): number[] {
-  return Array.from(text.matchAll(/(^|[^\w.])(-?\d+(?:\.\d+)?)(%?)/g), (m) => Number(m[2]) / (m[3] ? 100 : 1));
+/** The numbers in the text as written: "1.5", "-2", "50%". */
+export function numberWords(text: string): string[] {
+  return Array.from(text.matchAll(/(^|[^\w.])(-?\d+(?:\.\d+)?%?)/g), (m) => m[2]!);
 }
 
-/** A note name as typed: letter, accidental (#, b, x, s, n, is, es, ♯, ♭, ♮), octave. */
-const PITCH = /^([a-g])(##|bb|is|es|#|b|x|s|n|♯♯|♭♭|♯|♭|♮)?(\d)?$/i;
+/** A number as written, a percentage as a fraction ("50%" is 0.5). */
+export const numberOf = (word: string) => (word.endsWith('%') ? Number(word.slice(0, -1)) / 100 : Number(word));
 
-const ACCIDENTALS: Record<string, string> = { '#': 'S', is: 'S', s: 'S', '♯': 'S', b: 'F', es: 'F', '♭': 'F', n: 'N', '♮': 'N', '##': 'SS', x: 'SS', '♯♯': 'SS', bb: 'FF', '♭♭': 'FF' };
+/** The numbers in the text ("50%" as 0.5). */
+export function numbersIn(text: string): number[] {
+  return numberWords(text).map(numberOf);
+}
+
+/**
+ * A note name as typed: letter, accidental (#, b, x, is, es, ♯, ♭, ♮; n only
+ * before an octave), octave. A lone s or n would read English words ("as",
+ * "an") as notes.
+ */
+const PITCH = /^([a-g])(##|bb|is|es|#|b|x|♯♯|♭♭|♯|♭|♮|n(?=\d))?(\d)?$/i;
+
+const ACCIDENTALS: Record<string, string> = { '#': 'S', is: 'S', '♯': 'S', b: 'F', es: 'F', '♭': 'F', n: 'N', '♮': 'N', '##': 'SS', x: 'SS', '♯♯': 'SS', bb: 'FF', '♭♭': 'FF' };
 
 /** One note name in SCORE's input language (F#4 → FS4), or null. */
 function scoreNote(word: string): string | null {

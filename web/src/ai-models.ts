@@ -14,7 +14,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { MEASURES, TARGETS, scriptFor, type Action, type Intent } from './ai-intent';
 import { namedSettings, plain, type Region, type Script } from './ai-script';
-import { INTERVALS, RHYTHMS, musicIn, numbersIn, rhythmsFor } from './ai-values';
+import { INTERVALS, RHYTHMS, musicIn, numberOf, numberWords, rhythmsFor } from './ai-values';
 
 // ---------------------------------------------------------------------------
 // Settings and connections
@@ -118,19 +118,20 @@ function selectionWords(about: About): string {
 // Jev
 
 const ACTIONS: Record<Action | 'other', string> = {
-  insert: 'Write new notes, chords or rests into the score; the command names their pitches, such as c, f#, bb4, or chords such as d/f/a',
+  insert: 'Write new notes, chords or rests into the score, named by their pitches such as c, f#, bb4 or chords such as d/f/a, perhaps with their note value (add c e g as eighths)',
   beam: 'Join notes with beams, or beam them in groups such as pairs',
   unbeam: 'Take the beams away so the notes are no longer beamed',
-  delete: 'Remove, delete, erase or hide something: items such as rests, slurs or dynamics, or a part of notes such as their stems, accidentals, articulation marks or dots',
+  delete: 'Remove, delete, erase, clear, take away or hide something: items such as rests, slurs or dynamics, or a part of notes such as their stems, accidentals, articulation marks or dots',
   flip: 'Flip, invert or turn over stems, slurs or symbols to the other side',
   'stems-up': 'Make the stems point up',
   'stems-down': 'Make the stems point down',
   'stems-auto': 'Give the notes their normal stem directions, or give them stems again',
-  option: 'Give the items a named property: an articulation or mark such as staccato or accent, an accidental, a note value such as eighth or half, a note head shape, cue size, a clef type or a line style',
+  option:
+    'Give the items a named property: add or change an articulation or mark (accent them, add staccatos, a fermata), an accidental (sharpen them, flatten them, make them natural), a note value (make them eighths, half notes), a note head shape, cue size, a clef type or a line style (dashed, dotted)',
   bigger: 'Make them all larger, longer, thicker or wider by the same amount',
   smaller: 'Make them all smaller, shorter, thinner or narrower by the same amount',
-  grow: 'Make a size increase gradually from one item to the next, each a little bigger than the one before',
-  shrink: 'Make a size decrease gradually from one item to the next, each a little smaller than the one before',
+  grow: 'Make a size increase gradually across the items, each a little bigger than the one before, or from one value to a larger one (sizes from 1 to 3)',
+  shrink: 'Make a size decrease gradually across the items, each a little smaller than the one before, or from one value to a smaller one (sizes from 2 to 1)',
   move: 'Move, shift, raise, lower or transpose the items',
   align: 'Put the items at one height, in a straight row',
   number: 'Set a named property to a number the command gives, such as size 1.5 or stem length 3',
@@ -138,7 +139,17 @@ const ACTIONS: Record<Action | 'other', string> = {
   other: 'Something else, or several of these at once',
 };
 
-const DIRECTIONS = { up: 'up, higher, raise', down: 'down, lower', left: 'left, earlier, backwards', right: 'right, later, forwards', none: 'no direction is given' };
+const DIRECTIONS = { none: 'no direction is given', up: 'up, higher, raise', down: 'down, lower', left: 'left, earlier, backwards', right: 'right, later, forwards' };
+
+const WHICH = {
+  all: 'all of them, or all of one kind or with one property, such as all the stems or all the staccatos',
+  some: 'only some, picked out by their place or order, such as the first, the last, every other one, the top notes or the second bar',
+};
+
+/** Below this, a reading goes to Claude instead. */
+const SURE = 0.5;
+/** Answers that only narrow a reading (a note value for new notes, a property for removing) need more. */
+const QUITE_SURE = 0.75;
 
 const GROUPS = { '2': 'pairs, twos, two notes per beam', '3': 'threes, three notes per beam', '4': 'fours, four notes per beam', '6': 'six notes per beam', '8': 'eight notes per beam', runs: 'every run of notes up to the next barline, or no number of notes is given' };
 
@@ -167,8 +178,8 @@ function optionCriteria(code: number): Record<string, string | null> {
       }
     }
   }
-  criteria.none = 'No property from this list is named';
-  return criteria;
+  // Jev leans to the first option: "none" goes first, so a property must be named to be chosen.
+  return { none: 'No property from this list is named', ...criteria };
 }
 
 function numberSettings(codes: number[]): string[] {
@@ -183,6 +194,7 @@ function jevQuestions(about: About): Record<string, Question> {
   const present = (target: (typeof TARGETS)[number]) => target.codes.length === 0 || target.codes.some((c) => about.counts.has(c));
   const questions: Record<string, Question> = {
     action: { type: 'choice', instructions: 'What does the `command` ask to do with the selected items of the music score?', criteria: ACTIONS },
+    which: { type: 'choice', instructions: 'Does the `command` act on all the selected items it names, or only on some of them it picks out?', criteria: WHICH },
     target: {
       type: 'choice',
       instructions: 'Which items or which part of them does the `command` act on? Choose "all" when it names none and means the selection.',
@@ -207,14 +219,14 @@ function jevQuestions(about: About): Record<string, Question> {
       questions[`option.${code}`] = { type: 'choice', instructions: `Which property does the \`command\` give the ${about.codeName(code).toLowerCase()} items, or take from them?`, criteria: capped(criteria) };
     }
   }
-  const numbers = numbersIn(about.text).map(String);
+  const numbers = numberWords(about.text);
   if (numbers.length > 0) {
-    const options = { ...Object.fromEntries(numbers.map((n) => [n, null])), none: 'the command gives no such number' };
+    const options = { none: 'the command gives no such number', ...Object.fromEntries(numbers.map((n) => [n, null])) };
     questions.amount = { type: 'choice', instructions: 'Which number in the `command` says how much: a distance, a factor, a size or a count?', criteria: options };
     questions.setting = {
       type: 'choice',
       instructions: 'Which property does the `command` set to a number?',
-      criteria: capped({ ...Object.fromEntries(numberSettings(codes).map((n) => [n, null])), none: 'no property is named' }),
+      criteria: capped({ none: 'no property is named', ...Object.fromEntries(numberSettings(codes).map((n) => [n, null])) }),
     };
     if (numbers.length > 1) {
       questions.from = { type: 'choice', instructions: 'Which number in the `command` is the starting value?', criteria: options };
@@ -225,31 +237,49 @@ function jevQuestions(about: About): Record<string, Question> {
     questions.rhythm = {
       type: 'choice',
       instructions: 'Which note value does the `command` give the new notes?',
-      criteria: { ...Object.fromEntries(Object.keys(RHYTHMS).map((k) => [k, null])), none: 'none is given' },
+      criteria: { none: 'none is given', ...Object.fromEntries(Object.keys(RHYTHMS).map((k) => [k, null])) },
     };
   }
   return questions;
 }
 
-/** Jev's reading: the intent, or null when it is not sure enough; the action's probability either way. */
+/** Why a reading has no intent, said to the user: what Claude would be asked to do. */
+export type Unread = 'unsure' | 'other' | 'some' | 'nothing' | 'detail';
+
+export const UNREAD: Record<Unread, string> = {
+  unsure: 'Jev is not sure what this asks',
+  other: 'This is not one of Jev’s actions',
+  some: 'This picks out some of the items',
+  nothing: 'There is nothing selected for this',
+  detail: 'Jev misses a detail of this',
+};
+
+/** Jev's reading: the intent, or why there is none; the action's probability either way. */
 export interface JevReading {
   intent: Intent | null;
+  why: Unread | null;
   action: string;
   confidence: number;
   ms: number;
 }
 
-/** Below this, a reading goes to Claude instead. */
-const SURE = 0.5;
-
-function readAnswers(about: About, answers: Record<string, ChoiceAnswer>): Intent | null {
+function readAnswers(about: About, answers: Record<string, ChoiceAnswer>): Intent | Unread {
   const choice = (id: string) => answers[id]?.choice;
   const action = choice('action') as Action | 'other' | undefined;
-  if (!action || action === 'other') return null;
+  if (!action || action === 'other') return 'other';
+  // Some items picked out by place ("the last note", "every other one"): Claude writes that.
+  if (choice('which') === 'some' && answers.which!.confidence >= SURE) return 'some';
+  // Everything but new music acts on items: with none, the reading is wrong.
+  if (action !== 'insert' && about.counts.size === 0) return 'nothing';
   const target = choice('target') ?? 'all';
-  const numberOf = (id: string) => {
+  /** The number a question picked, as written ("50%" stays a percentage). */
+  const picked = (id: string) => {
     const c = choice(id);
-    return c === undefined || c === 'none' ? undefined : Number(c);
+    return c === undefined || c === 'none' ? undefined : c;
+  };
+  const number = (id: string) => {
+    const word = picked(id);
+    return word === undefined ? undefined : numberOf(word);
   };
   const intent: Intent = { action, target };
   const targetCodes = TARGETS.find((t) => t.id === target)?.codes ?? [];
@@ -266,27 +296,33 @@ function readAnswers(about: About, answers: Record<string, ChoiceAnswer>): Inten
   switch (action) {
     case 'insert': {
       const music = musicIn(about.text, about.middle);
-      if (!music) return null;
+      if (!music) return 'detail';
       intent.notes = music.notes;
       intent.typed = music.typed;
-      intent.rhythms = rhythmsFor(choice('rhythm'), music.count);
+      const rhythm = answers.rhythm && answers.rhythm.confidence >= QUITE_SURE ? choice('rhythm') : undefined;
+      intent.rhythms = rhythmsFor(rhythm, music.count);
       return intent;
     }
     case 'beam': {
       const group = choice('group');
-      intent.amount = group && group !== 'runs' ? Number(group) : numberOf('amount');
+      intent.amount = group && group !== 'runs' ? Number(group) : number('amount');
       return intent;
     }
     case 'option':
-      return intent.setting && intent.option ? intent : null;
+      return intent.setting && intent.option ? intent : 'detail';
     case 'delete':
-      // Without a property, the items themselves go.
-      if (option && option[1].confidence < SURE) delete intent.option;
+      // "the eighth notes": only those. Half sure of a property is not enough to delete
+      // all of them instead, nor only some: Claude decides.
+      if (option && option[1].confidence < QUITE_SURE) {
+        if (option[1].confidence >= 0.4) return 'detail';
+        delete intent.setting;
+        delete intent.option;
+      }
       return intent;
     case 'number': {
       const setting = choice('setting');
-      const value = numberOf('amount');
-      if (!setting || setting === 'none' || value === undefined) return null;
+      const value = number('amount');
+      if (!setting || setting === 'none' || value === undefined) return 'detail';
       return { ...intent, setting, value };
     }
     case 'bigger':
@@ -294,17 +330,22 @@ function readAnswers(about: About, answers: Record<string, ChoiceAnswer>): Inten
     case 'grow':
     case 'shrink':
       intent.measure = choice('measure');
-      intent.amount = numberOf('amount');
-      intent.from = numberOf('from');
-      intent.to = numberOf('to') ?? (action === 'grow' || action === 'shrink' ? intent.amount : undefined);
-      if (action === 'grow' || action === 'shrink') delete intent.amount;
+      intent.from = number('from');
+      intent.to = number('to');
+      if (action === 'grow' || action === 'shrink') intent.to ??= number('amount');
+      else {
+        // "50% bigger" multiplies by 1.5, "20% smaller" by 0.8; "bigger by 2" by 2.
+        const word = picked('amount');
+        intent.amount = word === undefined ? undefined : word.endsWith('%') ? 1 + (action === 'bigger' ? 1 : -1) * numberOf(word) : numberOf(word);
+      }
       return intent;
     case 'move': {
       const direction = choice('direction');
-      if (!direction || direction === 'none') return null;
+      if (!direction || direction === 'none') return 'detail';
       intent.direction = direction as Intent['direction'];
+      // A number given wins over an interval read into it ("5 to the right" is not a fifth).
       const interval = choice('interval');
-      intent.amount = interval && interval !== 'none' ? INTERVALS[interval] : numberOf('amount');
+      intent.amount = number('amount') ?? (interval && interval !== 'none' ? INTERVALS[interval] : undefined);
       return intent;
     }
     case 'command':
@@ -337,8 +378,22 @@ export async function askJev(about: About, connection: NonNullable<Connections['
   const state = { command: about.text, selected: selectionWords(about) };
   const answers = await systemOne(connection, { model: connection.model, state, questions: jevQuestions(about) }, signal);
   const action = answers.action;
-  const intent = action && action.confidence >= SURE ? readAnswers(about, answers) : null;
-  return { intent, action: action?.choice ?? 'other', confidence: action?.confidence ?? 0, ms: performance.now() - started };
+  const read = action && action.confidence >= SURE ? readAnswers(about, answers) : 'unsure';
+  const [intent, why] = typeof read === 'string' ? [null, read] : [read, null];
+  return { intent, why, action: action?.choice ?? 'other', confidence: action?.confidence ?? 0, ms: performance.now() - started };
+}
+
+let warmed = 0;
+
+/**
+ * A one-question request when the field opens, at most once a minute: the
+ * connection is open and the first command read as fast as the next.
+ */
+export function warmJev(connection: NonNullable<Connections['jev']>) {
+  if (performance.now() - warmed < 60_000 && warmed) return;
+  warmed = performance.now();
+  const body = { model: connection.model, state: 'warm-up', questions: { ready: { type: 'noul', instructions: 'Is this a warm-up?' } } };
+  systemOne(connection, body, new AbortController().signal).catch(() => (warmed = 0));
 }
 
 /** Jev's reading as an edit script, if it has one. */

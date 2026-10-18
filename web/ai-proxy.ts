@@ -3,7 +3,8 @@
 //
 //   GET  /ai/status           which keys there are: { jev, claude }
 //   POST /ai/jev              TypeSafe's System One endpoint (Jev), TYPESAFE_API_KEY
-//   *    /ai/anthropic/…      the Claude API, ANTHROPIC_API_KEY
+//   *    /ai/anthropic/…      the Claude API, ANTHROPIC_API_KEY (or CLAUDE_API_KEY,
+//                             where the environment keeps the first name for itself)
 //
 // TypeSafe's API refuses requests from web pages of other sites (CORS), so
 // the page reaches Jev through here, or through a gateway that allows it.
@@ -56,7 +57,7 @@ function middleware(keys: { jev?: string; claude?: string }): Connect.NextHandle
           });
           await forward(res, response);
         } else if (url.startsWith('/ai/anthropic/')) {
-          if (!keys.claude) return fail(401, 'ANTHROPIC_API_KEY is not set for the dev server');
+          if (!keys.claude) return fail(401, 'ANTHROPIC_API_KEY (or CLAUDE_API_KEY) is not set for the dev server');
           const headers: Record<string, string> = { 'x-api-key': keys.claude };
           for (const name of ANTHROPIC_HEADERS) {
             const value = req.headers[name];
@@ -82,7 +83,7 @@ export function aiProxy(): Plugin {
     name: 'winscore-ai-proxy',
     configResolved(config) {
       const env = { ...loadEnv(config.mode, config.envDir || config.root, ''), ...process.env };
-      keys = { jev: env.TYPESAFE_API_KEY || undefined, claude: env.ANTHROPIC_API_KEY || undefined };
+      keys = { jev: env.TYPESAFE_API_KEY || undefined, claude: env.ANTHROPIC_API_KEY || env.CLAUDE_API_KEY || undefined };
     },
     configureServer(server) {
       server.middlewares.use(middleware(keys));

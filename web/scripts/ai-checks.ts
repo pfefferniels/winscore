@@ -28,6 +28,8 @@ assert.equal(musicIn('add notes c g d/f/a')?.typed, 'c g d/f/a');
 assert.equal(musicIn('put f#4 bb4 r e4')?.notes, 'FS4/BF4/R/E4');
 assert.equal(musicIn('add c e g', 22)?.notes, 'PC3/E/G', 'a bass staff starts low');
 assert.equal(musicIn('add a fermata'), null);
+assert.equal(musicIn('add c e g as eighths')?.notes, 'PC5/E/G', '"as" is a word');
+assert.equal(musicIn('add fis4 bes gn4')?.notes, 'FS4/BF/GN4');
 assert.equal(musicIn('remove the stems'), null);
 assert.equal(quartersFor('PC5/G/M/D:F:A;'), '4/4/4');
 
