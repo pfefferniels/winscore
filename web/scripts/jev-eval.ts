@@ -12,7 +12,7 @@ const SCOPES: Record<string, Map<number, number>> = {
   empty: new Map(),
 };
 
-/** [selection, command, what the intent must hold]; action "(none)": Claude's to write. */
+/** [selection, command, what the intent must hold]; action "(none)": Claude's to write, `complex` with the model for complex commands. */
 const CASES: [string, string, Record<string, unknown>][] = [
   ["notes", "remove the stems", {"action": "delete", "target": "stems"}],
   ["notes", "get rid of the stems", {"action": "delete", "target": "stems"}],
@@ -51,8 +51,8 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["mixed", "make the slurs dashed", {"action": "option", "setting": "Line", "option": "Dashed"}],
   ["mixed", "delete the slurs", {"action": "delete", "target": "slurs"}],
   ["mixed", "remove the stems", {"action": "delete", "target": "stems"}],
-  ["notes", "make the last note an x head", {"action": "(none)"}],
-  ["notes", "accent every other note", {"action": "(none)"}],
+  ["notes", "make the last note an x head", {"action": "(none)", "complex": false}],
+  ["notes", "accent every other note", {"action": "(none)", "complex": false}],
   ["notes", "lose the accidentals", {"action": "delete", "target": "accidentals"}],
   ["notes", "staccato everything", {"action": "option", "setting": "Mark", "option": "Staccato"}],
   ["notes", "put accents on them", {"action": "option", "setting": "Mark", "option": "Accent"}],
@@ -73,9 +73,9 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["notes", "automatic stems", {"action": "stems-auto"}],
   ["empty", "add c e g as eighths", {"action": "insert", "notes": "PC5/E/G", "rhythms": "8/8/8"}],
   ["notes", "double sharp", {"action": "option", "setting": "Accidental", "option": "♯♯ Double sharp"}],
-  ["mixed", "make the slurs flatter", {"action": "(none)"}],
-  ["notes", "delete the eighth notes", {"action": "(none)"}],
-  ["notes", "make the first three notes red", {"action": "(none)"}],
+  ["mixed", "make the slurs flatter", {"action": "(none)", "complex": false}],
+  ["notes", "delete the eighth notes", {"action": "(none)", "complex": false}],
+  ["notes", "make the first three notes red", {"action": "(none)", "complex": false}],
   // Two actions at once, or a value given alongside a beam; the unsafe ones are Claude's.
   ["notes", "staccato and stems up", {"action": "option", "option": "Staccato", "then": {"action": "stems-up"}}],
   ["notes", "accent them and move up a step", {"then": {"action": "move"}}],
@@ -83,7 +83,17 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["notes", "8th beam", {"action": "beam", "then": {"action": "option", "target": "notes", "setting": "Value", "option": "Eighth"}}],
   ["notes", "sixteenths beamed in fours", {"action": "beam", "amount": 4, "then": {"action": "option", "target": "notes", "setting": "Value", "option": "16th"}}],
   ["notes", "beam the eighths", {"then": undefined}],
-  ["notes", "add staccatos and remove the stems", {"action": "(none)"}],
+  ["notes", "add staccatos and remove the stems", {"action": "(none)", "complex": false}],
+  // Commands that take thought, for the model for complex commands.
+  ["notes", "double the melody a third below", {"complex": true}],
+  ["notes", "harmonize the melody in four parts", {"complex": true}],
+  ["notes", "retrograde the melody", {"complex": true}],
+  ["notes", "invert the melody around the first note", {"complex": true}],
+  ["notes", "turn the chords into broken chords in sixteenths", {"complex": true}],
+  ["notes", "write a walking bass under these notes", {"complex": true}],
+  ["notes", "add lines from note head to note head", {"complex": true}],
+  ["mixed", "add a crescendo hairpin under each slur", {"complex": true}],
+  ["empty", "add a c major arpeggio in eighths, up and back down", {"complex": true}],
 ];
 
 const key = process.env.TYPESAFE_API_KEY;
@@ -121,7 +131,7 @@ async function one(i: number) {
   try {
     const reading = await askJev(about, connection, new AbortController().signal);
     times.push(reading.ms);
-    const got: Record<string, unknown> = reading.intent ? { ...reading.intent } : { action: '(none)', read: reading.action };
+    const got: Record<string, unknown> = { ...(reading.intent ?? { action: '(none)', read: reading.action }), complex: reading.complex };
     const ok = holds(got, expect);
     if (ok) passed++;
     const summary = reading.intent ? ` | ${scriptFor(reading.intent).summary}` : '';

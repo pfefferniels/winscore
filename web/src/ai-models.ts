@@ -26,19 +26,21 @@ export interface AiSettings {
   /** Anthropic key; empty: the dev server's. */
   claudeKey: string;
   claudeModel: string;
+  /** The model for commands Jev finds complex. */
+  claudeComplexModel: string;
 }
 
 export const TYPESAFE_URL = 'https://api.typesafe.ai/v1/systemone';
 /** Vercel's AI Gateway serves Jev to pages of any site (CORS), with a Vercel key. */
 export const GATEWAY_URL = 'https://ai-gateway.vercel.sh/typesafe/v1/systemone';
 export const CLAUDE_MODELS = [
-  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5 (fastest)' },
-  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5' },
-  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5' },
+  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5 (fastest)', short: 'Sonnet' },
+  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5', short: 'Haiku' },
+  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5 (most capable)', short: 'Opus' },
 ];
 
 const SETTINGS_KEY = 'winscore.ai';
-const DEFAULTS: AiSettings = { jevKey: '', jevUrl: TYPESAFE_URL, claudeKey: '', claudeModel: 'claude-sonnet-5-5' };
+const DEFAULTS: AiSettings = { jevKey: '', jevUrl: TYPESAFE_URL, claudeKey: '', claudeModel: 'claude-sonnet-5-5', claudeComplexModel: 'claude-opus-5-5' };
 
 export function loadSettings(): AiSettings {
   try {
@@ -71,7 +73,8 @@ export async function serverKeys(): Promise<{ jev: boolean; claude: boolean }> {
 export interface Connections {
   /** The gateway knows Jev as typesafe-ai/jev. */
   jev: { url: string; key: string | null; model: string } | null;
-  claude: { key: string | null; baseURL: string | undefined; model: string } | null;
+  /** `model` writes most commands, `complexModel` those Jev finds complex. */
+  claude: { key: string | null; baseURL: string | undefined; model: string; complexModel: string } | null;
 }
 
 export function connections(settings: AiSettings, server: { jev: boolean; claude: boolean }): Connections {
@@ -83,9 +86,9 @@ export function connections(settings: AiSettings, server: { jev: boolean; claude
         ? { url: local('ai/jev'), key: null, model: 'jev-latest' }
         : null,
     claude: settings.claudeKey
-      ? { key: settings.claudeKey, baseURL: undefined, model: settings.claudeModel }
+      ? { key: settings.claudeKey, baseURL: undefined, model: settings.claudeModel, complexModel: settings.claudeComplexModel }
       : server.claude
-        ? { key: null, baseURL: local('ai/anthropic'), model: settings.claudeModel }
+        ? { key: null, baseURL: local('ai/anthropic'), model: settings.claudeModel, complexModel: settings.claudeComplexModel }
         : null,
   };
 }
@@ -152,6 +155,14 @@ const WHICH = {
 const SURE = 0.5;
 /** Answers that only narrow a reading (a note value for new notes, a property for removing) need more. */
 const QUITE_SURE = 0.75;
+
+// Jev leans to the first option: "simple" goes first, so a command must clearly ask for thought to be complex.
+const COMPLEXITY = {
+  simple:
+    'One plain edit: a property, size, place or value given to the items, or to some of them picked out by place or kind (accent the last note, remove the stems, make the slurs flatter, stems down on the bottom notes of the chords)',
+  complex:
+    'Work that takes thought: new music worked out from a description or from the music there (an arpeggio, a scale, a second voice, a bass line, the melody backwards or upside down), several edits that depend on one another, or items and values worked out for each item from others (a pattern, a rule over the music, lines connecting the notes, a hairpin under each slur)',
+};
 
 // Jev leans to the first option: "no number" goes first, so a number must be named to be chosen.
 const GROUPS = {
@@ -227,6 +238,7 @@ function jevQuestions(about: About): Record<string, Question> {
       instructions: 'Besides its main action, does the `command` ask for a second, different thing? Which?',
       criteria: { none: 'only one thing is asked', ...Object.fromEntries(Object.entries(ACTIONS).filter(([id]) => id !== 'other')) },
     },
+    complexity: { type: 'choice', instructions: 'How much thought does carrying out the `command` on the score take?', criteria: COMPLEXITY },
   };
   if (about.counts.has(1)) {
     questions.also = {
@@ -283,6 +295,8 @@ export interface JevReading {
   why: Unread | null;
   action: string;
   confidence: number;
+  /** Whether the command takes thought: Claude's model for complex commands writes it. */
+  complex: boolean;
   ms: number;
 }
 
@@ -448,7 +462,8 @@ export async function askJev(about: About, connection: NonNullable<Connections['
   const action = answers.action;
   const read = action && action.confidence >= SURE ? readAnswers(about, answers) : 'unsure';
   const [intent, why] = typeof read === 'string' ? [null, read] : [read, null];
-  return { intent, why, action: action?.choice ?? 'other', confidence: action?.confidence ?? 0, ms: performance.now() - started };
+  const complex = answers.complexity?.choice === 'complex' && answers.complexity.confidence >= SURE;
+  return { intent, why, action: action?.choice ?? 'other', confidence: action?.confidence ?? 0, complex, ms: performance.now() - started };
 }
 
 let warmed = 0;
@@ -675,11 +690,31 @@ export interface Failed {
   error: string;
 }
 
+/** Which Claude writes a command, and how hard it thinks. */
+export interface Writer {
+  model: string;
+  effort: 'low' | 'medium' | 'high';
+}
+
+/** How hard the model for complex commands thinks: they run while other commands are typed, so their time matters less. */
+const COMPLEX_EFFORT: Writer['effort'] = 'medium';
+
+/** The fast model at low effort for most commands; for those Jev finds complex, the model for them at more. */
+export function writerFor(connection: NonNullable<Connections['claude']>, complex: boolean): Writer {
+  return complex ? { model: connection.complexModel, effort: COMPLEX_EFFORT } : { model: connection.model, effort: 'low' };
+}
+
+/** A model's short name, as shown: "Opus". */
+export function modelName(id: string): string {
+  return CLAUDE_MODELS.find((m) => m.id === id)?.short ?? id;
+}
+
 /** Claude's script for a command; after a `failed` one, its second try, told why. */
 export async function askClaude(
   about: About,
   catalog: Catalog,
   connection: NonNullable<Connections['claude']>,
+  writer: Writer,
   signal: AbortSignal,
   failed?: Failed,
 ): Promise<{ script: Script; ms: number; answer: string }> {
@@ -687,11 +722,11 @@ export async function askClaude(
   const claude = await anthropic(connection);
   const response = await claude.beta.messages.create(
     {
-      model: connection.model,
-      max_tokens: 4096,
+      model: writer.model,
+      max_tokens: 16000,
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
-      output_config: { effort: 'low', format: { type: 'json_schema', schema: SCRIPT_SCHEMA } },
+      output_config: { effort: writer.effort, format: { type: 'json_schema', schema: SCRIPT_SCHEMA } },
       system: [{ type: 'text', text: systemPrompt(catalog), cache_control: { type: 'ephemeral' } }],
       messages: [
         { role: 'user', content: userMessage(about) },

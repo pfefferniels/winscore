@@ -1,8 +1,9 @@
 // End-to-end check of the command field in the built app (dist/), with Jev
 // and Claude answered by canned replies at the network: a selection brings
 // the field, typing on the page goes into it, what Jev reads is shown while
-// typing, Enter edits the score as one undo step, a slider re-does it, and a
-// command Jev cannot read goes to Claude.
+// typing, Enter edits the score as one undo step, a slider re-does it, a
+// command Jev cannot read goes to Claude (a complex one to Opus), and while
+// Claude writes, other commands run on other items.
 //
 // usage: npm run build && node scripts/ai-smoke.mjs
 // CHROMIUM=/path/to/chrome uses that browser instead of Playwright's own.
@@ -22,6 +23,7 @@ const JEV = {
   'make the last note an x head': { action: 'other', target: 'notes' },
   'make the bottom notes of the chords smaller': { action: 'other', target: 'notes' },
   'add notes c g d/f/a': { action: 'insert', target: 'all' },
+  'double the melody a third below': { action: 'other', target: 'notes', complexity: 'complex' },
 };
 
 /** A step as Claude writes it, every field given. */
@@ -38,6 +40,15 @@ const CLAUDE = {
     { summary: 'Smaller bottom notes', knobs: [], steps: [step({ codes: [1], where: 'level < mean', setting: 'Size', value: '0.8' })] },
     { summary: 'Smaller bottom notes', knobs: [], steps: [step({ codes: [1], where: 'level == chord_low', setting: 'Size', value: '0.8' })] },
   ],
+  'double the melody a third below': [{ summary: 'A third below', knobs: [], steps: [step({ do: 'add', codes: [1], params: ['1', 'staff', 'x', 'level - 2', 'p5', 'p6', 'p7'] })] }],
+};
+
+/** Claude's replies held back until the check lets them go, by command. */
+const held = new Map();
+const hold = (text) => {
+  let release;
+  held.set(text, new Promise((resolve) => (release = resolve)));
+  return release;
 };
 
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'POST, OPTIONS' };
@@ -90,10 +101,15 @@ try {
     await route.fulfill({ status: 200, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(jevAnswers(body)) });
   });
   let claudeRequest = null;
+  const claudeRequests = [];
   await page.route('https://api.anthropic.com/**', async (route) => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    claudeRequest = route.request().postDataJSON();
-    await route.fulfill({ status: 200, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(claudeMessage(claudeRequest)) });
+    const request = route.request().postDataJSON();
+    claudeRequest = request;
+    claudeRequests.push(request);
+    await held.get(/^Command: (.*)$/m.exec(request.messages[0].content)[1]);
+    // A cancelled command's request is gone by now.
+    await route.fulfill({ status: 200, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(claudeMessage(request)) }).catch(() => {});
   });
 
   // Eight eighth notes on the left half of a new staff.
@@ -145,7 +161,7 @@ try {
   for (let i = 0; i < 100 && warmUps === 0; i++) await page.waitForTimeout(20);
   assert.equal(warmUps, 1, 'the field opens the connection to Jev');
 
-  const read = () => page.waitForFunction(() => /→|Claude write/.test(document.querySelector('.ai-status').textContent));
+  const read = () => page.waitForFunction(() => /→|Claude( \w+)? write/.test(document.querySelector('.ai-status').textContent));
   const command = async (text) => {
     await page.fill('.ai-input', text);
     await read();
@@ -202,8 +218,9 @@ try {
   assert.match(await page.textContent('.ai-reading'), /not one of Jev’s actions: ↵ has Claude write it/);
   await enter();
   assert.match(await page.textContent('.ai-status'), /✓ Last note with an X head/);
-  assert.match(await page.textContent('.ai-source'), /^Claude/);
+  assert.match(await page.textContent('.ai-source'), /^Claude Sonnet/);
   assert.equal(claudeRequest.model, 'claude-sonnet-5-5', 'Sonnet 5.5 unless another model is picked');
+  assert.equal(claudeRequest.output_config.effort, 'low');
   assert.equal(claudeRequest.output_config.format.type, 'json_schema');
   assert.match(claudeRequest.messages[0].content, /Command: make the last note an x head/);
 
@@ -241,6 +258,57 @@ try {
   const added = await p3s('#items li.selected[data-code="1"]');
   assert.equal(added.length, 5);
   assert.ok(Math.min(...added) > last, `the new notes (${added}) come after the last one (${last})`);
+
+  // A complex command goes to Opus, and Enter sends it off: the field is free at once.
+  const undoTitle = () => page.getAttribute('#undo', 'title');
+  const selectedRows = () => page.locator('#items li.selected').count();
+  const letGo = hold('double the melody a third below');
+  await page.click('#items li[data-code="1"]');
+  await page.waitForFunction(() => document.querySelectorAll('#items li.selected').length === 1);
+  await command('double the melody a third below');
+  assert.match(await page.textContent('.ai-reading'), /↵ has Claude Opus write it/);
+  const asked = claudeRequests.length;
+  await page.press('.ai-input', 'Enter');
+  assert.equal(await page.inputValue('.ai-input'), '');
+  await page.waitForSelector('.ai-job.busy .ai-job-source:text("Claude Opus")');
+  for (let i = 0; i < 100 && claudeRequests.length === asked; i++) await page.waitForTimeout(20);
+  assert.equal(claudeRequest.model, 'claude-opus-5-5');
+  assert.equal(claudeRequest.output_config.effort, 'medium');
+
+  // Meanwhile another command runs on other items.
+  await page.fill('#item-filter', 'note');
+  await page.click('#items-select');
+  await page.fill('#item-filter', '');
+  await page.waitForFunction(() => document.querySelectorAll('#items li.selected').length === 13);
+  await page.waitForFunction(() => document.querySelector('.ai-status').textContent === '');
+  await command('remove the stems');
+  await enter();
+  assert.match(await page.textContent('.ai-status'), /✓ Remove stems/);
+  assert.equal(await page.locator('.ai-job.busy').count(), 1, 'the first command is still being written');
+
+  // The first lands on its own note; the selection stays with the second's.
+  letGo();
+  await page.waitForSelector('.ai-job.done');
+  assert.match(await page.textContent('.ai-job.done .ai-job-text'), /✓ A third below/);
+  assert.equal(await page.textContent('#item-count'), '15');
+  assert.equal(await selectedRows(), 13);
+  assert.match(await undoTitle(), /“double the melody a third below”/);
+
+  // Its badge selects what it made, with the field saying what it did.
+  await page.click('.ai-job.done .ai-job-text');
+  await page.waitForFunction(() => document.querySelectorAll('#items li.selected').length === 1);
+  assert.match(await page.textContent('.ai-status'), /✓ A third below/);
+  assert.equal(await page.locator('.ai-job').count(), 0);
+
+  // A command sent off can be cancelled: nothing changes.
+  hold('make the last note an x head');
+  await page.click('#items li[data-code="1"]');
+  await page.waitForFunction(() => document.querySelectorAll('#items li.selected').length === 1);
+  await command('make the last note an x head');
+  await page.press('.ai-input', 'Enter');
+  await page.click('.ai-job.busy .ai-job-close');
+  assert.equal(await page.locator('.ai-job').count(), 0);
+  assert.match(await undoTitle(), /“double the melody a third below”/);
 
   assert.deepEqual(errors, []);
   console.log('ai smoke: ok');
