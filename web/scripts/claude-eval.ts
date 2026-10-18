@@ -4,7 +4,7 @@
 //
 // usage: npm run wasm && npm run eval:claude    (CLAUDE_MODEL=claude-haiku-5-5)
 import { readFileSync } from 'node:fs';
-import { codeName, editWords, initSync, InputLine, Score } from '../src/wasm/score_web.js';
+import { codeName, editWords, groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
 import { askClaude, type About, type Catalog, type Failed } from '../src/ai-models';
 import { barlines, run, type Access, type Region, type Scope, type Script } from '../src/ai-script';
@@ -29,6 +29,8 @@ interface Case {
   items: number[] | null;
   /** Music put on the empty score first (passes 1 and 2), whose notes the command is then about. */
   music?: [string, string];
+  /** The check sees every item of the score, not only those the command is about. */
+  all?: boolean;
   /** What must hold of the items before and after, and of the selection after, by identity; a message when it does not. */
   check(before: Params, after: Params, selected: number[]): string | null;
   /** The command cannot be done: it must fail with this message, changing nothing. */
@@ -151,6 +153,27 @@ const CASES: Case[] = [
     refused: /quarter/i,
   },
   {
+    text: 'add lines from note head to note head',
+    items: null,
+    music: ['C5/E/G/B4/D5', '8/8/8/8/8'],
+    check(before, after) {
+      const heads = notes(before).map(([, p]) => p);
+      const lines = [...after].filter(([k, p]) => !before.has(k) && p[0] === 4).map(([, p]) => p).sort((a, b) => a[2]! - b[2]!);
+      if (lines.length !== heads.length - 1) return `${lines.length} lines for ${heads.length} notes`;
+      const off = lines.filter((l, i) => l[3] !== heads[i]![3] || l[4] !== heads[i + 1]![3]);
+      return off.length ? `${off.length} lines miss their notes: ${lines.map((l) => Array.from(l.slice(0, 6)).join(' ')).join('; ')}` : null;
+    },
+  },
+  {
+    text: 'add staff above',
+    items: [312],
+    all: true,
+    check(before, after) {
+      const staves = [...after].filter(([k, p]) => !before.has(k) && p[0] === 8).map(([, p]) => p[1]);
+      return staves.length === 1 && staves[0] === 9 ? null : `new staves: ${staves.join(', ') || 'none'}`;
+    },
+  },
+  {
     text: 'add a c major arpeggio in eighths, up and back down',
     items: null,
     check(before, after) {
@@ -162,7 +185,7 @@ const CASES: Case[] = [
   },
 ];
 
-function setUp(items: number[] | null, music?: [string, string]) {
+function setUp(items: number[] | null, music?: [string, string], all = false) {
   const score = items ? new Score(readFileSync(`${process.env.SCORE_SAMPLES}/mozart.mus`)) : Score.empty();
   const editor = scoreEditor(score);
   const access: Access = {
@@ -177,28 +200,31 @@ function setUp(items: number[] | null, music?: [string, string]) {
     context: () => ({ clef: null, symbolName: () => null }),
     staves: () => score.staffGeometry(),
     summaries: () => score.itemSummaries(),
+    groupCommand,
     inputLine: (passes, staff, from, to) => new InputLine(passes, staff, from, to),
   };
   const region: Region = { staff: 1, bottom: 1, top: 1, from: 20, to: 180 };
   if (music) run({ summary: 'music', knobs: [], steps: [{ do: 'insert', notes: music[0], rhythms: music[1] }] }, access, { keys: [], region }, 'music');
   const keys = editor.keys();
   const scope: Scope = items ? { keys: items.map((i) => keys[i]!), region: null } : music ? { keys: keys.slice(1), region } : { keys: [], region };
-  /** The scope's items (or, for an empty score, every item), by identity. */
-  const snapshot = (): Params => {
+  /** The scope's items (or, for an empty score, every item), by identity; every item for a check that sees `all`. */
+  const itemsOf = (whole: boolean): Params => {
     const now = editor.keys();
-    const wanted = items ? new Set(scope.keys) : null;
+    const wanted = items && !whole ? new Set(scope.keys) : null;
     return new Map(now.flatMap((k, i) => (!wanted || wanted.has(k) ? [[k, access.params(i)!] as const] : [])));
   };
+  const inScope = () => itemsOf(false);
+  const snapshot = () => itemsOf(all);
   const selected = () => editor.selection().map((i) => editor.keys()[i]!);
-  return { score, editor, access, scope, snapshot, selected };
+  return { score, editor, access, scope, inScope, snapshot, selected };
 }
 
 /** One case's line of the report. */
 async function evaluate(c: Case): Promise<string> {
-  const { access, scope, snapshot, selected } = setUp(c.items, c.music);
+  const { access, scope, inScope, snapshot, selected } = setUp(c.items, c.music, c.all);
   const counts = new Map<number, number>();
   const sample: number[][] = [];
-  for (const p of snapshot().values()) {
+  for (const p of inScope().values()) {
     counts.set(p[0]!, (counts.get(p[0]!) ?? 0) + 1);
     sample.push(Array.from(p));
   }

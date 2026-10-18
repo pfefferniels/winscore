@@ -27,7 +27,7 @@ const JEV = {
 /** A step as Claude writes it, every field given. */
 const step = (fields) => ({
   do: 'setting', codes: [], where: '', where_setting: '', where_is: '', setting: '', param: 0, value: '',
-  right: '', up: '', line: '', staff: 0, from: 0, to: 0, notes: '', rhythms: '', marks: '', beams: '', slurs: '', size: '',
+  right: '', up: '', line: '', staff: 0, from: 0, to: 0, notes: '', rhythms: '', marks: '', beams: '', slurs: '', size: '', params: [],
   ...fields,
 });
 

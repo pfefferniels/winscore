@@ -328,6 +328,13 @@ pub fn command_supported(line: &str) -> bool {
     score_edit::command::is_supported(line)
 }
 
+/// Whether `line` is a group or layout command (FLN, M, LJ …): it runs with
+/// nothing selected and asks for an area or staves.
+#[wasm_bindgen(js_name = groupCommand)]
+pub fn group_command(line: &str) -> bool {
+    score_edit::command::is_group(line)
+}
+
 /// WinScore's edit words for selected items as JSON, `[[word, [codes…], meaning], …]`,
 /// e.g. `["NST", [1], "No stem (P5)"]`.
 #[wasm_bindgen(js_name = editWords)]

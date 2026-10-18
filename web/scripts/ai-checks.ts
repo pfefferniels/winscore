@@ -3,7 +3,7 @@
 // a score through score-web. Run by scripts/ai-check.mjs.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { initSync, InputLine, Score } from '../src/wasm/score_web.js';
+import { groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
 import { compile } from '../src/ai-expr';
 import { musicIn, numbersIn, quartersFor } from '../src/ai-values';
@@ -76,6 +76,7 @@ const access: Access = {
   context: () => ({ clef: null, symbolName: () => null }),
   staves: () => score.staffGeometry(),
   summaries: () => score.itemSummaries(),
+  groupCommand,
   inputLine: (passes, staff, from, to) => new InputLine(passes, staff, from, to),
 };
 /** Parameter n of an item, to four places (they are single precision). */
@@ -90,6 +91,11 @@ const stems = run(scriptFor({ action: 'delete', target: 'stems' }), access, note
 assert.ok(stems.changed);
 assert.equal(editor.undoLabel(), '“remove the stems”');
 for (let i = 1; i <= 8; i++) assert.equal(Math.floor(p(i, 5) / 10) % 10, 0, `note ${i} has no stem`);
+
+// A group command (FLN) on the selected notes: run with nothing selected, given their area.
+const auto = run(scriptFor({ action: 'stems-auto', target: 'notes' }), access, notes, '“add stems”');
+for (let i = 1; i <= 8; i++) assert.notEqual(Math.floor(p(i, 5) / 10) % 10, 0, `note ${i} has a stem again`);
+editor.rollback(auto.mark);
 
 // A knob re-does the same step: rolled back and run again.
 const grow = scriptFor({ action: 'grow', target: 'notes' });
@@ -131,6 +137,15 @@ assert.deepEqual(editor.selection().map((i) => p(i, 4)), [top + 7]);
 run({ summary: 'pick and accent', knobs: [], steps: [{ do: 'select', items: { codes: [1], where: 'i < 2' } }, { do: 'setting', items: null, setting: 'Mark', value: 'Accent' }] }, access, notes, '“accent”');
 assert.equal(editor.selection().length, 2);
 assert.equal(items().filter((q) => q[0] === 1 && Math.trunc(Math.abs(q[10] ?? 0)) === 5).length, 2, 'only the two picked are accented');
+
+// New items made from each picked one: a line from each note to the next, none after the last.
+const lines = run({ summary: 'lines', knobs: [], steps: [{ do: 'add', items: { codes: [1], where: 'si < sn - 1' }, params: ['4', 'staff', 'x + 1.5', 'level', 'next_level', 'next_x'] }] }, access, notes, '“lines”');
+const made = items().filter((q) => q[0] === 4);
+assert.equal(made.length, 7);
+assert.equal(lines.touched.length, 7);
+const noteRows = items().filter((q) => q[0] === 1).sort((a, b) => a[2]! - b[2]!);
+assert.deepEqual([made[0]![3], made[0]![4], made[0]![5]], [noteRows[0]![3], noteRows[1]![3], noteRows[1]![2]], 'from the first note to the second');
+editor.rollback(lines.mark);
 
 // Chords: the notes at one place on a staff; and means over the items.
 const dyads = Score.empty();

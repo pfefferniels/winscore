@@ -1,5 +1,5 @@
 import './style.css';
-import init, { codeName, commandSupported, editWords, InputLine, librarySymbols, paramName, Score, type EncodedList } from './wasm/score_web.js';
+import init, { codeName, commandSupported, editWords, groupCommand, InputLine, librarySymbols, paramName, Score, type EncodedList } from './wasm/score_web.js';
 import { createAiPrompt } from './ai-prompt';
 import type { About, Catalog } from './ai-models';
 import { barlines, type Access, type Region, type Scope } from './ai-script';
@@ -931,6 +931,7 @@ function aiAccess(): Access | null {
     context: (index) => ({ clef: clefAt(score, index), symbolName }),
     staves: () => editor.staves(),
     summaries: () => score.itemSummaries(),
+    groupCommand,
     inputLine: (passes, staff, from, to) => new InputLine(passes, staff, from, to),
   };
 }

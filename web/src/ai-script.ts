@@ -50,7 +50,9 @@ export type Step =
   /** The notes under beams, `size` notes or chords each (0: all up to the next barline). */
   | { do: 'beam'; items?: Filter | null; size: Value }
   /** The items picked become the selection, and what the steps after it act on; nothing is edited. */
-  | { do: 'select'; items?: Filter | null };
+  | { do: 'select'; items?: Filter | null }
+  /** For each item picked, a new item with P1 … Pn from these values (over the item it is made for); none where P1 comes to 0. */
+  | { do: 'add'; items?: Filter | null; params: Value[] };
 
 export interface Script {
   /** What it does, in a few words. */
@@ -86,6 +88,8 @@ export interface Access {
   staves(): Float32Array;
   /** Code, staff and P3 of every item, three numbers each. */
   summaries(): Float32Array;
+  /** Whether a command line is a group command only (FLN …), which starts with nothing selected. */
+  groupCommand(line: string): boolean;
   inputLine(passes: string[], staff: number, from: number, to: number): InputLine;
 }
 
@@ -133,6 +137,25 @@ function keyIndex(editor: Editor): Map<number, number> {
 
 /** The items of the scope that pass the filter, in file order. */
 function targets(access: Access, scope: Scope, filter: Filter | null | undefined, knobs: Vars): Target[] {
+  return filter?.where ? picked(access, scope, filter, knobs).list : found(access, scope, filter);
+}
+
+/**
+ * The items that pass the filter with their variables as the filter saw
+ * them: their place among all the items of the codes and setting asked for,
+ * so the last one picked still has a next one.
+ */
+function picked(access: Access, scope: Scope, filter: Filter | null | undefined, knobs: Vars): { list: Target[]; vars: Vars[] } {
+  const all = found(access, scope, filter);
+  const vars = placeVars(access, all);
+  if (!filter?.where) return { list: all, vars };
+  const where = valueOf(filter.where);
+  const keep = vars.map((v) => where({ ...knobs, ...v }) !== 0);
+  return { list: all.filter((_, k) => keep[k]), vars: vars.filter((_, k) => keep[k]) };
+}
+
+/** The items of the scope of the codes and setting value asked for, in file order. */
+function found(access: Access, scope: Scope, filter: Filter | null | undefined): Target[] {
   const keys = access.editor.keys();
   let indices: number[];
   if (scope.keys === null) indices = keys.map((_, i) => i);
@@ -141,19 +164,15 @@ function targets(access: Access, scope: Scope, filter: Filter | null | undefined
     indices = scope.keys.flatMap((key) => at.get(key) ?? []).sort((a, b) => a - b);
   }
   const codes = filter?.codes?.length ? new Set(filter.codes) : null;
-  const found: Target[] = [];
+  const list: Target[] = [];
   for (const index of indices) {
     const params = access.params(index);
     if (!params) continue;
     if (codes && !codes.has(params[0]!)) continue;
     if (filter?.setting && filter.is != null && !reads(params, filter.setting, filter.is, access.context(index))) continue;
-    found.push({ index, key: keys[index]!, params });
+    list.push({ index, key: keys[index]!, params });
   }
-  if (!filter?.where) return found;
-  // `where` sees each item's place among the others too: "t == 1" is the last.
-  const where = valueOf(filter.where);
-  const vars = placeVars(access, found);
-  return found.filter((_, k) => where({ ...knobs, ...vars[k]! }));
+  return list;
 }
 
 /** Whether setting `name` of an item reads `wanted`: an option's name, a number, on/off or text. */
@@ -263,6 +282,12 @@ function placeVars(access: Access, list: Target[]): Vars[] {
     inBar.set(key, [...(inBar.get(key) ?? []), Math.round(t.params[2]! / CHORD)]);
   });
   inBar.forEach((xs, key) => inBar.set(key, [...new Set(xs)].sort((a, b) => a - b)));
+  // The next column on each staff, for items made from one to the next.
+  const levelsAt = new Map<string, number[]>();
+  list.forEach((t) => {
+    const key = `${t.params[1]}:${Math.round(t.params[2]! / CHORD)}`;
+    levelsAt.set(key, [...(levelsAt.get(key) ?? []), level(t.params[3]!)]);
+  });
   // A chord: the targeted notes at one place on a staff (a lone note is its own).
   const chordOf = (t: Target) => `${t.params[1]}:${Math.round(t.params[2]! / CHORD)}`;
   const chords = new Map<string, number[]>();
@@ -281,6 +306,11 @@ function placeVars(access: Access, list: Target[]): Vars[] {
     const barXs = inBar.get(`${t.params[1]}:${bar}`) ?? [];
     const bi = barXs.indexOf(Math.round(t.params[2]! / CHORD));
     const bn = barXs.length;
+    const next = xs[si + 1];
+    const own = level(t.params[3]!);
+    // The next column's level nearest this item's, as a line from note to note would go.
+    const nextLevels = next === undefined ? [own] : (levelsAt.get(`${t.params[1]}:${next}`) ?? [own]);
+    const nextLevel = nextLevels.reduce((a, b) => (Math.abs(b - own) < Math.abs(a - own) ? b : a));
     return {
       ...spread,
       ...paramVars(t.params),
@@ -294,6 +324,8 @@ function placeVars(access: Access, list: Target[]): Vars[] {
       bi,
       bn,
       bt: bn > 1 ? bi / (bn - 1) : 0,
+      next_x: next === undefined ? t.params[2]! : next * CHORD,
+      next_level: nextLevel,
       left: (xs[0] ?? 0) * CHORD,
       right: (xs.at(-1) ?? 0) * CHORD,
       chord_low: Math.min(...chord),
@@ -460,7 +492,8 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
     }
     case 'command': {
       const list = targets(access, scope, step.items, knobs);
-      editor.select(list.map((t) => t.index));
+      // A group command (FLN …) starts with nothing selected and is given the items' area.
+      editor.select(access.groupCommand(step.line) ? [] : list.map((t) => t.index));
       editor.execute(step.line);
       if (editor.prompt() !== null) {
         const answer = area(list, scope.region);
@@ -494,6 +527,28 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       return beam(access, targets(access, scope, step.items, knobs), Math.round(knobValue(step.size)));
     case 'select':
       return targets(access, scope, step.items, knobs).map((t) => t.key);
+    case 'add': {
+      const { list, vars } = picked(access, scope, step.items, knobs);
+      const values = step.params.map(valueOf);
+      // Every new item's numbers first: making items sorts the file.
+      const lines = list
+        .map((_, k) => values.map((value) => Math.round(value({ ...knobs, ...vars[k]! }) * 1e4) / 1e4))
+        .filter((params) => params[0] !== 0)
+        .map((params) => params.join(' '));
+      const made: number[] = [];
+      for (const line of lines) {
+        // A new item comes selected, and numbers typed then would change it.
+        editor.select([]);
+        editor.execute(line);
+        if (editor.prompt() !== null) {
+          editor.execute('X');
+          throw new Error(`No item from ${line}`);
+        }
+        const keys = editor.keys();
+        made.push(...editor.selection().map((i) => keys[i]!));
+      }
+      return made;
+    }
   }
 }
 
