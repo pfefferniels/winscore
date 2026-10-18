@@ -1051,13 +1051,15 @@ function regionOf(box: Box): Region | null {
   const right = editor.placeAt({ x: box.x1, y: middle });
   const top = editor.placeAt({ x: (box.x0 + box.x1) / 2, y: box.y1 });
   const bottom = editor.placeAt({ x: (box.x0 + box.x1) / 2, y: box.y0 });
-  if (!centre || !left || !right) return null;
+  if (!centre) return null;
+  // An edge past the paper has no staff on its side of the page: the staff's start or end.
+  const [from, to] = [left?.p3 ?? 0, right?.p3 ?? 200];
   return {
     staff: centre.staff,
     bottom: Math.min(bottom?.staff ?? centre.staff, centre.staff),
     top: Math.max(top?.staff ?? centre.staff, centre.staff),
-    from: Math.max(0, Math.min(left.p3, right.p3)),
-    to: Math.min(200, Math.max(left.p3, right.p3)),
+    from: Math.max(0, Math.min(from, to)),
+    to: Math.min(200, Math.max(from, to)),
   };
 }
 

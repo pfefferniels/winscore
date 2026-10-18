@@ -193,8 +193,8 @@ try {
   assert.equal(await page.textContent('#item-count'), '9');
   assert.match(await page.getAttribute('#undo', 'title'), /“remove the stems”/);
 
-  // A lasso around empty space on the staff: the notes typed go there.
-  const [r0, r1] = [box.x + box.width + 40, box.x + box.width + 360];
+  // A lasso around empty space on the staff, reaching past the paper's edge: the notes typed go there.
+  const [r0, r1] = [box.x + box.width + 40, box.x + box.width + 700];
   await page.keyboard.down('Alt');
   await page.mouse.move(r0, y0);
   await page.mouse.down();
