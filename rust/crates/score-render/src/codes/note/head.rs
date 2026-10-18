@@ -298,7 +298,8 @@ mod tests {
         assert_ne!(head(heads(false), Options::ENGINE, 2), alone, "the engine pastes the first head's offsets");
         let print = Options { medium: Medium::Print, ..Options::ENGINE };
         assert_eq!(head(heads(false), print, 2), alone, "print draws each head afresh");
-        assert_eq!(head(heads(false), Options::REFINED, 2), alone);
+        let refined_alone = head(heads(true), Options::REFINED, 1);
+        assert_eq!(head(heads(false), Options::REFINED, 2), refined_alone);
     }
 
     #[test]

@@ -36,6 +36,18 @@ pub fn clef(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, n: i
     symbols::draw_clef(doc, &context(item), canvas, at, step, n, size);
 }
 
+/// [`clef`] for a mark. When printing, draw_note hands note_marks P28 as
+/// IP10, the pixel thickness draw_symbol gives its print pen; the refined
+/// style draws that pen on every medium.
+pub fn mark(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, n: i32, at: Pos, size: (f64, f64), step: f64) {
+    if n == DOT && doc.refined() {
+        round_dot(canvas, at, size, step);
+        return;
+    }
+    let pixels = if doc.refined() { item.ip(28) } else { 0 };
+    symbols::draw_clef(doc, &ItemContext { pixels, ..context(item) }, canvas, at, step, n, size);
+}
+
 /// draw_symbol 0x4293F0 for symbol `n` at sizes `(sx, sy)`, unrotated.
 pub fn library(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, n: i32, at: Pos, size: (f64, f64), step: f64) {
     draw_library_symbol(doc, &context(item), canvas, at, step, &SymbolCall::sized(n, size.0, size.1));
