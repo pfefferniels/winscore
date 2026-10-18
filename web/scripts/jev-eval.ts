@@ -20,7 +20,10 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["notes", "beam always 2 notes", {"action": "beam", "amount": 2}],
   ["notes", "beam in pairs", {"action": "beam", "amount": 2}],
   ["notes", "beam them in groups of four", {"action": "beam", "amount": 4}],
-  ["notes", "beam them", {"action": "beam"}],
+  ["notes", "beam them", {"action": "beam", "amount": undefined}],
+  ["notes", "beam", {"action": "beam", "amount": undefined}],
+  ["notes", "beam those", {"action": "beam", "amount": undefined}],
+  ["notes", "beam in eights", {"action": "beam", "amount": 8}],
   ["notes", "break the beams", {"action": "unbeam"}],
   ["notes", "make note size gradually bigger", {"action": "grow", "measure": "size"}],
   ["notes", "notes growing from small to big", {"action": "grow"}],
@@ -73,6 +76,14 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["mixed", "make the slurs flatter", {"action": "(none)"}],
   ["notes", "delete the eighth notes", {"action": "(none)"}],
   ["notes", "make the first three notes red", {"action": "(none)"}],
+  // Two actions at once, or a value given alongside a beam; the unsafe ones are Claude's.
+  ["notes", "staccato and stems up", {"action": "option", "option": "Staccato", "then": {"action": "stems-up"}}],
+  ["notes", "accent them and move up a step", {"then": {"action": "move"}}],
+  ["notes", "make them eighths, then beam in pairs", {"then": {"action": "beam"}}],
+  ["notes", "8th beam", {"action": "beam", "then": {"action": "option", "target": "notes", "setting": "Value", "option": "Eighth"}}],
+  ["notes", "sixteenths beamed in fours", {"action": "beam", "amount": 4, "then": {"action": "option", "target": "notes", "setting": "Value", "option": "16th"}}],
+  ["notes", "beam the eighths", {"then": undefined}],
+  ["notes", "add staccatos and remove the stems", {"action": "(none)"}],
 ];
 
 const key = process.env.TYPESAFE_API_KEY;
@@ -82,9 +93,20 @@ const rows: string[] = [];
 const times: number[] = [];
 let passed = 0;
 let next = 0;
+// JEV_CASES=beam,stems runs only the cases whose command has one of these words.
+const only = process.env.JEV_CASES?.split(',');
+const CHOSEN = only ? CASES.filter(([, text]) => only.some((w) => text.includes(w))) : CASES;
+
+/** Whether `got` has every field `expect` gives, objects field by field. */
+function holds(got: unknown, expect: unknown): boolean {
+  if (expect && typeof expect === 'object') {
+    return !!got && typeof got === 'object' && Object.entries(expect).every(([k, v]) => holds((got as Record<string, unknown>)[k], v));
+  }
+  return JSON.stringify(got) === JSON.stringify(expect);
+}
 
 async function one(i: number) {
-  const [scope, text, expect] = CASES[i]!;
+  const [scope, text, expect] = CHOSEN[i]!;
   const counts = SCOPES[scope]!;
   const about: About = {
     text,
@@ -100,7 +122,7 @@ async function one(i: number) {
     const reading = await askJev(about, connection, new AbortController().signal);
     times.push(reading.ms);
     const got: Record<string, unknown> = reading.intent ? { ...reading.intent } : { action: '(none)', read: reading.action };
-    const ok = Object.entries(expect).every(([k, v]) => JSON.stringify(got[k]) === JSON.stringify(v));
+    const ok = holds(got, expect);
     if (ok) passed++;
     const summary = reading.intent ? ` | ${scriptFor(reading.intent).summary}` : '';
     rows[i] = `${ok ? 'ok  ' : 'FAIL'} ${String(Math.round(reading.ms)).padStart(4)} ms ${String(Math.round(reading.confidence * 100)).padStart(3)} % [${scope}] "${text}" → ${JSON.stringify(got)}${ok ? '' : `, expected ${JSON.stringify(expect)}`}${summary}`;
@@ -110,8 +132,8 @@ async function one(i: number) {
 }
 
 await Promise.all(Array.from({ length: Number(process.env.LIMIT ?? 3) }, async () => {
-  while (next < CASES.length) await one(next++);
+  while (next < CHOSEN.length) await one(next++);
 }));
 times.sort((a, b) => a - b);
 console.log(rows.join('\n'));
-console.log(`jev eval: ${passed}/${CASES.length}, median ${Math.round(times[times.length >> 1] ?? 0)} ms, p90 ${Math.round(times[Math.floor(times.length * 0.9)] ?? 0)} ms`);
+console.log(`jev eval: ${passed}/${CHOSEN.length}, median ${Math.round(times[times.length >> 1] ?? 0)} ms, p90 ${Math.round(times[Math.floor(times.length * 0.9)] ?? 0)} ms`);

@@ -4,9 +4,25 @@
 // pre-parsed extraction pattern has it; what the command means is left to
 // the models.
 
-/** The numbers in the text as written: "1.5", "-2", "50%". */
+/** The numbers in the text as written: "1.5", "-2", "50%"; not ordinals ("8th"). */
 export function numberWords(text: string): string[] {
-  return Array.from(text.matchAll(/(^|[^\w.])(-?\d+(?:\.\d+)?%?)/g), (m) => m[2]!);
+  return Array.from(text.matchAll(/(^|[^\w.])(-?\d+(?:\.\d+)?%?)(?!\w)/g), (m) => m[2]!);
+}
+
+/** A count: a whole number that is not an ordinal ("4", "4s"; not "8th"), or a count's word ("pairs", "fours"; not "eighth"). */
+const COUNT = /(^|[^\w.])\d+s?(?![\w.])|\b(pairs?|two|twos|three|threes|four|fours|six|sixes|eight|eights)\b/i;
+
+/** Whether the text names a count of something. */
+export const namesCount = (text: string) => COUNT.test(text);
+
+/** Note values spelt as words and as numbers. */
+const VALUE_WORDS: Record<string, string[]> = { eighth: ['8th', 'eighth'], '16th': ['16th', 'sixteenth'], '32nd': ['32nd', 'thirty-second'], '64th': ['64th', 'sixty-fourth'] };
+
+/** Whether the text names an option by its first word ("staccatos" names Staccato, "8th" Eighth, "sharpen" ♯ Sharp). */
+export function namesOption(text: string, label: string): boolean {
+  const lower = text.toLowerCase();
+  const word = label.toLowerCase().split(/[^\p{L}\p{N}-]+/u).find((w) => w.length >= 3);
+  return word !== undefined && (VALUE_WORDS[word] ?? [word.slice(0, 6)]).some((s) => lower.includes(s));
 }
 
 /** A number as written, a percentage as a fraction ("50%" is 0.5). */
