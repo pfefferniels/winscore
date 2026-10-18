@@ -1,8 +1,8 @@
 // The side panel: the selection, with buttons for what can be done to it,
-// its settings (item-fields.ts) and all its parameters, and below it the
-// list of all items. Several selected items are edited together: a setting
-// shows their value where they agree and "Mixed" where they do not, and a
-// change sets it in every one of them as one undo step.
+// its settings (item-fields.ts) and all its parameters. Several selected
+// items are edited together: a setting shows their value where they agree
+// and "Mixed" where they do not, and a change sets it in every one of them
+// as one undo step.
 import { fillFontMenu } from './text-dialog';
 import { sameValue, sharedSections } from './item-fields';
 import type { Change, ChoiceSetting, Context, NumberSetting, P, PairSetting, Setting } from './item-fields';
@@ -30,9 +30,6 @@ export interface ItemDetails extends ItemSummary {
 export type ItemChanges = [index: number, changes: Change[]];
 
 export interface PanelHandlers {
-  select(index: number): void;
-  /** Adds an item to the selection or takes it out. */
-  toggle(index: number): void;
   /** Selects these items, the last one primary. */
   selectItems(items: number[]): void;
   /** Runs a SCORE command on the selection. */
@@ -61,71 +58,6 @@ function element<K extends keyof HTMLElementTagNameMap>(
   Object.assign(node, props);
   node.append(...children);
   return node;
-}
-
-/** What a row shows; rows whose key is unchanged are kept as they are. */
-function rowKey(item: ItemSummary): string {
-  return `${item.index} ${item.code} ${item.staff} ${item.p3}`;
-}
-
-function itemRow(item: ItemSummary, handlers: PanelHandlers): HTMLLIElement {
-  const row = element('li', { title: `Item ${item.index}: ${item.name}` }, [
-    element('span', { className: 'index' }, [String(item.index)]),
-    element('span', {}, [`${item.code} ${item.name}`]),
-    element('span', { className: 'where' }, [`${formatParam(item.staff)} · ${formatParam(item.p3)}`]),
-  ]);
-  row.dataset.index = String(item.index);
-  row.dataset.code = String(item.code);
-  row.dataset.name = item.name;
-  row.dataset.key = rowKey(item);
-  row.addEventListener('click', (e) => (e.shiftKey || e.metaKey || e.ctrlKey ? handlers.toggle(item.index) : handlers.select(item.index)));
-  return row;
-}
-
-/**
- * Whether a row matches the filter: a number matches the item's code or
- * index, a word the name of its kind.
- */
-function matches(row: HTMLLIElement, query: string): boolean {
-  if (!query) return true;
-  if (/^\d+$/.test(query)) return row.dataset.code === query || row.dataset.index === query;
-  return (row.dataset.name ?? '').toLowerCase().includes(query.toLowerCase());
-}
-
-/** Shows only the rows that match `query`; returns how many do. */
-export function filterItemList(list: HTMLOListElement, query: string): number {
-  let shown = 0;
-  for (const row of list.children as HTMLCollectionOf<HTMLLIElement>) {
-    row.hidden = !matches(row, query.trim());
-    if (!row.hidden) shown++;
-  }
-  return shown;
-}
-
-/** The items whose rows the filter shows. */
-export function shownItems(list: HTMLOListElement): number[] {
-  return [...(list.children as HTMLCollectionOf<HTMLLIElement>)].filter((row) => !row.hidden).map((row) => Number(row.dataset.index));
-}
-
-/** Brings the list up to date, rebuilding only the rows that changed (a page has a thousand items or more). */
-export function renderItemList(list: HTMLOListElement, items: ItemSummary[], handlers: PanelHandlers) {
-  const rows = list.children as HTMLCollectionOf<HTMLLIElement>;
-  items.forEach((item, i) => {
-    const row = rows[i];
-    if (row?.dataset.key === rowKey(item)) return;
-    const fresh = itemRow(item, handlers);
-    if (row) row.replaceWith(fresh);
-    else list.append(fresh);
-  });
-  while (rows.length > items.length) rows[rows.length - 1]!.remove();
-}
-
-/** Marks the rows of `items` and scrolls the last one into view. */
-export function markSelected(list: HTMLOListElement, items: number[]) {
-  list.querySelectorAll('li.selected').forEach((li) => li.classList.remove('selected'));
-  const rows = items.map((index) => list.querySelector<HTMLLIElement>(`li[data-index="${index}"]`));
-  rows.forEach((row) => row?.classList.add('selected'));
-  rows.at(-1)?.scrollIntoView({ block: 'nearest' });
 }
 
 /**
