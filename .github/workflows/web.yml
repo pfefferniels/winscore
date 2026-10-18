@@ -54,6 +54,8 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           npm run smoke
+          npm run check:ai
+          npm run smoke:ai
 
       - uses: actions/upload-pages-artifact@v4
         with:

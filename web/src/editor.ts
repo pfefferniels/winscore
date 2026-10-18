@@ -74,6 +74,14 @@ export interface Editor {
   redo(): Change | null;
   undoLabel(): string | null;
   redoLabel(): string | null;
+  /** A point in the history; the actions after it can be rolled back or made one undo step. */
+  mark(): number;
+  /** Reverts the actions after `mark`; they cannot be redone. */
+  rollback(mark: number): void;
+  /** Makes the actions after `mark` one undo step called `label`; false when there are none. */
+  combine(mark: number, label: string): boolean;
+  /** Every item's identity in file order; it stays with the item through edits, sorting and undo. */
+  keys(): number[];
 }
 
 /** The UI's view of an outcome; null when nothing changed and nothing was reported. */
@@ -131,5 +139,9 @@ export function scoreEditor(score: Score): Editor {
     redo: () => stepped(score.redo() ? `Redo ${score.undoLabel()}` : null),
     undoLabel: () => score.undoLabel() ?? null,
     redoLabel: () => score.redoLabel() ?? null,
+    mark: () => score.mark(),
+    rollback: (mark) => score.rollback(mark),
+    combine: (mark, label) => score.combine(mark, label),
+    keys: () => Array.from(score.keys()),
   };
 }

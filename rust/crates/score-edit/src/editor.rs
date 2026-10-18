@@ -555,6 +555,33 @@ impl Editor {
         Some(Change::new(&step.edits, self.selection()))
     }
 
+    /// A point in the history: the actions after it can be taken back with
+    /// [`Editor::rollback`] or made one step with [`Editor::combine`], so a
+    /// command made of several actions is one undo step and can be done
+    /// again with other values.
+    pub fn mark(&self) -> usize {
+        self.history.depth()
+    }
+
+    /// Reverts the steps after `mark` and forgets them: they cannot be redone.
+    pub fn rollback(&mut self, mark: usize) -> Change {
+        self.cancel_drag();
+        let mut inverse: Vec<Edit> = Vec::new();
+        while self.history.depth() > mark {
+            let Some(step) = self.history.discard() else { break };
+            self.doc.revert_all(&step.edits);
+            self.session.select(&self.doc, &step.selection_before);
+            inverse.extend(step.edits.iter().rev().map(Edit::inverse));
+        }
+        Change::new(&inverse, self.selection())
+    }
+
+    /// Makes the steps after `mark` one undo step called `label`; false when
+    /// there are none.
+    pub fn combine(&mut self, mark: usize, label: &str) -> bool {
+        self.history.combine(mark, label)
+    }
+
     pub fn can_undo(&self) -> bool {
         self.history.undo_label().is_some()
     }

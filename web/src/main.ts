@@ -1,5 +1,8 @@
 import './style.css';
-import init, { codeName, commandSupported, librarySymbols, paramName, Score, type EncodedList, type InputLine } from './wasm/score_web.js';
+import init, { codeName, commandSupported, editWords, InputLine, librarySymbols, paramName, Score, type EncodedList } from './wasm/score_web.js';
+import { createAiPrompt } from './ai-prompt';
+import type { About, Catalog } from './ai-models';
+import type { Access, Region, Scope } from './ai-script';
 import { createPageView, type Scene } from './canvas';
 import { bindClipboard } from './clipboard';
 import { bindCommandBar } from './command-bar';
@@ -185,7 +188,10 @@ const inputMode = createInputMode(ui.inputPanel, ui.stage, {
   score: () => state.score,
   show: showInput,
   insert: insertInput,
-  focusPage: () => ui.viewport.focus(),
+  focusPage() {
+    ui.viewport.focus();
+    followSelection();
+  },
   clientRect: (box) => view.clientRect(box),
 });
 view.onPaint(() => inputMode.layout());
@@ -447,6 +453,7 @@ function selectionChanged() {
   refreshPanel();
   redraw();
   report(null);
+  followSelection();
 }
 
 /** Scrolls the selected items into view unless they are visible. */
@@ -477,6 +484,8 @@ function edited(change: Change | null, live: boolean) {
     void loadFontsAndRepaint();
     report(change);
     inputMode.refresh();
+    aiPrompt.refresh();
+    followSelection();
   }
   redraw(live);
 }
@@ -592,6 +601,7 @@ async function openItem(item: number | null) {
 function enterInput(staff?: number) {
   inputMode.open(staff);
   refreshStatus();
+  followSelection();
 }
 
 /** Draws the line being typed over the page and scrolls to the cursor when it moved. */
@@ -642,6 +652,7 @@ function mayDiscard(): boolean {
 
 function openScore(score: Score, name: string) {
   inputMode.close();
+  aiPrompt.close();
   state.score?.free();
   state.score = score;
   state.editor = scoreEditor(score);
@@ -906,6 +917,177 @@ function itemAt(clientX: number, clientY: number, coarse = false): number | null
   return drawn ?? state.score?.itemAt(p.x, p.y, 0, view.unitsPerCss(coarse ? TOUCH_PICK_RADIUS_PX : PICK_RADIUS_PX)) ?? null;
 }
 
+// ---------------------------------------------------------------------------
+// The AI command
+
+/** The edit script's view of the score. */
+function aiAccess(): Access | null {
+  const { score, editor } = state;
+  if (!score || !editor) return null;
+  return {
+    editor,
+    params(index) {
+      const info = score.item(index);
+      if (!info) return null;
+      try {
+        return info.params;
+      } finally {
+        info.free();
+      }
+    },
+    context: (index) => ({ clef: clefAt(score, index), symbolName }),
+    staves: () => editor.staves(),
+    inputLine: (passes, staff, from, to) => new InputLine(passes, staff, from, to),
+  };
+}
+
+/** P1 … Pn without trailing zeros. */
+function trimmed(params: Float32Array): number[] {
+  const list = Array.from(params);
+  while (list.length > 4 && list.at(-1) === 0) list.pop();
+  return list;
+}
+
+/** The middle line of a staff by clef type, as a diatonic step from C0: B4, D3, C4, A3, B4. */
+const CLEF_MIDDLES = [34, 22, 28, 26, 34];
+
+/** The middle line of the region's staff for the clef in force there, where typed notes start. */
+function middleAt(score: Score, region: Region | null): number {
+  if (!region) return CLEF_MIDDLES[0]!;
+  const clefs = itemSummaries(score)
+    .filter(({ code, staff, p3 }) => code === 3 && staff === region.staff && p3 <= region.from + 1)
+    .sort((a, b) => a.p3 - b.p3);
+  const last = clefs.at(-1);
+  const info = last ? score.item(last.index) : undefined;
+  if (!info) return CLEF_MIDDLES[0]!;
+  const type = Math.trunc(Math.abs(info.params[4] ?? 0));
+  info.free();
+  return CLEF_MIDDLES[type] ?? CLEF_MIDDLES[0]!;
+}
+
+const SAMPLE_ITEMS = 60;
+
+/** What the models are told about a command and the items it is about. */
+function aiAbout(text: string, scope: Scope): About | null {
+  const score = state.score;
+  const access = aiAccess();
+  if (!score || !access) return null;
+  const counts = new Map<number, number>();
+  const sample: number[][] = [];
+  let indices: number[];
+  if (scope.keys === null) {
+    const all = itemSummaries(score);
+    all.forEach(({ code }) => counts.set(code, (counts.get(code) ?? 0) + 1));
+    indices = all.slice(0, SAMPLE_ITEMS).map(({ index }) => index);
+  } else {
+    const keys = access.editor.keys();
+    const at = new Map(keys.map((key, i) => [key, i]));
+    indices = scope.keys.flatMap((key) => at.get(key) ?? []);
+  }
+  for (const index of indices) {
+    const params = access.params(index);
+    if (!params) continue;
+    if (scope.keys !== null) counts.set(params[0]!, (counts.get(params[0]!) ?? 0) + 1);
+    if (sample.length < SAMPLE_ITEMS) sample.push(trimmed(params));
+  }
+  const staves = new Set([...sample.map((p) => p[1]!), ...(scope.region ? [scope.region.staff] : [])]);
+  const bars = new Map<number, number[]>();
+  itemSummaries(score).forEach(({ code, staff, p3 }) => {
+    if (code === 14 && staves.has(staff)) bars.set(staff, [...(bars.get(staff) ?? []), p3]);
+  });
+  bars.forEach((xs) => xs.sort((a, b) => a - b));
+  return { text, counts, whole: scope.keys === null, region: scope.region, middle: middleAt(score, scope.region), sample, bars, codeName: nameOf };
+}
+
+let catalog: Catalog | null = null;
+
+function aiCatalog(): Catalog {
+  catalog ??= {
+    codes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 18].map((code) => ({ code, name: nameOf(code) })),
+    words: JSON.parse(editWords()) as Catalog['words'],
+  };
+  return catalog;
+}
+
+const aiPrompt = createAiPrompt(ui.stage, {
+  editor: () => state.editor,
+  access: aiAccess,
+  about: aiAbout,
+  catalog: aiCatalog,
+  supported: commandSupported,
+  clientRect: (box) => view.clientRect(box),
+  edited(live, params) {
+    const score = state.score;
+    if (!score) return;
+    if (live) {
+      state.rust = decodeAndFree(params ? score.renderSelection() : score.render());
+      state.modified = true;
+      redraw(true);
+    } else edited({ label: state.editor?.undoLabel() ?? '', message: null }, false);
+  },
+  undo: (redo) => edit((editor) => (redo ? editor.redo() : editor.undo())),
+  left: () => ui.viewport.focus(),
+});
+view.onPaint(() => aiPrompt.place());
+
+/** SCORE's code for a staff. */
+const STAFF = 8;
+/** P3 between the music on a staff and music a command adds after it. */
+const AFTER_MUSIC = 3;
+
+/** Where music added by a command goes: after the music on a selected staff, else over the selection. */
+function regionOf(items: number[]): Region | null {
+  const { score, editor } = state;
+  const box = selectionBox();
+  if (!score || !editor || !box) return null;
+  const summaries = itemSummaries(score);
+  if (!items.every((i) => summaries[i]?.code === STAFF)) return regionIn(editor, box);
+  const staff = summaries[items[0]!]!.staff;
+  const music = summaries
+    .filter((s) => s.staff === staff && s.code !== STAFF)
+    .map((s) => bounds(elementsOf(state.rust, s.index)))
+    .reduce(union, null);
+  const region = regionIn(editor, music ? { ...box, x0: music.x1 } : box);
+  return region && music ? { ...region, from: Math.min(region.from + AFTER_MUSIC, region.to) } : region;
+}
+
+/** Staff and P3 span of page box `box`. */
+function regionIn(editor: Editor, box: Box): Region | null {
+  const middle = (box.y0 + box.y1) / 2;
+  // A box mostly off the paper is about the staff nearest it on the paper.
+  const paper = paperBox();
+  const mid = (box.x0 + box.x1) / 2;
+  const x = editor.placeAt({ x: mid, y: middle }) ? mid : Math.min(Math.max(mid, paper.x0), paper.x1 - 1);
+  const centre = editor.placeAt({ x, y: middle });
+  const left = editor.placeAt({ x: box.x0, y: middle });
+  const right = editor.placeAt({ x: box.x1, y: middle });
+  const top = editor.placeAt({ x, y: box.y1 });
+  const bottom = editor.placeAt({ x, y: box.y0 });
+  if (!centre) return null;
+  // An edge past the paper has no staff on its side of the page: the staff's start or end.
+  const [from, to] = [left?.p3 ?? 0, right?.p3 ?? 200];
+  return {
+    staff: centre.staff,
+    bottom: Math.min(bottom?.staff ?? centre.staff, centre.staff),
+    top: Math.max(top?.staff ?? centre.staff, centre.staff),
+    from: Math.max(0, Math.min(from, to)),
+    to: Math.min(200, Math.max(from, to)),
+  };
+}
+
+/** The command field stands by the selection while there is one (and no music input). */
+function followSelection() {
+  const editor = state.editor;
+  const items = selection();
+  const box = selectionBox();
+  if (!editor || !box || items.length === 0 || inputMode.isOpen) {
+    aiPrompt.close();
+    return;
+  }
+  const keys = editor.keys();
+  aiPrompt.follow({ keys: items.map((i) => keys[i]!), region: regionOf(items) }, box);
+}
+
 function bindPointer() {
   // With the input open, a click on its staff puts the cursor there (a tap does, below, once it is not a scroll).
   ui.viewport.addEventListener(
@@ -1104,6 +1286,7 @@ function bindControls() {
   bindCommandBar(ui.command, {
     run: runCommand,
     page: ui.viewport,
+    typing: () => aiPrompt.field,
   });
   window.addEventListener('keydown', onAppKey);
   window.addEventListener('keydown', (e) => {

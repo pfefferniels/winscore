@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const server = await preview({ preview: { port: 4178, strictPort: true } });
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
 try {
   const page = await browser.newPage({ viewport: { width: 1400, height: 900 }, acceptDownloads: true });
   const errors = [];
@@ -131,20 +131,33 @@ try {
   await page.click('#undo');
   assert.equal(await page.inputValue('#p3'), '0');
 
-  // Typing on the page goes to the command bar; Up recalls the previous line; Escape returns to the page.
+  // Typing on the page goes to the command field by the selection, SCORE commands too; Escape returns to the page.
   await page.focus('#viewport');
   await page.keyboard.type('U 2');
-  assert.equal(await page.inputValue('#command'), 'U 2');
+  assert.equal(await page.inputValue('.ai-input'), 'U 2');
   await page.keyboard.press('Enter');
   assert.equal(await page.inputValue('#p4'), '26');
-  await page.keyboard.press('ArrowUp');
-  assert.equal(await page.inputValue('#command'), 'U 2');
-  await page.keyboard.press('ArrowUp');
-  assert.equal(await page.inputValue('#command'), 'XYZZY');
   await page.keyboard.press('Escape');
   assert.equal(await page.evaluate(() => document.activeElement.id), 'viewport');
   await page.keyboard.press('Control+z');
   assert.equal(await page.inputValue('#p4'), '24');
+
+  // In the command bar Up recalls the previous lines.
+  await page.focus('#command');
+  await page.keyboard.press('ArrowUp');
+  assert.equal(await page.inputValue('#command'), 'XYZZY');
+  await page.keyboard.press('ArrowUp');
+  assert.equal(await page.inputValue('#command'), 'R 5');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'viewport');
+
+  // With nothing selected, typing on the page goes to the command bar.
+  await page.keyboard.press('Escape');
+  assert.ok(await page.isHidden('.ai-prompt'));
+  await page.keyboard.type('FLI');
+  assert.equal(await page.inputValue('#command'), 'FLI');
+  await page.keyboard.press('Escape');
+  await page.click('#items li[data-index="2"]');
 
   // Enter on the page moves edit mode to the next item, as in WinScore.
   await page.keyboard.press('Enter');
