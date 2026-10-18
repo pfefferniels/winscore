@@ -2,12 +2,9 @@
 //! them by duration across all its staves; J justifies, making room for accidentals,
 //! dots, flags and shifted heads; LJ does both, and LJA does LJ on all staves with notes.
 //!
-//! This is a reimplementation of WinScore's routines 0x4B80B7 (the command's main pass),
-//! 0x4F7808 (sort), 0x534C40 (events), 0x4C9510 (merge), 0x4CC470 (spacing), 0x4C8290
-//! (mapping), 0x4C5AD8 (grace notes), 0x4B6F4A (justify) and 0x4B93F2 (LJA's system),
-//! after disasm-expert's reference models `analysis/engine/experiments/lineup.py`,
-//! `grace.py` and `justify.py` and the notes in `analysis/engine/layout.md`. Results are
-//! compared with the engine item by item (`tests/engine.rs`).
+//! This follows WinScore's routines for the command's main pass, the sort, the events,
+//! the merge, the spacing, the mapping, the grace notes, the justification and LJA's
+//! system. Results are compared item by item in `tests/layout.rs`.
 //!
 //! The engine sorts the whole file before it lines up, so the result is a reordered list:
 //! [`Layout::source`] tells which input item each output item is.
@@ -115,7 +112,7 @@ impl fmt::Display for LayoutError {
 
 impl std::error::Error for LayoutError {}
 
-/// What a layout command does, from its letters (0x4B80B7): L lines up, J justifies.
+/// What a layout command does, from its letters: L lines up, J justifies.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Command {
     /// LI
@@ -142,7 +139,7 @@ pub fn line_up_and_justify(items: &[Item], range: StaffRange, options: &Options)
     layout(items, Command::LineUpAndJustify, range, options)
 }
 
-/// LJA: LJ on all staves with notes or rests (0x4B93F2). The engine answers its own
+/// LJA: LJ on all staves with notes or rests. The engine answers its own
 /// question with the lowest and the highest such staff, and reads the second number as a
 /// count, as for a typed answer. Without notes or rests nothing changes.
 pub fn line_up_and_justify_all(items: &[Item], options: &Options) -> Result<Layout, LayoutError> {
@@ -153,7 +150,7 @@ pub fn line_up_and_justify_all(items: &[Item], options: &Options) -> Result<Layo
     }
 }
 
-/// The sort the layout commands (and TR) start with (0x4F7808 in mode 'X'): every P3
+/// The sort the layout commands (and TR) start with: every P3
 /// rounded to hundredths, then the items ordered by staff and P3.
 pub fn sort(items: &[Item]) -> Result<Layout, LayoutError> {
     on_rows(items, sort_rows)

@@ -7,9 +7,8 @@
 //! given to [`Editor::execute`] act on it as the engine acts on the item in
 //! edit mode, and every action is one undo step.
 //!
-//! The commands follow Leland Smith's WinScore help and are checked against
-//! WinScore's own engine run under emulation (`oracle/edit_driver.py`, cases
-//! in `tests/engine_cases.txt`); `COMMANDS.md` lists what is covered.
+//! The commands follow Leland Smith's WinScore help; cases for them are in
+//! `tests/edit_cases.txt`.
 
 pub mod clipboard;
 pub mod command;

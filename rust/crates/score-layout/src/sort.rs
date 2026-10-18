@@ -1,4 +1,4 @@
-//! The item sort the layout commands start with (0x4F7808 in mode 'X').
+//! The item sort the layout commands start with.
 
 use std::cmp::Ordering;
 

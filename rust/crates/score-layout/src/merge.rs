@@ -1,4 +1,4 @@
-//! Merging the event lists of the staves of a system into one master list (0x4C9510):
+//! Merging the event lists of the staves of a system into one master list:
 //! first the markers of both lists, then the durations split wherever either staff has an
 //! onset.
 
@@ -14,7 +14,7 @@ fn at(values: &[f32], k: usize) -> f32 {
     k.checked_sub(1).and_then(|i| values.get(i)).copied().unwrap_or(0.0)
 }
 
-/// 0x4CB518: a barline directly after another is dropped.
+/// A barline directly after another is dropped.
 pub fn drop_repeated_barlines(entries: &[f32]) -> Vec<f32> {
     entries.iter().fold(Vec::new(), |mut out, &e| {
         if e != BARLINE || out.last() != Some(&e) {
@@ -24,7 +24,7 @@ pub fn drop_repeated_barlines(entries: &[f32]) -> Vec<f32> {
     })
 }
 
-/// The marker merge's output with its rule for what may follow what (0x4CB5F5).
+/// The marker merge's output with its rule for what may follow what.
 struct Emitter {
     out: Vec<f32>,
     last: f32,
@@ -43,7 +43,7 @@ impl Emitter {
     }
 }
 
-/// First merge of 0x4C9510: the markers of both lists in order, the master's durations
+/// First merge: the markers of both lists in order, the master's durations
 /// kept, the staff's durations walked alongside.
 pub fn merge_markers(master: &[f32], staff: &[f32]) -> Result<Vec<f32>, LayoutErrorKind> {
     let (m_len, s_len) = (master.len(), staff.len());
@@ -162,7 +162,7 @@ pub fn merge_markers(master: &[f32], staff: &[f32]) -> Result<Vec<f32>, LayoutEr
     Err(LayoutErrorKind::NoEnd)
 }
 
-/// 0x4CB78B: the master durations split wherever the staff (its durations only) has an
+/// The master durations split wherever the staff (its durations only) has an
 /// onset.
 struct DurationMerge<'a> {
     master: &'a [f32],
@@ -180,7 +180,7 @@ const ALIGNED: f32 = 0.01;
 const TOLERANCE: f32 = 0.004;
 
 impl DurationMerge<'_> {
-    /// 0x4CB6BF: the next master duration, copying the markers before it.
+    /// The next master duration, copying the markers before it.
     fn next_master(&mut self, stop_at_marker: bool) {
         loop {
             self.i += 1;
@@ -196,7 +196,6 @@ impl DurationMerge<'_> {
         }
     }
 
-    /// 0x4CB74B
     fn next_staff(&mut self) {
         self.j += 1;
         self.s = at(self.staff, self.j);

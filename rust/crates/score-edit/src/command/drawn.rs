@@ -1,7 +1,7 @@
 //! What WinScore's redraw after every command writes back into the items:
 //! the measured length of text items (P13) and the position of centred
-//! whole-bar rests (P9, draw_rest 0x519C38). A rest in edit mode gets the
-//! values draw_rest writes into the edit buffer (which leaving edit mode
+//! whole-bar rests (P9). A rest in edit mode gets the values drawing it
+//! writes into the edit buffer (which leaving edit mode
 //! stores); while no item is in edit mode, every centred rest gets its centre.
 
 use score_format::Item;

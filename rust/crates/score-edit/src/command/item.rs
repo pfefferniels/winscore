@@ -62,7 +62,7 @@ pub enum Op {
     /// Clef type (P5) with its vertical placement (P4).
     Clef { level: f32, kind: f32 },
     FlipSlur,
-    /// CR: the curvature 0x42C51C gives a slur of its length and slope.
+    /// CR: the curvature the engine gives a slur of its length and slope.
     DefaultCurve,
     SpaceAccidental(f32),
     UnspaceAccidental,
@@ -87,7 +87,7 @@ pub enum Op {
     /// P(n) + delta, not below `min`.
     AddAtLeast { n: usize, delta: f32, min: f32 },
     PedalSize(f32),
-    /// WB n, EU n: a whole-bar rest numbered n, centred (0x4359D0).
+    /// WB n, EU n: a whole-bar rest numbered n, centred.
     WholeBarRest { european: bool },
     FlipSymbol,
     SymbolSize(f32),
@@ -231,7 +231,7 @@ const fn clef(word: &'static str, level: f32, kind: f32, meaning: &'static str) 
     entry(word, C, Op::Clef { level, kind }, meaning)
 }
 
-/// Marks in P11 follow the order of the engine's table at 0x78F418.
+/// Marks in P11 follow the order of the engine's table.
 const MARKS: &[Entry] = &[
     mark("FCF", 1.0, "Ficta flat (P11 = 1)"),
     mark("FCS", 2.0, "Ficta sharp (P11 = 2)"),

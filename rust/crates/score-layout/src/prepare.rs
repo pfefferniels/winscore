@@ -1,4 +1,5 @@
-//! The adjustments 0x4B80B7 makes before the line-up proper, and the staff sizes it uses.
+//! The adjustments the command's main pass makes before the line-up proper, and the staff
+//! sizes it uses.
 
 use std::collections::BTreeMap;
 

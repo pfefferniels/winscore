@@ -1,5 +1,5 @@
 //! Edit-mode transformations of notes (code 1) and rests (code 2), after
-//! the WinScore help pages code1.txt and code2.txt, checked against the engine.
+//! the WinScore help pages code1.txt and code2.txt.
 //!
 //! Code 1's P5 packs `[100 parentheses] + 10 × stem + accidental`, with the
 //! accidental's offset after the decimal point; P9 packs `10 × dots + tails`.
@@ -145,7 +145,7 @@ pub fn respell(draft: &mut Draft, spelling: Spelling) {
     draft.add(STEM, respelled.digit() as f32 - digits.accidental as f32);
 }
 
-/// P4 without the hundreds that mark cue size (amod, as item_position 0x5479AB).
+/// P4 without the hundreds that mark cue size (amod, as the engine positions items).
 fn level_within_hundred(level: f32) -> f32 {
     level - (level / CUE).trunc() * CUE
 }

@@ -188,7 +188,7 @@ impl Editor {
         pick::nearest(items, PagePoint { x, y }, radius).and_then(|i| self.doc.id_at(i))
     }
 
-    /// Selects what a click at (`x`, `y`) means (decision D8): the item whose
+    /// Selects what a click at (`x`, `y`) means: the item whose
     /// drawn outline the shell found under the cursor, or else the nearest
     /// reference point within `radius`; nothing found clears the selection.
     pub fn select_at(&mut self, x: f64, y: f64, outline_hit: Option<ItemId>, radius: f64) -> Option<ItemId> {

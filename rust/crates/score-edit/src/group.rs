@@ -47,7 +47,7 @@ impl Region {
         Some(Self { bottom, top, left: get(1), right, codes })
     }
 
-    /// The area a box drawn with the mouse selects (region_select 0x41B011):
+    /// The area a box drawn with the mouse selects:
     /// corners in page coordinates (engine units from the paper's bottom-left
     /// corner, y up). The bottom and top staves are those whose middle lines
     /// lie nearest the box's lower and upper edges, among the staff numbers

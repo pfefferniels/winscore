@@ -18,7 +18,7 @@ const STEM_LENGTH: usize = 8;
 const DOTS_TAILS: usize = 9;
 const SIZE_FACTOR: usize = 15;
 const BEAM_SIZE_FACTOR: usize = 18;
-/// Head width in step units (f32 2.83333, 0x40C1C0).
+/// Head width in step units (f32 2.83333).
 const HEAD_WIDTH: f32 = 2.83333;
 /// Cue beams and their notes are drawn at this size, their beams this thick.
 const CUE_SIZE: f32 = 0.6;
@@ -51,7 +51,7 @@ fn trunc(x: f64) -> i64 {
     x.trunc() as i64
 }
 
-/// The engine's AMOD (0x54AABA).
+/// The engine's AMOD.
 fn amod(x: f64, y: f64) -> f64 {
     f(x - trunc(x / y) as f64 * y)
 }
@@ -68,7 +68,7 @@ fn cue_hundreds(p4: f32) -> i64 {
 /// A beam line from x to x (0 for none).
 type Span = (f64, f64);
 
-/// The ends of the beam and of its second and third beams, as 0x40C1C0
+/// The ends of the beam and of its second and third beams, as the engine
 /// moves them before it measures.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Lines {
@@ -77,8 +77,7 @@ struct Lines {
     third: Span,
 }
 
-/// P8 of one note under `beam` (0x40C1C0) before the division by the note's
-/// size factor; reimplemented after disasm-expert's `beam_stems.py`.
+/// P8 of one note under `beam` before the division by the note's size factor.
 /// `staff_offset` converts a cross-staff note's P4 to the beam's staff.
 fn stem_length(beam: &Draft, note: &Draft, note_stem: i64, fit: StemFit, step: f64, staff_offset: f64) -> f64 {
     let b = |k: usize| c(beam.get(k));
@@ -159,7 +158,7 @@ fn stem_length(beam: &Draft, note: &Draft, note_stem: i64, fit: StemFit, step: f
     f((length - extra) - cut)
 }
 
-/// Whether `note` takes part in the stem pass for `beam` (0x40CDE4).
+/// Whether `note` takes part in the stem pass for `beam`.
 fn under_beam(beam: &Draft, note: &Draft, opposite: bool) -> bool {
     let reach = c(REACH);
     let note_stem = stem(note);
@@ -176,7 +175,7 @@ fn is_fitting_beam(draft: &Draft) -> bool {
     draft.code() == BEAM && draft.get(DURATION) >= 0.0
 }
 
-/// The cross-staff shift of a note with P12 set, in steps of `step` (0x40C1C0).
+/// The cross-staff shift of a note with P12 set, in steps of `step`.
 fn cross_staff_offset(note: &Draft, staves: &StaffTable) -> f64 {
     if note.get(12) == 0.0 {
         return 0.0;
@@ -206,7 +205,7 @@ fn drawn_step(item: &Draft, staves: &StaffTable, size_param: usize) -> f64 {
     f(staves.get(item.get(2) as i32).step * size)
 }
 
-/// A note of the selected beam, fitted to it (0x40CDE4).
+/// A note of the selected beam, fitted to it.
 fn fitted(beam: &Draft, note: &Draft, fit: StemFit, staves: &StaffTable) -> Draft {
     let step = drawn_step(beam, staves, BEAM_SIZE_FACTOR);
     with_stem(note, stem_length(beam, note, stem(note), fit, step, cross_staff_offset(note, staves)))
@@ -220,7 +219,7 @@ enum Unfitted {
     NoBeam,
 }
 
-/// ADJ on a note in edit mode (0x40BC18): the longest stem any beam of
+/// ADJ on a note in edit mode: the longest stem any beam of
 /// staff `on` over the note asks for. The engine compares the note's cue
 /// hundreds with the beam's P1 / 100, which is always 0, so cue notes find
 /// no beam; and it measures with the STEP that drawing the note left.
@@ -254,7 +253,7 @@ fn note_fitted(note: &Draft, beams: &[&Draft], on: f32, fit: StemFit, staves: &S
     Ok(with_stem(note, f(offset + longest)))
 }
 
-/// The stem pass over `items` for `beam` (0x40CDE4), as AUTO and SPL end.
+/// The stem pass over `items` for `beam`, as AUTO and SPL end.
 fn fit_under(items: &mut [Draft], beam: &Draft, fit: StemFit, staves: &StaffTable) {
     if !is_fitting_beam(beam) {
         return;
@@ -314,7 +313,7 @@ impl Run<'_, '_> {
     }
 
     /// ADOF: each selected beam's P9 marks where notes with stems against
-    /// it sit (0x419498); CNX centres the beams first.
+    /// it sit; CNX centres the beams first.
     pub fn stem_offsets(&mut self) -> Result<(), EditError> {
         let all: Vec<Draft> = self.tx.doc().file().items.iter().map(Draft::of).collect();
         let beams: Vec<(ItemId, Draft)> = self
@@ -336,8 +335,8 @@ impl Run<'_, '_> {
     }
 
     /// ADJ and its variants: the stems of the notes under each selected beam
-    /// (0x40CDE4; tremolo beams with P7 < 0 are left alone), or of each
-    /// selected note (0x40BC18; `staff` names the beam's staff if not its own).
+    /// (tremolo beams with P7 < 0 are left alone), or of each
+    /// selected note (`staff` names the beam's staff if not its own).
     pub fn adjust_stems(&mut self, fit: StemFit, staff: Option<f32>) -> Result<(), EditError> {
         let all = self.drafts();
         let staves = RenderDocument::new(self.tx.doc().file()).staves;

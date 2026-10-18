@@ -1,4 +1,4 @@
-//! Which item a click selects, by WinScore's rule (0x498BF0, analysis/engine/editing.md):
+//! Which item a click selects, by WinScore's rule:
 //! the item whose reference point is nearest to the cursor. The reference
 //! point is P3 across and P4 plus a per-code offset up; it is not the drawn
 //! outline, so a click always finds something unless a radius limits it.
@@ -14,7 +14,7 @@ const RECTO_P3: f32 = 227.0;
 /// Any staff of the verso page, for the page origin without the recto shift.
 const VERSO_STAFF: i32 = 1;
 /// Rest symbols (P5 = -3 double whole … 3 thirty-second) are found this many
-/// steps above P4 (table 0x78DD8C; the eighth rest's 1 is checked in the oracle).
+/// steps above P4.
 const REST_LEVELS: [f32; 7] = [4.0, 4.0, 2.0, 2.0, 1.0, 1.0, 1.0];
 const REST_SYMBOL_BASE: i32 = 3;
 /// Staves and barlines are found at the bottom line (level 3), whatever P4 says.

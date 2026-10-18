@@ -1,11 +1,11 @@
-//! One staff's events for the line-up (0x534C40): the positions where something starts,
+//! One staff's events for the line-up: the positions where something starts,
 //! each with a duration (the shortest value still sounding, in P7 units) or a marker (the
 //! negated code of a clef, barline, key or meter).
 
 use crate::num::{trunc, wide};
 use crate::rows::{Row, BARLINE, CLEF, KEY, METER, REST};
 
-/// Notes and rests with a P7 from here on are left to 0x4C5AD8.
+/// Notes and rests with a P7 from here on are left to the grace-note pass.
 pub const LONG_VALUE: f32 = 64.0;
 /// Right edge of the area the line-up looks at.
 const AREA_RIGHT: f32 = 200.05;
@@ -23,7 +23,7 @@ pub struct StaffEvents {
     pub saw_long: bool,
 }
 
-/// 0x53572C: an event lasts as long as its shortest open value; the others carry over,
+/// An event lasts as long as its shortest open value; the others carry over,
 /// reduced by it.
 fn shortest_open_value(values: &[f32]) -> (f32, Vec<f32>) {
     let Some((&first, rest)) = values.split_first() else {
@@ -41,12 +41,11 @@ fn shortest_open_value(values: &[f32]) -> (f32, Vec<f32>) {
     (least, carried)
 }
 
-/// 0x5358E5
 pub fn p14_or_p15(row: &Row) -> bool {
     row.len() >= 14 && (row.par(14) != 0.0 || (row.len() >= 15 && row.par(15) != 0.0))
 }
 
-/// 0x535693: a meter shifted by more than 2 (P4 times P7) is no event.
+/// A meter shifted by more than 2 (P4 times P7) is no event.
 fn meter_off_staff(row: &Row) -> bool {
     if row.code() != METER || row.len() <= 3 {
         return false;
@@ -66,8 +65,8 @@ struct Scan {
     end: usize,
 }
 
-/// Phase 1 of 0x534C40: the first item of the staff that starts an event, the first item
-/// of the next staff, and where the scan ended.
+/// Phase 1 of the event scan: the first item of the staff that starts an event, the
+/// first item of the next staff, and where the scan ended.
 fn first_event_item(rows: &mut [Row], start: usize, staff: i32) -> Scan {
     let n = rows.len();
     let mut i = start - 1;

@@ -1,8 +1,6 @@
 //! CN on items with two ends, lines, slurs, beams and trills (codes 4–7),
-//! and CV, CNL, CNR on slurs: a reimplementation of the engine's 0x42C9B0
-//! with its note search 0x42DAF8, retry 0x42D9F9 and the slur routines
-//! 0x42E11C/0x42E437 (end levels), 0x42C60E, 0x42D887, 0x42E94D (CNL) and
-//! 0x42E6AB (CNR), after disasm-expert's `slur_center.py` for the latter.
+//! and CV, CNL, CNR on slurs, as the engine does them: its note search with
+//! a retry, and its slur routines for the end levels, CNL and CNR.
 //! Ending brackets (slurs with P8 = 1 or 2) go to the barlines instead.
 //!
 //! The engine collects parameter changes as (parameter, value) pairs in
@@ -20,7 +18,7 @@ const SLUR: i32 = 5;
 const BEAM: i32 = 6;
 const TRILL: i32 = 7;
 const BARLINE: i32 = 14;
-/// The page's right limit (RIGHT, 0x1FBB8B8) for the default page.
+/// The page's right limit (RIGHT) for the default page.
 const RIGHT: f32 = 200.0;
 /// How far right the search for an end moves on.
 const RETRY_STEP: f32 = 2.0;
@@ -152,7 +150,7 @@ pub fn to_line_end(slur: &Draft, barlines: &[Draft], notes: &[Draft], step: f32)
     pairs
 }
 
-/// 0x42E82D: x of the note nearest `x` (the last of equal distances); a note
+/// The x of the note nearest `x` (the last of equal distances); a note
 /// at 0 counts as none.
 fn last_nearest(notes: &[Draft], x: f32) -> Option<f32> {
     let nearest = notes.iter().fold(None, |best: Option<(f32, f32)>, n| {
@@ -165,7 +163,7 @@ fn last_nearest(notes: &[Draft], x: f32) -> Option<f32> {
     nearest.map(|(_, at)| at).filter(|&at| at != 0.0)
 }
 
-/// 0x42D887's use: the level of both tie ends from the chord step `d`.
+/// The level of both tie ends from the chord step `d`.
 fn tie_level(d: i32, curve: f32) -> f32 {
     let above = curve > 0.0;
     let level = if d % 2 == 0 {
@@ -194,7 +192,7 @@ fn amod(x: f32, y: f32) -> f32 {
     x - (x / y).trunc() * y
 }
 
-/// 0x42C60E: an end exactly on an odd step inside the staff moves one step out.
+/// An end exactly on an odd step inside the staff moves one step out.
 fn off_line(level: f32, below: bool) -> f32 {
     if amod(level, 2.0) != 1.0 {
         return level;
@@ -206,7 +204,7 @@ fn off_line(level: f32, below: bool) -> f32 {
     }
 }
 
-/// 0x42E437: how high (above) or low (below) a slur end clears `note`.
+/// How high (above) or low (below) a slur end clears `note`.
 fn clearing_level(note: &Draft, below: bool) -> f32 {
     let n = note.len();
     let v = if n > 3 { amod(note.get(4), 100.0) } else { 0.0 };
@@ -224,7 +222,7 @@ fn clearing_level(note: &Draft, below: bool) -> f32 {
     off + v
 }
 
-/// The ends 0x42C9B0 found: the targets of the left and the right end,
+/// The ends found: the targets of the left and the right end,
 /// whether the item has two ends at all, and whether the right end went to
 /// the left end's note with the left end before it.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -289,7 +287,7 @@ impl<'a> Search<'a> {
         self.pairs.extend([(4, level), (5, level)]);
     }
 
-    /// 0x42E11C: P4 and P5 clear of the end notes and their chords, the
+    /// P4 and P5 clear of the end notes and their chords, the
     /// highest note above, the lowest below.
     fn end_levels(&mut self, first: usize, right: Option<usize>) {
         let below = self.item.get(7) < 0.0;
@@ -312,7 +310,7 @@ impl<'a> Search<'a> {
         }
     }
 
-    /// 0x42D887: of the notes at the first end's x, the step nearest to P4
+    /// Of the notes at the first end's x, the step nearest to P4
     /// (the last of equals).
     fn chord_step(&self, first: usize) -> i32 {
         let Target(note) = &self.targets[first];
@@ -327,7 +325,7 @@ impl<'a> Search<'a> {
             .1
     }
 
-    /// 0x42DAF8: parameter `param` to the target nearest `x` (the first of
+    /// Parameter `param` to the target nearest `x` (the first of
     /// equals); returns the target's index.
     fn pair(&mut self, param: usize, x: f32) -> Option<usize> {
         if let Some(number) = ending(self.item) {
@@ -414,7 +412,7 @@ impl<'a> Search<'a> {
         Some(own + base)
     }
 
-    /// 0x42DAF8 then 0x42D9F9: while the new point lands where the point
+    /// While the new point lands where the point
     /// before did (unless that one was P6 or P12), search 2 units further
     /// right; past the page's right limit the point goes to the limit.
     fn retried_pair(&mut self, param: usize, mut x: f32) -> Option<usize> {

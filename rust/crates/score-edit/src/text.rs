@@ -178,7 +178,7 @@ pub fn set_characters(draft: &mut Draft, text: &[u8]) {
 }
 
 /// P13 of the text item at `index` of `file`: the string's length in P3
-/// units as the engine measures it after drawing (0x42FA58), with the font
+/// units as the engine measures it after drawing, with the font
 /// that is current when the item is drawn.
 pub fn measured_length(file: &MusFile, index: usize) -> f32 {
     let doc = RenderDocument::new(file);

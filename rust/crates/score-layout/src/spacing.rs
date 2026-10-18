@@ -1,10 +1,10 @@
-//! New positions for the master event list (0x4CC470): every duration d gets d^log2(1.5)
+//! New positions for the master event list: every duration d gets d^log2(1.5)
 //! of a common unit, so each doubling of a value gets 1.5 times the space; markers get
 //! fixed widths in staff-size units.
 
 use crate::num::wide;
 
-/// The f32 at 0x7926DC, log2(1.5).
+/// The engine's f32 constant log2(1.5).
 #[allow(clippy::excessive_precision)]
 const EXPONENT: f32 = 0.584_962_487_220_764_2;
 
@@ -59,7 +59,7 @@ pub fn positions(entries: &[f32], size: f32, left: f32, right: f32) -> Vec<f32> 
             }
         })
         .collect();
-    // The width is stored as f32 (0x89FCDC) before the rest of the expression.
+    // The width is stored as f32 before the rest of the expression.
     let width = right - left;
     let unit = ((wide(width) - wide(size) * wide(fixed)) / wide(total)) as f32;
     let mut x = left;

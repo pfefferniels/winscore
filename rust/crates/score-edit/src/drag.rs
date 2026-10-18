@@ -1,12 +1,12 @@
 //! Dragging items with the mouse.
 //!
-//! The engine (0x48F663, analysis/engine/editing.md) sets the dragged item's
-//! position from the cursor on every mouse move: P3 = x / 150, P4 = (y -
-//! level of P4 = 0) / scale step plus a per-item constant, with P4 snapped
-//! to whole steps (halves away from zero) for notes, rests, clefs, keys and
-//! meters. Here the item keeps the offset at which it was grabbed (decision
-//! D8/D9), so the per-item constant cancels: P3 = (150 P3₀ + dx) / 150,
-//! P4 = P4₀ + dy / step, rounded as the engine rounds.
+//! The engine sets the dragged item's position from the cursor on every
+//! mouse move: P3 = x / 150, P4 = (y - level of P4 = 0) / scale step plus a
+//! per-item constant, with P4 snapped to whole steps (halves away from zero)
+//! for notes, rests, clefs, keys and meters. Here the item keeps the offset
+//! at which it was grabbed, so the per-item constant cancels:
+//! P3 = (150 P3₀ + dx) / 150, P4 = P4₀ + dy / step, rounded as the engine
+//! rounds.
 
 use score_render::page::P3_UNIT;
 use score_render::staff::Staff;
@@ -24,8 +24,8 @@ pub struct PagePoint {
     pub y: f64,
 }
 
-/// Which part of a two-point item a drag moves: the engine's move mode
-/// (int 0x78DC30), set by ALL, LFT and RGT.
+/// Which part of a two-point item a drag moves: the engine's move mode,
+/// set by ALL, LFT and RGT.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Ends {
     #[default]

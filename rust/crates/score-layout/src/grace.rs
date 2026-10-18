@@ -1,12 +1,11 @@
-//! Grace notes in the line-up (0x4C5AD8 with 0x4C78F8, 0x4C795B, 0x4C7374): the line-up
+//! Grace notes in the line-up: the line-up
 //! leaves notes and rests with P7 >= 64 out of its events; this pass places every group of
 //! them in front of the note it ornaments. It collects the item before the group (the
 //! "before" anchor), the group, and the item at the next x (the "after" anchor), gives each
 //! a left and a right width, shrinks a group that does not fit between its anchors, and
 //! writes the grace notes' P3 from the after anchor leftwards.
 //!
-//! After disasm-expert's reference model `analysis/engine/experiments/grace.py`. Lists are
-//! 1-based as in the engine; index 0 holds the zero a fresh engine has there.
+//! Lists are 1-based as in the engine; index 0 holds the zero a fresh engine has there.
 
 use std::collections::BTreeMap;
 
@@ -14,7 +13,7 @@ use crate::events::LONG_VALUE;
 use crate::num::{amod, wide};
 use crate::rows::{Row, BARLINE, METER};
 
-/// Accidental widths by P5 mod 10 (0x792638).
+/// Accidental widths by P5 mod 10.
 const ACCIDENTAL: [f32; 12] = [0.0, 1.0, 4.2, 4.6, 4.2, 5.7, 4.6, 0.0, 0.0, 0.0, 0.0, 0.0];
 /// The kind of an anchor that stands for the start or end of the staff.
 const VIRTUAL: i32 = -99;
@@ -56,7 +55,7 @@ pub struct GracePass<'a> {
     steps: &'a BTreeMap<i32, f32>,
     e: Vec<Entry>,
     bars: Vec<(f32, usize)>,
-    /// 0x89FBF0: 0x4C7374 sets no right width for keys, so a key keeps the last one.
+    /// `entry_widths` sets no right width for keys, so a key keeps the last one.
     last_right: f32,
 }
 
@@ -269,7 +268,6 @@ impl<'a> GracePass<'a> {
         }
     }
 
-    /// 0x4C7374
     fn entry_widths(&mut self, k: i32, row: &Row) -> (f32, f32) {
         let n = row.len();
         let mut left = 1.2f32;
@@ -298,7 +296,7 @@ impl<'a> GracePass<'a> {
                 }
                 let accidental = if n > 4 { amod(row.par(5), 10.0) } else { 0.0 };
                 let index = (wide(accidental) + 1.0) as i32;
-                // A negative index reads from the end, as the model's list does.
+                // A negative index reads from the end.
                 let width = ACCIDENTAL[usize::try_from(index.rem_euclid(ACCIDENTAL.len() as i32)).unwrap_or(0)];
                 left = (wide(amod(accidental, 1.0)) * 10.0 + wide(width)) as f32;
                 if left <= 1.0 {
@@ -407,7 +405,7 @@ impl<'a> GracePass<'a> {
         }
     }
 
-    /// 0x4C795B: how much of its width the group before entry c may keep (at most 1), and
+    /// How much of its width the group before entry c may keep (at most 1), and
     /// its before anchor.
     fn fit(&self, c: usize) -> (f32, usize) {
         let mut previous_x = 0.0f32;

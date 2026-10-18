@@ -49,7 +49,7 @@ impl Template {
     }
 }
 
-/// Plain words with fixed defaults, as measured on the engine.
+/// Plain words with the engine's fixed defaults.
 const PLAIN: &[(&str, f32, &[f32])] = &[
     ("REST", 2.0, &[100.0, 0.0, 0.0, 0.0, 1.0]),
     ("BAR", 14.0, &[100.0, 1.0]),

@@ -1,6 +1,5 @@
 //! Edit-mode transformations of lines and hairpins (code 4), slurs and
-//! brackets (code 5) and beams (code 6), after code4.txt–code6.txt, checked
-//! against the engine.
+//! brackets (code 5) and beams (code 6), after code4.txt–code6.txt.
 
 use crate::params::Draft;
 
@@ -110,7 +109,7 @@ pub fn beam_tremolo(draft: &mut Draft, strokes: f32) {
 /// Slurs whose P8 is 1 or more (endings, tuplet brackets) keep their P7 under CR.
 const BRACKETS_FROM: f32 = 1.0;
 
-/// CR on a slur (0x42C51C): 0.9 plus a twentieth of its length (ties a
+/// CR on a slur: 0.9 plus a twentieth of its length (ties a
 /// little shorter) plus a tenth of its rise, downwards for a slur below.
 pub fn default_curve(draft: &mut Draft) {
     let e = |k: usize| draft.get(k);

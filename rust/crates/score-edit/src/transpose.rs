@@ -1,19 +1,16 @@
-//! TR: transposition as WinScore does it (routine 0x55B1F8 and the routines it
-//! calls), reimplemented from the decompilation and checked against the engine.
+//! TR: transposition as WinScore does it.
 //!
-//! The engine first sorts the file (0x4F7808). Then, staff by staff, it
-//! collects the notes and rests of the area and the key signatures up to its
-//! right edge (0x4EBD10), changes the clefs if asked (0x5611DA), adds a key
-//! signature if asked (0x4EC885), moves every note by the scale steps between
-//! the old and the new key and respells it from key tables (0x561B90), drops
-//! accidentals a note now inherits within its bar or across a tie, renames
-//! guitar chords, moves the beams, and refits the slurs to the moved notes
-//! (0x55C373 and 0x55CB57). Key signatures left without accidentals are removed.
+//! The engine first sorts the file. Then, staff by staff, it collects the
+//! notes and rests of the area and the key signatures up to its right edge,
+//! changes the clefs if asked, adds a key signature if asked, moves every
+//! note by the scale steps between the old and the new key and respells it
+//! from key tables, drops accidentals a note now inherits within its bar or
+//! across a tie, renames guitar chords, moves the beams, and refits the slurs
+//! to the moved notes. Key signatures left without accidentals are removed.
 //!
-//! With the stem option the notes go through the refit (0x47C3E8,
-//! score-input) before the slurs are refitted. Last, it justifies every
-//! staff of the area (J, score-layout). Not done here: the enharmonic
-//! change (±99 half steps).
+//! With the stem option the notes go through the refit (score-input) before
+//! the slurs are refitted. Last, it justifies every staff of the area (J,
+//! score-layout). Not done here: the enharmonic change (±99 half steps).
 
 use std::cmp::Ordering;
 
@@ -32,37 +29,37 @@ const BEAM: i32 = 6;
 const GUITAR: i32 = 12;
 const BARLINE: i32 = 14;
 const KEY: i32 = 17;
-/// P1 of an item the engine has marked for deletion (0x55E50B removes them).
+/// P1 of an item the engine has marked for deletion.
 const DELETED: f32 = 13.0;
 /// Cue notes carry 100 in P4.
 const CUE: f32 = 100.0;
 /// P7 of the grace notes that are transposed even when cue notes are not.
 const GRACE_P7: f32 = 65.0;
-/// The engine rewrites only items with 0 <= P3 <= this (0x562FBD with IP2).
+/// The engine rewrites only items with 0 <= P3 <= this.
 const RIGHT_END: f32 = 200.0;
 /// The dialog's enharmonic change, not ported.
 const ENHARMONIC: i32 = 99;
-/// Intervals whose key the engine's table 0x79F26C covers.
+/// Intervals whose key the engine's table covers.
 const MAX_HALF_STEPS: i32 = 30;
 
-/// Scale steps notes move for an interval of n half steps (table 0x79F240).
+/// Scale steps notes move for an interval of n half steps.
 const STEPS_BY_HALF_STEPS: [i32; 12] = [0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6];
-/// The key C major moves to, for -6..=6 half steps (table 0x79F26C).
+/// The key C major moves to, for -6..=6 half steps.
 const KEY_FROM_C: [i32; 13] = [-6, 1, -4, 3, -2, 5, 0, -5, 2, -3, 4, -1, 6];
 /// Letters (C = 0) a key signature alters, in the order sharps and flats are added.
 const SHARP_ORDER: [i32; 7] = [3, 0, 4, 1, 5, 2, 6];
 const FLAT_ORDER: [i32; 7] = [6, 2, 5, 1, 4, 0, 3];
-/// Alteration of an accidental digit (P5 mod 10; table 0x794CBC); 3 is the natural.
+/// Alteration of an accidental digit (P5 mod 10); 3 is the natural.
 const DIGIT_ALTERATION: [i32; 10] = [0, -1, 1, 3, -2, 2, 0, 0, 0, 0];
 const NATURAL: i32 = 3;
-/// Accidental digit for an alteration of -2..=2 (table 0x79F5B8).
+/// Accidental digit for an alteration of -2..=2.
 const ALTERATION_DIGIT: [i32; 5] = [4, 1, 0, 2, 5];
-/// Scale steps from treble to a clef's middle C, by clef type (table 0x79F5C8).
+/// Scale steps from treble to a clef's middle C, by clef type.
 const CLEF_OFFSET: [i32; 5] = [0, -12, -6, -8, -7];
-/// P4 change when a clef changes, at old * 4 + new (table 0x79F504).
+/// P4 change when a clef changes, at old * 4 + new.
 const CLEF_SHIFT: [i32; 20] = [0, 12, 6, 8, -12, 0, -6, -4, -6, 6, 0, 2, -8, 4, -2, 0, 0, 0, 0, 0];
 /// Guitar chord names in P7 (tens the letter, units 1 flat, 2 sharp): semitone of
-/// each letter (table 0x79F1E0) and the name of each semitone (table 0x79F1B0).
+/// each letter and the name of each semitone.
 const GUITAR_SEMITONE: [i32; 12] = [70, 1, 3, 5, 6, 8, 10, 12, -8, -5, -4, -3];
 const GUITAR_NAME: [i32; 13] = [0, 10, 21, 20, 31, 30, 40, 42, 50, 61, 60, 71, 70];
 
@@ -212,7 +209,7 @@ struct Area {
     right: f32,
 }
 
-/// The file as the engine's sort 0x4F7808 leaves it, which TR starts with.
+/// The file as the engine's sort leaves it, which TR starts with.
 fn sorted(items: &[Item]) -> Result<Vec<Row>, Unsupported> {
     let layout = layout::sort(items).map_err(|error| Unsupported::Layout(error.kind))?;
     Ok(rows_of(layout, Some))
@@ -223,8 +220,8 @@ fn rows_of(layout: Layout, source_of: impl Fn(usize) -> Option<usize>) -> Vec<Ro
     layout.source.into_iter().zip(layout.items).map(|(i, item)| Row { draft: Draft::of(&item), source: source_of(i) }).collect()
 }
 
-/// J on each staff `first..=last` over the whole width, as TR ends (0x4B80B7
-/// called once per staff). A staff J gives up on stays as J leaves it.
+/// J on each staff `first..=last` over the whole width, as TR ends (once per
+/// staff). A staff J gives up on stays as J leaves it.
 fn justify_staves(rows: Vec<Row>, first: i32, last: i32) -> Vec<Row> {
     (first..=last).fold(rows, |rows, staff| {
         let items: Vec<Item> = rows.iter().map(|row| row.draft.to_item()).collect();
@@ -276,14 +273,14 @@ fn interval_steps(half_steps: i32) -> i32 {
     }
 }
 
-/// The tonic's letter of a key as 0x562F53 counts it (C = 0, but C# major = 7).
+/// The tonic's letter of a key as the engine counts it (C = 0, but C# major = 7).
 fn tonic_letter(key: i32) -> i32 {
     let k = if key < 0 { key + 7 } else { key };
     let k = if k % 2 != 0 { k + 7 } else { k };
     k / 2
 }
 
-/// The key `half_steps` from `old`, and the scale steps notes move (0x562CC6).
+/// The key `half_steps` from `old`, and the scale steps notes move.
 fn moved_key(old: i32, half_steps: i32) -> (i32, i32) {
     let h = half_steps;
     if h.abs() == 12 {
@@ -322,7 +319,7 @@ fn moved_key(old: i32, half_steps: i32) -> (i32, i32) {
     (new, steps)
 }
 
-/// One of the items 0x4EBD10 lists for a staff.
+/// One of the items the engine lists for a staff.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Entry {
     row: usize,
@@ -355,7 +352,7 @@ impl Kind {
     }
 }
 
-/// What 0x4EBD10 gathers on one staff.
+/// What the engine gathers on one staff.
 #[derive(Debug, Clone, PartialEq, Default)]
 struct StaffItems {
     entries: Vec<Entry>,
@@ -456,7 +453,7 @@ fn mark_bar_starts(rows: &[Row], staff: i32, high: f32, entries: &mut [Entry]) {
     });
 }
 
-/// The shape 0x55C373 records of a note for the slur refit.
+/// The shape the engine records of a note for the slur refit.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct NoteShape {
     x: f32,
@@ -493,7 +490,7 @@ fn note_shapes(rows: &[Row], entries: &[Entry]) -> Vec<NoteShape> {
         .collect()
 }
 
-/// A slur as 0x55C373 records it before the transposition.
+/// A slur as the engine records it before the transposition.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Slur {
     row: usize,
@@ -563,7 +560,7 @@ fn transpose_staff(rows: &mut Vec<Row>, staff: i32, area: Area, how: &Transposit
 }
 
 /// The stem option: the staff's notes in the area through the refit
-/// (0x47C3E8 in mode 2, score-input), which the engine runs between moving
+/// (score-input), which the engine runs between moving
 /// the beams and refitting the slurs. Where the refit gives up, the items
 /// stay as it leaves them.
 fn refit_stems(rows: &mut [Row], staff: i32, area: Area) {
@@ -572,7 +569,7 @@ fn refit_stems(rows: &mut [Row], staff: i32, area: Area) {
     rows.iter_mut().zip(refitted).for_each(|(row, item)| row.draft = Draft::of(&item));
 }
 
-/// Changes the clef of every entry to `new` (0x5611DA): notes keep their
+/// Changes the clef of every entry to `new`: notes keep their
 /// pitch, beams near them move along, keys learn the clef in P6. The staff's
 /// first clef item becomes the clef of the last change made (see
 /// [`Leftover`]), its other clefs are deleted.
@@ -644,7 +641,7 @@ fn has_leading_key(rows: &[Row], staff: i32) -> bool {
         .is_some_and(|row| row.code() == KEY)
 }
 
-/// Appends a key signature (0x4EC885): halfway between the staff's first clef
+/// Appends a key signature: halfway between the staff's first clef
 /// and the item after it, else just right of the staff's leftmost item.
 fn add_key_signature(rows: &mut Vec<Row>, staff: i32, key: i32, clef: i32) {
     let scanned = &rows[..rows.len().saturating_sub(1)];
@@ -663,7 +660,7 @@ fn add_key_signature(rows: &mut Vec<Row>, staff: i32, key: i32, clef: i32) {
     rows.push(Row { draft, source: None });
 }
 
-/// The key context 0x561B90 carries along a staff.
+/// The key context the engine carries along a staff.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct KeyState {
     half_steps: i32,
@@ -787,14 +784,14 @@ fn drop_accidental(draft: &mut Draft) {
     }
 }
 
-/// The ties 0x557EDE walks through: windows of ±3 around each end.
+/// The ties the engine walks through: windows of ±3 around each end.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct TieWindow {
     start: (f32, f32),
     end: (f32, f32),
 }
 
-/// The second pass of 0x561B90: a note that had no accidental loses the one
+/// The second pass of the respelling: a note that had no accidental loses the one
 /// the transposition gave it when an earlier note of the same bar, level and
 /// clef sets it, or when it ends a tie from a note of its level.
 fn drop_inherited_accidentals(rows: &mut [Row], entries: &[Entry], ties: &[usize], how: &Transposition) {
@@ -912,7 +909,7 @@ fn nearest(notes: &[NoteShape], x: f32) -> usize {
         .0
 }
 
-/// Slurs refitted to the transposed notes nearest their ends (0x55CB57).
+/// Slurs refitted to the transposed notes nearest their ends.
 fn refit(rows: &mut [Row], slurs: &[Slur], before: &[NoteShape], after: &[NoteShape]) {
     if before.is_empty() || before.len() != after.len() {
         return;
@@ -947,7 +944,7 @@ fn refit(rows: &mut [Row], slurs: &[Slur], before: &[NoteShape], after: &[NoteSh
     });
 }
 
-/// Slots of the engine's note table (0x9A6864 and its companions).
+/// Slots of the engine's note table.
 const NOTE_SLOTS: usize = 200;
 
 /// The lowest level of the chord at note `start`, scanning on while notes lie

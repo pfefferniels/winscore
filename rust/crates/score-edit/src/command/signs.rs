@@ -1,6 +1,6 @@
 //! Edit-mode transformations of pedals (code 7), symbols (code 9), boxes
 //! (code 12), key signatures (code 17) and meters (code 18), after the
-//! WinScore help and checked against the engine.
+//! WinScore help.
 
 use crate::params::Draft;
 

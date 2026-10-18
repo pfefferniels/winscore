@@ -309,7 +309,7 @@ impl Run<'_, '_> {
         Ok(())
     }
 
-    /// FLI/FLN/FLU/FLD on `region` (0x494302): the file sorted, then each
+    /// FLI/FLN/FLU/FLD on `region`: the file sorted, then each
     /// staff's notes refitted (score-input); staves the engine gives up on
     /// stay as it leaves them and are reported.
     fn refit(&mut self, region: &Region, mode: score_input::RefitMode) {

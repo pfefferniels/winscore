@@ -1,4 +1,4 @@
-//! The line-up proper (0x4C9510 with 0x4C8290): the staves' events merged into one master
+//! The line-up proper: the staves' events merged into one master
 //! list, spaced anew, and every staff mapped onto the new positions segment by segment;
 //! afterwards clefs inside the line and the items that hang between others (codes 4-7,
 //! 9-13, 15, 16) are placed again.
@@ -16,7 +16,7 @@ use crate::LayoutErrorKind;
 const CLEF_MARKER: f32 = -3.0;
 const LOOP_LIMIT: usize = 100_000;
 
-/// An item whose position the interpolated items follow (0x4CB010).
+/// An item whose position the interpolated items follow.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Anchor {
     staff: i32,
@@ -52,7 +52,7 @@ pub struct Lineup<'a> {
     right: f32,
     steps: BTreeMap<i32, f32>,
     anchors: Vec<Anchor>,
-    /// Every staff's entries and positions one after the other (0x1E9F4F4, 0x1E9D5B4).
+    /// Every staff's entries and positions one after the other.
     saved_e: Vec<f32>,
     saved_x: Vec<f32>,
     /// Staff -> its start in `saved_e` and `saved_x`.
@@ -241,7 +241,7 @@ impl<'a> Lineup<'a> {
             .unzip()
     }
 
-    /// 0x4C8290: every staff mapped onto the new positions, then the clefs inside the line.
+    /// Every staff mapped onto the new positions, then the clefs inside the line.
     fn apply(&mut self) -> Result<(), LayoutErrorKind> {
         let (lo, hi) = (self.lo, self.hi);
         for row in self.rows.iter_mut() {
@@ -269,7 +269,7 @@ impl<'a> Lineup<'a> {
         Ok(())
     }
 
-    /// 0x4CC8A9: the staff's events against the master list; master markers the staff
+    /// The staff's events against the master list; master markers the staff
     /// lacks get the midpoint of the staff's neighbouring positions. Returns the master
     /// index the staff starts at.
     fn align(&self, staff: i32) -> Result<Option<Aligned>, LayoutErrorKind> {
@@ -451,7 +451,7 @@ impl<'a> Lineup<'a> {
         Ok(true)
     }
 
-    /// 0x49B1D8 with 0x49BB13 (mode -1): P3 in [old0, old1] maps linearly onto
+    /// P3 in [old0, old1] maps linearly onto
     /// [new0, new1]; moved values are parked 1000 higher until the staff is done.
     fn move_segment(&mut self, staff: i32, (old0, old1): (f32, f32), (new0, new1): (f32, f32), moved: &mut BTreeSet<usize>) {
         let low = old0 - 0.001;
@@ -467,8 +467,8 @@ impl<'a> Lineup<'a> {
         }
     }
 
-    /// End of 0x4C8290: a clef after the start of the line goes 0.3 staff steps (plus one)
-    /// before the note or barline it precedes, or halfway when there is no room.
+    /// End of the mapping: a clef after the start of the line goes 0.3 staff steps (plus
+    /// one) before the note or barline it precedes, or halfway when there is no room.
     fn place_clefs(&mut self, threshold: f32) {
         let (lo, hi) = (self.lo, self.hi);
         let mut clefs = Vec::new();
@@ -522,7 +522,7 @@ impl<'a> Lineup<'a> {
         }
     }
 
-    /// 0x4CB010: the x parameters of codes 4-7, 9-13, 15 and 16 follow their anchors.
+    /// The x parameters of codes 4-7, 9-13, 15 and 16 follow their anchors.
     fn interpolate_others(&mut self) {
         let (lo, hi) = (self.lo, self.hi);
         for i in 0..self.rows.len() {
@@ -559,7 +559,7 @@ impl<'a> Lineup<'a> {
         }
     }
 
-    /// 0x4CB2EA: parameter `k` of row `i` moves with the anchors around it, proportionally.
+    /// Parameter `k` of row `i` moves with the anchors around it, proportionally.
     fn interpolate(&mut self, i: usize, k: usize) {
         let x = self.rows[i].par(k);
         let staff = self.rows[i].staff();

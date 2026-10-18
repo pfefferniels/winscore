@@ -1,6 +1,5 @@
 //! AUTO, AUTOX and SPLn on a beam in edit mode: the secondary beams from
-//! the notes' durations (0x417738 with 0x419498), then the stem pass.
-//! Reimplemented after disasm-expert's `experiments/auto_beam.py`.
+//! the notes' durations, then the stem pass.
 //!
 //! The smallest beam count of the notes becomes the beam's P7 units digit;
 //! the next level's first run goes into P10..P12, the run after it into
@@ -156,7 +155,7 @@ pub fn run(items: &[Draft], edit: usize, word: Word) -> Option<Outcome> {
     Some(Outcome { items: run.items, inserted: run.inserted, stem_beam })
 }
 
-/// The selection sort of 0x417738: again and again the last row with the smallest x.
+/// The engine's selection sort: again and again the last row with the smallest x.
 fn last_of_smallest_first(rows: &[Row]) -> Vec<Row> {
     let mut left: Vec<Row> = rows.to_vec();
     std::iter::from_fn(|| {
@@ -347,7 +346,7 @@ impl AutoBeam {
         0
     }
 
-    /// AUTOX's P9 (0x419498), written from the edit buffer, which holds the
+    /// AUTOX's P9, written from the edit buffer, which holds the
     /// last item written; the stem pass works with that buffer too.
     fn finish(&mut self, all_stems: bool, target: Target) -> Draft {
         let mut length = self.item(target).len();
@@ -367,7 +366,7 @@ impl AutoBeam {
     }
 }
 
-/// 0x419498: digits of P9 for the beam's ends (hundreds), second beam (tens)
+/// Digits of P9 for the beam's ends (hundreds), second beam (tens)
 /// and third beam (units) where a note with the opposite stem sits: 1 at the
 /// start, 2 at the end, 3 when marked twice.
 pub fn stem_side_flags(beam: &Draft, items: &[Draft]) -> f32 {

@@ -1,11 +1,10 @@
-//! J, the justification (0x4B6F4A): every staff of the system gets columns with the room
-//! their items need on either side (0x4BCD68), the staves' columns are merged (0x4B7468),
-//! and gaps that are too narrow widen at the expense of gaps with room to spare (0x4B5DB0).
+//! J, the justification: every staff of the system gets columns with the room their items
+//! need on either side, the staves' columns are merged, and gaps that are too narrow widen
+//! at the expense of gaps with room to spare.
 //!
-//! After disasm-expert's reference model `analysis/engine/experiments/justify.py`. The
-//! engine keeps some of 0x4BCD68's values in globals from one item and one staff to the
-//! next (and mixes item store offsets with list indices in one of them); `State` holds
-//! those, starting from zero as in a fresh engine.
+//! The engine keeps some of the column pass's values in globals from one item and one
+//! staff to the next (and mixes item store offsets with list indices in one of them);
+//! `State` holds those, starting from zero as in a fresh engine.
 
 use std::collections::BTreeMap;
 
@@ -13,7 +12,7 @@ use crate::events::p14_or_p15;
 use crate::num::{amod, fmod, trunc, wide};
 use crate::rows::{Row, BARLINE, BEAM, CLEF, KEY, METER, NOTE, REST, STAFF};
 
-/// The f32 table around 0x792554, indexed from -5: shifted head, wide head, head, then the
+/// The engine's f32 table, indexed from -5: shifted head, wide head, head, then the
 /// accidental widths by P5 mod 10 (9 more above P5 = 100).
 const TABLE: [f32; 24] = [
     0.0, 0.0, 0.0, 2.833, 5.0, 4.5, 2.0, 2.4, 2.1, 4.0, 2.5, 2.0, 3.4, 2.0, 2.8, 4.1, 4.6, 4.1, 6.2, 4.5, 0.0, 0.0, 0.0, 0.0,
@@ -21,7 +20,7 @@ const TABLE: [f32; 24] = [
 const HEAD: f32 = 4.5;
 const WIDE_HEAD: f32 = 5.0;
 const SHIFTED_HEAD: f32 = 2.833;
-/// Left room after a clef, barline, key or meter on small staves (0x78B490..).
+/// Left room after a clef, barline, key or meter on small staves.
 const AFTER_CLEF: f32 = 1.8;
 const AFTER_BARLINE: f32 = 1.5;
 const AFTER_KEY: f32 = 2.8;
@@ -44,7 +43,7 @@ fn tenths(value: f32) -> f32 {
 }
 
 /// The parameters J may move, as (1-based item, parameter); `None` once a stretch has
-/// handled it (0x49B1D8 in mode 0).
+/// handled it.
 struct Selection {
     refs: Vec<Option<(usize, usize)>>,
 }
@@ -112,10 +111,10 @@ fn select_box(rows: &mut [Row], (lo, hi): (i32, i32), (x0, x1): (f32, f32), righ
     Selection { refs }
 }
 
-/// Globals of 0x4BCD68 that carry over between items and staves.
+/// Globals of the column pass that carry over between items and staves.
 #[derive(Default)]
 struct State {
-    /// The P array 0x1C58924.. (P3..P14 of the item loaded last).
+    /// The P array (P3..P14 of the item loaded last).
     p: [f32; 15],
     p_staff: i32,
     /// Items before it are ignored (except barlines); set from a column index.
@@ -131,7 +130,7 @@ struct State {
 }
 
 impl State {
-    /// 0x4B6CED: P3..P14 into the P array (zeros beyond the item); returns the length.
+    /// P3..P14 into the P array (zeros beyond the item); returns the length.
     fn load(&mut self, row: &Row) -> usize {
         for k in 3..=14 {
             self.p[k] = if k <= row.len().min(14) { row.par(k) } else { 0.0 };
@@ -145,7 +144,7 @@ impl State {
     }
 }
 
-/// 0x4B6818: left and right need of a barline; `p[8]` holds the size factor.
+/// Left and right need of a barline; `p[8]` holds the size factor.
 fn barline_widths(p: &[f32; 15], length: usize, prev: i32) -> (f32, f32) {
     let mut right = 2.5f32;
     let mut left = 1.0f32;
@@ -186,7 +185,6 @@ fn barline_widths(p: &[f32; 15], length: usize, prev: i32) -> (f32, f32) {
     (left, right)
 }
 
-/// 0x4B6657
 fn rest_widths(row: &Row, p: &mut [f32; 15]) -> (f32, f32) {
     let mut left = 0.0f32;
     let mut right = 4.5f32;
@@ -216,7 +214,6 @@ fn rest_widths(row: &Row, p: &mut [f32; 15]) -> (f32, f32) {
     (left, right)
 }
 
-/// 0x4B6C51
 fn key_widths(p: &[f32; 15], prev: i32) -> (f32, f32) {
     let left = if prev == NOTE { 2.0 } else { 0.0 };
     let count = (wide(p[5]) - (wide(p[5]) / 100.0).trunc() * 100.0).abs() as f32;
@@ -225,7 +222,7 @@ fn key_widths(p: &[f32; 15], prev: i32) -> (f32, f32) {
     (left, ((wide(count) - 1.0) * wide(2.8) * wide(scale) + wide(right)) as f32)
 }
 
-/// 0x4B6A52 (meters); a meter after a barline shortens the barline's right need.
+/// A meter after a barline shortens the barline's right need.
 fn meter_widths(row: &Row, prev: i32, rights: &mut [f32]) -> (f32, f32) {
     let mut left = 0.0f32;
     let mut right = 7.5f32;
@@ -269,7 +266,7 @@ struct Columns {
     need: Vec<f32>,
 }
 
-/// 0x4BCD68 for one staff.
+/// The column pass for one staff.
 struct StaffColumns<'a, 'b> {
     rows: &'a mut [Row],
     st: &'b mut State,
@@ -491,7 +488,7 @@ impl StaffColumns<'_, '_> {
         self.st.g938 + head
     }
 
-    /// LAB_004BDEB1: the left and right needs of the chord that starts at collected item k.
+    /// The left and right needs of the chord that starts at collected item k.
     fn chord(&mut self, k: usize, w: usize, length: usize, head: f32, p4m: f32, p6i: i32) -> (usize, f32, f32) {
         let n = self.n;
         if self.ledger != self.st.ledger_cur {
@@ -725,7 +722,6 @@ impl StaffColumns<'_, '_> {
         (left - t, t + right)
     }
 
-    /// LAB_004BE9B2
     fn add_to_column(&mut self, code: i32, left: f32, right: f32) {
         let x = self.st.p[3];
         let last_col = self.cols[self.cols.len() - 1];
@@ -764,7 +760,7 @@ impl StaffColumns<'_, '_> {
     }
 }
 
-/// 0x4B7468: the part of a gap's need up to `cut`, proportional, at least `least`.
+/// The part of a gap's need up to `cut`, proportional, at least `least`.
 fn split_gap(out: &mut Columns, cut: f32, other: f32, widths: &mut [f32], index: usize, least: f32) {
     let prev = out.x[out.x.len() - 1];
     let mut part = (((wide(cut) - wide(prev)) * wide(widths[index])) / (wide(other) - wide(prev))) as f32;
@@ -776,7 +772,7 @@ fn split_gap(out: &mut Columns, cut: f32, other: f32, widths: &mut [f32], index:
     out.x.push(cut);
 }
 
-/// The two-pointer merge of 0x4B6F4A; lists start with the box start.
+/// The two-pointer merge of J; lists start with the box start.
 fn merge_columns(master: Columns, staff: Columns, x_left: f32, x_right: f32) -> Columns {
     let (mx, mut mw) = (master.x, master.need);
     let (cx, mut cw) = (staff.x, staff.need);
@@ -822,7 +818,7 @@ fn merge_columns(master: Columns, staff: Columns, x_left: f32, x_right: f32) -> 
     }
 }
 
-/// 0x4B5DB0 with 0x4B63CD (stretch inside a gap), 0x4B6593 (shift from x) and 0x4B6365.
+/// The gap widening, with the stretch inside a gap and the shift from x.
 struct Distributor<'a> {
     rows: &'a mut [Row],
     selection: Selection,
@@ -845,8 +841,7 @@ impl Distributor<'_> {
         if span == 0.0 {
             return;
         }
-        // The numerator is stored as f32 before the division (visible only in the
-        // disassembly of 0x4B63CD).
+        // The numerator is stored as f32 before the division.
         let mut factor = (self.amount + span) / span;
         if factor <= 0.2 {
             factor = 1.0;
@@ -925,7 +920,7 @@ impl Distributor<'_> {
     }
 }
 
-/// J on staves `lo..=hi` between `x_left` and `x_right` (0x4B6F4A).
+/// J on staves `lo..=hi` between `x_left` and `x_right`.
 pub fn justify(rows: &mut [Row], (lo, hi): (i32, i32), (x_left, x_right): (f32, f32), right: f32, steps: &BTreeMap<i32, f32>) {
     let selection = select_box(rows, (lo, hi), (x_left, x_right), right);
     let words: Vec<usize> = std::iter::once(0)
