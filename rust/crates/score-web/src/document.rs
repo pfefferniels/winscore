@@ -18,7 +18,7 @@ const STAFF_CODE: i32 = 8;
 const CLEF_CODE: i32 = 3;
 
 fn render_page(file: &MusFile) -> DisplayList {
-    render(&score_render::Document::new(file))
+    render(&crate::drawn(file))
 }
 
 /// Characters of a text item as WinScore shows them (Windows-1252).

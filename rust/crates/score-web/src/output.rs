@@ -8,7 +8,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{EncodedList, Score};
 
-const PRINT: Options = Options { medium: Medium::Print, staff_numbers: false };
+const PRINT: Options = Options { medium: Medium::Print, staff_numbers: false, ..Options::REFINED };
 
 fn print_list(file: &MusFile) -> (DisplayList, Viewport) {
     let doc = Document::with_options(file, PRINT);
@@ -49,7 +49,7 @@ mod tests {
     #[test]
     fn print_leaves_out_staff_numbers() {
         let file = mozart();
-        let screen = render(&Document::new(&file));
+        let screen = render(&crate::drawn(&file));
         let (print, _) = print_list(&file);
         let staff_number_runs = |list: &DisplayList| list.texts.iter().filter(|t| t.font == "Helvetica-Narrow").count();
         assert!(staff_number_runs(&screen) > 0);

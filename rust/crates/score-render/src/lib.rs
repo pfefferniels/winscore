@@ -45,8 +45,8 @@ pub mod text;
 pub mod trig;
 pub mod units;
 
-pub use display::{Colour, DisplayList, ItemId, PlacedText, Point, Shape, ShapeKind, TextRun, UNITS_PER_INCH};
-pub use document::{Document, ItemRef, Medium, Options};
+pub use display::{Colour, DisplayList, ItemId, PlacedText, Point, Shape, ShapeKind, TextRun, PEN, UNITS_PER_INCH};
+pub use document::{Document, ItemRef, Medium, Options, Style};
 
 use canvas::{Canvas, Stream};
 

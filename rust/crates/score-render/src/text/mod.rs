@@ -414,6 +414,7 @@ impl<'c> Text<'c> {
             weight,
             italic,
             underline: false,
+            outline: false,
         }
     }
 

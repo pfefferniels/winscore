@@ -122,6 +122,7 @@ fn number_style() -> TextStyle {
         weight: 400,
         italic: false,
         underline: false,
+        outline: false,
     }
 }
 

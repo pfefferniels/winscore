@@ -481,6 +481,7 @@ mod tests {
             kind: ShapeKind::Stroke,
             colour: Colour::BLACK,
             paths: vec![points.iter().map(|&(x, y)| Point::new(x, y)).collect()],
+            width: 0.0,
             source: None,
         }
     }
@@ -509,6 +510,7 @@ mod tests {
             weight: 400,
             italic: false,
             underline: false,
+            outline: false,
             strings: vec![PlacedText {
                 origin: Point::new(x, y),
                 text: s.into(),

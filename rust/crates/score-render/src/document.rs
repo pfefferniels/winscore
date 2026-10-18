@@ -21,16 +21,39 @@ pub enum Medium {
     Print,
 }
 
+/// How closely the picture follows WinScore.
+///
+/// `Engine` reproduces the engine's display list to ±1 unit, artefacts
+/// included; the fixtures in `rust/fixtures/` test it. `Refined` keeps every
+/// item where the engine puts it but draws it better: lines with real
+/// widths instead of shifted copies, smoother curves, and fixes for engine
+/// bugs that only spoil the picture. What the engine computes for layout
+/// and writes into the file (P13 of texts, spacing) is the same in both.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Style {
+    #[default]
+    Engine,
+    Refined,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Options {
     pub medium: Medium,
     /// Staff numbers at the left edge (screen only; WinScore's NMO toggles them).
     pub staff_numbers: bool,
+    pub style: Style,
+}
+
+impl Options {
+    /// The engine's screen output.
+    pub const ENGINE: Options = Options { medium: Medium::Screen, staff_numbers: true, style: Style::Engine };
+    /// The refined screen output.
+    pub const REFINED: Options = Options { style: Style::Refined, ..Options::ENGINE };
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Self { medium: Medium::Screen, staff_numbers: true }
+        Self::ENGINE
     }
 }
 
@@ -138,6 +161,11 @@ impl<'a> Document<'a> {
 
     pub fn screen(&self) -> bool {
         self.options.medium == Medium::Screen
+    }
+
+    /// Whether to draw in the [`Style::Refined`] style.
+    pub fn refined(&self) -> bool {
+        self.options.style == Style::Refined
     }
 
     /// The item's reference point from P3, P4 (and P15), in internal

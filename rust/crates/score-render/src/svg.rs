@@ -170,6 +170,7 @@ mod tests {
                 kind: ShapeKind::Stroke,
                 colour: Colour::BLACK,
                 paths: vec![vec![Point::new(10, 20), Point::new(30, 20)]],
+                width: 0.0,
                 source: Some(ItemId(3)),
             }],
             texts: vec![],

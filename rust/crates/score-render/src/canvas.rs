@@ -50,19 +50,21 @@ impl Stream {
     }
 
     /// emit_points 0x54A69C: a start right after a start replaces it.
-    fn write(&mut self, at: Point, pen: Pen, colour: Colour, source: ItemId) {
+    /// `width` is the pen width of a shape this point starts.
+    fn write(&mut self, at: Point, pen: Pen, colour: Colour, width: f32, source: ItemId) {
         let previous_started = self.last_pen.is_some_and(|p| p != Pen::Continue);
         if pen != Pen::Continue && previous_started {
             self.drop_last_point();
         }
         let shapes = &mut self.list.shapes;
+        let start = |kind| Shape { kind, colour, paths: vec![vec![at]], width, source: Some(source) };
         match (pen, shapes.last_mut()) {
             (Pen::Continue, Some(open)) => open.paths.last_mut().expect("shapes have paths").push(at),
             (Pen::SubPath, Some(open)) => open.paths.push(vec![at]),
-            (Pen::Stroke, _) => shapes.push(shape(ShapeKind::Stroke, at, colour, source)),
+            (Pen::Stroke, _) => shapes.push(start(ShapeKind::Stroke)),
             // A stream that starts without an object start: the shell treats
             // any first tag other than a polyline start as a filled object.
-            (Pen::Fill | Pen::Continue | Pen::SubPath, _) => shapes.push(shape(ShapeKind::Fill, at, colour, source)),
+            (Pen::Fill | Pen::Continue | Pen::SubPath, _) => shapes.push(start(ShapeKind::Fill)),
         }
         self.last_pen = Some(pen);
     }
@@ -79,10 +81,6 @@ impl Stream {
     }
 }
 
-fn shape(kind: ShapeKind, at: Point, colour: Colour, source: ItemId) -> Shape {
-    Shape { kind, colour, paths: vec![vec![at]], source: Some(source) }
-}
-
 /// Font attributes of a text run, everything but its strings and colour.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextStyle {
@@ -96,6 +94,8 @@ pub struct TextStyle {
     pub weight: i32,
     pub italic: bool,
     pub underline: bool,
+    /// Outlined letters, see [`TextRun::outline`].
+    pub outline: bool,
 }
 
 /// One string of a text record, at the engine's internal text position.
@@ -110,6 +110,8 @@ pub struct Canvas<'a> {
     source: ItemId,
     offset: Point,
     buffer: Vec<BufferPoint>,
+    /// Pen widths set with [`Canvas::set_width`]: (buffer index, width).
+    widths: Vec<(usize, f32)>,
     pub colour: Colour,
 }
 
@@ -117,7 +119,16 @@ impl<'a> Canvas<'a> {
     /// A canvas for an item on staff `staff`; points of items on the recto
     /// page are shifted right when they are flushed.
     pub fn new(stream: &'a mut Stream, source: ItemId, staff: i32, colour: Colour) -> Self {
-        Self { stream, source, offset: page_offset(staff), buffer: Vec::new(), colour }
+        Self { stream, source, offset: page_offset(staff), buffer: Vec::new(), widths: Vec::new(), colour }
+    }
+
+    /// The pen width, in engine units, of the shapes started from here on
+    /// (0, the default, is the output's pen, [`crate::display::PEN`]). The
+    /// engine has no such width, so only [`crate::Style::Refined`] sets it.
+    pub fn set_width(&mut self, width: f32) {
+        let at = self.buffer.len();
+        self.widths.retain(|&(i, _)| i < at);
+        self.widths.push((at, width));
     }
 
     pub fn source(&self) -> ItemId {
@@ -164,8 +175,13 @@ impl<'a> Canvas<'a> {
     /// Writes the buffered points to the stream, as the engine does after each item.
     pub fn flush(&mut self) {
         let (offset, colour, source) = (self.offset, self.colour, self.source);
-        self.buffer.drain(..).for_each(|p| {
-            self.stream.write(p.at.shifted(offset.x, offset.y), p.pen, colour, source);
+        let mut widths = self.widths.drain(..).peekable();
+        let mut width = 0.0;
+        self.buffer.drain(..).enumerate().for_each(|(i, p)| {
+            while let Some((_, w)) = widths.next_if(|&(at, _)| at <= i) {
+                width = w;
+            }
+            self.stream.write(p.at.shifted(offset.x, offset.y), p.pen, colour, width, source);
         });
     }
 
@@ -188,6 +204,7 @@ impl<'a> Canvas<'a> {
             weight: style.weight,
             italic: style.italic,
             underline: style.underline,
+            outline: style.outline,
             strings,
             source: Some(self.source),
         });
@@ -225,6 +242,20 @@ mod tests {
         assert_eq!(shapes[1].kind, ShapeKind::Fill);
         assert_eq!(shapes[1].paths.len(), 2);
         assert_eq!(shapes[1].paths[1][0], Point::new(2001, 26949));
+    }
+
+    #[test]
+    fn widths_apply_to_the_shapes_started_after_them() {
+        let mut stream = Stream::default();
+        let mut canvas = Canvas::new(&mut stream, ItemId(0), 1, Colour::BLACK);
+        canvas.segment(Pos::new(0.0, 0.0), Pos::new(1.0, 0.0));
+        canvas.set_width(40.0);
+        canvas.segment(Pos::new(0.0, 1.0), Pos::new(1.0, 1.0));
+        canvas.set_width(0.0);
+        canvas.fill([[Pos::new(0.0, 2.0), Pos::new(1.0, 2.0), Pos::new(1.0, 3.0)]]);
+        canvas.flush();
+        let widths: Vec<f32> = stream.list.shapes.iter().map(|s| s.width).collect();
+        assert_eq!(widths, [0.0, 40.0, 0.0]);
     }
 
     #[test]

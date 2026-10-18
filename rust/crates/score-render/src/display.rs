@@ -9,6 +9,12 @@
 /// Engine units per inch.
 pub const UNITS_PER_INCH: i32 = 4000;
 
+/// The pen that draws polylines and outlines filled shapes whose
+/// [`Shape::width`] is 0, in engine units: 1/150 inch, the width SCORE's
+/// PostScript prologue sets with `wdl lw` (two dots at 300 dpi). Outputs
+/// draw it at least one device pixel wide.
+pub const PEN: f32 = 4000.0 / 150.0;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Point {
     pub x: i32,
@@ -55,11 +61,15 @@ pub enum ShapeKind {
     Fill,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Shape {
     pub kind: ShapeKind,
     pub colour: Colour,
     pub paths: Vec<Vec<Point>>,
+    /// Width in engine units of the pen that draws a polyline or outlines a
+    /// filled shape; 0 is the output's default pen ([`PEN`]). The engine's
+    /// own output always has 0: it draws with a one-unit pen.
+    pub width: f32,
     pub source: Option<ItemId>,
 }
 
@@ -85,6 +95,8 @@ pub struct TextRun {
     pub weight: i32,
     pub italic: bool,
     pub underline: bool,
+    /// Outlined letters (SCORE's `__nn` fonts): stroked with the pen, not filled.
+    pub outline: bool,
     pub strings: Vec<PlacedText>,
     pub source: Option<ItemId>,
 }

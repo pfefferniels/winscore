@@ -412,7 +412,7 @@ pub fn preview(file: &MusFile, line: &InputLine, motives: &Motives, pass: usize)
     let mut combined = file.clone();
     let first = combined.items.len();
     combined.items.extend(run.items.iter().cloned());
-    let doc = score_render::Document::new(&combined);
+    let doc = crate::drawn(&combined);
     let mut list = DisplayList::default();
     for index in first..combined.items.len() {
         if let Some(item) = doc.item(ItemId(index as u32)) {
