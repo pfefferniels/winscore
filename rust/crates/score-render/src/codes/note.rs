@@ -214,7 +214,12 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     if note.accidental != 0 {
         accidental(doc, item, &note, canvas);
     }
-    let stem_length = if note.stem == Stem::None { unwritten_stem_length(item) } else { stem(doc, item, &note, canvas) };
+    let stem_length = match note.stem {
+        // As for P14 >= 0, which the engine reads as a length of (about) 0.
+        Stem::None if doc.refined() => 0.0,
+        Stem::None => unwritten_stem_length(item),
+        _ => stem(doc, item, &note, canvas),
+    };
     if ip(item, 9) >= 10 {
         dots(doc, item, &note, canvas);
     }
@@ -235,7 +240,8 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
 
 /// The stem length the marks read when no stem routine ran: the stem
 /// routine keeps its f32 length in the IP14 slot, so without it the marks
-/// read trunc(P14)'s bits as a float (0 for P14 = 0, NaN when negative).
+/// read trunc(P14)'s bits as a float (0 for P14 = 0, NaN when negative,
+/// which loses the mark; the refined style reads 0 throughout).
 fn unwritten_stem_length(item: ItemRef<'_>) -> f64 {
     f64::from(f32::from_bits(ip(item, 14) as u32))
 }
@@ -440,4 +446,57 @@ fn dots(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
         glyph::clef(doc, item, canvas, DOT_SYMBOL, Pos::new(x, y), (size, size), note.step);
         real(note.unit * 13.0 + x)
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::display::{ItemId, Point, Shape};
+    use crate::document::Options;
+    use score_format::{Item, MusFile, Word};
+
+    /// A size-1 staff 1, then `items`.
+    fn file(items: &[&[f32]]) -> MusFile {
+        let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
+        let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
+        bytes.extend(trailer.iter().flat_map(|w| w.to_le_bytes()));
+        let mut file = MusFile::parse(&bytes).expect("an empty file parses");
+        let staff: &[f32] = &[8.0, 1.0, 0.0, 0.0, 1.0];
+        let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
+        file.items = std::iter::once(staff).chain(items.iter().copied()).map(words).collect();
+        file
+    }
+
+    /// The shapes item `n` draws.
+    fn shapes(file: &MusFile, options: Options, n: u32) -> Vec<Shape> {
+        let list = crate::render(&Document::with_options(file, options));
+        list.shapes.into_iter().filter(|s| s.source == Some(ItemId(n))).collect()
+    }
+
+    fn points(shape: &Shape) -> impl Iterator<Item = Point> + '_ {
+        shape.paths.iter().flatten().copied()
+    }
+
+    /// The middle of a shape's bounding box.
+    fn centre(shape: &Shape) -> (i32, i32) {
+        let (xs, ys): (Vec<i32>, Vec<i32>) = points(shape).map(|p| (p.x, p.y)).unzip();
+        let mid = |v: &[i32]| (v.iter().min().unwrap() + v.iter().max().unwrap()) / 2;
+        (mid(&xs), mid(&ys))
+    }
+
+    /// A stemless note with a staccato dot on the stem side (P11 = -7).
+    fn stemless_staccato(p14: f32) -> MusFile {
+        file(&[&[1.0, 1.0, 20.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -7.0, 0.0, 0.0, p14]])
+    }
+
+    #[test]
+    fn marks_of_stemless_notes_survive_a_negative_p14() {
+        let lowest = |options| shapes(&stemless_staccato(-1.0), options, 1).iter().flat_map(points).map(|p| p.y).min();
+        assert!(lowest(Options::ENGINE) < Some(-1_000_000), "the engine loses the mark");
+        let [_, moved] = &shapes(&stemless_staccato(-1.0), Options::REFINED, 1)[..] else { panic!("head and mark") };
+        let [_, unmoved] = &shapes(&stemless_staccato(0.0), Options::REFINED, 1)[..] else { panic!("head and mark") };
+        let (moved, unmoved) = (centre(moved), centre(unmoved));
+        assert_eq!(moved.0, unmoved.0);
+        assert!((unmoved.1 - moved.1 - 175).abs() <= 1, "P14 = -1 lowers the mark a scale step: {moved:?} {unmoved:?}");
+    }
 }
