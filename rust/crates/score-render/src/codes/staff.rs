@@ -3,8 +3,9 @@
 //! P3/P6 left and right end (P6 = 0 is 200), P4 displacement in scale steps,
 //! P5 size (or P14 = staff height in cm), P7 lines, P8 an extra line P8
 //! inches above the bottom line (undocumented), P10 height above a reference
-//! staff, P12 = 1 hides the staff number. P11 (thickness) only acts in print.
-//! Every line is its own one-unit segment, drawn bottom to top.
+//! staff, P12 = 1 hides the staff number. P11 (thickness) only acts in print,
+//! and in the refined style. Every line is its own segment, drawn bottom to
+//! top.
 
 use std::iter::successors;
 
@@ -12,9 +13,10 @@ use crate::canvas::{Canvas, TextString, TextStyle};
 use crate::colour::SCREEN_INVISIBLE;
 use crate::display::{Colour, Point, UNITS_PER_INCH};
 use crate::document::{Document, ItemRef};
+use crate::geometry::print_width;
 use crate::page::{self, RECTO_SHIFT};
 use crate::staff::Staff;
-use crate::units::{nint, real, Pos};
+use crate::units::{nint, real, trunc, Pos};
 
 /// Which lines of a normal staff are drawn (P7).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -72,11 +74,37 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     }
     let space = 2.0 * staff.scale_step();
     let first = real(staff.bottom + f64::from(lines.first) * space);
+    let pixels = if doc.refined() { print_pixels(item, &staff) } else { 0 };
+    if pixels != 0 {
+        canvas.set_width(print_width(pixels as f32));
+    }
     successors(Some(first), |y| Some(real(y + space)))
         .take(lines.count.max(0) as usize)
         .for_each(|y| segment(canvas, left, right, y));
+    if pixels != 0 {
+        canvas.set_width(0.0);
+    }
     if doc.screen() && doc.options.staff_numbers && item.p(12) != 1.0 {
         draw_number(&staff, left, canvas);
+    }
+}
+
+/// Staves smaller than this get lines a print pixel thinner when P11 is 0.
+const THIN_STAFF: f32 = 0.65;
+/// P11 = 99: lines of the print command's thickness, as for P11 = 0.
+const PRINT_THICKNESS: i32 = 99;
+
+/// The print pixels draw_staff 0x545140 adds to the lines through the
+/// print-width marker 0x4D4ED2: IP11, or -1 on staves smaller than 0.65
+/// when P11 is 0; nothing for P11 = 99 or invisible staves (IP7 < 0). The
+/// table keeps IP11 or -1 for ledger lines (STAFF_THICK0).
+fn print_pixels(item: ItemRef<'_>, staff: &Staff) -> i32 {
+    let ip11 = trunc(f64::from(item.p(11)));
+    let pixels = if ip11 == 0 && (staff.size as f32) < THIN_STAFF { -1 } else { ip11 };
+    if pixels == PRINT_THICKNESS || trunc(f64::from(item.p(7))) < 0 {
+        0
+    } else {
+        pixels
     }
 }
 
@@ -129,6 +157,27 @@ fn number_style() -> TextStyle {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn print_thickness_from_p11_and_size() {
+        use score_format::{Item, MusFile, Word};
+        let staff = |params: &[f32], refined: bool| {
+            let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
+            let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
+            bytes.extend(trailer.iter().flat_map(|w| w.to_le_bytes()));
+            let mut file = MusFile::parse(&bytes).expect("an empty file parses");
+            file.items = vec![Item::new(params.iter().map(|&p| Word::from_f32(p)).collect())];
+            let options = if refined { crate::Options::REFINED } else { crate::Options::ENGINE };
+            let list = crate::render(&Document::with_options(&file, options));
+            list.shapes.iter().map(|s| s.width).collect::<Vec<f32>>()
+        };
+        let p11 = |p11: f32| [8.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, p11];
+        assert_eq!(staff(&p11(2.0), true), vec![crate::print_pen(2.0); 5]);
+        assert_eq!(staff(&p11(2.0), false), vec![0.0; 5]);
+        assert_eq!(staff(&p11(99.0), true), vec![0.0; 5]);
+        assert_eq!(staff(&[8.0, 1.0, 0.0, 0.0, 0.6], true), vec![crate::print_pen(-1.0); 5]);
+        assert_eq!(staff(&[8.0, 1.0, 0.0, 0.0, 0.65], true), vec![0.0; 5]);
+    }
 
     #[test]
     fn p7_variants() {
