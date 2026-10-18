@@ -13,7 +13,7 @@
 //! 88/-88/155 come from draw_number, the harp pedals from draw_box.
 
 use crate::canvas::{Canvas, Pen};
-use crate::codes::boxes::{draw_box, BoxCall};
+use crate::codes::boxes::{draw_styled_box, BoxCall};
 use crate::codes::line::{self, end_mark, End, Params};
 use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
 use crate::document::{Document, ItemRef};
@@ -424,7 +424,8 @@ fn harp(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
     sides.into_iter().for_each(|(first_x, positions, count)| {
         let xs = std::iter::successors(Some(first_x), |&x| Some(real(spacing + x)));
         digits(positions, count).zip(xs).for_each(|(position, x)| {
-            draw_box(canvas, Pos::new(x, real(rise * f64::from(position) + top)), mark.step(), &pedal);
+            let at = Pos::new(x, real(rise * f64::from(position) + top));
+            draw_styled_box(mark.doc, canvas, at, mark.step(), &pedal);
         });
     });
 }
