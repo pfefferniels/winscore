@@ -120,8 +120,34 @@ size = 0.6 for cue notes, else 1;  if P31 != 0: x -= ((P31-1)*238*hs)/25, size *
 repeat count/10 times:  draw_clef(&x, &y, &24, &size, &size) with STEP = hs;  x = f32(hs*13 + x)
 ```
 
-Symbol 24 is LB0020.DRW slot 4 ("dot").
+Symbol 24 is LB0020.DRW slot 4 ("dot"), an octagon 13 library units across about (38.5, 0.5): corners 6.96 units from the centre, sides 6.36 (diagonal) and 6.5 (straight).
+
+## Print widths (read)
+
+When printing (OUTPUT_MODE = -1) the note routines set PostScript line widths with the print-width marker `0x4D4ED2(&w)` (emitters.md; w in 1/600 inch on top of the default 1/150-inch pen) and reset them with `0x4D4F3F`:
+
+- **Stem** (0x4F0EB9): h = trunc(P17/100). If h != 0: marker(|h|), and the stem moves |h| printer dots (0x78B480 = 4000/dpi units; the print dialog's default is 600 dpi, pen 4 dots) towards the head: right for a stem down, left for a stem up. On every medium P17 then becomes amod(P17, 100). The flag that should trigger the reset is cleared at 0x4F13D2, before the test, so the reset after the stem happens only when IP28 != 0: otherwise the thick pen stays on for the dots, the marks and what is printed next.
+- **Ledger lines** (0x50DDF0, called by 0x4F0871): w = trunc(P16); P16 = 0: the staff's thickness + 2 (+ 1 when STEP != the head step, i.e. a grace note); P16 = 99: the staff's thickness; no marker for w = 0, or when the staff's thickness is 99 and P16 is 0 or 99. The staff's thickness is its IP11, or -1 for P11 = 0 on a staff smaller than 0.65 (STAFF_THICK, written by draw_staff 0x545140 at 0x1A9E220 + 4n), but 0x50DDF0 reads 0x1A9E21C + 4n, the entry of staff n - 1 (0 for staff 1).
+- **Accidental** (0x4F2F31): marker(trunc(P28)) around the symbol when P28 != 0.
+- **Marks**: draw_note sets IP10 = IP28 for `note_marks`, so draw_symbol's own marker (IP10, one less from symbol 45 on) applies to them.
+- **Beams** (draw_beam 0x416168, also for tremolo marks): marker(BMTH) around the beams (BMTH = -2 from PREF.DAT: half the default pen), reset before the tuplet number. Each beam is a filled quadrilateral, which the PostScript output fills and strokes with the current pen.
+- draw_rest calls no marker: its ledger lines and the bar rest print with the default pen.
+
+Print draws every black head afresh: the head cache is screen-only.
+
+## Refined style
+
+score-render's `Style::Refined` keeps every position, size and thickness convention of the engine (dot gaps, stem lengths including the 16th-note extension, beam thickness, head designs) and changes only how notes, rests and beams are drawn:
+
+- the print widths above on every medium, each on its own shapes only; thick stems move inward as in print at 600 dpi (the move equals the extra width) and `note::stem_end` follows them; ledger widths come from the note's own staff;
+- full beams, whose ends stand on stems, are drawn (1/150 - 1/300)/2 inch longer at either end along their slope, so that they reach the outer edges of default stems instead of letting the stems poke past them; `beam::ends` stays at the stems' centres;
+- symbol 24 (rhythm dots of notes and rests, staccato) is a 32-sided circle about the octagon's centre with its mean radius, 6.6 library units;
+- the marks of a stemless note read a stem length of 0 (the engine reads trunc(P14)'s bits, NaN for P14 <= -1, which loses the mark);
+- black heads are drawn directly, without the screen's cache;
+- the masks behind hollow AlphaNotes and tablature numbers are white, not 0xFDFDFD.
+
+With the default pen a half note's stem foot stays some 13 units clear of the head's hole; from P17 = 200 the moved, thicker stem reaches a few units into it, as in print.
 
 ## Not yet examined
 
-Marks (P11, `note_marks` 0x4F2279, with P13/P14/P18), AlphaNotes (P21–P24), special heads (IP6 < -2, 20–25, 95, 139 and other symbol heads), P16 (ledger thickness), P28, the printing branches.
+Marks (P11, `note_marks` 0x4F2279, with P13/P14/P18), AlphaNotes (P21–P24), special heads (IP6 < -2, 20–25, 95, 139 and other symbol heads).
