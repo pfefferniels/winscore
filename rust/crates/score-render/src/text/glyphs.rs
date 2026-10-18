@@ -74,19 +74,18 @@ pub fn glyph_char(code: i32) -> u8 {
     usize::try_from(code).ok().and_then(|i| GLYPH_CHARS.get(i)).copied().unwrap_or(0)
 }
 
-/// Glyphs 95–161 and 167 as cp1252 characters (0x7970A4, 0x79706B); the
-/// emitter falls back to bytes before 0x7A0008 for codes missing here.
+/// Glyphs 95–161 and 167 as cp1252 characters (0x7970A4, 0x79706B), less
+/// the screen's stand-ins for the characters of [`printed_char`]; the
+/// emitter falls back to bytes before 0x7A0008 for codes missing there.
 #[rustfmt::skip]
-const EXTENDED_CHARS: [(i32, u8); 63] = [
-    (145, b'['), (146, b'\\'), (147, b']'), (157, b'{'), (158, b'|'), (159, b'}'), (137, b'-'), (149, 0xA9),
-    (148, 0xE6), (141, 0xC6), (115, 0xE5), (111, 0xC5), (121, b'X'), (150, 0x9C), (142, 0x8C), (117, 0x85),
-    (153, b'x'), (144, b'X'), (130, 0xA5), (160, 0xAA), (152, b'l'), (143, b'L'), (161, 0xBA), (154, 0xAE),
-    (155, 0xDF), (156, 0x99), (101, b'X'), (102, 0x84), (103, 0x94), (104, 0xA1), (105, 0xA2), (106, b'L'),
-    (107, 0xA7), (108, b'X'), (109, b'\''), (110, 0x93), (116, 0x86), (112, 0x87), (118, 0x83), (119, 0xAB),
-    (120, 0xBB), (122, 0x8B), (123, 0x9B), (124, b'X'), (125, 0x97), (167, b'X'), (127, 0xB6), (128, 0xBF),
-    (129, 0x9A), (113, 0x8A), (131, b'z'), (114, b'Z'), (140, b'@'), (132, b'#'), (133, b'$'), (134, b'%'),
-    (135, b'&'), (138, b'<'), (139, b'>'),
-    (96, b'L'), (100, b'J'), (136, b'!'), (151, 0x01),
+const EXTENDED_CHARS: [(i32, u8); 49] = [
+    (145, b'['), (146, b'\\'), (147, b']'), (157, b'{'), (158, b'|'), (159, b'}'), (149, 0xA9), (148, 0xE6),
+    (141, 0xC6), (115, 0xE5), (111, 0xC5), (150, 0x9C), (142, 0x8C), (117, 0x85), (130, 0xA5), (160, 0xAA),
+    (161, 0xBA), (154, 0xAE), (155, 0xDF), (156, 0x99), (102, 0x84), (103, 0x94), (104, 0xA1), (105, 0xA2),
+    (107, 0xA7), (109, b'\''), (110, 0x93), (116, 0x86), (112, 0x87), (118, 0x83), (119, 0xAB), (120, 0xBB),
+    (122, 0x8B), (123, 0x9B), (125, 0x97), (127, 0xB6), (128, 0xBF), (129, 0x9A), (113, 0x8A), (140, b'@'),
+    (132, b'#'), (133, b'$'), (134, b'%'), (135, b'&'), (138, b'<'), (139, b'>'),
+    (96, b'L'), (100, b'J'), (136, b'!'),
 ];
 
 pub fn extended_char(code: i32) -> u8 {
@@ -126,14 +125,6 @@ pub fn accented(accent: i32, base: u8) -> u8 {
     table.iter().find(|&&(b, _)| b == base).map_or(base, |&(_, a)| a)
 }
 
-/// [`accented`] as SCORE prints it: `%%Y` is Ÿ there too (0x56EBB4).
-pub fn printed_accented(accent: i32, base: u8) -> u8 {
-    match (accent, base) {
-        (86, b'Y') => 0x9F,
-        _ => accented(accent, base),
-    }
-}
-
 const ACUTE: [(u8, u8); 12] = [
     (b'A', 0xC1), (b'a', 0xE1), (b'E', 0xC9), (b'e', 0xE9), (b'I', 0xCD), (b'i', 0xED),
     (b'O', 0xD3), (b'o', 0xF3), (b'U', 0xDA), (b'u', 0xFA), (b'Y', 0xDD), (b'y', 0xFD),
@@ -146,9 +137,10 @@ const CIRCUMFLEX: [(u8, u8); 10] = [
     (b'A', 0xC2), (b'a', 0xE2), (b'E', 0xCA), (b'e', 0xEA), (b'I', 0xCE), (b'i', 0xEE),
     (b'O', 0xD4), (b'o', 0xF4), (b'U', 0xDB), (b'u', 0xFB),
 ];
-const DIERESIS: [(u8, u8); 11] = [
+/// With `%%Y` as Ÿ, as SCORE prints it (0x56EBB4); the screen leaves Y.
+const DIERESIS: [(u8, u8); 12] = [
     (b'A', 0xC4), (b'a', 0xE4), (b'E', 0xCB), (b'e', 0xEB), (b'I', 0xCF), (b'i', 0xEF),
-    (b'O', 0xD6), (b'o', 0xF6), (b'U', 0xDC), (b'u', 0xFC), (b'y', 0xFF),
+    (b'O', 0xD6), (b'o', 0xF6), (b'U', 0xDC), (b'u', 0xFC), (b'y', 0xFF), (b'Y', 0x9F),
 ];
 const CEDILLA: [(u8, u8); 2] = [(b'C', 0xC7), (b'c', 0xE7)];
 const TILDE_LETTERS: [(u8, u8); 6] = [(b'A', 0xC3), (b'a', 0xE3), (b'o', 0xF5), (b'O', 0xD5), (b'n', 0xF1), (b'N', 0xD1)];
@@ -197,6 +189,6 @@ mod tests {
         assert_eq!(printed_char(char_code(b'\'')), Some('’'));
         assert_eq!(printed_char(char_code(b'"')), None);
         assert_eq!(printed_char(char_code(b'A')), None);
-        assert_eq!((accented(86, b'Y'), printed_accented(86, b'Y')), (b'Y', 0x9F));
+        assert_eq!(accented(86, b'Y'), 0x9F);
     }
 }
