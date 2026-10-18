@@ -8,8 +8,8 @@
 //! looked up by name among the compact libraries shipped with WinScore
 //! (`KBRHY.DRW`, `FAULT.DRW`). Symbols are drawn at full library size, like
 //! code 9's below 50, and P15 does not move them. Where the file or the
-//! symbol is not there, the refined style shows a placeholder on the
-//! screen ([`draw_missing_symbol`]).
+//! symbol is not there, the screen shows a placeholder
+//! ([`draw_missing_symbol`]); the engine draws nothing.
 
 use std::sync::OnceLock;
 
@@ -47,7 +47,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         .filter(|s| (0..SYMBOLS_PER_FILE).contains(&number) && !s.records.is_empty());
     let (at, step) = (doc.position(item), doc.staff_of(item).step);
     match symbol {
-        Some(symbol) => draw_scaled_symbol(doc, canvas, symbol, at, step, &call, 1.0, ItemContext::of(item).pixels),
+        Some(symbol) => draw_scaled_symbol(canvas, symbol, at, step, &call, 1.0, ItemContext::of(item).pixels),
         None if shows_missing(doc) => {
             // The file name without its extension, and the symbol's number in it.
             let stem = name.as_deref().map_or("?", |n| n.split('.').next().unwrap_or(n));
@@ -100,7 +100,7 @@ mod tests {
 
     /// A code-11 item for symbol `number` of file `name`, and what it draws:
     /// shapes and the strings of its texts.
-    fn draw(number: f32, name: &str, options: Options) -> (usize, Vec<String>) {
+    fn draw(number: f32, name: &str, medium: Medium) -> (usize, Vec<String>) {
         let mut params: Vec<Word> = [11.0, 1.0, 20.0, 4.0, number].into_iter().map(Word::from_f32).collect();
         params.resize(13, Word::from_f32(0.0));
         let mut bytes = name.as_bytes().to_vec();
@@ -109,7 +109,7 @@ mod tests {
         let staff = Item::new([8.0, 1.0, 0.0, 0.0, 1.0].into_iter().map(Word::from_f32).collect());
         let mut file = MusFile::empty();
         file.items = vec![staff, Item::new(params)];
-        let list = crate::render(&Document::with_options(&file, options));
+        let list = crate::render(&Document::with_options(&file, Options { medium, ..Options::default() }));
         let shapes = list.shapes.iter().filter(|s| s.source == Some(ItemId(1))).count();
         let texts = list.texts.iter().filter(|t| t.source == Some(ItemId(1)));
         (shapes, texts.flat_map(|t| t.strings.iter().map(|s| s.text.clone())).collect())
@@ -117,10 +117,9 @@ mod tests {
 
     #[test]
     fn a_file_that_is_not_there_shows_a_placeholder_on_the_screen() {
-        assert_eq!(draw(3.0, "MYSYMS.DRW", Options::REFINED), (1, vec!["MYSYMS 3".to_string()]));
-        assert_eq!(draw(3.0, "MYSYMS.DRW", Options::ENGINE), (0, vec![]));
-        assert_eq!(draw(3.0, "MYSYMS.DRW", Options { medium: Medium::Print, ..Options::REFINED }), (0, vec![]));
-        let (shapes, texts) = draw(1.0, "KBRHY.DRW", Options::REFINED);
+        assert_eq!(draw(3.0, "MYSYMS.DRW", Medium::Screen), (1, vec!["MYSYMS 3".to_string()]));
+        assert_eq!(draw(3.0, "MYSYMS.DRW", Medium::Print), (0, vec![]));
+        let (shapes, texts) = draw(1.0, "KBRHY.DRW", Medium::Screen);
         assert!(shapes > 1 && texts.is_empty());
     }
 }
