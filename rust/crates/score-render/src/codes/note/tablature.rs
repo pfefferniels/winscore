@@ -196,7 +196,7 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let level = level(item, &fingering, lettered);
     let step = step(doc, item);
     if item.p(20) == 1.0 {
-        clear_behind(item, &doc.staff_of(item), step, level, fingering.fret, canvas);
+        clear_behind(doc, item, &doc.staff_of(item), step, level, fingering.fret, canvas);
     }
     let call = text_call(doc, item, step, &text, &fingering, level, lettered, font_before(doc, item));
     draw_text(doc, item, canvas, &call);
@@ -267,7 +267,15 @@ fn text_call<'t>(
 }
 
 /// P20 = 1 (0x559733): a white box over the string line behind the number.
-fn clear_behind(item: ItemRef<'_>, staff: &Staff, step: f64, level: f64, fret: i32, canvas: &mut Canvas<'_>) {
+fn clear_behind(
+    doc: &Document<'_>,
+    item: ItemRef<'_>,
+    staff: &Staff,
+    step: f64,
+    level: f64,
+    fret: i32,
+    canvas: &mut Canvas<'_>,
+) {
     let mut width = match fret {
         -1 => constant(2.3),
         f if f > 9 => constant(3.35),
@@ -283,5 +291,5 @@ fn clear_behind(item: ItemRef<'_>, staff: &Staff, step: f64, level: f64, fret: i
     }
     let y = staff.y(f64::from(trunc(level + 1.0)));
     let x = real(staff.step / 35.0 * 160.0 + p3 * P3_UNIT);
-    white_box(canvas, Pos::new(x, y), step, (width, 1.0));
+    white_box(doc, canvas, Pos::new(x, y), step, (width, 1.0));
 }

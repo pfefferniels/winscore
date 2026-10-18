@@ -13,6 +13,7 @@ use score_format::{Item, Word};
 use crate::canvas::Canvas;
 use crate::codes;
 use crate::codes::slur::BracketNumber;
+use crate::display::{print_pen, PEN};
 use crate::document::{Document, ItemRef};
 use crate::page::P3_UNIT;
 use crate::text::Font;
@@ -23,6 +24,11 @@ use crate::units::{constant, real, trunc, Pos};
 const NOTE_WIDTH: f32 = 17.0;
 
 const STEMS_UP: i32 = 1;
+
+/// `BMTH -2` in PREF.DAT (int 0x78B478): when printing, draw_beam outlines
+/// its beams with the pen of a print-width marker of BMTH, half the
+/// default pen; the refined style does so on every medium.
+const BMTH: i32 = -2;
 
 /// P8 from 1000 on is font × 1000 + number.
 const FONT_IN_P8: i32 = 1000;
@@ -46,7 +52,9 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 }
 
 /// The ends of a beam's main edge, the one at the end of the stems
-/// (internal coordinates), for an editor's handles on them.
+/// (internal coordinates), for an editor's handles on them: where the
+/// stems at the ends meet it (the refined style draws the full beams a
+/// little further, to the stems' outer edges).
 pub fn ends(doc: &Document<'_>, item: ItemRef<'_>) -> (Pos, Pos) {
     let edge = Beam::of_item(doc, item).main.edge;
     (edge.left, edge.right)
@@ -118,6 +126,14 @@ impl Edge {
     fn next(self, spacing: f64) -> Edge {
         let shift = |p: Pos| Pos::new(p.x, real(p.y - spacing));
         Edge { left: shift(self.left), right: shift(self.right) }
+    }
+
+    /// The edge longer by `by` at either end, along a line of slope `slope`.
+    fn lengthened(self, by: f64, slope: f64) -> Edge {
+        let by = if self.right.x < self.left.x { -by } else { by };
+        let left = Pos::new(self.left.x - by, self.left.y - by * slope);
+        let right = Pos::new(self.right.x + by, self.right.y + by * slope);
+        Edge { left, right }
     }
 }
 
@@ -216,6 +232,7 @@ struct Beam {
     cue: bool,
     /// Print output closes each beam with one more point (0x4A060D).
     print: bool,
+    refined: bool,
 }
 
 impl Beam {
@@ -303,6 +320,7 @@ impl Beam {
             up,
             cue,
             print: !doc.screen(),
+            refined: doc.refined(),
         }
     }
 
@@ -339,10 +357,29 @@ impl Beam {
 
     /// The full beams, then the partial or tremolo groups.
     fn draw_groups(&self, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+        if self.refined {
+            canvas.set_width(print_pen(BMTH as f32));
+        }
         let plan = self.plan(item);
-        let main = plan.main.map_or(self.main.edge, |count| self.group(canvas, self.main.edge, count));
+        let main = plan.main.map_or(self.main.edge, |count| self.group(canvas, self.main.edge, count, self.overhang()));
         let partials = plan.first.iter().chain(plan.second.iter());
         partials.fold(main, |last, partial| self.partial(canvas, last, partial));
+        if self.refined {
+            canvas.set_width(0.0);
+        }
+    }
+
+    /// How much further than the stems' centres the refined style draws the
+    /// full beams, whose ends stand on stems: stems have the default pen
+    /// and beams BMTH's, so a beam ending at a stem's centre would stop
+    /// 1/600 inch short of the stem's outer edge, and the stem would poke
+    /// past it where it ends.
+    fn overhang(&self) -> f64 {
+        if self.refined {
+            f64::from(PEN - print_pen(BMTH as f32)) / 2.0
+        } else {
+            0.0
+        }
     }
 
     fn plan(&self, item: ItemRef<'_>) -> Plan {
@@ -417,10 +454,12 @@ impl Beam {
         }
     }
 
-    /// `count` beams (at least one) from `edge` on; returns the last edge.
-    fn group(&self, canvas: &mut Canvas<'_>, edge: Edge, count: i32) -> Edge {
+    /// `count` beams (at least one) from `edge` on, drawn `overhang` longer
+    /// at either end; returns the last edge.
+    fn group(&self, canvas: &mut Canvas<'_>, edge: Edge, count: i32, overhang: f64) -> Edge {
         let edges = std::iter::successors(Some(edge), |e| Some(e.next(self.spacing)));
-        edges.take(count.max(1) as usize).inspect(|e| self.draw(canvas, *e)).last().unwrap_or(edge)
+        let drawn = |e: &Edge| if overhang == 0.0 { *e } else { e.lengthened(overhang, self.main.slope) };
+        edges.take(count.max(1) as usize).inspect(|e| self.draw(canvas, drawn(e))).last().unwrap_or(edge)
     }
 
     /// A partial group after `last`, the edge of the previous group's last beam.
@@ -455,7 +494,7 @@ impl Beam {
         } else {
             (self.main.y(xl, drop), self.main.y(xr, drop))
         };
-        self.group(canvas, Edge { left: Pos::new(xl, yl), right: Pos::new(xr, yr) }, count)
+        self.group(canvas, Edge { left: Pos::new(xl, yl), right: Pos::new(xr, yr) }, count, 0.0)
     }
 
     /// One beam as the quadrilateral of 0x4A060D, started at the right end.
@@ -517,6 +556,38 @@ fn tremolo_edge(edge: Edge, item: ItemRef<'_>, unit: f64, cue: bool) -> Edge {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::codes::note::tests::{file, shapes};
+    use crate::document::Options;
+
+    #[test]
+    fn beams_take_the_print_pen_of_bmth() {
+        // Two beams over two stems up (item 1), and a note with a tremolo mark (item 2).
+        let file = file(&[&[6.0, 1.0, 20.0, 5.0, 7.0, 30.0, 12.0], &[1.0, 1.0, 50.0, 5.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 41.0]]);
+        let widths = |options, n| shapes(&file, options, n).iter().map(|s| s.width).collect::<Vec<_>>();
+        let pen = print_pen(BMTH as f32);
+        assert_eq!(widths(Options::ENGINE, 1), [0.0, 0.0]);
+        assert_eq!(widths(Options::REFINED, 1), [pen, pen]);
+        assert_eq!(widths(Options::REFINED, 2), [0.0, 0.0, pen], "head, stem, tremolo beam");
+    }
+
+    #[test]
+    fn full_beams_reach_the_outer_edges_of_their_stems() {
+        // Stems up at x = 5425 and 6925; a full beam and a partial one (P10 = 11) between them.
+        let file = file(&[&[6.0, 1.0, 20.0, 5.0, 7.0, 30.0, 11.0, 0.0, 0.0, 11.0]]);
+        let reach = |options| {
+            let xs = shapes(&file, options, 1).iter().map(|s| s.paths[0].iter().map(|p| p.x).collect::<Vec<_>>()).collect::<Vec<_>>();
+            xs.iter().map(|x| (*x.iter().min().unwrap(), *x.iter().max().unwrap())).collect::<Vec<_>>()
+        };
+        let [full, partial] = reach(Options::ENGINE)[..] else { panic!("two beams") };
+        assert_eq!(full, (5425, 6925));
+        // Half of PEN less the beam's pen beyond either stem, along the slope.
+        assert_eq!(reach(Options::REFINED), [(5418, 6931), partial]);
+        let ends = |options| {
+            let doc = Document::with_options(&file, options);
+            ends(&doc, doc.item(crate::display::ItemId(1)).expect("the beam"))
+        };
+        assert_eq!(ends(Options::REFINED), ends(Options::ENGINE), "the handles stay where the stems end");
+    }
 
     #[test]
     fn p9_digits() {
