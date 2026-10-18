@@ -51,7 +51,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     match (clef.tablature, clef.text) {
         (Some(tablature), _) => draw_tablature(doc, item, canvas, &clef.placement, tablature),
         (None, Some(call)) => draw_text_symbol(doc, item, canvas, &call),
-        // A symbol no library has: a placeholder on the screen in the refined style.
+        // A symbol no library has: a placeholder on the screen.
         (None, None) if shows_missing(doc) && is_missing(doc, clef.placement.number) => {
             let call = clef_symbol_call(&clef.placement);
             let unit = library_unit(step, &call, normal_size(call.number));

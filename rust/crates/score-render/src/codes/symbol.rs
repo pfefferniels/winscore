@@ -10,8 +10,8 @@
 //! symbols the engine writes as text (8va, cresc., G.P., …) by
 //! [`symbols::draw_text_symbol`], and the terms 3000-3099 from the term
 //! library (`scorlib/CODE9.DAT`) through draw_text. A symbol or term that
-//! is not there draws nothing; the refined style shows a placeholder on
-//! the screen instead ([`symbols::draw_missing_symbol`]).
+//! is not there shows a placeholder on the screen
+//! ([`symbols::draw_missing_symbol`]); the engine draws nothing.
 
 use std::sync::OnceLock;
 

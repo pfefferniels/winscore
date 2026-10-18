@@ -3,17 +3,16 @@
 //! Code-9 symbol n is slot n % 10 of `LB{n / 10 * 10:04}.DRW` (`scorlib/symblist.txt`).
 //! Clefs, accidentals, note heads, flags, rests, articulations and the brace
 //! are all library symbols, drawn by draw_symbol 0x4293F0 (via draw_clef
-//! 0x431AE0 for most item codes). [`draw_symbol`] is the common core: every
-//! record of the symbol becomes one buffer point. The refined style draws
-//! smoothed outlines instead ([`smooth::Outline`]).
+//! 0x431AE0 for most item codes). The engine turns every record of a symbol
+//! into one buffer point; the port draws smoothed outlines through the
+//! records ([`smooth::Outline`]).
 
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
 use score_format::{DrwError, DrwLibrary, Symbol};
 
-use crate::canvas::{Canvas, Pen};
-use crate::units::{real, Pos};
+use crate::canvas::Pen;
 
 pub mod clef;
 pub mod library;
@@ -83,15 +82,6 @@ fn pen(code: i16) -> Pen {
         3 => Pen::SubPath,
         _ => Pen::Continue,
     }
-}
-
-/// Adds every record of `symbol` to the buffer in file order, at
-/// f32(origin + scale × coordinate) per axis (truncated by add_point).
-pub fn draw_symbol(canvas: &mut Canvas<'_>, symbol: &Symbol, origin: Pos, scale: Scale) {
-    symbol.records.iter().for_each(|r| {
-        let at = Pos::new(real(origin.x + f64::from(r.x) * scale.x), real(origin.y + f64::from(r.y) * scale.y));
-        canvas.point(at, pen(r.pen));
-    });
 }
 
 #[cfg(test)]

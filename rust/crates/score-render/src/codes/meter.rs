@@ -8,9 +8,9 @@
 //! (99 common time, 98 alla breve) at 0.75 × P7.
 //!
 //! Every number goes through draw_number 0x4F65A8 and draw_text; in the
-//! meter font its digits are library symbols 2000–2009. The refined style
-//! sets those digits as the screen does on every medium and centres the
-//! numbers of a meter on one another ([`Layout::centred`]).
+//! meter font its digits are library symbols 2000–2009. Those digits are
+//! set as the engine's screen sets them on every medium, and the numbers of
+//! a meter are centred on one another ([`Layout::centred`]).
 
 use crate::canvas::{Canvas, Stream};
 use crate::codes;
@@ -36,8 +36,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         draw_meter_symbol(doc, item, canvas, p5);
         return;
     }
-    let layout = Layout::of(doc, item);
-    let layout = if doc.refined() { layout.centred(doc, item) } else { layout };
+    let layout = Layout::of(doc, item).centred(doc, item);
     layout.parts.iter().for_each(|part| match *part {
         Part::Number { value, at, .. } => draw_number(doc, item, canvas, at, &number_call(item, value, layout.size)),
         Part::Plus(at) => {
@@ -96,7 +95,7 @@ enum Part {
     Plus(Pos),
 }
 
-/// The numbers a number lines up with in the refined style.
+/// The numbers a number lines up with ([`Layout::centred`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Column {
     /// The top and bottom number of the first (0) or the second meter (1).
@@ -136,7 +135,7 @@ impl Fraction {
 struct Frame<'d> {
     staff: crate::staff::Staff,
     item: ItemRef<'d>,
-    /// P4 after the small lift for screen or print (REAL*4).
+    /// P4 after the small lift for the outline digits or a text font (REAL*4).
     p4: f64,
     size: f64,
     top_y: f64,
@@ -183,15 +182,14 @@ impl Layout {
         let ip = |n: usize| trunc(f64::from(item.p(n)));
         let staff = doc.staff_of(item);
         let x = doc.position(item).x;
-        // Print and an explicit font set the numbers a little higher and
-        // smaller, for the meter font of SCORE's PostScript output. The
-        // refined style keeps the screen's setting, made for the outline
-        // digits drawn here, wherever they are drawn.
-        let set_as_print = if doc.refined() { !outline_digits(item) } else { !doc.screen() || ip(13) != 0 };
-        let (p4, factor, top_level) = if set_as_print {
-            (real(f64::from(item.p(4)) + c(0.1)), c(1.2), c(5.82))
-        } else {
+        // The outline digits drawn here keep the setting the engine's screen
+        // gives them on every medium. Text fonts take the one the engine
+        // uses in print and for an explicit font, a little higher and
+        // smaller, made for the meter font of SCORE's PostScript output.
+        let (p4, factor, top_level) = if outline_digits(item) {
             (real(f64::from(item.p(4)) - c(0.23)), c(1.35), c(5.46))
+        } else {
+            (real(f64::from(item.p(4)) + c(0.1)), c(1.2), c(5.82))
         };
         let size = real(p7(item) * factor);
         let (first, top_level) = match (ip(5), ip(6)) {
@@ -228,13 +226,13 @@ impl Layout {
         Self { size, parts }
     }
 
-    /// The refined style lines the numbers of a meter up by their middles,
-    /// as drawn (the engine starts them at one x, or moves a one-digit
-    /// number a fixed step beside a two-digit one, so that in 3/4 the 3
-    /// sits 40 units left of the 4): the widest number of each meter stays
-    /// where it is and the others move to its middle; a bottom number both
-    /// meters share goes under the middle of both tops. Only the outline
-    /// digits are measured, and only unrotated.
+    /// Lines the numbers of a meter up by their middles, as drawn (the
+    /// engine starts them at one x, or moves a one-digit number a fixed
+    /// step beside a two-digit one, so that in 3/4 the 3 sits 40 units left
+    /// of the 4): the widest number of each meter stays where it is and the
+    /// others move to its middle; a bottom number both meters share goes
+    /// under the middle of both tops. Only the outline digits are measured,
+    /// and only unrotated.
     fn centred(self, doc: &Document<'_>, item: ItemRef<'_>) -> Self {
         if !outline_digits(item) || item.p(19) != 0.0 {
             return self;
@@ -330,11 +328,11 @@ mod tests {
     /// The middle line of staff 1 on the page.
     const MIDDLE: i32 = 3648;
 
-    fn render(meter: &[f32], options: Options) -> DisplayList {
+    fn render(meter: &[f32], medium: Medium) -> DisplayList {
         let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
         let mut file = MusFile::empty();
         file.items = vec![words(&[8.0, 1.0, 0.0, 0.0, 1.0]), words(meter)];
-        crate::render(&Document::with_options(&file, options))
+        crate::render(&Document::with_options(&file, Options { medium, ..Options::default() }))
     }
 
     /// The middles of the numbers above and below the middle line.
@@ -355,25 +353,25 @@ mod tests {
     }
 
     #[test]
-    fn the_refined_style_centres_the_numbers() {
-        let (top, bottom) = middles(&render(&[18.0, 1.0, 20.0, 0.0, 3.0, 4.0], Options::ENGINE));
-        assert!((bottom - top - 40.0).abs() < 5.0, "the engine's 3 sits left of its 4: {top} {bottom}");
+    fn the_numbers_are_centred() {
         for meter in [[3.0, 4.0], [12.0, 8.0], [5.0, 16.0], [2.0, 2.0]] {
-            let (top, bottom) = middles(&render(&[18.0, 1.0, 20.0, 0.0, meter[0], meter[1]], Options::REFINED));
+            let (top, bottom) = middles(&render(&[18.0, 1.0, 20.0, 0.0, meter[0], meter[1]], Medium::Screen));
             assert!((top - bottom).abs() <= 1.0, "{meter:?}: {top} {bottom}");
         }
     }
 
     #[test]
-    fn the_refined_style_sets_outline_digits_alike_on_every_medium() {
-        let print = |options: Options| Options { medium: Medium::Print, ..options };
+    fn meters_are_set_alike_on_every_medium() {
         let three_four = [18.0, 1.0, 20.0, 0.0, 3.0, 4.0];
-        assert_eq!(render(&three_four, Options::REFINED).shapes, render(&three_four, print(Options::REFINED)).shapes);
-        assert_ne!(render(&three_four, Options::ENGINE).shapes, render(&three_four, print(Options::ENGINE)).shapes);
-        // A text font keeps the print setting.
+        assert_eq!(render(&three_four, Medium::Screen).shapes, render(&three_four, Medium::Print).shapes);
+        // A text font as well, in the setting made for SCORE's PostScript meter font.
         let times = [18.0, 1.0, 20.0, 0.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
-        assert_eq!(render(&times, print(Options::REFINED)).texts, render(&times, print(Options::ENGINE)).texts);
-        assert_eq!(render(&times, Options::REFINED).texts, render(&times, Options::ENGINE).texts);
+        let texts = |medium: Medium| {
+            let list = render(&times, medium);
+            list.texts.into_iter().filter(|t| t.source == Some(ItemId(1))).collect::<Vec<_>>()
+        };
+        assert_eq!(texts(Medium::Screen).len(), 2);
+        assert_eq!(texts(Medium::Screen), texts(Medium::Print));
     }
 }
 

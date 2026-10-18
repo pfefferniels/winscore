@@ -1,4 +1,4 @@
-//! Smooth library outlines for [`crate::Style::Refined`].
+//! Smooth outlines for library symbols.
 //!
 //! The libraries store every outline as polygons on an integer grid of
 //! library units, so curves show facets and steps when a symbol is drawn
@@ -161,8 +161,8 @@ impl Outline {
     }
 
     /// Adds the outline to the buffer at f32(origin + scale × coordinate)
-    /// per axis, like [`super::draw_symbol`], each curve in pieces short
-    /// enough to look round at any zoom.
+    /// per axis, where draw_symbol 0x4293F0 puts the records, each curve in
+    /// pieces short enough to look round at any zoom.
     pub fn draw(&self, canvas: &mut Canvas<'_>, origin: Pos, scale: Scale) {
         let place = |v: V| Pos::new(real(origin.x + v.x * scale.x), real(origin.y + v.y * scale.y));
         self.paths.iter().for_each(|path| {
