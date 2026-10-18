@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { codeName, editWords, groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
-import { askClaude, type About, type Catalog, type Failed, type Writer } from '../src/ai-models';
+import { askClaude, type About, type Catalog, type Failed, type Sampled, type Writer } from '../src/ai-models';
 import { barlines, run, type Access, type Region, type Scope, type Script } from '../src/ai-script';
 
 initSync({ module: readFileSync(process.env.SCORE_WASM!) });
@@ -30,10 +30,12 @@ interface Case {
   items: number[] | null;
   /** Music put on the empty score first (passes 1 and 2), whose notes the command is then about. */
   music?: [string, string];
+  /** Lyrics under that music: a syllable centred under each note, a "-" between the syllables around it. */
+  lyrics?: string;
   /** The check sees every item of the score, not only those the command is about. */
   all?: boolean;
   /** What must hold of the items before and after, and of the selection after, by identity; a message when it does not. */
-  check(before: Params, after: Params, selected: number[]): string | null;
+  check(before: Params, after: Params, selected: number[], text: (key: number) => string | null): string | null;
   /** The command cannot be done: it must fail with this message, changing nothing. */
   refused?: RegExp;
 }
@@ -41,6 +43,9 @@ interface Case {
 const notes = (m: Params) => [...m].filter(([, p]) => p[0] === 1).sort((a, b) => a[1][2]! - b[1][2]!);
 const mark = (p: Float32Array) => Math.trunc(Math.abs(p[10] ?? 0) + 1e-6);
 const beams = (m: Params) => [...m.values()].filter((p) => p[0] === 6).length;
+/** The texts of the items, left to right: their characters, where they begin and end. */
+const texts = (m: Params, text: (key: number) => string | null) =>
+  [...m].filter(([, p]) => p[0] === 16).map(([k, p]) => ({ k, text: text(k) ?? '', x: p[2]!, end: p[2]! + p[12]! })).sort((a, b) => a.x - b.x);
 
 const CASES: Case[] = [
   {
@@ -174,6 +179,23 @@ const CASES: Case[] = [
       return staves.length === 1 && staves[0] === 9 ? null : `new staves: ${staves.join(', ') || 'none'}`;
     },
   },
+  {
+    text: 'add missing "-" for lyrics',
+    items: null,
+    music: ['A4/G/A/C5/B4/A/G/A', '4/4/4/4/4/4/4/4'],
+    lyrics: 'O splen - di dis si ma gem - ma',
+    check(before, after, _selected, text) {
+      const made = texts(after, text).filter((t) => !before.has(t.k));
+      if (made.some((t) => t.text !== '_00-')) return `made ${made.map((t) => JSON.stringify(t.text)).join(' ')}`;
+      const syllables = texts(after, text).filter((t) => !t.text.endsWith('-'));
+      const between = made.map((h) => {
+        const [last, next] = [syllables.filter((s) => s.end <= h.x + 0.5).at(-1), syllables.find((s) => s.x >= h.end - 0.5)];
+        const centred = last && next && Math.abs((h.x + h.end) / 2 - (last.end + next.x) / 2) < 1;
+        return `${last?.text.slice(3)}-${next?.text.slice(3)}${centred ? '' : ' (off centre)'}`;
+      });
+      return between.join(' ') === 'di-dis dis-si si-ma' ? null : `hyphens ${between.join(' ') || 'none'}`;
+    },
+  },
   // Complex: what Jev sends to the model for complex commands.
   {
     text: 'double the melody a third below',
@@ -220,7 +242,7 @@ const CASES: Case[] = [
   },
 ];
 
-function setUp(items: number[] | null, music?: [string, string], all = false) {
+function setUp(items: number[] | null, music?: [string, string], lyrics?: string, all = false) {
   const score = items ? new Score(readFileSync(`${process.env.SCORE_SAMPLES}/mozart.mus`)) : Score.empty();
   const editor = scoreEditor(score);
   const access: Access = {
@@ -240,6 +262,25 @@ function setUp(items: number[] | null, music?: [string, string], all = false) {
   };
   const region: Region = { staff: 1, bottom: 1, top: 1, from: 20, to: 180 };
   if (music) run({ summary: 'music', knobs: [], steps: [{ do: 'insert', notes: music[0], rhythms: music[1] }] }, access, { keys: [], region }, 'music');
+  /** Characters of the text item `key`. */
+  const text = (key: number) => {
+    const info = score.item(editor.keys().indexOf(key));
+    const characters = info?.text ?? null;
+    info?.free();
+    return characters;
+  };
+  if (lyrics) {
+    const heads = editor.keys().flatMap((_, i) => (access.params(i)![0] === 1 ? [access.params(i)![2]!] : [])).sort((a, b) => a - b);
+    const words = lyrics.split(' ');
+    // Half a note head right of P3, as CTN centres text on a note.
+    words.filter((w) => w !== '-').forEach((w, i) => editor.insertText(w, [1, 1000 + heads[i]! + 1.6, -5]));
+    const sung = texts(new Map(editor.keys().map((k, i) => [k, access.params(i)!])), text);
+    words.forEach((w, i) => {
+      if (w !== '-') return;
+      const syllable = words.slice(0, i).filter((v) => v !== '-').length;
+      editor.insertText('-', [1, 1000 + (sung[syllable - 1]!.end + sung[syllable]!.x) / 2, -5]);
+    });
+  }
   const keys = editor.keys();
   const scope: Scope = items ? { keys: items.map((i) => keys[i]!), region: null } : music ? { keys: keys.slice(1), region } : { keys: [], region };
   /** The scope's items (or, for an empty score, every item), by identity; every item for a check that sees `all`. */
@@ -251,19 +292,19 @@ function setUp(items: number[] | null, music?: [string, string], all = false) {
   const inScope = () => itemsOf(false);
   const snapshot = () => itemsOf(all);
   const selected = () => editor.selection().map((i) => editor.keys()[i]!);
-  return { score, editor, access, scope, inScope, snapshot, selected };
+  return { score, editor, access, scope, inScope, snapshot, selected, text };
 }
 
 /** One case's line of the report. */
 async function evaluate(c: Case): Promise<string> {
-  const { access, scope, inScope, snapshot, selected } = setUp(c.items, c.music, c.all);
+  const { access, scope, inScope, snapshot, selected, text } = setUp(c.items, c.music, c.lyrics, c.all);
   const counts = new Map<number, number>();
-  const sample: number[][] = [];
-  for (const p of inScope().values()) {
+  const sample: Sampled[] = [];
+  for (const [id, p] of inScope()) {
     counts.set(p[0]!, (counts.get(p[0]!) ?? 0) + 1);
-    sample.push(Array.from(p));
+    sample.push({ id, params: Array.from(p), text: text(id) });
   }
-  const staves = new Set(sample.map((p) => p[1]!));
+  const staves = new Set(sample.map(({ params }) => params[1]!));
   const bars = new Map([...barlines(access)].filter(([staff]) => staves.has(staff)));
   const about: About = { text: c.text, counts, whole: false, region: scope.region, middle: 34, sample, bars, codeName: (code) => codeName(code) ?? `Code ${code}` };
   let written: Script | null = null;
@@ -283,7 +324,7 @@ async function evaluate(c: Case): Promise<string> {
     }
     const { script, ms } = asked;
     if (c.refused) return `FAIL "${c.text}" was not refused → ${JSON.stringify(script.steps)}`;
-    const problem = c.check(before, snapshot(), selected());
+    const problem = c.check(before, snapshot(), selected(), text);
     return `${problem ? 'FAIL' : 'ok  '} ${(ms / 1000).toFixed(1)} s "${c.text}" → ${script.summary} ${JSON.stringify(script.steps)}${script.knobs.length ? ` knobs ${script.knobs.map((k) => `${k.id}=${k.value}`).join(', ')}` : ''}${problem ? `\n       ${problem}` : ''}`;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

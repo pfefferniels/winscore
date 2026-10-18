@@ -106,12 +106,19 @@ export interface About {
   region: Region | null;
   /** The middle line of the region's staff as a diatonic step from C0 (B4 = 34 for a treble clef), where typed notes start. */
   middle: number;
-  /** Some of the items, P1 … Pn each, for Claude. */
-  sample: number[][];
+  /** Some of the items, every text among them, for Claude. */
+  sample: Sampled[];
   /** Where the barlines are (P3) on the staves of the items, by staff, for Claude: where bars begin. */
   bars: Map<number, number[]>;
   /** Names of item codes. */
   codeName(code: number): string;
+}
+
+/** One item as Claude is shown it: its identity (the scripts' `id`), P1 … Pn, and a text's characters. */
+export interface Sampled {
+  id: number;
+  params: number[];
+  text: string | null;
 }
 
 function selectionWords(about: About): string {
@@ -515,7 +522,7 @@ function systemPrompt(catalog: Catalog): string {
   return `You turn an engraver's command, typed while editing a score in WinScore (Leland Smith's SCORE), into an edit script that the editor runs at once on the real score. Answer with the script only.
 
 # The score
-A score is a list of items, each a row of numbers P1 … Pn. P1 is the item's code (what it is), P2 its staff number (staff 1 is the lowest on the page), P3 its horizontal position on the staff (0 at the left edge, 200 at the right), P4 its vertical level in scale steps (half the distance between staff lines; on a treble staff level 1 is middle C, level 3 the bottom line, level 11 the top line). The other parameters depend on the code; the settings below name them.
+A score is a list of items, each a row of numbers P1 … Pn. P1 is the item's code (what it is), P2 its staff number (staff 1 is the lowest on the page), P3 its horizontal position on the staff (0 at the left edge, 200 at the right), P4 its vertical level in scale steps (half the distance between staff lines; on a treble staff level 1 is middle C, level 3 the bottom line, level 11 the top line). The other parameters depend on the code; the settings below name them. A text (code 16) also has characters, shown after its numbers (a leading _NN is its font); it begins at P3 and is P13 long. Lyrics are a text for each syllable, with a "-" text centred between the syllables of a word.
 
 # The script
 {"summary": a few words on what it does, "knobs": [...], "steps": [...]}
@@ -530,11 +537,12 @@ Steps run in order, each on the items the command is about (the selection, or th
   - "insert": a line of music input on "staff" between P3 "from" and "to" (0 for all three: where new music goes, given below), from the five passes "notes", "rhythms", "marks", "beams", "slurs". Pass 1: notes C D E F G A B with accidentals F (flat), S (sharp), N, FF, SS and octave 0–8 (C4 is middle C, the octave persists), items separated by /, chord notes by : (C4:E:G), R a rest, M a barline; a P before the first note gives each note the octave nearest the one before (PC4/E/G). Pass 2: one value per note, chord or rest: 1 whole, 2 half, 4 quarter, 8 eighth, 16, 32; a dot after it dots it (4.); always give it, as notes without a value become grace notes. Passes 3–5 may stay empty.
   - "beam": beams over "size" notes or chords each ("0" for every run up to a barline); the engine refits stems and flags.
   - "select": the items it picks become the selection, and the steps after it act on them only; nothing is edited. A command to select, keep only or pick out items is this, never a delete.
-  - "add": for each item it picks, a new item whose P1, P2, P3 … are "params" (numbers or expressions over the item it is made for; the settings below give each code's parameter numbers); an item whose P1 comes to 0 is not made. Lines (code 4) and slurs (code 5) run from P3, P4 to P6, P5.
+  - "add": for each item it picks, a new item whose P1, P2, P3 … are "params" (numbers or expressions over the item it is made for; the settings below give each code's parameter numbers); an item whose P1 comes to 0 is not made. Lines (code 4) and slurs (code 5) run from P3, P4 to P6, P5. A text (code 16) has the characters in "text" and is made as SCORE's quick entry makes it: P2 … P11 from "params" (0 keeps the default), P3 plus 1000 centres it on P3.
 - Which items a step acts on: "codes" (empty for all), "where" (an expression that must hold, or ""), and "where_setting" with "where_is" (only the items whose setting reads that option, e.g. "Mark" and "Staccato", or "" and "").
 - "value", "right", "up", "size": text holding a number, an expression or an option's name.
+- "text": the characters of the texts an "add" makes.
 
-Values may be expressions: numbers, + - * / % ^, comparisons, && || !, a ? b : c, functions min max abs round floor ceil sqrt pow lerp(a,b,t) clamp(x,lo,hi) snap(x,step), and these names for each item: p1 … p45 (its parameters), staff, x (P3), level (P4 without the cue-size hundred), value (the setting's current value; 0 often means the default, e.g. size 0 is size 1), mean (the mean of that parameter over the items, in set steps), t (0 for the first column of items from left to right, 1 for the last; the notes of a chord share one), i and n (that column's number from 0, and how many there are), st, si, sn (the same on the item's own staff), next_x and next_level (the position of the next note or chord on its staff, and its level nearest this item's; the item's own for the last), bar, bi, bn, bt (its bar on its staff from 0, by the barlines, and the same as i, n, t within that bar: "bi == 0" is the first note or chord of each bar, "bi == bn - 1" the last), left and right (the leftmost and rightmost P3 of the items on its staff), count, chord_low and chord_high (the lowest and highest level among the notes of its chord, its notes at the same place on its staff, a lone note being its own chord: "level == chord_low" is the bottom note of each chord), chord_size (how many notes that chord has), min_p1 … min_p45, max_p1 … max_p45 and mean_p1 … mean_p45 (a parameter's smallest, largest and mean value over the items; min_level, max_level and mean_level the same for level, so "level == max_level" is the single highest note), and the knobs by id. There are no functions over the items: max(p4) is just p4.
+Values may be expressions: numbers, + - * / % ^, comparisons, && || !, a ? b : c, functions min max abs round floor ceil sqrt pow lerp(a,b,t) clamp(x,lo,hi) snap(x,step), and these names for each item: p1 … p45 (its parameters), id (its identity, as the items are listed: "id == 412 || id == 415" picks those two), staff, x (P3), level (P4 without the cue-size hundred), value (the setting's current value; 0 often means the default, e.g. size 0 is size 1), mean (the mean of that parameter over the items, in set steps), t (0 for the first column of items from left to right, 1 for the last; the notes of a chord share one), i and n (that column's number from 0, and how many there are), st, si, sn (the same on the item's own staff), next_x and next_level (the position of the next note or chord, or item of the step's codes, on its staff, for a text the next text on its line (within a step of its level), and its level nearest this item's; the item's own for the last), bar, bi, bn, bt (its bar on its staff from 0, by the barlines, and the same as i, n, t within that bar: "bi == 0" is the first note or chord of each bar, "bi == bn - 1" the last), left and right (the leftmost and rightmost P3 of the items on its staff), count, chord_low and chord_high (the lowest and highest level among the notes of its chord, its notes at the same place on its staff, a lone note being its own chord: "level == chord_low" is the bottom note of each chord), chord_size (how many notes that chord has), min_p1 … min_p45, max_p1 … max_p45 and mean_p1 … mean_p45 (a parameter's smallest, largest and mean value over the items; min_level, max_level and mean_level the same for level, so "level == max_level" is the single highest note), and the knobs by id. There are no functions over the items: max(p4) is just p4.
 
 Knobs are numbers the command leaves open — how much bigger, how fast something grows, how far to move. Give each a slider: {"id": a name used in expressions, "label": two or three words, "min", "max", "step", "value": a sensible default}. The user drags the slider and the script runs again at once. A command that says everything needs no knobs ([]).
 
@@ -554,7 +562,8 @@ A step leaves out its unused fields here for brevity; give every field ("params"
 "stems down on the bottom notes of the chords" → {"summary": "Bottom notes stem down", "knobs": [], "steps": [{"do": "setting", "codes": [1], "where": "level == chord_low && chord_size > 1", "setting": "Stem", "value": "Down"}]}
 "select only the top notes" → {"summary": "Select the top notes", "knobs": [], "steps": [{"do": "select", "codes": [1], "where": "level == chord_high"}]}
 "connect the notes with lines" → {"summary": "Lines from note to note", "knobs": [], "steps": [{"do": "add", "codes": [1], "where": "si < sn - 1", "params": ["4", "staff", "x + 1.5", "level", "next_level", "next_x"]}]}
-"add c e g" → {"summary": "Add C E G", "knobs": [], "steps": [{"do": "insert", "staff": 0, "from": 0, "to": 0, "notes": "PC5/E/G", "rhythms": "4/4/4"}]}`;
+"add c e g" → {"summary": "Add C E G", "knobs": [], "steps": [{"do": "insert", "staff": 0, "from": 0, "to": 0, "notes": "PC5/E/G", "rhythms": "4/4/4"}]}
+"add the missing hyphens to the lyrics" (412 and 415 are syllables a word goes on from) → {"summary": "Hyphens between syllables", "knobs": [], "steps": [{"do": "add", "codes": [16], "where": "id == 412 || id == 415", "params": ["16", "staff", "1000 + (x + p13 + next_x) / 2", "p4", "p5", "p6"], "text": "-"}]}`;
 }
 
 /** One step as Claude writes it: every field there, none of them a union (the API allows few). */
@@ -580,6 +589,7 @@ interface Written {
   slurs: string;
   size: string;
   params: string[];
+  text: string;
 }
 
 const STRING = { type: 'string' };
@@ -606,7 +616,7 @@ export const SCRIPT_SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['do', 'codes', 'where', 'where_setting', 'where_is', 'setting', 'param', 'value', 'right', 'up', 'line', 'staff', 'from', 'to', 'notes', 'rhythms', 'marks', 'beams', 'slurs', 'size', 'params'],
+        required: ['do', 'codes', 'where', 'where_setting', 'where_is', 'setting', 'param', 'value', 'right', 'up', 'line', 'staff', 'from', 'to', 'notes', 'rhythms', 'marks', 'beams', 'slurs', 'size', 'params', 'text'],
         properties: {
           do: { type: 'string', enum: ['setting', 'set', 'move', 'delete', 'command', 'insert', 'beam', 'select', 'add'] },
           codes: { type: 'array', items: { type: 'integer' } },
@@ -629,6 +639,7 @@ export const SCRIPT_SCHEMA = {
           slurs: STRING,
           size: STRING,
           params: { type: 'array', items: STRING },
+          text: STRING,
         },
       },
     },
@@ -657,18 +668,19 @@ function stepOf(w: Written): Step {
     case 'select':
       return { do: 'select', items };
     case 'add':
-      return { do: 'add', items, params: w.params ?? [] };
+      return { do: 'add', items, params: w.params ?? [], text: w.text || null };
   }
 }
 
 function userMessage(about: About): string {
   const region = about.region ? `staff ${about.region.staff}${about.region.top !== about.region.staff ? `–${about.region.top}` : ''}, P3 ${Math.round(about.region.from)} to ${Math.round(about.region.to)}` : 'nowhere';
-  const rows = about.sample.map((params) => params.map((v) => +v.toFixed(3)).join(' ')).join('\n');
+  const rows = about.sample.map(({ id, params, text }) => `${params.map((v) => +v.toFixed(3)).join(' ')}${text === null ? '' : ` ${JSON.stringify(text)}`} (id ${id})`).join('\n');
+  const some = about.sample.length < [...about.counts.values()].reduce((a, b) => a + b, 0);
   return `Command: ${about.text}
 Selected: ${selectionWords(about)}
 New music goes: ${region}
 Barlines (P3) on these staves: ${[...about.bars].map(([staff, xs]) => `staff ${staff}: ${xs.map((x) => +x.toFixed(2)).join(', ') || 'none'}`).join('; ') || 'none'}
-Items (P1 … Pn)${about.sample.length < [...about.counts.values()].reduce((a, b) => a + b, 0) ? ', the first of them' : ''}:
+Items (P1 … Pn, a text's characters, the id)${some ? `, the first of them${about.counts.has(16) ? ' and the texts' : ''}` : ''}:
 ${rows}`;
 }
 

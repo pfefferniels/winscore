@@ -149,6 +149,39 @@ const noteRows = items().filter((q) => q[0] === 1).sort((a, b) => a[2]! - b[2]!)
 assert.deepEqual([made[0]![3], made[0]![4], made[0]![5]], [noteRows[0]![3], noteRows[1]![3], noteRows[1]![2]], 'from the first note to the second');
 editor.rollback(lines.mark);
 
+// New texts: a hyphen centred between a syllable picked by its identity and the next one on its
+// line, past a text above the staff.
+const sung = Score.empty();
+const sungEditor = scoreEditor(sung);
+const sungAccess: Access = { ...access, editor: sungEditor, params: (index) => {
+  const info = sung.item(index);
+  if (!info) return null;
+  const params = info.params;
+  info.free();
+  return params;
+}, staves: () => sung.staffGeometry(), summaries: () => sung.itemSummaries() };
+run({ summary: 'add', knobs: [], steps: [{ do: 'insert', notes: 'C5/D/E', rhythms: '4/4/4' }] }, sungAccess, { keys: [], region }, '“add”');
+for (const [syllable, x, level] of [['splen', 40, -5], ['di', 80, -5], ['dolce', 100, 13], ['dis', 120, -5]] as const) sungEditor.insertText(syllable, [1, 1000 + x, level]);
+const texts = () => sungEditor.keys().flatMap((key, i) => {
+  const info = sung.item(i)!;
+  const [code, , x = 0, level = 0] = info.params;
+  const text = { key, text: info.text ?? '', x, end: x + (info.params[12] ?? 0), level };
+  info.free();
+  return code === 16 ? [text] : [];
+});
+const syllable = (s: string) => texts().find((t) => t.text === `_00${s}`)!;
+const hyphens: Script = { summary: 'hyphens', knobs: [], steps: [{ do: 'add', items: { codes: [16], where: `id == ${syllable('di').key}` }, params: ['16', 'staff', '1000 + (x + p13 + next_x) / 2', 'p4'], text: '-' }] };
+const hyphened = run(hyphens, sungAccess, { keys: sungEditor.keys(), region }, '“hyphens”');
+assert.equal(hyphened.touched.length, 1, 'one hyphen, after di only');
+const hyphen = texts().find((t) => t.key === hyphened.touched[0])!;
+assert.equal(hyphen.text, '_00-');
+assert.equal(hyphen.level, -5);
+const gap = (syllable('di').end + syllable('dis').x) / 2;
+assert.ok(Math.abs((hyphen.x + hyphen.end) / 2 - gap) < 0.01, `the hyphen is centred on ${gap}, not ${(hyphen.x + hyphen.end) / 2}`);
+sungEditor.rollback(hyphened.mark);
+assert.throws(() => run({ ...hyphens, steps: [{ ...hyphens.steps[0]!, text: null } as Script['steps'][number]] }, sungAccess, { keys: sungEditor.keys(), region }, '“hyphens”'), /needs its characters/);
+assert.equal(texts().length, 4, 'nothing made');
+
 // A refit the engine gives up on (chords with two stems) leaves no half-made beam: the step fails, nothing changes.
 const twoStems = Score.empty();
 const twoEditor = scoreEditor(twoStems);

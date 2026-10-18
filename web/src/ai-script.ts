@@ -54,8 +54,11 @@ export type Step =
   | { do: 'beam'; items?: Filter | null; size: Value }
   /** The items picked become the selection, and what the steps after it act on; nothing is edited. */
   | { do: 'select'; items?: Filter | null }
-  /** For each item picked, a new item with P1 … Pn from these values (over the item it is made for); none where P1 comes to 0. */
-  | { do: 'add'; items?: Filter | null; params: Value[] };
+  /**
+   * For each item picked, a new item with P1 … Pn from these values (over the item it is made for); none where P1 comes to 0.
+   * A text (P1 16) has `text` as its characters and is made as quick entry makes it: P2 … P11 from the values, P3 + 1000 centred on P3.
+   */
+  | { do: 'add'; items?: Filter | null; params: Value[]; text?: string | null };
 
 export interface Script {
   /** What it does, in a few words. */
@@ -108,6 +111,9 @@ export interface Ran {
 const NOTE = 1;
 const BEAM = 6;
 const BARLINE = 14;
+const TEXT = 16;
+/** Quick text entry takes P2 … P11. */
+const TEXT_PARAMS = 11;
 const MAX_PARAM = 45;
 /** Notes this long or longer (and grace notes, from 64) are not beamed, as the engine's refit has it. */
 const BEAMABLE = 0.99;
@@ -264,13 +270,15 @@ function extremes(list: Target[]): Vars {
 }
 
 /**
- * Each target's variables: its parameters, its place in reading order (i of
- * n, t from 0 to 1; chords count once), the same on its own staff (si, sn,
- * st) and in its bar (bar, bi, bn, bt: "bi == 0" is the first of each bar),
- * the targets' leftmost and rightmost P3 on its staff, the lowest and
- * highest level of its chord ("level == chord_low" is each chord's bottom
- * note) and the extremes and means of every parameter over the targets
- * ("level == max_level" is the highest).
+ * Each target's variables: its parameters, its identity (id, as Claude is
+ * shown it), its place in reading order (i of n, t from 0 to 1; chords count
+ * once), the same on its own staff (si, sn, st) and in its bar (bar, bi, bn,
+ * bt: "bi == 0" is the first of each bar), where the next column on its
+ * staff is (a text's: the next text on its line), the targets' leftmost and
+ * rightmost P3 on its staff, the lowest and highest level of its chord
+ * ("level == chord_low" is each chord's bottom note) and the extremes and
+ * means of every parameter over the targets ("level == max_level" is the
+ * highest).
  */
 function placeVars(access: Access, list: Target[]): Vars[] {
   const systems = systemOrder(access.staves());
@@ -301,6 +309,12 @@ function placeVars(access: Access, list: Target[]): Vars[] {
     const key = `${t.params[1]}:${Math.round(t.params[2]! / CHORD)}`;
     levelsAt.set(key, [...(levelsAt.get(key) ?? []), level(t.params[3]!)]);
   });
+  // A text's next one is on its line, as a verse of lyrics goes on: on its staff, within a step of its level.
+  const texts = list.filter((t) => t.params[0] === TEXT);
+  const nextOnLine = (t: Target) =>
+    texts
+      .filter((u) => u.params[1] === t.params[1] && Math.round(u.params[2]! / CHORD) > Math.round(t.params[2]! / CHORD) && Math.abs(level(u.params[3]!) - level(t.params[3]!)) < 1)
+      .reduce<Target | undefined>((a, u) => (a && a.params[2]! <= u.params[2]! ? a : u), undefined);
   // A chord: the targeted notes at one place on a staff (a lone note is its own).
   const chordOf = (t: Target) => `${t.params[1]}:${Math.round(t.params[2]! / CHORD)}`;
   const chords = new Map<string, number[]>();
@@ -324,9 +338,11 @@ function placeVars(access: Access, list: Target[]): Vars[] {
     // The next column's level nearest this item's, as a line from note to note would go.
     const nextLevels = next === undefined ? [own] : (levelsAt.get(`${t.params[1]}:${next}`) ?? [own]);
     const nextLevel = nextLevels.reduce((a, b) => (Math.abs(b - own) < Math.abs(a - own) ? b : a));
+    const line = t.params[0] === TEXT ? (nextOnLine(t) ?? t) : null;
     return {
       ...spread,
       ...paramVars(t.params),
+      id: t.key,
       i,
       n,
       t: n > 1 ? i / (n - 1) : 0,
@@ -337,8 +353,8 @@ function placeVars(access: Access, list: Target[]): Vars[] {
       bi,
       bn,
       bt: bn > 1 ? bi / (bn - 1) : 0,
-      next_x: next === undefined ? t.params[2]! : next * CHORD,
-      next_level: nextLevel,
+      next_x: line ? line.params[2]! : next === undefined ? t.params[2]! : next * CHORD,
+      next_level: line ? level(line.params[3]!) : nextLevel,
       left: (xs[0] ?? 0) * CHORD,
       right: (xs.at(-1) ?? 0) * CHORD,
       chord_low: Math.min(...chord),
@@ -551,18 +567,23 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       const { list, vars } = picked(access, scope, step.items, knobs);
       const values = step.params.map(valueOf);
       // Every new item's numbers first: making items sorts the file.
-      const lines = list
+      const rows = list
         .map((_, k) => values.map((value) => Math.round(value({ ...knobs, ...vars[k]! }) * 1e4) / 1e4))
-        .filter((params) => params[0] !== 0)
-        .map((params) => params.join(' '));
+        .filter((params) => params[0] !== 0);
       const made: number[] = [];
-      for (const line of lines) {
+      for (const params of rows) {
         // A new item comes selected, and numbers typed then would change it.
         editor.select([]);
-        editor.execute(line);
-        if (editor.prompt() !== null) {
-          editor.execute('X');
-          throw new Error(`No item from ${line}`);
+        if (params[0] === TEXT) {
+          if (!step.text) throw new Error('A new text needs its characters');
+          editor.insertText(step.text, params.slice(1, TEXT_PARAMS));
+        } else {
+          const line = params.join(' ');
+          editor.execute(line);
+          if (editor.prompt() !== null) {
+            editor.execute('X');
+            throw new Error(`No item from ${line}`);
+          }
         }
         const keys = editor.keys();
         made.push(...editor.selection().map((i) => keys[i]!));

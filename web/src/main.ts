@@ -1,7 +1,7 @@
 import './style.css';
 import init, { codeName, commandSupported, editWords, groupCommand, InputLine, librarySymbols, paramName, Score, type EncodedList } from './wasm/score_web.js';
 import { createAiPrompt } from './ai-prompt';
-import type { About, Catalog } from './ai-models';
+import type { About, Catalog, Sampled } from './ai-models';
 import { barlines, type Access, type Region, type Scope } from './ai-script';
 import { createPageView, type Scene } from './canvas';
 import { bindClipboard } from './clipboard';
@@ -943,6 +943,9 @@ function middleAt(score: Score, region: Region | null): number {
 }
 
 const SAMPLE_ITEMS = 60;
+/** Texts are shown besides those: commands about words need their characters. */
+const SAMPLE_TEXTS = 200;
+const TEXT = 16;
 
 /** What the models are told about a command and the items it is about. */
 function aiAbout(text: string, scope: Scope): About | null {
@@ -950,24 +953,30 @@ function aiAbout(text: string, scope: Scope): About | null {
   const access = aiAccess();
   if (!score || !access) return null;
   const counts = new Map<number, number>();
-  const sample: number[][] = [];
+  const sample: Sampled[] = [];
+  const keys = access.editor.keys();
   let indices: number[];
   if (scope.keys === null) {
     const all = itemSummaries(score);
     all.forEach(({ code }) => counts.set(code, (counts.get(code) ?? 0) + 1));
-    indices = all.slice(0, SAMPLE_ITEMS).map(({ index }) => index);
+    const sampled = [...all.filter(({ code }) => code !== TEXT).slice(0, SAMPLE_ITEMS), ...all.filter(({ code }) => code === TEXT).slice(0, SAMPLE_TEXTS)];
+    indices = sampled.map(({ index }) => index).sort((a, b) => a - b);
   } else {
-    const keys = access.editor.keys();
     const at = new Map(keys.map((key, i) => [key, i]));
     indices = scope.keys.flatMap((key) => at.get(key) ?? []);
   }
+  let [others, texts] = [0, 0];
   for (const index of indices) {
-    const params = access.params(index);
-    if (!params) continue;
+    const info = score.item(index);
+    if (!info) continue;
+    const params = info.params;
+    const characters = info.text ?? null;
+    info.free();
     if (scope.keys !== null) counts.set(params[0]!, (counts.get(params[0]!) ?? 0) + 1);
-    if (sample.length < SAMPLE_ITEMS) sample.push(trimmed(params));
+    const shown = params[0] === TEXT ? texts++ < SAMPLE_TEXTS : others++ < SAMPLE_ITEMS;
+    if (shown) sample.push({ id: keys[index]!, params: trimmed(params), text: characters });
   }
-  const staves = new Set([...sample.map((p) => p[1]!), ...(scope.region ? [scope.region.staff] : [])]);
+  const staves = new Set([...sample.map(({ params }) => params[1]!), ...(scope.region ? [scope.region.staff] : [])]);
   const bars = new Map([...barlines(access)].filter(([staff]) => staves.has(staff)));
   return { text, counts, whole: scope.keys === null, region: scope.region, middle: middleAt(score, scope.region), sample, bars, codeName: nameOf };
 }
