@@ -82,7 +82,7 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Can
     };
     match unparenthesised(p6) {
         HEADLESS => {}
-        BLACK if doc.screen() => cached_black_head(doc, item, note, canvas),
+        BLACK if doc.screen() && !doc.refined() => cached_black_head(doc, item, note, canvas),
         -3 => clef_head(canvas, super::BREVE),
         h if h < HEADLESS => clef_head(canvas, h),
         DIAMOND_X => library_head(canvas, DIAMOND_X_SYMBOL),
@@ -101,7 +101,8 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Can
 /// lives across items and redraws, and the engine draws a score more than
 /// once before showing it, so the head whose offsets a note gets is found
 /// by walking back cyclically through the black heads of the score to the
-/// last one whose predecessor had another scale.
+/// last one whose predecessor had another scale. Print, and the refined
+/// style, draw every head afresh.
 fn cached_black_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
     let heads: Vec<(ItemRef<'_>, Note)> = doc
         .items()
@@ -145,7 +146,7 @@ fn alpha_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
     let staff = doc.staff_of(item);
     let hollow = trunc(f64::from(item.p(6))) < 0;
     if hollow && note.level % 2 != 0 {
-        staff_line_mask(note, staff.step, canvas);
+        staff_line_mask(doc, note, staff.step, canvas);
     }
     let size = alpha_size(item);
     let p3 = real(note.unit * constant(1.45) / 25.0 + real(note.origin.x / P3_UNIT));
@@ -224,21 +225,22 @@ fn letter_item(item: ItemRef<'_>, note: &Note, size: f64) -> Option<Item> {
 
 /// draw_box type 0, filled, 2.4 by 0.35 half-widths of 3.5 steps, centred
 /// 210 units (at size 1) right of the note, emitted at once in white.
-fn staff_line_mask(note: &Note, staff_step: f64, canvas: &mut Canvas<'_>) {
+fn staff_line_mask(doc: &Document<'_>, note: &Note, staff_step: f64, canvas: &mut Canvas<'_>) {
     let centre = Pos::new(real(staff_step / 25.0 * 210.0 + note.origin.x), note.origin.y);
-    white_box(canvas, centre, note.step, (constant(2.4), constant(0.35)));
+    white_box(doc, canvas, centre, note.step, (constant(2.4), constant(0.35)));
 }
 
 /// draw_box type 0, filled, with half-widths of `size` × 3.5 steps,
-/// emitted at once in near-white (as 0x4F1F69 and 0x559733 do).
-pub(super) fn white_box(canvas: &mut Canvas<'_>, centre: Pos, step: f64, size: (f64, f64)) {
+/// emitted at once in near-white (as 0x4F1F69 and 0x559733 do), or in
+/// white in the refined style: a mask is meant to match the paper.
+pub(super) fn white_box(doc: &Document<'_>, canvas: &mut Canvas<'_>, centre: Pos, step: f64, size: (f64, f64)) {
     let half_width = real(step * 3.5 * size.0);
     let half_height = real(step * 3.5 * size.1);
     let (left, right) = (real(centre.x - half_width), real(half_width + centre.x));
     let (bottom, top) = (real(centre.y - half_height), real(half_height + centre.y));
     let own = canvas.colour;
     canvas.flush();
-    canvas.colour = MASK_COLOUR;
+    canvas.colour = if doc.refined() { KNOCKOUT_COLOUR } else { MASK_COLOUR };
     canvas.fill([[
         Pos::new(left, bottom),
         Pos::new(right, bottom),
@@ -252,6 +254,7 @@ pub(super) fn white_box(canvas: &mut Canvas<'_>, centre: Pos, step: f64, size: (
 
 /// The colour 0x4F1F69 emits the mask in (COLORREF 0xFDFDFD).
 const MASK_COLOUR: Colour = Colour { r: 253, g: 253, b: 253 };
+const KNOCKOUT_COLOUR: Colour = Colour { r: 255, g: 255, b: 255 };
 
 fn parentheses(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
     let left = match trunc(f64::from(item.p(5))) % 10 {
@@ -271,4 +274,42 @@ fn parentheses(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut 
         let at = Pos::new(real(note.unit * offset + note.origin.x), note.origin.y);
         glyph::library(doc, item, canvas, PARENTHESIS_SYMBOL, at, (sx, size), note.unit);
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::codes::note::tests::{file, shapes};
+    use crate::document::{Medium, Options};
+
+    /// A black head at x = 150 × 30.003 = 4500.45, alone or after one at P3 = 20.
+    fn heads(alone: bool) -> score_format::MusFile {
+        let head = |p3: f32| [1.0, 1.0, p3, 5.0, 0.0];
+        if alone {
+            file(&[&head(30.003)])
+        } else {
+            file(&[&head(20.0), &head(30.003)])
+        }
+    }
+
+    #[test]
+    fn refined_black_heads_do_not_copy_each_other() {
+        let head = |file, options, n| shapes(&file, options, n).remove(0).paths;
+        let alone = head(heads(true), Options::ENGINE, 1);
+        assert_ne!(head(heads(false), Options::ENGINE, 2), alone, "the engine pastes the first head's offsets");
+        let print = Options { medium: Medium::Print, ..Options::ENGINE };
+        assert_eq!(head(heads(false), print, 2), alone, "print draws each head afresh");
+        assert_eq!(head(heads(false), Options::REFINED, 2), alone);
+    }
+
+    #[test]
+    fn refined_knockouts_are_white() {
+        // Tablature (P6 = -6) with P20 = 1: a box behind the fret number.
+        let mut params = [0.0_f32; 20];
+        params[..6].copy_from_slice(&[1.0, 1.0, 20.0, 5.0, 0.0, -6.0]);
+        params[19] = 1.0;
+        let file = file(&[&params]);
+        let colour = |options| shapes(&file, options, 1)[0].colour;
+        assert_eq!(colour(Options::ENGINE), super::MASK_COLOUR);
+        assert_eq!(colour(Options::REFINED), super::KNOCKOUT_COLOUR);
+    }
 }
