@@ -6,7 +6,8 @@
 //! has been read, P12 clockwise rotation in degrees, P14… the file name.
 //! The screen shows the bounding box with its diagonals; before the box is
 //! read, a placeholder square of P5 × P6 scale steps (default 3). Printing
-//! embeds the file instead.
+//! embeds the file instead; the port, which cannot, draws the screen's box
+//! on every medium, the refined style on the screen only.
 //!
 //! The engine draws nothing when it cannot find the file; the port has no
 //! file system and assumes the file is there.
@@ -23,6 +24,11 @@ const BOUNDING_BOX_READ: i32 = -9999;
 const PLACEHOLDER_SIZE: f64 = 3.0;
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+    // The box stands in for the picture on the screen; a printed or
+    // exported page would show it where the picture belongs.
+    if doc.refined() && !doc.screen() {
+        return;
+    }
     let at = doc.position(item);
     let step = doc.staff_of(item).step;
     if trunc(f64::from(item.p(11))) == BOUNDING_BOX_READ {
@@ -80,4 +86,28 @@ fn placeholder(item: ItemRef<'_>, at: Pos, step: f64, canvas: &mut Canvas<'_>) {
     [Pos::new(right, at.y), Pos::new(right, top), Pos::new(at.x, top), at]
         .into_iter()
         .for_each(|p| canvas.point(p, Pen::Continue));
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::display::ItemId;
+    use crate::document::{Medium, Options};
+    use crate::Document;
+    use score_format::{Item, MusFile, Word};
+
+    #[test]
+    fn the_refined_style_shows_the_box_on_the_screen_only() {
+        let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
+        let mut file = MusFile::empty();
+        file.items = vec![words(&[8.0, 1.0, 0.0, 0.0, 1.0]), words(&[15.0, 1.0, 20.0, 4.0])];
+        let boxes = |options: Options| {
+            let list = crate::render(&Document::with_options(&file, options));
+            list.shapes.iter().filter(|s| s.source == Some(ItemId(1))).count()
+        };
+        let print = |options: Options| Options { medium: Medium::Print, ..options };
+        assert_eq!(boxes(Options::ENGINE), 1);
+        assert_eq!(boxes(print(Options::ENGINE)), 1);
+        assert_eq!(boxes(Options::REFINED), 1);
+        assert_eq!(boxes(print(Options::REFINED)), 0);
+    }
 }
