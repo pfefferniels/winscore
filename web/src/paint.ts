@@ -105,12 +105,25 @@ function placement(t: Transform, shape: Shape, pen: number | null): Placement {
   return { x: snap(x, first[0]!), y: snap(y, first[1]!) };
 }
 
+/** Whether polyline `path` ends where it starts (box and frame outlines, circles), after at least two other points. */
+function isClosed(path: Int32Array): boolean {
+  const last = path.length - 2;
+  return path.length >= 8 && path[0] === path[last] && path[1] === path[last + 1];
+}
+
+/**
+ * Traces `shape`'s paths. A polyline that ends where it starts is closed, so
+ * that its first corner is joined like the others instead of showing two
+ * butt ends.
+ */
 function tracePaths(ctx: CanvasRenderingContext2D, shape: Shape, at: Placement) {
   shape.paths.forEach((path) => {
     if (path.length < 2) return;
+    const closed = !shape.fill && isClosed(path);
+    const end = closed ? path.length - 2 : path.length;
     ctx.moveTo(at.x(path[0]!), at.y(path[1]!));
-    for (let i = 2; i + 1 < path.length; i += 2) ctx.lineTo(at.x(path[i]!), at.y(path[i + 1]!));
-    if (shape.fill) ctx.closePath();
+    for (let i = 2; i + 1 < end; i += 2) ctx.lineTo(at.x(path[i]!), at.y(path[i + 1]!));
+    if (shape.fill || closed) ctx.closePath();
   });
 }
 
@@ -149,18 +162,26 @@ function onCanvas(ctx: CanvasRenderingContext2D, t: Transform, shape: Shape, pen
 
 /**
  * The pen of a shape in device pixels, 0 for none. Lines are at least a pixel
- * wide. Fill outlines go down to half a pixel: a whole one closes the gaps
- * between beams at 75 % and less on a 1× screen, while much thinner slurs and
- * the thin strokes of glyphs fade to grey. Pens under one and a half pixels
- * are drawn at most a pixel wide: canvases draw such pens as hairlines, several
- * times faster than wider ones, and the quarter pixel or less this takes off
- * each side does not show. Snapped shapes take whole pixels, as stroke
- * adjustment rounds them, a fill none below half a pixel.
+ * wide, so the thinnest (score-render's hairline of an engine unit, a print
+ * pen narrowed to almost nothing) are drawn one pixel wide, never with the
+ * default pen. The outline of a fill with the default pen goes down to half a
+ * pixel: a whole one closes the gaps between beams at 75 % and less on a 1×
+ * screen, while much thinner slurs and the thin strokes of glyphs fade to
+ * grey. Thinner pens lower that floor in proportion, and an outline under a
+ * tenth of a pixel is left out, so a fill whose outline is a hairline does not
+ * visibly grow. Pens under one and a half pixels are drawn at most
+ * a pixel wide: canvases draw such pens as hairlines, several times faster
+ * than wider ones, and the quarter pixel or less this takes off each side does
+ * not show. Snapped shapes take whole pixels, as stroke adjustment rounds
+ * them, a fill none below half a pixel.
  */
 function shapePen(t: Transform, shape: Shape, snapped: boolean): number {
-  const pen = (shape.width || PEN) * t.k;
+  const width = shape.width || PEN;
+  const pen = width * t.k;
   if (snapped) return Math.max(shape.fill ? 0 : 1, Math.round(pen));
-  const drawn = Math.max(shape.fill ? 0.5 : 1, pen);
+  if (!shape.fill) return pen < 1.5 ? 1 : pen;
+  const drawn = Math.max(pen, 0.5 * Math.min(1, width / PEN));
+  if (drawn < 0.1) return 0;
   return drawn < 1.5 ? Math.min(drawn, 1) : drawn;
 }
 
