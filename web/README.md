@@ -26,7 +26,7 @@ Frame times while dragging: `npm run build && npm run perf [FILE.mus …]` (defa
 
 Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT_DIR [name='sample=mozart.mus&zoom=200' …]` (needs `npx playwright install chromium` once).
 
-The AI command: `npm run check:ai` (no browser: expressions, values lifted from commands, scripts run through score-web) and, after a build, `npm run smoke:ai` (the field, sliders and undo in the built app, with Jev and Claude answered by canned replies). `npm run eval:jev` sends 59 commands to the real Jev (`TYPESAFE_API_KEY`) and compares the intents with the expected ones (`scripts/jev-eval.ts`): all 59 with jev-1.13, a median of about 120 ms per reading. `CHROMIUM=/path/to/chrome` runs the browser scripts with another Chromium than Playwright's.
+The AI command: `npm run check:ai` (no browser: expressions, values lifted from commands, scripts run through score-web) and, after a build, `npm run smoke:ai` (the field, sliders and undo in the built app, with Jev and Claude answered by canned replies). `npm run eval:jev` sends 59 commands to the real Jev (`TYPESAFE_API_KEY`) and compares the intents with the expected ones (`scripts/jev-eval.ts`): all 59 with jev-1.13, a median of about 120 ms per reading. `npm run eval:claude` gives Claude (`CLAUDE_API_KEY` or `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` to pick one) the commands Jev leaves to it, on items of `mozart.mus`, runs each script on the score and checks what it did (`scripts/claude-eval.ts`). `CHROMIUM=/path/to/chrome` runs the browser scripts with another Chromium than Playwright's.
 
 ## Using it
 
