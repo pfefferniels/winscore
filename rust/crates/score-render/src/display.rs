@@ -15,6 +15,15 @@ pub const UNITS_PER_INCH: i32 = 4000;
 /// draw it at least one device pixel wide.
 pub const PEN: f32 = 4000.0 / 150.0;
 
+/// The pen SCORE's PostScript output draws with after a print-width marker
+/// (0x4D4ED2, called by the drawing routines when printing) of `w`: `w` is
+/// in 1/600 inch and adds to the default pen (0x4CF0D3), which it can also
+/// narrow, down to nothing. The engine's screen output has no such widths;
+/// [`crate::Style::Refined`] draws them on every medium.
+pub fn print_pen(w: f32) -> f32 {
+    (PEN + w * UNITS_PER_INCH as f32 / 600.0).max(0.0)
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Point {
     pub x: i32,
