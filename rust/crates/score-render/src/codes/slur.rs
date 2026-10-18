@@ -9,10 +9,11 @@
 //! P27–P29 a slash. The slur is built level from its left end and then
 //! turned through the angle of P4–P5. A slur reads no other item.
 //!
-//! The engine samples the curve at two points per 200 units, which leaves
-//! short slurs and ties with visible corners and a flat top, and thickens it
-//! upright, which leaves steep ends thin. The refined style follows the same
-//! curve between the samples and thickens it along its normal ([`Smooth`]).
+//! The curve is sampled as the engine samples it, at two points per 200
+//! units, and followed between the samples, thickened along its normal
+//! ([`Smooth`]); the engine draws only the samples, which leaves short slurs
+//! and ties with visible corners and a flat top, and thickens them upright,
+//! which leaves steep ends thin.
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
 use crate::codes::number::{draw_number, number_font_loaded, NumberCall};
@@ -322,9 +323,8 @@ fn ending(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut C
     };
     let step = bracket.step;
     let number_y = real(bracket.top - step * constant(28.0));
-    // The screen and print place the number differently; the refined style as print.
-    let print_place = !doc.screen() || doc.refined();
-    let number_x = real(step * if print_place { constant(13.5) } else { constant(14.5) });
+    // Where print places the number; the engine's screen puts it a step further right.
+    let number_x = real(step * constant(13.5));
     // P13 from 0.01 to 0.99 moves the stop right; P13 >= 1 only opens the bracket.
     let p13 = if ip13 > 0 { 0.0 } else { p(13) };
     let (shift, lift) = match p(12) {
@@ -437,13 +437,13 @@ fn slur(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Can
         number_gap(&mut buffer, item, slur.step, slur.dx);
     }
     let slash = (item.p(27) != 0.0).then(|| slur.slash(item, buffer.slots.first().map_or(0, |p| p.at.y)));
-    let smooth = doc.refined().then(|| Smooth::of(&slur, item)).flatten();
-    let mut points: Vec<BufferPoint> = match smooth {
-        // The refined style draws the slash whole, as its own object.
+    let mut points: Vec<BufferPoint> = match Smooth::of(&slur, item) {
+        // The slash is drawn whole, as its own object.
         Some(smooth) if buffer.len() < BUFFER_POINTS => {
             smooth.follow(buffer.points()).into_iter().chain(slash.iter().flatten().map(Slot::point)).collect()
         }
         Some(_) => Vec::new(),
+        // Triangles, and curves whose peak is not between their ends, as the engine draws them.
         None => {
             if let Some(slash) = slash {
                 buffer.append_keeping_pens(&slash);
@@ -467,8 +467,8 @@ fn slur(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Can
     }
 }
 
-/// A point of the slur in draw_slur's buffer and, for the refined style,
-/// the sample of the curve it stands for.
+/// A point of the slur in draw_slur's buffer and the sample of the curve it
+/// stands for, if any.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Slot {
     at: Point,
@@ -651,9 +651,6 @@ struct Slur {
     /// Point spacing along the slur.
     dx: f64,
     points: usize,
-    /// The screen repeats triangle strokes; print (OUTPUT_MODE = -1) and
-    /// the refined style do not.
-    copies: bool,
 }
 
 impl Slur {
@@ -715,15 +712,14 @@ impl Slur {
         }
         let points = point_count(item, length, shape);
         let dx = real(length / f64::from(points as i32 - 1));
-        let copies = doc.screen() && !doc.refined();
-        Self { step, centre, xl, y0, dy, length0, length, height, start, end, shape, dx, points, copies }
+        Self { step, centre, xl, y0, dy, length0, length, height, start, end, shape, dx, points }
     }
 
     /// The closed outline: along the curve from the left end and back with
     /// the thickness added; dots, dashes or a triangle instead when asked.
     fn outline(&self, item: ItemRef<'_>) -> Vec<Slot> {
         if trunc(f64::from(item.p(9))) == TRIANGLE {
-            return self.triangle(item);
+            return self.triangle();
         }
         let curve = self.curve(item);
         let mut points = self.with_thickness(item, &curve);
@@ -859,24 +855,19 @@ impl Slur {
             .collect()
     }
 
-    /// P9 = 99: two strokes from the ends up to the peak at P10, repeated
-    /// trunc(P13) times seven units higher on the screen.
-    fn triangle(&self, item: ItemRef<'_>) -> Vec<Slot> {
+    /// P9 = 99: two strokes from the ends up to the peak at P10, drawn once
+    /// as print draws them (the engine's screen repeats them trunc(P13)
+    /// times seven units higher).
+    fn triangle(&self) -> Vec<Slot> {
         let y = trunc(self.y0);
         let left = trunc(self.xl);
         let peak = trunc(self.centre * self.length + self.xl);
         let right = trunc(self.length + self.xl);
-        let copies = if self.copies { trunc(f64::from(item.p(13))).max(0) + 1 } else { 1 };
-        (0..copies)
-            .flat_map(|copy| {
-                let y = y + 7 * copy;
-                [
-                    Slot::new(Point::new(left, y), Pen::Stroke),
-                    Slot::new(Point::new(peak, trunc(f64::from(y) + self.height)), Pen::Continue),
-                    Slot::new(Point::new(right, y), Pen::Continue),
-                ]
-            })
-            .collect()
+        vec![
+            Slot::new(Point::new(left, y), Pen::Stroke),
+            Slot::new(Point::new(peak, trunc(f64::from(y) + self.height)), Pen::Continue),
+            Slot::new(Point::new(right, y), Pen::Continue),
+        ]
     }
 
     /// After building the curve the counter stands at half its points; the
@@ -1030,16 +1021,16 @@ impl Profile {
     }
 }
 
-/// Units a sample of the refined curve keeps from the engine's samples.
+/// Units a point of the drawn curve keeps from the engine's samples.
 const MIN_SEGMENT: f64 = 3.0;
 
-/// Turn of the refined curve per segment, at most.
+/// Turn of the drawn curve per segment, at most.
 const MAX_TURN_DEGREES: f64 = 3.0;
 
-/// The curve draw_slur samples, followed between its samples: the refined
-/// style's slur. It is [`Slur::curve`]'s power curve with the same ends,
-/// peak and exponent, but without the flat top an even number of samples
-/// leaves at the peak, and its way back is offset along the normal with
+/// The curve draw_slur samples, followed between its samples: the slur as
+/// drawn. It is [`Slur::curve`]'s power curve with the same ends, peak and
+/// exponent, but without the flat top an even number of samples leaves at
+/// the peak, and its way back is offset along the normal with
 /// [`Profile::offset`]. Coordinates are level, as before the turn.
 #[derive(Debug, Clone, PartialEq)]
 struct Smooth {
@@ -1429,47 +1420,53 @@ mod tests {
         assert_eq!(loaded(font_loaded, &p16), times_italic);
     }
 
-    /// The shapes of `item` in the given style.
-    fn shapes(item: &[f32], options: crate::Options) -> Vec<crate::Shape> {
+    /// The shapes of `item`.
+    fn shapes(item: &[f32]) -> Vec<crate::Shape> {
         let file = file(item);
-        let list = crate::render(&Document::with_options(&file, options));
+        let list = crate::render(&Document::new(&file));
         list.shapes.into_iter().filter(|s| s.source == Some(ItemId(1))).collect()
     }
 
     /// A tie over a scale step's curvature, 1200 units long.
     const TIE: [f32; 7] = [5.0, 1.0, 100.0, 9.0, 9.0, 108.0, 1.0];
 
-    fn smooth(item: &[f32]) -> Smooth {
+    /// The curve of the slur `item` and the engine's outline of it.
+    fn slur(item: &[f32]) -> (Option<Smooth>, Vec<Slot>) {
         let file = file(item);
         let doc = Document::new(&file);
         let item = doc.item(ItemId(1)).expect("the slur exists");
         let slur = Slur::new(&doc, item, &Params::new(&doc, item));
-        Smooth::of(&slur, item).expect("a slur with a curve")
+        (Smooth::of(&slur, item), slur.outline(item))
+    }
+
+    fn smooth(item: &[f32]) -> Smooth {
+        slur(item).0.expect("a slur with a curve")
     }
 
     #[test]
-    fn refined_ties_follow_the_curve_with_the_peak_sampled() {
-        let smooth = smooth(&TIE);
+    fn ties_follow_the_curve_with_the_peak_sampled() {
+        let (smooth, outline) = slur(&TIE);
+        let smooth = smooth.expect("a slur with a curve");
         assert!(smooth.dense.contains(&smooth.peak));
         let points: Vec<Pos> = smooth.dense.iter().map(|&x| smooth.point(x)).collect();
         let direction = |a: Pos, b: Pos| (b.y - a.y).atan2(b.x - a.x).to_degrees();
         let turns = points.windows(3).map(|w| (direction(w[1], w[2]) - direction(w[0], w[1])).abs());
         assert!(turns.fold(0.0, f64::max) <= MAX_TURN_DEGREES + 1e-9);
-        let engine = shapes(&TIE, crate::Options::ENGINE);
-        let refined = shapes(&TIE, crate::Options::REFINED);
-        assert_eq!((engine.len(), refined.len()), (1, 1));
-        assert!(refined[0].paths[0].len() > 2 * engine[0].paths[0].len());
-        // The ends stay where the engine has them, and the peak is a point.
-        let ends = |shape: &crate::Shape| (shape.paths[0][0], shape.paths[0].iter().map(|p| p.x).max());
-        assert_eq!(ends(&refined[0]), ends(&engine[0]));
-        let (first, left) = (refined[0].paths[0][0], smooth.point(smooth.left).to_point());
-        let peak = smooth.point(smooth.peak).to_point();
-        let peak = Point::new(peak.x + first.x - left.x, peak.y + first.y - left.y);
-        assert!(refined[0].paths[0].contains(&peak));
+        let tie = shapes(&TIE);
+        assert_eq!(tie.len(), 1);
+        let path = &tie[0].paths[0];
+        assert!(path.len() > 2 * outline.len());
+        // The ends stay at the engine's samples, and the peak is a point.
+        let start = outline[0].at;
+        assert_eq!(smooth.point(smooth.left).to_point(), start);
+        let placed = |p: Point| Point::new(p.x + path[0].x - start.x, p.y + path[0].y - start.y);
+        let right = outline.iter().map(|s| s.at.x).max().expect("samples");
+        assert_eq!(path.iter().map(|p| p.x).max(), Some(placed(Point::new(right, 0)).x));
+        assert!(path.contains(&placed(smooth.point(smooth.peak).to_point())));
     }
 
     #[test]
-    fn refined_thickness_lies_along_the_normal() {
+    fn thickness_lies_along_the_normal() {
         let smooth = smooth(&TIE);
         let x = smooth.left + (smooth.peak - smooth.left) * 0.2;
         let (point, back) = (smooth.point(x), smooth.back(x));
@@ -1484,20 +1481,19 @@ mod tests {
     }
 
     #[test]
-    fn refined_dashed_slurs_keep_their_dashes() {
+    fn dashed_slurs_keep_their_dashes() {
         let dashed = [5.0, 1.0, 100.0, 9.0, 9.0, 130.0, 3.0, 0.0, 0.0, 0.0, 5.0];
-        let engine = shapes(&dashed, crate::Options::ENGINE);
-        let refined = shapes(&dashed, crate::Options::REFINED);
-        assert_eq!(engine.len(), refined.len());
-        let starts = |shapes: &[crate::Shape]| shapes.iter().map(|s| s.paths[0][0].x).collect::<Vec<_>>();
-        assert_eq!(starts(&engine), starts(&refined));
+        let (_, outline) = slur(&dashed);
+        let starts: Vec<i32> = outline.iter().filter(|s| s.pen == Pen::Fill).map(|s| s.at.x).collect();
+        let dashes = shapes(&dashed);
+        let drawn: Vec<i32> = dashes.iter().map(|s| s.paths[0][0].x - dashes[0].paths[0][0].x).collect();
+        assert_eq!(drawn, starts.iter().map(|x| x - starts[0]).collect::<Vec<_>>());
     }
 
     #[test]
-    fn refined_triangles_are_drawn_once_as_in_print() {
+    fn triangles_are_drawn_once_whatever_their_p13() {
         let triangle = [5.0, 1.0, 100.0, 9.0, 9.0, 130.0, 3.0, 0.0, 99.0, 0.0, 0.0, 0.0, 2.0];
-        assert_eq!(shapes(&triangle, crate::Options::ENGINE).len(), 3);
-        assert_eq!(shapes(&triangle, crate::Options::REFINED).len(), 1);
+        assert_eq!(shapes(&triangle).len(), 1);
     }
 
     #[test]
