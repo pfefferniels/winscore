@@ -3,9 +3,9 @@
 //! P3/P6 left and right end (P6 = 0 is 200), P4 displacement in scale steps,
 //! P5 size (or P14 = staff height in cm), P7 lines, P8 an extra line P8
 //! inches above the bottom line (undocumented), P10 height above a reference
-//! staff, P12 = 1 hides the staff number. P11 (thickness) only acts in print,
-//! and in the refined style. Every line is its own segment, drawn bottom to
-//! top.
+//! staff, P11 thickness, P12 = 1 hides the staff number. The lines have the
+//! widths of SCORE's print output on every medium (the engine's screen
+//! ignores P11). Every line is its own segment, drawn bottom to top.
 
 use std::iter::successors;
 
@@ -74,7 +74,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     }
     let space = 2.0 * staff.scale_step();
     let first = real(staff.bottom + f64::from(lines.first) * space);
-    let pixels = if doc.refined() { print_pixels(item, &staff) } else { 0 };
+    let pixels = print_pixels(item, &staff);
     if pixels != 0 {
         canvas.set_width(print_width(pixels as f32));
     }
@@ -161,22 +161,20 @@ mod tests {
     #[test]
     fn print_thickness_from_p11_and_size() {
         use score_format::{Item, MusFile, Word};
-        let staff = |params: &[f32], refined: bool| {
+        let staff = |params: &[f32]| {
             let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
             let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
             bytes.extend(trailer.iter().flat_map(|w| w.to_le_bytes()));
             let mut file = MusFile::parse(&bytes).expect("an empty file parses");
             file.items = vec![Item::new(params.iter().map(|&p| Word::from_f32(p)).collect())];
-            let options = if refined { crate::Options::REFINED } else { crate::Options::ENGINE };
-            let list = crate::render(&Document::with_options(&file, options));
+            let list = crate::render(&Document::new(&file));
             list.shapes.iter().map(|s| s.width).collect::<Vec<f32>>()
         };
         let p11 = |p11: f32| [8.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, p11];
-        assert_eq!(staff(&p11(2.0), true), vec![crate::print_pen(2.0); 5]);
-        assert_eq!(staff(&p11(2.0), false), vec![0.0; 5]);
-        assert_eq!(staff(&p11(99.0), true), vec![0.0; 5]);
-        assert_eq!(staff(&[8.0, 1.0, 0.0, 0.0, 0.6], true), vec![crate::print_pen(-1.0); 5]);
-        assert_eq!(staff(&[8.0, 1.0, 0.0, 0.0, 0.65], true), vec![0.0; 5]);
+        assert_eq!(staff(&p11(2.0)), vec![crate::print_pen(2.0); 5]);
+        assert_eq!(staff(&p11(99.0)), vec![0.0; 5]);
+        assert_eq!(staff(&[8.0, 1.0, 0.0, 0.0, 0.6]), vec![crate::print_pen(-1.0); 5]);
+        assert_eq!(staff(&[8.0, 1.0, 0.0, 0.0, 0.65]), vec![0.0; 5]);
     }
 
     #[test]

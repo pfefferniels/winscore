@@ -10,16 +10,15 @@
 //! P14/P15 partial hairpins, P16 = 1 with P17/P18 end offsets. Wavy lines
 //! and P7 = -5 with P6 = 0 (or P6 = P3) run upward from P4 to P5.
 //!
-//! The engine's screen branches are ported (OUTPUT_MODE 1). The engine
-//! thickens lines on the screen by drawing copies 14 units apart; in print
-//! it sets a PostScript line width instead, which the refined style draws on
-//! every medium.
+//! The engine's screen branches are ported (OUTPUT_MODE 1), with the line
+//! widths of SCORE's print output on every medium: the engine's screen
+//! thickens lines by drawing copies 14 units apart instead.
 
 use std::iter::{once, successors};
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
 use crate::document::{Document, ItemRef};
-use crate::geometry::{self, print_width, rotate_points};
+use crate::geometry::{print_width, rotate_points};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, UNITS_PER_SCALE_STEP};
 use crate::units::{constant, real, trunc, Pos};
@@ -63,7 +62,7 @@ impl Params {
 }
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-    draw(doc, &Params::of(item), doc.position(item), &doc.staff_of(item), canvas);
+    draw(&Params::of(item), doc.position(item), &doc.staff_of(item), canvas);
 }
 
 /// Where the parts of a code-4 item lie before its rotation (internal
@@ -120,17 +119,16 @@ const HEAVY_WAVE: i32 = -1;
 const MULTIPOINT: i32 = 100;
 
 /// Draws a code-4 item with parameters `params` whose P3/P4 point is
-/// `origin` (X_POS, Y_POS) on `staff`, in the document's style.
-pub fn draw(doc: &Document<'_>, params: &Params, origin: Pos, staff: &Staff, canvas: &mut Canvas<'_>) {
-    draw_with_step(doc, params, origin, staff, staff.step, canvas);
+/// `origin` (X_POS, Y_POS) on `staff`.
+pub fn draw(params: &Params, origin: Pos, staff: &Staff, canvas: &mut Canvas<'_>) {
+    draw_with_step(params, origin, staff, staff.step, canvas);
 }
 
 /// [`draw`] with the engine's STEP set to `step` (callers that scale it,
 /// e.g. for small notes); levels still come from the staff table.
-pub fn draw_with_step(doc: &Document<'_>, params: &Params, origin: Pos, staff: &Staff, step: f64, canvas: &mut Canvas<'_>) {
+pub fn draw_with_step(params: &Params, origin: Pos, staff: &Staff, step: f64, canvas: &mut Canvas<'_>) {
     let mut line = Line::new(params, origin, staff, step, canvas.buffer_mut().len());
-    line.refined = doc.refined();
-    let width = line.print_width().filter(|_| line.refined);
+    let width = line.print_width();
     if let Some(width) = width {
         canvas.set_width(width);
     }
@@ -171,8 +169,6 @@ struct Line<'a> {
     thickness: i32,
     /// The buffer index of the line's first point (NPT0).
     start: usize,
-    /// Draw in the refined style: the print width instead of copies.
-    refined: bool,
 }
 
 impl<'a> Line<'a> {
@@ -208,7 +204,6 @@ impl<'a> Line<'a> {
             left: Pos::new(x, origin.y),
             thickness,
             start,
-            refined: false,
         }
     }
 
@@ -223,14 +218,6 @@ impl<'a> Line<'a> {
             _ => 2 * self.thickness,
         };
         (pixels != 0).then(|| print_width(pixels as f32))
-    }
-
-    /// thicken 0x42A8AE on the line's points (screen output); the refined
-    /// style has drawn them with [`Line::print_width`] instead.
-    fn thicken(&self, canvas: &mut Canvas<'_>, n: i32) {
-        if !self.refined {
-            geometry::thicken(canvas.buffer_mut(), self.start, n);
-        }
     }
 
     fn step(&self) -> f64 {
@@ -294,11 +281,6 @@ fn straight(line: &Line<'_>, right: Pos, canvas: &mut Canvas<'_>) {
     canvas.point(right, Pen::Continue);
     if line.p.p(12) != 0.0 {
         end_mark(canvas, right, line.p.p(12), End::Finish, across, scale_step);
-    }
-    if line.thickness != 0 {
-        // 0x43C0EA: the copies go up and down unless the line is steeper than 45°.
-        let flat = (right.x - line.left.x).abs() - (right.y - line.left.y).abs() >= 0.0;
-        line.thicken(canvas, if flat { line.thickness * 100 } else { line.thickness });
     }
     line.rotate(canvas, line.rotation());
 }
@@ -375,8 +357,9 @@ fn dash_lengths(p: &Params, scale_step: f64) -> (f64, f64) {
     (dash, if space <= 0.0 { dash } else { space })
 }
 
-/// Dashes along y = `from.y` from `from.x` until `until` (0x439598); the
-/// last dash may pass it. Returns the x after the last space.
+/// Dashes along y = `from.y` from `from.x` until `until` as the engine
+/// draws them (0x439598): the last dash may pass it. Returns the x after the
+/// last space.
 fn dash_row(canvas: &mut Canvas<'_>, from: Pos, until: f64, dash: f64, space: f64) -> f64 {
     let next = |x: f64| real(space + real(dash + x));
     let starts = repeated(from.x, next, |x| x < until);
@@ -400,18 +383,10 @@ fn dashes(line: &Line<'_>, right_y: f64, canvas: &mut Canvas<'_>) {
         return;
     }
     let (dash, space) = dash_lengths(p, scale_step);
-    let (last_dash_end, run) = if line.refined {
-        let end = fitted_dash_row(canvas, line.left, line.right_x, dash, space);
-        (end, end - line.left.x)
-    } else {
-        let end = dash_row(canvas, line.left, line.right_x, dash, space);
-        (real(end - space), end - space - line.left.x)
-    };
+    let last_dash_end = fitted_dash_row(canvas, line.left, line.right_x, dash, space);
+    let run = last_dash_end - line.left.x;
     if p.p(12) != 0.0 {
         end_mark(canvas, Pos::new(last_dash_end, line.left.y), p.p(12), End::Finish, false, scale_step);
-    }
-    if line.thickness != 0 {
-        line.thicken(canvas, line.thickness * 100);
     }
     if p.p(13) != 0.0 {
         line.rotate(canvas, p.p(13));
@@ -421,9 +396,11 @@ fn dashes(line: &Line<'_>, right_y: f64, canvas: &mut Canvas<'_>) {
     }
 }
 
-/// The refined style's [`dash_row`]: the dashes fill `from.x` to `until`
-/// exactly, starting and ending with a dash, with as many dashes as come
-/// closest to the asked lengths, both scaled alike. Returns `until`.
+/// Dashes along y = `from.y` that fill `from.x` to `until` exactly,
+/// starting and ending with a dash, with as many dashes as come closest to
+/// the asked lengths, both scaled alike, where the engine's [`dash_row`]
+/// lets the last dash pass `until`; that row stands in where there is no
+/// length to fill. Returns the end of the last dash.
 fn fitted_dash_row(canvas: &mut Canvas<'_>, from: Pos, until: f64, dash: f64, space: f64) -> f64 {
     let length = until - from.x;
     if length <= 0.0 || dash <= 0.0 || space <= 0.0 {
@@ -458,9 +435,6 @@ fn vertical_dashes(line: &Line<'_>, top: f64, scale_step: f64, canvas: &mut Canv
     repeated(line.left.y, next, |y| y < top)
         .into_iter()
         .for_each(|y| canvas.segment(Pos::new(x, y), Pos::new(x, real(dash + y))));
-    if line.thickness != 0 {
-        line.thicken(canvas, line.thickness);
-    }
 }
 
 /// Library units of the dot outline (0x78F6DC, 0x78F6AC), after a first
@@ -598,9 +572,6 @@ fn wavy(line: &mut Line<'_>, canvas: &mut Canvas<'_>) {
         SAWTOOTH => sawtooth(line, size, canvas),
         _ => thin_wave(line, size, arrow, canvas),
     }
-    if !heavy && line.thickness != 0 {
-        line.thicken(canvas, line.thickness * 100);
-    }
     line.rotate(canvas, rotation);
 }
 
@@ -705,9 +676,6 @@ fn multipoint(line: &Line<'_>, right: Pos, canvas: &mut Canvas<'_>) {
     });
     let points: Vec<Pos> = once(line.left).chain(inner).chain(once(right)).collect();
     canvas.stroke(points);
-    if p.p(21) != 0.0 {
-        line.thicken(canvas, p.ip(21));
-    }
     line.rotate(canvas, p.p(20));
 }
 
@@ -731,9 +699,6 @@ fn hairpin(line: &mut Line<'_>, canvas: &mut Canvas<'_>) {
             (0.0, 0.0) => wedge.draw(canvas),
             (p14, p15) => wedge.partial(f64::from(p14), f64::from(p15), p7 < 0.0, canvas),
         }
-    }
-    if line.thickness != 0 {
-        line.thicken(canvas, line.thickness * 100);
     }
     line.rotate(canvas, line.rotation());
 }
@@ -828,11 +793,7 @@ fn dashed_hairpin(line: &Line<'_>, canvas: &mut Canvas<'_>) {
     let spread = if p7 != 0.0 && p7 != -1.0 { real(f64::from(p7.abs()) / 2.0) } else { constant(1.1) };
     [spread, -spread].into_iter().for_each(|spread| {
         let first = canvas.buffer_mut().len();
-        let run = if line.refined {
-            fitted_dash_row(canvas, line.left, line.right_x, dash, space) - line.left.x
-        } else {
-            dash_row(canvas, line.left, line.right_x, dash, space) - space - line.left.x
-        };
+        let run = fitted_dash_row(canvas, line.left, line.right_x, dash, space) - line.left.x;
         let level = real(f64::from(p.p(4)) - spread);
         let slope = real((line.staff.y(level) - line.left.y) / run);
         shear(&mut canvas.buffer_mut()[first..], slope);
@@ -850,7 +811,6 @@ mod tests {
 
     use super::*;
     use crate::display::{print_pen, ItemId, Shape, ShapeKind};
-    use crate::document::Options;
 
     #[test]
     fn repeated_counts_the_first_and_tests_after() {
@@ -859,47 +819,42 @@ mod tests {
     }
 
     /// The shapes of a code-4 `item` after a size-1 staff 1.
-    fn shapes(item: &[f32], options: Options) -> Vec<Shape> {
+    fn shapes(item: &[f32]) -> Vec<Shape> {
         let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
         let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
         bytes.extend(trailer.iter().flat_map(|w| w.to_le_bytes()));
         let mut file = MusFile::parse(&bytes).expect("an empty file parses");
         let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
         file.items = vec![words(&[8.0, 1.0, 0.0, 0.0, 1.0]), words(item)];
-        let list = crate::render(&Document::with_options(&file, options));
+        let list = crate::render(&Document::new(&file));
         list.shapes.into_iter().filter(|s| s.source == Some(ItemId(1))).collect()
     }
 
     #[test]
     fn a_thick_line_is_one_stroke_with_the_print_pen() {
-        let line = [4.0, 1.0, 10.0, 9.0, 9.0, 30.0, 0.0, 0.0, 0.0, 3.0];
-        assert_eq!(shapes(&line, Options::ENGINE).len(), 7);
-        let refined = shapes(&line, Options::REFINED);
-        assert_eq!(refined.len(), 1);
-        assert_eq!(refined[0].width, print_pen(6.0));
-        assert_eq!(refined[0].paths, shapes(&line, Options::ENGINE)[0].paths);
+        let line = shapes(&[4.0, 1.0, 10.0, 9.0, 9.0, 30.0, 0.0, 0.0, 0.0, 3.0]);
+        assert_eq!(line.len(), 1);
+        assert_eq!(line[0].width, print_pen(6.0));
+        let path = &line[0].paths[0];
+        assert_eq!((line[0].paths.len(), path.len()), (1, 2));
+        assert_eq!((path[1].x - path[0].x, path[1].y - path[0].y), (3000, 0));
     }
 
     #[test]
     fn heavy_waves_and_multipoint_lines_take_their_print_widths() {
-        let wave = shapes(&[4.0, 1.0, 10.0, 9.0, 9.0, 30.0, -1.0], Options::REFINED);
+        let wave = shapes(&[4.0, 1.0, 10.0, 9.0, 9.0, 30.0, -1.0]);
         assert!(wave.iter().all(|s| s.kind == ShapeKind::Fill && s.width == print_pen(-1.0)));
         let multipoint = [4.0, 1.0, 10.0, 9.0, 9.0, 30.0, 100.0, 15.0, 12.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0];
-        let refined = shapes(&multipoint, Options::REFINED);
-        assert_eq!(refined.len(), 1);
-        assert_eq!(refined[0].width, print_pen(2.0));
+        let multipoint = shapes(&multipoint);
+        assert_eq!(multipoint.len(), 1);
+        assert_eq!(multipoint[0].width, print_pen(2.0));
     }
 
     #[test]
-    fn refined_dashes_end_on_a_dash_at_p6() {
-        let ends = |options| {
-            let dashes = shapes(&[4.0, 1.0, 10.0, 9.0, 9.0, 31.5, 1.0], options);
-            let first = dashes.first().expect("dashes").paths[0][0].x;
-            (first, dashes.last().expect("dashes").paths[0][1].x)
-        };
-        let (first, last) = ends(Options::REFINED);
+    fn dashes_end_on_a_dash_at_p6() {
+        let dashes = shapes(&[4.0, 1.0, 10.0, 9.0, 9.0, 31.5, 1.0]);
+        let first = dashes.first().expect("dashes").paths[0][0].x;
+        let last = dashes.last().expect("dashes").paths[0][1].x;
         assert_eq!(last - first, 3225);
-        let (first, last) = ends(Options::ENGINE);
-        assert!(last - first > 3225, "the engine's last dash passes P6");
     }
 }

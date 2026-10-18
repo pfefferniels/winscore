@@ -7,9 +7,9 @@
 //! 0x49EAE0) and the other values (arrows and arcs, 0x432E80) are not drawn
 //! yet.
 //!
-//! On the screen the engine thickens outlines with rings 25 units apart; in
-//! print it draws one outline with a wider PostScript pen and circles as
-//! PostScript arcs. The refined style ([`draw_styled_box`]) does as print.
+//! Thick outlines are drawn as print draws them, as one outline with a
+//! wider PostScript pen, and circles as PostScript arcs, round; the
+//! engine's screen thickens outlines with rings 25 units apart.
 
 mod guitar;
 
@@ -20,7 +20,6 @@ use crate::codes::line;
 use crate::geometry::{print_width, rotate_points, HAIRLINE};
 use crate::trig::CIRCLE;
 use crate::units::{real, trunc, Pos};
-
 
 pub const BOX: i32 = 0;
 pub const CIRCLE_SHAPE: i32 = 1;
@@ -89,15 +88,12 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     } else {
         call
     };
-    if marked && doc.refined() && !doc.screen() {
+    if marked && !doc.screen() {
         return;
     }
     let (at, step) = (doc.position(item), doc.staff_of(item).step);
     match call.kind {
-        BOX | CIRCLE_SHAPE | DASHED_BOX => {
-            let thickness = Thickness::of_marked(doc, marked);
-            draw_box_as(canvas, at, step, &call, thickness);
-        }
+        BOX | CIRCLE_SHAPE | DASHED_BOX => draw_box_as(canvas, at, step, &call, Thickness::of(marked)),
         REGISTER => draw_register(doc, item, canvas, at, &call),
         k if k < 0 => guitar::draw_guitar_grid(doc, item, canvas, at, &call),
         _ => draw_arrow(doc, item, canvas, at, &call, marked),
@@ -134,9 +130,11 @@ fn draw_register(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>,
         ..*call
     };
     let p4 = f64::from(item.p(4));
-    draw_styled_box(doc, canvas, Pos::new(at.x, staff.y(p4)), step, &circle);
+    draw_box(canvas, Pos::new(at.x, staff.y(p4)), step, &circle);
     let size = real(step * factor / 25.0);
-    register_lines(doc, item, canvas, &staff, at.x, rows, size, factor);
+    register_lines(item, canvas, &staff, at.x, rows, size, factor);
+    // The engine leaves each circle's IP12 doubled, which coarsens every
+    // further dot; they are all drawn round here.
     let dot = BoxCall {
         kind: CIRCLE_SHAPE,
         width: real(factor * f64::from(REGISTER_DOT)),
@@ -146,19 +144,18 @@ fn draw_register(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>,
         ip9: 0,
         ip10: 0,
         ip11: 0,
+        ip12: 0,
         fill: true,
         ..*call
     };
     let digits = (trunc(f64::from(item.p(8))), trunc(f64::from(item.p(9))));
-    register_dots(doc, canvas, &staff, at.x, rows, size, factor, digits, p4, &dot);
+    register_dots(canvas, &staff, at.x, rows, size, factor, digits, p4, &dot);
 }
 
 /// The dividing lines through draw_line (0x4345EE): one through the centre
 /// (2 rows), two at ±1.35 × P6 steps (3 rows), or the centre line and two
 /// at ±1.95 × P6 (4 rows); half lengths 4.66, 4.4 and 4.08 × the size.
-#[allow(clippy::too_many_arguments)]
 fn register_lines(
-    doc: &Document<'_>,
     item: ItemRef<'_>,
     canvas: &mut Canvas<'_>,
     staff: &crate::staff::Staff,
@@ -183,7 +180,7 @@ fn register_lines(
             .with(12, 0.0)
             .with(13, 0.0)
             .with(18, factor as f32);
-        line::draw(doc, &params, Pos::new(start, staff.y(level)), staff, canvas);
+        line::draw(&params, Pos::new(start, staff.y(level)), staff, canvas);
     };
     let pair = |canvas: &mut Canvas<'_>, half: f32, lift: f32| {
         let lift = real(factor * f64::from(lift));
@@ -207,7 +204,6 @@ fn register_lines(
 /// dots right and left of the centre (P9's tens too for a centre dot).
 #[allow(clippy::too_many_arguments)]
 fn register_dots(
-    doc: &Document<'_>,
     canvas: &mut Canvas<'_>,
     staff: &crate::staff::Staff,
     x: f64,
@@ -219,15 +215,8 @@ fn register_dots(
     dot: &BoxCall,
 ) {
     let step = staff.step;
-    // Each circle leaves IP12 doubled and the dots do not reset it, so every
-    // further dot has twice the degrees per side; draw_line leaves 0. The
-    // refined style draws every dot round.
-    let mut ip12 = 0;
-    let mut draw = |canvas: &mut Canvas<'_>, x: f64, level: f64, dot: &BoxCall| {
-        ip12 = draw_styled_box(doc, canvas, Pos::new(x, staff.y(level)), step, &BoxCall { ip12, ..*dot });
-        if doc.refined() {
-            ip12 = 0;
-        }
+    let draw = |canvas: &mut Canvas<'_>, x: f64, level: f64, dot: &BoxCall| {
+        draw_box(canvas, Pos::new(x, staff.y(level)), step, dot);
     };
     let times = |c: f32| real(factor * f64::from(c));
     let tens = |n: i32| (n % 100) / 10 != 0;
@@ -291,7 +280,7 @@ fn draw_arrow(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at
     let p9 = item.p(9);
     let centre = if call.ip10 == STRAIGHT {
         // draw_box_other 0x432E80 sets the print width IP8 for the whole arrow.
-        let pen = (doc.refined() && call.ip8 > 0).then(|| print_width(call.ip8 as f32));
+        let pen = (call.ip8 > 0).then(|| print_width(call.ip8 as f32));
         if let Some(pen) = pen {
             canvas.set_width(pen);
         }
@@ -392,7 +381,7 @@ fn draw_arc_arrow(
         fill: false,
         ..*call
     };
-    let thickness = Thickness::of_marked(doc, marked);
+    let thickness = Thickness::of(marked);
     draw_box_as(canvas, centre, step, &arc, thickness);
     if head_width >= 0.0 {
         let head_length = if height < 0.0 { -head_length } else { head_length };
@@ -423,8 +412,7 @@ fn draw_arc_arrow(
 const DEGREES_PER_RADIAN: f32 = 57.295_776;
 
 /// IP26 = -1 marks a box: blue (P26 = 99) and three rings thick on the
-/// screen. In print it is not drawn; the engine style does not model that,
-/// the refined style does.
+/// screen. In print it is not drawn.
 const MARKED: i32 = -1;
 const MARKED_COLOUR: f32 = 99.0;
 const MARKED_THICKNESS: i32 = 3;
@@ -443,56 +431,41 @@ const SLANT_UNIT: f32 = 7.0;
 /// Dashed boxes: dash length per unit of P10.
 const DASH: f32 = 175.0;
 
-/// draw_box 0x433530 at the centre `at` on a staff with step unit `step`,
-/// as the engine draws on the screen ([`draw_styled_box`] for the
-/// document's style).
-///
-/// Returns the IP12 the routine leaves in the engine's globals: circles
-/// double it (see [`draw_circles`]), which changes the next circle of a
-/// caller that does not reset it.
-pub fn draw_box(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall) -> i32 {
-    draw_box_as(canvas, at, step, call, Thickness::Rings)
+/// draw_box 0x433530 at the centre `at` on a staff with step unit `step`:
+/// a thick outline with SCORE's print width ([`print_pen_of`]), and the
+/// circles print draws as PostScript arcs round.
+pub fn draw_box(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall) {
+    draw_box_as(canvas, at, step, call, Thickness::Pen);
 }
 
-/// [`draw_box`] in the document's style: the refined style draws a thick
-/// outline with SCORE's print width ([`print_pen_of`]) instead of rings,
-/// and the circles print draws as PostScript arcs round.
-pub fn draw_styled_box(doc: &Document<'_>, canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall) -> i32 {
-    draw_box_as(canvas, at, step, call, Thickness::of(doc))
+/// [`draw_box`] under its former name, for callers that still pass the
+/// document.
+pub fn draw_styled_box(_doc: &Document<'_>, canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall) {
+    draw_box(canvas, at, step, call);
 }
 
 /// How draw_box draws P8's thickness.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Thickness {
-    /// One more outline per ring, as on the screen.
-    Rings,
-    /// One outline with SCORE's print width (the refined style).
+    /// One outline with SCORE's print width.
     Pen,
-    /// The rings' extent as one band: the refined style's marked frames,
-    /// which only the screen shows.
+    /// The extent of the engine's rings as one band: marked frames, which
+    /// only the screen shows.
     Band,
 }
 
 impl Thickness {
-    fn of(doc: &Document<'_>) -> Self {
-        if doc.refined() {
-            Thickness::Pen
+    /// For a code-12 item, drawn as a band when it is marked (IP26 = -1).
+    fn of(marked: bool) -> Self {
+        if marked {
+            Thickness::Band
         } else {
-            Thickness::Rings
-        }
-    }
-
-    /// For a code-12 item, which the refined style draws as a band when it
-    /// is marked (IP26 = -1).
-    fn of_marked(doc: &Document<'_>, marked: bool) -> Self {
-        match Self::of(doc) {
-            Thickness::Pen if marked => Thickness::Band,
-            thickness => thickness,
+            Thickness::Pen
         }
     }
 }
 
-fn draw_box_as(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall, thickness: Thickness) -> i32 {
+fn draw_box_as(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall, thickness: Thickness) {
     let start = canvas.buffer_mut().len();
     let height = if call.height == 0.0 { call.width } else { call.height };
     let (width, height) = if call.p16 == 1.0 && matches!(call.kind, BOX | CIRCLE_SHAPE | DASHED_BOX) {
@@ -506,20 +479,16 @@ fn draw_box_as(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall, thic
     if let Some(width) = print_pen {
         canvas.set_width(width);
     }
-    let ip12 = match call.kind {
-        BOX | DASHED_BOX => {
-            draw_rectangles(canvas, at, step, call, (width, height), pen, thickness);
-            call.ip12
-        }
+    match call.kind {
+        BOX | DASHED_BOX => draw_rectangles(canvas, at, step, call, (width, height), pen, thickness),
         _ => draw_circles(canvas, at, step, call, (width, height), pen, thickness),
-    };
+    }
     if print_pen.is_some() {
         canvas.set_width(0.0);
     }
     if call.ip9 != 0 && call.kind >= 0 {
         rotate_points(&mut canvas.buffer_mut()[start..], at.to_point(), call.p9 as f32);
     }
-    ip12
 }
 
 /// The pen SCORE's print output outlines a box or circle with (draw_box
@@ -552,7 +521,7 @@ fn print_arc(call: &BoxCall) -> bool {
 const MAX_ARC_SIDES: i32 = 5;
 /// The circle table holds 100 × sin/cos.
 const TABLE_RADIUS: f64 = 100.0;
-/// Degrees per side of the refined style's arcs, at most.
+/// Degrees per side of the arcs drawn round, at most.
 const ROUND_SIDES: i32 = 10;
 
 /// Degrees per side for an arc print draws exactly: at most
@@ -699,11 +668,9 @@ const HALF_TURN: i32 = 180;
 
 /// Circles and arcs: points every IP12 degrees from IP10 to IP11 clockwise
 /// from the top, as dashes when IP12 is negative; then one further outline
-/// per thickness ring, each a new polyline. Returns the IP12 the engine
-/// leaves behind: twice the degrees per side, or 2 after dashes. Except
-/// with [`Thickness::Rings`], arcs print draws exactly are drawn round
-/// ([`arc_sides`]) and without rings, or with [`Thickness::Band`] a solid
-/// circle's rings as one band.
+/// per thickness ring, each a new polyline. Arcs print draws exactly are
+/// drawn round ([`arc_sides`]); with [`Thickness::Pen`] without rings, with
+/// [`Thickness::Band`] a solid circle's rings as one band.
 fn draw_circles(
     canvas: &mut Canvas<'_>,
     at: Pos,
@@ -712,7 +679,7 @@ fn draw_circles(
     (width, height): (f64, f64),
     pen: Pen,
     thickness: Thickness,
-) -> i32 {
+) {
     let rings = if call.ip8 >= 1 { trunc(step * call.p8 / BOX_RING) } else { 0 };
     let rings = if thickness == Thickness::Pen { 0 } else { rings };
     let growth = real(f64::from(CIRCLE_RING) / step);
@@ -722,7 +689,7 @@ fn draw_circles(
     let mut sides = if call.ip12 == 0 { 1 } else { call.ip12 };
     let unit = real(step * f64::from(CIRCLE_UNIT));
     let radius_of = |width: f64, height: f64| (real(unit * width), real(unit * height));
-    let traced = if thickness != Thickness::Rings && print_arc(call) {
+    let traced = if print_arc(call) {
         let (rx, ry) = radius_of(width, height);
         arc_sides(to - from, rx.abs().max(ry.abs()) * TABLE_RADIUS, sides)
     } else {
@@ -749,7 +716,7 @@ fn draw_circles(
         } else {
             canvas.fill([outer.into_iter().chain(inner.into_iter().rev()).collect::<Vec<_>>()]);
         }
-        return 2 * sides;
+        return;
     }
     (0..=last_ring).for_each(|ring| {
         if ring > 0 {
@@ -764,11 +731,6 @@ fn draw_circles(
         trace_arc(&mut |p, pen| canvas.point(p, pen), at, radius_of(width, height), from, to, traced, dashes, pen);
         pen = Pen::Stroke;
     });
-    if sides < 0 {
-        2
-    } else {
-        2 * sides
-    }
 }
 
 /// The engine's search for a divisor of 180 near a negative `n`:
@@ -839,7 +801,7 @@ mod tests {
     use crate::display::{print_pen, ItemId, Point, Shape, ShapeKind};
     use crate::document::{Medium, Options};
 
-    /// The shapes of `item` after a size-1 staff 1.
+    /// The shapes of `item` after a size-1 staff 1, drawn for `options`.
     fn shapes(item: &[f32], options: Options) -> Vec<Shape> {
         let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
         let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
@@ -851,31 +813,35 @@ mod tests {
         list.shapes.into_iter().filter(|s| s.source == Some(ItemId(1))).collect()
     }
 
+    /// The width of the points in `path`.
+    fn width(path: &[Point]) -> i32 {
+        let xs = path.iter().map(|p| p.x);
+        xs.clone().max().expect("points") - xs.min().expect("points")
+    }
+
     #[test]
-    fn refined_thick_boxes_have_one_outline_with_the_print_pen() {
-        let box_p8 = [12.0, 1.0, 100.0, 5.0, 0.0, 2.0, 0.0, 2.0];
-        let engine = shapes(&box_p8, Options::ENGINE);
-        assert_eq!(engine[0].paths[0].len(), 15, "three outlines in one path");
-        let refined = shapes(&box_p8, Options::REFINED);
-        assert_eq!(refined.len(), 1);
-        assert_eq!(refined[0].paths[0], engine[0].paths[0][..5]);
-        assert_eq!(refined[0].width, print_pen(4.0));
-        let circle = shapes(&[12.0, 1.0, 100.0, 5.0, 1.0, 2.0, 0.0, 2.0], Options::REFINED);
+    fn thick_boxes_have_one_outline_with_the_print_pen() {
+        let box_p8 = shapes(&[12.0, 1.0, 100.0, 5.0, 0.0, 2.0, 0.0, 2.0], Options::default());
+        assert_eq!((box_p8.len(), box_p8[0].paths.len()), (1, 1));
+        let outline = &box_p8[0].paths[0];
+        assert_eq!((outline.len(), outline[0]), (5, outline[4]));
+        assert_eq!(width(outline), 350, "two half scale steps either side");
+        assert_eq!(box_p8[0].width, print_pen(4.0));
+        let circle = shapes(&[12.0, 1.0, 100.0, 5.0, 1.0, 2.0, 0.0, 2.0], Options::default());
         assert_eq!(circle.len(), 1);
         assert_eq!(circle[0].width, print_pen(4.0));
     }
 
     #[test]
-    fn refined_marked_boxes_are_one_band_on_the_screen_only() {
+    fn marked_boxes_are_one_band_on_the_screen_only() {
         let marked = [12.0, 1.0, 100.0, 5.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0];
-        let band = shapes(&marked, Options::REFINED);
+        let band = shapes(&marked, Options::default());
         assert_eq!(band.len(), 1);
         assert_eq!((band[0].kind, band[0].paths.len()), (ShapeKind::Fill, 2));
-        let engine = shapes(&marked, Options::ENGINE);
-        let xs = |paths: &[Vec<Point>]| paths.iter().flatten().map(|p| p.x).collect::<Vec<_>>();
-        let extent = |xs: Vec<i32>| (xs.iter().min().copied(), xs.iter().max().copied());
-        assert_eq!(extent(xs(&band[0].paths)), extent(xs(&engine[0].paths)));
-        let print = Options { medium: Medium::Print, ..Options::REFINED };
+        // From the box outline out to where the engine's third ring lies, 25 units apart.
+        let widths: Vec<i32> = band[0].paths.iter().map(|path| width(path)).collect();
+        assert_eq!(widths, [350, 350 + 2 * 3 * 25]);
+        let print = Options { medium: Medium::Print, ..Options::default() };
         assert!(shapes(&marked, print).is_empty());
     }
 
