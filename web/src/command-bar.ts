@@ -1,11 +1,14 @@
-// WinScore's command bar: typing anywhere outside a form field goes into it,
-// Enter runs the line, Up and Down recall earlier lines, Escape hands the
-// keyboard back to the page.
+// WinScore's command bar: typing anywhere outside a form field goes into it
+// (or into a field that takes it instead, the one by the selection), Enter
+// runs the line, Up and Down recall earlier lines, Escape hands the keyboard
+// back to the page.
 
 export interface CommandBarHooks {
   run(line: string): void;
   /** Where the keyboard goes after Escape. */
   page: HTMLElement;
+  /** A field that takes what is typed on the page instead of the bar, while there is one. */
+  typing?(): HTMLInputElement | null;
 }
 
 /** Keys the page keeps for itself even though they print a character ([ and ] move staves, + and _ zoom). */
@@ -49,8 +52,10 @@ export function bindCommandBar(input: HTMLInputElement, hooks: CommandBarHooks) 
   window.addEventListener('keydown', (e) => {
     if (input.disabled || isFormField(e.target) || document.querySelector('dialog[open]') || !startsCommand(e)) return;
     e.preventDefault();
-    input.focus();
-    input.value = e.key;
-    recalled = 0;
+    const field = hooks.typing?.() ?? input;
+    field.focus();
+    field.value = e.key;
+    if (field === input) recalled = 0;
+    else field.dispatchEvent(new Event('input'));
   });
 }

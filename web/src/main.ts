@@ -1,7 +1,6 @@
 import './style.css';
 import init, { codeName, commandSupported, editWords, InputLine, librarySymbols, paramName, Score, type EncodedList } from './wasm/score_web.js';
 import { createAiPrompt } from './ai-prompt';
-import { boundsOf, lassoItems, paintLasso } from './ai-lasso';
 import type { About, Catalog } from './ai-models';
 import type { Access, Region, Scope } from './ai-script';
 import { createPageView, type Scene } from './canvas';
@@ -55,10 +54,6 @@ interface State {
   hover: number | null;
   /** A move or handle drag in progress, with its guides. */
   drag: Drag | null;
-  /** The lasso being drawn, page coordinates. */
-  lasso: Point[] | null;
-  /** Whether the next drag draws a lasso (the Ask button). */
-  lassoArmed: boolean;
 }
 
 /** A move of the selection or a drag of one of its handles. */
@@ -109,7 +104,6 @@ const ui = {
   undo: $<HTMLButtonElement>('undo'),
   redo: $<HTMLButtonElement>('redo'),
   input: $<HTMLButtonElement>('input'),
-  ask: $<HTMLButtonElement>('ask'),
   inputPanel: $<HTMLElement>('input-panel'),
   symbolDialog: $<HTMLDialogElement>('symbol-dialog'),
   textDialog: $<HTMLDialogElement>('text-dialog'),
@@ -179,8 +173,6 @@ const state: State = {
   handles: null,
   hover: null,
   drag: null,
-  lasso: null,
-  lassoArmed: false,
 };
 
 const view = createPageView(ui, showZoom);
@@ -195,7 +187,10 @@ const inputMode = createInputMode(ui.inputPanel, ui.stage, {
   score: () => state.score,
   show: showInput,
   insert: insertInput,
-  focusPage: () => ui.viewport.focus(),
+  focusPage() {
+    ui.viewport.focus();
+    followSelection();
+  },
   clientRect: (box) => view.clientRect(box),
 });
 view.onPaint(() => inputMode.layout());
@@ -294,11 +289,6 @@ function overlays(): Overlay[] {
       if (state.handles) paintHandles(ctx, t, { set: state.handles, hover: drag ? null : state.hover, active, coarse: touchScreen(), dpr: dpr() });
     });
   }
-  if (state.lasso) {
-    drawn.push((ctx, t) => {
-      if (state.lasso) paintLasso(ctx, t, state.lasso, dpr());
-    });
-  }
   if (state.drag) {
     drawn.push((ctx, t) => {
       const drag = state.drag;
@@ -354,7 +344,6 @@ function refreshStatus() {
   ui.redo.title = redo === null ? 'Nothing to redo' : `Redo ${redo} (${REDO_KEYS})`;
   ui.command.disabled = !state.editor;
   ui.input.disabled = !state.editor;
-  ui.ask.disabled = !state.editor;
   ui.input.setAttribute('aria-pressed', String(inputMode.isOpen));
   ui.app.classList.toggle('inputting', inputMode.isOpen);
   [ui.zoomIn, ui.zoomOut, ui.zoom, ui.fit].forEach((control) => (control.disabled = !open));
@@ -463,6 +452,7 @@ function selectionChanged() {
   refreshPanel();
   redraw();
   report(null);
+  followSelection();
 }
 
 /** Scrolls the selected items into view unless they are visible. */
@@ -494,6 +484,7 @@ function edited(change: Change | null, live: boolean) {
     report(change);
     inputMode.refresh();
     aiPrompt.refresh();
+    followSelection();
   }
   redraw(live);
 }
@@ -609,6 +600,7 @@ async function openItem(item: number | null) {
 function enterInput(staff?: number) {
   inputMode.open(staff);
   refreshStatus();
+  followSelection();
 }
 
 /** Draws the line being typed over the page and scrolls to the cursor when it moved. */
@@ -1027,26 +1019,35 @@ const aiPrompt = createAiPrompt(ui.stage, {
     } else edited({ label: state.editor?.undoLabel() ?? '', message: null }, false);
   },
   undo: (redo) => edit((editor) => (redo ? editor.redo() : editor.undo())),
-  closed: () => ui.viewport.focus(),
+  left: () => ui.viewport.focus(),
 });
 view.onPaint(() => aiPrompt.place());
 
-function armLasso(on: boolean) {
-  state.lassoArmed = on && state.editor !== null;
-  ui.ask.setAttribute('aria-pressed', String(state.lassoArmed));
-  ui.viewport.classList.toggle('lassoing', state.lassoArmed);
-  if (state.lassoArmed) {
-    aiPrompt.close();
-    message('Draw a lasso around the music, then say what to do with it');
-  } else report(null);
+/** SCORE's code for a staff. */
+const STAFF = 8;
+/** P3 between the music on a staff and music a command adds after it. */
+const AFTER_MUSIC = 3;
+
+/** Where music added by a command goes: after the music on a selected staff, else over the selection. */
+function regionOf(items: number[]): Region | null {
+  const { score, editor } = state;
+  const box = selectionBox();
+  if (!score || !editor || !box) return null;
+  const summaries = itemSummaries(score);
+  if (!items.every((i) => summaries[i]?.code === STAFF)) return regionIn(editor, box);
+  const staff = summaries[items[0]!]!.staff;
+  const music = summaries
+    .filter((s) => s.staff === staff && s.code !== STAFF)
+    .map((s) => bounds(elementsOf(state.rust, s.index)))
+    .reduce(union, null);
+  const region = regionIn(editor, music ? { ...box, x0: music.x1 } : box);
+  return region && music ? { ...region, from: Math.min(region.from + AFTER_MUSIC, region.to) } : region;
 }
 
-/** Staff and P3 span of page box `box`, for music added there. */
-function regionOf(box: Box): Region | null {
-  const editor = state.editor;
-  if (!editor) return null;
+/** Staff and P3 span of page box `box`. */
+function regionIn(editor: Editor, box: Box): Region | null {
   const middle = (box.y0 + box.y1) / 2;
-  // A lasso mostly off the paper is about the staff nearest it on the paper.
+  // A box mostly off the paper is about the staff nearest it on the paper.
   const paper = paperBox();
   const mid = (box.x0 + box.x1) / 2;
   const x = editor.placeAt({ x: mid, y: middle }) ? mid : Math.min(Math.max(mid, paper.x0), paper.x1 - 1);
@@ -1067,31 +1068,17 @@ function regionOf(box: Box): Region | null {
   };
 }
 
-/** A lasso was drawn: the items in it are selected and the AI command opens by it. */
-function lassoed(points: Point[]) {
-  state.lasso = null;
-  armLasso(false);
-  const { score, editor } = state;
-  if (!score || !editor) return;
-  const summaries = itemSummaries(score);
-  const items = lassoItems(points, itemBoxes(state.rust, summaries.length), summaries.map((s) => s.code));
-  editor.select(items);
-  selectionChanged();
-  const box = boundsOf(points);
-  const keys = editor.keys();
-  aiPrompt.open({ keys: items.map((i) => keys[i]!), region: regionOf(box) }, box);
-}
-
-/** ⌘K: the AI command for the selection, or for the whole score when nothing is selected. */
-function askAboutSelection() {
+/** The command field stands by the selection while there is one (and no music input). */
+function followSelection() {
   const editor = state.editor;
-  if (!editor) return;
   const items = selection();
-  const keys = editor.keys();
   const box = selectionBox();
-  const shown = view.visibleBox();
-  const around = box ?? { x0: (shown.x0 + shown.x1) / 2 - 2000, x1: (shown.x0 + shown.x1) / 2 + 2000, y0: (shown.y0 + shown.y1) / 2, y1: (shown.y0 + shown.y1) / 2 };
-  aiPrompt.open({ keys: items.length ? items.map((i) => keys[i]!) : null, region: box ? regionOf(box) : null }, around);
+  if (!editor || !box || items.length === 0 || inputMode.isOpen) {
+    aiPrompt.close();
+    return;
+  }
+  const keys = editor.keys();
+  aiPrompt.follow({ keys: items.map((i) => keys[i]!), region: regionOf(items) }, box);
 }
 
 function bindPointer() {
@@ -1104,14 +1091,6 @@ function bindPointer() {
         e.preventDefault();
         e.stopImmediatePropagation();
       }
-    },
-    { capture: true },
-  );
-  // A press on the page outside a lasso closes the AI command.
-  ui.viewport.addEventListener(
-    'pointerdown',
-    (e) => {
-      if (aiPrompt.isOpen && !e.altKey && !state.lassoArmed) aiPrompt.close();
     },
     { capture: true },
   );
@@ -1142,12 +1121,6 @@ function bindPointer() {
     moveTo,
     moveEnd: () => (state.drag = null),
     hover,
-    lassoArmed: () => state.lassoArmed,
-    lassoDraw(points) {
-      state.lasso = points;
-      view.repaint();
-    },
-    lasso: lassoed,
   });
   ui.viewport.addEventListener('pointerleave', () => {
     if (state.hover === null) return;
@@ -1237,8 +1210,6 @@ function bindMenus() {
       panelShown: () => state.panel,
       togglePanel: () => setPanel(!state.panel),
       shortcuts: showShortcuts,
-      ask: askAboutSelection,
-      lasso: () => armLasso(true),
     }),
     settleFocus,
   );
@@ -1274,11 +1245,6 @@ function onAppKey(e: KeyboardEvent) {
   }
   const command = e.metaKey || e.ctrlKey;
   if (!command || e.altKey) return;
-  if (e.key.toLowerCase() === 'k' && !e.shiftKey) {
-    e.preventDefault();
-    askAboutSelection();
-    return;
-  }
   const action = { o: chooseFile, s: save, p: () => void print() }[e.key.toLowerCase()];
   if (!action || e.shiftKey) return;
   e.preventDefault();
@@ -1298,7 +1264,6 @@ function bindControls() {
   ui.undo.addEventListener('click', () => edit((editor) => editor.undo()));
   ui.redo.addEventListener('click', () => edit((editor) => editor.redo()));
   ui.input.addEventListener('click', toggleInput);
-  ui.ask.addEventListener('click', () => armLasso(!state.lassoArmed));
   ui.emptyInput.addEventListener('click', () => enterInput());
   ui.togglePanel.addEventListener('click', () => setPanel(!state.panel));
   ui.help.addEventListener('click', showShortcuts);
@@ -1314,6 +1279,7 @@ function bindControls() {
   bindCommandBar(ui.command, {
     run: runCommand,
     page: ui.viewport,
+    typing: () => aiPrompt.field,
   });
   window.addEventListener('keydown', onAppKey);
   window.addEventListener('keydown', (e) => {
