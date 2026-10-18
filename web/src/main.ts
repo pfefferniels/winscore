@@ -991,7 +991,13 @@ function aiAbout(text: string, scope: Scope): About | null {
     if (scope.keys !== null) counts.set(params[0]!, (counts.get(params[0]!) ?? 0) + 1);
     if (sample.length < SAMPLE_ITEMS) sample.push(trimmed(params));
   }
-  return { text, counts, whole: scope.keys === null, region: scope.region, middle: middleAt(score, scope.region), sample, codeName: nameOf };
+  const staves = new Set([...sample.map((p) => p[1]!), ...(scope.region ? [scope.region.staff] : [])]);
+  const bars = new Map<number, number[]>();
+  itemSummaries(score).forEach(({ code, staff, p3 }) => {
+    if (code === 14 && staves.has(staff)) bars.set(staff, [...(bars.get(staff) ?? []), p3]);
+  });
+  bars.forEach((xs) => xs.sort((a, b) => a - b));
+  return { text, counts, whole: scope.keys === null, region: scope.region, middle: middleAt(score, scope.region), sample, bars, codeName: nameOf };
 }
 
 let catalog: Catalog | null = null;

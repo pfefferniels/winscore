@@ -105,6 +105,8 @@ export interface About {
   middle: number;
   /** Some of the items, P1 … Pn each, for Claude. */
   sample: number[][];
+  /** Where the barlines are (P3) on the staves of the items, by staff, for Claude: where bars begin. */
+  bars: Map<number, number[]>;
   /** Names of item codes. */
   codeName(code: number): string;
 }
@@ -464,6 +466,7 @@ A step leaves out its unused fields here for brevity; give every field.
 "remove the stems" → {"summary": "Remove stems", "knobs": [], "steps": [{"do": "setting", "codes": [1], "setting": "Stem", "value": "None"}]}
 "remove the staccatos" → {"summary": "Remove staccatos", "knobs": [], "steps": [{"do": "setting", "codes": [1], "where_setting": "Mark", "where_is": "Staccato", "setting": "Mark", "value": "None"}]}
 "make the notes gradually bigger" → {"summary": "Notes grow", "knobs": [{"id": "to", "label": "Final size", "min": 0.5, "max": 4, "step": 0.05, "value": 1.8}, {"id": "curve", "label": "Curve", "min": 0.25, "max": 4, "step": 0.05, "value": 1}], "steps": [{"do": "setting", "codes": [1], "setting": "Size", "value": "round((1 + (to - 1) * t ^ curve) * 100) / 100"}]}
+"make the slurs flatter" → {"summary": "Flatter slurs", "knobs": [{"id": "k", "label": "Curvature ×", "min": 0, "max": 1, "step": 0.05, "value": 0.5}], "steps": [{"do": "setting", "codes": [5], "setting": "Curvature", "value": "round(value * k * 100) / 100"}]}
 "accent the last note" → {"summary": "Accent the last note", "knobs": [], "steps": [{"do": "setting", "codes": [1], "where": "t == 1", "setting": "Mark", "value": "Accent"}]}
 "add c e g" → {"summary": "Add C E G", "knobs": [], "steps": [{"do": "insert", "staff": 0, "from": 0, "to": 0, "notes": "PC5/E/G", "rhythms": "4/4/4"}]}`;
 }
@@ -572,6 +575,7 @@ function userMessage(about: About): string {
   return `Command: ${about.text}
 Selected: ${selectionWords(about)}
 Region drawn: ${region}
+Barlines (P3) on these staves: ${[...about.bars].map(([staff, xs]) => `staff ${staff}: ${xs.map((x) => +x.toFixed(2)).join(', ') || 'none'}`).join('; ') || 'none'}
 Items (P1 … Pn)${about.sample.length < [...about.counts.values()].reduce((a, b) => a + b, 0) ? ', the first of them' : ''}:
 ${rows}`;
 }

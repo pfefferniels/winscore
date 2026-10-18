@@ -93,6 +93,7 @@ async function one(i: number) {
     region: scope === 'empty' ? { staff: 1, bottom: 1, top: 1, from: 100, to: 180 } : null,
     middle: 34,
     sample: [],
+    bars: new Map(),
     codeName: (code) => counted(code, 2).replace(/^2 /, ''),
   };
   try {

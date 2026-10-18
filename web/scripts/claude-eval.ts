@@ -138,26 +138,42 @@ function setUp(items: number[] | null) {
   return { score, editor, access, scope, snapshot };
 }
 
-const results = await Promise.all(
-  CASES.map(async (c) => {
-    const { access, scope, snapshot } = setUp(c.items);
-    const counts = new Map<number, number>();
-    const sample: number[][] = [];
-    for (const p of snapshot().values()) {
-      counts.set(p[0]!, (counts.get(p[0]!) ?? 0) + 1);
-      sample.push(Array.from(p));
-    }
-    const about: About = { text: c.text, counts, whole: false, region: scope.region, middle: 34, sample, codeName: (code) => codeName(code) ?? `Code ${code}` };
-    try {
-      const { script, ms } = await askClaude(about, catalog, connection, new AbortController().signal);
-      const before = snapshot();
-      run(script, access, scope, `“${c.text}”`);
-      const problem = c.check(before, snapshot());
-      return `${problem ? 'FAIL' : 'ok  '} ${(ms / 1000).toFixed(1)} s "${c.text}" → ${script.summary} ${JSON.stringify(script.steps)}${script.knobs.length ? ` knobs ${script.knobs.map((k) => `${k.id}=${k.value}`).join(', ')}` : ''}${problem ? `\n       ${problem}` : ''}`;
-    } catch (err) {
-      return `ERR  "${c.text}": ${err instanceof Error ? err.message : String(err)}`;
-    }
-  }),
-);
+/** One case's line of the report. */
+async function evaluate(c: Case): Promise<string> {
+  const { access, scope, snapshot } = setUp(c.items);
+  const counts = new Map<number, number>();
+  const sample: number[][] = [];
+  for (const p of snapshot().values()) {
+    counts.set(p[0]!, (counts.get(p[0]!) ?? 0) + 1);
+    sample.push(Array.from(p));
+  }
+  const bars = new Map<number, number[]>();
+  const staves = new Set(sample.map((p) => p[1]!));
+  for (let i = 0; i < access.editor.keys().length; i++) {
+    const p = access.params(i)!;
+    if (p[0] === 14 && staves.has(p[1]!)) bars.set(p[1]!, [...(bars.get(p[1]!) ?? []), p[2]!].sort((a, b) => a - b));
+  }
+  const about: About = { text: c.text, counts, whole: false, region: scope.region, middle: 34, sample, bars, codeName: (code) => codeName(code) ?? `Code ${code}` };
+  try {
+    const { script, ms } = await askClaude(about, catalog, connection, new AbortController().signal);
+    const before = snapshot();
+    run(script, access, scope, `“${c.text}”`);
+    const problem = c.check(before, snapshot());
+    return `${problem ? 'FAIL' : 'ok  '} ${(ms / 1000).toFixed(1)} s "${c.text}" → ${script.summary} ${JSON.stringify(script.steps)}${script.knobs.length ? ` knobs ${script.knobs.map((k) => `${k.id}=${k.value}`).join(', ')}` : ''}${problem ? `\n       ${problem}` : ''}`;
+  } catch (err) {
+    return `ERR  "${c.text}": ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+// CLAUDE_LIMIT=1 asks one at a time, as the app does: the system prompt is then cached after the first.
+const limit = Number(process.env.CLAUDE_LIMIT ?? CASES.length);
+const results: string[] = [];
+let next = 0;
+await Promise.all(Array.from({ length: limit }, async () => {
+  while (next < CASES.length) {
+    const i = next++;
+    results[i] = await evaluate(CASES[i]!);
+  }
+}));
 console.log(results.join('\n'));
 console.log(`claude eval: ${results.filter((r) => r.startsWith('ok')).length}/${CASES.length} with ${connection.model}`);
