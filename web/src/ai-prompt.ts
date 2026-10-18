@@ -1,13 +1,16 @@
 // The command field: it stands by the selection while there is one, or where
 // the empty paper was clicked, and what is typed on the page goes into it
 // (opening it if need be). A command in words goes to Jev while it is typed;
-// Enter edits the score at once with what Jev read, or has Claude write the
-// edit when Jev is not sure. A SCORE command runs as on WinScore's command
-// bar, on the selection if there is one. Numbers the
-// command leaves open appear as sliders under the field; dragging one re-does
-// the edit with the new value, live, as the same undo step. While a group
-// command asks for its area, the field shows the question and takes the
-// answer. Up and Down recall earlier lines.
+// Enter edits the score at once with what Jev read. When Jev is not sure,
+// Enter sends the command off to Claude (one Jev finds complex to the model
+// for those) and the field takes the next command at once, for these items or
+// others: the edit lands on the command's own items when it is written, and a
+// badge by them says how it goes. A SCORE command runs as on WinScore's
+// command bar, on the selection if there is one. Numbers the command leaves
+// open appear as sliders under the field; dragging one re-does the edit with
+// the new value, live, as the same undo step. While a group command asks for
+// its area, the field shows the question and takes the answer. Up and Down
+// recall earlier lines.
 import type { Box } from './display';
 import type { Change, Editor } from './editor';
 import { onlyParams, reach, run, selects, type Access, type Knob, type Scope, type Script } from './ai-script';
@@ -19,12 +22,14 @@ import {
   GATEWAY_URL,
   jevScript,
   loadSettings,
+  modelName,
   readingKey,
   saveSettings,
   serverKeys,
   TYPESAFE_URL,
   UNREAD,
   warmJev,
+  writerFor,
   type About,
   type Catalog,
   type Connections,
@@ -51,6 +56,10 @@ export interface PromptHooks {
   undo(redo: boolean): void;
   /** The field gave the keyboard back to the page. */
   left(): void;
+  /** Whether the page can take an edit of a command sent off: not during a drag, the music input or a group command's question. */
+  ready(): boolean;
+  /** Selects items by identity and brings them into view. */
+  select(keys: number[]): void;
 }
 
 /** A reading of the typed command, ready to run. */
@@ -58,6 +67,12 @@ interface Reading {
   script: Script;
   /** Where it came from, as shown: "Jev 93 % · 120 ms". */
   source: string;
+}
+
+/** What Jev made of a command: its reading, if it has one, and whether the command takes thought. */
+interface Asked {
+  reading: Reading | null;
+  complex: boolean;
 }
 
 /** The last command run, while its sliders can still re-do it. */
@@ -71,8 +86,37 @@ interface Applied {
   values: Record<string, number>;
 }
 
+/** A reading run on the score. */
+interface Performed {
+  applied: Applied;
+  /** Whether it changed something (or picked a selection). */
+  done: boolean;
+  /** What it changed or made, by identity. */
+  touched: number[];
+}
+
+/** A command sent off with Enter: it is read or written while the field takes other commands, and edits its own items. */
+interface Job {
+  text: string;
+  scope: Scope;
+  anchor: Box;
+  /** The editor of its score: another score drops it. */
+  editor: Editor;
+  controller: AbortController;
+  badge: HTMLElement;
+  /** Once it ran: what ran, and what it changed. */
+  reading?: Reading;
+  performed?: Performed;
+  /** The command could not be done: why. */
+  error?: string;
+}
+
 /** Jev is asked once typing pauses this long. */
 const TYPING_PAUSE_MS = 120;
+/** A command that lands away from the field says so by its items this long. */
+const DONE_SHOWN_MS = 8000;
+/** A command waiting for the page to take its edit looks again this often. */
+const READY_POLL_MS = 150;
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, props: Record<string, unknown> = {}, ...children: (Node | string)[]): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -114,8 +158,8 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   const gear = el('button', { className: 'ai-gear', type: 'button', title: 'Models and keys', textContent: '⚙' });
   gear.setAttribute('aria-label', 'Models and keys');
   const questionText = el('span', { className: 'ai-question-text' });
-  const cancel = el('button', { className: 'ai-cancel', type: 'button', title: 'End the group edit without a change', textContent: 'Cancel' });
-  const asking = el('div', { className: 'ai-question', hidden: true }, questionText, cancel);
+  const endQuestion = el('button', { className: 'ai-cancel', type: 'button', title: 'End the group edit without a change', textContent: 'Cancel' });
+  const asking = el('div', { className: 'ai-question', hidden: true }, questionText, endQuestion);
   const status = el('div', { className: 'ai-status' });
   const knobs = el('div', { className: 'ai-knobs' });
   const settings = el('form', { className: 'ai-settings', hidden: true });
@@ -136,18 +180,20 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   const history: string[] = [];
   let recalled = 0;
   let reading: Reading | null = null;
-  /** The request in flight for the text typed, with what it will give. */
-  let pending: { text: string; controller: AbortController; done: Promise<Reading | null> } | null = null;
+  /** Jev's request in flight for the text typed, with what it will give. */
+  let pending: { text: string; controller: AbortController; done: Promise<Asked | null> } | null = null;
   let typingTimer = 0;
   let applied: Applied | null = null;
   let frame = 0;
+  /** Set while a slider is held: commands sent off wait to land. */
+  let sliding = false;
   let server = { jev: false, claude: false };
   let links: Connections = connections(loadSettings(), server);
   /** Readings of earlier commands: Jev's by their words and the kinds of items, Claude's by the very items too (its scripts may name places). */
   const memo = new Map<string, Reading>();
-  const claudeKey = (about: About) => `${readingKey(about)}|${scope?.keys?.join(',') ?? 'all'}|${JSON.stringify(scope?.region ?? null)}`;
-  /** The command Claude is writing an edit for. */
-  let writing: string | null = null;
+  const claudeKey = (about: About, items: Scope) => `${readingKey(about)}|${items.keys?.join(',') ?? 'all'}|${JSON.stringify(items.region ?? null)}`;
+  /** Commands sent off, until they have landed (and been seen). */
+  const jobs = new Set<Job>();
   /** Set while the page takes in an edit of this field: the selection it then follows is the command's. */
   let own = false;
   const edited = (live: boolean, params: boolean) => {
@@ -178,18 +224,43 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   }
 
   function place() {
-    if (box.hidden || !anchor) return;
-    const rect = hooks.clientRect(anchor);
     const origin = host.getBoundingClientRect();
-    const width = box.offsetWidth;
-    const height = box.offsetHeight;
-    let left = Math.min(Math.max(8, rect.left - origin.left), origin.width - width - 8);
-    let top = rect.bottom - origin.top + 8;
-    if (top + height > origin.height - 8) top = rect.top - origin.top - height - 8;
-    if (top < 8) top = Math.min(origin.height - height - 8, Math.max(8, rect.bottom - origin.top + 8));
-    left = Math.max(8, left);
-    box.style.left = `${left}px`;
-    box.style.top = `${Math.max(8, top)}px`;
+    /** Where the field and the badges placed so far lie, so that the next badge goes clear of them. */
+    const taken: { left: number; top: number; right: number; bottom: number }[] = [];
+    if (!box.hidden && anchor) {
+      const rect = hooks.clientRect(anchor);
+      const width = box.offsetWidth;
+      const height = box.offsetHeight;
+      let left = Math.min(Math.max(8, rect.left - origin.left), origin.width - width - 8);
+      let top = rect.bottom - origin.top + 8;
+      if (top + height > origin.height - 8) top = rect.top - origin.top - height - 8;
+      if (top < 8) top = Math.min(origin.height - height - 8, Math.max(8, rect.bottom - origin.top + 8));
+      left = Math.max(8, left);
+      top = Math.max(8, top);
+      box.style.left = `${left}px`;
+      box.style.top = `${top}px`;
+      taken.push({ left, top, right: left + width, bottom: top + height });
+    }
+    // Badges stand above their items, each clear of the others and of the field.
+    for (const job of jobs) {
+      if (job.editor !== hooks.editor()) {
+        cancel(job);
+        continue;
+      }
+      const rect = hooks.clientRect(job.anchor);
+      const width = job.badge.offsetWidth;
+      const height = job.badge.offsetHeight;
+      const left = Math.min(Math.max(8, rect.left - origin.left), Math.max(8, origin.width - width - 8));
+      let top = Math.min(Math.max(8, rect.top - origin.top - height - 6), origin.height - height - 8);
+      const clashes = (t: number) => taken.filter((r) => left < r.right && left + width > r.left && t < r.bottom && t + height > r.top);
+      for (let clash = clashes(top), tries = 0; clash.length > 0 && tries <= jobs.size; clash = clashes(top), tries++) {
+        const above = Math.min(...clash.map((r) => r.top)) - height - 4;
+        top = above >= 8 ? above : Math.max(...clash.map((r) => r.bottom)) + 4;
+      }
+      job.badge.style.left = `${left}px`;
+      job.badge.style.top = `${top}px`;
+      taken.push({ left, top, right: left + width, bottom: top + height });
+    }
   }
 
   function counted(script: Script): string {
@@ -206,7 +277,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   }
 
   /** Asks Jev about the text typed; the answer becomes the reading if the text is still the same. */
-  function askAbout(text: string): Promise<Reading | null> | null {
+  function askAbout(text: string): Promise<Asked | null> | null {
     const about = scope && hooks.about(text, scope);
     if (!about || !links.jev) return null;
     pending?.controller.abort();
@@ -217,10 +288,11 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
         const result = script ? { script, source: `Jev ${Math.round(jev.confidence * 100)} % · ${Math.round(jev.ms)} ms` } : null;
         if (result) memo.set(readingKey(about), result);
         if (input.value.trim() === text) {
+          const claude = links.claude && `Claude${jev.complex ? ` ${modelName(writerFor(links.claude, true).model)}` : ''}`;
           if (result) showReading(result);
-          else show(`${UNREAD[jev.why ?? 'unsure']}${links.claude ? ': ↵ has Claude write it' : '; Claude could write it (⚙)'}`, '', `Jev · ${Math.round(jev.ms)} ms`);
+          else show(`${UNREAD[jev.why ?? 'unsure']}${claude ? `: ↵ has ${claude} write it` : '; Claude could write it (⚙)'}`, '', `Jev · ${Math.round(jev.ms)} ms`);
         }
-        return result;
+        return { reading: result, complex: jev.complex };
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return null;
@@ -239,10 +311,11 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   function typed() {
     clearTimeout(typingTimer);
     reading = null;
+    // What Jev is being asked is about other words, or other items.
+    pending?.controller.abort();
+    pending = null;
     const text = input.value.trim();
     if (!text || question !== null) {
-      pending?.controller.abort();
-      pending = null;
       idle();
       return;
     }
@@ -251,7 +324,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       return;
     }
     const about = scope && hooks.about(text, scope);
-    const known = about && (memo.get(readingKey(about)) ?? memo.get(claudeKey(about)));
+    const known = about && (memo.get(readingKey(about)) ?? memo.get(claudeKey(about, scope!)));
     if (known) {
       showReading(known);
       return;
@@ -264,30 +337,41 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     typingTimer = window.setTimeout(() => askAbout(text), TYPING_PAUSE_MS);
   }
 
-  /** Runs a reading on the score, as one undo step named after the command; why it failed, if it did. */
-  function apply(r: Reading, text: string): string | null {
+  /** Runs a reading on `items` as one undo step named after the command: what it did, or why it failed. */
+  function perform(r: Reading, text: string, items: Scope): Performed | string {
     const editor = hooks.editor();
     const access = hooks.access();
-    if (!editor || !access || !scope) return null;
-    let error: string | null = null;
+    if (!editor || !access) return 'There is no score';
     const label = `“${text}”`;
     const values = Object.fromEntries(r.script.knobs.map((k) => [k.id, k.value]));
     try {
-      const ran = run(r.script, access, scope, label, values);
-      applied = { script: r.script, scope, label, mark: ran.mark, depth: editor.mark(), values };
+      const ran = run(r.script, access, items, label, values);
+      return { applied: { script: r.script, scope: items, label, mark: ran.mark, depth: editor.mark(), values }, done: ran.changed || selects(r.script), touched: ran.touched };
+    } catch (err) {
+      return err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  /** What a command did, in the field, with its sliders. */
+  function present(r: Reading, performed: Performed) {
+    applied = performed.applied;
+    show(performed.done ? `✓ ${r.script.summary}` : `${r.script.summary}: nothing changed`, performed.done ? 'done' : 'error', r.source);
+    showKnobs(r.script.knobs.map((k) => ({ ...k, value: performed.applied.values[k.id] ?? k.value })));
+  }
+
+  /** Runs a reading on the selection at once. */
+  function apply(r: Reading, text: string) {
+    if (!scope) return;
+    const performed = perform(r, text, scope);
+    if (typeof performed === 'string') show(performed, 'error', r.source);
+    else {
       input.value = '';
       reading = null;
-      const done = ran.changed || selects(r.script);
-      show(done ? `✓ ${r.script.summary}` : `${r.script.summary}: nothing changed`, done ? 'done' : 'error', r.source);
-      showKnobs(r.script.knobs);
-    } catch (err) {
-      error = err instanceof Error ? err.message : String(err);
-      show(error, 'error', r.source);
+      present(r, performed);
     }
     // The command leaves what it changed selected, and the next one is about that.
     edited(false, false);
     place();
-    return error;
   }
 
   /** Runs a line on the page as WinScore's command bar runs it; the text stays to be corrected when the engine objects. */
@@ -309,52 +393,163 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     place();
   }
 
-  async function enter() {
+  function enter() {
     const text = input.value.trim();
-    if (!text || !scope) return;
+    const editor = hooks.editor();
+    if (!text || !scope || !anchor || !editor) return;
     clearTimeout(typingTimer);
     if (history.at(-1) !== text) history.push(text);
     recalled = 0;
-    if (native(text)) return void runLine(text);
-    if (reading) return void apply(reading, text);
-    const asked = pending?.text === text ? pending.done : askAbout(text);
-    if (asked) {
-      show('…', 'busy');
-      const result = await asked;
-      if (input.value.trim() !== text) return;
-      if (result) return void apply(result, text);
-    }
+    if (native(text)) return runLine(text);
+    if (reading) return apply(reading, text);
     const about = hooks.about(text, scope);
-    if (writing === text) return;
-    const claude = links.claude;
-    if (!about || !claude) {
-      show(links.jev ? 'Jev could not read this, and no Claude key is set (⚙)' : 'Commands in words need a model: set one up with ⚙', 'error');
+    if (!about || (!links.jev && !links.claude)) {
+      show('Commands in words need a model: set one up with ⚙', 'error');
       return;
     }
-    show('Claude is writing the edit…', 'busy');
-    const controller = new AbortController();
-    pending = { text, controller, done: Promise.resolve(null) };
-    writing = text;
+    // Jev's reading of these words, if it is under way, goes with the command.
+    if (pending?.text !== text) askAbout(text);
+    const asked = pending?.text === text ? pending : null;
+    pending = null;
+    const job: Job = { text, scope, anchor, editor, controller: asked?.controller ?? new AbortController(), badge: badgeFor() };
+    jobs.add(job);
+    host.append(job.badge);
+    showJob(job, text, 'busy');
+    input.value = '';
+    reading = null;
+    idle();
+    place();
+    void work(job, about, asked?.done ?? null);
+  }
+
+  /** A command sent off: Jev's reading runs on its items, or Claude writes the edit; a script that fails to run goes back to Claude once, with the error. */
+  async function work(job: Job, about: About, asked: Promise<Asked | null> | null) {
+    const { signal } = job.controller;
     try {
-      // A script that fails to run goes back to Claude once, with the error.
+      const jev = asked && (await asked);
+      if (signal.aborted) return;
+      if (jev?.reading) return void (await land(job, jev.reading, false));
+      const claude = links.claude;
+      if (!claude) throw new Error(links.jev ? 'Jev could not read this, and no Claude key is set (⚙)' : 'Commands in words need a model: set one up with ⚙');
+      const writer = writerFor(claude, jev?.complex ?? false);
+      const name = `Claude ${modelName(writer.model)}`;
+      showJob(job, job.text, 'busy', name);
       let failed: Failed | undefined;
       for (let tries = 2; tries > 0; tries--) {
-        const { script, ms, answer } = await askClaude(about, hooks.catalog(), claude, controller.signal, failed);
-        if (input.value.trim() !== text) return;
-        const result = { script, source: `Claude · ${(ms / 1000).toFixed(1)} s` };
-        const error = apply(result, text);
+        const { script, ms, answer } = await askClaude(about, hooks.catalog(), claude, writer, signal, failed);
+        const result = { script, source: `${name} · ${(ms / 1000).toFixed(1)} s` };
+        const error = await land(job, result, tries > 1);
         if (error === null) {
-          memo.set(claudeKey(about), result);
+          memo.set(claudeKey(about, job.scope), result);
           return;
         }
         failed = { answer, error };
-        if (tries > 1) show(`${error}: Claude is correcting the edit…`, 'busy', 'Claude');
+        showJob(job, `${error}: correcting the edit…`, 'busy', name);
       }
     } catch (err) {
-      if (!controller.signal.aborted && input.value.trim() === text) show(err instanceof Error ? err.message : String(err), 'error', 'Claude');
-    } finally {
-      writing = null;
+      if (!signal.aborted) fail(job, err instanceof Error ? err.message : String(err));
     }
+  }
+
+  /** Whether the field stands by a command's items with nothing typed: what it does is then said there. */
+  const atField = (job: Job) => !box.hidden && scope !== null && sameScope(scope, job.scope) && !input.value.trim();
+
+  /**
+   * Runs a command's reading on its items once the page can take it, as one
+   * undo step. By the field, it leaves what it changed selected, as a command
+   * run at once does; elsewhere the selection stays, and its badge says what
+   * it did. Why it failed, if it did: said, unless Claude is to `retry`.
+   */
+  async function land(job: Job, r: Reading, retry: boolean): Promise<string | null> {
+    const { signal } = job.controller;
+    while (!signal.aborted && (sliding || !hooks.ready())) await new Promise((wake) => setTimeout(wake, READY_POLL_MS));
+    const editor = hooks.editor();
+    if (editor !== job.editor) cancel(job);
+    if (signal.aborted || !editor) throw new DOMException('The command was dropped', 'AbortError');
+    const here = atField(job);
+    const keys = editor.keys();
+    const before = editor.selection().map((i) => keys[i]!);
+    const performed = perform(r, job.text, job.scope);
+    if (typeof performed === 'string') {
+      if (!retry) fail(job, performed);
+      return performed;
+    }
+    job.reading = r;
+    job.performed = performed;
+    if (here) {
+      finish(job);
+      present(r, performed);
+    } else {
+      const at = new Map(editor.keys().map((key, i) => [key, i]));
+      editor.select(before.flatMap((key) => at.get(key) ?? []));
+      showJob(job, performed.done ? `✓ ${r.script.summary}` : `${r.script.summary}: nothing changed`, performed.done ? 'done' : 'error', r.source);
+      setTimeout(() => finish(job), DONE_SHOWN_MS);
+    }
+    edited(false, false);
+    place();
+    return null;
+  }
+
+  /** A command that could not be done: by the field, the command goes back into it with why; else its badge says why until it is seen. */
+  function fail(job: Job, error: string) {
+    job.error = error;
+    if (atField(job)) {
+      finish(job);
+      input.value = job.text;
+      show(error, 'error');
+    } else showJob(job, error, 'error');
+    place();
+  }
+
+  function badgeFor(): HTMLElement {
+    const text = el('button', { type: 'button', className: 'ai-job-text' });
+    const source = el('span', { className: 'ai-job-source' });
+    const close = el('button', { type: 'button', className: 'ai-job-close', textContent: '×' });
+    const badge = el('div', { className: 'ai-job' }, text, source, close);
+    badge.setAttribute('role', 'status');
+    // A click leaves the keyboard where it was: in the field, or with the page.
+    badge.addEventListener('mousedown', (e) => e.preventDefault());
+    return badge;
+  }
+
+  function showJob(job: Job, text: string, kind: 'busy' | 'done' | 'error', source = '') {
+    const [label, from, close] = job.badge.children as unknown as [HTMLButtonElement, HTMLElement, HTMLButtonElement];
+    job.badge.className = `ai-job ${kind}`;
+    label.textContent = kind === 'busy' ? `“${job.text}”` : text;
+    label.title = kind === 'busy' ? `${text === job.text ? 'Working on it' : text}: select its items` : kind === 'done' ? 'Select what it changed' : `“${job.text}”: select its items and put it back in the field`;
+    from.textContent = source;
+    from.hidden = !source;
+    close.title = kind === 'busy' ? 'Cancel the command' : 'Dismiss';
+    close.setAttribute('aria-label', close.title);
+    label.onclick = () => open(job);
+    close.onclick = () => cancel(job);
+    place();
+  }
+
+  /** The command's badge goes; the command stops if it is still under way. */
+  function cancel(job: Job) {
+    job.controller.abort();
+    finish(job);
+  }
+
+  function finish(job: Job) {
+    jobs.delete(job);
+    job.badge.remove();
+  }
+
+  /** A badge clicked: its items are selected (what it changed, once it ran), with its sliders if nothing came after; a failed command goes back into the field. */
+  function open(job: Job) {
+    const ran = job.performed;
+    const keys = ran && ran.touched.length > 0 ? ran.touched : (job.scope.keys ?? []);
+    if (ran || job.error) finish(job);
+    hooks.select(keys);
+    if (box.hidden) return;
+    if (job.error) {
+      input.value = job.text;
+      show(job.error, 'error');
+      input.focus();
+    } else if (ran && job.reading && hooks.editor()?.mark() === ran.applied.depth) present(job.reading, ran);
+    place();
   }
 
   /** Re-does the last command with the knobs' values now, live while a slider moves. */
@@ -380,6 +575,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   }
 
   function showKnobs(list: Knob[]) {
+    sliding = false;
     knobs.replaceChildren(
       ...list.map((knob) => {
         const slider = el('input', { type: 'range', min: String(knob.min), max: String(knob.max), step: String(knob.step || 'any'), value: String(knob.value) });
@@ -387,11 +583,13 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
         slider.setAttribute('aria-label', knob.label);
         slider.addEventListener('input', () => {
           if (!applied) return;
+          sliding = true;
           applied.values[knob.id] = Number(slider.value);
           value.textContent = format(Number(slider.value));
           if (!frame) frame = requestAnimationFrame(() => redo(true));
         });
         slider.addEventListener('change', () => {
+          sliding = false;
           cancelAnimationFrame(frame);
           redo(false);
         });
@@ -408,17 +606,19 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     const jevUrl = el('select', {}, ...[[TYPESAFE_URL, 'TypeSafe (through a server)'], [GATEWAY_URL, 'Vercel AI Gateway (from any page)']].map(([v, l]) => new Option(l, v, false, v === current.jevUrl)));
     const claudeKey = el('input', { type: 'password', value: current.claudeKey, placeholder: server.claude ? 'the dev server’s ANTHROPIC_API_KEY' : 'Anthropic API key', autocomplete: 'off' });
     const model = el('select', {}, ...CLAUDE_MODELS.map((m) => new Option(m.label, m.id, false, m.id === current.claudeModel)));
+    const complexModel = el('select', {}, ...CLAUDE_MODELS.map((m) => new Option(m.label, m.id, false, m.id === current.claudeComplexModel)));
     const save = el('button', { type: 'submit', className: 'primary', textContent: 'Save' });
     settings.replaceChildren(
       field('Jev key', jevKey),
       field('Jev through', jevUrl, 'TypeSafe answers pages of its own site only: from here Jev needs the dev server (npm run dev with TYPESAFE_API_KEY) or the AI Gateway.'),
       field('Claude key', claudeKey),
       field('Claude model', model),
+      field('For complex commands', complexModel, 'Jev tells which commands take thought; they are written, at more effort, while you go on with others.'),
       el('div', { className: 'ai-settings-actions' }, el('small', { textContent: 'Keys stay in this browser.' }), save),
     );
     settings.onsubmit = (e) => {
       e.preventDefault();
-      const next = { jevKey: jevKey.value.trim(), jevUrl: jevUrl.value, claudeKey: claudeKey.value.trim(), claudeModel: model.value };
+      const next = { jevKey: jevKey.value.trim(), jevUrl: jevUrl.value, claudeKey: claudeKey.value.trim(), claudeModel: model.value, claudeComplexModel: complexModel.value };
       saveSettings(next);
       links = connections(next, server);
       memo.clear();
@@ -441,7 +641,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     }
     if (e.key === 'Enter') {
       e.preventDefault();
-      void enter();
+      enter();
     } else if (e.key === 'Escape') {
       e.preventDefault();
       leave();
@@ -458,7 +658,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     e.stopPropagation();
   });
   gear.addEventListener('click', () => (settings.hidden ? showSettings() : ((settings.hidden = true), place())));
-  cancel.addEventListener('click', () => {
+  endQuestion.addEventListener('click', () => {
     hooks.run('X');
     hooks.left();
   });

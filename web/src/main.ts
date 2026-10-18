@@ -1002,6 +1002,13 @@ const aiPrompt = createAiPrompt(ui.stage, {
   },
   undo: (redo) => edit((editor) => (redo ? editor.redo() : editor.undo())),
   left: () => ui.viewport.focus(),
+  ready: () => !state.drag && !inputMode.isOpen && state.editor?.prompt() == null,
+  select(keys) {
+    const editor = state.editor;
+    if (!editor) return;
+    const at = new Map(editor.keys().map((key, i) => [key, i]));
+    select(keys.flatMap((key) => at.get(key) ?? []), true);
+  },
 });
 view.onPaint(() => aiPrompt.place());
 

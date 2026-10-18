@@ -2042,6 +2042,88 @@ button.danger:hover {
   font-size: 11px;
 }
 
+/* A command sent off, above its items while it is written and once it lands away from the field. */
+.ai-job {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(320px, calc(100% - 16px));
+  padding: 2px 2px 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  color: var(--muted);
+  font-size: 12px;
+  z-index: 3;
+}
+
+/* A command Jev reads in a moment shows no badge. */
+.ai-job.busy {
+  animation: ai-job-in 0.15s 0.3s both;
+}
+
+@keyframes ai-job-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.ai-job-text {
+  min-width: 0;
+  height: 22px;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-job.busy .ai-job-text {
+  font-family: ui-monospace, monospace;
+}
+
+.ai-job.busy::before {
+  content: '';
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--accent-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: ai-spin 0.7s linear infinite;
+}
+
+.ai-job.done .ai-job-text {
+  color: #15803d;
+}
+
+.ai-job.error {
+  border-color: var(--danger);
+}
+
+.ai-job.error .ai-job-text {
+  color: var(--danger);
+}
+
+.ai-job-source {
+  flex: none;
+  font-size: 11px;
+}
+
+.ai-job-close {
+  flex: none;
+  height: 22px;
+  padding: 0 7px;
+  border-color: transparent;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
 .ai-knobs {
   display: grid;
   gap: 4px;

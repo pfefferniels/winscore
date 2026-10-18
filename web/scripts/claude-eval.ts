@@ -2,17 +2,18 @@
 // each script Claude writes is run on the score and its effect checked, then
 // undone. Needs CLAUDE_API_KEY (or ANTHROPIC_API_KEY).
 //
-// usage: npm run wasm && npm run eval:claude    (CLAUDE_MODEL=claude-haiku-5-5)
+// usage: npm run wasm && npm run eval:claude    (CLAUDE_MODEL=claude-opus-5-5 CLAUDE_EFFORT=medium)
 import { readFileSync } from 'node:fs';
 import { codeName, editWords, groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
-import { askClaude, type About, type Catalog, type Failed } from '../src/ai-models';
+import { askClaude, type About, type Catalog, type Failed, type Writer } from '../src/ai-models';
 import { barlines, run, type Access, type Region, type Scope, type Script } from '../src/ai-script';
 
 initSync({ module: readFileSync(process.env.SCORE_WASM!) });
 const key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
 if (!key) throw new Error('CLAUDE_API_KEY is not set');
-const connection = { key, baseURL: undefined, model: process.env.CLAUDE_MODEL ?? 'claude-sonnet-5-5' };
+const writer: Writer = { model: process.env.CLAUDE_MODEL ?? 'claude-sonnet-5-5', effort: (process.env.CLAUDE_EFFORT as Writer['effort']) ?? 'low' };
+const connection = { key, baseURL: undefined, model: writer.model, complexModel: writer.model };
 const catalog: Catalog = {
   codes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 18].map((code) => ({ code, name: codeName(code) ?? `Code ${code}` })),
   words: JSON.parse(editWords()) as Catalog['words'],
@@ -173,6 +174,40 @@ const CASES: Case[] = [
       return staves.length === 1 && staves[0] === 9 ? null : `new staves: ${staves.join(', ') || 'none'}`;
     },
   },
+  // Complex: what Jev sends to the model for complex commands.
+  {
+    text: 'double the melody a third below',
+    items: MELODY,
+    all: true,
+    check(before, after) {
+      // The melody's notes: those on its staff before its barline.
+      const melody = notes(before).filter(([, p]) => p[1] === 8 && p[2]! < 90);
+      const added = notes(after).filter(([k]) => !before.has(k));
+      if (added.length !== melody.length) return `${added.length} notes added for ${melody.length}`;
+      const off = melody.filter(([, p]) => !added.some(([, q]) => q[1] === p[1] && Math.abs(q[2]! - p[2]!) < 0.6 && q[3] === p[3]! - 2));
+      return off.length ? `${off.length} notes without a third below` : null;
+    },
+  },
+  {
+    text: 'retrograde the melody',
+    items: MELODY,
+    check(before, after) {
+      const levels = (m: Params) => notes(m).map(([, p]) => p[3]);
+      const want = levels(before).reverse().join(' ');
+      return levels(after).join(' ') === want ? null : `levels ${levels(after).join(' ')}, expected ${want}`;
+    },
+  },
+  {
+    text: 'invert the melody around its first note',
+    items: MELODY,
+    check(before, after) {
+      const all = notes(before);
+      const axis = all[0]![1][3]!;
+      const want = all.map(([, p]) => 2 * axis - p[3]!).join(' ');
+      const got = all.map(([k]) => after.get(k)?.[3]).join(' ');
+      return got === want ? null : `levels ${got}, expected ${want}`;
+    },
+  },
   {
     text: 'add a c major arpeggio in eighths, up and back down',
     items: null,
@@ -236,13 +271,13 @@ async function evaluate(c: Case): Promise<string> {
   try {
     // As the app does: a script that fails to run goes back to Claude once, with why.
     let failed: Failed | undefined;
-    let asked = await askClaude(about, catalog, connection, new AbortController().signal);
+    let asked = await askClaude(about, catalog, connection, writer, new AbortController().signal);
     written = asked.script;
     try {
       run(asked.script, access, scope, `“${c.text}”`);
     } catch (err) {
       failed = { answer: asked.answer, error: err instanceof Error ? err.message : String(err) };
-      asked = await askClaude(about, catalog, connection, new AbortController().signal, failed);
+      asked = await askClaude(about, catalog, connection, writer, new AbortController().signal, failed);
       written = asked.script;
       run(asked.script, access, scope, `“${c.text}”`);
     }
@@ -272,4 +307,4 @@ await Promise.all(Array.from({ length: limit }, async () => {
   }
 }));
 console.log(results.join('\n'));
-console.log(`claude eval: ${results.filter((r) => r.startsWith('ok')).length}/${CHOSEN.length} with ${connection.model}`);
+console.log(`claude eval: ${results.filter((r) => r.startsWith('ok')).length}/${CHOSEN.length} with ${writer.model} at ${writer.effort} effort`);
