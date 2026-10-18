@@ -13,7 +13,7 @@
 // the environment) or directly from the page with keys kept in this browser.
 import type Anthropic from '@anthropic-ai/sdk';
 import { MEASURES, TARGETS, scriptFor, type Action, type Intent } from './ai-intent';
-import { namedSettings, plain, type Region, type Script } from './ai-script';
+import { namedSettings, plain, type Filter, type Region, type Script, type Step } from './ai-script';
 import { INTERVALS, RHYTHMS, musicIn, numberOf, numberWords, rhythmsFor } from './ai-values';
 
 // ---------------------------------------------------------------------------
@@ -437,16 +437,17 @@ A score is a list of items, each a row of numbers P1 … Pn. P1 is the item's co
 # The script
 {"summary": a few words on what it does, "knobs": [...], "steps": [...]}
 
-Steps run in order, each on the items the command is about (the selection, or the whole score when nothing is selected), narrowed by "items":
-- {"do": "setting", "items": filter, "setting": a setting's name, "value": an option's name, on/off, a number or an expression}. Prefer this: the editor packs the parameters itself.
-- {"do": "set", "items": filter, "param": n, "value": number or expression}: parameter Pn directly.
-- {"do": "move", "items": filter, "right": P3 spaces, "up": scale steps}: as the arrow keys move items, ends of lines and slurs included. Notes move by whole steps (diatonic transposition).
-- {"do": "delete", "items": filter}
-- {"do": "command", "items": filter, "line": an edit word below, such as "NST" or "FLI", or a group command (FLN, FLU, FLD refit stems, beams and slurs over the items' area)}.
-- {"do": "insert", "staff": n or null, "from": P3 or null, "to": P3 or null, "notes": SCORE input pass 1, "rhythms": pass 2, "marks": pass 3, "beams": pass 4, "slurs": pass 5}: a line of music input, spaced between from and to; null takes the region the user drew. Pass 1: notes C D E F G A B with accidentals F (flat), S (sharp), N, FF, SS and octave 0–8 (C4 is middle C, the octave persists), items separated by /, chord notes by : (C4:E:G), R a rest, M a barline; a P before the first note gives each note the octave nearest the one before (PC4/E/G). Pass 2: one value per note, chord or rest: 1 whole, 2 half, 4 quarter, 8 eighth, 16, 32; a dot after it dots it (4.); always give it, as notes without a value become grace notes. Passes 3–5 may stay empty.
-- {"do": "beam", "items": filter, "size": notes or chords per beam, 0 for every run up to a barline}: the engine refits stems and flags.
-
-A filter is {"codes": [codes] or null (all), "where": expression or null, "setting": a setting's name or null, "is": the option it must read or null}, e.g. {"codes": [1], "where": null, "setting": "Mark", "is": "Staccato", ...}. Use null for the filter's fields you do not need.
+Steps run in order, each on the items the command is about (the selection, or the whole score when nothing is selected). Every step has all of these fields; give the ones its kind uses and leave the others empty ("", 0 or []):
+- "do": what it does:
+  - "setting": the setting named "setting" becomes "value" (an option's name, on or off, a number or an expression). Prefer this: the editor packs the parameters itself.
+  - "set": parameter P"param" becomes "value" (a number or an expression).
+  - "move": move by "right" P3 spaces and "up" scale steps, as the arrow keys move items, ends of lines and slurs included. Notes move by whole steps (diatonic transposition).
+  - "delete": the items go.
+  - "command": the SCORE edit word in "line" on the items, such as "NST" or "FLI" (below), or a group command (FLN, FLU, FLD refit stems, beams and slurs over the items' area).
+  - "insert": a line of music input on "staff" between P3 "from" and "to" (0 for all three: the region the user drew), from the five passes "notes", "rhythms", "marks", "beams", "slurs". Pass 1: notes C D E F G A B with accidentals F (flat), S (sharp), N, FF, SS and octave 0–8 (C4 is middle C, the octave persists), items separated by /, chord notes by : (C4:E:G), R a rest, M a barline; a P before the first note gives each note the octave nearest the one before (PC4/E/G). Pass 2: one value per note, chord or rest: 1 whole, 2 half, 4 quarter, 8 eighth, 16, 32; a dot after it dots it (4.); always give it, as notes without a value become grace notes. Passes 3–5 may stay empty.
+  - "beam": beams over "size" notes or chords each ("0" for every run up to a barline); the engine refits stems and flags.
+- Which items a step acts on: "codes" (empty for all), "where" (an expression that must hold, or ""), and "where_setting" with "where_is" (only the items whose setting reads that option, e.g. "Mark" and "Staccato", or "" and "").
+- "value", "right", "up", "size": text holding a number, an expression or an option's name.
 
 Values may be expressions: numbers, + - * / % ^, comparisons, && || !, a ? b : c, functions min max abs round floor ceil sqrt pow lerp(a,b,t) clamp(x,lo,hi) snap(x,step), and these names for each item: p1 … p45 (its parameters), staff, x (P3), level (P4 without the cue-size hundred), value (the setting's current value; 0 often means the default, e.g. size 0 is size 1), mean (the mean of that parameter over the items, in set steps), t (0 for the first column of items from left to right, 1 for the last; the notes of a chord share one), i and n (that column's number from 0, and how many there are), st, si, sn (the same on the item's own staff), left and right (the leftmost and rightmost P3 of the items on its staff), count, and the knobs by id.
 
@@ -459,75 +460,111 @@ ${settings}
 ${words}
 
 # Examples
-"remove the stems" → {"summary": "Remove stems", "knobs": [], "steps": [{"do": "setting", "items": {"codes": [1], "where": null, "setting": null, "is": null}, "setting": "Stem", "value": "None"}]}
-"make the notes gradually bigger" → {"summary": "Notes grow", "knobs": [{"id": "to", "label": "Final size", "min": 0.5, "max": 4, "step": 0.05, "value": 1.8}, {"id": "curve", "label": "Curve", "min": 0.25, "max": 4, "step": 0.05, "value": 1}], "steps": [{"do": "setting", "items": {"codes": [1], "where": null, "setting": null, "is": null}, "setting": "Size", "value": "round((1 + (to - 1) * t ^ curve) * 100) / 100"}]}
-"add c e g" → {"summary": "Add C E G", "knobs": [], "steps": [{"do": "insert", "staff": null, "from": null, "to": null, "notes": "PC5/E/G", "rhythms": "4/4/4", "marks": "", "beams": "", "slurs": ""}]}`;
+A step leaves out its unused fields here for brevity; give every field.
+"remove the stems" → {"summary": "Remove stems", "knobs": [], "steps": [{"do": "setting", "codes": [1], "setting": "Stem", "value": "None"}]}
+"remove the staccatos" → {"summary": "Remove staccatos", "knobs": [], "steps": [{"do": "setting", "codes": [1], "where_setting": "Mark", "where_is": "Staccato", "setting": "Mark", "value": "None"}]}
+"make the notes gradually bigger" → {"summary": "Notes grow", "knobs": [{"id": "to", "label": "Final size", "min": 0.5, "max": 4, "step": 0.05, "value": 1.8}, {"id": "curve", "label": "Curve", "min": 0.25, "max": 4, "step": 0.05, "value": 1}], "steps": [{"do": "setting", "codes": [1], "setting": "Size", "value": "round((1 + (to - 1) * t ^ curve) * 100) / 100"}]}
+"accent the last note" → {"summary": "Accent the last note", "knobs": [], "steps": [{"do": "setting", "codes": [1], "where": "t == 1", "setting": "Mark", "value": "Accent"}]}
+"add c e g" → {"summary": "Add C E G", "knobs": [], "steps": [{"do": "insert", "staff": 0, "from": 0, "to": 0, "notes": "PC5/E/G", "rhythms": "4/4/4"}]}`;
 }
 
-const NULLABLE = (schema: object) => ({ anyOf: [schema, { type: 'null' }] });
-const VALUE = { anyOf: [{ type: 'number' }, { type: 'string' }] };
-const FILTER = NULLABLE({
-  type: 'object',
-  additionalProperties: false,
-  required: ['codes', 'where', 'setting', 'is'],
-  properties: {
-    codes: NULLABLE({ type: 'array', items: { type: 'integer' } }),
-    where: NULLABLE({ type: 'string' }),
-    setting: NULLABLE({ type: 'string' }),
-    is: NULLABLE({ type: 'string' }),
-  },
-});
-
-function step(kind: string, properties: Record<string, object>) {
-  return {
-    type: 'object',
-    additionalProperties: false,
-    required: ['do', ...Object.keys(properties)],
-    properties: { do: { type: 'string', enum: [kind] }, ...properties },
-  };
+/** One step as Claude writes it: every field there, none of them a union (the API allows few). */
+interface Written {
+  do: Step['do'];
+  codes: number[];
+  where: string;
+  where_setting: string;
+  where_is: string;
+  setting: string;
+  param: number;
+  value: string;
+  right: string;
+  up: string;
+  line: string;
+  staff: number;
+  from: number;
+  to: number;
+  notes: string;
+  rhythms: string;
+  marks: string;
+  beams: string;
+  slurs: string;
+  size: string;
 }
 
-/** The script as a JSON schema for structured output: every field required, null where it is left out. */
-const SCRIPT_SCHEMA = {
+const STRING = { type: 'string' };
+const NUMBER = { type: 'number' };
+
+/** The script as a JSON schema for structured output: flat, every field required. */
+export const SCRIPT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   required: ['summary', 'knobs', 'steps'],
   properties: {
-    summary: { type: 'string' },
+    summary: STRING,
     knobs: {
       type: 'array',
       items: {
         type: 'object',
         additionalProperties: false,
         required: ['id', 'label', 'min', 'max', 'step', 'value'],
-        properties: { id: { type: 'string' }, label: { type: 'string' }, min: { type: 'number' }, max: { type: 'number' }, step: { type: 'number' }, value: { type: 'number' } },
+        properties: { id: STRING, label: STRING, min: NUMBER, max: NUMBER, step: NUMBER, value: NUMBER },
       },
     },
     steps: {
       type: 'array',
       items: {
-        anyOf: [
-          step('setting', { items: FILTER, setting: { type: 'string' }, value: { anyOf: [{ type: 'number' }, { type: 'string' }, { type: 'boolean' }] } }),
-          step('set', { items: FILTER, param: { type: 'integer' }, value: VALUE }),
-          step('move', { items: FILTER, right: NULLABLE(VALUE), up: NULLABLE(VALUE) }),
-          step('delete', { items: FILTER }),
-          step('command', { items: FILTER, line: { type: 'string' } }),
-          step('insert', {
-            staff: NULLABLE({ type: 'number' }),
-            from: NULLABLE({ type: 'number' }),
-            to: NULLABLE({ type: 'number' }),
-            notes: { type: 'string' },
-            rhythms: NULLABLE({ type: 'string' }),
-            marks: NULLABLE({ type: 'string' }),
-            beams: NULLABLE({ type: 'string' }),
-            slurs: NULLABLE({ type: 'string' }),
-          }),
-          step('beam', { items: FILTER, size: VALUE }),
-        ],
+        type: 'object',
+        additionalProperties: false,
+        required: ['do', 'codes', 'where', 'where_setting', 'where_is', 'setting', 'param', 'value', 'right', 'up', 'line', 'staff', 'from', 'to', 'notes', 'rhythms', 'marks', 'beams', 'slurs', 'size'],
+        properties: {
+          do: { type: 'string', enum: ['setting', 'set', 'move', 'delete', 'command', 'insert', 'beam'] },
+          codes: { type: 'array', items: { type: 'integer' } },
+          where: STRING,
+          where_setting: STRING,
+          where_is: STRING,
+          setting: STRING,
+          param: { type: 'integer' },
+          value: STRING,
+          right: STRING,
+          up: STRING,
+          line: STRING,
+          staff: NUMBER,
+          from: NUMBER,
+          to: NUMBER,
+          notes: STRING,
+          rhythms: STRING,
+          marks: STRING,
+          beams: STRING,
+          slurs: STRING,
+          size: STRING,
+        },
       },
     },
   },
 };
+
+/** A step as the script runs it. */
+function stepOf(w: Written): Step {
+  const items: Filter = { codes: w.codes?.length ? w.codes : null, where: w.where || null, setting: (w.where_is && w.where_setting) || null, is: w.where_is || null };
+  const text = (v: string | undefined) => (v ?? '').trim();
+  switch (w.do) {
+    case 'setting':
+      return { do: 'setting', items, setting: w.setting, value: text(w.value) };
+    case 'set':
+      return { do: 'set', items, param: w.param, value: text(w.value) };
+    case 'move':
+      return { do: 'move', items, right: text(w.right) || 0, up: text(w.up) || 0 };
+    case 'delete':
+      return { do: 'delete', items };
+    case 'command':
+      return { do: 'command', items, line: w.line };
+    case 'insert':
+      return { do: 'insert', staff: w.staff || null, from: w.from || null, to: w.to || null, notes: w.notes, rhythms: w.rhythms, marks: w.marks, beams: w.beams, slurs: w.slurs };
+    case 'beam':
+      return { do: 'beam', items, size: text(w.size) || 0 };
+  }
+}
 
 function userMessage(about: About): string {
   const region = about.region ? `staff ${about.region.staff}${about.region.top !== about.region.staff ? `–${about.region.top}` : ''}, P3 ${Math.round(about.region.from)} to ${Math.round(about.region.to)}` : 'none drawn';
@@ -551,15 +588,6 @@ async function anthropic(connection: NonNullable<Connections['claude']>): Promis
   return instance;
 }
 
-/** Turns Claude's nulls into what a script leaves out. */
-function cleaned(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(cleaned);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== null).map(([k, v]) => [k, cleaned(v)]));
-  }
-  return value;
-}
-
 /** Claude's script for a command. */
 export async function askClaude(about: About, catalog: Catalog, connection: NonNullable<Connections['claude']>, signal: AbortSignal): Promise<{ script: Script; ms: number }> {
   const started = performance.now();
@@ -578,9 +606,9 @@ export async function askClaude(about: About, catalog: Catalog, connection: NonN
   );
   if (response.stop_reason === 'refusal') throw new Error('Claude declined this command');
   const text = response.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])).join('');
-  const script = cleaned(JSON.parse(text)) as Script;
-  if (!Array.isArray(script.steps) || script.steps.length === 0) throw new Error(`Claude found nothing to do${script.summary ? `: ${script.summary}` : ''}`);
-  script.knobs ??= [];
+  const written = JSON.parse(text) as { summary: string; knobs: Script['knobs']; steps: Written[] };
+  if (!Array.isArray(written.steps) || written.steps.length === 0) throw new Error(`Claude found nothing to do${written.summary ? `: ${written.summary}` : ''}`);
+  const script: Script = { summary: written.summary, knobs: written.knobs ?? [], steps: written.steps.map(stepOf) };
   return { script, ms: performance.now() - started };
 }
 

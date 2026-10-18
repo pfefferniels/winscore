@@ -9,6 +9,7 @@ import { compile } from '../src/ai-expr';
 import { musicIn, numbersIn, quartersFor } from '../src/ai-values';
 import { scriptFor } from '../src/ai-intent';
 import { run, type Access, type Scope, type Script } from '../src/ai-script';
+import { SCRIPT_SCHEMA } from '../src/ai-models';
 
 initSync({ module: readFileSync(process.env.SCORE_WASM!) });
 
@@ -32,6 +33,23 @@ assert.equal(musicIn('add c e g as eighths')?.notes, 'PC5/E/G', '"as" is a word'
 assert.equal(musicIn('add fis4 bes gn4')?.notes, 'FS4/BF/GN4');
 assert.equal(musicIn('remove the stems'), null);
 assert.equal(quartersFor('PC5/G/M/D:F:A;'), '4/4/4');
+
+// Claude's schema: structured output allows few union-typed fields (16) and
+// wants every object closed with all its fields required.
+function schemaFaults(node: unknown, path = '$'): string[] {
+  if (!node || typeof node !== 'object') return [];
+  const o = node as Record<string, unknown>;
+  const faults: string[] = [];
+  if ('anyOf' in o || Array.isArray(o.type)) faults.push(`${path}: a union`);
+  if (o.type === 'object') {
+    const keys = Object.keys((o.properties ?? {}) as object).sort();
+    if (o.additionalProperties !== false) faults.push(`${path}: open`);
+    if (JSON.stringify([...((o.required ?? []) as string[])].sort()) !== JSON.stringify(keys)) faults.push(`${path}: not all required`);
+  }
+  for (const [k, v] of Object.entries(o)) faults.push(...schemaFaults(v, `${path}.${k}`));
+  return faults;
+}
+assert.deepEqual(schemaFaults(SCRIPT_SCHEMA), []);
 
 // Intents as scripts.
 assert.deepEqual(scriptFor({ action: 'delete', target: 'stems' }).steps, [{ do: 'setting', items: { codes: [1], where: null }, setting: 'Stem', value: 'None' }]);

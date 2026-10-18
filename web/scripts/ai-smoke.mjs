@@ -26,7 +26,12 @@ const JEV = {
 const CLAUDE = {
   summary: 'Last note with an X head',
   knobs: [],
-  steps: [{ do: 'setting', items: { codes: [1], where: 't == 1', setting: null, is: null }, setting: 'Head', value: 'X' }],
+  steps: [
+    {
+      do: 'setting', codes: [1], where: 't == 1', where_setting: '', where_is: '', setting: 'Head', param: 0, value: 'X',
+      right: '', up: '', line: '', staff: 0, from: 0, to: 0, notes: '', rhythms: '', marks: '', beams: '', slurs: '', size: '',
+    },
+  ],
 };
 
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'POST, OPTIONS' };
