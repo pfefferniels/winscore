@@ -32,13 +32,13 @@ export const TYPESAFE_URL = 'https://api.typesafe.ai/v1/systemone';
 /** Vercel's AI Gateway serves Jev to pages of any site (CORS), with a Vercel key. */
 export const GATEWAY_URL = 'https://ai-gateway.vercel.sh/typesafe/v1/systemone';
 export const CLAUDE_MODELS = [
+  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5 (fastest)' },
+  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5' },
   { id: 'claude-opus-5-5', label: 'Claude Opus 5.5' },
-  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5' },
-  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5 (fastest)' },
 ];
 
 const SETTINGS_KEY = 'winscore.ai';
-const DEFAULTS: AiSettings = { jevKey: '', jevUrl: TYPESAFE_URL, claudeKey: '', claudeModel: 'claude-opus-5-5' };
+const DEFAULTS: AiSettings = { jevKey: '', jevUrl: TYPESAFE_URL, claudeKey: '', claudeModel: 'claude-sonnet-5-5' };
 
 export function loadSettings(): AiSettings {
   try {

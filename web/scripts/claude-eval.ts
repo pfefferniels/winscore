@@ -12,7 +12,7 @@ import { run, type Access, type Region, type Scope } from '../src/ai-script';
 initSync({ module: readFileSync(process.env.SCORE_WASM!) });
 const key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
 if (!key) throw new Error('CLAUDE_API_KEY is not set');
-const connection = { key, baseURL: undefined, model: process.env.CLAUDE_MODEL ?? 'claude-opus-5-5' };
+const connection = { key, baseURL: undefined, model: process.env.CLAUDE_MODEL ?? 'claude-sonnet-5-5' };
 const catalog: Catalog = {
   codes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 18].map((code) => ({ code, name: codeName(code) ?? `Code ${code}` })),
   words: JSON.parse(editWords()) as Catalog['words'],

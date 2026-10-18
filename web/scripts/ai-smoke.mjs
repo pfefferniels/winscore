@@ -59,7 +59,7 @@ function claudeMessage() {
     id: 'msg_test',
     type: 'message',
     role: 'assistant',
-    model: 'claude-opus-5-5',
+    model: 'claude-sonnet-5-5',
     content: [{ type: 'text', text: JSON.stringify(CLAUDE) }],
     stop_reason: 'end_turn',
     stop_details: null,
@@ -72,7 +72,7 @@ try {
   const errors = [];
   page.on('pageerror', (err) => errors.push(err.message));
   await page.addInitScript(() => {
-    localStorage.setItem('winscore.ai', JSON.stringify({ jevKey: 'test', jevUrl: 'https://api.typesafe.ai/v1/systemone', claudeKey: 'test', claudeModel: 'claude-opus-5-5' }));
+    localStorage.setItem('winscore.ai', JSON.stringify({ jevKey: 'test', jevUrl: 'https://api.typesafe.ai/v1/systemone', claudeKey: 'test' }));
   });
   await page.route('https://api.typesafe.ai/v1/systemone', async (route) => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
@@ -174,7 +174,7 @@ try {
   await enter();
   assert.match(await page.textContent('.ai-status'), /✓ Last note with an X head/);
   assert.match(await page.textContent('.ai-source'), /^Claude/);
-  assert.equal(claudeRequest.model, 'claude-opus-5-5');
+  assert.equal(claudeRequest.model, 'claude-sonnet-5-5', 'Sonnet 5.5 unless another model is picked');
   assert.equal(claudeRequest.output_config.format.type, 'json_schema');
   assert.match(claudeRequest.messages[0].content, /Command: make the last note an x head/);
 
