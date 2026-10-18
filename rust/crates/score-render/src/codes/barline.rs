@@ -234,7 +234,7 @@ impl Barline {
                 self.thick(canvas, a, real(a - u * constant(4.5)));
             }
             SQUARE_BRACKET => self.square_bracket(canvas),
-            k if k > REPEAT_HEAVY => self.dashed(doc, item, canvas),
+            k if k > REPEAT_HEAVY => self.dashed(item, canvas),
             _ => self.heavy(canvas),
         }
     }
@@ -244,7 +244,7 @@ impl Barline {
     /// 0x439963) with P5 = the top as a level of staff P2, P6 = P3, IP7 = 1,
     /// IP10 = IP6 or (OUTPUT_MODE != 0), which is 1 on the screen and in
     /// print, P8 dash (default 1), P9 space (default 2).
-    fn dashed(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+    fn dashed(&self, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         let staff = &self.low;
         let top_level = real((self.top - f64::from(staff.level0)) / (staff.step * 7.0));
         let default = |p: f32, value: f32| if p == 0.0 { value } else { p };
@@ -260,7 +260,7 @@ impl Barline {
             .with(8, default(self.dash.0, 1.0))
             .with(9, default(self.dash.1, 2.0))
             .with(10, thickness as f32);
-        line::draw(doc, &params, Pos::new(self.x_pos, self.bottom), staff, canvas);
+        line::draw(&params, Pos::new(self.x_pos, self.bottom), staff, canvas);
     }
 
     /// barline_stroke 0x412699 (on screen: one segment).
