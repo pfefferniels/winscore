@@ -2053,3 +2053,178 @@ button.danger:hover {
     display: block;
   }
 }
+
+/* The AI command: a field by the music a lasso took in, what it reads the
+   command as, and sliders for what the command leaves open. */
+.viewport.lassoing {
+  cursor: crosshair;
+}
+
+.ai-prompt {
+  position: absolute;
+  width: min(380px, calc(100% - 16px));
+  padding: 6px;
+  border: 1px solid #c4b5fd;
+  border-radius: 10px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  z-index: 3;
+}
+
+.ai-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-mark {
+  padding-left: 4px;
+  color: #7c3aed;
+  font-size: 15px;
+}
+
+.ai-input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 6px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 15px;
+}
+
+.ai-gear {
+  height: 26px;
+  padding: 0 7px;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.ai-status {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 18px;
+  padding: 2px 6px 0 26px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ai-reading {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-status.done .ai-reading {
+  color: #15803d;
+}
+
+.ai-status.error .ai-reading {
+  color: var(--danger);
+  white-space: normal;
+}
+
+.ai-status.busy .ai-reading::after {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 6px;
+  border: 2px solid #c4b5fd;
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: ai-spin 0.7s linear infinite;
+}
+
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ai-source {
+  flex: none;
+  font-size: 11px;
+  color: #7c3aed;
+}
+
+.ai-knobs {
+  display: grid;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 6px 6px 2px 26px;
+  border-top: 1px solid var(--border);
+}
+
+.ai-knob {
+  display: grid;
+  grid-template-columns: 7.5em 1fr 3.2em;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.ai-knob input {
+  width: 100%;
+  accent-color: #7c3aed;
+}
+
+.ai-knob input:focus-visible {
+  outline: 2px solid #c4b5fd;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.ai-knob output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ai-settings {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 8px 6px 2px 26px;
+  border-top: 1px solid var(--border);
+}
+
+.ai-settings label {
+  display: grid;
+  gap: 3px;
+  font-size: 12px;
+}
+
+.ai-settings input {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.ai-settings small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.ai-settings-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+@media (pointer: coarse) {
+  .ai-input,
+  .ai-settings input {
+    font-size: 16px;
+  }
+
+  .ai-knob {
+    grid-template-columns: 6.5em 1fr 3em;
+    min-height: 36px;
+  }
+}

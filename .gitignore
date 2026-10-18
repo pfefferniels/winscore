@@ -10,3 +10,5 @@ web/dist/
 *:Zone.Identifier*
 .claude/
 progress/
+.env.local
+.env.*.local

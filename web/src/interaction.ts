@@ -12,6 +12,9 @@
 // fingers pinch to zoom; a long press adds or removes an item, and dragging
 // on from it draws a box; a double tap opens an item. While a group command
 // waits for its area, one finger draws the box and a tap answers it.
+//
+// A lasso (Alt/⌥-drag, or any drag once the lasso is armed, a finger's too)
+// draws a free shape around music for an AI command.
 import type { Change, Editor } from './editor';
 import type { Point } from './view';
 
@@ -56,6 +59,12 @@ export interface Hooks {
   moveEnd(): void;
   /** The mouse or pen moved over the page with no gesture in progress. */
   hover(clientX: number, clientY: number): void;
+  /** Whether the next drag draws a lasso. */
+  lassoArmed(): boolean;
+  /** The lasso being drawn, page coordinates; null when it is gone. */
+  lassoDraw(points: Point[] | null): void;
+  /** A lasso drawn around music. */
+  lasso(points: Point[]): void;
 }
 
 const DRAG_THRESHOLD_PX = 4;
@@ -93,10 +102,18 @@ type Gesture =
   | { kind: 'pan'; x: number; y: number; left: number; top: number; samples?: Sample[] }
   /** A finger down that has not moved yet; `held` after a long press. */
   | { kind: 'touch'; x: number; y: number; hit: number | null; handle: number | null; onSelected: boolean; held: boolean; timer: number }
-  | { kind: 'pinch'; distance: number; zoom: number; at: Point };
+  | { kind: 'pinch'; distance: number; zoom: number; at: Point }
+  /** Client positions drawn so far. */
+  | { kind: 'lasso'; points: { x: number; y: number }[] };
 
 type Touch = Extract<Gesture, { kind: 'touch' }>;
 type BoxGesture = Extract<Gesture, { kind: 'box' }>;
+type LassoGesture = Extract<Gesture, { kind: 'lasso' }>;
+
+/** Points of a lasso closer than this (CSS pixels) to the last one are skipped. */
+const LASSO_STEP_PX = 3;
+/** A lasso smaller than this across is a click. */
+const LASSO_MIN_PX = 8;
 
 function isTyping(target: EventTarget | null): boolean {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
@@ -209,6 +226,22 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     return select(editor, current.includes(hit) ? current.filter((i) => i !== hit) : [...current, hit]);
   };
 
+  const lassoTo = (lasso: LassoGesture, clientX: number, clientY: number) => {
+    const last = lasso.points.at(-1)!;
+    if (Math.hypot(clientX - last.x, clientY - last.y) < LASSO_STEP_PX) return;
+    lasso.points.push({ x: clientX, y: clientY });
+    hooks.lassoDraw(lasso.points.map((p) => hooks.pageAt(p.x, p.y)));
+  };
+
+  /** A lasso is finished: one big enough selects; a click only ends it. */
+  const endLasso = (lasso: LassoGesture) => {
+    const xs = lasso.points.map((p) => p.x);
+    const ys = lasso.points.map((p) => p.y);
+    const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+    hooks.lassoDraw(null);
+    if (lasso.points.length >= 3 && span >= LASSO_MIN_PX) hooks.lasso(lasso.points.map((p) => hooks.pageAt(p.x, p.y)));
+  };
+
   /** A box drawn with the mouse or a finger is finished; a click answers a waiting group command too (WinScore reads it as a thin box). */
   const endBox = (box: BoxGesture, clientX: number, clientY: number) => {
     showBand(band, box, null);
@@ -230,6 +263,11 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       return;
     }
     if (e.button !== 0 || !editor) return;
+    if ((e.altKey || hooks.lassoArmed()) && editor.prompt() === null) {
+      gesture = { kind: 'lasso', points: [{ x: e.clientX, y: e.clientY }] };
+      viewport.setPointerCapture(e.pointerId);
+      return;
+    }
     // A handle takes the press even with Shift, which then constrains its drag.
     const handle = editor.prompt() === null ? hooks.handleAt(e.clientX, e.clientY) : null;
     if (handle !== null && hooks.handleBegin(handle, e.clientX, e.clientY)) {
@@ -266,6 +304,10 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       handleTo(e.clientX, e.clientY, e.shiftKey, e.metaKey || e.ctrlKey);
       return;
     }
+    if (gesture.kind === 'lasso') {
+      lassoTo(gesture, e.clientX, e.clientY);
+      return;
+    }
     if (gesture.kind === 'pan') {
       viewport.scrollLeft = gesture.left - (e.clientX - gesture.x);
       viewport.scrollTop = gesture.top - (e.clientY - gesture.y);
@@ -292,6 +334,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     if (gesture?.kind === 'press' || (gesture?.kind === 'box' && !gesture.drawn)) hooks.clicked(hooks.pageAt(e.clientX, e.clientY));
     if (gesture?.kind === 'handle') endHandle(true);
     if (gesture?.kind === 'box') endBox(gesture, e.clientX, e.clientY);
+    if (gesture?.kind === 'lasso') endLasso(gesture);
     gesture = null;
   };
   viewport.addEventListener('pointerup', release);
@@ -300,6 +343,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     if (e.pointerType === 'touch') touches.clear();
     if (gesture?.kind === 'touch') clearTimeout(gesture.timer);
     if (gesture?.kind === 'box') showBand(band, gesture, null);
+    if (gesture?.kind === 'lasso') hooks.lassoDraw(null);
     endDrag(false);
     endHandle(false);
     gesture = null;
@@ -371,6 +415,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
   const abandon = () => {
     if (gesture?.kind === 'touch') clearTimeout(gesture.timer);
     if (gesture?.kind === 'box') showBand(band, gesture, null);
+    if (gesture?.kind === 'lasso') hooks.lassoDraw(null);
   };
 
   const touchDown = (e: PointerEvent) => {
@@ -390,6 +435,10 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     const editor = hooks.editor();
     if (editor?.prompt() != null) {
       gesture = { kind: 'box', x: e.clientX, y: e.clientY, drawn: false };
+      return;
+    }
+    if (editor && hooks.lassoArmed()) {
+      gesture = { kind: 'lasso', points: [{ x: e.clientX, y: e.clientY }] };
       return;
     }
     const hit = editor ? hooks.itemAt(e.clientX, e.clientY, true) : null;
@@ -415,6 +464,10 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       return;
     }
     if (e.pointerId !== finger) return;
+    if (gesture.kind === 'lasso') {
+      lassoTo(gesture, e.clientX, e.clientY);
+      return;
+    }
     if (gesture.kind === 'touch') {
       if (Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) < TOUCH_SLOP_PX) return;
       clearTimeout(gesture.timer);
@@ -472,6 +525,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       if (!gesture.held) tap(gesture, e);
     } else if (gesture.kind === 'pan' && gesture.samples) startGlide(gesture.samples, e.timeStamp);
     else if (gesture.kind === 'box') endBox(gesture, e.clientX, e.clientY);
+    else if (gesture.kind === 'lasso') endLasso(gesture);
     else if (gesture.kind === 'drag') endDrag(true);
     else if (gesture.kind === 'handle') endHandle(true);
     gesture = null;
@@ -490,6 +544,11 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     }
     if (e.key === 'Escape' && gesture?.kind === 'box') {
       showBand(band, gesture, null);
+      gesture = null;
+      return;
+    }
+    if (e.key === 'Escape' && gesture?.kind === 'lasso') {
+      hooks.lassoDraw(null);
       gesture = null;
       return;
     }
