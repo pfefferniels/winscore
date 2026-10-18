@@ -84,7 +84,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let call = BoxCall::of(item);
     let marked = trunc(f64::from(item.p(26))) == MARKED;
     let call = if marked {
-        canvas.colour = colour::from_p26(MARKED_COLOUR, doc.options.medium);
+        canvas.colour = colour::of(MARKED_COLOUR, doc.options);
         BoxCall { p8: f64::from(MARKED_THICKNESS), ip8: MARKED_THICKNESS, ..call }
     } else {
         call

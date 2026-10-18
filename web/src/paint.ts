@@ -375,18 +375,6 @@ function paintPaper(ctx: CanvasRenderingContext2D, t: Transform, paper: Box) {
   ctx.strokeRect(x - edge / 2, y - edge / 2, width + edge, height + edge);
 }
 
-/** Paints the page for print: white paper filling the canvas, no screen aids. */
-export function paintPrint(ctx: CanvasRenderingContext2D, list: DisplayList, paper: Box) {
-  const { width, height } = ctx.canvas;
-  const k = width / (paper.x1 - paper.x0);
-  const t: Transform = { k, ox: -paper.x0 * k, oy: height + paper.y0 * k };
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = PAPER;
-  ctx.fillRect(0, 0, width, height);
-  setPen(ctx);
-  paintList(ctx, t, list, null);
-}
-
 /** Paints `list` scaled to fit the canvas with a margin, for previews. */
 export function paintThumbnail(ctx: CanvasRenderingContext2D, list: DisplayList, box: Box) {
   const { width, height } = ctx.canvas;
