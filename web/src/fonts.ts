@@ -4,25 +4,21 @@
 import './fonts.css';
 import type { TextRun } from './display';
 
-/** Metrics of the Windows face GDI would use, in em. */
-interface WindowsMetrics {
-  /** OS/2 xAvgCharWidth: GDI stretches glyphs until this matches the run's width. */
-  average: number;
-  /** usWinAscent: GDI's tmAscent, the baseline's depth below the cell top. */
-  ascent: number;
-}
-
 export interface Face {
   family: string;
-  /** Times New Roman, Arial or Courier New where GDI substitutes them; null if unknown. */
-  windows: WindowsMetrics | null;
+  /**
+   * usWinAscent in em of the Windows face GDI substitutes (Times New Roman,
+   * Arial, Courier New), GDI's tmAscent: the baseline's depth below the cell
+   * top, about which GDI turns rotated text; null if unknown.
+   */
+  ascent: number | null;
 }
 
-const TIMES_NEW_ROMAN: WindowsMetrics = { average: 821 / 2048, ascent: 1825 / 2048 };
-const ARIAL: WindowsMetrics = { average: 904 / 2048, ascent: 1854 / 2048 };
-const COURIER_NEW: WindowsMetrics = { average: 1229 / 2048, ascent: 1705 / 2048 };
+const TIMES_NEW_ROMAN = 1825 / 2048;
+const ARIAL = 1854 / 2048;
+const COURIER_NEW = 1705 / 2048;
 
-const face = (family: string, windows: WindowsMetrics | null): Face => ({ family, windows });
+const face = (family: string, ascent: number | null): Face => ({ family, ascent });
 const TERMES = face('WS Termes', TIMES_NEW_ROMAN);
 
 const FACES: Record<string, Face> = {
@@ -53,15 +49,26 @@ export function faceOf(font: string): Face {
   return FACES[font.replace(/\0/g, '').trim()] ?? TERMES;
 }
 
-/** Horizontal stretch GDI applies to `run`'s glyphs. */
+/**
+ * Average character width per em of ordinary text (P6 = P7): the record
+ * header's width over its height, 32 · 0.825 / 64 (`Text::style` in
+ * score-render's text/mod.rs, analysis/engine/text.md).
+ */
+const ORDINARY_WIDTH = 0.4125;
+
+/**
+ * Horizontal scale of `run`'s glyphs: 1 for ordinary text, P6/P7 where the
+ * text sets its width apart from its height, whatever the face. GDI instead
+ * fitted the Windows face's average character width to the run's (squeezing
+ * Courier to 69 %), a property of the face that SCORE's own spacing ignores.
+ */
 export function stretch(run: TextRun): number {
-  const average = faceOf(run.font).windows?.average;
-  return average && run.width > 0 && run.height > 0 ? run.width / (average * run.height) : 1;
+  return run.width > 0 && run.height > 0 ? run.width / (ORDINARY_WIDTH * run.height) : 1;
 }
 
 /** GDI's tmAscent of `run`'s font in engine units, the pivot depth for rotated text. */
 export function ascent(run: TextRun): number {
-  return (faceOf(run.font).windows?.ascent ?? TIMES_NEW_ROMAN.ascent) * run.height;
+  return (faceOf(run.font).ascent ?? TIMES_NEW_ROMAN) * run.height;
 }
 
 /** A CSS font shorthand for `run` at `size` pixels. */
