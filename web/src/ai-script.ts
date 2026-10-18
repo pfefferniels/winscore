@@ -38,7 +38,10 @@ export interface Filter {
 export type Step =
   /** Parameter `param` of each item becomes `value`. */
   | { do: 'set'; items?: Filter | null; param: number; value: Value }
-  /** A setting by the side panel's name ("Stem", "Mark", "Size", "Start level") becomes an option's name, a number or on/off. */
+  /**
+   * A setting by the side panel's name ("Stem", "Mark", "Size", "Start level") becomes an option's name, a number or on/off.
+   * Names joined by "|" are alternatives: each item takes the first one it shows.
+   */
   | { do: 'setting'; items?: Filter | null; setting: string; value: Value | boolean }
   /** WinScore's arrow keys: P3 spaces right, scale steps up. */
   | { do: 'move'; items?: Filter | null; right?: Value | null; up?: Value | null }
@@ -285,10 +288,16 @@ function settingsOf(code: number, name: string): Named[] {
   return SETTINGS.get(code)!.get(plain(name)) ?? [];
 }
 
-/** The setting called `name` that an item shows, if any. */
+/** The setting called `name` that an item shows, if any; of alternatives "A | B", the first it shows. */
 function applicable(code: number, name: string, p: P): Named | null {
-  return settingsOf(code, name).find((n) => (!n.when || n.when(p)) && (!n.setting.when || n.setting.when(p))) ?? null;
+  for (const alternative of alternatives(name)) {
+    const found = settingsOf(code, alternative).find((n) => (!n.when || n.when(p)) && (!n.setting.when || n.setting.when(p)));
+    if (found) return found;
+  }
+  return null;
 }
+
+const alternatives = (name: string) => name.split('|').map((n) => n.trim());
 
 /** The option whose name is `wanted`, or begins with it, or contains it. */
 export function optionNamed(options: { value: number; label: string }[], wanted: string): number | null {
@@ -383,7 +392,8 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       });
       if (edits.length === 0 && list.length > 0) {
         const codes = [...new Set(list.map((t) => t.params[0]!))];
-        if (!codes.some((code) => settingsOf(code, step.setting).length > 0)) throw new Error(`No setting “${step.setting}” for these items`);
+        const names = alternatives(step.setting);
+        if (!codes.some((code) => names.some((name) => settingsOf(code, name).length > 0))) throw new Error(`No setting “${names[0]}” for these items`);
       }
       if (edits.length) editor.setParamsOf(edits);
       return touched;
