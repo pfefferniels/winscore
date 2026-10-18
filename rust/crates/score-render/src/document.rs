@@ -91,9 +91,9 @@ impl ItemRef<'_> {
         self.p(2) as i32
     }
 
-    /// The colour P26 asks for on `medium`.
-    pub fn colour(&self, medium: Medium) -> Colour {
-        colour::from_p26(self.p(26), medium)
+    /// The colour P26 asks for with `options` (see [`colour::of`]).
+    pub fn colour(&self, options: Options) -> Colour {
+        colour::of(self.p(26), options)
     }
 
     /// A copy of the item with parameters `(n, value)` replaced, for a

@@ -67,7 +67,7 @@ pub fn render_item(doc: &Document<'_>, item: ItemRef<'_>, list: &mut DisplayList
 
 fn draw(doc: &Document<'_>, item: ItemRef<'_>, stream: &mut Stream) {
     if let Some(render) = codes::renderer(item.code()) {
-        let mut canvas = Canvas::new(stream, item.id, item.staff(), item.colour(doc.options.medium));
+        let mut canvas = Canvas::new(stream, item.id, item.staff(), item.colour(doc.options));
         render(doc, item, &mut canvas);
         canvas.flush();
     }
