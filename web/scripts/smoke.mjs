@@ -282,18 +282,22 @@ try {
   assert.equal(saved.length, original.length);
   assert.notDeepEqual(saved, original);
 
-  // SVG export downloads the printed page; Print paints it alone for the print stylesheet.
+  // SVG export downloads the printed page with the faces its text uses; Print puts the same
+  // SVG alone on the page for the print stylesheet.
   const [svgDownload] = await Promise.all([page.waitForEvent('download'), menu('file', 'export-svg')]);
   assert.equal(svgDownload.suggestedFilename(), 'mozart.svg');
   const svg = fs.readFileSync(await svgDownload.path(), 'utf8');
   assert.match(svg, /^<svg[^>]*width="8.5in"/);
+  assert.match(svg, /@font-face \{ font-family: "WS Termes"; font-style: normal; [^}]*src: url\(data:font\/woff2;base64,/);
+  assert.doesNotMatch(svg, /font-family: "WS Heros Cn"/);
   await page.evaluate(() => (window.print = () => (document.body.dataset.printed = 'yes')));
   await menu('file', 'print');
   await page.waitForSelector('body[data-printed="yes"]', { state: 'attached' });
-  assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('#print-page canvas')].map((c) => [c.width, c.height])), [[2550, 4200]]);
+  const printed = () => [...document.querySelectorAll('#print-page svg')].map((s) => [s.getAttribute('width'), s.getAttribute('height')]);
+  assert.deepEqual(await page.evaluate(printed), [['8.5in', '14in']]);
   await page.emulateMedia({ media: 'print' });
   assert.ok(await page.isHidden('#app'));
-  assert.ok(await page.isVisible('#print-page canvas'));
+  assert.ok(await page.isVisible('#print-page svg'));
   await page.emulateMedia({ media: 'screen' });
 
   // Music input at a cursor in the music: the line is drawn as it is typed, the bubble at the

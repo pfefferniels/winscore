@@ -1,11 +1,11 @@
-// Printing and SVG export of the page. Print paints the page, rendered for
-// print, onto a 300 dpi canvas that a print stylesheet shows alone on paper
-// of the score's size; the app's chrome is hidden.
-import type { Box, DisplayList } from './display';
-import { loadFaces } from './fonts';
-import { paintPrint } from './paint';
+// Printing and SVG export of the page. Print puts the page, drawn for print
+// as SVG by score_render::svg, into a container that a print stylesheet
+// shows alone on paper of the score's size; the app's chrome is hidden.
+// Lines, curves and text stay vectors at the printer's resolution, and a
+// PDF saved from the print dialog has real paths and text.
+import type { Box } from './display';
+import { loadSvgFaces } from './svg-fonts';
 
-const PRINT_DPI = 300;
 const UNITS_PER_INCH = 4000;
 
 /** The page container outside the app root, which the host page may wrap. */
@@ -26,19 +26,19 @@ function setPageSize(widthIn: number, heightIn: number) {
   style.textContent = `@page { size: ${widthIn}in ${heightIn}in; margin: 0; }`;
 }
 
-export async function printPage(list: DisplayList, paper: Box) {
+/** Prints `svg`, the page as the score's exportSvg draws it, on paper `paper`. */
+export async function printPage(svg: string, paper: Box) {
   const widthIn = (paper.x1 - paper.x0) / UNITS_PER_INCH;
   const heightIn = (paper.y1 - paper.y0) / UNITS_PER_INCH;
-  await loadFaces(list.texts);
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(widthIn * PRINT_DPI);
-  canvas.height = Math.round(heightIn * PRINT_DPI);
-  canvas.style.width = `${widthIn}in`;
-  canvas.style.height = `${heightIn}in`;
-  const ctx = canvas.getContext('2d', { alpha: false });
-  if (!ctx) throw new Error('Canvas 2D is not available');
-  paintPrint(ctx, list, paper);
-  printRoot().replaceChildren(canvas);
+  const parsed = new DOMParser().parseFromString(svg, 'image/svg+xml');
+  if (parsed.documentElement.localName !== 'svg' || parsed.querySelector('parsererror')) {
+    throw new Error('The page could not be drawn for print');
+  }
+  // Inline in the document, its text takes the app's faces (fonts.css); the
+  // container is hidden on screen, so nothing would load them before print.
+  const page = document.importNode(parsed.documentElement, true);
+  await loadSvgFaces(page);
+  printRoot().replaceChildren(page);
   setPageSize(widthIn, heightIn);
   window.print();
 }

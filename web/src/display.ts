@@ -8,6 +8,8 @@ export interface Shape {
   colour: number;
   /** Index of the source item, or null for screen aids and reference lists. */
   source: number | null;
+  /** Pen width in engine units for the polyline or the fill's outline; 0 = the default pen. */
+  width: number;
   /** x, y pairs; views into one shared coordinate array. */
   paths: Int32Array[];
 }
@@ -31,6 +33,8 @@ export interface TextRun {
   weight: number;
   /** Average character width in engine units, 0 = font default. */
   width: number;
+  /** Outlined letters, stroked with the pen instead of filled. */
+  outline?: boolean;
   source: number | null;
 }
 
@@ -53,7 +57,7 @@ export interface Encoded {
 }
 
 const FLAG_FILL = 1;
-const HEADER_WORDS = 4;
+const HEADER_WORDS = 5;
 
 export const EMPTY: DisplayList = { shapes: [], texts: [] };
 
@@ -61,15 +65,17 @@ interface Record {
   flags: number;
   colour: number;
   source: number;
+  /** Hundredths of an engine unit. */
+  width: number;
   lengths: Uint32Array;
 }
 
 /** The variable-length shape records of the header array. */
 function* records(header: Uint32Array): Generator<Record> {
   for (let at = 0; at < header.length; ) {
-    const [flags = 0, colour = 0, source = 0, count = 0] = header.subarray(at, at + HEADER_WORDS);
+    const [flags = 0, colour = 0, source = 0, width = 0, count = 0] = header.subarray(at, at + HEADER_WORDS);
     const lengths = header.subarray(at + HEADER_WORDS, at + HEADER_WORDS + count);
-    yield { flags, colour, source, lengths };
+    yield { flags, colour, source, width, lengths };
     at += HEADER_WORDS + count;
   }
 }
@@ -88,6 +94,7 @@ export function decode(encoded: Encoded): DisplayList {
     fill: (r.flags & FLAG_FILL) !== 0,
     colour: r.colour,
     source: source(r.source),
+    width: r.width / 100,
     paths: Array.from(r.lengths, take),
   }));
   const runs = (JSON.parse(encoded.texts) as { texts: (Omit<TextRun, 'source'> & { item?: number })[] }).texts;

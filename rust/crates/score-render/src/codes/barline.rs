@@ -5,14 +5,16 @@
 //! thickness (print only), P8 bracket ends, P10/P11 bottom and top level in
 //! scale steps, P12 dot size, P13/P14 extra spacing, P16 dot levels, P17
 //! spacing as on a staff of that size, P18/P19 gap. The construction follows
-//! `analysis/engine/barlines.md`; constants are REAL*4 as in the engine.
+//! `analysis/engine/barlines.md`; constants are REAL*4 as in the engine. The
+//! refined style draws the widths of SCORE's print output on every medium.
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
-use crate::codes::boxes::{draw_box, BoxCall, CIRCLE_SHAPE};
+use crate::codes::boxes::{draw_styled_box, BoxCall, CIRCLE_SHAPE};
 use crate::codes::line::{self, Params};
 use crate::codes::rest;
 use crate::display::Point;
 use crate::document::{Document, ItemRef};
+use crate::geometry::{print_width, spline_through, PRINT_PIXEL};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, STEP_UNIT, UNITS_PER_SCALE_STEP};
 use crate::symbols::{draw_clef, ItemContext};
@@ -61,7 +63,14 @@ struct Barline {
     p4: f32,
     /// Dash and space length (P8, P9); an invisible bar sets 0.3 and 1.5.
     dash: (f32, f32),
+    /// Draw in the refined style.
+    refined: bool,
 }
+
+/// barline_stroke 0x412699 adds a second stroke a print pixel (0x78B480)
+/// right of the first when printing: the bar is that much wider than the
+/// default pen, which the refined style draws as one stroke.
+const STROKE_PIXELS: f32 = 1.0;
 
 /// The rest item draw_barline draws after a two-bar-repeat bar (P5 = -44):
 /// the barline with P4 = 0 and P5 = -44, drawn by draw_rest at the bar's
@@ -162,13 +171,18 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         ip8: trunc(f64::from(item.p(8))),
         p4,
         dash,
+        refined: doc.refined(),
     };
     bar.draw(doc, item, canvas);
     if let Some(sign) = two_bar_sign(item) {
         rest::draw(doc, item.changed(&sign), bar.x_pos, canvas);
     }
     if item.p(18) != 0.0 && gap_p5 < 2.0 {
-        gap(item, &bar, doc.screen(), canvas.buffer_mut());
+        if bar.refined {
+            refined_gap(item, &bar, canvas);
+        } else {
+            gap(item, &bar, doc.screen(), canvas.buffer_mut());
+        }
     }
 }
 
@@ -178,7 +192,7 @@ impl Barline {
         let d13 = real(u * 6.0 * f64::from(item.p(13)));
         let d14 = real(u * 6.0 * f64::from(item.p(14)));
         match self.kind {
-            0 if item.p(6) != 0.0 => self.thick(canvas, self.xb, self.xb),
+            0 if item.p(6) != 0.0 => self.thick(canvas, self.p6_left(item), self.xb),
             0 => self.stroke(canvas, self.xb),
             DOUBLE => {
                 self.stroke(canvas, self.xb);
@@ -220,7 +234,7 @@ impl Barline {
                 self.thick(canvas, a, real(a - u * constant(4.5)));
             }
             SQUARE_BRACKET => self.square_bracket(canvas),
-            k if k > REPEAT_HEAVY => self.dashed(item, canvas),
+            k if k > REPEAT_HEAVY => self.dashed(doc, item, canvas),
             _ => self.heavy(canvas),
         }
     }
@@ -230,7 +244,7 @@ impl Barline {
     /// 0x439963) with P5 = the top as a level of staff P2, P6 = P3, IP7 = 1,
     /// IP10 = IP6 or (OUTPUT_MODE != 0), which is 1 on the screen and in
     /// print, P8 dash (default 1), P9 space (default 2).
-    fn dashed(&self, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
+    fn dashed(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         let staff = &self.low;
         let top_level = real((self.top - f64::from(staff.level0)) / (staff.step * 7.0));
         let default = |p: f32, value: f32| if p == 0.0 { value } else { p };
@@ -246,12 +260,28 @@ impl Barline {
             .with(8, default(self.dash.0, 1.0))
             .with(9, default(self.dash.1, 2.0))
             .with(10, thickness as f32);
-        line::draw(&params, Pos::new(self.x_pos, self.bottom), staff, canvas);
+        line::draw(doc, &params, Pos::new(self.x_pos, self.bottom), staff, canvas);
     }
 
     /// barline_stroke 0x412699 (on screen: one segment).
     fn stroke(&self, canvas: &mut Canvas<'_>, x: f64) {
+        if self.refined {
+            canvas.set_width(print_width(STROKE_PIXELS));
+        }
         canvas.segment(Pos::new(x, self.bottom), Pos::new(x, self.top));
+        if self.refined {
+            canvas.set_width(0.0);
+        }
+    }
+
+    /// The left edge of a P6 bar (0x411F7C): P6 + 1 print pixels left of
+    /// the bar's x, which is no width at all on the screen.
+    fn p6_left(&self, item: ItemRef<'_>) -> f64 {
+        if self.refined {
+            real(self.xb - (f64::from(item.p(6)) + 1.0) * PRINT_PIXEL)
+        } else {
+            self.xb
+        }
     }
 
     fn final_bar(&self, canvas: &mut Canvas<'_>, d13: f64) {
@@ -332,10 +362,12 @@ impl Barline {
         };
         ends.into_iter().for_each(|(y, sign)| {
             canvas.point(Pos::new(x0, real(-(sign * 33.0) + y)), Pen::Fill);
-            BRACKET_CURVE.iter().for_each(|&(tx, ty)| {
-                let at = Pos::new(real(step * f64::from(tx) + x0), real(sign * f64::from(ty) + y));
-                canvas.point(at, Pen::Continue);
-            });
+            let place = |(tx, ty): (f32, f32)| Pos::new(real(step * f64::from(tx) + x0), real(sign * f64::from(ty) + y));
+            if self.refined {
+                smooth_bracket_end().into_iter().for_each(|t| canvas.point(place(t), Pen::Continue));
+            } else {
+                BRACKET_CURVE.iter().for_each(|&t| canvas.point(place(t), Pen::Continue));
+            }
         });
         self.ip8 = 1;
     }
@@ -351,7 +383,7 @@ impl Barline {
         };
         let rise = if rise == 0 { 2 } else { rise };
         let size = real(constant(0.58) * if item.p(12) == 0.0 { 1.0 } else { f64::from(item.p(12)) });
-        let call = dot_call(item, size, doc.screen());
+        let call = dot_call(item, size, doc.screen() && !self.refined);
         let last = (self.low.number + self.span - 1).min(LAST_STAFF);
         (self.low.number..=last).for_each(|number| {
             let staff = doc.staves.get(number);
@@ -359,19 +391,21 @@ impl Barline {
             let second = real(staff.step * f64::from(rise) * UNITS_PER_SCALE_STEP + first);
             // barline_dots sets IP12 afresh for every dot, so draw_box's doubled IP12 is not carried over.
             [first, second].into_iter().for_each(|y| {
-                draw_box(canvas, Pos::new(x, y), staff.step, &call);
+                draw_styled_box(doc, canvas, Pos::new(x, y), staff.step, &call);
             });
         });
         self.ip8 = 0;
     }
 }
 
-/// Degrees per side of a dot on the screen; in print draw_box's default of 1.
+/// Degrees per side of a dot on the screen; in print (and in the refined
+/// style) draw_box's default of 1, a round dot.
 const SCREEN_DOT_ANGLE: i32 = 60;
 
 /// The draw_box call barline_dots makes: a filled circle of `size`, the
 /// integer parameters cleared, the barline's own P8, P9, P10 and P16 left in
 /// place (P16 = 1 is draw_box's inch flag, so it enlarges the dots).
+/// `screen`: the engine's screen output, with hexagonal dots.
 fn dot_call(item: ItemRef<'_>, size: f64, screen: bool) -> BoxCall {
     BoxCall {
         kind: CIRCLE_SHAPE,
@@ -406,22 +440,46 @@ const BRACKET_CURVE: [(f32, f32); 12] = [
     (0.0, -33.0),
 ];
 
-/// barline_gap 0x412353: replaces the bar's strokes in the point buffer by
-/// two strokes each, below and above a gap of P19 scale steps centred P18
-/// (a fraction, or a percentage above 1) of the way up.
-fn gap(item: ItemRef<'_>, bar: &Barline, screen: bool, buffer: &mut Vec<BufferPoint>) {
-    let (Some(first), Some(second)) = (buffer.first().copied(), buffer.get(1).copied()) else {
-        return;
-    };
-    let y0 = f64::from(first.at.y);
-    let y1 = f64::from(second.at.y);
+/// The outline of a bracket end in the refined style: [`BRACKET_CURVE`]
+/// with its two curves (up to the tip and back) drawn as splines through
+/// the engine's points, meeting the straight edges smoothly.
+fn smooth_bracket_end() -> Vec<(f32, f32)> {
+    let at = |k: usize| Pos::new(f64::from(BRACKET_CURVE[k].0), f64::from(BRACKET_CURVE[k].1));
+    let points = |range: std::ops::RangeInclusive<usize>| range.map(at).collect::<Vec<_>>();
+    // Points 0..=5 run from the bottom edge up to the tip, 5..=9 back down
+    // to the top edge; the start and points 10 and 11 close it straight.
+    let start = Pos::new(0.0, -33.0);
+    let outer = spline_through(Some(start), &points(0..=5), None, BRACKET_STEPS);
+    let inner = spline_through(None, &points(5..=9), Some(at(10)), BRACKET_STEPS);
+    let outline = outer.into_iter().chain(inner.into_iter().skip(1)).chain(points(10..=11));
+    outline.map(|p| (p.x as f32, p.y as f32)).collect()
+}
+
+/// Segments of a refined bracket end's curves per point of the engine's.
+const BRACKET_STEPS: usize = 8;
+
+/// The gap barline_gap 0x412353 leaves between y0 and y1 (the bottom and
+/// top of the first stroke): P19 scale steps centred P18 (a fraction, or a
+/// percentage above 1) of the way up.
+fn gap_span(item: ItemRef<'_>, bar: &Barline, y0: f64, y1: f64) -> (f64, f64) {
     let height = real(y1 - y0);
     let p18 = item.p(18);
     let fraction = f64::from(if p18 > 1.0 { p18 / 100.0 } else { p18 });
     let centre = real(fraction * height + y0);
     let size = real(bar.low.step * f64::from(item.p(19)) * 7.0);
     let lo = real(centre - size / 2.0);
-    let hi = real(size + lo);
+    (lo, real(size + lo))
+}
+
+/// barline_gap 0x412353: replaces the bar's strokes in the point buffer by
+/// two strokes each, below and above the gap.
+fn gap(item: ItemRef<'_>, bar: &Barline, screen: bool, buffer: &mut Vec<BufferPoint>) {
+    let (Some(first), Some(second)) = (buffer.first().copied(), buffer.get(1).copied()) else {
+        return;
+    };
+    let y0 = f64::from(first.at.y);
+    let y1 = f64::from(second.at.y);
+    let (lo, hi) = gap_span(item, bar, y0, y1);
     let lines = if item.p(5) == 1.0 { 2 } else { 1 } * if screen { 1 } else { 2 };
     let xs: Vec<i32> = buffer.iter().step_by(2).take(lines).map(|p| p.at.x).collect();
     let point = |x: i32, y: f64, pen: Pen| BufferPoint { at: Point::new(x, trunc(y)), pen };
@@ -431,4 +489,97 @@ fn gap(item: ItemRef<'_>, bar: &Barline, screen: bool, buffer: &mut Vec<BufferPo
             [point(x, y0, Pen::Stroke), point(x, lo, Pen::Continue), point(x, hi, Pen::Stroke), point(x, y1, Pen::Continue)]
         })
         .collect();
+}
+
+/// [`gap`] in the refined style: the bar drawn again below and above the
+/// gap, its strokes as wide as before and a P6 bar as two rectangles (the
+/// engine keeps only the rectangle's sides, or its diagonal on the screen).
+fn refined_gap(item: ItemRef<'_>, bar: &Barline, canvas: &mut Canvas<'_>) {
+    let buffer = canvas.buffer_mut();
+    let (Some(first), Some(second)) = (buffer.first().copied(), buffer.get(1).copied()) else {
+        return;
+    };
+    let (y0, y1) = (f64::from(first.at.y), f64::from(second.at.y));
+    let (lo, hi) = gap_span(item, bar, y0, y1);
+    let lines = if item.p(5) == 1.0 { 2 } else { 1 };
+    let xs: Vec<f64> = buffer.iter().step_by(2).take(lines).map(|p| f64::from(p.at.x)).collect();
+    buffer.clear();
+    canvas.set_width(0.0);
+    let parts = [(y0, lo), (hi, y1)];
+    if bar.kind == 0 && item.p(6) != 0.0 {
+        let (a, b) = (f64::from(first.at.x), f64::from(second.at.x));
+        parts.into_iter().for_each(|(from, to)| {
+            canvas.fill([[Pos::new(b, from), Pos::new(a, from), Pos::new(a, to), Pos::new(b, to)]]);
+        });
+    } else {
+        canvas.set_width(print_width(STROKE_PIXELS));
+        xs.into_iter().for_each(|x| {
+            parts.into_iter().for_each(|(from, to)| canvas.segment(Pos::new(x, from), Pos::new(x, to)));
+        });
+        canvas.set_width(0.0);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use score_format::{Item, MusFile, Word};
+
+    use super::*;
+    use crate::display::{print_pen, ItemId, Shape, ShapeKind};
+    use crate::document::{Medium, Options};
+
+    /// The shapes of `item` after a size-1 staff 1.
+    fn shapes(item: &[f32], options: Options) -> Vec<Shape> {
+        let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
+        let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
+        bytes.extend(trailer.iter().flat_map(|w| w.to_le_bytes()));
+        let mut file = MusFile::parse(&bytes).expect("an empty file parses");
+        let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
+        file.items = vec![words(&[8.0, 1.0, 0.0, 0.0, 1.0]), words(item)];
+        let list = crate::render(&Document::with_options(&file, options));
+        list.shapes.into_iter().filter(|s| s.source == Some(ItemId(1))).collect()
+    }
+
+    #[test]
+    fn refined_bars_have_the_doubled_print_stroke_width() {
+        let bar = shapes(&[14.0, 1.0, 100.0, 1.0], Options::REFINED);
+        assert_eq!(bar.len(), 1);
+        assert_eq!(bar[0].width, print_pen(1.0));
+        assert_eq!(bar[0].paths, shapes(&[14.0, 1.0, 100.0, 1.0], Options::ENGINE)[0].paths);
+    }
+
+    #[test]
+    fn a_p6_bar_is_p6_plus_one_print_pixels_wide() {
+        let width = |options| {
+            let bar = shapes(&[14.0, 1.0, 100.0, 1.0, 0.0, 3.0], options);
+            let fill = bar.iter().find(|s| s.kind == ShapeKind::Fill).expect("the thick bar");
+            let xs = fill.paths[0].iter().map(|p| p.x);
+            xs.clone().max().expect("corners") - xs.min().expect("corners")
+        };
+        assert_eq!(width(Options::ENGINE), 0);
+        assert!((f64::from(width(Options::REFINED)) - 4.0 * PRINT_PIXEL).abs() <= 1.0);
+    }
+
+    #[test]
+    fn refined_repeat_dots_are_round_on_every_medium() {
+        let dots = |options| {
+            let bar = shapes(&[14.0, 1.0, 100.0, 1.0, 4.0], options);
+            bar.into_iter().filter(|s| s.kind == ShapeKind::Fill && s.paths[0].len() != 6).collect::<Vec<_>>()
+        };
+        let print = Options { medium: Medium::Print, ..Options::REFINED };
+        assert_eq!(dots(Options::ENGINE)[0].paths[0].len(), 7);
+        for options in [Options::REFINED, print] {
+            let dots = dots(options);
+            assert_eq!(dots.len(), 2);
+            assert!(dots.iter().all(|d| d.paths[0].len() == 37 && d.width == crate::geometry::HAIRLINE));
+        }
+    }
+
+    #[test]
+    fn refined_bracket_ends_follow_the_engine_points_smoothly() {
+        let end = smooth_bracket_end();
+        assert_eq!(end.len(), 5 * BRACKET_STEPS + 4 * BRACKET_STEPS + 1 + 2);
+        BRACKET_CURVE.iter().take(10).for_each(|p| assert!(end.contains(p), "{p:?}"));
+        assert_eq!(end[end.len() - 2..], BRACKET_CURVE[10..]);
+    }
 }

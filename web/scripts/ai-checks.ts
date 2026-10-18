@@ -171,4 +171,41 @@ assert.throws(() => run({ summary: 'bad', knobs: [], steps: [{ do: 'setting', it
 assert.equal(score.save().join(), before);
 assert.equal(editor.mark(), depth);
 
+// "Bigger" reaches every kind: notes by their Size, slurs by their
+// curvature, hairpins by their opening, lines by their thickness, boxes in
+// width and height.
+for (const name of ['mozart.mus', '000.mus']) {
+  const sample = new Score(readFileSync(`${process.env.SCORE_SAMPLES}/${name}`));
+  const sampleAccess: Access = { ...access, editor: scoreEditor(sample), params(index) {
+    const info = sample.item(index);
+    if (!info) return null;
+    const params = info.params;
+    info.free();
+    return params;
+  } };
+  const all = Array.from({ length: sample.itemCount() }, (_, i) => sampleAccess.params(i)!);
+  const first = (test: (q: Float32Array | number[]) => boolean) => all.findIndex(test);
+  const picked = [
+    first((q) => q[0] === 1),
+    first((q) => q[0] === 5 && (q[7] ?? 0) === 0 && (q[6] ?? 0) !== 0),
+    first((q) => q[0] === 4 && q[4] === 999 && ![0, -1].includes(q[6] ?? 0)),
+    first((q) => q[0] === 4 && q[4] !== 999),
+    first((q) => q[0] === 12 && [0, 1, 3].includes(q[4] ?? 0) && (q[5] ?? 0) !== 0 && (q[6] ?? 0) !== 0),
+  ].filter((i) => i >= 0);
+  const keys = sampleAccess.editor.keys();
+  const q = (i: number, n: number) => Math.round((sampleAccess.params(i)![n - 1] ?? 0) * 100) / 100;
+  const before = picked.map((i) => [all[i]![0], q(i, 5), q(i, 6), q(i, 7), q(i, 10), q(i, 15)]);
+  run(scriptFor({ action: 'bigger', target: 'all', amount: 2 }), sampleAccess, { keys: picked.map((i) => keys[i]!), region }, '“bigger”');
+  for (const [k, i] of picked.entries()) {
+    const [code, p5, p6, p7, p10, p15] = before[k]!;
+    const was = (v: number) => Math.round((v === 0 ? 1 : v) * 2 * 100) / 100;
+    if (code === 1) assert.equal(q(i, 15), was(p15!), `${name}: a note's size`);
+    if (code === 5) assert.equal(q(i, 7), was(p7!), `${name}: a slur's curvature`);
+    if (code === 4 && p5 === 999) assert.equal(q(i, 7), Math.sign(p7!) * was(Math.abs(p7!)), `${name}: a hairpin's opening`);
+    if (code === 4 && p5 !== 999) assert.equal(q(i, 10), was(p10!), `${name}: a line's thickness`);
+    if (code === 12) assert.deepEqual([q(i, 6), q(i, 7)], [was(p6!), was(p7!)], `${name}: a box's width and height`);
+  }
+  sample.free();
+}
+
 console.log('ai checks: ok');

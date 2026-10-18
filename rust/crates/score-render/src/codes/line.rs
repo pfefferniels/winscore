@@ -10,14 +10,16 @@
 //! P14/P15 partial hairpins, P16 = 1 with P17/P18 end offsets. Wavy lines
 //! and P7 = -5 with P6 = 0 (or P6 = P3) run upward from P4 to P5.
 //!
-//! The engine's screen branches are ported (OUTPUT_MODE 1); its PostScript
-//! line widths for print are not part of the display list.
+//! The engine's screen branches are ported (OUTPUT_MODE 1). The engine
+//! thickens lines on the screen by drawing copies 14 units apart; in print
+//! it sets a PostScript line width instead, which the refined style draws on
+//! every medium.
 
 use std::iter::{once, successors};
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
 use crate::document::{Document, ItemRef};
-use crate::geometry::{self, rotate_points};
+use crate::geometry::{self, print_width, rotate_points};
 use crate::page::P3_UNIT;
 use crate::staff::{Staff, UNITS_PER_SCALE_STEP};
 use crate::units::{constant, real, trunc, Pos};
@@ -61,7 +63,7 @@ impl Params {
 }
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
-    draw(&Params::of(item), doc.position(item), &doc.staff_of(item), canvas);
+    draw(doc, &Params::of(item), doc.position(item), &doc.staff_of(item), canvas);
 }
 
 /// Where the parts of a code-4 item lie before its rotation (internal
@@ -118,31 +120,39 @@ const HEAVY_WAVE: i32 = -1;
 const MULTIPOINT: i32 = 100;
 
 /// Draws a code-4 item with parameters `params` whose P3/P4 point is
-/// `origin` (X_POS, Y_POS) on `staff`.
-pub fn draw(params: &Params, origin: Pos, staff: &Staff, canvas: &mut Canvas<'_>) {
-    draw_with_step(params, origin, staff, staff.step, canvas);
+/// `origin` (X_POS, Y_POS) on `staff`, in the document's style.
+pub fn draw(doc: &Document<'_>, params: &Params, origin: Pos, staff: &Staff, canvas: &mut Canvas<'_>) {
+    draw_with_step(doc, params, origin, staff, staff.step, canvas);
 }
 
 /// [`draw`] with the engine's STEP set to `step` (callers that scale it,
 /// e.g. for small notes); levels still come from the staff table.
-pub fn draw_with_step(params: &Params, origin: Pos, staff: &Staff, step: f64, canvas: &mut Canvas<'_>) {
+pub fn draw_with_step(doc: &Document<'_>, params: &Params, origin: Pos, staff: &Staff, step: f64, canvas: &mut Canvas<'_>) {
     let mut line = Line::new(params, origin, staff, step, canvas.buffer_mut().len());
+    line.refined = doc.refined();
+    let width = line.print_width().filter(|_| line.refined);
+    if let Some(width) = width {
+        canvas.set_width(width);
+    }
     if line.ip5 >= HAIRPIN {
         hairpin(&mut line, canvas);
-        return;
-    }
-    let right = Pos::new(line.right_x, staff.y(f64::from(line.p.p(5))));
-    match line.ip7 {
-        0 => straight(&line, right, canvas),
-        QUICK_VERTICAL => {
-            line.left.x = line.offset_by_p15(line.left.x);
-            let right = Pos::new(line.left.x, right.y);
-            straight(&line, right, canvas);
+    } else {
+        let right = Pos::new(line.right_x, staff.y(f64::from(line.p.p(5))));
+        match line.ip7 {
+            0 => straight(&line, right, canvas),
+            QUICK_VERTICAL => {
+                line.left.x = line.offset_by_p15(line.left.x);
+                let right = Pos::new(line.left.x, right.y);
+                straight(&line, right, canvas);
+            }
+            k if k >= MULTIPOINT => multipoint(&line, right, canvas),
+            k if k > 0 => dashes(&line, right.y, canvas),
+            DOTS => dots(&line, canvas),
+            _ => wavy(&mut line, canvas),
         }
-        k if k >= MULTIPOINT => multipoint(&line, right, canvas),
-        k if k > 0 => dashes(&line, right.y, canvas),
-        DOTS => dots(&line, canvas),
-        _ => wavy(&mut line, canvas),
+    }
+    if width.is_some() {
+        canvas.set_width(0.0);
     }
 }
 
@@ -161,6 +171,8 @@ struct Line<'a> {
     thickness: i32,
     /// The buffer index of the line's first point (NPT0).
     start: usize,
+    /// Draw in the refined style: the print width instead of copies.
+    refined: bool,
 }
 
 impl<'a> Line<'a> {
@@ -196,6 +208,28 @@ impl<'a> Line<'a> {
             left: Pos::new(x, origin.y),
             thickness,
             start,
+            refined: false,
+        }
+    }
+
+    /// The pen SCORE's print output draws the line with: draw_line passes
+    /// 2·IP10 to the print-width marker 0x4D4ED2 below IP7 = 100, IP21 for
+    /// multipoint lines, and -1 for heavy waves (0x43A6DA, and 0x50DEFA,
+    /// which sets the width directly); `None` is the default pen.
+    fn print_width(&self) -> Option<f32> {
+        let pixels = match self.ip7 {
+            k if k >= MULTIPOINT => self.p.ip(21),
+            HEAVY_WAVE if self.ip5 < HAIRPIN => -1,
+            _ => 2 * self.thickness,
+        };
+        (pixels != 0).then(|| print_width(pixels as f32))
+    }
+
+    /// thicken 0x42A8AE on the line's points (screen output); the refined
+    /// style has drawn them with [`Line::print_width`] instead.
+    fn thicken(&self, canvas: &mut Canvas<'_>, n: i32) {
+        if !self.refined {
+            geometry::thicken(canvas.buffer_mut(), self.start, n);
         }
     }
 
@@ -264,7 +298,7 @@ fn straight(line: &Line<'_>, right: Pos, canvas: &mut Canvas<'_>) {
     if line.thickness != 0 {
         // 0x43C0EA: the copies go up and down unless the line is steeper than 45°.
         let flat = (right.x - line.left.x).abs() - (right.y - line.left.y).abs() >= 0.0;
-        thicken(canvas, line.start, if flat { line.thickness * 100 } else { line.thickness });
+        line.thicken(canvas, if flat { line.thickness * 100 } else { line.thickness });
     }
     line.rotate(canvas, line.rotation());
 }
@@ -322,11 +356,6 @@ pub(crate) fn end_mark(canvas: &mut Canvas<'_>, at: Pos, value: f32, end: End, a
     }
 }
 
-/// thicken 0x42A8AE on the line's points from `start` (screen output).
-fn thicken(canvas: &mut Canvas<'_>, start: usize, n: i32) {
-    geometry::thicken(canvas.buffer_mut(), start, n);
-}
-
 /// The engine's do-while loops never stop when the step does not advance;
 /// this bounds them.
 const MAX_REPEATS: usize = 100_000;
@@ -371,20 +400,43 @@ fn dashes(line: &Line<'_>, right_y: f64, canvas: &mut Canvas<'_>) {
         return;
     }
     let (dash, space) = dash_lengths(p, scale_step);
-    let end = dash_row(canvas, line.left, line.right_x, dash, space);
-    let last_dash_end = real(end - space);
+    let (last_dash_end, run) = if line.refined {
+        let end = fitted_dash_row(canvas, line.left, line.right_x, dash, space);
+        (end, end - line.left.x)
+    } else {
+        let end = dash_row(canvas, line.left, line.right_x, dash, space);
+        (real(end - space), end - space - line.left.x)
+    };
     if p.p(12) != 0.0 {
         end_mark(canvas, Pos::new(last_dash_end, line.left.y), p.p(12), End::Finish, false, scale_step);
     }
     if line.thickness != 0 {
-        thicken(canvas, line.start, line.thickness * 100);
+        line.thicken(canvas, line.thickness * 100);
     }
     if p.p(13) != 0.0 {
         line.rotate(canvas, p.p(13));
     } else if line.ip5 != line.ip4 {
-        let slope = real((right_y - line.left.y) / (end - space - line.left.x));
+        let slope = real((right_y - line.left.y) / run);
         shear(&mut canvas.buffer_mut()[line.start..], slope);
     }
+}
+
+/// The refined style's [`dash_row`]: the dashes fill `from.x` to `until`
+/// exactly, starting and ending with a dash, with as many dashes as come
+/// closest to the asked lengths, both scaled alike. Returns `until`.
+fn fitted_dash_row(canvas: &mut Canvas<'_>, from: Pos, until: f64, dash: f64, space: f64) -> f64 {
+    let length = until - from.x;
+    if length <= 0.0 || dash <= 0.0 || space <= 0.0 {
+        return real(dash_row(canvas, from, until, dash, space) - space);
+    }
+    let spaces = ((length - dash) / (dash + space)).round().clamp(0.0, MAX_REPEATS as f64);
+    let scale = length / (dash + spaces * (dash + space));
+    let (dash, period) = (dash * scale, (dash + space) * scale);
+    (0..=spaces as usize).for_each(|k| {
+        let x = from.x + k as f64 * period;
+        canvas.segment(Pos::new(x, from.y), Pos::new(x + dash, from.y));
+    });
+    until
 }
 
 /// P6 = 0 or P6 = P3: as many whole dash periods as fit between P4 and P5,
@@ -407,7 +459,7 @@ fn vertical_dashes(line: &Line<'_>, top: f64, scale_step: f64, canvas: &mut Canv
         .into_iter()
         .for_each(|y| canvas.segment(Pos::new(x, y), Pos::new(x, real(dash + y))));
     if line.thickness != 0 {
-        thicken(canvas, line.start, line.thickness);
+        line.thicken(canvas, line.thickness);
     }
 }
 
@@ -547,7 +599,7 @@ fn wavy(line: &mut Line<'_>, canvas: &mut Canvas<'_>) {
         _ => thin_wave(line, size, arrow, canvas),
     }
     if !heavy && line.thickness != 0 {
-        thicken(canvas, line.start, line.thickness * 100);
+        line.thicken(canvas, line.thickness * 100);
     }
     line.rotate(canvas, rotation);
 }
@@ -654,7 +706,7 @@ fn multipoint(line: &Line<'_>, right: Pos, canvas: &mut Canvas<'_>) {
     let points: Vec<Pos> = once(line.left).chain(inner).chain(once(right)).collect();
     canvas.stroke(points);
     if p.p(21) != 0.0 {
-        thicken(canvas, line.start, p.ip(21));
+        line.thicken(canvas, p.ip(21));
     }
     line.rotate(canvas, p.p(20));
 }
@@ -681,7 +733,7 @@ fn hairpin(line: &mut Line<'_>, canvas: &mut Canvas<'_>) {
         }
     }
     if line.thickness != 0 {
-        thicken(canvas, line.start, line.thickness * 100);
+        line.thicken(canvas, line.thickness * 100);
     }
     line.rotate(canvas, line.rotation());
 }
@@ -776,9 +828,13 @@ fn dashed_hairpin(line: &Line<'_>, canvas: &mut Canvas<'_>) {
     let spread = if p7 != 0.0 && p7 != -1.0 { real(f64::from(p7.abs()) / 2.0) } else { constant(1.1) };
     [spread, -spread].into_iter().for_each(|spread| {
         let first = canvas.buffer_mut().len();
-        let end = dash_row(canvas, line.left, line.right_x, dash, space);
+        let run = if line.refined {
+            fitted_dash_row(canvas, line.left, line.right_x, dash, space) - line.left.x
+        } else {
+            dash_row(canvas, line.left, line.right_x, dash, space) - space - line.left.x
+        };
         let level = real(f64::from(p.p(4)) - spread);
-        let slope = real((line.staff.y(level) - line.left.y) / (end - space - line.left.x));
+        let slope = real((line.staff.y(level) - line.left.y) / run);
         shear(&mut canvas.buffer_mut()[first..], slope);
     });
     if p7 < 0.0 {
@@ -790,11 +846,60 @@ fn dashed_hairpin(line: &Line<'_>, canvas: &mut Canvas<'_>) {
 
 #[cfg(test)]
 mod tests {
+    use score_format::{Item, MusFile, Word};
+
     use super::*;
+    use crate::display::{print_pen, ItemId, Shape, ShapeKind};
+    use crate::document::Options;
 
     #[test]
     fn repeated_counts_the_first_and_tests_after() {
         assert_eq!(repeated(0.0, |x| x + 3.0, |x| x < 10.0), vec![0.0, 3.0, 6.0, 9.0]);
         assert_eq!(repeated(20.0, |x| x + 3.0, |x| x < 10.0), vec![20.0]);
+    }
+
+    /// The shapes of a code-4 `item` after a size-1 staff 1.
+    fn shapes(item: &[f32], options: Options) -> Vec<Shape> {
+        let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
+        let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
+        bytes.extend(trailer.iter().flat_map(|w| w.to_le_bytes()));
+        let mut file = MusFile::parse(&bytes).expect("an empty file parses");
+        let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
+        file.items = vec![words(&[8.0, 1.0, 0.0, 0.0, 1.0]), words(item)];
+        let list = crate::render(&Document::with_options(&file, options));
+        list.shapes.into_iter().filter(|s| s.source == Some(ItemId(1))).collect()
+    }
+
+    #[test]
+    fn a_thick_line_is_one_stroke_with_the_print_pen() {
+        let line = [4.0, 1.0, 10.0, 9.0, 9.0, 30.0, 0.0, 0.0, 0.0, 3.0];
+        assert_eq!(shapes(&line, Options::ENGINE).len(), 7);
+        let refined = shapes(&line, Options::REFINED);
+        assert_eq!(refined.len(), 1);
+        assert_eq!(refined[0].width, print_pen(6.0));
+        assert_eq!(refined[0].paths, shapes(&line, Options::ENGINE)[0].paths);
+    }
+
+    #[test]
+    fn heavy_waves_and_multipoint_lines_take_their_print_widths() {
+        let wave = shapes(&[4.0, 1.0, 10.0, 9.0, 9.0, 30.0, -1.0], Options::REFINED);
+        assert!(wave.iter().all(|s| s.kind == ShapeKind::Fill && s.width == print_pen(-1.0)));
+        let multipoint = [4.0, 1.0, 10.0, 9.0, 9.0, 30.0, 100.0, 15.0, 12.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0];
+        let refined = shapes(&multipoint, Options::REFINED);
+        assert_eq!(refined.len(), 1);
+        assert_eq!(refined[0].width, print_pen(2.0));
+    }
+
+    #[test]
+    fn refined_dashes_end_on_a_dash_at_p6() {
+        let ends = |options| {
+            let dashes = shapes(&[4.0, 1.0, 10.0, 9.0, 9.0, 31.5, 1.0], options);
+            let first = dashes.first().expect("dashes").paths[0][0].x;
+            (first, dashes.last().expect("dashes").paths[0][1].x)
+        };
+        let (first, last) = ends(Options::REFINED);
+        assert_eq!(last - first, 3225);
+        let (first, last) = ends(Options::ENGINE);
+        assert!(last - first > 3225, "the engine's last dash passes P6");
     }
 }

@@ -170,11 +170,11 @@ mod tests {
     }
 
     fn fill(paths: Vec<Vec<Point>>, item: u32) -> Shape {
-        Shape { kind: ShapeKind::Fill, colour: Colour::BLACK, paths, source: Some(ItemId(item)) }
+        Shape { kind: ShapeKind::Fill, colour: Colour::BLACK, paths, width: 0.0, source: Some(ItemId(item)) }
     }
 
     fn stroke(path: Vec<Point>, item: u32) -> Shape {
-        Shape { kind: ShapeKind::Stroke, colour: Colour::BLACK, paths: vec![path], source: Some(ItemId(item)) }
+        Shape { kind: ShapeKind::Stroke, colour: Colour::BLACK, paths: vec![path], width: 0.0, source: Some(ItemId(item)) }
     }
 
     #[test]
@@ -214,6 +214,7 @@ mod tests {
             weight: 400,
             italic: false,
             underline: false,
+            outline: false,
             strings: vec![PlacedText { origin: Point::new(1000, 2000), text: "abc".into() }],
             source: Some(ItemId(9)),
         };

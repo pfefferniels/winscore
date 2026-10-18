@@ -8,8 +8,9 @@
 //! | 0 | flags: bit 0 set = filled (even-odd), clear = polyline |
 //! | 1 | colour as `0xRRGGBB` |
 //! | 2 | source item index + 1; 0 = no source item |
-//! | 3 | number of paths `n` |
-//! | 4 … 3+n | number of points of each path |
+//! | 3 | pen width in hundredths of an engine unit; 0 = the default pen |
+//! | 4 | number of paths `n` |
+//! | 5 … 4+n | number of points of each path |
 //!
 //! `coords` (`Int32Array`) holds `x, y` of every point of every path, in the
 //! same order, in page coordinates (engine units, y up).
@@ -43,7 +44,8 @@ fn header(shape: &Shape) -> impl Iterator<Item = u32> + '_ {
         ShapeKind::Fill => FLAG_FILL,
         ShapeKind::Stroke => 0,
     };
-    [flags, rgb(shape.colour), source_word(shape.source), shape.paths.len() as u32]
+    let width = (shape.width.max(0.0) * 100.0).round() as u32;
+    [flags, rgb(shape.colour), source_word(shape.source), width, shape.paths.len() as u32]
         .into_iter()
         .chain(shape.paths.iter().map(|path| path.len() as u32))
 }
@@ -74,19 +76,21 @@ mod tests {
                     kind: ShapeKind::Fill,
                     colour: Colour { r: 0x12, g: 0x34, b: 0x56 },
                     paths: vec![vec![Point::new(1, 2), Point::new(3, 4), Point::new(5, 6)], vec![Point::new(7, 8)]],
+                    width: 12.5,
                     source: Some(ItemId(4)),
                 },
                 Shape {
                     kind: ShapeKind::Stroke,
                     colour: Colour::BLACK,
                     paths: vec![vec![Point::new(-1, -2), Point::new(9, 9)]],
+                    width: 0.0,
                     source: None,
                 },
             ],
             texts: vec![],
         };
         let encoded = encode(&list);
-        assert_eq!(encoded.shapes, vec![1, 0x123456, 5, 2, 3, 1, 0, 0, 0, 1, 2]);
+        assert_eq!(encoded.shapes, vec![1, 0x123456, 5, 1250, 2, 3, 1, 0, 0, 0, 0, 1, 2]);
         assert_eq!(encoded.coords, vec![1, 2, 3, 4, 5, 6, 7, 8, -1, -2, 9, 9]);
     }
 
@@ -101,6 +105,7 @@ mod tests {
             weight: 400,
             italic: false,
             underline: false,
+            outline: false,
             strings: vec![PlacedText { origin: Point::new(10, 20), text: "A".into() }],
             source,
         };

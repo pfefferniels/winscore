@@ -1,8 +1,30 @@
-//! Geometry the engine applies to buffered points, shared by several codes.
+//! Geometry the engine applies to buffered points, shared by several codes,
+//! and the pen widths of SCORE's print output that the refined style draws.
 
 use crate::canvas::{BufferPoint, Pen};
-use crate::display::Point;
+use crate::display::{print_pen, Point, UNITS_PER_INCH};
 use crate::units::{real, trunc, Pos};
+
+/// One pixel of SCORE's print output in engine units, as the refined style
+/// reads SCORE's print widths: at 600 dpi, where a print-width marker
+/// (0x4D4ED2) counts pixels and the default pen ([`crate::PEN`]) is four
+/// of them, so that `d` pixels more than the default is `print_pen(d)`.
+/// The engine's own pixel (0x78B480) follows the printer's resolution.
+pub const PRINT_PIXEL: f64 = UNITS_PER_INCH as f64 / 600.0;
+
+/// The thinnest pen, for outlines SCORE's print output leaves out (filled
+/// arcs) or narrows to nothing: the one unit the engine draws everything
+/// with, which outputs widen to a device pixel. (Width 0 is the default pen.)
+pub const HAIRLINE: f32 = 1.0;
+
+/// [`print_pen`]`(pixels)` as a width for [`crate::canvas::Canvas::set_width`]:
+/// a pen narrowed to nothing is a [`HAIRLINE`], not the default pen.
+pub fn print_width(pixels: f32) -> f32 {
+    match print_pen(pixels) {
+        w if w > 0.0 => w,
+        _ => HAIRLINE,
+    }
+}
 
 /// Degrees per radian as the REAL*4 constant at 0x75FC6C.
 const DEGREES_PER_RADIAN: f32 = 57.295_776;
@@ -39,6 +61,44 @@ fn turn(points: &mut [BufferPoint], centre: Point, angle: f64) {
         let dy = f64::from(p.at.y) - cy;
         p.at = Point::new(trunc(cos * dx + sin * dy + cx), trunc(cos * dy - sin * dx + cy));
     });
+}
+
+/// A centripetal Catmull–Rom spline through `points`, `steps` segments
+/// from each point to the next, for the refined style's smoother outlines.
+/// `before` and `after` are the neighbours that set the tangent at the
+/// first and last point; without one that end runs straight to its
+/// neighbour (the end point mirrored).
+pub fn spline_through(before: Option<Pos>, points: &[Pos], after: Option<Pos>, steps: usize) -> Vec<Pos> {
+    let [first, .., last] = points else {
+        return points.to_vec();
+    };
+    let mirrored = |end: Pos, next: Pos| Pos::new(2.0 * end.x - next.x, 2.0 * end.y - next.y);
+    let before = before.unwrap_or_else(|| mirrored(*first, points[1]));
+    let after = after.unwrap_or_else(|| mirrored(*last, points[points.len() - 2]));
+    let controls: Vec<Pos> = std::iter::once(before).chain(points.iter().copied()).chain([after]).collect();
+    let steps = steps.max(1);
+    let mut out = vec![*first];
+    controls.windows(4).for_each(|w| {
+        // Knots spaced by the square root of the chord lengths (alpha = 1/2).
+        let knot = |a: Pos, b: Pos| (a.x - b.x).hypot(a.y - b.y).sqrt().max(1e-9);
+        let t1 = knot(w[0], w[1]);
+        let t2 = t1 + knot(w[1], w[2]);
+        let t3 = t2 + knot(w[2], w[3]);
+        let lerp = |a: Pos, b: Pos, ta: f64, tb: f64, t: f64| {
+            let (u, v) = ((tb - t) / (tb - ta), (t - ta) / (tb - ta));
+            Pos::new(u * a.x + v * b.x, u * a.y + v * b.y)
+        };
+        (1..=steps).for_each(|k| {
+            let t = t1 + (t2 - t1) * k as f64 / steps as f64;
+            let a1 = lerp(w[0], w[1], 0.0, t1, t);
+            let a2 = lerp(w[1], w[2], t1, t2, t);
+            let a3 = lerp(w[2], w[3], t2, t3, t);
+            let b1 = lerp(a1, a2, 0.0, t2, t);
+            let b2 = lerp(a2, a3, t1, t3, t);
+            out.push(lerp(b1, b2, t1, t2, t));
+        });
+    });
+    out
 }
 
 /// Distance between the copies [`thicken`] adds.
@@ -132,6 +192,16 @@ mod tests {
         let mut points = [BufferPoint { at: Point::new(110, 100), pen: Pen::Stroke }];
         rotate_points(&mut points, Point::new(100, 100), 90.0);
         assert_eq!(points[0].at, Point::new(99, 90));
+    }
+
+    #[test]
+    fn splines_pass_through_their_points() {
+        let points = [Pos::new(0.0, 0.0), Pos::new(100.0, 40.0), Pos::new(200.0, 0.0)];
+        let spline = spline_through(None, &points, None, 4);
+        assert_eq!(spline.len(), 9);
+        assert_eq!((spline[0], spline[4], spline[8]), (points[0], points[1], points[2]));
+        // Between the points the curve bulges past the polygon's chords.
+        assert!(spline[2].y > 20.0 && spline[6].y > 20.0, "{spline:?}");
     }
 
     #[test]

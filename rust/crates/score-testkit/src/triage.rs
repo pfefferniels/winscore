@@ -365,6 +365,7 @@ mod tests {
                 .iter()
                 .map(|&(x, y)| Point::new(left + x, y))
                 .collect()],
+            width: 0.0,
             source: Some(ItemId(item)),
         }
     }

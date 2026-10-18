@@ -21,20 +21,88 @@ pub const CENTRED: f32 = 1000.0;
 pub const DIVIDED_GAP: f32 = 2.0;
 /// Characters CTX leaves out when centring (help: ? ! ¿ ¡ . , : ; ").
 const PUNCTUATION: &[u8] = b"?!\xbf\xa1.,:;\"";
+/// ¡ and ¿ as [`encode`] spells them; CTX leaves them out as well.
+const SPELLED_PUNCTUATION: [&[u8]; 2] = [b"!3", b"!q"];
 /// Unicode of Windows-1252 bytes 0x80–0x9F; the other bytes are Latin-1.
 const HIGH: [char; 32] = [
     '€', '\u{81}', '‚', 'ƒ', '„', '…', '†', '‡', 'ˆ', '‰', 'Š', '‹', 'Œ', '\u{8d}', 'Ž', '\u{8f}', '\u{90}', '‘', '’',
     '“', '”', '•', '–', '—', '˜', '™', 'š', '›', 'œ', '\u{9d}', 'ž', 'Ÿ',
 ];
 
-/// Characters as WinScore stores them (Windows-1252); others become `?`.
+/// Characters SCORE spells with escapes (help, "Inputting Special Text
+/// Characters"): an accent before the letter (`<<` acute, `>>` grave, `^^`
+/// circumflex, `%%` dieresis, `##` cedilla, `~` tilde), and `?x`, `!x` for
+/// the extended characters, as SCORE prints them (`?i` prints ¹).
+#[rustfmt::skip]
+const SPELLINGS: &[(char, &str)] = &[
+    ('Á', "<<A"), ('á', "<<a"), ('É', "<<E"), ('é', "<<e"), ('Í', "<<I"), ('í', "<<i"),
+    ('Ó', "<<O"), ('ó', "<<o"), ('Ú', "<<U"), ('ú', "<<u"), ('Ý', "<<Y"), ('ý', "<<y"),
+    ('À', ">>A"), ('à', ">>a"), ('È', ">>E"), ('è', ">>e"), ('Ì', ">>I"), ('ì', ">>i"),
+    ('Ò', ">>O"), ('ò', ">>o"), ('Ù', ">>U"), ('ù', ">>u"),
+    ('Â', "^^A"), ('â', "^^a"), ('Ê', "^^E"), ('ê', "^^e"), ('Î', "^^I"), ('î', "^^i"),
+    ('Ô', "^^O"), ('ô', "^^o"), ('Û', "^^U"), ('û', "^^u"),
+    ('Ä', "%%A"), ('ä', "%%a"), ('Ë', "%%E"), ('ë', "%%e"), ('Ï', "%%I"), ('ï', "%%i"),
+    ('Ö', "%%O"), ('ö', "%%o"), ('Ü', "%%U"), ('ü', "%%u"), ('Ÿ', "%%Y"), ('ÿ', "%%y"),
+    ('Ç', "##C"), ('ç', "##c"),
+    ('Ã', "~A"), ('ã', "~a"), ('Ñ', "~N"), ('ñ', "~n"), ('Õ', "~O"), ('õ', "~o"),
+    ('−', "?-"), ('Æ', "?A"), ('Œ', "?E"), ('Ł', "?L"), ('Ø', "?O"), ('æ', "?a"), ('©', "?c"),
+    ('œ', "?e"), ('ª', "?f"), ('¹', "?i"), ('ł', "?l"), ('º', "?m"), ('ø', "?o"), ('®', "?r"),
+    ('ß', "?s"), ('™', "?t"),
+    ('•', "!0"), ('„', "!1"), ('”', "!2"), ('¡', "!3"), ('¢', "!4"), ('£', "!5"), ('§', "!6"),
+    ('¤', "!7"), ('“', "!9"), ('Å', "!A"), ('‡', "!D"), ('Š', "!S"), ('Ž', "!Z"), ('å', "!a"),
+    ('†', "!d"), ('…', "!e"), ('ƒ', "!f"), ('«', "!g"), ('»', "!h"), ('ﬁ', "!i"), ('‹', "!j"),
+    ('›', "!k"), ('ﬂ', "!l"), ('—', "!m"), ('–', "!n"), ('¶', "!p"), ('¿', "!q"), ('š', "!s"),
+    ('¥', "!y"), ('ž', "!z"),
+];
+
+/// SCORE prints ` and ' as curly quotes.
+const QUOTES: [(char, u8); 2] = [('‘', b'`'), ('’', b'\'')];
+
+/// Characters as WinScore stores them: SCORE's spelling where it has one,
+/// so that WinScore draws and measures the character, otherwise
+/// Windows-1252, whose bytes from 128 up WinScore cannot draw (é is "0");
+/// others become `?`.
 pub fn encode(text: &str) -> Vec<u8> {
     text.chars()
-        .map(|c| match u32::from(c) {
-            code @ (0..=0x7F | 0xA0..=0xFF) => code as u8,
-            _ => HIGH.iter().position(|&h| h == c).map_or(b'?', |i| 0x80 + i as u8),
+        .flat_map(|c| {
+            if let Some(&(_, spelling)) = SPELLINGS.iter().find(|&&(s, _)| s == c) {
+                return spelling.as_bytes().to_vec();
+            }
+            let byte = match u32::from(c) {
+                code @ (0..=0x7F | 0xA0..=0xFF) => code as u8,
+                _ => QUOTES
+                    .iter()
+                    .find(|&&(q, _)| q == c)
+                    .map(|&(_, b)| b)
+                    .or_else(|| HIGH.iter().position(|&h| h == c).map(|i| 0x80 + i as u8))
+                    .unwrap_or(b'?'),
+            };
+            vec![byte]
         })
         .collect()
+}
+
+/// The characters of a text item for editing: Windows-1252, with the
+/// spellings [`encode`] writes read back as their characters.
+pub fn decode(bytes: &[u8]) -> String {
+    let mut text = String::new();
+    let mut rest = bytes;
+    while let Some(&byte) = rest.first() {
+        match SPELLINGS.iter().find(|&&(_, s)| rest.starts_with(s.as_bytes())) {
+            Some(&(c, spelling)) => {
+                text.push(c);
+                rest = &rest[spelling.len()..];
+            }
+            None => {
+                text.push(match byte {
+                    0x80..=0x9F => HIGH[usize::from(byte - 0x80)],
+                    _ => char::from(byte),
+                });
+                rest = &rest[1..];
+            }
+        }
+    }
+    text
 }
 
 /// The font number of a font code at the start of `text`, such as `_15`.
@@ -80,9 +148,27 @@ pub fn divided(text: &[u8], font: u8) -> Vec<Vec<u8>> {
 pub fn core(text: &[u8]) -> (Vec<u8>, Vec<u8>) {
     let code_len = if font_code(text).is_some() { FONT_CODE_LEN } else { 0 };
     let (code, body) = text.split_at(code_len);
-    let start = body.iter().position(|b| !PUNCTUATION.contains(b)).unwrap_or(body.len());
-    let end = body.iter().rposition(|b| !PUNCTUATION.contains(b)).map_or(start, |i| i + 1);
+    let mut start = 0;
+    while let Some(len) = punctuation_at(&body[start..]) {
+        start += len;
+    }
+    let mut end = body.len();
+    while end > start {
+        match SPELLED_PUNCTUATION.iter().find(|s| body[start..end].ends_with(s)) {
+            Some(spelled) => end -= spelled.len(),
+            None if PUNCTUATION.contains(&body[end - 1]) => end -= 1,
+            None => break,
+        }
+    }
     ([code, &body[..start]].concat(), [code, &body[..end]].concat())
+}
+
+/// The length of the punctuation CTX leaves out at the start of `text`, if any.
+fn punctuation_at(text: &[u8]) -> Option<usize> {
+    match SPELLED_PUNCTUATION.iter().find(|s| text.starts_with(s)) {
+        Some(spelled) => Some(spelled.len()),
+        None => text.first().filter(|b| PUNCTUATION.contains(b)).map(|_| 1),
+    }
 }
 
 /// A text item's draft with new characters and their count in P12.
@@ -183,6 +269,8 @@ mod tests {
         assert_eq!(core(b"_00Hello,"), (b"_00".to_vec(), b"_00Hello".to_vec()));
         assert_eq!(core(b"_00\"Hi!\""), (b"_00\"".to_vec(), b"_00\"Hi".to_vec()));
         assert_eq!(core(b"_00(Hello)"), (b"_00".to_vec(), b"_00(Hello)".to_vec()));
+        assert_eq!(core(b"_00!qQue?"), (b"_00!q".to_vec(), b"_00!qQue".to_vec()));
+        assert_eq!(core(b"!3Hola!"), (b"!3".to_vec(), b"!3Hola".to_vec()));
     }
 
     /// The sample scores, saved by WinScore, store exactly the lengths we measure.
@@ -205,8 +293,43 @@ mod tests {
 
     #[test]
     fn windows_1252() {
-        assert_eq!(encode("© B. – x"), b"\xa9 B. \x96 x");
+        assert_eq!(encode("€ ‰ ×"), b"\x80 \x89 \xd7");
         assert_eq!(encode("✓"), b"?");
+        assert_eq!(decode(b"\xa9 B. \x96 x"), "© B. – x");
+    }
+
+    #[test]
+    fn spellings() {
+        assert_eq!(encode("© B. – Café Söhne, l’été"), b"?c B. !n Caf<<e S%%ohne, l'<<et<<e");
+        assert_eq!(encode("¿Año?"), b"!qA~no?");
+        assert_eq!(decode(b"_00?c 1999 Caf<<e"), "_00© 1999 Café");
+    }
+
+    #[test]
+    fn spellings_round_trip() {
+        let all: String = SPELLINGS.iter().map(|&(c, _)| c).collect();
+        assert_eq!(decode(&encode(&all)), all);
+        let stored: &[&[u8]] = &[b"_00<<<e%%%u!!a??c~~n", b"<<b %%x ?x !o ~b", b"\x80\xd7"];
+        stored.iter().for_each(|&bytes| assert_eq!(encode(&decode(bytes)), bytes, "{bytes:?}"));
+        // Older files store é as a byte, which an edit spells.
+        assert_eq!(encode(&decode(b"\xe9t\xe7")), b"<<et##c");
+    }
+
+    /// What the refined renderer draws for each spelling is its character,
+    /// and what the engine measures is the letter's width.
+    #[test]
+    fn spellings_draw_their_characters() {
+        let drawn = |text: &[u8]| {
+            let file = file_with(vec![staff(), new_item(1.0, &with_font_code(text, 0)).to_item()]);
+            let doc = RenderDocument::with_options(&file, score_render::Options::REFINED);
+            let list = score_render::render(&doc);
+            let strings = list.texts.iter().filter(|t| t.source == Some(RenderId(1))).flat_map(|t| &t.strings);
+            strings.map(|s| s.text.as_str()).collect::<String>()
+        };
+        SPELLINGS.iter().for_each(|&(c, spelling)| assert_eq!(drawn(spelling.as_bytes()), c.to_string(), "{spelling}"));
+        assert_eq!(drawn(&encode("‘quotes’")), "‘quotes’");
+        let length = |text: &str| measured_length(&file_with(vec![staff(), new_item(1.0, &encode(text)).to_item()]), 1);
+        assert_eq!(length("_00Café"), length("_00Cafe"));
     }
 
     /// Characters, parameter changes, and the engine's P13 for them.

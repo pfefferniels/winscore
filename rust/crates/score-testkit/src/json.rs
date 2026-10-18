@@ -23,6 +23,13 @@ struct ShapeJson {
     paths: Vec<Vec<[i32; 2]>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     raw_kind: Option<u8>,
+    /// The pen width of a refined rendering; absent in engine output.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    width: f32,
+}
+
+fn is_zero(width: &f32) -> bool {
+    *width == 0.0
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,6 +48,9 @@ struct TextJson {
     italic: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     item: Option<u32>,
+    /// Outlined letters of a refined rendering; absent in engine output.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    outline: bool,
     strings: Vec<StringJson>,
     underline: bool,
     weight: i32,
@@ -78,6 +88,7 @@ impl From<ShapeJson> for Shape {
                 .into_iter()
                 .map(|path| path.into_iter().map(|[x, y]| Point::new(x, y)).collect())
                 .collect(),
+            width: s.width,
             source: s.item.map(ItemId),
         }
     }
@@ -98,6 +109,7 @@ impl From<&Shape> for ShapeJson {
                 .map(|path| path.iter().map(|p| [p.x, p.y]).collect())
                 .collect(),
             raw_kind: None,
+            width: s.width,
         }
     }
 }
@@ -113,6 +125,7 @@ impl From<TextJson> for TextRun {
             weight: t.weight,
             italic: t.italic,
             underline: t.underline,
+            outline: t.outline,
             strings: t
                 .strings
                 .into_iter()
@@ -135,6 +148,7 @@ impl From<&TextRun> for TextJson {
             height: t.height,
             italic: t.italic,
             item: t.source.map(|ItemId(i)| i),
+            outline: t.outline,
             strings: t
                 .strings
                 .iter()

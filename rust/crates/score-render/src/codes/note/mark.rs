@@ -105,7 +105,7 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, stem_length: f64
     let x = real((note.width * constant(8.5) - constant(8.5)) * note.unit + placed.at.x);
     (0..=placed.repeats.max(0)).fold(x, |x, _| {
         let at = Pos::new(x, placed.at.y);
-        glyph::clef(doc, item, canvas, placed.symbol, at, (placed.size, placed.size_y), note.unit);
+        glyph::mark(doc, item, canvas, placed.symbol, at, (placed.size, placed.size_y), note.unit);
         real(note.unit * constant(8.6) + x)
     });
 }

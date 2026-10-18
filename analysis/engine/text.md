@@ -21,6 +21,18 @@ Routines: draw_text 0x569AF0, parser 0x42FA58, per-character emitter 0x532EC0, r
 - **Glyph kinds at emission**: 95–161 and 167 → cp1252 via table 0x7970A4/0x79706B; accents 83–87/126 combine with the next glyph's character; glyphs > 79 (and every glyph of font 94) in fonts < 100 → library symbols code+2080 (80–92), code+2012 (≥ 162), code+2000 (font 94) at P6/4·3.5714 (0x56B529); code-10 numbers print them as text.
 - **Current font**: a global (0x78B6A0) kept across items and across the several drawing passes of one command, so a text without `_nn` takes the font of the nearest earlier item that set one, else wraps around to the last one in the file. Text items set it (last font change drawn, or P8), staves set Helvetica-Narrow (8) through their screen staff number. Text items drop font changes to the current font.
 
+## Refined style
+
+`Style::Refined` keeps everything above that places text (parser, advances, positions, P13) and draws what SCORE's PostScript output prints instead of the screen's artefacts:
+
+- **Characters**: the print writer (0x5704F8 → 0x571059 → 0x56DAA0) sends glyphs below 95 as the bytes of 0x7A0008 (0x56F324) in Adobe's standard encoding, so `` ` `` and `'` print ‘ ’ and `""` (77) a straight ", and glyphs 95–161 as octal codes from the int table 0x79FD7C in fonts re-encoded with FMFONTINIT.PSC's `acc` (`acc ReE`). The screen's stand-ins print as • ¤ £ Ł ł Ø ø ﬁ ﬂ Ž ž − – and, for `?i`, ¹ (`acc` puts onesuperior at 365, StandardEncoding's dotlessi). `%%Y` prints Ÿ (0x56EBB4). Bytes from 128 up draw their cp1252 character in the slot of the glyph the engine reads for them.
+- **Outline fonts** (`__nn`): `false charpath lw stroke`, in the text's colour, not green.
+- **Colour**: when printing, draw_items calls 0x4D4F89: `P26 setgray` for 0 < P26 ≤ 1, otherwise 0x4F0D31: each percentage over 100, from 0.989 on 1, then `setrgbcolor` (format strings at 0x793C4C, 0x794E10). White P16 text prints white.
+- **Rotation**: every glyph turns, and library symbols turn with the line about the text start (the shift dx, dy is for GDI turning records about the cell top).
+- **Tabs** on the recto page keep the 34050 shift; framed numbers (code 10) draw their text once.
+
+The editor (`score-edit::text::encode`) writes typed accented and special characters as SCORE's spellings (`<<e`, `##c`, `~n`, `?c`, `!5`, …), so WinScore draws and measures them.
+
 ## Not imitated or open
 
 - Code-10 numbers in the font chain: an oracle run showed a code-10 number after `_02` text leaving Times; waits for impl-symbols' `codes::number::text_call` to check against fixtures.

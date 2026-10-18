@@ -165,7 +165,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64, canvas: &mut Canvas<'_>) {
     let Some(rest) = Rest::new(doc, item, x_pos) else { return };
     if invisible_on_screen(doc, item) {
-        canvas.colour = colour::from_p26(INVISIBLE_GREY, doc.options.medium);
+        canvas.colour = colour::of(INVISIBLE_GREY, doc.options);
     }
     let t = rest.kind + 8;
     let shift = p10_shift(item, &rest);

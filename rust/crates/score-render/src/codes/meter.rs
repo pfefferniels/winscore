@@ -8,14 +8,17 @@
 //! (99 common time, 98 alla breve) at 0.75 × P7.
 //!
 //! Every number goes through draw_number 0x4F65A8 and draw_text; in the
-//! meter font its digits are library symbols 2000–2009.
+//! meter font its digits are library symbols 2000–2009. The refined style
+//! sets those digits as the screen does on every medium and centres the
+//! numbers of a meter on one another ([`Layout::centred`]).
 
-use crate::canvas::Canvas;
+use crate::canvas::{Canvas, Stream};
 use crate::codes;
 use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
+use crate::display::Colour;
 use crate::document::{Document, ItemRef};
 use crate::symbols::{draw_clef, draw_library_symbol, ItemContext, SymbolCall};
-use crate::text::{font_loaded as text_font_loaded, Font};
+use crate::text::{draw_text, font_loaded as text_font_loaded, Font};
 use crate::units::{real, trunc, Pos};
 
 /// P5 from this value on selects a symbol instead of a number.
@@ -34,8 +37,9 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         return;
     }
     let layout = Layout::of(doc, item);
+    let layout = if doc.refined() { layout.centred(doc, item) } else { layout };
     layout.parts.iter().for_each(|part| match *part {
-        Part::Number { value, at } => draw_number(doc, item, canvas, at, &number_call(item, value, layout.size)),
+        Part::Number { value, at, .. } => draw_number(doc, item, canvas, at, &number_call(item, value, layout.size)),
         Part::Plus(at) => {
             let context = ItemContext { code: codes::CLEF, ..ItemContext::of(item) };
             draw_clef(doc, &context, canvas, at, doc.staff_of(item).step, PLUS_SYMBOL, (layout.size, layout.size));
@@ -51,7 +55,7 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     }
     let layout = Layout::of(doc, item);
     let (value, at) = layout.parts.iter().find_map(|part| match *part {
-        Part::Number { value, at } => Some((value, at)),
+        Part::Number { value, at, .. } => Some((value, at)),
         Part::Plus(_) => None,
     })?;
     let call = number_call(item, value, layout.size);
@@ -87,9 +91,18 @@ fn p7(item: ItemRef<'_>) -> f64 {
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Part {
     /// One number of a meter, at draw_number's X_POS, Y_POS.
-    Number { value: i32, at: Pos },
+    Number { value: i32, at: Pos, column: Column },
     /// The plus between two meters, as placed before draw_clef.
     Plus(Pos),
+}
+
+/// The numbers a number lines up with in the refined style.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Column {
+    /// The top and bottom number of the first (0) or the second meter (1).
+    Meter(usize),
+    /// The bottom number both meters share, as in 4+3/4.
+    Shared,
 }
 
 /// The numbers and the plus of a numeric meter, in drawing order, and the
@@ -140,14 +153,19 @@ impl Frame<'_> {
         real(self.staff.step * c(7.6) * self.size + x)
     }
 
-    /// The numbers of one meter at `x`; `centre` moves one-digit numbers
-    /// right, `bottom_x` overrides the bottom number's x.
-    fn numbers(&self, fraction: Fraction, x: f64, centre: bool, bottom_x: Option<f64>) -> Vec<Part> {
+    /// The numbers of meter `meter` (0 or 1) at `x`; `centre` moves
+    /// one-digit numbers right, `bottom_x` places a shared bottom number.
+    fn numbers(&self, meter: usize, fraction: Fraction, x: f64, centre: bool, bottom_x: Option<f64>) -> Vec<Part> {
         let x_for = |n: i32| if centre && n < 10 { self.centred(x) } else { x };
-        let top = Part::Number { value: fraction.top, at: Pos::new(x_for(fraction.top), self.top_y) };
+        let top = Part::Number {
+            value: fraction.top,
+            at: Pos::new(x_for(fraction.top), self.top_y),
+            column: Column::Meter(meter),
+        };
         let bottom = (fraction.bottom >= 1).then(|| Part::Number {
             value: fraction.bottom,
             at: Pos::new(bottom_x.unwrap_or_else(|| x_for(fraction.bottom)), self.bottom_y),
+            column: if bottom_x.is_some() { Column::Shared } else { Column::Meter(meter) },
         });
         std::iter::once(top).chain(bottom).collect()
     }
@@ -165,8 +183,11 @@ impl Layout {
         let ip = |n: usize| trunc(f64::from(item.p(n)));
         let staff = doc.staff_of(item);
         let x = doc.position(item).x;
-        // Print and an explicit font set the numbers a little higher and smaller.
-        let set_as_print = !doc.screen() || ip(13) != 0;
+        // Print and an explicit font set the numbers a little higher and
+        // smaller, for the meter font of SCORE's PostScript output. The
+        // refined style keeps the screen's setting, made for the outline
+        // digits drawn here, wherever they are drawn.
+        let set_as_print = if doc.refined() { !outline_digits(item) } else { !doc.screen() || ip(13) != 0 };
         let (p4, factor, top_level) = if set_as_print {
             (real(f64::from(item.p(4)) + c(0.1)), c(1.2), c(5.82))
         } else {
@@ -186,7 +207,7 @@ impl Layout {
 
         let shared_bottom = (second_bottom < 0 && second.is_some())
             .then(|| frame.shared_bottom_x(x, first.bottom, ip(5)));
-        let mut parts = frame.numbers(first, x, second_bottom >= 0 && first.wide(), shared_bottom);
+        let mut parts = frame.numbers(0, first, x, second_bottom >= 0 && first.wide(), shared_bottom);
         if let Some(second) = second {
             let unit = real(staff.step * 6.0 * p7(item));
             let suppressed = ip(12) != 0;
@@ -202,9 +223,157 @@ impl Layout {
                 parts.push(Part::Plus(Pos::new(plus_x, frame.level_y(level))));
             }
             let x2 = real(real((f64::from(item.p(11)) + c(4.2)) * unit) + plus_x);
-            parts.extend(frame.numbers(second, x2, second.bottom >= 0 && second.wide(), None));
+            parts.extend(frame.numbers(1, second, x2, second.bottom >= 0 && second.wide(), None));
         }
         Self { size, parts }
+    }
+
+    /// The refined style lines the numbers of a meter up by their middles,
+    /// as drawn (the engine starts them at one x, or moves a one-digit
+    /// number a fixed step beside a two-digit one, so that in 3/4 the 3
+    /// sits 40 units left of the 4): the widest number of each meter stays
+    /// where it is and the others move to its middle; a bottom number both
+    /// meters share goes under the middle of both tops. Only the outline
+    /// digits are measured, and only unrotated.
+    fn centred(self, doc: &Document<'_>, item: ItemRef<'_>) -> Self {
+        if !outline_digits(item) || item.p(19) != 0.0 {
+            return self;
+        }
+        let mut numbers: Vec<Drawn> = self
+            .parts
+            .iter()
+            .enumerate()
+            .filter_map(|(part, p)| match *p {
+                Part::Number { value, at, column } => {
+                    let (left, right) = number_extent(doc, item, value, at, self.size)?;
+                    Some(Drawn { part, column, left, right, shift: 0.0 })
+                }
+                Part::Plus(_) => None,
+            })
+            .collect();
+        for meter in [Column::Meter(0), Column::Meter(1)] {
+            let widest = numbers.iter().filter(|n| n.column == meter).max_by(|a, b| a.width().total_cmp(&b.width()));
+            if let Some(centre) = widest.map(Drawn::middle) {
+                numbers.iter_mut().filter(|n| n.column == meter).for_each(|n| n.move_to(centre));
+            }
+        }
+        let tops = numbers.iter().filter(|n| n.column != Column::Shared);
+        let left = tops.clone().map(|n| n.left).reduce(f64::min);
+        let right = tops.map(|n| n.right).reduce(f64::max);
+        if let (Some(left), Some(right)) = (left, right) {
+            numbers.iter_mut().filter(|n| n.column == Column::Shared).for_each(|n| n.move_to((left + right) / 2.0));
+        }
+        let mut parts = self.parts;
+        numbers.iter().for_each(|n| {
+            if let Part::Number { at, .. } = &mut parts[n.part] {
+                at.x = real(at.x + n.shift);
+            }
+        });
+        Self { parts, ..self }
+    }
+}
+
+/// A number of a meter and where it draws, for [`Layout::centred`].
+struct Drawn {
+    part: usize,
+    column: Column,
+    left: f64,
+    right: f64,
+    /// How far it has been moved.
+    shift: f64,
+}
+
+impl Drawn {
+    fn width(&self) -> f64 {
+        self.right - self.left
+    }
+
+    fn middle(&self) -> f64 {
+        (self.left + self.right) / 2.0
+    }
+
+    fn move_to(&mut self, middle: f64) {
+        let dx = middle - self.middle();
+        (self.left, self.right, self.shift) = (self.left + dx, self.right + dx, self.shift + dx);
+    }
+}
+
+/// Whether the numbers are drawn in the meter font, as the outline digits
+/// 2000–2009, rather than as text: for P13 = 0 and a P13 that selects font 94.
+fn outline_digits(item: ItemRef<'_>) -> bool {
+    let font = number_text_call(&number_call(item, 0, 1.0), Pos::default(), b"", Font::TIMES).font_override;
+    font == Font::METER.0 || (font >= 1000 && font % 1000 == Font::METER.0)
+}
+
+/// The left and right end of what the number `value` of the meter draws
+/// at `at`, in page units.
+fn number_extent(doc: &Document<'_>, item: ItemRef<'_>, value: i32, at: Pos, size: f64) -> Option<(f64, f64)> {
+    let mut stream = Stream::default();
+    {
+        let mut canvas = Canvas::new(&mut stream, item.id, item.staff(), Colour::BLACK);
+        let call = number_call(item, value, size);
+        let text = number_text(call.value, call.p5, call.p17, call.p18);
+        // The meter font's digits do not depend on the current font.
+        draw_text(doc, item, &mut canvas, &number_text_call(&call, at, &text, Font::TIMES));
+        canvas.flush();
+    }
+    let xs = stream.list.shapes.iter().flat_map(|s| s.paths.iter().flatten()).map(|p| f64::from(p.x));
+    xs.fold(None, |extent, x| Some(extent.map_or((x, x), |(left, right): (f64, f64)| (left.min(x), right.max(x)))))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::display::{DisplayList, ItemId, Point};
+    use crate::document::{Document, Medium, Options};
+    use score_format::{Item, MusFile, Word};
+
+    /// The middle line of staff 1 on the page.
+    const MIDDLE: i32 = 3648;
+
+    fn render(meter: &[f32], options: Options) -> DisplayList {
+        let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
+        let mut file = MusFile::empty();
+        file.items = vec![words(&[8.0, 1.0, 0.0, 0.0, 1.0]), words(meter)];
+        crate::render(&Document::with_options(&file, options))
+    }
+
+    /// The middles of the numbers above and below the middle line.
+    fn middles(list: &DisplayList) -> (f64, f64) {
+        let points = |above: bool| -> Vec<Point> {
+            let shapes = list.shapes.iter().filter(|s| s.source == Some(ItemId(1)));
+            let in_half = move |s: &&crate::display::Shape| {
+                let ys: Vec<i32> = s.paths.iter().flatten().map(|p| p.y).collect();
+                ((ys.iter().min().unwrap() + ys.iter().max().unwrap()) / 2 > MIDDLE) == above
+            };
+            shapes.filter(in_half).flat_map(|s| s.paths.iter().flatten().copied()).collect()
+        };
+        let middle = |points: Vec<Point>| {
+            let (left, right) = (points.iter().map(|p| p.x).min().unwrap(), points.iter().map(|p| p.x).max().unwrap());
+            f64::from(left + right) / 2.0
+        };
+        (middle(points(true)), middle(points(false)))
+    }
+
+    #[test]
+    fn the_refined_style_centres_the_numbers() {
+        let (top, bottom) = middles(&render(&[18.0, 1.0, 20.0, 0.0, 3.0, 4.0], Options::ENGINE));
+        assert!((bottom - top - 40.0).abs() < 5.0, "the engine's 3 sits left of its 4: {top} {bottom}");
+        for meter in [[3.0, 4.0], [12.0, 8.0], [5.0, 16.0], [2.0, 2.0]] {
+            let (top, bottom) = middles(&render(&[18.0, 1.0, 20.0, 0.0, meter[0], meter[1]], Options::REFINED));
+            assert!((top - bottom).abs() <= 1.0, "{meter:?}: {top} {bottom}");
+        }
+    }
+
+    #[test]
+    fn the_refined_style_sets_outline_digits_alike_on_every_medium() {
+        let print = |options: Options| Options { medium: Medium::Print, ..options };
+        let three_four = [18.0, 1.0, 20.0, 0.0, 3.0, 4.0];
+        assert_eq!(render(&three_four, Options::REFINED).shapes, render(&three_four, print(Options::REFINED)).shapes);
+        assert_ne!(render(&three_four, Options::ENGINE).shapes, render(&three_four, print(Options::ENGINE)).shapes);
+        // A text font keeps the print setting.
+        let times = [18.0, 1.0, 20.0, 0.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+        assert_eq!(render(&times, print(Options::REFINED)).texts, render(&times, print(Options::ENGINE)).texts);
+        assert_eq!(render(&times, Options::REFINED).texts, render(&times, Options::ENGINE).texts);
     }
 }
 

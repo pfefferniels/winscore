@@ -109,7 +109,10 @@ export interface Measure {
 }
 
 export const MEASURES: Record<string, Measure> = {
-  size: { setting: 'Size', scale: 'times', noun: 'size', more: 'Bigger', less: 'Smaller' },
+  // What makes each kind bigger: its Size, else a slur's curvature or a
+  // bracket's height, a hairpin's opening, a box's width (SIZE_EXTRA adds
+  // its height), a line's, beam's or barline's thickness.
+  size: { setting: 'Size | Curvature | Height | Opening | Size width | Thickness', scale: 'times', noun: 'size', more: 'Bigger', less: 'Smaller' },
   'stem length': { setting: 'Stem length', scale: 'plus', noun: 'stem length', more: 'Longer stems', less: 'Shorter stems' },
   thickness: { setting: 'Thickness', scale: 'times', noun: 'thickness', more: 'Thicker', less: 'Thinner' },
   width: { setting: 'Width', scale: 'times', noun: 'width', more: 'Wider', less: 'Narrower' },
@@ -139,6 +142,23 @@ export interface Intent {
   /** number: the value; command: the line. */
   value?: number;
   line?: string;
+}
+
+/** Settings "bigger" changes along with a measure's own: a box grows in height as in width. */
+const SIZE_EXTRA: Record<string, { codes: number[]; setting: string }[]> = {
+  size: [{ codes: [12], setting: 'Size height' }],
+};
+
+/** `step` for the measure's setting, then for the settings that go with it on the items `scope` reaches. */
+function measureSteps(measureId: string, scope: Filter | null, value: string): Step[] {
+  const measure = MEASURES[measureId] ?? MEASURES.size!;
+  const extra = (SIZE_EXTRA[measureId] ?? [])
+    .filter(({ codes }) => {
+      const reach = scope?.codes ?? [];
+      return reach.length === 0 || codes.some((c) => reach.includes(c));
+    })
+    .map(({ codes, setting }): Step => ({ do: 'setting', items: { ...scope, codes, where: scope?.where ?? null }, setting, value }));
+  return [{ do: 'setting', items: scope, setting: measure.setting, value }, ...extra];
 }
 
 function filterOf(target: Target, extra: Partial<Filter> = {}): Filter {
@@ -199,7 +219,8 @@ export function scriptFor(intent: Intent): Script {
       return one(`${intent.setting} ${intent.value}`, { do: 'setting', items: target.id === 'all' ? null : items, setting: intent.setting ?? '', value: intent.value ?? 0 });
     case 'bigger':
     case 'smaller': {
-      const measure = MEASURES[intent.measure ?? 'size'] ?? MEASURES.size!;
+      const measureId = MEASURES[intent.measure ?? 'size'] ? (intent.measure ?? 'size') : 'size';
+      const measure = MEASURES[measureId]!;
       const up = intent.action === 'bigger';
       const scope = target.id === 'all' || target.aspect ? null : items;
       if (measure.scale === 'plus') {
@@ -214,12 +235,13 @@ export function scriptFor(intent: Intent): Script {
       return {
         summary: up ? measure.more : measure.less,
         knobs: [knob('factor', `${capital(measure.noun)} ×`, factor, 0.1, 4, 0.05)],
-        steps: [{ do: 'setting', items: scope, setting: measure.setting, value: 'round((value == 0 ? 1 : value) * factor * 100) / 100' }],
+        steps: measureSteps(measureId, scope, 'round((value == 0 ? 1 : value) * factor * 100) / 100'),
       };
     }
     case 'grow':
     case 'shrink': {
-      const measure = MEASURES[intent.measure ?? 'size'] ?? MEASURES.size!;
+      const measureId = MEASURES[intent.measure ?? 'size'] ? (intent.measure ?? 'size') : 'size';
+      const measure = MEASURES[measureId]!;
       const up = intent.action === 'grow';
       const scope = target.id === 'all' || target.aspect ? null : items;
       const plus = measure.scale === 'plus';
@@ -233,7 +255,7 @@ export function scriptFor(intent: Intent): Script {
           knob('to', 'To', round(to), lo, hi, plus ? 0.5 : 0.05),
           knob('curve', 'Curve', 1, 0.25, 4, 0.05),
         ],
-        steps: [{ do: 'setting', items: scope, setting: measure.setting, value: 'round((from + (to - from) * t ^ curve) * 100) / 100' }],
+        steps: measureSteps(measureId, scope, 'round((from + (to - from) * t ^ curve) * 100) / 100'),
       };
     }
     case 'move': {

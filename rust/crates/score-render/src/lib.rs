@@ -45,8 +45,9 @@ pub mod text;
 pub mod trig;
 pub mod units;
 
-pub use display::{Colour, DisplayList, ItemId, PlacedText, Point, Shape, ShapeKind, TextRun, UNITS_PER_INCH};
-pub use document::{Document, ItemRef, Medium, Options};
+pub use display::{Colour, DisplayList, ItemId, PlacedText, Point, Shape, ShapeKind, TextRun, PEN, UNITS_PER_INCH};
+pub use display::print_pen;
+pub use document::{Document, ItemRef, Medium, Options, Style};
 
 use canvas::{Canvas, Stream};
 
@@ -66,7 +67,7 @@ pub fn render_item(doc: &Document<'_>, item: ItemRef<'_>, list: &mut DisplayList
 
 fn draw(doc: &Document<'_>, item: ItemRef<'_>, stream: &mut Stream) {
     if let Some(render) = codes::renderer(item.code()) {
-        let mut canvas = Canvas::new(stream, item.id, item.staff(), item.colour(doc.options.medium));
+        let mut canvas = Canvas::new(stream, item.id, item.staff(), item.colour(doc.options));
         render(doc, item, &mut canvas);
         canvas.flush();
     }

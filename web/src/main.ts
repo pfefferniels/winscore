@@ -21,6 +21,7 @@ import { appMenus, type DialogKind } from './menus';
 import { bindPanelGrip, filterItemList, formatParam, markSelected, renderItemList, renderSelection, shownItems, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer, Overlay } from './paint';
 import { download, printPage } from './print';
+import { embedFonts } from './svg-fonts';
 import { createSymbolDialog } from './symbol-dialog';
 import { createTextDialog, editInPlace } from './text-dialog';
 import { stepZoom, toDevice, ZOOM_LEVELS } from './view';
@@ -713,14 +714,20 @@ function exportName(extension: string): string {
   return `${(state.fileName || 'score').replace(/\.[^.]*$/, '')}.${extension}`;
 }
 
-function exportSvg() {
-  if (state.score) download(state.score.exportSvg(), exportName('svg'), 'image/svg+xml');
+/** The printed page as an SVG file, with the faces of its text embedded. */
+async function exportSvg() {
+  if (!state.score) return;
+  try {
+    download(await embedFonts(state.score.exportSvg()), exportName('svg'), 'image/svg+xml');
+  } catch (err) {
+    failed(err);
+  }
 }
 
 async function print() {
   if (!state.score) return;
   try {
-    await printPage(decodeAndFree(state.score.renderPrint()), paperBox());
+    await printPage(state.score.exportSvg(), paperBox());
   } catch (err) {
     failed(err);
   }
@@ -1189,7 +1196,7 @@ function bindMenus() {
       open: chooseFile,
       samples: () => samples.map((s) => ({ title: s.title, open: () => void openSample(s) })),
       save,
-      exportSvg,
+      exportSvg: () => void exportSvg(),
       print: () => void print(),
       undo: () => edit((editor) => editor.undo()),
       redo: () => edit((editor) => editor.redo()),

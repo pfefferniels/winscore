@@ -24,12 +24,17 @@ pub struct Entry {
     pub code: Code,
     /// In P3 units; zero for font changes, tabs and accents.
     pub advance: f32,
+    /// The byte from 128 up that the glyph was read from, see [`Token::High`].
+    pub byte: Option<u8>,
 }
 
 /// What the parser reads, before widths: the syntax of a string.
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Token {
     Glyph(i32),
+    /// A byte from 128 up, read as whatever follows the character table
+    /// (é as glyph 0, "0"); the refined style draws its cp1252 character.
+    High { glyph: i32, byte: u8 },
     /// `""`: a glyph that depends on the font.
     DoubleQuote,
     /// `_nn` or `__nn`; `digits` are the two characters after the underscores.
@@ -166,6 +171,11 @@ impl Tokens<'_> {
     /// The token starting at the current character; `None` for an unclosed tab.
     fn token(&mut self) -> Option<Token> {
         let mut char = self.byte(self.at);
+        // No code past the table is an escape, an accent, a font change or
+        // a doubled character: such a byte is always one glyph.
+        if char >= FIRST_HIGH_BYTE {
+            return Some(Token::High { glyph: char_code(char), byte: char });
+        }
         loop {
             let code = char_code(char);
             if self.next_byte() != char {
@@ -206,6 +216,9 @@ pub struct ScanSettings<'f> {
     /// P5, 0 read as 1.
     pub spread: f32,
 }
+
+/// Bytes from here on lie past the engine's 128-entry character table.
+const FIRST_HIGH_BYTE: u8 = 0x80;
 
 /// The engine's ratio between its text scale and the metric units.
 const METRIC_UNITS: f32 = 638.0;
@@ -248,7 +261,7 @@ const FIRST_OVERRIDE_FONT: i32 = 90;
 impl Scanner<'_> {
     fn push(&mut self, token: Token) {
         let code = match token {
-            Token::Glyph(code) => Code::Glyph(code),
+            Token::Glyph(code) | Token::High { glyph: code, .. } => Code::Glyph(code),
             Token::DoubleQuote => Code::Glyph(if self.font.outline() { 110 } else { 77 }),
             Token::TildeAccent => Code::Glyph(TILDE),
             Token::Tab(n) => Code::Tab((f64::from(n) * 10.0) as i32),
@@ -264,9 +277,13 @@ impl Scanner<'_> {
             _ => 0.0,
         };
         if self.entries.is_empty() && !matches!(code, Code::Font(_)) {
-            self.entries.push(Entry { code: Code::Font(self.font), advance: 0.0 });
+            self.entries.push(Entry { code: Code::Font(self.font), advance: 0.0, byte: None });
         }
-        self.entries.push(Entry { code, advance });
+        let byte = match token {
+            Token::High { byte, .. } => Some(byte),
+            _ => None,
+        };
+        self.entries.push(Entry { code, advance, byte });
     }
 
     /// The glyph's advance in P3 units; P13 grows by it.
@@ -341,6 +358,22 @@ mod tests {
         assert_eq!(tokens("A~50~B"), [Token::Glyph(10), Token::Tab(50.0), Token::Glyph(11)]);
         assert_eq!(tokens("\\\\351B"), [Token::Glyph(24), Token::Glyph(11)]);
         assert_eq!(tokens("\\\\101"), [Token::Glyph(73), Token::Glyph(73), Token::Glyph(1), Token::Glyph(0), Token::Glyph(1)]);
+    }
+
+    /// The early return for bytes from 128 up gives what the general rules would.
+    #[test]
+    fn high_bytes_are_single_glyphs() {
+        (FIRST_HIGH_BYTE..=u8::MAX).for_each(|byte| {
+            let code = char_code(byte);
+            let pair = [byte, byte];
+            let mut doubled = Tokens { text: &pair, at: 0 };
+            assert_eq!((doubled.doubled(code), doubled.at), (Some(Token::Glyph(code)), 0), "{byte:#x}");
+            let pair = [byte, b'a'];
+            let mut single = Tokens { text: &pair, at: 0 };
+            assert_eq!((single.single(code), single.at), (Some(Token::Glyph(code)), 0), "{byte:#x}");
+        });
+        let tokens: Vec<Token> = Tokens { text: b"\xe9\xeca", at: 0 }.collect();
+        assert_eq!(tokens, [Token::High { glyph: 0, byte: 0xE9 }, Token::High { glyph: 128, byte: 0xEC }, Token::Glyph(40)]);
     }
 
     #[test]

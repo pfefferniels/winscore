@@ -11,6 +11,12 @@
 //!
 //! The engine keeps the current font in a global across items and drawing
 //! passes; [`TextCall::current_font`] carries it in.
+//!
+//! The refined style keeps every advance and position the engine computes
+//! but draws what SCORE prints: the characters behind the screen's stand-ins
+//! and behind bytes from 128 up, outline fonts as outlines in the text's
+//! colour, symbols and every glyph turned with a rotated line, and tab stops
+//! on the recto page.
 
 mod fonts;
 mod glyphs;
@@ -21,7 +27,7 @@ pub use fonts::{weight_and_italic, Font, FontLibrary};
 use crate::canvas::{Canvas, TextString, TextStyle};
 use crate::colour;
 use crate::display::{Colour, Point};
-use crate::document::{Document, ItemRef};
+use crate::document::{Document, ItemRef, Options, Style};
 use crate::geometry::rotate_points;
 use crate::page::RECTO_SHIFT;
 use crate::symbols::{draw_library_symbol, ItemContext, SymbolCall};
@@ -196,11 +202,14 @@ enum Mark {
 struct Placed {
     code: Code,
     mark: Mark,
+    /// The byte from 128 up the glyph was read from.
+    byte: Option<u8>,
 }
 
 /// A string read and sized, ready to be placed.
 struct Text<'c> {
     call: &'c TextCall<'c>,
+    options: Options,
     entries: Vec<Entry>,
     /// The font after scanning, current until the first font change is drawn.
     scan_font: Font,
@@ -251,6 +260,7 @@ impl<'c> Text<'c> {
         spread_advances(&mut entries, scanned.length, spread);
         Self {
             call,
+            options: doc.options,
             entries,
             scan_font: scanned.font,
             length: scanned.length,
@@ -268,28 +278,35 @@ impl<'c> Text<'c> {
         self.call.rotation != 0.0
     }
 
+    fn refined(&self) -> bool {
+        self.options.style == Style::Refined
+    }
+
     /// Positions (0x56A67E–0x56A9A9): NINT of the running x before each
-    /// glyph's advance; tabs set x absolutely.
+    /// glyph's advance; tabs set x absolutely. The engine leaves the recto
+    /// shift out of a tab's x, so that the text after it lands on the verso
+    /// page; the refined style adds it.
     fn place(&self) -> Vec<Placed> {
         let y = nint(self.call.origin.y);
         let mut x = f64::from(self.x);
+        let tab_shift = if self.refined() { recto_shift(self.call) } else { 0.0 };
         self.entries
             .iter()
             .map(|entry| {
                 let placed = if entry.advance != 0.0 {
                     let at = Point::new(nint(x), y);
                     x = real(f64::from(entry.advance) * P3_UNIT + x);
-                    Placed { code: entry.code, mark: Mark::At(at) }
+                    Placed { code: entry.code, mark: Mark::At(at), byte: entry.byte }
                 } else {
                     let code = match entry.code {
                         Code::Tab(tenths) => {
-                            x = real(f64::from(tenths) * TAB_TENTH);
+                            x = real(f64::from(tenths) * TAB_TENTH + tab_shift);
                             Code::Glyph(SPACE)
                         }
                         code => code,
                     };
                     let accent = matches!(code, Code::Glyph(g) if (83..127).contains(&g) && g != SPACE);
-                    Placed { code, mark: if accent { Mark::Accent } else { Mark::Hidden } }
+                    Placed { code, mark: if accent { Mark::Accent } else { Mark::Hidden }, byte: entry.byte }
                 };
                 self.overridden(placed)
             })
@@ -313,13 +330,9 @@ impl<'c> Text<'c> {
         let degrees = f64::from(self.call.rotation);
         let radians = real(degrees / f64::from(DEGREE));
         let (sin, cos) = (real(radians.sin()), real(radians.cos()));
-        let size = self.step * f64::from(self.width) / 25.0;
-        let dx = real(sin * f64::from(4.583_f32) * real(size * 150.0));
-        let lower = real((f64::from(270.0_f32) - degrees) / f64::from(DEGREE));
-        let drop = real(size * 175.0) * f64::from(3.95_f32);
-        let dy = real(real(drop) * real(lower.sin()) + real(drop));
+        let (dx, dy) = self.record_shift();
         let centre = Point::new(nint(f64::from(self.x)), nint(self.call.origin.y));
-        placed.iter_mut().filter(|p| turns(p)).for_each(|p| {
+        placed.iter_mut().filter(|p| self.turns(p)).for_each(|p| {
             if let Mark::At(at) = p.mark {
                 let (ox, oy) = (real(f64::from(at.x - centre.x)), real(f64::from(at.y - centre.y)));
                 let x = centre.x + nint(cos * ox + sin * oy);
@@ -327,6 +340,27 @@ impl<'c> Text<'c> {
                 p.mark = Mark::At(Point::new(trunc(f64::from(x) + dx), trunc(f64::from(y) - dy)));
             }
         });
+    }
+
+    /// What the rotation adds to x and takes from y after the turn: the
+    /// shell turns a record's glyphs about the top of their cell, which lies
+    /// 4.583·150 units of size above the baseline.
+    fn record_shift(&self) -> (f64, f64) {
+        let degrees = f64::from(self.call.rotation);
+        let sin = real(real(degrees / f64::from(DEGREE)).sin());
+        let size = self.step * f64::from(self.width) / 25.0;
+        let dx = real(sin * f64::from(4.583_f32) * real(size * 150.0));
+        let lower = real((f64::from(270.0_f32) - degrees) / f64::from(DEGREE));
+        let drop = real(size * 175.0) * f64::from(3.95_f32);
+        let dy = real(real(drop) * real(lower.sin()) + real(drop));
+        (dx, dy)
+    }
+
+    /// The rotation leaves font changes, hidden entries and glyphs 80–126
+    /// alone, so that the symbols 80–92 and the characters 95–126 stay on
+    /// the unturned line; the refined style turns every glyph.
+    fn turns(&self, placed: &Placed) -> bool {
+        matches!((placed.code, placed.mark), (Code::Glyph(g), Mark::At(_)) if self.refined() || !(80..=126).contains(&g))
     }
 
     /// The emission loop (0x56AA8A–0x56ACCC).
@@ -343,17 +377,25 @@ impl<'c> Text<'c> {
                     }
                 }
                 (Code::Glyph(accent), Mark::Accent) => {
-                    if let Some((Code::Glyph(base), Mark::At(at))) = entries.next().map(|e| (e.code, e.mark)) {
-                        push_string(&mut runs, at, glyphs::accented(accent, glyphs::glyph_char(base)));
+                    if let Some(&Placed { code: Code::Glyph(base), mark: Mark::At(at), byte }) = entries.next() {
+                        let base = self.refined_byte(byte, font).unwrap_or_else(|| glyphs::glyph_char(base));
+                        let accented = if self.refined() {
+                            glyphs::printed_accented(accent, base)
+                        } else {
+                            glyphs::accented(accent, base)
+                        };
+                        push_string(&mut runs, at, cp1252_text(accented));
                     }
                 }
                 (Code::Glyph(g), Mark::At(at)) if g != SPACE => {
-                    if (95..=161).contains(&g) || g == 167 {
-                        push_string(&mut runs, at, glyphs::extended_char(g));
+                    if let Some(byte) = self.refined_byte(entry.byte, font) {
+                        push_string(&mut runs, at, cp1252_text(byte));
+                    } else if (95..=161).contains(&g) || g == 167 {
+                        push_string(&mut runs, at, self.glyph_text(g, glyphs::extended_char(g)));
                     } else if self.is_symbol(g, font) {
                         self.draw_symbol(doc, item, canvas, g, font, at);
                     } else {
-                        push_string(&mut runs, at, glyphs::glyph_char(g));
+                        push_string(&mut runs, at, self.glyph_text(g, glyphs::glyph_char(g)));
                     }
                 }
                 _ => {}
@@ -364,7 +406,25 @@ impl<'c> Text<'c> {
             canvas.colour = colour;
             canvas.text(&style, strings);
         });
-        canvas.colour = self.call.colour.map_or(item_colour, |p16| colour::from_p26(p16, doc.options.medium));
+        canvas.colour = self.call.colour.map_or(item_colour, |p16| colour::of(p16, doc.options));
+    }
+
+    /// What a record shows for glyph `code`, whose screen character is
+    /// `screen`: the refined style puts the printed characters in place of
+    /// the screen's stand-ins.
+    fn glyph_text(&self, code: i32, screen: u8) -> String {
+        match glyphs::printed_char(code).filter(|_| self.refined()) {
+            Some(char) => char.to_string(),
+            None => cp1252_text(screen),
+        }
+    }
+
+    /// The byte from 128 up a glyph was read from, which the refined style
+    /// draws as its cp1252 character in the glyph's place (the meter font
+    /// has no characters). Bytes cp1252 leaves undefined show nothing.
+    fn refined_byte(&self, byte: Option<u8>, font: Font) -> Option<u8> {
+        let defined = |b: u8| if char_from_cp1252(b).is_control() { 0 } else { b };
+        byte.filter(|_| self.refined() && font != Font::METER).map(defined)
     }
 
     fn is_symbol(&self, glyph: i32, font: Font) -> bool {
@@ -382,6 +442,20 @@ impl<'c> Text<'c> {
             _ => (glyph, f64::from(self.width_q), f64::from(self.height_q)),
         };
         let recto = if self.call.staff > LAST_VERSO_STAFF { RECTO_SHIFT } else { 0 };
+        // 0x56B529 sets IP1 = 16; draw_text has cleared IP10.
+        let context = ItemContext { code: TEXT_ITEM, pixels: 0, ..ItemContext::of(item) };
+        let start = canvas.buffer_mut().len();
+        if self.refined() && self.rotated() {
+            // The refined style keeps the symbol on the turned line: where
+            // the rotation put its position, less the shift meant for text
+            // records, and turned about itself.
+            let (dx, dy) = self.record_shift();
+            let origin = Pos::new(f64::from(at.x - recto) - dx, f64::from(at.y) + dy);
+            let call = SymbolCall { number, size_x, size_y, thickness: 0, rotation: 0.0 };
+            draw_library_symbol(doc, &context, canvas, origin, self.step, &call);
+            rotate_points(&mut canvas.buffer_mut()[start..], origin.to_point(), self.call.rotation);
+            return;
+        }
         let origin = Pos::new(f64::from(at.x - recto), self.call.origin.y);
         // rotate_points (0x42A5F4) turns the points of a code-16 item about
         // (P3·150, Y_POS) rather than about the symbol.
@@ -390,9 +464,6 @@ impl<'c> Text<'c> {
         let rotation = f64::from(self.call.rotation);
         let own_rotation = if centre.is_some() { 0.0 } else { rotation };
         let call = SymbolCall { number, size_x, size_y, thickness: 0, rotation: own_rotation };
-        // 0x56B529 sets IP1 = 16; draw_text has cleared IP10.
-        let context = ItemContext { code: TEXT_ITEM, pixels: 0, ..ItemContext::of(item) };
-        let start = canvas.buffer_mut().len();
         draw_library_symbol(doc, &context, canvas, origin, self.step, &call);
         if let Some(centre) = centre.filter(|_| trunc(rotation) != 0) {
             rotate_points(&mut canvas.buffer_mut()[start..], centre, self.call.rotation);
@@ -414,11 +485,16 @@ impl<'c> Text<'c> {
             weight,
             italic,
             underline: false,
+            outline: self.refined() && font.outline(),
         }
     }
 
+    /// The record's colour; the refined style draws outline fonts in it
+    /// as SCORE prints them (`false charpath lw stroke`), not in green.
     fn run_colour(&self, font: Font) -> Colour {
-        if font.outline() {
+        if self.refined() {
+            self.call.colour.map_or(Colour::BLACK, |p16| colour::printed(p16, self.options.medium))
+        } else if font.outline() {
             OUTLINE_COLOUR
         } else {
             self.call.colour.map_or(Colour::BLACK, record_colour)
@@ -429,20 +505,33 @@ impl<'c> Text<'c> {
 /// REAL*4 57.29578, degrees per radian in the text rotation.
 const DEGREE: f32 = 57.29578;
 
-/// The rotation leaves font changes, hidden entries and glyphs 80–126 alone.
-fn turns(placed: &Placed) -> bool {
-    matches!((placed.code, placed.mark), (Code::Glyph(g), Mark::At(_)) if !(80..=126).contains(&g))
-}
-
-fn push_string(runs: &mut [(TextStyle, Colour, Vec<TextString>)], at: Point, char: u8) {
+fn push_string(runs: &mut [(TextStyle, Colour, Vec<TextString>)], at: Point, text: String) {
     if let Some((_, _, strings)) = runs.last_mut() {
-        let text = if char == 0 { String::new() } else { char_from_cp1252(char).to_string() };
         strings.push(TextString { at: Point::new(at.x, at.y - RECORD_DROP), text });
     }
 }
 
+/// A cp1252 character as the record's string; 0 is none.
+fn cp1252_text(byte: u8) -> String {
+    if byte == 0 {
+        String::new()
+    } else {
+        char_from_cp1252(byte).to_string()
+    }
+}
+
+/// The recto shift of text above staff 200, as [`start_x`] adds it.
+fn recto_shift(call: &TextCall<'_>) -> f64 {
+    if call.staff > LAST_VERSO_TEXT_STAFF {
+        f64::from(RECTO_SHIFT)
+    } else {
+        0.0
+    }
+}
+
 /// The text record's colour for P14 = -1 (0x56CAF0): P16 as in P26, with
-/// white (1) shown as grey 0.92.
+/// white (1) shown as grey 0.92 on every medium. The refined style takes
+/// [`colour::printed`] instead.
 fn record_colour(p16: f32) -> Colour {
     let p16 = match p16 {
         1.0 => 0.92_f32,
@@ -514,7 +603,10 @@ fn char_from_cp1252(byte: u8) -> char {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use score_format::MusFile;
+    use crate::display::{DisplayList, ItemId};
+    use crate::document::Medium;
+    use crate::render;
+    use score_format::{Item, MusFile, Word};
 
     /// A file without items: every staff is a size-1 staff.
     fn empty_file() -> MusFile {
@@ -555,5 +647,131 @@ mod tests {
     #[test]
     fn override_range() {
         assert_eq!([0, 4, 90, 94, 999, 1004].map(effective_override), [0, 4, 0, 94, 0, 1004]);
+    }
+
+    /// Staff 1 and a text item on `staff` at P3 = 50 with `text` and the
+    /// parameters `changes` (P14 = -1 needs P16).
+    fn text_file(staff: f32, text: &[u8], changes: &[(usize, f32)]) -> MusFile {
+        let mut file = empty_file();
+        let words = |params: &[f32]| params.iter().map(|&p| Word::from_f32(p)).collect::<Vec<_>>();
+        let mut params = vec![16.0, staff, 50.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, text.len() as f32, 0.0];
+        changes.iter().for_each(|&(n, v)| {
+            params.resize(params.len().max(n), 0.0);
+            params[n - 1] = v;
+        });
+        let mut padded = text.to_vec();
+        padded.resize(text.len().div_ceil(4) * 4, b' ');
+        file.items = vec![Item::new(words(&[8.0, 1.0, 0.0, 0.0, 1.0])), Item::with_text(words(&params), padded)];
+        file
+    }
+
+    fn drawn(file: &MusFile, options: Options) -> DisplayList {
+        let list = render(&Document::with_options(file, Options { staff_numbers: false, ..options }));
+        let of_text = |source: Option<ItemId>| source == Some(ItemId(1));
+        DisplayList {
+            shapes: list.shapes.into_iter().filter(|s| of_text(s.source)).collect(),
+            texts: list.texts.into_iter().filter(|t| of_text(t.source)).collect(),
+        }
+    }
+
+    fn strings(list: &DisplayList) -> Vec<(String, Point)> {
+        list.texts.iter().flat_map(|t| t.strings.iter().map(|s| (s.text.clone(), s.origin))).collect()
+    }
+
+    const PRINT: Options = Options { medium: Medium::Print, ..Options::REFINED };
+
+    #[test]
+    fn refined_bytes_from_128_up_draw_their_characters_in_place() {
+        let file = text_file(1.0, b"_00\xe9t\xe7a \xfc", &[]);
+        let (engine, refined) = (strings(&drawn(&file, Options::ENGINE)), strings(&drawn(&file, Options::REFINED)));
+        let text = |s: &[(String, Point)]| s.iter().map(|(t, _)| t.as_str()).collect::<String>();
+        assert_eq!((text(&engine), text(&refined)), ("0t0a0".to_string(), "étçaü".to_string()));
+        assert!(engine.iter().zip(&refined).all(|(e, r)| e.1 == r.1));
+    }
+
+    #[test]
+    fn refined_stand_ins_are_the_printed_characters() {
+        let file = text_file(1.0, b"_00!5?L?o!0!n'", &[]);
+        let text = |options| strings(&drawn(&file, options)).into_iter().map(|(t, _)| t).collect::<String>();
+        assert_eq!((text(Options::ENGINE), text(Options::REFINED)), ("LLxXX'".to_string(), "£Łø•–’".to_string()));
+    }
+
+    #[test]
+    fn refined_outline_fonts_are_outlines_in_the_text_colour() {
+        let file = text_file(1.0, b"__05Outline", &[]);
+        let run = |options| drawn(&file, options).texts.remove(0);
+        let (engine, refined) = (run(Options::ENGINE), run(PRINT));
+        assert_eq!((engine.outline, engine.colour), (false, OUTLINE_COLOUR));
+        assert_eq!((refined.outline, refined.colour), (true, Colour::BLACK));
+    }
+
+    #[test]
+    fn refined_white_text_prints_white() {
+        let file = text_file(1.0, b"_00White", &[(14, -1.0), (16, 1.0)]);
+        let colour = |options| drawn(&file, options).texts[0].colour;
+        let (grey, white) = (Colour { r: 235, g: 235, b: 235 }, Colour { r: 255, g: 255, b: 255 });
+        let engine_print = Options { medium: Medium::Print, ..Options::ENGINE };
+        assert_eq!([colour(engine_print), colour(Options::REFINED), colour(PRINT)], [grey, grey, white]);
+    }
+
+    #[test]
+    fn refined_tabs_stay_on_the_recto_page() {
+        let file = text_file(201.0, b"_00A~60~B", &[]);
+        let xs = |options| strings(&drawn(&file, options)).iter().map(|(_, at)| at.x).collect::<Vec<_>>();
+        let (engine, refined) = (xs(Options::ENGINE), xs(Options::REFINED));
+        assert_eq!(engine[0], refined[0]);
+        assert_eq!(refined[1] - engine[1], RECTO_SHIFT);
+        assert!(engine[1] < engine[0] && refined[1] > refined[0]);
+    }
+
+    /// Distance of `p` from the line through `a` and `b`.
+    fn off_line(p: Point, a: Point, b: Point) -> f64 {
+        let (dx, dy) = (f64::from(b.x - a.x), f64::from(b.y - a.y));
+        (dx * f64::from(p.y - a.y) - dy * f64::from(p.x - a.x)).abs() / dx.hypot(dy)
+    }
+
+    #[test]
+    fn refined_rotation_turns_every_character() {
+        let file = text_file(1.0, b"_00AB!5CD", &[(9, 30.0)]);
+        let on_line = |options| {
+            let s = strings(&drawn(&file, options));
+            off_line(s[2].1, s[0].1, s[4].1)
+        };
+        assert!(on_line(Options::ENGINE) > 300.0);
+        assert!(on_line(Options::REFINED) < 2.0);
+    }
+
+    /// How far the symbols of `A[B]C` shifted by P11 = 5 and turned by 30°
+    /// lie from the unturned ones turned about the text start, at most.
+    fn symbols_off_the_turned_line(options: Options) -> f64 {
+        let points = |degrees: f32| {
+            let file = text_file(1.0, b"_00A[B]C", &[(9, degrees), (11, 5.0)]);
+            let list = drawn(&file, options);
+            list.shapes.iter().flat_map(|s| s.paths.iter().flatten().copied()).collect::<Vec<Point>>()
+        };
+        let (flat, turned) = (points(0.0), points(30.0));
+        assert!(!flat.is_empty() && flat.len() == turned.len());
+        // X_POS = 150·P3 plus 150·P11, on the page.
+        let file = text_file(1.0, b"", &[]);
+        let doc = Document::new(&file);
+        let start = doc.position(doc.item(ItemId(1)).expect("the text")).to_point();
+        let start = start.shifted(750 - crate::page::PAPER_ORIGIN.x, -crate::page::PAPER_ORIGIN.y);
+        let (sin, cos) = 30_f64.to_radians().sin_cos();
+        flat.iter()
+            .zip(&turned)
+            .map(|(p, q)| {
+                let (dx, dy) = (f64::from(p.x - start.x), f64::from(p.y - start.y));
+                let want = (f64::from(start.x) + cos * dx + sin * dy, f64::from(start.y) + cos * dy - sin * dx);
+                (want.0 - f64::from(q.x)).hypot(want.1 - f64::from(q.y))
+            })
+            .fold(0.0, f64::max)
+    }
+
+    /// The engine turns the notes about (150·P3, Y_POS), the refined style
+    /// about the text start as the characters.
+    #[test]
+    fn refined_rotation_turns_symbols_about_the_text_start() {
+        assert!(symbols_off_the_turned_line(Options::ENGINE) > 350.0);
+        assert!(symbols_off_the_turned_line(Options::REFINED) < 4.0);
     }
 }

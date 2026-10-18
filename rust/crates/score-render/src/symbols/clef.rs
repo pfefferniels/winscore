@@ -73,6 +73,11 @@ pub fn draw_clef_symbol(
     placement: &ClefPlacement,
     step: f64,
 ) {
+    draw_library_symbol(doc, context, canvas, placement.at, step, &clef_symbol_call(placement));
+}
+
+/// What draw_clef hands draw_symbol for a placed symbol.
+pub fn clef_symbol_call(placement: &ClefPlacement) -> SymbolCall {
     let (size_x, size_y) = if placement.number >= FIRST_FULL_SIZE_SYMBOL {
         (placement.size_x, placement.size_y)
     } else {
@@ -83,8 +88,7 @@ pub fn draw_clef_symbol(
         };
         (size_x, real(placement.size_y * quarter))
     };
-    let call = SymbolCall::sized(placement.number, size_x, size_y);
-    draw_library_symbol(doc, context, canvas, placement.at, step, &call);
+    SymbolCall::sized(placement.number, size_x, size_y)
 }
 
 /// draw_clef for symbol `number` at `at` with size factors `size` (P6, P7

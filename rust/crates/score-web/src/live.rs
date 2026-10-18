@@ -11,7 +11,7 @@
 use std::ops::Range;
 
 use score_format::MusFile;
-use score_render::{render_item, DisplayList, Document, ItemId};
+use score_render::{render_item, DisplayList, ItemId};
 
 /// Where one item's elements lie in a display list.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -42,7 +42,7 @@ fn stretches(list: &DisplayList, items: usize) -> Vec<Stretch> {
 /// Draws the items at `indices` of `file` again in `page`, a full rendering
 /// of an earlier state of `file` with the same items.
 pub fn rerender(page: &mut DisplayList, file: &MusFile, indices: &[usize]) {
-    let doc = Document::new(file);
+    let doc = crate::drawn(file);
     let spans = stretches(page, file.items.len());
     let mut descending: Vec<usize> = indices.iter().copied().filter(|&i| i < spans.len()).collect();
     descending.sort_unstable_by(|a, b| b.cmp(a));
@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn rerendering_moved_notes_matches_a_full_render() {
         let mut file = mozart();
-        let mut page = render(&Document::new(&file));
+        let mut page = render(&crate::drawn(&file));
         let moved: Vec<usize> = file.items.iter().enumerate().filter(|(_, item)| item.code() == 1).map(|(i, _)| i).take(3).collect();
         for &index in &moved {
             let mut params = file.items[index].params().to_vec();
@@ -87,6 +87,6 @@ mod tests {
             file.items[index] = score_format::Item::new(params);
         }
         rerender(&mut page, &file, &moved);
-        assert_eq!(page, render(&Document::new(&file)));
+        assert_eq!(page, render(&crate::drawn(&file)));
     }
 }

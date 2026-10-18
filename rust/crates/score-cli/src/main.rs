@@ -5,18 +5,20 @@ use std::process::ExitCode;
 
 use score_format::MusFile;
 use score_render::svg::{to_svg, SvgOptions, Viewport};
-use score_render::{render, Colour, DisplayList, Document, Medium, Options, Point, ShapeKind};
+use score_render::{render, Colour, DisplayList, Document, Medium, Options, Point, ShapeKind, Style};
 
-const USAGE: &str = "usage: score-cli render <in.mus> [-o <out.svg>] [--fit] [--stroke <units>] [--print] [--no-staff-numbers]
-       score-cli dump <in.mus> [-o <out.txt>] [--print] [--no-staff-numbers]
+const USAGE: &str = "usage: score-cli render <in.mus> [-o <out.svg>] [--fit] [--stroke <units>] [--print] [--no-staff-numbers] [--engine]
+       score-cli dump <in.mus> [-o <out.txt>] [--print] [--no-staff-numbers] [--engine]
 
   render               draw the page as SVG (page coordinates, y flipped)
   dump                 list the display list, one shape or text run per line
   -o <path>            write here instead of standard output
   --fit                crop to the drawing instead of showing the whole paper
-  --stroke <units>     polyline width in engine units (default: one CSS pixel)
+  --stroke <units>     width of the default pen in engine units (default: 1/150 inch)
   --print              leave out screen aids (staff numbers, invisible items)
-  --no-staff-numbers   leave out the staff numbers only";
+  --no-staff-numbers   leave out the staff numbers only
+  --engine             draw as WinScore's engine does, artefacts included,
+                       instead of the refined style";
 
 /// Margin around the drawing for `--fit`: an eighth of an inch.
 const FIT_MARGIN: i32 = 500;
@@ -28,7 +30,7 @@ enum Command {
     Dump,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 struct Args {
     command: Command,
     input: PathBuf,
@@ -46,7 +48,11 @@ fn parse(args: &[String]) -> Result<Args, String> {
             "dump" => Command::Dump,
             other => return Err(format!("unknown command {other:?}\n{USAGE}")),
         },
-        ..Args::default()
+        input: PathBuf::new(),
+        output: None,
+        options: Options::REFINED,
+        fit: false,
+        stroke: None,
     };
     let mut input = None;
     let mut words = rest.iter();
@@ -60,6 +66,7 @@ fn parse(args: &[String]) -> Result<Args, String> {
             }
             "--print" => parsed.options.medium = Medium::Print,
             "--no-staff-numbers" => parsed.options.staff_numbers = false,
+            "--engine" => parsed.options.style = Style::Engine,
             flag if flag.starts_with('-') => return Err(format!("unknown option {flag}\n{USAGE}")),
             path if input.is_none() => input = Some(PathBuf::from(path)),
             extra => return Err(format!("unexpected argument {extra:?}\n{USAGE}")),
@@ -97,12 +104,13 @@ fn dump(list: &DisplayList) -> String {
             ShapeKind::Fill => 'F',
         };
         let paths = s.paths.iter().map(|p| points(p)).collect::<Vec<_>>().join(" | ");
-        format!("{kind} item={} {} {paths}\n", item_label(s.source), hex(s.colour))
+        let width = if s.width != 0.0 { format!(" w={}", s.width) } else { String::new() };
+        format!("{kind} item={} {}{width} {paths}\n", item_label(s.source), hex(s.colour))
     });
     let texts = list.texts.iter().map(|t| {
         let strings = t.strings.iter().map(|s| format!("{},{} {:?}", s.origin.x, s.origin.y, s.text));
         format!(
-            "T item={} {} {:?} h={} w={} esc={} weight={} {}\n",
+            "T item={} {} {:?} h={} w={} esc={} weight={}{} {}\n",
             item_label(t.source),
             hex(t.colour),
             t.font,
@@ -110,6 +118,7 @@ fn dump(list: &DisplayList) -> String {
             t.width,
             t.escapement,
             t.weight,
+            if t.outline { " outline" } else { "" },
             strings.collect::<Vec<_>>().join(" ")
         )
     });
