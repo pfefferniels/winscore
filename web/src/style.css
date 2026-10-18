@@ -2049,7 +2049,17 @@ button.danger:hover {
     display: block;
   }
 
-  .print-page canvas {
+  /* The page's SVG draws with its own attributes, not the app's icon style
+     or a host page's font. */
+  .print-page svg {
     display: block;
+    fill: initial;
+    stroke: initial;
+    stroke-width: initial;
+    stroke-linecap: initial;
+    stroke-linejoin: initial;
+    font: initial;
+    letter-spacing: initial;
+    word-spacing: initial;
   }
 }
