@@ -25,6 +25,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M8 13h.01M12 13h.01M16 13h.01M7 16h10" /></svg>
           <span>Input music</span>
         </button>
+        <button id="ask" class="accent" type="button" aria-pressed="false" title="AI command: draw a lasso around music, then say what to do (⌥ drag; ⌘K for the selection)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" /><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" /></svg>
+          <span>Ask</span>
+        </button>
         <span class="spacer"></span>
         <span class="doc" id="doc" hidden><span id="status" class="doc-name"></span><span id="doc-state" class="doc-state"></span></span>
         <span class="spacer"></span>
@@ -215,6 +219,7 @@
                 <dt>Double tap</dt><dd>Edit a text where it stands</dd>
                 <dt>Copy, paste</dt><dd>Edit menu; a paste goes where you tapped last</dd>
                 <dt>Group commands</dt><dd>One finger draws the box, two scroll</dd>
+                <dt>Ask, then drag</dt><dd>Draw a lasso around music and say what to do</dd>
               </dl>
             </section>
             <section>
@@ -250,6 +255,8 @@
                 <dt>Type anywhere</dt><dd>Goes to the command bar; <kbd>↵</kbd> runs a SCORE command on the selection</dd>
                 <dt><kbd>↑</kbd><kbd>↓</kbd> in the bar</dt><dd>Earlier commands</dd>
                 <dt><code>IN 3</code></dt><dd>Music input on staff 3</dd>
+                <dt><kbd>⌥</kbd> drag</dt><dd>Lasso around music, then say what to do with it: “remove the stems”, “beam in pairs”, “add c e g”</dd>
+                <dt><kbd class="mod">⌘</kbd><kbd>K</kbd></dt><dd>Say what to do with the selection (or the whole score)</dd>
               </dl>
             </section>
             <section>

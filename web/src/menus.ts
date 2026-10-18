@@ -40,6 +40,10 @@ export interface MenuHooks {
   panelShown(): boolean;
   togglePanel(): void;
   shortcuts(): void;
+  /** The AI command for the selection. */
+  ask(): void;
+  /** Arms the lasso: the next drag draws one. */
+  lasso(): void;
 }
 
 /** How an entry sends its command. */
@@ -132,6 +136,9 @@ export function appMenus(hooks: MenuHooks): Menu[] {
           enabled: () => scored() && hooks.canPaste(),
         },
         { label: 'Duplicate', hint: `${MOD}D`, title: 'Copies of the selected items, ten spaces to the right', id: 'duplicate', run: hooks.duplicate, enabled: selected },
+        'separator',
+        { label: 'Ask…', hint: `${MOD}K`, title: 'Say in words what to do with the selection, or with the whole score', id: 'ask', run: hooks.ask, enabled: scored },
+        { label: 'Lasso', hint: '⌥ drag', title: 'Draw a lasso around music, then say what to do with it', id: 'lasso', run: hooks.lasso, enabled: scored },
         'separator',
         cmd(32704, 'Delete', 'selection', 'Del'),
         cmd(32779, 'Undelete', 'area'),

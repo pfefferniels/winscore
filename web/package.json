@@ -13,11 +13,16 @@
     "typecheck": "tsc --noEmit",
     "screenshots": "node scripts/screenshots.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "smoke:ai": "node scripts/ai-smoke.mjs",
+    "check:ai": "node scripts/ai-check.mjs",
     "perf": "node scripts/perf.mjs"
   },
   "devDependencies": {
     "playwright": "^1.63.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.2"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0"
   }
 }

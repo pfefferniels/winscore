@@ -178,6 +178,33 @@ fn commands_act_on_the_selection_and_undo_in_steps() {
 }
 
 #[test]
+fn actions_after_a_mark_combine_into_one_step_or_roll_back() {
+    let mut e = small();
+    let (first, second) = (e.id_at(1).unwrap(), e.id_at(2).unwrap());
+    e.select(&[first]);
+    e.execute("R 5").unwrap();
+    let mark = e.mark();
+    e.execute("FLI").unwrap();
+    e.select(&[second]);
+    e.delete_selection().unwrap();
+    assert!(e.combine(mark, "flip and delete"));
+    assert_eq!(e.undo_label(), Some("flip and delete"));
+    e.undo();
+    assert_eq!((p(&e, first, 5), e.index_of(second)), (10.0, Some(2)));
+    assert_eq!(e.selection(), [first]);
+    e.redo();
+    assert_eq!(e.mark(), mark + 1);
+
+    let change = e.rollback(mark);
+    assert_eq!((p(&e, first, 5), e.index_of(second)), (10.0, Some(2)));
+    assert_eq!((change.inserted, change.modified), (vec![second], vec![first]));
+    assert_eq!(e.selection(), [first]);
+    assert_eq!((e.undo_label(), e.redo_label()), (Some("R 5"), None));
+    assert!(!e.combine(mark, "nothing"));
+    assert_eq!(p(&e, first, 3), 105.0);
+}
+
+#[test]
 fn ids_survive_deleting_earlier_items() {
     let mut e = small();
     let (first, second) = (e.id_at(1).unwrap(), e.id_at(2).unwrap());

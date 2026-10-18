@@ -288,6 +288,29 @@ impl Score {
         self.undo_label()
     }
 
+    /// A point in the history: the actions after it can be rolled back or
+    /// combined into one undo step (a command made of several actions).
+    pub fn mark(&self) -> u32 {
+        self.0.editor().mark() as u32
+    }
+
+    /// Reverts the actions after `mark`; they cannot be redone.
+    pub fn rollback(&mut self, mark: u32) {
+        self.0.editor_mut().rollback(mark as usize);
+    }
+
+    /// Makes the actions after `mark` one undo step called `label`; false when there are none.
+    pub fn combine(&mut self, mark: u32, label: &str) -> bool {
+        self.0.editor_mut().combine(mark as usize, label)
+    }
+
+    /// Every item's identity in file order: it stays with the item when
+    /// items before it come or go, the file is sorted, or edits are undone.
+    pub fn keys(&self) -> Vec<f64> {
+        let editor = self.0.editor();
+        (0..self.0.items().len()).filter_map(|i| editor.id_at(i)).map(|id| id.0 as f64).collect()
+    }
+
     #[wasm_bindgen(js_name = undoLabel)]
     pub fn undo_label(&self) -> Option<String> {
         self.0.editor().undo_label().map(str::to_owned)
@@ -303,6 +326,14 @@ impl Score {
 #[wasm_bindgen(js_name = commandSupported)]
 pub fn command_supported(line: &str) -> bool {
     score_edit::command::is_supported(line)
+}
+
+/// WinScore's edit words for selected items as JSON, `[[word, [codes…], meaning], …]`,
+/// e.g. `["NST", [1], "No stem (P5)"]`.
+#[wasm_bindgen(js_name = editWords)]
+pub fn edit_words() -> String {
+    let rows: Vec<(&str, &[i32], &str)> = score_edit::command::item::entries().map(|e| (e.word, e.codes, e.meaning)).collect();
+    serde_json::to_string(&rows).expect("words and numbers serialise")
 }
 
 #[cfg(test)]
@@ -362,6 +393,24 @@ mod tests {
         assert_eq!(note.param(4), score.0.item(ItemId(4)).unwrap().param(4));
         score.select(vec![]);
         assert!(score.copy_selection().is_empty());
+    }
+
+    #[test]
+    fn keys_follow_items_through_a_combined_step_and_its_rollback() {
+        let mut score = mozart();
+        let keys = score.keys();
+        assert_eq!(keys.len(), score.item_count());
+        let mark = score.mark();
+        score.select(vec![2]);
+        score.delete_selection().unwrap_or_else(|_| panic!("delete"));
+        score.select(vec![10]);
+        score.execute("R 5").unwrap_or_else(|_| panic!("R 5"));
+        assert!(score.combine(mark, "Ask: tidy"));
+        assert_eq!(score.undo_label().as_deref(), Some("Ask: tidy"));
+        assert_eq!(score.keys()[10], keys[11]);
+        score.rollback(mark);
+        assert_eq!(score.keys(), keys);
+        assert_eq!(score.undo_label(), None);
     }
 
     #[test]
