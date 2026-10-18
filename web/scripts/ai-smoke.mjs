@@ -101,14 +101,18 @@ try {
   await page.waitForFunction(() => document.getElementById('item-count').textContent === '9');
   await page.click('#input');
 
+  /** Two frames: a paint already asked for (an undo's, say) has then happened. */
+  const painted = () => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
   /** The selection's box on screen once the page has painted it after `act` (it is written on paint). */
   const selectedBox = async (act) => {
+    await painted();
     const before = await page.getAttribute('#viewport', 'data-selection');
     await act();
     await page.waitForFunction((b) => {
       const now = document.getElementById('viewport').dataset.selection;
       return now && now !== b;
     }, before);
+    await painted();
     return JSON.parse(await page.getAttribute('#viewport', 'data-selection'));
   };
 
@@ -206,6 +210,7 @@ try {
   // A lasso around empty space on the staff, from its last quarter to past the paper's
   // edge (a tenth of the staff beyond its end), at any zoom: the notes typed go there.
   const staff = await selectedBox(() => page.click('#items li[data-index="0"]'));
+  assert.ok(staff.width > box.width, `the staff's box ${JSON.stringify(staff)} is wider than the notes' ${JSON.stringify(box)}`);
   await page.keyboard.press('Escape');
   const [r0, r1] = [staff.x + 0.75 * staff.width, staff.x + 1.1 * staff.width];
   await page.keyboard.down('Alt');
@@ -215,15 +220,7 @@ try {
   await page.mouse.up();
   await page.keyboard.up('Alt');
   await page.waitForSelector('.ai-prompt:not([hidden])');
-  const scope = await page.textContent('.ai-status');
-  if (!/Empty space on staff 1/.test(scope)) {
-    const layout = await page.evaluate(() => {
-      const v = document.getElementById('viewport');
-      return { scroll: [v.scrollLeft, v.scrollTop], size: [v.clientWidth, v.clientHeight], zoom: document.getElementById('zoom').value, selection: v.dataset.selection };
-    });
-    console.log('empty-space lasso:', JSON.stringify({ scope, notes: box, staff, lasso: [r0, r1, y0, y1], ...layout }));
-  }
-  assert.match(scope, /Empty space on staff 1/);
+  assert.match(await page.textContent('.ai-status'), /Empty space on staff 1/);
   await ask('add notes c g d/f/a');
   assert.match(await page.textContent('.ai-reading'), /Add c g d\/f\/a/);
   await enter();
