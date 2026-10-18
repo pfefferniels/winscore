@@ -417,7 +417,7 @@ try {
   assert.match(await page.textContent('#item h2'), /^\d+ items/);
   await page.keyboard.press('Escape');
 
-  // While a group command waits for its area, the box answers it (editor-core's draw_box).
+  // While a group command waits for its area, the box answers it.
   await menu('edit', 'M');
   await drawBox();
   assert.match(await page.textContent('#prompt'), /^Enter destination staff/);

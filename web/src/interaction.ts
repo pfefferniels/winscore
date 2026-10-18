@@ -66,7 +66,7 @@ const DOUBLE_TAP_MS = 350;
 /** A pan glides on after the finger lifts, slowing with this time constant (as a native scroll does). */
 const GLIDE_MS = 325;
 
-/** WinScore's edit-mode keys (edit.txt): steps in P3 spaces and P4 scale steps. */
+/** WinScore's edit-mode keys: steps in P3 spaces and P4 scale steps. */
 const MOVES: Record<string, [number, number]> = {
   ArrowLeft: [-1, 0],
   ArrowRight: [1, 0],

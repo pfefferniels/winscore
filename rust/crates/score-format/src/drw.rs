@@ -14,17 +14,16 @@
 //!   continuation points. [`Symbol::records`] keeps every point with its pen.
 //!
 //! The engine draws one library unit as 25 engine units (1/160 inch) at
-//! normal size; checked against WScore.exe output for symbols 20-29.
+//! normal size.
 //!
 //! Compact variant (all SCORE 4 libraries, WinScore's `KBRHY.DRW` and
-//! `FAULT.DRW`, user symbols of code 11), as the engine reads it (0x432998):
+//! `FAULT.DRW`, user symbols of code 11), as the engine reads it:
 //! an MS Fortran unformatted sequential file (first byte `K`, sub-records of
 //! up to 128 bytes framed by length bytes, 0x81 for a full one that
 //! continues, 0x82 at the end). The first record holds 11 i16 offsets in
 //! i16 words (from the second on converted to points as offset/3 + 1) and
 //! 10 names of 5 characters; the rest is i16 triples x, y, pen in library
-//! units. Checked against the float variant: SCORE 4's `LIBRB.DRW` decodes to
-//! the points of WinScore's `LB0010.DRW`.
+//! units.
 
 const SYMBOLS: usize = 10;
 const NAME_LEN: usize = 24;

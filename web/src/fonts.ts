@@ -1,6 +1,5 @@
 // Maps the font names of the engine's text stream (the family field of
-// WinScore's fontlib/FM*.FMT, list from impl-text) to bundled faces, see
-// fonts/README.md.
+// assets/fontlib/FM*.FMT) to bundled faces, see fonts/README.md.
 import './fonts.css';
 import type { TextRun } from './display';
 
@@ -52,7 +51,7 @@ export function faceOf(font: string): Face {
 /**
  * Average character width per em of ordinary text (P6 = P7): the record
  * header's width over its height, 32 · 0.825 / 64 (`Text::style` in
- * score-render's text/mod.rs, analysis/engine/text.md).
+ * score-render's text/mod.rs).
  */
 const ORDINARY_WIDTH = 0.4125;
 

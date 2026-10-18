@@ -68,7 +68,7 @@ export function contentSize(zoom: number, extent: Box): { width: number; height:
 
 /**
  * WinScore's Zoom and Reduce: ± max(1, zoom/4) in its integer zoom units,
- * Reduce stopping at 1 (analysis/engine/display.md).
+ * Reduce stopping at 1.
  */
 export function stepZoom(zoom: number, step: 1 | -1): number {
   const units = Math.round((zoom * ZOOM_UNIT) / 100);

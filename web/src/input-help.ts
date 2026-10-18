@@ -1,7 +1,6 @@
 // Contextual help for the five-pass input: what the text before the caret
 // means so far and which keys can follow, after Smith's "Computer Keyboard
-// Input" and the grammar in analysis/engine/input.md. The help only reads
-// the text; score-input decides what is valid.
+// Input". The help only reads the text; score-input decides what is valid.
 
 export interface Hint {
   /** Keys as shown, each in its own key cap, e.g. ['S', 'F', 'N']. */
@@ -81,7 +80,7 @@ interface NoteState {
   repeats: number;
 }
 
-/** Reads a note as the suffix loop of 0x4E2CC8 does; null if the text is not a note. */
+/** Reads a note as the engine's suffix loop does; null if the text is not a note. */
 function readNote(text: string): NoteState | null {
   const m = /^[OP]?([A-G])(.*)$/.exec(text.replace(/\s+/g, ''));
   if (!m) return null;

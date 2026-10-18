@@ -11,7 +11,7 @@
 //! Entry i is the width of the character with glyph index i in the engine's
 //! character order: digits (0–9), capitals (10–35), `. , ( )`, small letters
 //! (40–65), punctuation, the space (94), accented and special characters.
-//! WScore.exe reads the files in its font loader (0x56B845): it computes
+//! WinScore reads the files in its font loader: it computes
 //! advances from the first table (width / 638 per unit of its text scale)
 //! and keeps the second.
 

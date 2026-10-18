@@ -1,6 +1,6 @@
 # Fonts
 
-WinScore's engine names text fonts by the family column of its font-metric files (`WINSCORE 5.01/winscore/fontlib/FM*.FMT`): Times, Helvetica, Helvetica-Narrow, Palatino, AvantGarde, Bookman, NewCenturySchlbk, ZapfChancery, Courier, Symbol, ZapfDingbats, plus weight and italic flags. These are the PostScript base-35 families. The browser draws them with free faces designed to the same metrics, converted to WOFF2 without other changes (fontTools `woff2.compress`).
+WinScore's engine names text fonts by the family column of its font-metric files (`assets/fontlib/FM*.FMT`): Times, Helvetica, Helvetica-Narrow, Palatino, AvantGarde, Bookman, NewCenturySchlbk, ZapfChancery, Courier, Symbol, ZapfDingbats, plus weight and italic flags. These are the PostScript base-35 families. The browser draws them with free faces designed to the same metrics, converted to WOFF2 without other changes (fontTools `woff2.compress`).
 
 | Engine family | Face | Files |
 |---|---|---|
@@ -18,7 +18,7 @@ WinScore's engine names text fonts by the family column of its font-metric files
 
 The URW symbol faces map the Symbol and Dingbats byte codes directly (e.g. `a` → alpha), so engine strings need no re-encoding.
 
-The engine also names Adobe display faces for its fonts 35–71 (list from `impl-text`). They have no free metric-compatible versions, so a bundled face of the same kind stands in. Since the engine places every character itself, only the glyph shapes differ.
+The engine also names Adobe display faces for its fonts 35–71. They have no free metric-compatible versions, so a bundled face of the same kind stands in. Since the engine places every character itself, only the glyph shapes differ.
 
 | Engine family | Stand-in |
 |---|---|

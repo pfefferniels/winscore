@@ -51,7 +51,7 @@ impl EncodedList {
         self.0.coords.clone()
     }
 
-    /// Text runs as an `engine.json` document without shapes.
+    /// Text runs as a JSON document without shapes (see `json.rs`).
     #[wasm_bindgen(getter)]
     pub fn texts(&self) -> String {
         self.0.texts.clone()

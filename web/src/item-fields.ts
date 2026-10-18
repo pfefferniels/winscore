@@ -1,8 +1,8 @@
 // What the side panel offers for each kind of item: its parameters as named
 // settings in groups, each with a control that fits what it holds (a list of
 // clef types, stem up or down, a pitch), read from and written back into
-// SCORE's packed numbers as the WinScore help (analysis/docs/text/winscore/
-// code*.txt) and the renderer (rust/crates/score-render/src/codes) read them.
+// SCORE's packed numbers as the WinScore help and the renderer
+// (rust/crates/score-render/src/codes) read them.
 // Every parameter, with or without a setting here, is also in the panel's
 // list of all parameters.
 

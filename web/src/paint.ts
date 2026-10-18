@@ -301,8 +301,8 @@ function paintShape(ctx: CanvasRenderingContext2D, t: Transform, shape: Shape, c
 /**
  * Rotation of a run's glyphs: clockwise by escapement/10 degrees, following
  * the clockwise line on which the engine places the characters
- * (escapement = 10 × P9, analysis/engine/display.md §3.4). How GDI turns
- * glyphs in a y-up mapping is inferred, not observed on Windows.
+ * (escapement = 10 × P9). How GDI turns glyphs in a y-up mapping is
+ * inferred, not observed on Windows.
  */
 function glyphAngle(run: TextRun): number {
   return (run.escapement / 10) * (Math.PI / 180);
@@ -315,7 +315,7 @@ function paintText(ctx: CanvasRenderingContext2D, t: Transform, run: TextRun, co
   const scaleX = stretch(run);
   // GDI turns text about the cell's top-left corner, one ascent above the
   // baseline, and the engine's positions of rotated characters allow for it
-  // (analysis/engine/text.md, P9), so the glyphs turn about that corner here too.
+  // (P9), so the glyphs turn about that corner here too.
   const drop = ascent(run) * t.k;
   ctx.font = cssFont(run, size);
   ctx.fillStyle = colour;

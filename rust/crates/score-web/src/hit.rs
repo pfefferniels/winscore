@@ -115,7 +115,7 @@ const CELL_ASCENT: f64 = 0.8;
 const CELL_DESCENT: f64 = 0.25;
 
 /// The box of a placed string: from its origin on the baseline (the engine's
-/// y + 96, analysis/engine/display.md), one cell ascent up, one descent down,
+/// y + 96), one cell ascent up, one descent down,
 /// and one average width per character across. Rotation is ignored.
 pub(crate) fn text_bounds(run: &TextRun, origin: Point, text: &str) -> Bounds {
     let height = f64::from(run.height);

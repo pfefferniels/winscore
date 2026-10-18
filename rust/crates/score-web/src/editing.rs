@@ -264,9 +264,9 @@ impl Score {
         self.finish(result)
     }
 
-    /// The item a click at page point (`x`, `y`) means (decision D8): the one
-    /// whose drawn outline lies within `tolerance` units, else the one whose
-    /// reference point WinScore would pick within `radius` units.
+    /// The item a click at page point (`x`, `y`) means: the one whose drawn
+    /// outline lies within `tolerance` units, else the one whose reference
+    /// point WinScore would pick within `radius` units.
     #[wasm_bindgen(js_name = itemAt)]
     pub fn item_at(&self, x: f64, y: f64, tolerance: f64, radius: f64) -> Option<u32> {
         let outline = self.0.hit(At::new(x, y), tolerance);

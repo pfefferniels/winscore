@@ -79,7 +79,7 @@ interface Drag {
 
 const MARGIN = 1000;
 const CLICK_TOLERANCE_PX = 4;
-/** Without an outline under the pointer, WinScore's nearest-reference-point rule applies within this radius (D8). */
+/** Without an outline under the pointer, WinScore's nearest-reference-point rule applies within this radius. */
 const PICK_RADIUS_PX = 12;
 /** A finger covers more than a mouse pointer: it picks from further away. */
 const TOUCH_TOLERANCE_PX = 10;

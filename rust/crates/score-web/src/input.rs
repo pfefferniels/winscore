@@ -41,9 +41,9 @@ pub(crate) fn on_staff(item: &Item, code: i32, staff: u8) -> bool {
     item.code() == code && item.param(2) == f32::from(staff)
 }
 
-/// What the engine takes from the score for a line of input (input-lang's
-/// findings): the staff's size (P5, 0 = 1), its right end (P6) clipping the
-/// range, and the clef of the last clef item on the staff.
+/// What the engine takes from the score for a line of input: the staff's
+/// size (P5, 0 = 1), its right end (P6) clipping the range, and the clef of
+/// the last clef item on the staff.
 pub(crate) fn options(file: &MusFile, line: &InputLine) -> Options {
     let staff = file.items.iter().find(|item| on_staff(item, STAFF_CODE, line.staff));
     let size = staff.map(|s| s.param(5)).filter(|&p5| p5 != 0.0).unwrap_or(1.0);
