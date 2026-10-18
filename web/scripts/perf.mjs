@@ -1,8 +1,8 @@
 // Frame times while dragging an item in the built app (dist/), headless Chromium.
 //
 // usage: node scripts/perf.mjs [FILE.mus ...]   (default: the largest bundled sample)
-// For each score: open it at 300 %, select the middle note from the item
-// list, drag it for about two seconds, and report the longest frame and the
+// For each score: open it at 300 %, select a note from the middle of the
+// score, drag it for about two seconds, and report the longest frame and the
 // long tasks (> 50 ms) the browser saw.
 import { chromium } from 'playwright';
 import { preview } from 'vite';
@@ -24,14 +24,14 @@ async function open(page, file) {
   await page.selectOption('#zoom', '300');
 }
 
-/** Selects the middle note of the item list; the page scrolls it into view. */
-async function selectMiddleNote(page) {
-  const index = await page.evaluate(() => {
-    const notes = [...document.querySelectorAll('#items li')].filter((li) => li.children[1].textContent.endsWith(' Note'));
-    return Number(notes[Math.floor(notes.length / 2)].dataset.index);
-  });
-  await page.click(`#items li[data-index="${index}"]`);
-  return index;
+/** Selects the first note from the middle item of `count` on (`I n`, then Enter for the next item); the page scrolls it into view. */
+async function selectMiddleNote(page, count) {
+  await page.focus('#viewport');
+  await page.keyboard.type(`I ${Math.floor(count / 2) + 1}`);
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Escape');
+  for (let i = 0; i < 100 && !(await page.textContent('#item h2')).endsWith(' · Note'); i++) await page.keyboard.press('Enter');
+  return Number(/^Item (\d+)/.exec(await page.textContent('#item h2'))[1]);
 }
 
 /** The client point at the centre of the highlighted (selected) pixels. */
@@ -54,8 +54,8 @@ async function highlightCentre(page) {
 async function measure(label, file) {
   const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
   await open(page, file);
-  const count = Number((await page.textContent('#item-count')).replace(/\D/g, ''));
-  const index = await selectMiddleNote(page);
+  const count = Number(await page.getAttribute('#app', 'data-items'));
+  const index = await selectMiddleNote(page, count);
   await page.waitForTimeout(100);
   const at = await highlightCentre(page);
   if (!at) throw new Error(`${label}: item ${index} is not drawn on screen`);

@@ -30,6 +30,7 @@ export interface MenuHooks {
   /** Whether something was copied to paste. */
   canPaste(): boolean;
   duplicate(): void;
+  selectAll(): void;
   undoLabel(): string | null;
   redoLabel(): string | null;
   input(): void;
@@ -132,6 +133,7 @@ export function appMenus(hooks: MenuHooks): Menu[] {
           enabled: () => scored() && hooks.canPaste(),
         },
         { label: 'Duplicate', hint: `${MOD}D`, title: 'Copies of the selected items, ten spaces to the right', id: 'duplicate', run: hooks.duplicate, enabled: selected },
+        { label: 'Select all', hint: `${MOD}A`, title: 'Select every item of the score', id: 'select-all', run: hooks.selectAll, enabled: scored },
         'separator',
         cmd(32704, 'Delete', 'selection', 'Del'),
         cmd(32779, 'Undelete', 'area'),

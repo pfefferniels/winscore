@@ -2,7 +2,8 @@
 // the empty paper was clicked, and what is typed on the page goes into it
 // (opening it if need be). A command in words goes to Jev while it is typed;
 // Enter edits the score at once with what Jev read, or has Claude write the
-// edit when Jev is not sure. A SCORE command runs as it is. Numbers the
+// edit when Jev is not sure. A SCORE command runs as on WinScore's command
+// bar, on the selection if there is one. Numbers the
 // command leaves open appear as sliders under the field; dragging one re-does
 // the edit with the new value, live, as the same undo step. While a group
 // command asks for its area, the field shows the question and takes the
@@ -230,13 +231,9 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     return done;
   }
 
-  /**
-   * Whether a line goes to the page as WinScore's command bar sends it: an
-   * answer to the question, IN, or a SCORE command with nothing selected
-   * (with a selection it runs on the command's items, below).
-   */
+  /** Whether a line goes to the page as WinScore's command bar sends it: an answer to the question, IN, or a SCORE command. */
   function native(text: string): boolean {
-    return question !== null || opensInput(text) || (scope?.keys === null && looksLikeScore(text) && hooks.supported(text));
+    return question !== null || opensInput(text) || (looksLikeScore(text) && hooks.supported(text));
   }
 
   function typed() {
@@ -251,10 +248,6 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     }
     if (native(text)) {
       show(`→ ${text}`, '', 'SCORE command');
-      return;
-    }
-    if (looksLikeScore(text) && hooks.supported(text)) {
-      showReading({ script: { summary: `SCORE: ${text}`, knobs: [], steps: [{ do: 'command', items: null, line: text }] }, source: 'SCORE command' });
       return;
     }
     const about = scope && hooks.about(text, scope);
@@ -302,18 +295,15 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     pending?.controller.abort();
     pending = null;
     reading = null;
-    let change: Change | null;
-    own = true;
-    try {
-      change = hooks.run(text);
-    } finally {
-      own = false;
-    }
+    // Emptied first: while the line runs the field may follow a new selection or question, with nothing to read.
+    input.value = '';
+    const change = hooks.run(text);
+    if (box.hidden) return;
     if (change?.message) {
+      input.value = text;
       show(change.message.replace(/^\*+ ?/, ''), 'error', 'SCORE command');
       return;
     }
-    input.value = '';
     if (question === null) show(`✓ ${text}`, 'done', 'SCORE command');
     else idle();
     place();
