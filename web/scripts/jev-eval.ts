@@ -84,6 +84,14 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["notes", "sixteenths beamed in fours", {"action": "beam", "amount": 4, "then": {"action": "option", "target": "notes", "setting": "Value", "option": "16th"}}],
   ["notes", "beam the eighths", {"then": undefined}],
   ["notes", "add staccatos and remove the stems", {"action": "(none)"}],
+  // SCORE's layout commands in words.
+  ["notes", "justify this system", {"action": "layout", "line": "LJ"}],
+  ["notes", "line up and justify", {"action": "layout", "line": "LJ"}],
+  ["notes", "space the notes properly", {"action": "layout", "line": "LJ"}],
+  ["notes", "lay out the music", {"action": "layout", "line": "LJ"}],
+  ["notes", "only line up the beats, don't justify", {"action": "layout", "line": "LI"}],
+  ["notes", "just justify, without lining up", {"action": "layout", "line": "J"}],
+  ["mixed", "line up and justify all staves at once", {"action": "layout", "line": "LJA"}],
 ];
 
 const key = process.env.TYPESAFE_API_KEY;

@@ -136,9 +136,19 @@ const ACTIONS: Record<Action | 'other', string> = {
   shrink: 'Make a size decrease gradually across the items, each a little smaller than the one before, or from one value to a smaller one (sizes from 2 to 1)',
   move: 'Move, shift, raise, lower or transpose the items',
   align: 'Put the items at one height, in a straight row',
+  layout:
+    'Lay out a system as SCORE’s LJ, LI and J commands do: line up the beats of its staves one above the other, or justify the line, spacing the music left to right',
   number: 'Set a named property to a number the command gives, such as size 1.5 or stem length 3',
   command: 'A command in the SCORE program’s own language, short upper-case words and numbers such as FLI or R 5',
   other: 'Something else',
+};
+
+// Jev leans to the first option: LJ goes first, the command for laying out.
+const LAYOUT = {
+  LJ: 'line up and justify (LJ): lay out, space, respace or justify the music',
+  LI: 'only line up (LI): the beats of the staves aligned by the notes’ durations, without justifying',
+  J: 'only justify (J): room made for accidentals, dots and flags, without lining up the beats again',
+  LJA: 'line up and justify all the staves of the page at once, as one single system (LJA)',
 };
 
 const DIRECTIONS = { none: 'no direction is given', up: 'up, higher, raise', down: 'down, lower', left: 'left, earlier, backwards', right: 'right, later, forwards' };
@@ -222,6 +232,7 @@ function jevQuestions(about: About): Record<string, Question> {
       criteria: { none: 'none is named', ...Object.fromEntries(Object.keys(INTERVALS).map((k) => [k, `a ${k}`])) },
     },
     group: { type: 'choice', instructions: 'How many notes does the `command` want under each beam?', criteria: GROUPS },
+    layout: { type: 'choice', instructions: 'Which of SCORE’s layout commands does the `command` ask for?', criteria: LAYOUT },
     then: {
       type: 'choice',
       instructions: 'Besides its main action, does the `command` ask for a second, different thing? Which?',
@@ -418,6 +429,10 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
     }
     case 'command':
       return { ...intent, line: about.text.trim() };
+    case 'layout': {
+      const layout = answers.layout;
+      return { ...intent, line: layout && layout.confidence >= QUITE_SURE ? layout.choice : 'LJ' };
+    }
     default:
       return intent;
   }
@@ -514,6 +529,7 @@ Steps run in order, each on the items the command is about (the selection, or th
   - "command": the SCORE edit word in "line" on the items, such as "NST" or "FLI" (below), or a group command (FLN, FLU, FLD refit stems, beams and slurs over the items' area), or "STAFF", which makes a new staff above the highest.
   - "insert": a line of music input on "staff" between P3 "from" and "to" (0 for all three: where new music goes, given below), from the five passes "notes", "rhythms", "marks", "beams", "slurs". Pass 1: notes C D E F G A B with accidentals F (flat), S (sharp), N, FF, SS and octave 0–8 (C4 is middle C, the octave persists), items separated by /, chord notes by : (C4:E:G), R a rest, M a barline; a P before the first note gives each note the octave nearest the one before (PC4/E/G). Pass 2: one value per note, chord or rest: 1 whole, 2 half, 4 quarter, 8 eighth, 16, 32; a dot after it dots it (4.); always give it, as notes without a value become grace notes. Passes 3–5 may stay empty.
   - "beam": beams over "size" notes or chords each ("0" for every run up to a barline); the engine refits stems and flags.
+  - "layout": SCORE's layout command in "line" on each system the items are on (the staves its barlines join): "LJ" lines up the beats of the system's staves by the notes' durations and justifies the line (what laying out, spacing or justifying the music means), "LI" only lines up, "J" only justifies (makes room for accidentals, dots and flags); "LJA" does LJ on all staves of the page at once, as one system. LJ and LI need the staves of a system to last equally long.
   - "select": the items it picks become the selection, and the steps after it act on them only; nothing is edited. A command to select, keep only or pick out items is this, never a delete.
   - "add": for each item it picks, a new item whose P1, P2, P3 … are "params" (numbers or expressions over the item it is made for; the settings below give each code's parameter numbers); an item whose P1 comes to 0 is not made. Lines (code 4) and slurs (code 5) run from P3, P4 to P6, P5.
 - Which items a step acts on: "codes" (empty for all), "where" (an expression that must hold, or ""), and "where_setting" with "where_is" (only the items whose setting reads that option, e.g. "Mark" and "Staccato", or "" and "").
@@ -539,6 +555,7 @@ A step leaves out its unused fields here for brevity; give every field ("params"
 "stems down on the bottom notes of the chords" → {"summary": "Bottom notes stem down", "knobs": [], "steps": [{"do": "setting", "codes": [1], "where": "level == chord_low && chord_size > 1", "setting": "Stem", "value": "Down"}]}
 "select only the top notes" → {"summary": "Select the top notes", "knobs": [], "steps": [{"do": "select", "codes": [1], "where": "level == chord_high"}]}
 "connect the notes with lines" → {"summary": "Lines from note to note", "knobs": [], "steps": [{"do": "add", "codes": [1], "where": "si < sn - 1", "params": ["4", "staff", "x + 1.5", "level", "next_level", "next_x"]}]}
+"justify this system" → {"summary": "Line up and justify", "knobs": [], "steps": [{"do": "layout", "line": "LJ"}]}
 "add c e g" → {"summary": "Add C E G", "knobs": [], "steps": [{"do": "insert", "staff": 0, "from": 0, "to": 0, "notes": "PC5/E/G", "rhythms": "4/4/4"}]}`;
 }
 
@@ -593,7 +610,7 @@ export const SCRIPT_SCHEMA = {
         additionalProperties: false,
         required: ['do', 'codes', 'where', 'where_setting', 'where_is', 'setting', 'param', 'value', 'right', 'up', 'line', 'staff', 'from', 'to', 'notes', 'rhythms', 'marks', 'beams', 'slurs', 'size', 'params'],
         properties: {
-          do: { type: 'string', enum: ['setting', 'set', 'move', 'delete', 'command', 'insert', 'beam', 'select', 'add'] },
+          do: { type: 'string', enum: ['setting', 'set', 'move', 'delete', 'command', 'layout', 'insert', 'beam', 'select', 'add'] },
           codes: { type: 'array', items: { type: 'integer' } },
           where: STRING,
           where_setting: STRING,
@@ -635,6 +652,8 @@ function stepOf(w: Written): Step {
       return { do: 'delete', items };
     case 'command':
       return { do: 'command', items, line: w.line };
+    case 'layout':
+      return { do: 'layout', items, line: w.line };
     case 'insert':
       return { do: 'insert', staff: w.staff || null, from: w.from || null, to: w.to || null, notes: w.notes, rhythms: w.rhythms, marks: w.marks, beams: w.beams, slurs: w.slurs };
     case 'beam':

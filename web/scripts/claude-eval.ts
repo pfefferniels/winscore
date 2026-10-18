@@ -4,7 +4,7 @@
 //
 // usage: npm run wasm && npm run eval:claude    (CLAUDE_MODEL=claude-haiku-5-5)
 import { readFileSync } from 'node:fs';
-import { codeName, editWords, groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
+import { codeName, editWords, groupCommand, initSync, InputLine, layoutCommand, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
 import { askClaude, type About, type Catalog, type Failed } from '../src/ai-models';
 import { barlines, run, type Access, type Region, type Scope, type Script } from '../src/ai-script';
@@ -36,6 +36,26 @@ interface Case {
   /** The command cannot be done: it must fail with this message, changing nothing. */
   refused?: RegExp;
 }
+
+/** mozart.mus after a line typed on the command bar, by identity. */
+function typed(line: string): Params {
+  const score = new Score(readFileSync(`${process.env.SCORE_SAMPLES}/mozart.mus`));
+  const editor = scoreEditor(score);
+  editor.execute(line);
+  const items: Params = new Map(editor.keys().map((k, i) => {
+    const info = score.item(i)!;
+    const params = info.params;
+    info.free();
+    return [k, params];
+  }));
+  score.free();
+  return items;
+}
+/** Which items differ from mozart.mus after `line`. */
+const unlike = (after: Params, line: string) => {
+  const off = [...typed(line)].filter(([k, p]) => after.get(k)?.join() !== p.join()).length;
+  return off ? `${off} items differ from ${line}` : null;
+};
 
 const notes = (m: Params) => [...m].filter(([, p]) => p[0] === 1).sort((a, b) => a[1][2]! - b[1][2]!);
 const mark = (p: Float32Array) => Math.trunc(Math.abs(p[10] ?? 0) + 1e-6);
@@ -174,6 +194,18 @@ const CASES: Case[] = [
     },
   },
   {
+    text: 'line up and justify the system these notes are on',
+    items: MELODY,
+    all: true,
+    check: (_, after) => unlike(after, 'LJ 7 2'),
+  },
+  {
+    text: 'only justify their system, without lining up the beats again',
+    items: [...MELODY, ...BASS],
+    all: true,
+    check: (_, after) => unlike(after, 'J 7 2'),
+  },
+  {
     text: 'add a c major arpeggio in eighths, up and back down',
     items: null,
     check(before, after) {
@@ -201,6 +233,7 @@ function setUp(items: number[] | null, music?: [string, string], all = false) {
     staves: () => score.staffGeometry(),
     summaries: () => score.itemSummaries(),
     groupCommand,
+    layoutCommand,
     inputLine: (passes, staff, from, to) => new InputLine(passes, staff, from, to),
   };
   const region: Region = { staff: 1, bottom: 1, top: 1, from: 20, to: 180 };

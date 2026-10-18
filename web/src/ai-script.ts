@@ -46,8 +46,10 @@ export type Step =
   /** WinScore's arrow keys: P3 spaces right, scale steps up. */
   | { do: 'move'; items?: Filter | null; right?: Value | null; up?: Value | null }
   | { do: 'delete'; items?: Filter | null }
-  /** A SCORE edit command on the items (FLI, NST, R 5 …); a group command (FLN …) is given their area. */
+  /** A SCORE edit command on the items (FLI, NST, R 5 …); a group command (FLN …) is given their area, LJ their systems. */
   | { do: 'command'; items?: Filter | null; line: string }
+  /** A layout command (LI, J, LJ) on each system the items are on, or LJA on all staves at once. */
+  | { do: 'layout'; items?: Filter | null; line: string }
   /** A line of music input on a staff between two positions (the region's when left out). */
   | { do: 'insert'; staff?: number | null; from?: number | null; to?: number | null; notes: string; rhythms?: string | null; marks?: string | null; beams?: string | null; slurs?: string | null }
   /** The notes under beams, `size` notes or chords each (0: all up to the next barline). */
@@ -93,6 +95,8 @@ export interface Access {
   summaries(): Float32Array;
   /** Whether a command line is a group command only (FLN …), which starts with nothing selected. */
   groupCommand(line: string): boolean;
+  /** Whether a command line is a layout command (LI, J, LJ, LJA) when nothing is selected. */
+  layoutCommand(line: string): boolean;
   inputLine(passes: string[], staff: number, from: number, to: number): InputLine;
 }
 
@@ -248,6 +252,36 @@ export function barlines(access: Access): Map<number, number[]> {
   }
   byStaff.forEach((xs, s) => byStaff.set(s, [...new Set(xs)].sort((a, b) => a - b)));
   return byStaff;
+}
+
+/**
+ * The systems the items are on (else the region's staves), as layout
+ * commands ask for them: the lowest staff and how many staves. A system is
+ * the staves its barlines join (its opening line crosses them all); a staff
+ * no barline joins to others is a system of its own.
+ */
+function systemsOf(access: Access, list: Target[], region: Region | null): [number, number][] {
+  const summaries = access.summaries();
+  const spans: [number, number][] = [];
+  for (let index = 0; 3 * index < summaries.length; index++) {
+    if (summaries[3 * index] !== BARLINE) continue;
+    const [, staff = 0, , crosses = 1] = access.params(index) ?? [];
+    if (crosses > 1) spans.push([staff, staff + crosses - 1]);
+  }
+  spans.sort((a, b) => a[0] - b[0]);
+  const joined: [number, number][] = [];
+  for (const [low, high] of spans) {
+    const last = joined.at(-1);
+    if (last && low <= last[1]) last[1] = Math.max(last[1], high);
+    else joined.push([low, high]);
+  }
+  const staves = list.length ? list.map((t) => t.params[1]!) : region ? Array.from({ length: region.top - region.bottom + 1 }, (_, i) => region.bottom + i) : [];
+  const systems = new Map<number, number>();
+  for (const staff of new Set(staves.map(Math.round))) {
+    const [low, high] = joined.find(([low, high]) => low <= staff && staff <= high) ?? [staff, staff];
+    systems.set(low, high - low + 1);
+  }
+  return [...systems].sort((a, b) => a[0] - b[0]);
 }
 
 /** The smallest, largest and mean value of every parameter over the targets: max_p4, min_p7, mean_level … */
@@ -448,6 +482,21 @@ function area(list: Target[], region: Region | null): string | null {
   return `${Math.min(...staves)} ${Math.max(0, Math.min(...xs) - pad)} ${Math.min(200, Math.max(...xs) + pad)} ${Math.max(...staves)}`;
 }
 
+/**
+ * A layout command with nothing selected: LJA, or one given its system
+ * (LJ 1 2), as it is; LI, J and LJ alone on each system of the items.
+ */
+function layOut(access: Access, line: string, list: Target[], region: Region | null) {
+  const editor = access.editor;
+  editor.select([]);
+  execute(editor, line);
+  if (editor.prompt() === null) return;
+  editor.execute('X');
+  const systems = systemsOf(access, list, region);
+  if (systems.length === 0) throw new Error(`${line} needs the staves of a system`);
+  for (const [lowest, count] of systems) execute(editor, `${line} ${lowest} ${count}`);
+}
+
 function ensureSemicolon(text: string | null | undefined): string {
   const t = (text ?? '').trim();
   return t.endsWith(';') ? t : `${t};`;
@@ -512,6 +561,11 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
     }
     case 'command': {
       const list = targets(access, scope, step.items, knobs);
+      // LJ asks for a system rather than an area (on selected items LI moves them and J justifies text).
+      if (access.groupCommand(step.line) && access.layoutCommand(step.line)) {
+        layOut(access, step.line.trim(), list, scope.region);
+        return list.map((t) => t.key);
+      }
       // A group command (FLN …) starts with nothing selected and is given the items' area.
       editor.select(access.groupCommand(step.line) ? [] : list.map((t) => t.index));
       execute(editor, step.line);
@@ -523,6 +577,12 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
           throw new Error(`${step.line} asks for more than the area`);
         }
       }
+      return list.map((t) => t.key);
+    }
+    case 'layout': {
+      const list = targets(access, scope, step.items, knobs);
+      if (!access.layoutCommand(step.line)) throw new Error(`${step.line} is not a layout command (LI, J, LJ, LJA)`);
+      layOut(access, step.line.trim(), list, scope.region);
       return list.map((t) => t.key);
     }
     case 'insert': {

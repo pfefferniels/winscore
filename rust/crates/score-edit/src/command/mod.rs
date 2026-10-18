@@ -227,6 +227,17 @@ pub fn is_group(line: &str) -> bool {
     }
 }
 
+/// Whether the command of `line` is a layout command when nothing is
+/// selected (LI, J, LJ, LJA): it works on a system of staves, which it asks
+/// for as the lowest staff and how many staves (LJA answers itself). With
+/// items selected, LI and J are edit words instead (a move left, text justify).
+pub fn is_layout(line: &str) -> bool {
+    match parse::tokens(line).first() {
+        Some(Token::Word(w)) => LayoutCommand::word(&w.to_ascii_uppercase()).is_some(),
+        _ => false,
+    }
+}
+
 /// Whether the editor knows the command of `line` in some context; menus
 /// can grey out the entries it does not.
 pub fn is_supported(line: &str) -> bool {
@@ -764,6 +775,8 @@ mod tests {
     fn group_and_layout_commands_are_told_from_edit_words() {
         assert!(is_group("FLN") && is_group("fln 1 0 200 2") && is_group("M") && is_group("LJ 1 2"));
         assert!(!is_group("NST") && !is_group("R 5") && !is_group("FLI") && !is_group("D 2") && !is_group("1 1 50"));
+        assert!(is_layout("LJ") && is_layout("lj 1 2") && is_layout("LI") && is_layout("J") && is_layout("LJA"));
+        assert!(!is_layout("FLN") && !is_layout("M") && !is_layout("JR") && !is_layout("1 1 50"));
     }
 
     #[test]

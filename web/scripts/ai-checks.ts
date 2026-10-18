@@ -3,7 +3,7 @@
 // a score through score-web. Run by scripts/ai-check.mjs.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
+import { groupCommand, initSync, InputLine, layoutCommand, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
 import { compile } from '../src/ai-expr';
 import { musicIn, namesCount, numbersIn, quartersFor } from '../src/ai-values';
@@ -79,6 +79,7 @@ const access: Access = {
   staves: () => score.staffGeometry(),
   summaries: () => score.itemSummaries(),
   groupCommand,
+  layoutCommand,
   inputLine: (passes, staff, from, to) => new InputLine(passes, staff, from, to),
 };
 /** Parameter n of an item, to four places (they are single precision). */
@@ -235,5 +236,40 @@ for (const name of ['mozart.mus', '000.mus']) {
   }
   sample.free();
 }
+
+// Layout commands on the systems of the items. mozart.mus has four, staves
+// 1–2, 3–4, 5–6 and 7–8, each joined by its barlines: LJ alone on a note of
+// staff 1 and one of staff 8 does LJ 1 2 and LJ 7 2, not one system of staves 1–9.
+function mozart() {
+  const sample = new Score(readFileSync(`${process.env.SCORE_SAMPLES}/mozart.mus`));
+  const sampleAccess: Access = { ...access, editor: scoreEditor(sample), params(index) {
+    const info = sample.item(index);
+    if (!info) return null;
+    const params = info.params;
+    info.free();
+    return params;
+  }, staves: () => sample.staffGeometry(), summaries: () => sample.itemSummaries() };
+  const noteOn = (staff: number) => sampleAccess.editor.keys()[Array.from({ length: sample.itemCount() }, (_, i) => sampleAccess.params(i)!).findIndex((q) => q[0] === 1 && q[1] === staff)]!;
+  return { sample, access: sampleAccess, noteOn };
+}
+const laidOut = (lines: string[]) => {
+  const { sample, access: typed } = mozart();
+  for (const line of lines) assert.equal(typed.editor.execute(line)?.message ?? null, null, line);
+  const bytes = sample.save().join();
+  sample.free();
+  return bytes;
+};
+const field = mozart();
+const lj = run({ summary: 'SCORE: LJ', knobs: [], steps: [{ do: 'command', items: null, line: 'LJ' }] }, field.access, { keys: [field.noteOn(1), field.noteOn(8)], region: null }, '“LJ”');
+assert.ok(lj.changed);
+assert.equal(field.access.editor.prompt(), null);
+assert.equal(field.sample.save().join(), laidOut(['LJ 1 2', 'LJ 7 2']), 'LJ alone: each system the items are on');
+field.sample.free();
+// Jev's or Claude's layout step: J on a selected note justifies its system, not text.
+assert.deepEqual(scriptFor({ action: 'layout', target: 'all', line: 'J' }).steps, [{ do: 'layout', items: null, line: 'J' }]);
+const justified = mozart();
+run(scriptFor({ action: 'layout', target: 'all', line: 'J' }), justified.access, { keys: [justified.noteOn(8)], region: null }, '“justify only”');
+assert.equal(justified.sample.save().join(), laidOut(['J 7 2']));
+justified.sample.free();
 
 console.log('ai checks: ok');

@@ -95,7 +95,8 @@ export type Action =
   | 'move'
   | 'align'
   | 'number'
-  | 'command';
+  | 'command'
+  | 'layout';
 
 /** A number setting that "bigger", "longer" … change, and how. */
 export interface Measure {
@@ -139,7 +140,7 @@ export interface Intent {
   notes?: string;
   typed?: string;
   rhythms?: string;
-  /** number: the value; command: the line. */
+  /** number: the value; command: the line; layout: LI, J, LJ or LJA. */
   value?: number;
   line?: string;
   /** A second action the command asks for ("staccato and stems up"). */
@@ -308,7 +309,19 @@ function scriptForOne(intent: Intent): Script {
       };
     case 'command':
       return one(intent.line ?? '', { do: 'command', items: target.id === 'all' ? null : items, line: intent.line ?? '' });
+    case 'layout': {
+      const line = intent.line && LAYOUTS[intent.line] ? intent.line : 'LJ';
+      return one(LAYOUTS[line]!, { do: 'layout', items: null, line });
+    }
   }
 }
+
+/** SCORE's layout commands, as said in a summary. */
+export const LAYOUTS: Record<string, string> = {
+  LJ: 'Line up and justify each system',
+  LI: 'Line up each system',
+  J: 'Justify each system',
+  LJA: 'Line up and justify all staves as one system',
+};
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

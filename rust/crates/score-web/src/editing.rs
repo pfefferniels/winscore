@@ -335,6 +335,13 @@ pub fn group_command(line: &str) -> bool {
     score_edit::command::is_group(line)
 }
 
+/// Whether `line` is a layout command when nothing is selected (LI, J, LJ,
+/// LJA): it works on a system, asked for as the lowest staff and how many staves.
+#[wasm_bindgen(js_name = layoutCommand)]
+pub fn layout_command(line: &str) -> bool {
+    score_edit::command::is_layout(line)
+}
+
 /// WinScore's edit words for selected items as JSON, `[[word, [codes…], meaning], …]`,
 /// e.g. `["NST", [1], "No stem (P5)"]`.
 #[wasm_bindgen(js_name = editWords)]
