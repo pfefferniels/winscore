@@ -1,7 +1,0 @@
-IN 1 0 0 .8
-10 190
-AS4:A(FF+:C:B(SSU/RD/BJ/OA4/OG/MS/SO/C/ODN/../M/E/PBN5/../C(F3/.;
-T/4./32/8/T/T/S/H/H/2/E/4/8.;
-TME 2/F2 2:4/D 2/O 9 9;
-;
-+10 12/+8/2 -3;

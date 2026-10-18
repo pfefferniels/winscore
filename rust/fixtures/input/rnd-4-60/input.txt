@@ -1,7 +1,0 @@
-IN 1
-2 150
-3 4/PES4/MR/EU/../R/F:CN/RD/FN/OAN/B:A(SS:BF:D/ODN:F/ODN:F/BA/Q+/ODN:F/RF;
-Q/1/8../16/24/4./32/4/Q/S/1/T/4;
-;
-3 5;
-0 4/+508 9;

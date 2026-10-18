@@ -1,7 +1,0 @@
-IN 1 0 0 .8
-;
-TE/C5/GS/GF:F:E:B/GF:F:E:B/C/GF/SO/EF3/R/CF/RU/BF/SU/G/M/AS:B:ES;
-24/H/24/T/8/Q/32/8/8./4/8/2/8.;
-CR 6/TM 2/T 9:10;
-3 5/-7 9;
-7 10;

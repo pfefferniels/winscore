@@ -1,7 +1,0 @@
-IN 1 0 0 0 180
-;
-AL/K1S/RW/D5/ES3/ES3/ODU:G:AF/EN:DDDD+:EU:FN;
-1/H/8/E/8/T;
-;
-2 5 6;
--2 3/1 3;

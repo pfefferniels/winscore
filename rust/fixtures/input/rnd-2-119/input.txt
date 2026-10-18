@@ -1,7 +1,0 @@
-IN 1
-10 190
-BA/F3:GF:BS/RI/RD/SD/G/R/FF5:BF:C/M;
-H/4/2/12/4./H;
-;
-;
-;

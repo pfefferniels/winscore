@@ -1,7 +1,0 @@
-IN 1
-30 200
-AL/COM/-TR/B3/OBF5/OF4/PBF:EF-/FN:E/G:D:BN:C/PE;
-4/32/4./8./S/8../Q;
-OB 6.5 7/A 2/WS 4:6;
-4 6;
-+6 7 4/2 2;

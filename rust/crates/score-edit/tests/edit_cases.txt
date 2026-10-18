@@ -1,0 +1,5474 @@
+# Edit command cases, replayed by tests/edits.rs; the expected items are in
+# edit_expected.txt. Each case: "== name", an optional "base:" line with the
+# starting items (default "8 1; 1 1 100 6 10 0 1": a staff and a quarter note),
+# then command lines as typed. The test leaves edit mode (X) before reading the
+# items.
+
+# -- parameters by number ------------------------------------------------------
+
+== param_pairs
+I 2
+5 20 7 2
+X
+== param_lone_number_sets_zero
+I 2
+3 50 4
+== param_commas
+I 2
+3,50,4,8
+== param_negate
+I 2
+-5
+== param_negate_unset
+I 2
+-9
+== param_relative
+I 2
+600 5
+== param_relative_slash
+I 2
+/3 -10.5
+== param_relative_p2
+I 2
+200 1
+== param_relative_two
+I 2
+300 -0.25 400 2
+== param_transfer
+I 2
+50000 4
+== param_transfer_slash
+I 2
+//8 4
+== param_zero_range
+base: 8 1; 1 1 100 6 10 1 0 3 12 4 5 6 7
+I 2
+7 -9999 10
+== param_zero_from
+base: 8 1; 1 1 100 6 10 1 0 3 12 4 5 6 7
+I 2
+9 -9999
+== param_code_change
+I 2
+1 2
+== param_p30
+I 2
+30 5
+== param_p45
+I 2
+45 5
+== param_p46_ignored
+I 2
+46 5
+== param_staff_up
+base: 8 1; 8 2 0 0; 1 1 100 6 10 0 1
+I 3
+/2 1
+
+# -- moves -----------------------------------------------------------------------
+
+== move_right_up
+I 2
+R1
+U1
+== move_counts
+I 2
+R 5
+D 3
+== move_attached_counts
+I 2
+L1
+L10
+D1
+D10
+== move_negative
+I 2
+R -2
+== move_fraction
+I 2
+R 2.5
+== move_double_letter
+I 2
+RR
+UU
+== move_triple_letter
+I 2
+RRR
+LL
+DDD
+== move_repeat_count
+I 2
+R 3
+R
+== move_repeat_shared_by_axis
+I 2
+U 3
+U
+D
+== move_repeat_per_axis
+I 2
+R 3
+U
+== move_double_sets_increment
+I 2
+RR
+R
+== move_double_then_left
+I 2
+RR
+L
+== move_count_then_double
+I 2
+R 3
+RR
+R
+== move_inch_alone
+I 2
+RI
+== move_inch_right
+I 2
+RI 1
+== move_inch_up
+I 2
+UI 1
+== move_inch_up_small_staff
+base: 8 1 0 0 0.5; 1 1 100 6 10 0 1
+I 2
+UI 1
+== move_cm_right
+I 2
+RC 1
+== move_cm_down
+I 2
+DC 1
+== move_rest
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+R 1
+U 2
+== move_clef
+base: 8 1; 3 1 2 0 1
+I 2
+R 1
+U 2
+== move_line
+base: 8 1; 4 1 50 5 10 120
+I 2
+R 1
+U 2
+== move_line_without_right_end
+base: 8 1; 4 1 100 3 0 0
+I 2
+R 1
+U 2
+== move_hairpin
+base: 8 1; 4 1 100 -1 999 120
+I 2
+R 1
+U 2
+== move_slur
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+R 1
+U 2
+== move_beam
+base: 8 1; 6 1 50 5 10 120 1
+I 2
+R 1
+U 2
+== move_trill
+base: 8 1; 7 1 50 12 1 120
+I 2
+R 1
+U 2
+== move_staff
+base: 8 1 0 0 1 200
+I 1
+R 1
+U 2
+== move_symbol
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+R 1
+U 2
+== move_number
+base: 8 1; 10 1 100 13 1
+I 2
+R 1
+U 2
+== move_box
+base: 8 1; 12 1 50 12 0 10
+I 2
+R 1
+U 2
+== move_barline
+base: 8 1; 14 1 100 1
+I 2
+R 1
+U 2
+== move_eps
+base: 8 1; 15 1 100 13 1 5 6
+I 2
+R 1
+U 2
+== move_key_signature
+base: 8 1; 17 1 100 0 2
+I 2
+R 1
+U 2
+== move_meter
+base: 8 1; 18 1 100 0 4 4
+I 2
+R 1
+U 2
+
+# -- stems -------------------------------------------------------------------------
+
+== flip_up_to_down
+I 2
+FLI
+== flip_down_to_up
+base: 8 1; 1 1 100 6 21 0 1
+I 2
+FLI
+== flip_keeps_offset
+base: 8 1; 1 1 100 6 12.25 0 1
+I 2
+FLI
+== flip_stemless
+base: 8 1; 1 1 100 6 2 0 1
+I 2
+FLI
+== flip_lowercase
+I 2
+fli
+== flip_slur
+base: 8 1; 5 1 50 5 10 120 3 -1
+I 2
+FLI
+== no_stem
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+NST
+== no_stem_down_offset
+base: 8 1; 1 1 100 6 21.5 0 1
+I 2
+NST
+== stem_shorter_longer
+I 2
+STM
+STM
+STP
+== stem_normal
+base: 8 1; 1 1 100 6 10 0 1 3
+I 2
+STN
+
+# -- accidentals and enharmonics ---------------------------------------------------
+
+== flat
+I 2
+FLT
+== flat_two_letters
+I 2
+FL
+== sharp
+I 2
+SHP
+== natural
+I 2
+NAT
+== double_flat
+I 2
+DBF
+== double_sharp
+I 2
+DBS
+== no_accidental_keeps_offset
+base: 8 1; 1 1 100 6 112.25 0 1
+I 2
+NAC
+== no_accidental_stemless
+base: 8 1; 1 1 100 6 1 0 1
+I 2
+NAC
+== sharp_drops_parentheses
+base: 8 1; 1 1 100 6 111.3 0 1
+I 2
+SHP
+== sharp_stemless
+base: 8 1; 1 1 100 6 1 0 1
+I 2
+SHP
+== enh_a_sharp
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+ENH
+== enh_a_flat
+base: 8 1; 1 1 100 6 11 0 1
+I 2
+ENH
+== enh_a_natural
+base: 8 1; 1 1 100 6 13 0 1
+I 2
+ENH
+== enh_a_plain
+I 2
+ENH
+== enh_a_double_sharp
+base: 8 1; 1 1 100 6 15 0 1
+I 2
+ENH
+== enh_a_double_flat
+base: 8 1; 1 1 100 6 24 0 1
+I 2
+ENH
+== enh_f_sharp
+base: 8 1; 1 1 100 4 12 0 1
+I 2
+ENH
+== enh_g_flat
+base: 8 1; 1 1 100 5 11 0 1
+I 2
+ENH
+== enh_c_sharp
+base: 8 1; 1 1 100 8 12 0 1
+I 2
+ENH
+== enh_e_sharp
+base: 8 1; 1 1 100 3 12 0 1
+I 2
+ENH
+== enh_b_sharp
+base: 8 1; 1 1 100 7 12 0 1
+I 2
+ENH
+== enh_f_flat
+base: 8 1; 1 1 100 4 11 0 1
+I 2
+ENH
+== enh_c_flat
+base: 8 1; 1 1 100 8 11 0 1
+I 2
+ENH
+== enh_e_plain
+base: 8 1; 1 1 100 3 10 0 1
+I 2
+ENH
+== enh_f_plain
+base: 8 1; 1 1 100 4 10 0 1
+I 2
+ENH
+== enh_c_plain
+base: 8 1; 1 1 100 1 10 0 1
+I 2
+ENH
+== enh_below_staff
+base: 8 1; 1 1 100 -3 12 0 1
+I 2
+ENH
+== enh_cue
+base: 8 1; 1 1 100 104 12 0 1
+I 2
+ENH
+== enh_stemless
+base: 8 1; 1 1 100 6 2 0 1
+I 2
+ENH
+== enh_keeps_parentheses
+base: 8 1; 1 1 100 6 112.3 0 1
+I 2
+ENH
+== enh_plus_one
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+ENH+1
+== enh_minus_one
+base: 8 1; 1 1 100 6 11 0 1
+I 2
+ENH-1
+== enh_up
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+ENHU
+== enh_up_impossible
+base: 8 1; 1 1 100 6 11 0 1
+I 2
+ENHU
+== enh_up_plain
+I 2
+ENHU
+== enh_up_e_sharp
+base: 8 1; 1 1 100 3 12 0 1
+I 2
+ENHU
+== enh_down
+base: 8 1; 1 1 100 6 11 0 1
+I 2
+ENHD
+== enh_down_plain
+I 2
+ENHD
+== enh_down_f_natural
+base: 8 1; 1 1 100 4 13 0 1
+I 2
+ENHD
+
+# -- marks -------------------------------------------------------------------------
+
+== mark_ficta_flat
+I 2
+FCF
+== mark_wedge
+I 2
+W
+== mark_accent
+I 2
+AC
+== mark_accent_replaces
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 -7.2
+I 2
+AC
+== mark_tenuto
+I 2
+TN
+== mark_staccato
+I 2
+STA
+== mark_wedge_staccato
+I 2
+WST
+== mark_accent_staccato
+I 2
+AST
+== mark_tenuto_staccato
+I 2
+TNS
+== mark_down_bow
+I 2
+DNB
+== mark_up_bow
+I 2
+UPB
+== mark_harmonic
+I 2
+HAR
+== mark_fermata
+I 2
+FE
+== mark_arsis
+I 2
+ARS
+== mark_thesis
+I 2
+THE
+== mark_mordent
+I 2
+MO
+== mark_inverted_mordent
+I 2
+IMO
+== mark_heavy_wedge
+I 2
+HW
+== mark_trill
+I 2
+TR
+== mark_trill_flat
+I 2
+TRF
+== mark_trill_sharp
+I 2
+TRS
+== mark_trill_natural
+I 2
+TRN
+== mark_plus
+I 2
+PLU
+== mark_accent_tenuto
+I 2
+ACT
+== mark_none
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7
+I 2
+NOM
+== mark_flip
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7
+I 2
+FLM
+== mark_flip_back
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 -7.2
+I 2
+FLM
+== mark_flip_twice
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 5
+I 2
+FLM
+FLM
+== mark_left_up
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7
+I 2
+MKL
+MKU
+MKU
+== mark_right_down
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7
+I 2
+MKR
+MKD
+== mark_home
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7 0 2 3
+I 2
+MKH
+MKV
+
+# -- rhythm --------------------------------------------------------------------------
+
+== rhythm_eighth
+I 2
+RHE
+== rhythm_eighth_from_dotted
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+RHE
+== rhythm_half
+I 2
+RHH
+== rhythm_whole
+I 2
+RHW
+== rhythm_double_whole
+I 2
+RHD
+== rhythm_sixteenth_from_dotted
+base: 8 1; 1 1 100 6 10 0 1 0 10
+I 2
+RHS
+== rhythm_32nd
+I 2
+RH32
+== rhythm_64th
+I 2
+RH64
+== rhythm_quarter_keeps_colour
+base: 8 1; 1 1 100 6 10 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+I 2
+RHQ
+== rhythm_grace
+I 2
+RHG
+== rest_eighth
+base: 8 1; 2 1 100 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+I 2
+RHE
+== rest_32nd
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RH32
+== rest_64th
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RH64
+== rest_double_whole
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RHD
+== rest_quarter
+base: 8 1; 2 1 100 0 2 0 0.25
+I 2
+RHQ
+== dot
+I 2
+DOT
+== dot_eighth
+base: 8 1; 1 1 100 6 10 0 0.5 0 1
+I 2
+DOT
+== dot_twice
+I 2
+DOT
+DOT
+== dot_from_double
+base: 8 1; 1 1 100 6 10 0 1.75 0 20
+I 2
+DOT
+== double_dot
+I 2
+DDT
+== double_dot_from_dotted
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+DDT
+== triplet_eighth
+base: 8 1; 1 1 100 6 10 0 0.5 0 1
+I 2
+TRP
+== triplet_quarter
+I 2
+TRP
+== triplet_half
+base: 8 1; 1 1 100 6 10 1 2
+I 2
+TRP
+== triplet_sixteenth
+base: 8 1; 1 1 100 6 10 0 0.25 0 2
+I 2
+TRP
+== triplet_not_from_dotted
+base: 8 1; 1 1 100 6 10 0 0.75 0 11
+I 2
+TRP
+== quintuplet_eighth
+base: 8 1; 1 1 100 6 10 0 0.5 0 1
+I 2
+RHU
+== quintuplet_quarter
+I 2
+RHU
+== quintuplet_not_from_dotted
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+RHU
+== add_tail
+base: 8 1; 1 1 100 6 10 0 0.5
+I 2
+ADT
+== no_tail
+base: 8 1; 1 1 100 6 10 0 0.5 0 11
+I 2
+NTA
+
+# -- size and offsets ---------------------------------------------------------------
+
+== cue
+I 2
+CUE
+== cue_off
+base: 8 1; 1 1 100 106 10 0.65
+I 2
+CUX
+== offset_left
+I 2
+OFL
+== offset_right
+I 2
+OFR
+== offset_minus_twice
+I 2
+OFM
+OFM
+== offset_plus
+I 2
+OFP
+== offset_none
+base: 8 1; 1 1 100 6 10 0 1 0 0 20
+I 2
+NOF
+
+# -- clefs in edit mode ----------------------------------------------------------------
+
+== clef_to_treble
+base: 8 1; 3 1 2 0 1
+I 2
+TREB
+== clef_to_bass
+base: 8 1; 3 1 2
+I 2
+BASS
+== clef_to_alto
+base: 8 1; 3 1 2
+I 2
+ALTO
+== clef_to_baritone
+base: 8 1; 3 1 2
+I 2
+BAR
+== clef_to_soprano
+base: 8 1; 3 1 2
+I 2
+SOP
+== clef_to_mezzo
+base: 8 1; 3 1 2
+I 2
+MEZ
+== clef_to_mini
+base: 8 1; 3 1 2
+I 2
+MINI
+== clef_octave_below
+base: 8 1; 3 1 2
+I 2
+5 .8
+
+# -- edit mode: abort, copy, delete, navigation ------------------------------------------
+
+== abort
+I 2
+5 20
+AB
+== abort_exit
+I 2
+5 20
+ABX
+== abort_then_go_on
+I 2
+R 4
+U 2
+AB
+R 1
+== copy_exit
+I 2
+R 10
+C
+== copy_keeps_original
+I 2
+R 4
+C
+I 2
+U 1
+== copy_continue
+I 2
+R 10
+CC
+U 2
+== copy_next
+I 2
+R 10
+CX
+== copy_next_item
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 1 1 140 8 10 0 1
+I 2
+R 1
+CX
+R 2
+== copy_next_from_last
+I 2
+R 2
+CX
+U 1
+== delete
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 20 0 1
+I 2
+DE
+== delete_moves_on
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 1 1 140 8 10 0 1
+I 2
+DE
+R 1
+== delete_last_leaves_edit_mode
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 1 1 140 8 10 0 1
+I 4
+DE
+R 1
+== undelete
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 20 0 1
+I 2
+DE
+X
+UND
+== delete_next_same_code
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 2
+DEN
+R 1
+== delete_back_same_code
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 4
+DEB
+R 1
+== next_item
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 2
+NEX
+R 1
+== previous_item
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 3
+B
+R 1
+== next_same_code
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 2
+NZ
+R 1
+== previous_same_code
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1; 1 1 120 7 10 0 1
+I 4
+BZ
+R 1
+== exit_to_item
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 1 1 140 8 10 0 1
+I 2
+R 1
+X 4
+R 2
+== edit_last_item
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+II
+R 1
+== edit_current_item
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+I
+R 1
+== edit_beyond_last
+I 99
+R 1
+== edit_item_zero
+I 0
+R 1
+
+# -- new items -------------------------------------------------------------------------
+
+== new_raw_note
+1 1 50 3 20
+== new_raw_staff
+8 2
+== new_raw_code_only
+base: 8 1; 8 2
+1
+== new_note
+NOTE
+== new_note_lowercase
+base: 8 1
+note
+== new_note_three_letters
+NOT
+== new_note_args
+NOTE 1 50
+== new_note_zero_args_keep_defaults
+base: 8 1; 8 2
+NOTE 0 0 5
+== new_note_zero_p4
+base: 8 1
+NOTE 1 50 0
+== new_note_on_given_staff
+base: 8 1; 8 2
+NOTE 2 30
+== new_note_flat
+NOTEF
+== new_note_sharp
+NOTES
+== new_note_natural
+NOTEN
+== new_note_down
+NOTED
+== new_note_down_flat
+NOTEDF
+== new_note_down_sharp
+NOTEDS
+== new_note_down_natural
+NOTEDN
+== new_note_eighth
+NOTE RHE
+== new_note_half
+NOTE RHH
+== new_note_whole
+NOTE RHW
+== new_note_sixteenth
+NOTE RHS
+== new_note_then_move
+NOTE
+R 3
+X
+== new_on_last_items_staff
+base: 8 1; 8 2; 1 2 100 6 10 0 1
+NOTE
+== new_on_last_items_staff_1
+base: 8 2; 1 2 100 6 10 0 1; 8 1
+NOTE
+== new_on_last_staff_item
+base: 8 1; 8 3; 8 2
+NOTE
+== new_after_editing_staff_2
+base: 8 1; 8 2; 1 2 100 6 10 0 1; 1 1 100 6 10 0 1
+I 3
+X
+NOTE
+== new_after_editing_staff_1
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 2 100 6 10 0 1
+I 3
+X
+NOTE
+== new_into_empty_score
+base: 1 3 100 6 10 0 1
+I 1
+DE
+NOTE
+== new_rest
+REST
+== new_rest_args
+base: 8 1
+REST 1 40 4
+== new_rest_eighth
+REST RHE
+== new_rest_half
+REST RHH
+== new_rest_whole
+REST RHW
+== new_rest_sixteenth
+REST RHS
+== new_treble
+TREB
+== new_treble_short
+TRE
+== new_treble_mini
+TREBM
+== new_treble_ignores_position
+base: 8 1
+TREB 1 50
+== new_clef
+CLEF
+== new_clef_short
+CLE
+== new_clef_mini
+CLEFM
+== new_bass
+BASS
+== new_bass_short
+BAS
+== new_bass_mini
+BASSM
+== new_bass_args
+base: 8 1; 8 2
+BASS 2 30
+== new_alto
+ALTO
+== new_alto_short
+ALT
+== new_alto_mini
+ALTOM
+== new_tenor
+TENOR
+== new_tenor_short
+TEN
+== new_percussion
+PERC
+== new_percussion_short
+PER
+== new_tab_clef
+CLEFTA
+== new_barline
+BAR
+== new_barline_args
+base: 8 1
+BAR 1 50 2
+== new_barline_two_staves
+BAR2
+== new_double_bar
+BARD
+== new_heavy_double_bar
+BARH
+== new_repeat_left
+BARL
+== new_repeat_right
+BARR
+== new_double_repeat
+BARRD
+== new_brace
+BARBC
+== new_bracket
+BARBK
+== new_line
+LINE
+== new_line_short
+LIN
+== new_crescendo
+CRH
+== new_decrescendo
+DCH
+== new_crescendo_dashes
+CR-
+== new_decrescendo_dashes
+DC-
+== new_dashes
+DASH
+== new_arpeggio
+ARP
+== new_slur
+SLUR
+== new_slur_down
+SLURD
+== new_tuplet_bracket
+SLUR3
+== new_tuplet_bracket_down
+SLURD3
+== new_tie
+TIE
+== new_tie_down
+TIED
+== new_first_ending
+END1
+== new_second_ending
+END2
+== new_ending
+END
+== new_beam
+BEAM
+== new_beam_two
+BEAM2
+== new_beam_down
+BEAMD
+== new_tremolo
+TREM
+== new_tremolo_down
+TREMD
+== new_tremolo_two
+TREM2
+== new_trill
+TRILL
+== new_trill_short
+TRI
+== new_ottava
+OVA
+== new_ottava_bassa
+OBA
+== new_quindicesima
+OMA
+== new_piano_pedal
+PEDA
+== new_pedal_line
+PEDB
+== new_pedal_line_2
+PEDC
+== new_harp_pedals
+HARP
+== new_staff
+STAFF
+== new_staff_short
+STA
+== new_staff_above_highest
+base: 8 1; 8 3
+STAFF
+== new_staff_without_staves
+base: 1 1 100 6 10 0 1
+STAFF
+== new_number
+NUMB
+== new_number_short
+NUM
+== new_box
+BOX
+== new_circle
+CIRCLE
+== new_circle_short
+CIR
+== new_guitar_grid
+GUIT
+== new_key_signature
+KSIG
+== new_key_two_sharps
+KSIG+2
+== new_key_three_flats
+KSIG-3
+== new_key_three_flats_bass
+KSIG-3B
+== new_key_one_sharp_alto
+KSIG+1A
+== new_meter
+METER
+== new_meter_34
+METER34
+== new_meter_68
+METER68
+== new_meter_24
+METER24
+== new_meter_1216
+METER1216
+== new_meter_128
+base: 8 1
+METER128
+== new_meter_316
+base: 8 1
+METER316
+== new_meter_98
+base: 8 1
+METER98
+== new_common_time
+COMM
+== new_cut_time
+CUT
+== new_accel
+ACL
+== new_accent_symbol
+ACN
+== new_accent_tenuto_symbol
+ACT
+== new_arco
+ARC
+== new_a_tempo
+ATM
+== new_cresc
+CRS
+== new_dim
+DIM
+== new_down_bow_symbol
+DNB
+== new_espr
+ESP
+== new_fermata_symbol
+FER
+== new_gliss
+GLI
+== new_harmonic_symbol
+HAR
+== new_heavy_wedge_symbol
+HVW
+== new_inverted_mordent_symbol
+INV
+== new_meno
+MEN
+== new_molto
+MOL
+== new_mordent_symbol
+MOR
+== new_ped
+PED
+== new_pizz
+piz
+== new_staccato_symbol
+STAC
+== new_subito
+SUB
+== new_tenuto_symbol
+TENU
+== new_turn
+TUR
+== new_up_bow_symbol
+UPB
+== new_wedge_symbol
+WED
+== new_wedge_staccato_symbol
+WEDS
+== new_piano
+p
+== new_pianissimo
+pp
+== new_mezzo_piano
+mp
+== new_mezzo_forte
+mf
+== new_forte
+f
+== new_forte_upper
+base: 8 1
+F
+== new_mezzo_forte_upper
+base: 8 1
+MF
+== new_fortissimo
+ff
+== new_sforzando
+sf
+== new_sforzato
+sfz
+
+# -- notes: parentheses, accidental and dot spacing, tremolo, width ------------------
+
+== b2_note_parentheses
+I 2
+ACP
+== b2_note_parentheses_off
+base: 8 1; 1 1 100 6 112.5 0 1
+I 2
+ACP
+== b2_note_parentheses_twice
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+ACP
+ACP
+== b2_acc_space_left
+base: 8 1; 1 1 100 6 112.5 0 1
+I 2
+SPA
+== b2_acc_space_right
+base: 8 1; 1 1 100 6 112.5 0 1
+I 2
+SPA-
+== b2_acc_space_right_at_zero
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+SPA-
+== b2_acc_space_left_sharp
+base: 8 1; 1 1 100 6 12 0 1
+I 2
+SPA
+== b2_acc_no_space
+base: 8 1; 1 1 100 6 112.5 0 1
+I 2
+NOS
+== b2_dot_up_down
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+DUD
+== b2_dot_up_down_twice
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+DUD
+DUD
+== b2_dot_space_right
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+SPD
+SPD
+== b2_dot_space_left
+base: 8 1; 1 1 100 6 10 0 1.5 0 10.15
+I 2
+SPD-
+== b2_dot_space_left_at_zero
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+SPD-
+== b2_dot_note_width
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+SPDN
+== b2_dot_note_width_twice
+base: 8 1; 1 1 100 6 10 0 1.5 0 10
+I 2
+SPDN
+SPDN
+== b2_no_dot
+base: 8 1; 1 1 100 6 10 0 0.75 0 11 0 0 0 0 0 0 0 0 0 1
+I 2
+NOD
+== b2_tremolo_one
+I 2
+TM1
+== b2_tremolo_add
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 41
+I 2
+TM+
+== b2_tremolo_add_from_mark
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 7
+I 2
+TM+
+== b2_tremolo_three
+I 2
+TRM3
+== b2_width_plus
+I 2
+WID+
+WID+
+== b2_width_minus
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1.2
+I 2
+WID-
+== b2_width_default
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1.2
+I 2
+WID0
+== b2_no_offset
+base: 8 1; 1 1 100 6 10 0 1 0 0 5
+I 2
+NOFST
+== b2_head_parentheses
+I 2
+PRN
+== b2_head_parentheses_twice
+I 2
+PRN
+PRN
+== b2_rh8
+I 2
+RH8
+== b2_rh16
+I 2
+RH16
+== b2_rh2
+I 2
+RH2
+== b2_rh1
+I 2
+RH1
+== b2_rh_half_whole
+I 2
+RH.5
+== b2_rh4
+base: 8 1; 1 1 100 6 10 1 2
+I 2
+RH4
+== b2_rh3
+I 2
+RH3
+== b2_rh6
+I 2
+RH6
+== b2_rh12
+I 2
+RH12
+== b2_rh24
+I 2
+RH24
+== b2_rh5
+I 2
+RH5
+== b2_rh5_from_eighth
+base: 8 1; 1 1 100 6 10 0 0.5 0 1
+I 2
+RH5
+== b2_rh10
+I 2
+RH10
+== b2_rh20
+I 2
+RH20
+
+# -- rests ----------------------------------------------------------------------------
+
+== b2_rest_invisible
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RINV
+== b2_rest_invisible_twice
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RINV
+RINV
+== b2_rest_fermata
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RF
+== b2_rest_fermata_twice
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+RF
+RF
+== b2_rest_parentheses
+base: 8 1; 2 1 100 0 1 0 0.5
+I 2
+RPR
+== b2_rest_parentheses_twice
+base: 8 1; 2 1 100 0 1 0 0.5
+I 2
+RPR
+RPR
+== b2_rest_center_whole
+base: 8 1; 2 1 100 0 -2 0 4
+I 2
+CW
+== b2_rest_dot
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+DOT
+== b2_rest_dot_twice
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+DOT
+DOT
+== b2_rest_double_dot
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+DDT
+== b2_rest_offsets
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+OFL
+OFM
+== b2_rest_cue
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+CUE
+
+# -- clefs ----------------------------------------------------------------------------
+
+== b2_clef_tab
+base: 8 1; 3 1 2
+I 2
+TAB
+== b2_clef_tab4
+base: 8 1; 3 1 2
+I 2
+TB4
+== b2_clef_tab5
+base: 8 1; 3 1 2
+I 2
+TB5
+== b2_clef_tenor
+base: 8 1; 3 1 2
+I 2
+TENOR
+== b2_clef_percussion
+base: 8 1; 3 1 2
+I 2
+PERC
+
+# -- lines (code 4) -------------------------------------------------------------------
+
+== b2_line_arrow_left
+base: 8 1; 4 1 50 5 10 120
+I 2
+LAR
+== b2_line_arrow_left_twice
+base: 8 1; 4 1 50 5 10 120
+I 2
+LAR
+LAR
+== b2_line_arrow_left_over_bracket
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 2
+I 2
+LAR
+== b2_line_arrow_right
+base: 8 1; 4 1 50 5 10 120
+I 2
+RAR
+== b2_line_bracket_left
+base: 8 1; 4 1 50 5 10 120
+I 2
+LBR
+== b2_line_bracket_left_off
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 1
+I 2
+LBR
+== b2_line_bracket_left_arrow
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 102
+I 2
+LBR
+== b2_line_bracket_right
+base: 8 1; 4 1 50 5 10 120
+I 2
+RBR
+== b2_line_bracket_lengths
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 2 2
+I 2
+LBR+
+RBR-
+RBR-
+== b2_line_bracket_down
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 2 2
+I 2
+LBRD
+RBRD
+== b2_line_dash_length
+base: 8 1; 4 1 50 5 10 120 1
+I 2
+DSHL+
+DSHL+
+== b2_line_dash_length_minus
+base: 8 1; 4 1 50 5 10 120 1 1.5
+I 2
+DSHL-
+== b2_line_dash_length_default
+base: 8 1; 4 1 50 5 10 120 1 1.5
+I 2
+DSHL0
+== b2_line_dash_space
+base: 8 1; 4 1 50 5 10 120 1
+I 2
+DSHS+
+DSHS-
+DSHS-
+== b2_line_dash_space_default
+base: 8 1; 4 1 50 5 10 120 1 0 3
+I 2
+DSHS0
+== b2_line_thicker
+base: 8 1; 4 1 50 5 10 120
+I 2
+THK
+THK
+== b2_line_thickness_default
+base: 8 1; 4 1 50 5 10 120 0 0 0 3
+I 2
+THK0
+== b2_line_horizontal
+base: 8 1; 4 1 50 5 10 120
+I 2
+HORZ
+== b2_line_vertical
+base: 8 1; 4 1 50 5 10 120
+I 2
+VERT
+== b2_line_vertical_2
+base: 8 1; 4 1 50 3 20 90
+I 2
+VERT
+== b2_line_wiggle
+base: 8 1; 4 1 50 5 10 120 1 1 1 1 1 1
+I 2
+WIG
+== b2_line_saw
+base: 8 1; 4 1 50 5 10 120 1 1 1 1 1 1
+I 2
+SAW
+== b2_line_saw_heavy
+base: 8 1; 4 1 50 5 10 120
+I 2
+SAWX
+== b2_line_vibrato
+base: 8 1; 4 1 50 5 10 120 1 1 1 1 1 1
+I 2
+VIB
+== b2_line_dotted
+base: 8 1; 4 1 50 5 10 120
+I 2
+DTS4
+== b2_line_offsets
+base: 8 1; 4 1 50 5 10 120
+I 2
+LOFFP
+LOFFP
+ROFFM
+== b2_line_offsets_zero
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 0 0 0 0 0 1 0.5 -0.5
+I 2
+LOFF0
+== b2_line_offsets_zero_both
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 0 0 0 0 0 1 0.5 -0.5
+I 2
+LOFF0
+ROFF0
+== b2_line_end_offsets
+base: 8 1; 4 1 50 5 10 120
+I 2
+LROFP
+LROFM
+LROFM
+== b2_hairpin_spread
+base: 8 1; 4 1 50 -1 999 120
+I 2
+SPD+1
+== b2_hairpin_spread_minus
+base: 8 1; 4 1 50 -1 999 120
+I 2
+SPD-
+== b2_hairpin_spread_from_3
+base: 8 1; 4 1 50 -1 999 120 3
+I 2
+SPD+1
+== b2_hairpin_spread_minus_from_3
+base: 8 1; 4 1 50 -1 999 120 3
+I 2
+SPD-
+== b2_hairpin_spread_default
+base: 8 1; 4 1 50 -1 999 120 3
+I 2
+SPD0
+== b2_hairpin_dashes
+base: 8 1; 4 1 50 -1 999 120
+I 2
+CR-
+== b2_hairpin_dashes_decresc
+base: 8 1; 4 1 50 -1 999 120
+I 2
+DC-
+== b2_decresc_to_cresc_dashes
+base: 8 1; 4 1 50 -1 999 120 -1
+I 2
+CR-
+
+# -- slurs (code 5) -------------------------------------------------------------------
+
+== b2_slur_dashes
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLDSH
+== b2_slur_dots
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLDTS
+== b2_slur_dashes_to_dots
+base: 8 1; 5 1 50 5 10 120 3 0 0 0 1
+I 2
+SLDTS
+SLDSH
+== b2_slur_half_left
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLHL
+== b2_slur_half_left_twice
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLHL
+SLHL
+== b2_slur_half_right
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLHR
+== b2_slur_half_right_over_left
+base: 8 1; 5 1 50 5 10 120 3 0 0 0 0 1
+I 2
+SLHR
+== b2_slur_up_down
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SUPDN
+== b2_slur_triplet
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLTRIP
+== b2_slur_triplet_off
+base: 8 1; 5 1 50 5 10 120 3 0 0 0 0 0 0 0 0 3
+I 2
+SLTRIP
+== b2_slur_triplet_off_numbered
+base: 8 1; 5 1 50 5 10 120 2 3 0.5 0 0 0 0 4 0 3
+I 2
+SLTRIP
+== b2_slur_thinner
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+THM
+THM
+== b2_slur_thickness_default
+base: 8 1; 5 1 50 5 10 120 3 0 0 0 0 0 1.2
+I 2
+THK
+== b2_slur_curve
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+CRVP
+CRVP
+CRVM
+== b2_slur_curve_down
+base: 8 1; 5 1 50 5 10 120 -3
+I 2
+CRVP
+== b2_slur_midpoint
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+MIDL
+MIDL
+== b2_slur_midpoint_right
+base: 8 1; 5 1 50 5 10 120 3 0 0 0.6
+I 2
+MIDR
+== b2_slur_midpoint_default
+base: 8 1; 5 1 50 5 10 120 3 0 0 0.6
+I 2
+MID
+== b2_slur_midpoint_default_0
+base: 8 1; 5 1 50 5 10 120 3 0 0 0.6
+I 2
+MID0
+== b2_slur_number_moves
+base: 8 1; 5 1 50 5 10 120 2 3
+I 2
+NUML
+NUMU
+NUMU
+== b2_slur_number_moves_from_set
+base: 8 1; 5 1 50 5 10 120 2 3 0 0 0 0 0 0 0 0 0.3 0.4
+I 2
+NUMR
+NUMD
+== b2_slur_number_home
+base: 8 1; 5 1 50 5 10 120 2 3 0 0 0 0 0 0 0 0 0.3 0.4
+I 2
+NUMH0
+NUMV0
+== b2_slur_number_moves_unnumbered
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+NUML
+== b2_slur_to_triplet_bracket
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+SLUR3
+== b2_slur_triplet_word
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+TRP
+== b2_slur_offsets
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+LOFFM
+ROFFP
+
+# -- beams (code 6) -------------------------------------------------------------------
+
+== b2_beam_add
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+BEAM+
+BEAM+
+== b2_beam_add_down
+base: 8 1; 6 1 50 5 10 120 21
+I 2
+BEAM+
+== b2_beam_number
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+BNUM3
+== b2_beam_number_5
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+BNUM5
+== b2_beam_number_plus
+base: 8 1; 6 1 50 5 10 120 11 3
+I 2
+BNUMP
+== b2_beam_number_none
+base: 8 1; 6 1 50 5 10 120 11 3
+I 2
+BNUM0
+== b2_beam_tremolo
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+TRM2
+== b2_beam_tremolo_down
+base: 8 1; 6 1 50 5 10 120 22
+I 2
+TRM3
+== b2_beam_thickness
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+THK 2
+== b2_beam_thickness_default
+base: 8 1; 6 1 50 5 10 120 11 0 0 0 0 0 0 0 0 0 2
+I 2
+THK0
+== b2_beam_offsets
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+LOFFP
+ROFF0
+== b2_trill_offsets
+base: 8 1; 7 1 50 15 0 120
+I 2
+LOFFP
+ROFFM
+
+# -- end offsets of beams and code 7 items ----------------------------------------------
+
+== b3_beam_left_offset_twice
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+LOFFP
+LOFFP
+== b3_beam_left_offset_minus
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+LOFFM
+== b3_beam_right_offsets
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+ROFFP
+ROFFP
+ROFFM
+== b3_beam_zero_left
+base: 8 1; 6 1 50 5 10 120 11 0 0 0 0 0 0 10 -10
+I 2
+LOFF0
+== b3_beam_zero_right
+base: 8 1; 6 1 50 5 10 120 11 0 0 0 0 0 0 10 -10
+I 2
+ROFF0
+== b3_beam_zero_offsets
+base: 8 1; 6 1 50 5 10 120 11 0 0 0 0 0 0 10 -10
+I 2
+XOF
+== b3_trill_left_offset
+base: 8 1; 7 1 50 15 0 120
+I 2
+LOFFP
+LOFFP
+LOFFM
+== b3_trill_right_offset
+base: 8 1; 7 1 50 15 0 120
+I 2
+ROFFP
+== b3_trill_zero_left
+base: 8 1; 7 1 50 15 0 120 0 0 0 0 0 0 0 0 0.5 1 0 -0.5
+I 2
+LOFF0
+== b3_trill_zero_right
+base: 8 1; 7 1 50 15 0 120 0 0 0 0 0 0 0 0 0.5 1 0 -0.5
+I 2
+ROFF0
+== b3_trill_zero_offsets
+base: 8 1; 7 1 50 15 0 120 0 0 0 0 0 0 0 0 0.5 1 0 -0.5
+I 2
+XOFF
+== b3_trill_left_offset_value
+base: 8 1; 7 1 50 15 0 120
+I 2
+LOFF 3
+== b3_trill_right_offset_value
+base: 8 1; 7 1 50 15 0 120
+I 2
+ROFF 2
+== b3_line_zero_offsets
+base: 8 1; 4 1 50 5 10 120 0 0 0 0 0 0 0 0 0 1 0.5 -0.5
+I 2
+XOFF
+== b3_decresc_spread
+base: 8 1; 4 1 50 -1 999 120 -1
+I 2
+SPD+1
+== b3_decresc_spread_minus
+base: 8 1; 4 1 50 -1 999 120 -1
+I 2
+SPD-
+
+# -- mouse drags and clicks ------------------------------------------------------------
+# Points are page coordinates. A drag keeps the grab offset, so every drag starts at the
+# item's own anchor, where that and putting the item at the cursor agree:
+# x = 150 P3 + 2000, y = 2423 + (P4 - c) 175 on staff 1, c = -2 for codes 2, 3, 17, 18,
+# else 2.
+
+== b4_drag_note
+I 2
+~v 17000 3123
+~v 17150 3298
+~x 17150 3298
+== b4_drag_note_fraction_down
+I 2
+~v 17000 3123
+~v 17037 3200
+~x 17037 3200
+== b4_drag_note_fraction_up
+I 2
+~v 17000 3123
+~v 16900 3223
+~x 16900 3223
+== b4_drag_note_twice
+I 2
+~v 17000 3123
+~v 17300 3473
+~v 17450 2950
+~x 17450 2950
+== b4_drag_line
+base: 8 1; 4 1 50 5 10 120
+I 2
+~v 9500 2948
+~v 9637 3035
+~x 9637 3035
+== b4_drag_hairpin
+base: 8 1; 4 1 50 -1 999 120
+I 2
+~v 9500 1898
+~v 9650 2073
+~x 9650 2073
+== b4_drag_slur
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+~v 9500 2948
+~v 9650 3123
+~x 9650 3123
+== b4_drag_beam
+base: 8 1; 6 1 50 5 10 120 11
+I 2
+~v 9500 2948
+~v 9575 3000
+~x 9575 3000
+== b4_drag_trill
+base: 8 1; 7 1 50 15 0 120
+I 2
+~v 9500 4698
+~v 9650 4873
+~x 9650 4873
+== b4_drag_rest
+base: 8 1; 2 1 100 0 0 0 1
+I 2
+~v 17000 2773
+~v 17150 2948
+~x 17150 2948
+== b4_drag_clef
+base: 8 1; 3 1 2 0 1
+I 2
+~v 2300 2773
+~v 2450 3123
+~x 2450 3123
+== b4_drag_barline
+base: 8 1; 14 1 100 1
+I 2
+~v 17000 2948
+~v 17300 3448
+~x 17300 3448
+== b4_drag_staff
+base: 8 1 0 0 1 200
+I 1
+~v 2000 2948
+~v 2150 3448
+~x 2150 3448
+== b4_drag_meter
+base: 8 1; 18 1 100 0 4 4
+I 2
+~v 17000 2773
+~v 17150 3123
+~x 17150 3123
+== b4_drag_key
+base: 8 1; 17 1 100 0 2
+I 2
+~v 17000 2773
+~v 16850 2600
+~x 16850 2600
+== b4_drag_shift_second_move
+base: 8 1; 4 1 50 5 10 120
+I 2
+~s 9500 2948
+~s 9505 3123
+~x 9505 3123
+== b4_drag_shift_threshold
+base: 8 1; 4 1 50 5 10 120
+I 2
+~s 9500 2948
+~s 9505 3123
+~s 9505 3163
+~s 9505 3193
+~x 9505 3193
+== b4_drag_shift_vertical
+base: 8 1; 4 1 50 5 10 120
+I 2
+~s 9500 2948
+~s 9510 3123
+~s 9800 3148
+~s 9800 3298
+~x 9800 3298
+== b4_drag_shift_horizontal
+base: 8 1; 4 1 50 5 10 120
+I 2
+~s 9500 2948
+~s 9650 2958
+~s 9680 2958
+~s 9800 3075
+~x 9800 3075
+== b4_drag_left_end
+base: 8 1; 4 1 50 5 10 120
+I 2
+LFT
+~v 9500 2948
+~v 9650 3123
+~x 9650 3123
+== b4_drag_right_end
+base: 8 1; 4 1 50 5 10 120
+I 2
+RGT
+~v 20000 3823
+~v 20150 3998
+~x 20150 3998
+== b4_drag_right_end_slur
+base: 8 1; 5 1 50 5 10 120 3
+I 2
+RGT
+~v 20000 3823
+~v 20150 3998
+~x 20150 3998
+== b4_drag_right_end_trill
+base: 8 1; 7 1 50 15 0 120
+I 2
+RGT
+~v 20000 4698
+~v 20150 4873
+~x 20150 4873
+== b4_drag_left_end_twice
+base: 8 1; 4 1 50 5 10 120
+I 2
+LFT
+LFT
+~v 9500 2948
+~v 9650 3123
+~x 9650 3123
+== b4_drag_left_end_then_next_item
+base: 8 1; 4 1 50 5 10 120
+I 2
+LFT
+X
+I 2
+~v 9500 2948
+~v 9650 3123
+~x 9650 3123
+== b4_click_note
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 8 10 0 1; 2 1 140 0 0 0 1
+~ 19900 3600
+R 1
+== b4_click_rest
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 8 10 0 1; 2 1 140 0 0 0 1
+~ 23000 2800
+R 1
+== b4_click_staff
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 8 10 0 1; 2 1 140 0 0 0 1
+~ 2100 2950
+R 1
+== b4_click_far_away
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 8 10 0 1; 2 1 140 0 0 0 1
+~ 30000 9000
+R 1
+== b4_click_after_exit
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 8 10 0 1; 2 1 140 0 0 0 1
+I 3
+X
+~ 19900 3600
+R 1
+== b4_click_whole_rest
+base: 8 1; 2 1 100 0 -2 0 4; 1 1 100 2 10 0 1
+~ 17000 3473
+R 1
+== b4_click_beam_above_note
+base: 8 1; 6 1 50 5 10 120 11; 1 1 52 6 10 0 1
+~ 9800 4300
+R 1
+== b4_click_beam_down
+base: 8 1; 6 1 50 5 10 120 21; 1 1 52 6 10 0 1
+~ 9500 1000
+R 1
+== b4_click_symbol
+base: 8 1; 9 1 100 13 22 0.25; 1 1 100 12 10 0 1
+~ 17000 4148
+R 1
+== b4_click_key_meter
+base: 8 1; 17 1 100 0 2; 18 1 110 0 4 4
+~ 18500 3100
+R 1
+== b4_click_eighth_rest
+base: 8 1; 2 1 100 0 1 0 0.5; 1 1 100 3 10 0 1
+~ 17000 2800
+R 1
+== b4_click_tie_breaks_by_order
+base: 8 1; 1 1 100 6 10 0 1; 1 1 100 6 20 0 1
+~ 17000 3298
+R 1
+
+# -- centring on notes (CN) ---------------------------------------------------------------
+
+== b5_cn_symbol_left
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 6 10 0 1; 9 1 108 13 22 0.25
+I 4
+CN
+== b5_cn_symbol_right
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 6 10 0 1; 9 1 113 13 22 0.25
+I 4
+CN
+== b5_cn_number
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 6 20 0 1; 10 1 117 13 1
+I 4
+CN
+== b5_cn_ignores_note_offset
+base: 8 1; 1 1 100 6 10 0 1 0 0 10; 9 1 103 13 22 0.25
+I 3
+CN
+== b5_cn_rest
+base: 8 1; 2 1 100 0 0 0 1; 9 1 103 13 22 0.25
+I 3
+CN
+== b5_cn_other_staff
+base: 8 1; 8 2; 1 2 100 6 10 0 1; 1 1 130 6 10 0 1; 9 1 103 13 22 0.25
+I 5
+CN 2
+== b5_cn_note
+base: 8 1; 1 1 100 6 10 0 1; 1 1 104 8 10 0 1
+I 3
+CN
+== b5_cn_beam
+base: 8 1; 1 1 100 6 10 0 0.5 0 1; 1 1 120 8 10 0 0.5 0 1; 6 1 103 13 15 118 11
+I 4
+CN
+== b5_cn_midway
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 6 10 0 1; 9 1 110 13 22 0.25
+I 4
+CN
+
+# -- trills and pedals, staves, symbols, numbers, boxes, barlines, keys, meters ------------
+
+== b6_trill_flat
+base: 8 1; 7 1 50 15 0 120
+I 2
+TRF
+TRF
+== b6_trill_sharp_over_flat
+base: 8 1; 7 1 50 15 0 120 0 1
+I 2
+TRS
+== b6_trill_natural
+base: 8 1; 7 1 50 15 0 120
+I 2
+TRN
+== b6_trill_flat_toggle
+base: 8 1; 7 1 50 15 0 120 0 1
+I 2
+TRFW
+== b6_trill_sharp_toggle
+base: 8 1; 7 1 50 15 0 120
+I 2
+TRSW
+== b6_trill_natural_toggle
+base: 8 1; 7 1 50 15 0 120
+I 2
+TRNW
+== b6_trill_no_accidental
+base: 8 1; 7 1 50 15 0 120 0 2
+I 2
+TRZ
+== b6_pedal_size
+base: 8 1; 7 1 50 -1 0 140 20
+I 2
+PDSZ+
+PDSZ+
+== b6_pedal_size_minus
+base: 8 1; 7 1 50 -1 0 140 22
+I 2
+PDSZ-
+== b6_pedal_midpoint
+base: 8 1; 7 1 50 -1 0 140 21
+I 2
+PDM+
+PDM+
+PDM-
+== b6_staff_size
+base: 8 1 0 0 1 200
+I 1
+SZ.4
+== b6_staff_size_9
+base: 8 1 0 0 1 200
+I 1
+SZ.9
+== b6_staff_size_plus
+base: 8 1 0 0 1 200
+I 1
+SZ+
+SZ+
+== b6_staff_size_minus
+base: 8 1 0 0 1 200
+I 1
+SZ-
+== b6_staff_number_toggle
+base: 8 1 0 0 1 200
+I 1
+NMO
+== b6_staff_number_twice
+base: 8 1 0 0 1 200
+I 1
+NMO
+NMO
+== b6_staff_invisible
+base: 8 1 0 0 1 200
+I 1
+SI
+== b6_staff_invisible_twice
+base: 8 1 0 0 1 200
+I 1
+SI
+SI
+== b6_symbol_flip
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+FLI
+== b6_symbol_flip_twice
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+FLI
+FLI
+== b6_symbol_flip_tall
+base: 8 1; 9 1 100 13 22 0.25 0.5
+I 2
+FLI
+== b6_symbol_rotate
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+ROT+
+ROT+
+ROT-
+== b6_symbol_rotate_zero
+base: 8 1; 9 1 100 13 22 0.25 1 0 1
+I 2
+ROT0
+== b6_symbol_larger
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+SZ+
+== b6_symbol_smaller_tall
+base: 8 1; 9 1 100 13 22 0.25 1
+I 2
+SZ-
+== b6_symbol_larger_tall
+base: 8 1; 9 1 100 13 22 0.25 1
+I 2
+SZ+
+== b6_symbol_larger_unsized
+base: 8 1; 9 1 100 13 22
+I 2
+SZ+
+== b6_symbol_cue
+base: 8 1; 9 1 100 13 22 0.25
+I 2
+CUE
+== b6_number_plus
+base: 8 1; 10 1 100 13 1
+I 2
+PLUS1
+PLUS10
+== b6_number_minus
+base: 8 1; 10 1 100 13 1
+I 2
+MINUS10
+== b6_box_wider
+base: 8 1; 12 1 50 12 0 10
+I 2
+BXHP
+== b6_box_narrower_tall
+base: 8 1; 12 1 50 12 1 10 1
+I 2
+BXHM
+== b6_box_taller
+base: 8 1; 12 1 50 12 0 10
+I 2
+BXVP
+== b6_box_lower_tall
+base: 8 1; 12 1 50 12 1 10 1
+I 2
+BXVM
+== b6_box_fill
+base: 8 1; 12 1 50 12 0 10
+I 2
+FILL
+FILL
+== b6_box_dashes
+base: 8 1; 12 1 50 12 0 10
+I 2
+CDSH
+CDSH
+== b6_box_skew
+base: 8 1; 12 1 50 12 0 10
+I 2
+SKWR
+SKWR
+SKWL
+== b6_box_skew_zero
+base: 8 1; 12 1 50 12 0 10 0 0 0 4
+I 2
+SKW0
+== b6_box_rotate
+base: 8 1; 12 1 50 12 0 10
+I 2
+ROT+
+ROT-
+ROT-
+== b6_bar_double
+base: 8 1; 14 1 100 1
+I 2
+BARD
+== b6_bar_double_clears_p16
+base: 8 1; 14 1 100 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+I 2
+BARD
+== b6_bar_heavy
+base: 8 1; 14 1 100 1
+I 2
+BARH
+== b6_bar_repeats
+base: 8 1; 14 1 100 1
+I 2
+BARL
+== b6_bar_repeat_right
+base: 8 1; 14 1 100 1
+I 2
+BARR
+== b6_bar_double_repeat
+base: 8 1; 14 1 100 1
+I 2
+BARRD
+== b6_bar_brace
+base: 8 1; 14 1 100 1
+I 2
+BARBC
+== b6_bar_bracket
+base: 8 1; 14 1 100 1
+I 2
+BARBK
+== b6_bar_invisible
+base: 8 1; 14 1 100 1
+I 2
+INV
+== b6_bar_invisible_twice
+base: 8 1; 14 1 100 1
+I 2
+INV
+INV
+== b6_bar_end
+base: 8 1; 14 1 100 1
+I 2
+END
+== b6_bar_double_space
+base: 8 1; 14 1 100 1 1 0 0 0 0 0 0 0 1
+I 2
+DBRS+
+== b6_bar_double_space_default
+base: 8 1; 14 1 100 1 1 0 0 0 0 0 0 0 1
+I 2
+DBRS0
+== b6_bar_double_width
+base: 8 1; 14 1 100 1 1
+I 2
+DBRW+
+== b6_bar_double_width_set
+base: 8 1; 14 1 100 1 1 0 0 0 0 0 0 0 0 0 0 0 1
+I 2
+DBRW+
+DBRW0
+== b6_key_clefs
+base: 8 1; 17 1 100 0 2
+I 2
+KSAL
+== b6_key_bass
+base: 8 1; 17 1 100 0 2
+I 2
+KSBA
+== b6_key_tenor
+base: 8 1; 17 1 100 0 2
+I 2
+KSTN
+== b6_key_treble
+base: 8 1; 17 1 100 0 -3 1
+I 2
+KSTR
+== b6_key_cue
+base: 8 1; 17 1 100 0 2
+I 2
+KSCU
+KSCU
+== b6_key_normal
+base: 8 1; 17 1 100 0 2 101
+I 2
+KSNO
+== b6_key_flat_from_sharps
+base: 8 1; 17 1 100 0 2
+I 2
+KSFL
+== b6_key_flat_more
+base: 8 1; 17 1 100 0 -2
+I 2
+KSFL
+== b6_key_sharp_from_flats
+base: 8 1; 17 1 100 0 -3
+I 2
+KSSH
+== b6_key_sharp_from_none
+base: 8 1; 17 1 100 0 0
+I 2
+KSSH
+== b6_key_naturals
+base: 8 1; 17 1 100 0 -3
+I 2
+KSNA
+== b6_key_naturals_twice
+base: 8 1; 17 1 100 0 2
+I 2
+KSNA
+KSNA
+== b6_key_justify
+base: 8 1; 17 1 100 0 2 0 0 0 0 0 0 0 0 1
+I 2
+KSJU
+== b6_key_no_justify
+base: 8 1; 17 1 100 0 2
+I 2
+KSNJ
+== b6_key_spacing
+base: 8 1; 17 1 100 0 2
+I 2
+KSSM
+KSSM
+== b6_key_spacing_plus
+base: 8 1; 17 1 100 0 2 0 1.2
+I 2
+KSSP
+== b6_key_spacing_default
+base: 8 1; 17 1 100 0 2 0 1.2
+I 2
+KSSZ
+== b6_key_clear_specials
+base: 8 1; 17 1 100 0 2 0 0 1 1 1 1 1 1 1
+I 2
+KSZR
+== b6_meter_top_right
+base: 8 1; 18 1 100 0 4 4
+I 2
+MTRP
+MTRP
+MTRM
+== b6_meter_top_right_minimum
+base: 8 1; 18 1 100 0 4 4
+I 2
+MTRM
+== b6_meter_bottom
+base: 8 1; 18 1 100 0 6 8
+I 2
+MBLM
+MBLM
+MBLM
+MBLM
+== b6_meter_bottom_double
+base: 8 1; 18 1 100 0 6 8
+I 2
+MBLP
+== b6_meter_bottom_right
+base: 8 1; 18 1 100 0 4 4 0 0 1
+I 2
+MBRM
+MBRM
+MBRP
+== b6_meter_single
+base: 8 1; 18 1 100 0 4 4
+I 2
+MTRS
+MTRSP
+
+# -- remembered parameters (PS, PG) ------------------------------------------------------
+
+== b7_save_and_recall
+I 2
+PS3
+R 10
+PG
+== b7_copy_position_to_another_item
+base: 8 1; 1 1 100 6 10 0 1; 1 1 130 8 10 0 1
+I 2
+PS3
+X
+I 3
+PG
+== b7_recall_by_number
+base: 8 1; 1 1 100 6 10 0 1; 1 1 130 8 10 0 1
+I 2
+PS3
+PS4
+X
+I 3
+PG3
+
+# -- text items (code 16): quick entry, measured length P13, text words -------------------
+
+== c1_text_plain
+base: 8 1
+"Hello"
+== c1_text_font_and_params
+base: 8 1
+"_15A stitch in time saves nine." 1 20 14 0 2
+== c1_text_on_staff_3
+base: 8 1; 8 3
+"A stitch" 3 20 14 0 2
+== c1_text_centred
+base: 8 1
+"_00Centre" 1 1080 13 0 1.5
+== c1_text_centred_size2
+base: 8 1
+"_00Centre" 1 1080 13 0 2
+== c1_text_divided
+base: 8 1
+"_04This/is/how"
+== c1_text_divided_size2
+base: 8 1
+"_04This/is/how" 1 20 10 0 2
+== c1_text_divided_spread
+base: 8 1
+"_04This/is" 1 20 10 1.5
+== c1_text_divided_centred
+base: 8 1
+"_00a/b" 1 1080 10
+== c1_text_divided_font_carried
+base: 8 1
+"_00a _02b/c"
+== c1_text_divided_font_changes
+base: 8 1
+"_00a/_02b/c"
+== c1_text_backslash
+base: 8 1
+"a\b"
+== c1_text_last_font
+base: 8 1
+"_02First"
+X
+"Second"
+== c1_text_last_font_mixed
+base: 8 1
+"_00a _16b"
+X
+"c"
+== c1_text_staff_1_by_default
+base: 8 1; 8 2; 1 2 100 6 10 0 1
+"Hello"
+== c1_text_mixed_fonts
+base: 8 1
+"_00A stitch _02in time _16saves _23nine." 1 20 14 0 2
+== c1_text_spaces
+base: 8 1
+"_00a b  c"
+== c1_text_alphabet
+base: 8 1
+"_00abcdefghijklmnopqrstuvwxyz"
+== c1_text_empty
+base: 8 1
+""
+== c1_text_negative_p3
+base: 8 1
+"_00Hi" 1 -10
+== c1_text_spread_zero_is_one
+base: 8 1
+"_00Hello" 1 50 10 0
+== c1_text_spread_two
+base: 8 1
+"_00Hello" 1 50 10 2
+== c1_text_rotated
+base: 8 1
+"_00Hello" 1 50 10 0 1.5 0 0 30
+== c1_text_move
+base: 8 1
+"_00Hello" 1 50 10
+R 5
+U 2
+== c1_text_size_param
+base: 8 1
+"_00Hello" 1 50 10
+6 2
+== c1_text_spread_param
+base: 8 1
+"_00Hello" 1 50 10
+5 1.5
+== c1_text_font_override
+base: 8 1
+"_00Hello" 1 50 10
+8 1004
+== c1_text_vertical_size
+base: 8 1
+"_00Hello" 1 50 10
+7 2
+== c1_text_rotation_param
+base: 8 1
+"_00Hello" 1 50 10
+9 30
+== c1_text_character_space_plus
+base: 8 1
+"_00Hello" 1 50 10
+CHSP
+CHSP
+== c1_text_character_space_minus
+base: 8 1
+"_00Hello" 1 50 10
+CHSM
+== c1_text_character_space_normal
+base: 8 1
+"_00Hello" 1 50 10
+CHSD
+== c1_text_larger
+base: 8 1
+"_00Hello" 1 50 10
+SZ+
+== c1_text_smaller
+base: 8 1
+"_00Hello" 1 50 10
+SZ-
+== c1_text_rotate
+base: 8 1
+"_00Hello" 1 50 10
+ROT+
+== c1_text_rotate_back
+base: 8 1
+"_00Hello" 1 50 10
+ROT-
+ROT0
+== c1_text_font_word_italic
+base: 8 1
+"_00Hello" 1 50 10
+FNT02
+== c1_text_font_word_palatino
+base: 8 1
+"_00Hello" 1 50 10
+FNT15
+== c1_text_font_word_music
+base: 8 1
+"_00Hello" 1 50 10
+FNT94
+== c1_text_font_word_then_size
+base: 8 1
+"_00Hello" 1 50 10
+FNT02
+6 2
+== c1_text_points
+base: 8 1
+"_00Hello" 1 50 10
+PT 12
+== c1_text_points_24
+base: 8 1
+"_00Hello" 1 50 10
+PT 24
+== c1_text_points_small_staff
+base: 8 1 0 0 0.5
+"_00Hello" 1 50 10
+PT 12
+== c1_text_points_large_staff
+base: 8 1 0 0 2
+"_00Hello" 1 50 10
+PT 12
+== c1_text_centre_at
+base: 8 1
+"_00Hello" 1 50 10
+CT 80
+== c1_text_centre_default
+base: 8 1
+"_00Hello" 1 50 10
+CT
+== c1_text_centre_remembered
+base: 8 1
+"_00Hello" 1 50 10
+CT 60
+X
+"_00Hi" 1 30 10
+CT
+== c1_text_centre_on_note
+base: 8 1; 1 1 80 6 10 0 1; 1 1 120 6 10 0 1
+"_00Hello" 1 50 10
+CTN
+== c1_text_centre_on_note_wide
+base: 8 1; 1 1 80 6 10 0 1
+"_00Hello world" 1 50 10
+CTN
+== c1_text_centre_on_note_size2
+base: 8 1; 1 1 80 6 10 0 1
+"_00Hello" 1 50 10 0 2
+CTN
+== c1_text_centre_on_rest
+base: 8 1; 2 1 80 0 0 0 1
+"_00Hello" 1 50 10
+CTN
+== c1_text_centre_on_note_comma
+base: 8 1; 1 1 80 6 10 0 1
+"_00Hello," 1 50 10
+CTN
+== c1_text_centre_without_comma
+base: 8 1; 1 1 80 6 10 0 1
+"_00Hello," 1 50 10
+CTX
+== c1_text_centre_keeps_parentheses
+base: 8 1; 1 1 80 6 10 0 1
+"_00(Hello)" 1 50 10
+CTX
+== c1_text_leading_edge_on_note
+base: 8 1; 1 1 80 6 10 0 1; 1 1 120 6 10 0 1
+"_00Hello" 1 50 10
+CN
+== c1_text_copy
+base: 8 1
+"_00Hello" 1 50 10
+R 10
+CC
+== c1_text_from_file_moved
+base: 8 1; 16 1 50 10 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"
+I 2
+R 3
+== c1_text_from_file_resized
+base: 8 1; 16 1 50 10 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"
+I 2
+6 3
+== c1_text_from_file_font_carried
+base: 8 1; 16 1 50 10 1 1 0 0 0 0 0 6 0 "_16Old"
+"New"
+== c1_text_without_font_code_in_file
+base: 8 1; 16 1 50 10 1 1 0 0 0 0 0 2 0 "Hi"
+I 2
+6 2
+
+# -- stems to beams (ADJ), chord rhythm (CH) -------------------------------------------
+
+== c2_adjust_stems_from_beam
+base: 8 1; 1 1 100 6 10 0 0.5 0 1; 1 1 110 8 10 0 0.5 0 1; 1 1 120 7 10 0 0.5 0 1; 6 1 100 13 15 120 11
+I 5
+ADJ
+== c2_adjust_stems_from_beam_down
+base: 8 1; 1 1 100 6 20 0 0.5 0 1; 1 1 110 8 20 0 0.5 0 1; 1 1 120 7 20 0 0.5 0 1; 6 1 100 0 1 120 21
+I 5
+ADJ
+== c2_adjust_stems_four_notes
+base: 8 1; 1 1 100 6 10 0 0.5 0 1; 1 1 110 8 10 0 0.5 0 1; 1 1 120 7 10 0 0.5 0 1; 1 1 130 6 10 0 0.5 0 1; 6 1 100 13 15 130 11
+I 6
+ADJ
+== c2_adjust_stems_dotted_sixteenths
+base: 8 1; 1 1 100 6 10 0 0.75 0 12; 1 1 110 8 10 0 0.25 0 2; 6 1 100 13 15 110 12
+I 4
+ADJ
+== c2_adjust_stems_other_staff_untouched
+base: 8 1; 8 2; 1 1 100 6 10 0 0.5 0 1; 1 2 110 8 10 0 0.5 0 1; 1 1 120 7 10 0 0.5 0 1; 6 1 100 13 15 120 11
+I 6
+ADJ
+== c2_adjust_one_note
+base: 8 1; 1 1 100 6 10 0 0.5 0 1; 1 1 110 8 10 0 0.5 0 1; 1 1 120 7 10 0 0.5 0 1; 6 1 100 13 15 120 11
+I 3
+ADJ
+== c2_adjust_one_note_down
+base: 8 1; 1 1 100 6 20 0 0.5 0 1; 1 1 110 8 20 0 0.5 0 1; 1 1 120 7 20 0 0.5 0 1; 6 1 100 0 1 120 21
+I 3
+ADJ
+== c2_chord_rhythm
+base: 8 1; 1 1 100 3 10 0 0.5 0 1; 1 1 100 5 0 0 1; 1 1 100 7 0 0 2
+I 2
+CH
+== c2_chord_rhythm_value
+base: 8 1; 1 1 100 3 10 0 0.5 0 1; 1 1 100 5 0 0 1; 1 1 100 7 0 0 2
+I 2
+CH .25
+== c2_chord_rhythm_from_stemless
+base: 8 1; 1 1 100 3 10 0 0.5 0 1; 1 1 100 5 0 0 1; 1 1 100 7 0 0 2
+I 3
+CH
+== c2_chord_rhythm_other_chord_untouched
+base: 8 1; 1 1 100 3 10 0 0.5 0 1; 1 1 100 5 0 0 1; 1 1 110 7 10 0 2
+I 2
+CH
+
+# -- text justification (JR, J) ----------------------------------------------------------
+
+== c3_text_right_hello
+base: 8 1
+"_00Hello" 1 50 10
+JR 150
+== c3_text_right_wide
+base: 8 1
+"_00Hello world" 1 50 10
+JR 150
+== c3_text_right_size2
+base: 8 1
+"_00Hello" 1 50 10 0 2
+JR 150
+== c3_text_right_capital
+base: 8 1
+"_00A" 1 50 10
+JR 150
+== c3_text_right_default
+base: 8 1
+"_00Hello" 1 50 10
+JR
+== c3_text_right_remembered
+base: 8 1
+"_00Hello" 1 50 10
+JR 120
+X
+"_00Hi" 1 30 10
+JR
+== c3_text_right_helvetica
+base: 8 1
+"_04Hello" 1 50 10
+JR 150
+== c3_text_justify
+base: 8 1
+"_00a b c" 1 50 10
+J 20 180
+== c3_text_justify_size2
+base: 8 1
+"_00Hello big world" 1 50 10 0 2
+J 10 190
+== c3_text_justify_spread
+base: 8 1
+"_00Hello big world" 1 50 10 1.5
+J 10 190
+== c3_text_justify_without_spaces
+base: 8 1
+"_00Hello" 1 50 10
+J 20 180
+== c3_text_justify_again
+base: 8 1
+"_00a b" 1 50 10
+J 20 180
+X
+"_00c d" 1 30 12
+J
+
+# -- group edits: area, then destination or changes, one line at a time -------------------
+
+== g1_delete_staff
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 2 120 7 10 0 1; 9 1 130 13 22 .25
+DE
+1 0 0 0
+== g1_delete_code
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 2 120 7 10 0 1; 9 1 130 13 22 .25
+DE
+1 0 0 0 9
+== g1_delete_two_codes
+base: 8 1; 1 1 100 6 10 0 1; 2 1 120 0 0 0 1; 9 1 130 13 22 .25
+D
+1 0 0 0 1 2
+== g1_delete_range_two_staves
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 1 150 7 10 0 1; 1 2 120 7 10 0 1
+DE
+1 90 120 2
+== g1_delete_with_d
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 2 120 7 10 0 1; 9 1 130 13 22 .25
+D
+1 0 0 0
+== g1_move_to_staff
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 2 120 7 10 0 1
+M
+1
+2
+== g1_move_left
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 1 130 7 10 0 1
+M
+1 90 120
+1 -10
+== g1_move_scaled
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 4 1 100 5 5 120
+M
+1 100 120
+2 50 90
+== g1_move_staff_and_shift
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 4 1 100 5 5 120
+M
+1 90 130
+2 5
+== g1_move_right_end_outside
+base: 8 1; 8 2; 4 1 100 5 5 120
+M
+1 90 110
+1 5
+== g1_move_two_staves_up
+base: 8 1; 8 2; 8 3; 1 1 100 6 10 0 1; 1 2 100 6 10 0 1
+M
+1 0 0 2
+2
+== g1_copy_to_staff
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 2 120 7 10 0 1
+C
+1
+2
+== g1_copy_shifted
+base: 8 1; 1 1 100 6 10 0 1
+C
+1 90 110
+1 20
+== g1_alter_notes
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 2 1 110 0 0 0 1
+A
+1 0 0 0
+1
+7 .5 9 1
+== g1_alter_relative
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+A
+1 0 0 0
+1
+600 1 /3 5
+== g1_move_up_down
+base: 8 1; 1 1 100 6 10 0 1; 3 1 2; 14 1 120 1; 9 1 130 13 22 .25
+MUD
+1 0 0 0
+3
+== g1_move_up_down_lines
+base: 8 1; 4 1 100 5 5 120; 4 1 130 -1 999 150; 5 1 100 13 14 120 3; 6 1 100 13 15 120 11; 17 1 100 0 2; 18 1 100 0 4 4; 2 1 110 0 0 0 1
+MUD
+1 0 0 0
+-2
+== g1_copy_to_staves
+base: 8 1; 8 2; 8 3; 1 1 100 6 10 0 1
+CPX
+1 0 0 0
+2 3
+== g1_order_by_staff
+base: 8 1; 8 2; 1 2 100 6 10 0 1; 1 1 120 7 10 0 1; 1 1 110 8 10 0 1
+OS
+== g1_order_by_staff_mixed
+base: 8 2; 8 1; 1 2 100 6 10 0 1; 1 1 120 7 10 0 1; 3 1 2; 1 1 110 8 10 0 1
+OS
+== g1_order_by_staff_equal_positions
+base: 8 1; 1 1 100 6 10 0 1; 1 1 100 8 0 0 1; 1 1 90 7 10 0 1; 2 1 100 0 0 0 1
+OS
+== g1_order_by_staff_catalogue_base
+base: 8 1 0 0 1; 8 2 0 0 1; 3 1 2 0 0; 1 1 30 5 10 0 1; 2 1 50 0 0 0 1; 14 1 70 1
+OS
+== g1_order_horizontal
+base: 8 1; 8 2; 1 2 100 6 10 0 1; 1 1 120 7 10 0 1; 1 1 110 8 10 0 1
+OH
+== g1_order_horizontal_mixed
+base: 8 2; 8 1; 1 2 100 6 10 0 1; 1 1 120 7 10 0 1; 3 1 2; 1 1 110 8 10 0 1
+OH
+== g1_order_text
+base: 8 1; 8 2; 1 2 100 6 10 0 1; 16 1 50 10 1 1 0 0 0 0 0 5 5.14623785 "_00Hi"; 16 2 30 10 1 1 0 0 0 0 0 5 5.14623785 "_00Ho"; 1 1 110 8 10 0 1
+OT
+== g1_cancelled
+base: 8 1; 1 1 100 6 10 0 1
+DE
+X
+R 1
+
+# -- conditional editing (IF … THEN …) and paste ------------------------------------------
+
+== g2_if_move_right_part
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 9 1 150 13 22 .25
+IF P3 > 100 THEN P3=P3-20
+== g2_if_semicolon
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1; 9 1 150 13 22 .25
+IF P3 > 100 ; P3=p3-20
+== g2_if_delete_codes
+base: 8 1; 8 6; 1 1 100 6 10 0 1; 1 6 120 7 10 0 1; 2 1 110 0 0 0 1; 2 6 130 0 0 0 1
+IF (P1=1 AND P2<4) OR (P1=2 AND P2>=6) THEN DEL
+== g2_if_mod_and_two_changes
+base: 8 1; 8 4; 1 4 100 6 10 0 0.5 0 1; 1 4 110 6 10 0 1; 1 1 120 6 10 0 1; 1 1 90 7 10 0 1
+IF(P1=1 AND P2>3 AND MOD(P9,10) <> 0) OR (P1=1 AND P2=1 AND P3>100) THEN P11=5, P6=6
+== g2_if_not_equal_tilde
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 12 0 1
+IF P1=1 AND P5~10 THEN P5=20
+== g2_if_less_equal_brace
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+IF P3{100 THEN P4=P4+2
+== g2_if_greater_equal_brace
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+IF P3}120 THEN P4=P4*2
+== g2_if_arithmetic
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 7 10 0 1
+IF P1=1 THEN P3=P3+P4*2
+== g2_if_divide
+base: 8 1; 1 1 100 6 10 0 1
+IF P1=1 THEN P7=P7/3
+== g2_if_colour
+base: 8 1; 1 1 100 6 10 0 1; 2 1 110 0 0 0 1
+IF P1=1 THEN RGB 990000
+== g2_if_grey
+base: 8 1; 1 1 100 6 10 0 1
+IF P1=1 THEN GRA .5
+== g2_if_black
+base: 8 1; 1 1 100 6 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5
+IF P1=1 THEN BLA
+== g2_if_cut_keeps_items
+base: 8 1; 1 1 100 6 10 0 1; 9 1 130 13 22 .25
+IF P3 > 120 AND (P1=9 OR P1=18) THEN CUT
+== g2_if_negative_value
+base: 8 1; 1 1 100 6 10 0 1
+IF P1=1 THEN P4=-3
+== g2_if_or_then_and
+base: 8 1; 1 1 120 6 10 0 1; 1 1 100 6 10 0 1
+IF P3=120 OR P1=2 AND P2=5 THEN P4=9
+
+# -- library symbols typed as numbers, as the symbol picker creates them -------------------
+
+== g3_symbol_fermata
+base: 8 1
+9 1 80 12 31
+== g3_symbol_then_edit
+base: 8 1
+9 1 80 12 31
+R 2
+
+# -- boxes drawn with the mouse as group areas and destinations ("~x x0 y0 x1 y1") --------
+
+== g4_box_delete_one_staff
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 1 150 7 10 0 1; 1 2 120 7 10 0 1
+DE
+~x 15000 2000 22000 4500
+== g4_box_delete_two_staves
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 1 150 7 10 0 1; 1 2 120 7 10 0 1
+DE
+~x 15000 2000 22000 7000
+== g4_box_click_takes_the_staff
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 1 150 7 10 0 1; 1 2 120 7 10 0 1
+DE
+~x 15000 6500 15050 6500
+== g4_box_line_through_staves
+base: 8 1; 8 2; 8 3; 1 1 100 6 10 0 1; 1 2 150 7 10 0 1; 1 3 120 7 10 0 1
+DE
+~x 15000 2500 15100 6500
+== g4_box_move_to_typed_staff
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 1 150 7 10 0 1
+M
+~x 15000 2000 20000 4500
+2
+== g4_box_move_click_destination
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 1 150 7 10 0 1
+M
+~x 15000 2000 20000 4500
+~x 25000 6700 25000 6700
+== g4_box_move_box_destination
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 1 150 7 10 0 1
+M
+~x 15000 2000 20000 4500
+~x 5000 6000 12500 7000
+== g4_box_move_line_destination
+base: 8 1; 8 2; 1 1 100 6 10 0 1; 1 1 150 7 10 0 1
+M
+~x 15000 2000 20000 4500
+~x 9500 6000 9550 7000
+== g4_box_unused_staff_skipped
+base: 8 1; 8 3; 1 1 100 6 10 0 1; 1 3 120 7 10 0 1
+DE
+~x 15000 6000 22000 7500
+
+# -- slider buttons, arrow keys, page right, ottavas, staff above/below, trailing slashes --
+
+== h1_slider_plus_one
+I 2
+PCHNG9
+== h1_slider_minus_tenth
+I 2
+PCHNG1
+== h1_slider_zero_refused
+I 2
+PCHNG0
+== h1_slider_minus_one_refused
+I 2
+PCHNG3
+== h1_slider_plus_five
+I 2
+PCHNG10
+== h1_arrow_left
+I 2
+~~037x
+== h1_arrow_up
+I 2
+~~038x
+== h1_arrow_right
+I 2
+~~039x
+== h1_arrow_down
+I 2
+~~040x
+== h1_page_right
+base: 8 1; 8 2; 1 1 100 6 10 0 1
+PGR
+== h1_page_back
+base: 8 201; 1 201 100 6 10 0 1
+PGR
+== h1_staff_above_below
+I 2
+SUD
+== h1_staff_above_below_twice
+I 2
+SUD
+SUD
+== h1_staff_above_below_thrice
+I 2
+SUD
+SUD
+SUD
+== h1_ottava_up
+base: 8 1; 7 1 50 15 0 120
+I 2
+OVAU
+== h1_ottava_down
+base: 8 1; 7 1 50 15 0 120
+I 2
+OVAD
+== h1_ottava
+base: 8 1; 7 1 50 15 1 120 1 1 1 1 1 1 1 1
+I 2
+OVA
+== h1_ottava_bassa
+base: 8 1; 7 1 50 15 1 120 1 1 1 1 1 1 1 1
+I 2
+OBA
+== h1_quindicesima
+base: 8 1; 7 1 50 15 0 120
+I 2
+OMA
+== h1_quindicesima_up
+base: 8 1; 7 1 50 15 0 120
+I 2
+OMAU
+== h1_pairs_with_slash
+I 2
+12 16/
+== h1_new_item_with_slash
+base: 8 1
+2 4/
+== h1_cut_time_word
+base: 8 1
+CUT/
+== h1_accordion
+base: 8 1
+ACCORD
+== h1_library_symbol
+base: 8 1
+LIB
+== h1_ottava_up_word
+base: 8 1
+OVAU
+# -- TR transposition ---------------------------------------------------------------------
+== t1_keynone_by1
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 1 1 0 0 0 0 0 1
+== t1_keynone_by2
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t1_keynone_bym1
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -1 1 0 0 0 0 0 1
+== t1_keynone_bym2
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -2 1 0 0 0 0 0 1
+== t1_keynone_by3
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 3 1 0 0 0 0 0 1
+== t1_keynone_by6
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 6 1 0 0 0 0 0 1
+== t1_keynone_bym6
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -6 1 0 0 0 0 0 1
+== t1_keynone_by7
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 7 1 0 0 0 0 0 1
+== t1_keynone_bym5
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -5 1 0 0 0 0 0 1
+== t1_keynone_by12
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 12 1 0 0 0 0 0 1
+== t1_keynone_bym12
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -12 1 0 0 0 0 0 1
+== t1_keynone_by13
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 13 1 0 0 0 0 0 1
+== t1_keynone_bym21
+base: 8 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -21 1 0 0 0 0 0 1
+== t1_key0_by1
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 1 1 0 0 0 0 0 1
+== t1_key0_by2
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t1_key0_bym1
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -1 1 0 0 0 0 0 1
+== t1_key0_bym2
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -2 1 0 0 0 0 0 1
+== t1_key0_by3
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 3 1 0 0 0 0 0 1
+== t1_key0_by6
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 6 1 0 0 0 0 0 1
+== t1_key0_bym6
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -6 1 0 0 0 0 0 1
+== t1_key0_by7
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 7 1 0 0 0 0 0 1
+== t1_key0_bym5
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -5 1 0 0 0 0 0 1
+== t1_key0_by12
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 12 1 0 0 0 0 0 1
+== t1_key0_bym12
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -12 1 0 0 0 0 0 1
+== t1_key0_by13
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 13 1 0 0 0 0 0 1
+== t1_key0_bym21
+base: 8 1; 17 1 10 0 0; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -21 1 0 0 0 0 0 1
+== t1_key1_by1
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 1 1 0 0 0 0 0 1
+== t1_key1_by2
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t1_key1_bym1
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -1 1 0 0 0 0 0 1
+== t1_key1_bym2
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -2 1 0 0 0 0 0 1
+== t1_key1_by3
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 3 1 0 0 0 0 0 1
+== t1_key1_by6
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 6 1 0 0 0 0 0 1
+== t1_key1_bym6
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -6 1 0 0 0 0 0 1
+== t1_key1_by7
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 7 1 0 0 0 0 0 1
+== t1_key1_bym5
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -5 1 0 0 0 0 0 1
+== t1_key1_by12
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 12 1 0 0 0 0 0 1
+== t1_key1_bym12
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -12 1 0 0 0 0 0 1
+== t1_key1_by13
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 13 1 0 0 0 0 0 1
+== t1_key1_bym21
+base: 8 1; 17 1 10 0 1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -21 1 0 0 0 0 0 1
+== t1_keym1_by1
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 1 1 0 0 0 0 0 1
+== t1_keym1_by2
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t1_keym1_bym1
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -1 1 0 0 0 0 0 1
+== t1_keym1_bym2
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -2 1 0 0 0 0 0 1
+== t1_keym1_by3
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 3 1 0 0 0 0 0 1
+== t1_keym1_by6
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 6 1 0 0 0 0 0 1
+== t1_keym1_bym6
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -6 1 0 0 0 0 0 1
+== t1_keym1_by7
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 7 1 0 0 0 0 0 1
+== t1_keym1_bym5
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -5 1 0 0 0 0 0 1
+== t1_keym1_by12
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 12 1 0 0 0 0 0 1
+== t1_keym1_bym12
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -12 1 0 0 0 0 0 1
+== t1_keym1_by13
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 13 1 0 0 0 0 0 1
+== t1_keym1_bym21
+base: 8 1; 17 1 10 0 -1; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -21 1 0 0 0 0 0 1
+== t1_key2_by1
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 1 1 0 0 0 0 0 1
+== t1_key2_by2
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t1_key2_bym1
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -1 1 0 0 0 0 0 1
+== t1_key2_bym2
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -2 1 0 0 0 0 0 1
+== t1_key2_by3
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 3 1 0 0 0 0 0 1
+== t1_key2_by6
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 6 1 0 0 0 0 0 1
+== t1_key2_bym6
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -6 1 0 0 0 0 0 1
+== t1_key2_by7
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 7 1 0 0 0 0 0 1
+== t1_key2_bym5
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -5 1 0 0 0 0 0 1
+== t1_key2_by12
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 12 1 0 0 0 0 0 1
+== t1_key2_bym12
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -12 1 0 0 0 0 0 1
+== t1_key2_by13
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 13 1 0 0 0 0 0 1
+== t1_key2_bym21
+base: 8 1; 17 1 10 0 2; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -21 1 0 0 0 0 0 1
+== t1_keym3_by1
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 1 1 0 0 0 0 0 1
+== t1_keym3_by2
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t1_keym3_bym1
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -1 1 0 0 0 0 0 1
+== t1_keym3_bym2
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -2 1 0 0 0 0 0 1
+== t1_keym3_by3
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 3 1 0 0 0 0 0 1
+== t1_keym3_by6
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 6 1 0 0 0 0 0 1
+== t1_keym3_bym6
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -6 1 0 0 0 0 0 1
+== t1_keym3_by7
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 7 1 0 0 0 0 0 1
+== t1_keym3_bym5
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -5 1 0 0 0 0 0 1
+== t1_keym3_by12
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 12 1 0 0 0 0 0 1
+== t1_keym3_bym12
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -12 1 0 0 0 0 0 1
+== t1_keym3_by13
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 13 1 0 0 0 0 0 1
+== t1_keym3_bym21
+base: 8 1; 17 1 10 0 -3; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -21 1 0 0 0 0 0 1
+== t1_key5_by1
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 1 1 0 0 0 0 0 1
+== t1_key5_by2
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t1_key5_bym1
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -1 1 0 0 0 0 0 1
+== t1_key5_bym2
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -2 1 0 0 0 0 0 1
+== t1_key5_by3
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 3 1 0 0 0 0 0 1
+== t1_key5_by6
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 6 1 0 0 0 0 0 1
+== t1_key5_bym6
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -6 1 0 0 0 0 0 1
+== t1_key5_by7
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 7 1 0 0 0 0 0 1
+== t1_key5_bym5
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -5 1 0 0 0 0 0 1
+== t1_key5_by12
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 12 1 0 0 0 0 0 1
+== t1_key5_bym12
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -12 1 0 0 0 0 0 1
+== t1_key5_by13
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 13 1 0 0 0 0 0 1
+== t1_key5_bym21
+base: 8 1; 17 1 10 0 5; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -21 1 0 0 0 0 0 1
+== t1_keym6_by1
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 1 1 0 0 0 0 0 1
+== t1_keym6_by2
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t1_keym6_bym1
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -1 1 0 0 0 0 0 1
+== t1_keym6_bym2
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -2 1 0 0 0 0 0 1
+== t1_keym6_by3
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 3 1 0 0 0 0 0 1
+== t1_keym6_by6
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 6 1 0 0 0 0 0 1
+== t1_keym6_bym6
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -6 1 0 0 0 0 0 1
+== t1_keym6_by7
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 7 1 0 0 0 0 0 1
+== t1_keym6_bym5
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -5 1 0 0 0 0 0 1
+== t1_keym6_by12
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 12 1 0 0 0 0 0 1
+== t1_keym6_bym12
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -12 1 0 0 0 0 0 1
+== t1_keym6_by13
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 13 1 0 0 0 0 0 1
+== t1_keym6_bym21
+base: 8 1; 17 1 10 0 -6; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -21 1 0 0 0 0 0 1
+== t1_key7_by1
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 1 1 0 0 0 0 0 1
+== t1_key7_by2
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t1_key7_bym1
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -1 1 0 0 0 0 0 1
+== t1_key7_bym2
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -2 1 0 0 0 0 0 1
+== t1_key7_by3
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 3 1 0 0 0 0 0 1
+== t1_key7_by6
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 6 1 0 0 0 0 0 1
+== t1_key7_bym6
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -6 1 0 0 0 0 0 1
+== t1_key7_by7
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 7 1 0 0 0 0 0 1
+== t1_key7_bym5
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -5 1 0 0 0 0 0 1
+== t1_key7_by12
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 12 1 0 0 0 0 0 1
+== t1_key7_bym12
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -12 1 0 0 0 0 0 1
+== t1_key7_by13
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 13 1 0 0 0 0 0 1
+== t1_key7_bym21
+base: 8 1; 17 1 10 0 7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -21 1 0 0 0 0 0 1
+== t1_keym7_by1
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 1 1 0 0 0 0 0 1
+== t1_keym7_by2
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t1_keym7_bym1
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -1 1 0 0 0 0 0 1
+== t1_keym7_bym2
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -2 1 0 0 0 0 0 1
+== t1_keym7_by3
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 3 1 0 0 0 0 0 1
+== t1_keym7_by6
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 6 1 0 0 0 0 0 1
+== t1_keym7_bym6
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -6 1 0 0 0 0 0 1
+== t1_keym7_by7
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 7 1 0 0 0 0 0 1
+== t1_keym7_bym5
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -5 1 0 0 0 0 0 1
+== t1_keym7_by12
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 12 1 0 0 0 0 0 1
+== t1_keym7_bym12
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -12 1 0 0 0 0 0 1
+== t1_keym7_by13
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR 13 1 0 0 0 0 0 1
+== t1_keym7_bym21
+base: 8 1; 17 1 10 0 -7; 1 1 20 1 10 0 1; 1 1 28 2 10 0 1; 1 1 36 3 10 0 1; 1 1 44 4 10 0 1; 1 1 52 5 10 0 1; 1 1 60 6 10 0 1; 1 1 68 7 10 0 1; 1 1 76 1 12 0 1; 1 1 84 2 11 0 1; 1 1 92 3 13 0 1; 1 1 100 4 12 0 1; 1 1 108 6 11 0 1; 1 1 116 7 14 0 1; 1 1 124 5 15 0 1; 1 1 132 8 16 0 1
+TR -21 1 0 0 0 0 0 1
+== t2_dialog_area
+base: 8 1; 3 1 5 0 1; 17 1 10 0 1; 1 1 100 6 12 0 1; 1 1 110 9 20 0 1
+!transpose half=2
+TR
+1 0 0 0
+== t2_dialog_two_staves
+base: 8 1; 8 2 0 0 0 200; 17 1 10 0 1; 1 1 100 6 12 0 1; 17 2 10 0 -1; 1 2 100 6 10 0 1; 1 3 100 6 10 0 1
+!transpose half=-1
+TR
+1 0 0 2
+== t2_typed_zero_interval
+base: 8 1; 17 1 10 0 1; 1 1 100 6 12 0 1
+TR 0 1
+== t2_range
+base: 8 1; 17 1 10 0 1; 1 1 50 6 10 0 1; 1 1 100 6 10 0 1; 1 1 150 6 10 0 1; 5 1 40 6 6 110 3; 6 1 90 9 9 160 11
+TR 2 1 60 140 0 0 0 1
+== t2_unsorted_base
+base: 8 1; 1 1 60.004 3 10 0 1; 17 1 10 0 2; 1 1 40 5 12 0 1; 1 1 40 2 10 0 1
+TR 3 1 0 0 0 0 0 1
+== t2_mid_key
+base: 8 1; 17 1 10 0 1; 1 1 50 7 10 0 1; 17 1 80 0 -2; 1 1 100 7 10 0 1; 1 1 120 3 10 0 1
+TR 3 1 0 0 0 0 0 1
+== t2_mid_key_cancelled
+base: 8 1; 17 1 10 0 2; 1 1 50 7 10 0 1; 14 1 70; 17 1 80 0 1; 1 1 100 7 12 0 1
+TR -7 1 0 0 0 0 0 1
+== t2_first_key_removed
+base: 8 1; 17 1 10 0 -1; 1 1 50 7 10 0 1; 17 1 80 0 2; 1 1 100 7 10 0 1
+TR 5 1 0 0 0 0 0 1
+== t2_key_after_flats
+base: 8 1; 17 1 10 0 -3; 1 1 50 7 10 0 1; 17 1 80 0 3; 1 1 100 7 10 0 1
+TR -9 1 0 0 0 0 0 1
+== t2_cancel_key_value
+base: 8 1; 17 1 10 0 102; 1 1 50 7 10 0 1
+TR 2 1 0 0 0 0 0 1
+== t2_bar_inherits
+base: 8 1; 1 1 20 1 10 0 1; 1 1 30 1 10 0 1; 1 1 40 4 12 0 1; 1 1 50 4 10 0 1; 14 1 60; 1 1 70 1 10 0 1; 1 1 80 4 10 0 1
+TR 1 1 0 0 0 0 0 1
+== t2_bar_explicit_stops
+base: 8 1; 1 1 20 1 10 0 1; 1 1 30 1 13 0 1; 1 1 40 1 10 0 1; 1 1 50 3 10 0 1
+TR 1 1 0 0 0 0 0 1
+== t2_bar_chord
+base: 8 1; 1 1 20 1 10 0 1; 1 1 20 3 10 0 1; 14 1 30; 1 1 40 1 10 0 1; 1 1 40 3 10 0 1; 1 1 50 3 10 0 1
+TR 1 1 0 0 0 0 0 1
+== t2_bar_spanning
+base: 8 1; 8 2 0 0 0 200; 1 1 20 1 10 0 1; 14 1 30 0 2; 1 1 40 1 10 0 1; 1 2 20 1 10 0 1; 1 2 40 1 10 0 1
+TR 1 1 0 0 2 0 0 1
+== t2_tie_across_bar
+base: 8 1; 1 1 20 1 10 0 1; 5 1 20 3 3 40 2; 14 1 30; 1 1 40 1 10 0 1; 1 1 50 1 10 0 1
+TR 1 1 0 0 0 0 0 1
+== t2_tie_other_level
+base: 8 1; 1 1 20 2 10 0 1; 5 1 20 3 3 40 2; 14 1 30; 1 1 40 1 10 0 1
+TR 1 1 0 0 0 0 0 1
+== t2_tie_from_before
+base: 8 1; 5 1 5 3 3 25 2; 1 1 20 1 10 0 1; 1 1 30 1 10 0 1
+TR 1 1 0 0 0 0 0 1
+== t2_rest_inside
+base: 8 1; 17 1 10 0 1; 2 1 20 0 0 0 1; 1 1 30 4 10 0 1; 2 1 40 0 0 0 1; 1 1 50 4 12 0 1
+TR 2 1 0 0 0 0 0 1
+== t2_rest_without_duration
+base: 8 1; 17 1 10 0 1; 2 1 20 0 0 0 0; 1 1 30 4 10 0 1
+TR 2 1 0 0 0 0 0 1
+== t2_key_only
+base: 8 1; 17 1 10 0 1
+TR 2 1 0 0 0 0 0 1
+== t2_digits
+base: 8 1; 1 1 20 1 16 0 1; 1 1 30 2 17 0 1; 1 1 40 3 12.5 0 1; 17 1 50 0 2; 1 1 60 1 16 0 1
+TR 2 1 0 0 0 0 0 1
+== t2_clamped
+base: 8 1; 17 1 10 0 1; 1 1 20 7 14 0 1; 1 1 30 4 15 0 1; 1 1 40 5 15 0 1
+TR -1 1 0 0 0 0 0 1
+== t2_cue_off
+base: 8 1; 1 1 50 106 10 0 1; 1 1 60 6 10 0 1; 6 1 50 106 7 60 11; 5 1 50 106 6 60 3; 1 1 70 105 11 0 65
+TR 2 1 0 0 0 0 0 1
+== t2_cue_on
+base: 8 1; 1 1 50 106 10 0 1; 1 1 60 6 10 0 1; 6 1 50 106 7 60 11; 5 1 50 106 6 60 3; 1 1 70 105 11 0 65
+TR 2 1 0 0 0 0 0 1 1
+== t2_cue_down
+base: 8 1; 1 1 50 101 10 0 1; 6 1 50 101 101 60 11; 6 1 70 -105 -105 80 11
+TR -5 1 0 0 0 0 0 1 1
+== t2_beam_interval_steps
+base: 8 1; 17 1 10 0 1; 1 1 50 1 10 0 1; 6 1 50 9 9 60 11; 5 1 50 2 2 60 3
+TR 6 1 0 0 0 0 0 1
+== t2_beam_flat_key
+base: 8 1; 17 1 10 0 -1; 1 1 50 1 10 0 1; 6 1 50 9 9 60 11; 5 1 50 2 2 60 3
+TR 6 1 0 0 0 0 0 1
+== t2_beam_short
+base: 8 1; 1 1 50 1 10 0 1; 6 1 50 9 9 60 0
+TR 2 1 0 0 0 0 0 1
+== t2_beam_short_with_tie
+base: 8 1; 1 1 50 1 10 0 1; 6 1 50 9 9 60; 5 1 50 2 2 60 3
+TR 2 1 0 0 0 0 0 1
+== t2_slur_stems_down
+base: 8 1; 1 1 50 9 20 0 1; 1 1 60 10 20 0 1; 5 1 50 13 14 60 -3
+TR 2 1 0 0 0 0 0 1
+== t2_slur_down_up
+base: 8 1; 1 1 50 9 20 0 1; 1 1 60 3 10 0 1; 5 1 50 13 14 60 -3
+TR 2 1 0 0 0 0 0 1
+== t2_slur_up_down
+base: 8 1; 1 1 50 3 10 0 1 3; 1 1 60 9 20 0 1; 5 1 50 13 14 60 3
+TR 2 1 0 0 0 0 0 1
+== t2_slur_up_up_below
+base: 8 1; 1 1 50 3 10 0 1; 1 1 60 4 10 0 1; 5 1 50 1 2 60 -3
+TR 2 1 0 0 0 0 0 1
+== t2_slur_nudged
+base: 8 1; 1 1 50 3 10 0 1; 1 1 60 5 10 0 1; 5 1 50 4 6 60 3; 5 1 50 4 6 60 -3
+TR 2 1 0 0 0 0 0 1
+== t2_slur_mixed_stemless
+base: 8 1; 1 1 50 3 10 0 1; 1 1 60 5 0 0 1; 5 1 50 5 7 60 3
+TR 2 1 0 0 0 0 0 1
+== t2_slur_cue_stem
+base: 8 1; 1 1 50 109 20 0 1; 1 1 60 3 10 0 1 0 2; 5 1 50 113 14 60 3
+TR 2 1 0 0 0 0 0 1 1
+== t2_slur_nearest
+base: 8 1; 1 1 50 3 10 0 1; 1 1 60 5 10 0 1; 1 1 70 7 10 0 1; 5 1 54 9 9 66 3
+TR -3 1 0 0 0 0 0 1
+== t2_chord_ties
+base: 8 1; 1 1 50 3 10 0 1; 1 1 50 5 10 0 1; 5 1 50 2 2 60 -3; 5 1 50 2 2 60 -3; 1 1 60 3 10 0 1; 1 1 60 5 10 0 1; 1 1 80 4 10 0 1
+TR 2 1 0 0 0 0 0 1
+== t2_chord_ties_last
+base: 8 1; 1 1 50 3 10 0 1; 1 1 50 5 10 0 1; 5 1 50 2 2 60 -3; 5 1 50 2 2 60 -3; 1 1 60 3 10 0 1; 1 1 60 5 10 0 1
+TR 2 1 0 0 0 0 0 1
+== t2_flat_tie_p8
+base: 8 1; 1 1 50 9 20 0 1; 1 1 60 9 20 0 1; 5 1 50 11 11 60 3 -2
+TR 2 1 0 0 0 0 0 1
+== t2_slur_p8_two
+base: 8 1; 1 1 50 3 10 0 1; 1 1 60 5 10 0 1; 5 1 50 5 7 60 3 2
+TR 2 1 0 0 0 0 0 1
+== t2_slur_before_clef
+base: 8 1; 1 1 50 3 10 0 1; 5 1 50 5 7 60 3; 3 1 55 0; 1 1 60 5 10 0 1
+TR 2 1 0 0 0 0 0 1
+== t2_guitar
+base: 8 1; 12 1 50 12 -1 0 10; 12 1 60 12 -3 0 42; 12 1 70 12 -1 0 61; 12 1 80 12 1 0 10; 12 1 85 12 -3 0 72; 1 1 90 6 10 0 1
+TR 3 1 0 0 0 0 0 1
+== t2_guitar_octave
+base: 8 1; 12 1 50 12 -3 0 10; 1 1 90 6 10 0 1
+TR 12 1 0 0 0 0 0 1
+== t2_clef_bass_to_treble
+base: 8 1; 3 1 5 0 1; 17 1 10 0 1; 1 1 50 6 12 0 1; 6 1 50 9 9 60 11; 5 1 50 10 10 60 3; 1 1 60 106 10 0 1
+!transpose half=2 clef=0
+TR
+1 0 0 0
+== t2_clef_only_alto
+base: 8 1; 3 1 5 0 0; 1 1 50 6 10 0 1; 1 1 60 106 10 0 1; 5 1 50 6 6 60 3; 6 1 50 9 9 60 11
+!transpose half=0 clef=2
+TR
+1 0 0 0
+== t2_clef_two_runs
+base: 8 1; 3 1 5 0 1; 1 1 50 6 10 0 1; 6 1 50 9 9 55 11; 3 1 70 0 0; 1 1 80 6 10 0 1; 6 1 80 9 9 90 11
+!transpose half=0 clef=3
+TR
+1 0 0 0
+== t2_clef_none_present
+base: 8 1; 17 1 10 0 1; 1 1 50 6 10 0 1
+TR 2 1 0 0 0 0 1 1
+== t2_clef_unchanged
+base: 8 1; 3 1 5 0 1; 1 1 50 6 10 0 1; 3 1 70 0 1
+TR 2 1 0 0 0 0 1 1
+== t2_key_gets_clef
+base: 8 1; 3 1 5 0 0; 17 1 10 0 1; 1 1 100 6 10 0 1; 3 1 120 0 1; 17 1 130 0 1; 1 1 150 6 10 0 1
+TR 2 1 0 0 0 0 0 1
+== t2_add_key
+base: 8 1; 3 1 5 0 0; 1 1 50 6 10 0 1; 1 1 60 4 10 0 1
+TR 2 1 0 0 0 1 0 1
+== t2_add_key_no_clef
+base: 8 1; 1 1 100 6 10 0 1; 1 1 120 4 12 0 1
+TR -3 1 0 0 0 1 0 1
+== t2_add_key_rest_first
+base: 8 1; 3 1 8 0 1; 2 1 40 0 0 0 1; 1 1 60 6 10 0 1
+TR 3 1 0 0 0 1 0 1
+== t2_add_key_existing
+base: 8 1; 3 1 5 0 0; 17 1 20 0 2; 1 1 50 6 10 0 1
+TR 2 1 0 0 0 1 0 1
+== t2_add_key_octave
+base: 8 1; 3 1 5 0 0; 1 1 50 6 10 0 1
+TR 12 1 0 0 0 1 0 1
+== t2_beyond_right_end
+base: 8 1; 1 1 50 6 10 0 1; 1 1 205 6 10 0 1
+TR 2 1 0 250 0 0 0 1
+== t2_trill_in_edit_mode
+base: 8 1; 1 1 100 6 10 0 1
+I 2
+TR
+== li_answer
+base: 8 1; 3 1 2 0 0; 18 1 12 4 0 4; 1 1 20 6 10 0 1; 1 1 30 7 10 0 2; 1 1 60 8 10 0 1; 14 1 80; 1 1 90 6 10 0 4
+LI
+1 1
+== li_typed
+base: 8 1; 3 1 2 0 0; 18 1 12 4 0 4; 1 1 20 6 10 0 1; 1 1 30 7 10 0 2; 1 1 60 8 10 0 1; 14 1 80; 1 1 90 6 10 0 4
+LI 1 1
+== li_two_staves
+base: 8 1; 8 2 0 0 0 200; 1 1 20 6 10 0 2; 1 1 40 6 10 0 2; 1 2 20 6 10 0 1; 1 2 25 7 10 0 1; 1 2 30 8 10 0 1; 1 2 35 6 10 0 1
+LI
+1 2
+== li_box
+base: 8 1; 3 1 2 0 0; 1 1 20 6 10 0 1; 1 1 30 7 10 0 2; 1 1 60 8 10 0 1; 14 1 80; 1 1 90 6 10 0 4
+LI
+~x 3000 3000 30000 5000
+== li_unequal
+base: 8 1; 8 2 0 0 0 200; 1 1 20 6 10 0 2; 1 2 20 6 10 0 1
+LI
+1 2
+== li_in_edit_mode
+base: 8 1; 1 1 100 6 10 0 1
+I 2
+LI 2
+== lj_justify
+base: 8 1; 3 1 2 0 0; 18 1 12 4 0 4; 1 1 20 6 10 0 1; 1 1 30 7 10 0 2; 1 1 60 8 10 0 1; 14 1 80; 1 1 90 6 12 0 4; 14 1 120
+J
+1 1
+== lj_justify_typed
+base: 8 1; 3 1 2 0 0; 1 1 20 6 10 0 1; 1 1 30 7 10 0 2; 14 1 50; 1 1 60 8 10 0 1; 14 1 100
+J 1 1
+== lj_justify_box
+base: 8 1; 3 1 2 0 0; 1 1 20 6 10 0 1; 1 1 30 7 10 0 2; 14 1 50; 1 1 60 8 10 0 1; 14 1 100
+J
+~x 3000 3000 30000 5000
+== lj_both
+base: 8 1; 3 1 2 0 0; 18 1 12 4 0 4; 1 1 20 6 10 0 1; 1 1 30 7 10 0 2; 1 1 60 8 10 0 1; 14 1 80; 1 1 90 6 12 0 4; 14 1 120
+LJ
+1 1
+== lj_both_two_staves
+base: 8 1; 8 2 0 0 0 200; 1 1 20 6 10 0 2; 1 1 40 6 10 0 2; 14 1 60 1; 1 2 20 6 10 0 1; 1 2 25 7 11 0 1; 1 2 30 8 10 0 1; 1 2 35 6 10 0 1
+LJ
+1 2
+== lj_all
+base: 8 1; 8 2 0 0 0 200; 1 1 20 6 10 0 2; 1 1 40 6 10 0 2; 14 1 60 1; 1 2 20 6 10 0 1; 1 2 25 7 11 0 1; 1 2 30 8 10 0 1; 1 2 35 6 10 0 1
+LJA
+== lj_all_no_notes
+base: 8 1; 9 1 20 10 1
+LJA
+== lj_unequal
+base: 8 1; 8 2 0 0 0 200; 1 1 20 6 10 0 2; 1 2 20 6 10 0 1
+LJ
+1 2
+== lj_text_justify_in_edit_mode
+base: 8 1; 16 1 50 10 1 1 0 0 0 0 0 5 9 "_00Hello"
+I 2
+J 20 80
+== d_open_centred
+base: 8 1; 14 1 60; 2 1 80 0 -2 0 4 0 -1; 14 1 120
+I 2
+X
+== d_cw_bars
+base: 8 1; 14 1 60; 2 1 80 0 -2 0 4; 14 1 120
+I 3
+CW
+== d_cw_bars_left
+base: 8 1; 14 1 60; 2 1 80 0 -2 0 4; 14 1 120
+I 3
+CW
+X
+== d_li_whole_rest
+base: 8 1; 1 1 20 6 10 0 4; 14 1 60; 2 1 80 0 -2 0 4; 14 1 120
+LI
+1 1
+== d_cwn_kinds
+base: 8 1; 14 1 10; 2 1 20 0 0 0 1; 14 1 40; 2 1 50 0 -2 0 4; 14 1 70; 2 1 80 0 -3 0 8; 14 1 100; 2 1 110 0 -4 0 4; 14 1 130; 2 1 140 0 -5 0 4; 14 1 160; 2 1 170 0 -2 -1 4; 14 1 190
+CW1
+== d_cwn_other_staff
+base: 8 1; 8 2 0 0 0 200; 14 1 60; 2 1 80 0 -2 0 4; 14 1 120; 14 2 60; 2 2 70 0 -2 0 4; 14 2 120
+CW2
+== d_cwa
+base: 8 1; 8 2 0 0 0 200; 14 1 60; 2 1 80 0 -2 0 4; 14 1 120; 14 2 60; 2 2 70 0 -2 0 4; 14 2 120
+CWA
+== d_cw_no_number
+base: 8 1; 14 1 60; 2 1 80 0 -2 0 4; 14 1 120
+CW
+== d_cwn_cue_and_p10
+base: 8 1; 14 1 10; 2 1 20 100 -2 0 4; 14 1 40; 2 1 50 0 -2 0 4 0 0 5; 14 1 70; 2 1 80 0 -2 0 4 0 77; 14 1 100
+CW1
+# -- beam stem pass: ADJ, ADJX, ADX, ADF, ADFX -----------------------------------------
+== e1_beam0_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 108 10 0 0.25 0 11; 1 1 69.23 109 10 0 0.25 0 1; 1 1 72.38 98 20 0 0.25 0 2; 1 1 90.57 98 13 0 0.25 0 0; 1 1 93.52 106 20 0 0.25 0 0; 6 1 58.1 95.8 -6.6 93.52 21; 14 1 200 1
+I 8
+ADJ
+== e1_beam0_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 108 10 0 0.25 0 11; 1 1 69.23 109 10 0 0.25 0 1; 1 1 72.38 98 20 0 0.25 0 2; 1 1 90.57 98 13 0 0.25 0 0; 1 1 93.52 106 20 0 0.25 0 0; 6 1 58.1 95.8 -6.6 93.52 21; 14 1 200 1
+I 8
+ADJX
+== e1_beam0_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 108 10 0 0.25 0 11; 1 1 69.23 109 10 0 0.25 0 1; 1 1 72.38 98 20 0 0.25 0 2; 1 1 90.57 98 13 0 0.25 0 0; 1 1 93.52 106 20 0 0.25 0 0; 6 1 58.1 95.8 -6.6 93.52 21; 14 1 200 1
+I 8
+ADX
+== e1_beam0_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 108 10 0 0.25 0 11; 1 1 69.23 109 10 0 0.25 0 1; 1 1 72.38 98 20 0 0.25 0 2; 1 1 90.57 98 13 0 0.25 0 0; 1 1 93.52 106 20 0 0.25 0 0; 6 1 58.1 95.8 -6.6 93.52 21; 14 1 200 1
+I 8
+ADF
+== e1_beam0_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 108 10 0 0.25 0 11; 1 1 69.23 109 10 0 0.25 0 1; 1 1 72.38 98 20 0 0.25 0 2; 1 1 90.57 98 13 0 0.25 0 0; 1 1 93.52 106 20 0 0.25 0 0; 6 1 58.1 95.8 -6.6 93.52 21; 14 1 200 1
+I 8
+ADFX
+== e1_beam0_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 108 10 0 0.25 0 11; 1 1 69.23 109 10 0 0.25 0 1; 1 1 72.38 98 20 0 0.25 0 2; 1 1 90.57 98 13 0 0.25 0 0; 1 1 93.52 106 20 0 0.25 0 0; 6 1 58.1 95.8 -6.6 93.52 21; 14 1 200 1
+I 4
+ADJ
+== e1_beam1_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.5 5 13 0 0.25 0 11; 1 1 74.94 8 20 0 0.25 0 0; 1 1 85.12 3 10 0 0.25 0 11; 1 1 101.27 0 10 0 0.25 0 1 20 0 0 0 0 0.8; 1 1 92.5 8 10 0 0.25 0 11; 6 1 66.5 10.2 10.6 92.5 11 0 0 -10 -1 0 0 0 10 0 0; 14 1 200 1
+I 8
+ADJ
+== e1_beam1_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.5 5 13 0 0.25 0 11; 1 1 74.94 8 20 0 0.25 0 0; 1 1 85.12 3 10 0 0.25 0 11; 1 1 101.27 0 10 0 0.25 0 1 20 0 0 0 0 0.8; 1 1 92.5 8 10 0 0.25 0 11; 6 1 66.5 10.2 10.6 92.5 11 0 0 -10 -1 0 0 0 10 0 0; 14 1 200 1
+I 8
+ADJX
+== e1_beam1_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.5 5 13 0 0.25 0 11; 1 1 74.94 8 20 0 0.25 0 0; 1 1 85.12 3 10 0 0.25 0 11; 1 1 101.27 0 10 0 0.25 0 1 20 0 0 0 0 0.8; 1 1 92.5 8 10 0 0.25 0 11; 6 1 66.5 10.2 10.6 92.5 11 0 0 -10 -1 0 0 0 10 0 0; 14 1 200 1
+I 8
+ADX
+== e1_beam1_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.5 5 13 0 0.25 0 11; 1 1 74.94 8 20 0 0.25 0 0; 1 1 85.12 3 10 0 0.25 0 11; 1 1 101.27 0 10 0 0.25 0 1 20 0 0 0 0 0.8; 1 1 92.5 8 10 0 0.25 0 11; 6 1 66.5 10.2 10.6 92.5 11 0 0 -10 -1 0 0 0 10 0 0; 14 1 200 1
+I 8
+ADF
+== e1_beam1_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.5 5 13 0 0.25 0 11; 1 1 74.94 8 20 0 0.25 0 0; 1 1 85.12 3 10 0 0.25 0 11; 1 1 101.27 0 10 0 0.25 0 1 20 0 0 0 0 0.8; 1 1 92.5 8 10 0 0.25 0 11; 6 1 66.5 10.2 10.6 92.5 11 0 0 -10 -1 0 0 0 10 0 0; 14 1 200 1
+I 8
+ADFX
+== e1_beam1_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.5 5 13 0 0.25 0 11; 1 1 74.94 8 20 0 0.25 0 0; 1 1 85.12 3 10 0 0.25 0 11; 1 1 101.27 0 10 0 0.25 0 1 20 0 0 0 0 0.8; 1 1 92.5 8 10 0 0.25 0 11; 6 1 66.5 10.2 10.6 92.5 11 0 0 -10 -1 0 0 0 10 0 0; 14 1 200 1
+I 4
+ADJ
+== e1_beam2_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 79.4 2 20 0 0.25 0 0; 1 1 87.7 -1 20 0 0.25 0 1; 1 1 96.14 1 10 0 0.25 0 0; 6 1 79.4 -0.2 1.6 96.14 21 0 0 12 0 -1 0 0 10 0 0; 14 1 200 1
+I 6
+ADJ
+== e1_beam2_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 79.4 2 20 0 0.25 0 0; 1 1 87.7 -1 20 0 0.25 0 1; 1 1 96.14 1 10 0 0.25 0 0; 6 1 79.4 -0.2 1.6 96.14 21 0 0 12 0 -1 0 0 10 0 0; 14 1 200 1
+I 6
+ADJX
+== e1_beam2_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 79.4 2 20 0 0.25 0 0; 1 1 87.7 -1 20 0 0.25 0 1; 1 1 96.14 1 10 0 0.25 0 0; 6 1 79.4 -0.2 1.6 96.14 21 0 0 12 0 -1 0 0 10 0 0; 14 1 200 1
+I 6
+ADX
+== e1_beam2_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 79.4 2 20 0 0.25 0 0; 1 1 87.7 -1 20 0 0.25 0 1; 1 1 96.14 1 10 0 0.25 0 0; 6 1 79.4 -0.2 1.6 96.14 21 0 0 12 0 -1 0 0 10 0 0; 14 1 200 1
+I 6
+ADF
+== e1_beam2_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 79.4 2 20 0 0.25 0 0; 1 1 87.7 -1 20 0 0.25 0 1; 1 1 96.14 1 10 0 0.25 0 0; 6 1 79.4 -0.2 1.6 96.14 21 0 0 12 0 -1 0 0 10 0 0; 14 1 200 1
+I 6
+ADFX
+== e1_beam2_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 79.4 2 20 0 0.25 0 0; 1 1 87.7 -1 20 0 0.25 0 1; 1 1 96.14 1 10 0 0.25 0 0; 6 1 79.4 -0.2 1.6 96.14 21 0 0 12 0 -1 0 0 10 0 0; 14 1 200 1
+I 4
+ADJ
+== e1_beam3_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 4 23 0 0.25 0 1; 1 1 64.91 -1 10 0 0.25 0 0; 1 1 74.73 4 21 0 0.25 0 11; 1 1 87.39 5 21 0 0.25 0 2; 1 1 89.56 0 10 0 0.25 0 11; 6 1 58.1 11 11.7 89.56 11; 14 1 200 1
+I 8
+ADJ
+== e1_beam3_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 4 23 0 0.25 0 1; 1 1 64.91 -1 10 0 0.25 0 0; 1 1 74.73 4 21 0 0.25 0 11; 1 1 87.39 5 21 0 0.25 0 2; 1 1 89.56 0 10 0 0.25 0 11; 6 1 58.1 11 11.7 89.56 11; 14 1 200 1
+I 8
+ADJX
+== e1_beam3_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 4 23 0 0.25 0 1; 1 1 64.91 -1 10 0 0.25 0 0; 1 1 74.73 4 21 0 0.25 0 11; 1 1 87.39 5 21 0 0.25 0 2; 1 1 89.56 0 10 0 0.25 0 11; 6 1 58.1 11 11.7 89.56 11; 14 1 200 1
+I 8
+ADX
+== e1_beam3_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 4 23 0 0.25 0 1; 1 1 64.91 -1 10 0 0.25 0 0; 1 1 74.73 4 21 0 0.25 0 11; 1 1 87.39 5 21 0 0.25 0 2; 1 1 89.56 0 10 0 0.25 0 11; 6 1 58.1 11 11.7 89.56 11; 14 1 200 1
+I 8
+ADF
+== e1_beam3_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 4 23 0 0.25 0 1; 1 1 64.91 -1 10 0 0.25 0 0; 1 1 74.73 4 21 0 0.25 0 11; 1 1 87.39 5 21 0 0.25 0 2; 1 1 89.56 0 10 0 0.25 0 11; 6 1 58.1 11 11.7 89.56 11; 14 1 200 1
+I 8
+ADFX
+== e1_beam3_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.1 4 23 0 0.25 0 1; 1 1 64.91 -1 10 0 0.25 0 0; 1 1 74.73 4 21 0 0.25 0 11; 1 1 87.39 5 21 0 0.25 0 2; 1 1 89.56 0 10 0 0.25 0 11; 6 1 58.1 11 11.7 89.56 11; 14 1 200 1
+I 4
+ADJ
+== e1_beam4_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 74.1 103 10 0 0.25 0 1; 1 1 85.6 103 11 0 0.25 0 1 1.5 0 0 0 0 0; 6 1 74.1 112.5 11 85.6 11 0 100 -10 85.6 85.6 0 0 20 0 0; 14 1 200 1
+I 5
+ADJ
+== e1_beam4_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 74.1 103 10 0 0.25 0 1; 1 1 85.6 103 11 0 0.25 0 1 1.5 0 0 0 0 0; 6 1 74.1 112.5 11 85.6 11 0 100 -10 85.6 85.6 0 0 20 0 0; 14 1 200 1
+I 5
+ADJX
+== e1_beam4_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 74.1 103 10 0 0.25 0 1; 1 1 85.6 103 11 0 0.25 0 1 1.5 0 0 0 0 0; 6 1 74.1 112.5 11 85.6 11 0 100 -10 85.6 85.6 0 0 20 0 0; 14 1 200 1
+I 5
+ADX
+== e1_beam4_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 74.1 103 10 0 0.25 0 1; 1 1 85.6 103 11 0 0.25 0 1 1.5 0 0 0 0 0; 6 1 74.1 112.5 11 85.6 11 0 100 -10 85.6 85.6 0 0 20 0 0; 14 1 200 1
+I 5
+ADF
+== e1_beam4_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 74.1 103 10 0 0.25 0 1; 1 1 85.6 103 11 0 0.25 0 1 1.5 0 0 0 0 0; 6 1 74.1 112.5 11 85.6 11 0 100 -10 85.6 85.6 0 0 20 0 0; 14 1 200 1
+I 5
+ADFX
+== e1_beam4_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 74.1 103 10 0 0.25 0 1; 1 1 85.6 103 11 0 0.25 0 1 1.5 0 0 0 0 0; 6 1 74.1 112.5 11 85.6 11 0 100 -10 85.6 85.6 0 0 20 0 0; 14 1 200 1
+I 4
+ADJ
+== e1_beam5_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.3 4 20 0 0.25 0 11; 1 1 71.3 8 13 0 0.25 0 11; 1 1 72.2 -1 10 0 0.25 0 1; 1 1 87.13 4 21 0 0.25 0 11; 6 1 59.3 -0.5 -1.4 87.13 21; 14 1 200 1
+I 7
+ADJ
+== e1_beam5_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.3 4 20 0 0.25 0 11; 1 1 71.3 8 13 0 0.25 0 11; 1 1 72.2 -1 10 0 0.25 0 1; 1 1 87.13 4 21 0 0.25 0 11; 6 1 59.3 -0.5 -1.4 87.13 21; 14 1 200 1
+I 7
+ADJX
+== e1_beam5_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.3 4 20 0 0.25 0 11; 1 1 71.3 8 13 0 0.25 0 11; 1 1 72.2 -1 10 0 0.25 0 1; 1 1 87.13 4 21 0 0.25 0 11; 6 1 59.3 -0.5 -1.4 87.13 21; 14 1 200 1
+I 7
+ADX
+== e1_beam5_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.3 4 20 0 0.25 0 11; 1 1 71.3 8 13 0 0.25 0 11; 1 1 72.2 -1 10 0 0.25 0 1; 1 1 87.13 4 21 0 0.25 0 11; 6 1 59.3 -0.5 -1.4 87.13 21; 14 1 200 1
+I 7
+ADF
+== e1_beam5_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.3 4 20 0 0.25 0 11; 1 1 71.3 8 13 0 0.25 0 11; 1 1 72.2 -1 10 0 0.25 0 1; 1 1 87.13 4 21 0 0.25 0 11; 6 1 59.3 -0.5 -1.4 87.13 21; 14 1 200 1
+I 7
+ADFX
+== e1_beam5_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.3 4 20 0 0.25 0 11; 1 1 71.3 8 13 0 0.25 0 11; 1 1 72.2 -1 10 0 0.25 0 1; 1 1 87.13 4 21 0 0.25 0 11; 6 1 59.3 -0.5 -1.4 87.13 21; 14 1 200 1
+I 4
+ADJ
+== e1_beam6_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.8 105 11 0 0.25 0 1; 1 1 78.83 108 20 0 0.25 0 2; 1 1 80.81 108 23 0 0.25 0 11; 1 1 99.3 104 21 0 0.25 0 2; 1 1 92.51 101 23 0 0.25 0 2; 6 1 67.8 99.7 -2.6 92.51 23; 14 1 200 1
+I 8
+ADJ
+== e1_beam6_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.8 105 11 0 0.25 0 1; 1 1 78.83 108 20 0 0.25 0 2; 1 1 80.81 108 23 0 0.25 0 11; 1 1 99.3 104 21 0 0.25 0 2; 1 1 92.51 101 23 0 0.25 0 2; 6 1 67.8 99.7 -2.6 92.51 23; 14 1 200 1
+I 8
+ADJX
+== e1_beam6_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.8 105 11 0 0.25 0 1; 1 1 78.83 108 20 0 0.25 0 2; 1 1 80.81 108 23 0 0.25 0 11; 1 1 99.3 104 21 0 0.25 0 2; 1 1 92.51 101 23 0 0.25 0 2; 6 1 67.8 99.7 -2.6 92.51 23; 14 1 200 1
+I 8
+ADX
+== e1_beam6_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.8 105 11 0 0.25 0 1; 1 1 78.83 108 20 0 0.25 0 2; 1 1 80.81 108 23 0 0.25 0 11; 1 1 99.3 104 21 0 0.25 0 2; 1 1 92.51 101 23 0 0.25 0 2; 6 1 67.8 99.7 -2.6 92.51 23; 14 1 200 1
+I 8
+ADF
+== e1_beam6_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.8 105 11 0 0.25 0 1; 1 1 78.83 108 20 0 0.25 0 2; 1 1 80.81 108 23 0 0.25 0 11; 1 1 99.3 104 21 0 0.25 0 2; 1 1 92.51 101 23 0 0.25 0 2; 6 1 67.8 99.7 -2.6 92.51 23; 14 1 200 1
+I 8
+ADFX
+== e1_beam6_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.8 105 11 0 0.25 0 1; 1 1 78.83 108 20 0 0.25 0 2; 1 1 80.81 108 23 0 0.25 0 11; 1 1 99.3 104 21 0 0.25 0 2; 1 1 92.51 101 23 0 0.25 0 2; 6 1 67.8 99.7 -2.6 92.51 23; 14 1 200 1
+I 4
+ADJ
+== e1_beam7_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.7 -2 11 0 0.25 0 1; 1 1 60.8 7 11 0 0.25 0 0; 1 1 75.45 -2 20 0 0.25 0 11; 6 1 52.7 11.7 9.7 75.45 11 0 100 12 -1 -1 -10 20 -1 0 0; 14 1 200 1
+I 6
+ADJ
+== e1_beam7_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.7 -2 11 0 0.25 0 1; 1 1 60.8 7 11 0 0.25 0 0; 1 1 75.45 -2 20 0 0.25 0 11; 6 1 52.7 11.7 9.7 75.45 11 0 100 12 -1 -1 -10 20 -1 0 0; 14 1 200 1
+I 6
+ADJX
+== e1_beam7_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.7 -2 11 0 0.25 0 1; 1 1 60.8 7 11 0 0.25 0 0; 1 1 75.45 -2 20 0 0.25 0 11; 6 1 52.7 11.7 9.7 75.45 11 0 100 12 -1 -1 -10 20 -1 0 0; 14 1 200 1
+I 6
+ADX
+== e1_beam7_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.7 -2 11 0 0.25 0 1; 1 1 60.8 7 11 0 0.25 0 0; 1 1 75.45 -2 20 0 0.25 0 11; 6 1 52.7 11.7 9.7 75.45 11 0 100 12 -1 -1 -10 20 -1 0 0; 14 1 200 1
+I 6
+ADF
+== e1_beam7_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.7 -2 11 0 0.25 0 1; 1 1 60.8 7 11 0 0.25 0 0; 1 1 75.45 -2 20 0 0.25 0 11; 6 1 52.7 11.7 9.7 75.45 11 0 100 12 -1 -1 -10 20 -1 0 0; 14 1 200 1
+I 6
+ADFX
+== e1_beam7_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.7 -2 11 0 0.25 0 1; 1 1 60.8 7 11 0 0.25 0 0; 1 1 75.45 -2 20 0 0.25 0 11; 6 1 52.7 11.7 9.7 75.45 11 0 100 12 -1 -1 -10 20 -1 0 0; 14 1 200 1
+I 4
+ADJ
+== e1_beam8_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 41 6 10 0 0.25 0 11; 1 1 47.85 1 20 0 0.25 0 11; 1 1 53.56 4 20 0 0.25 0 11; 1 1 70.33 -2 23 0 0.25 0 0; 6 1 41 14.1 12.3 70.33 12 0 0 11 -1 70.33 0 10 10 0 0; 14 1 200 1
+I 7
+ADJ
+== e1_beam8_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 41 6 10 0 0.25 0 11; 1 1 47.85 1 20 0 0.25 0 11; 1 1 53.56 4 20 0 0.25 0 11; 1 1 70.33 -2 23 0 0.25 0 0; 6 1 41 14.1 12.3 70.33 12 0 0 11 -1 70.33 0 10 10 0 0; 14 1 200 1
+I 7
+ADJX
+== e1_beam8_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 41 6 10 0 0.25 0 11; 1 1 47.85 1 20 0 0.25 0 11; 1 1 53.56 4 20 0 0.25 0 11; 1 1 70.33 -2 23 0 0.25 0 0; 6 1 41 14.1 12.3 70.33 12 0 0 11 -1 70.33 0 10 10 0 0; 14 1 200 1
+I 7
+ADX
+== e1_beam8_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 41 6 10 0 0.25 0 11; 1 1 47.85 1 20 0 0.25 0 11; 1 1 53.56 4 20 0 0.25 0 11; 1 1 70.33 -2 23 0 0.25 0 0; 6 1 41 14.1 12.3 70.33 12 0 0 11 -1 70.33 0 10 10 0 0; 14 1 200 1
+I 7
+ADF
+== e1_beam8_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 41 6 10 0 0.25 0 11; 1 1 47.85 1 20 0 0.25 0 11; 1 1 53.56 4 20 0 0.25 0 11; 1 1 70.33 -2 23 0 0.25 0 0; 6 1 41 14.1 12.3 70.33 12 0 0 11 -1 70.33 0 10 10 0 0; 14 1 200 1
+I 7
+ADFX
+== e1_beam8_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 41 6 10 0 0.25 0 11; 1 1 47.85 1 20 0 0.25 0 11; 1 1 53.56 4 20 0 0.25 0 11; 1 1 70.33 -2 23 0 0.25 0 0; 6 1 41 14.1 12.3 70.33 12 0 0 11 -1 70.33 0 10 10 0 0; 14 1 200 1
+I 4
+ADJ
+== e1_beam9_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.1 10 11 0 0.25 0 0; 1 1 77.3 3 20 0 0.25 0 1; 1 1 87.68 4 11 0 0.25 0 11; 6 1 66.1 -0.6 2.3 87.68 21; 14 1 200 1
+I 6
+ADJ
+== e1_beam9_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.1 10 11 0 0.25 0 0; 1 1 77.3 3 20 0 0.25 0 1; 1 1 87.68 4 11 0 0.25 0 11; 6 1 66.1 -0.6 2.3 87.68 21; 14 1 200 1
+I 6
+ADJX
+== e1_beam9_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.1 10 11 0 0.25 0 0; 1 1 77.3 3 20 0 0.25 0 1; 1 1 87.68 4 11 0 0.25 0 11; 6 1 66.1 -0.6 2.3 87.68 21; 14 1 200 1
+I 6
+ADX
+== e1_beam9_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.1 10 11 0 0.25 0 0; 1 1 77.3 3 20 0 0.25 0 1; 1 1 87.68 4 11 0 0.25 0 11; 6 1 66.1 -0.6 2.3 87.68 21; 14 1 200 1
+I 6
+ADF
+== e1_beam9_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.1 10 11 0 0.25 0 0; 1 1 77.3 3 20 0 0.25 0 1; 1 1 87.68 4 11 0 0.25 0 11; 6 1 66.1 -0.6 2.3 87.68 21; 14 1 200 1
+I 6
+ADFX
+== e1_beam9_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 66.1 10 11 0 0.25 0 0; 1 1 77.3 3 20 0 0.25 0 1; 1 1 87.68 4 11 0 0.25 0 11; 6 1 66.1 -0.6 2.3 87.68 21; 14 1 200 1
+I 4
+ADJ
+== e1_beam10_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 48.7 9 13 0 0.25 0 11; 1 1 54.91 -1 10 0 0.25 0 11; 6 1 48.7 0 2.4 54.91 21; 14 1 200 1
+I 5
+ADJ
+== e1_beam10_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 48.7 9 13 0 0.25 0 11; 1 1 54.91 -1 10 0 0.25 0 11; 6 1 48.7 0 2.4 54.91 21; 14 1 200 1
+I 5
+ADJX
+== e1_beam10_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 48.7 9 13 0 0.25 0 11; 1 1 54.91 -1 10 0 0.25 0 11; 6 1 48.7 0 2.4 54.91 21; 14 1 200 1
+I 5
+ADX
+== e1_beam10_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 48.7 9 13 0 0.25 0 11; 1 1 54.91 -1 10 0 0.25 0 11; 6 1 48.7 0 2.4 54.91 21; 14 1 200 1
+I 5
+ADF
+== e1_beam10_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 48.7 9 13 0 0.25 0 11; 1 1 54.91 -1 10 0 0.25 0 11; 6 1 48.7 0 2.4 54.91 21; 14 1 200 1
+I 5
+ADFX
+== e1_beam10_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 48.7 9 13 0 0.25 0 11; 1 1 54.91 -1 10 0 0.25 0 11; 6 1 48.7 0 2.4 54.91 21; 14 1 200 1
+I 4
+ADJ
+== e1_beam11_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 6 10 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 62.66 10 20 0 0.25 0 11 10 0 0 0 0 0; 1 1 70.32 5 23 0 0.25 0 11; 6 1 51.6 15.2 15.9 70.32 13 0 0 0 62.66 -1 -10 10 -1 0 1.2; 14 1 200 1
+I 6
+ADJ
+== e1_beam11_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 6 10 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 62.66 10 20 0 0.25 0 11 10 0 0 0 0 0; 1 1 70.32 5 23 0 0.25 0 11; 6 1 51.6 15.2 15.9 70.32 13 0 0 0 62.66 -1 -10 10 -1 0 1.2; 14 1 200 1
+I 6
+ADJX
+== e1_beam11_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 6 10 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 62.66 10 20 0 0.25 0 11 10 0 0 0 0 0; 1 1 70.32 5 23 0 0.25 0 11; 6 1 51.6 15.2 15.9 70.32 13 0 0 0 62.66 -1 -10 10 -1 0 1.2; 14 1 200 1
+I 6
+ADX
+== e1_beam11_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 6 10 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 62.66 10 20 0 0.25 0 11 10 0 0 0 0 0; 1 1 70.32 5 23 0 0.25 0 11; 6 1 51.6 15.2 15.9 70.32 13 0 0 0 62.66 -1 -10 10 -1 0 1.2; 14 1 200 1
+I 6
+ADF
+== e1_beam11_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 6 10 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 62.66 10 20 0 0.25 0 11 10 0 0 0 0 0; 1 1 70.32 5 23 0 0.25 0 11; 6 1 51.6 15.2 15.9 70.32 13 0 0 0 62.66 -1 -10 10 -1 0 1.2; 14 1 200 1
+I 6
+ADFX
+== e1_beam11_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 6 10 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 62.66 10 20 0 0.25 0 11 10 0 0 0 0 0; 1 1 70.32 5 23 0 0.25 0 11; 6 1 51.6 15.2 15.9 70.32 13 0 0 0 62.66 -1 -10 10 -1 0 1.2; 14 1 200 1
+I 4
+ADJ
+== e1_beam12_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.9 103 21 0 0.25 0 2; 1 1 70.31 105 20 0 0.25 0 0; 1 1 82.13 106 13 0 0.25 0 1; 6 1 58.9 96.5 -6.3 82.13 22 0 21 11 0 0 0 10 0 0 1.2; 14 1 200 1
+I 6
+ADJ
+== e1_beam12_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.9 103 21 0 0.25 0 2; 1 1 70.31 105 20 0 0.25 0 0; 1 1 82.13 106 13 0 0.25 0 1; 6 1 58.9 96.5 -6.3 82.13 22 0 21 11 0 0 0 10 0 0 1.2; 14 1 200 1
+I 6
+ADJX
+== e1_beam12_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.9 103 21 0 0.25 0 2; 1 1 70.31 105 20 0 0.25 0 0; 1 1 82.13 106 13 0 0.25 0 1; 6 1 58.9 96.5 -6.3 82.13 22 0 21 11 0 0 0 10 0 0 1.2; 14 1 200 1
+I 6
+ADX
+== e1_beam12_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.9 103 21 0 0.25 0 2; 1 1 70.31 105 20 0 0.25 0 0; 1 1 82.13 106 13 0 0.25 0 1; 6 1 58.9 96.5 -6.3 82.13 22 0 21 11 0 0 0 10 0 0 1.2; 14 1 200 1
+I 6
+ADF
+== e1_beam12_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.9 103 21 0 0.25 0 2; 1 1 70.31 105 20 0 0.25 0 0; 1 1 82.13 106 13 0 0.25 0 1; 6 1 58.9 96.5 -6.3 82.13 22 0 21 11 0 0 0 10 0 0 1.2; 14 1 200 1
+I 6
+ADFX
+== e1_beam12_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.9 103 21 0 0.25 0 2; 1 1 70.31 105 20 0 0.25 0 0; 1 1 82.13 106 13 0 0.25 0 1; 6 1 58.9 96.5 -6.3 82.13 22 0 21 11 0 0 0 10 0 0 1.2; 14 1 200 1
+I 4
+ADJ
+== e1_beam13_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 56.5 0 10 0 0.25 0 2; 1 1 67.68 4 10 0 0.25 0 11; 1 1 74.91 6 10 0 0.25 0 2; 6 1 56.5 13.7 15.8 74.91 11 0 21 -10 0 -1 11 10 10 0 0; 14 1 200 1
+I 6
+ADJ
+== e1_beam13_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 56.5 0 10 0 0.25 0 2; 1 1 67.68 4 10 0 0.25 0 11; 1 1 74.91 6 10 0 0.25 0 2; 6 1 56.5 13.7 15.8 74.91 11 0 21 -10 0 -1 11 10 10 0 0; 14 1 200 1
+I 6
+ADJX
+== e1_beam13_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 56.5 0 10 0 0.25 0 2; 1 1 67.68 4 10 0 0.25 0 11; 1 1 74.91 6 10 0 0.25 0 2; 6 1 56.5 13.7 15.8 74.91 11 0 21 -10 0 -1 11 10 10 0 0; 14 1 200 1
+I 6
+ADX
+== e1_beam13_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 56.5 0 10 0 0.25 0 2; 1 1 67.68 4 10 0 0.25 0 11; 1 1 74.91 6 10 0 0.25 0 2; 6 1 56.5 13.7 15.8 74.91 11 0 21 -10 0 -1 11 10 10 0 0; 14 1 200 1
+I 6
+ADF
+== e1_beam13_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 56.5 0 10 0 0.25 0 2; 1 1 67.68 4 10 0 0.25 0 11; 1 1 74.91 6 10 0 0.25 0 2; 6 1 56.5 13.7 15.8 74.91 11 0 21 -10 0 -1 11 10 10 0 0; 14 1 200 1
+I 6
+ADFX
+== e1_beam13_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 56.5 0 10 0 0.25 0 2; 1 1 67.68 4 10 0 0.25 0 11; 1 1 74.91 6 10 0 0.25 0 2; 6 1 56.5 13.7 15.8 74.91 11 0 21 -10 0 -1 11 10 10 0 0; 14 1 200 1
+I 4
+ADJ
+== e1_beam14_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.4 101 20 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 76.82 101 10 0 0.25 0 1; 6 1 67.4 113 14.6 76.82 12; 14 1 200 1
+I 5
+ADJ
+== e1_beam14_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.4 101 20 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 76.82 101 10 0 0.25 0 1; 6 1 67.4 113 14.6 76.82 12; 14 1 200 1
+I 5
+ADJX
+== e1_beam14_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.4 101 20 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 76.82 101 10 0 0.25 0 1; 6 1 67.4 113 14.6 76.82 12; 14 1 200 1
+I 5
+ADX
+== e1_beam14_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.4 101 20 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 76.82 101 10 0 0.25 0 1; 6 1 67.4 113 14.6 76.82 12; 14 1 200 1
+I 5
+ADF
+== e1_beam14_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.4 101 20 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 76.82 101 10 0 0.25 0 1; 6 1 67.4 113 14.6 76.82 12; 14 1 200 1
+I 5
+ADFX
+== e1_beam14_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.4 101 20 0 0.25 0 11 10 0 0 0 0 0.8; 1 1 76.82 101 10 0 0.25 0 1; 6 1 67.4 113 14.6 76.82 12; 14 1 200 1
+I 4
+ADJ
+== e1_beam15_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 73.6 3 11 0 0.25 0 11; 1 1 80.17 0 20 0 0.25 0 1; 1 1 86.34 10 13 0 0.25 0 2; 1 1 108.73 10 11 0 0.25 0 0; 6 1 73.6 12.8 12.9 108.73 11 0 310 -10 0 108.73 0 10 10 0 0; 14 1 200 1
+I 7
+ADJ
+== e1_beam15_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 73.6 3 11 0 0.25 0 11; 1 1 80.17 0 20 0 0.25 0 1; 1 1 86.34 10 13 0 0.25 0 2; 1 1 108.73 10 11 0 0.25 0 0; 6 1 73.6 12.8 12.9 108.73 11 0 310 -10 0 108.73 0 10 10 0 0; 14 1 200 1
+I 7
+ADJX
+== e1_beam15_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 73.6 3 11 0 0.25 0 11; 1 1 80.17 0 20 0 0.25 0 1; 1 1 86.34 10 13 0 0.25 0 2; 1 1 108.73 10 11 0 0.25 0 0; 6 1 73.6 12.8 12.9 108.73 11 0 310 -10 0 108.73 0 10 10 0 0; 14 1 200 1
+I 7
+ADX
+== e1_beam15_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 73.6 3 11 0 0.25 0 11; 1 1 80.17 0 20 0 0.25 0 1; 1 1 86.34 10 13 0 0.25 0 2; 1 1 108.73 10 11 0 0.25 0 0; 6 1 73.6 12.8 12.9 108.73 11 0 310 -10 0 108.73 0 10 10 0 0; 14 1 200 1
+I 7
+ADF
+== e1_beam15_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 73.6 3 11 0 0.25 0 11; 1 1 80.17 0 20 0 0.25 0 1; 1 1 86.34 10 13 0 0.25 0 2; 1 1 108.73 10 11 0 0.25 0 0; 6 1 73.6 12.8 12.9 108.73 11 0 310 -10 0 108.73 0 10 10 0 0; 14 1 200 1
+I 7
+ADFX
+== e1_beam15_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 73.6 3 11 0 0.25 0 11; 1 1 80.17 0 20 0 0.25 0 1; 1 1 86.34 10 13 0 0.25 0 2; 1 1 108.73 10 11 0 0.25 0 0; 6 1 73.6 12.8 12.9 108.73 11 0 310 -10 0 108.73 0 10 10 0 0; 14 1 200 1
+I 4
+ADJ
+== e1_beam16_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.8 10 21 0 0.25 0 0; 1 1 78.23 3 20 0 0.25 0 2; 1 1 92.56 2 11 0 0.25 0 2; 6 1 69.8 -1.4 -2 92.56 22; 14 1 200 1
+I 6
+ADJ
+== e1_beam16_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.8 10 21 0 0.25 0 0; 1 1 78.23 3 20 0 0.25 0 2; 1 1 92.56 2 11 0 0.25 0 2; 6 1 69.8 -1.4 -2 92.56 22; 14 1 200 1
+I 6
+ADJX
+== e1_beam16_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.8 10 21 0 0.25 0 0; 1 1 78.23 3 20 0 0.25 0 2; 1 1 92.56 2 11 0 0.25 0 2; 6 1 69.8 -1.4 -2 92.56 22; 14 1 200 1
+I 6
+ADX
+== e1_beam16_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.8 10 21 0 0.25 0 0; 1 1 78.23 3 20 0 0.25 0 2; 1 1 92.56 2 11 0 0.25 0 2; 6 1 69.8 -1.4 -2 92.56 22; 14 1 200 1
+I 6
+ADF
+== e1_beam16_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.8 10 21 0 0.25 0 0; 1 1 78.23 3 20 0 0.25 0 2; 1 1 92.56 2 11 0 0.25 0 2; 6 1 69.8 -1.4 -2 92.56 22; 14 1 200 1
+I 6
+ADFX
+== e1_beam16_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.8 10 21 0 0.25 0 0; 1 1 78.23 3 20 0 0.25 0 2; 1 1 92.56 2 11 0 0.25 0 2; 6 1 69.8 -1.4 -2 92.56 22; 14 1 200 1
+I 4
+ADJ
+== e1_beam17_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 62.8 1 11 0 0.25 0 11; 1 1 74.8 10 20 0 0.25 0 11 20 0 0 0 0 0.8; 6 1 62.8 -0.1 -3 74.8 21; 14 1 200 1
+I 5
+ADJ
+== e1_beam17_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 62.8 1 11 0 0.25 0 11; 1 1 74.8 10 20 0 0.25 0 11 20 0 0 0 0 0.8; 6 1 62.8 -0.1 -3 74.8 21; 14 1 200 1
+I 5
+ADJX
+== e1_beam17_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 62.8 1 11 0 0.25 0 11; 1 1 74.8 10 20 0 0.25 0 11 20 0 0 0 0 0.8; 6 1 62.8 -0.1 -3 74.8 21; 14 1 200 1
+I 5
+ADX
+== e1_beam17_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 62.8 1 11 0 0.25 0 11; 1 1 74.8 10 20 0 0.25 0 11 20 0 0 0 0 0.8; 6 1 62.8 -0.1 -3 74.8 21; 14 1 200 1
+I 5
+ADF
+== e1_beam17_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 62.8 1 11 0 0.25 0 11; 1 1 74.8 10 20 0 0.25 0 11 20 0 0 0 0 0.8; 6 1 62.8 -0.1 -3 74.8 21; 14 1 200 1
+I 5
+ADFX
+== e1_beam17_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 62.8 1 11 0 0.25 0 11; 1 1 74.8 10 20 0 0.25 0 11 20 0 0 0 0 0.8; 6 1 62.8 -0.1 -3 74.8 21; 14 1 200 1
+I 4
+ADJ
+== e1_beam18_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51 4 20 0 0.25 0 11; 1 1 60.05 5 20 0 0.25 0 11; 1 1 74.61 2 23 0 0.25 0 0; 1 1 79.22 5 21 0 0.25 0 0; 6 1 51 -5.5 -5 79.22 23; 14 1 200 1
+I 7
+ADJ
+== e1_beam18_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51 4 20 0 0.25 0 11; 1 1 60.05 5 20 0 0.25 0 11; 1 1 74.61 2 23 0 0.25 0 0; 1 1 79.22 5 21 0 0.25 0 0; 6 1 51 -5.5 -5 79.22 23; 14 1 200 1
+I 7
+ADJX
+== e1_beam18_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51 4 20 0 0.25 0 11; 1 1 60.05 5 20 0 0.25 0 11; 1 1 74.61 2 23 0 0.25 0 0; 1 1 79.22 5 21 0 0.25 0 0; 6 1 51 -5.5 -5 79.22 23; 14 1 200 1
+I 7
+ADX
+== e1_beam18_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51 4 20 0 0.25 0 11; 1 1 60.05 5 20 0 0.25 0 11; 1 1 74.61 2 23 0 0.25 0 0; 1 1 79.22 5 21 0 0.25 0 0; 6 1 51 -5.5 -5 79.22 23; 14 1 200 1
+I 7
+ADF
+== e1_beam18_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51 4 20 0 0.25 0 11; 1 1 60.05 5 20 0 0.25 0 11; 1 1 74.61 2 23 0 0.25 0 0; 1 1 79.22 5 21 0 0.25 0 0; 6 1 51 -5.5 -5 79.22 23; 14 1 200 1
+I 7
+ADFX
+== e1_beam18_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51 4 20 0 0.25 0 11; 1 1 60.05 5 20 0 0.25 0 11; 1 1 74.61 2 23 0 0.25 0 0; 1 1 79.22 5 21 0 0.25 0 0; 6 1 51 -5.5 -5 79.22 23; 14 1 200 1
+I 4
+ADJ
+== e1_beam19_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.9 5 21 0 0.25 0 2 10 0 0 0 0 0.8; 1 1 77.37 1 10 0 0.25 0 1; 6 1 69.9 14.1 11.4 77.37 11 0 200 11 77.37 77.37 11 0 10 0 0; 14 1 200 1
+I 5
+ADJ
+== e1_beam19_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.9 5 21 0 0.25 0 2 10 0 0 0 0 0.8; 1 1 77.37 1 10 0 0.25 0 1; 6 1 69.9 14.1 11.4 77.37 11 0 200 11 77.37 77.37 11 0 10 0 0; 14 1 200 1
+I 5
+ADJX
+== e1_beam19_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.9 5 21 0 0.25 0 2 10 0 0 0 0 0.8; 1 1 77.37 1 10 0 0.25 0 1; 6 1 69.9 14.1 11.4 77.37 11 0 200 11 77.37 77.37 11 0 10 0 0; 14 1 200 1
+I 5
+ADX
+== e1_beam19_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.9 5 21 0 0.25 0 2 10 0 0 0 0 0.8; 1 1 77.37 1 10 0 0.25 0 1; 6 1 69.9 14.1 11.4 77.37 11 0 200 11 77.37 77.37 11 0 10 0 0; 14 1 200 1
+I 5
+ADF
+== e1_beam19_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.9 5 21 0 0.25 0 2 10 0 0 0 0 0.8; 1 1 77.37 1 10 0 0.25 0 1; 6 1 69.9 14.1 11.4 77.37 11 0 200 11 77.37 77.37 11 0 10 0 0; 14 1 200 1
+I 5
+ADFX
+== e1_beam19_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69.9 5 21 0 0.25 0 2 10 0 0 0 0 0.8; 1 1 77.37 1 10 0 0.25 0 1; 6 1 69.9 14.1 11.4 77.37 11 0 200 11 77.37 77.37 11 0 10 0 0; 14 1 200 1
+I 4
+ADJ
+== e1_beam20_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.2 3 10 0 0.25 0 0; 1 1 66.34 5 10 0 0.25 0 0; 1 1 72.06 3 21 0 0.25 0 0; 6 1 58.2 12.7 11.3 72.06 11; 14 1 200 1
+I 6
+ADJ
+== e1_beam20_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.2 3 10 0 0.25 0 0; 1 1 66.34 5 10 0 0.25 0 0; 1 1 72.06 3 21 0 0.25 0 0; 6 1 58.2 12.7 11.3 72.06 11; 14 1 200 1
+I 6
+ADJX
+== e1_beam20_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.2 3 10 0 0.25 0 0; 1 1 66.34 5 10 0 0.25 0 0; 1 1 72.06 3 21 0 0.25 0 0; 6 1 58.2 12.7 11.3 72.06 11; 14 1 200 1
+I 6
+ADX
+== e1_beam20_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.2 3 10 0 0.25 0 0; 1 1 66.34 5 10 0 0.25 0 0; 1 1 72.06 3 21 0 0.25 0 0; 6 1 58.2 12.7 11.3 72.06 11; 14 1 200 1
+I 6
+ADF
+== e1_beam20_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.2 3 10 0 0.25 0 0; 1 1 66.34 5 10 0 0.25 0 0; 1 1 72.06 3 21 0 0.25 0 0; 6 1 58.2 12.7 11.3 72.06 11; 14 1 200 1
+I 6
+ADFX
+== e1_beam20_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 58.2 3 10 0 0.25 0 0; 1 1 66.34 5 10 0 0.25 0 0; 1 1 72.06 3 21 0 0.25 0 0; 6 1 58.2 12.7 11.3 72.06 11; 14 1 200 1
+I 4
+ADJ
+== e1_beam21_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69 8 10 0 0.25 0 2; 1 1 79.52 5 13 0 0.25 0 0; 1 1 83.28 5 10 0 0.25 0 1; 6 1 69 10.2 7.6 83.28 11 0 200 11 79.52 0 0 10 20 0 0; 14 1 200 1
+I 6
+ADJ
+== e1_beam21_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69 8 10 0 0.25 0 2; 1 1 79.52 5 13 0 0.25 0 0; 1 1 83.28 5 10 0 0.25 0 1; 6 1 69 10.2 7.6 83.28 11 0 200 11 79.52 0 0 10 20 0 0; 14 1 200 1
+I 6
+ADJX
+== e1_beam21_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69 8 10 0 0.25 0 2; 1 1 79.52 5 13 0 0.25 0 0; 1 1 83.28 5 10 0 0.25 0 1; 6 1 69 10.2 7.6 83.28 11 0 200 11 79.52 0 0 10 20 0 0; 14 1 200 1
+I 6
+ADX
+== e1_beam21_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69 8 10 0 0.25 0 2; 1 1 79.52 5 13 0 0.25 0 0; 1 1 83.28 5 10 0 0.25 0 1; 6 1 69 10.2 7.6 83.28 11 0 200 11 79.52 0 0 10 20 0 0; 14 1 200 1
+I 6
+ADF
+== e1_beam21_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69 8 10 0 0.25 0 2; 1 1 79.52 5 13 0 0.25 0 0; 1 1 83.28 5 10 0 0.25 0 1; 6 1 69 10.2 7.6 83.28 11 0 200 11 79.52 0 0 10 20 0 0; 14 1 200 1
+I 6
+ADFX
+== e1_beam21_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 69 8 10 0 0.25 0 2; 1 1 79.52 5 13 0 0.25 0 0; 1 1 83.28 5 10 0 0.25 0 1; 6 1 69 10.2 7.6 83.28 11 0 200 11 79.52 0 0 10 20 0 0; 14 1 200 1
+I 4
+ADJ
+== e1_beam22_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.9 0 23 0 0.25 0 0; 1 1 68.38 3 10 0 0.25 0 1; 1 1 74.58 5 23 0 0.25 0 0; 6 1 57.9 15.9 14.9 74.58 11; 14 1 200 1
+I 6
+ADJ
+== e1_beam22_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.9 0 23 0 0.25 0 0; 1 1 68.38 3 10 0 0.25 0 1; 1 1 74.58 5 23 0 0.25 0 0; 6 1 57.9 15.9 14.9 74.58 11; 14 1 200 1
+I 6
+ADJX
+== e1_beam22_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.9 0 23 0 0.25 0 0; 1 1 68.38 3 10 0 0.25 0 1; 1 1 74.58 5 23 0 0.25 0 0; 6 1 57.9 15.9 14.9 74.58 11; 14 1 200 1
+I 6
+ADX
+== e1_beam22_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.9 0 23 0 0.25 0 0; 1 1 68.38 3 10 0 0.25 0 1; 1 1 74.58 5 23 0 0.25 0 0; 6 1 57.9 15.9 14.9 74.58 11; 14 1 200 1
+I 6
+ADF
+== e1_beam22_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.9 0 23 0 0.25 0 0; 1 1 68.38 3 10 0 0.25 0 1; 1 1 74.58 5 23 0 0.25 0 0; 6 1 57.9 15.9 14.9 74.58 11; 14 1 200 1
+I 6
+ADFX
+== e1_beam22_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.9 0 23 0 0.25 0 0; 1 1 68.38 3 10 0 0.25 0 1; 1 1 74.58 5 23 0 0.25 0 0; 6 1 57.9 15.9 14.9 74.58 11; 14 1 200 1
+I 4
+ADJ
+== e1_beam23_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 40.4 -1 21 0 0.25 0 11; 1 1 50.37 2 13 0 0.25 0 0; 1 1 53.38 4 20 0 0.25 0 1; 1 1 63.87 -2 21 0 0.25 0 11; 6 1 40.4 -5.1 -6 63.87 22; 14 1 200 1
+I 7
+ADJ
+== e1_beam23_adjx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 40.4 -1 21 0 0.25 0 11; 1 1 50.37 2 13 0 0.25 0 0; 1 1 53.38 4 20 0 0.25 0 1; 1 1 63.87 -2 21 0 0.25 0 11; 6 1 40.4 -5.1 -6 63.87 22; 14 1 200 1
+I 7
+ADJX
+== e1_beam23_adx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 40.4 -1 21 0 0.25 0 11; 1 1 50.37 2 13 0 0.25 0 0; 1 1 53.38 4 20 0 0.25 0 1; 1 1 63.87 -2 21 0 0.25 0 11; 6 1 40.4 -5.1 -6 63.87 22; 14 1 200 1
+I 7
+ADX
+== e1_beam23_adf
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 40.4 -1 21 0 0.25 0 11; 1 1 50.37 2 13 0 0.25 0 0; 1 1 53.38 4 20 0 0.25 0 1; 1 1 63.87 -2 21 0 0.25 0 11; 6 1 40.4 -5.1 -6 63.87 22; 14 1 200 1
+I 7
+ADF
+== e1_beam23_adfx
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 40.4 -1 21 0 0.25 0 11; 1 1 50.37 2 13 0 0.25 0 0; 1 1 53.38 4 20 0 0.25 0 1; 1 1 63.87 -2 21 0 0.25 0 11; 6 1 40.4 -5.1 -6 63.87 22; 14 1 200 1
+I 7
+ADFX
+== e1_beam23_note_adj
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 40.4 -1 21 0 0.25 0 11; 1 1 50.37 2 13 0 0.25 0 0; 1 1 53.38 4 20 0 0.25 0 1; 1 1 63.87 -2 21 0 0.25 0 11; 6 1 40.4 -5.1 -6 63.87 22; 14 1 200 1
+I 4
+ADJ
+== e2_beam_p18
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 1 1 40 4 10 0 0.5 0 1; 6 1 20 13 14 40 11 0 0 0 0 0 0 0 0 0 0 0.8
+I 5
+ADJ
+== e2_beam_p18_down_offset
+base: 8 1; 1 1 20 6 20 0 0.5 0 1 20; 1 1 30 8 20 0 0.5 0 1; 6 1 20 -1 -2 30 21 0 0 0 0 0 0 0 0 0 0 0.7
+I 4
+ADJ
+== e2_note_staff_typed
+base: 8 1; 8 2 0 0 0 200; 1 1 20 9 20 0 0.5 0 1; 1 2 30 4 10 0 0.5 0 1; 6 2 20 -2 -3 30 21
+I 3
+ADJ 2
+== e2_note_staff_typed_up
+base: 8 1; 8 2 0 0 0 200; 1 2 20 1 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11
+I 3
+ADJ 1
+== e2_note_quarter
+base: 8 1; 1 1 20 6 10 0 1 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11
+I 2
+ADJ
+== e2_note_adx
+base: 8 1; 1 1 20 6 20 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11
+I 2
+ADX
+== e2_note_opposite_no_x
+base: 8 1; 1 1 20 6 20 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11
+I 2
+ADJ
+== e2_note_two_beams
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11; 6 1 15 15 16 35 11
+I 2
+ADJ
+== e2_note_adf_inner
+base: 8 1; 1 1 20 6 10 0 0.25 0 2; 1 1 30 8 10 0 0.25 0 2; 1 1 40 7 10 0 0.25 0 2; 6 1 20 13 14 40 12
+I 3
+ADF
+== e2_note_size
+base: 8 1; 1 1 20 6 10 0 0.5 0 1 0 0 0 0 0 0.7; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11
+I 2
+ADJ
+== e2_beam_tremolo
+base: 8 1; 1 1 20 6 10 0 1 0 1; 1 1 30 8 10 0 1 0 1; 6 1 20 13 14 30 -10
+I 4
+ADJ
+== e2_note_level_fifty
+base: 8 1; 1 1 20 52 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 60 61 30 11
+I 2
+ADJ
+== r2_wb1
+base: 8 1; 14 1 60; 2 1 80 0 0 0 1; 14 1 120
+I 3
+WB1
+== r2_wb3
+base: 8 1; 14 1 60; 2 1 80 0 0 0 1 0 0 0 0 0 7; 14 1 120
+I 3
+WB3
+== r2_wb
+base: 8 1; 14 1 60; 2 1 80 0 0 0 1; 14 1 120
+I 3
+WB
+== r2_eu2
+base: 8 1; 14 1 60; 2 1 80 0 0 0 1; 14 1 120
+I 3
+EU2
+== r2_rp
+base: 8 1; 14 1 60; 2 1 80 0 0 0 1; 14 1 120
+I 3
+RP
+== r2_rp_twice
+base: 8 1; 14 1 60; 2 1 80 0 0 0 1; 14 1 120
+I 3
+RP
+RP
+== r2_ri
+base: 8 1; 14 1 60; 2 1 80 0 0 0 1; 14 1 120
+I 3
+RI
+== r2_ri_twice
+base: 8 1; 14 1 60; 2 1 80 0 0 0 1; 14 1 120
+I 3
+RI
+RI
+== r2_rf
+base: 8 1; 14 1 60; 2 1 80 0 -2 0 4; 14 1 120
+I 3
+RF
+== r2_rfm
+base: 8 1; 14 1 60; 2 1 80 0 -2 0 4; 14 1 120
+I 3
+RF-
+== r2_rfm_twice
+base: 8 1; 14 1 60; 2 1 80 0 -2 0 4; 14 1 120
+I 3
+RF-
+RF-
+== r2_wb_on_note
+base: 8 1; 14 1 60; 1 1 80 6 10 0 1; 14 1 120
+I 3
+WB2
+# -- CN on lines, slurs, beams and trills --------------------------------------------------
+== f1_cn_slur
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 1 1 60 7 10 0 1; 5 1 22 11 12 43 3
+I 5
+CN
+== f1_cn_slur_same_note
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 5 1 21 11 12 23 3
+I 4
+CN
+== f1_cn_slur_last_note
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 5 1 39 11 12 45 3
+I 4
+CN
+== f1_cn_slur_last_note_down
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 108 10 0 1; 5 1 39 11 12 45 -3
+I 4
+CN
+== f1_cn_slur_before_first
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 5 1 5 11 12 12 3
+I 4
+CN
+== f1_cn_tie_before_first
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 5 1 5 11 11 12 3 -2
+I 4
+CN
+== f1_cn_tie
+base: 8 1; 1 1 20 6 10 0 1; 1 1 20 9 10 0 1; 1 1 40 6 10 0 1; 1 1 40 9 10 0 1; 5 1 22 10 10 38 3 -2
+I 6
+CN
+== f1_cn_slur_rests
+base: 8 1; 2 1 20 0 0 0 1; 1 1 40 8 10 0 1; 2 1 60 0 0 0 1; 5 1 25 11 12 55 3
+I 5
+CN
+== f1_cn_slur_staff
+base: 8 1; 8 2 0 0 0 200; 1 1 20 6 10 0 1; 1 2 30 8 10 0 1; 1 2 50 8 10 0 1; 5 1 22 11 12 48 3
+I 6
+CN 2
+== f1_cn_slur_ending
+base: 8 1; 14 1 20; 1 1 30 6 10 0 1; 14 1 60; 5 1 22 11 12 58 3 1
+I 5
+CN
+== f1_cn_line
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 1 1 60 7 10 0 1; 4 1 22 5 5 57
+I 5
+CN
+== f1_cn_hairpin
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 1 1 60 7 10 0 1; 4 1 22 -1 999 57
+I 5
+CN
+== f1_cn_line_attached
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 4 1 22 5 5 0 -1
+I 4
+CN
+== f1_cn_line_points
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 1 1 60 7 10 0 1; 1 1 80 7 10 0 1; 4 1 22 5 5 79 3 0 0 0 43 61
+I 6
+CN
+== f1_cn_trill
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 7 1 21 13 0 37
+I 4
+CN
+== f1_cn_trill_same
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 7 1 21 13 0 25
+I 4
+CN
+== f1_cn_beam_secondary
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.25 0 2; 1 1 40 4 10 0 0.25 0 2; 1 1 50 7 10 0 0.5 0 1; 6 1 21 13 14 52 11 0 0 11 29 41
+I 6
+CN
+== f1_cn_beam_offsets
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 21 13 14 28 11 0 0 0 0 0 0 10 20
+I 4
+CN
+== f1_cn_beam_width
+base: 8 1; 1 1 20 6 10 0 0.5 0 1 0 0 0 0 0 0 0 0 0 0 1.4; 1 1 30 8 10 0 0.5 0 1; 6 1 21 13 14 28 11
+I 4
+CN
+== f1_cn_beam_tremolo_half
+base: 8 1; 1 1 20 6 10 2 1; 6 1 21 13 14 30 -12
+I 3
+CN
+== f1_cn_beam_tremolo_long
+base: 8 1; 1 1 20 6 10 2 1 0 0 10; 6 1 21 13 14 30 -22
+I 3
+CN
+== f1_cn_beam_same_note
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 21 13 14 23 11
+I 4
+CN
+== r2_wb4
+base: 8 1; 14 1 60; 2 1 80 0 -2 0.5 4; 14 1 120
+I 3
+WB4
+== r2_wb9
+base: 8 1; 14 1 60; 2 1 80 0 0 0 1; 14 1 120
+I 3
+WB9
+== r2_wb12
+base: 8 1; 14 1 60; 2 1 80 0 0 0 1; 14 1 120
+I 3
+WB12
+== r2_eu9
+base: 8 1; 14 1 60; 2 1 80 0 -2 1 4; 14 1 120
+I 3
+EU9
+# -- secondary beams: AUTO, AUTOX, SPLn ----------------------------------------------
+== e3_beam0_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44.9 9 20 0 0.0625 0 0; 1 1 54.9 2 20 0 0.375 0 10; 1 1 64.9 3 20 0 0.03125 0 0; 1 1 74.9 0 10 0 0.125 0 0; 1 1 84.9 6 20 0 0.03125 0 0; 1 1 94.9 0 20 0 0.25 0 0; 1 1 104.9 8 10 0 0.125 0 0; 6 1 44.9 -2 -3 104.9 21; 14 1 200 1
+I 10
+AUTO
+== e3_beam0_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44.9 9 20 0 0.0625 0 0; 1 1 54.9 2 20 0 0.375 0 10; 1 1 64.9 3 20 0 0.03125 0 0; 1 1 74.9 0 10 0 0.125 0 0; 1 1 84.9 6 20 0 0.03125 0 0; 1 1 94.9 0 20 0 0.25 0 0; 1 1 104.9 8 10 0 0.125 0 0; 6 1 44.9 -2 -3 104.9 21; 14 1 200 1
+I 10
+AUTOX
+== e3_beam0_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44.9 9 20 0 0.0625 0 0; 1 1 54.9 2 20 0 0.375 0 10; 1 1 64.9 3 20 0 0.03125 0 0; 1 1 74.9 0 10 0 0.125 0 0; 1 1 84.9 6 20 0 0.03125 0 0; 1 1 94.9 0 20 0 0.25 0 0; 1 1 104.9 8 10 0 0.125 0 0; 6 1 44.9 -2 -3 104.9 21; 14 1 200 1
+I 10
+SPL1
+== e3_beam0_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44.9 9 20 0 0.0625 0 0; 1 1 54.9 2 20 0 0.375 0 10; 1 1 64.9 3 20 0 0.03125 0 0; 1 1 74.9 0 10 0 0.125 0 0; 1 1 84.9 6 20 0 0.03125 0 0; 1 1 94.9 0 20 0 0.25 0 0; 1 1 104.9 8 10 0 0.125 0 0; 6 1 44.9 -2 -3 104.9 21; 14 1 200 1
+I 10
+SPL2
+== e3_beam0_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44.9 9 20 0 0.0625 0 0; 1 1 54.9 2 20 0 0.375 0 10; 1 1 64.9 3 20 0 0.03125 0 0; 1 1 74.9 0 10 0 0.125 0 0; 1 1 84.9 6 20 0 0.03125 0 0; 1 1 94.9 0 20 0 0.25 0 0; 1 1 104.9 8 10 0 0.125 0 0; 6 1 44.9 -2 -3 104.9 21; 14 1 200 1
+I 10
+SPL3
+== e3_beam0_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44.9 9 20 0 0.0625 0 0; 1 1 54.9 2 20 0 0.375 0 10; 1 1 64.9 3 20 0 0.03125 0 0; 1 1 74.9 0 10 0 0.125 0 0; 1 1 84.9 6 20 0 0.03125 0 0; 1 1 94.9 0 20 0 0.25 0 0; 1 1 104.9 8 10 0 0.125 0 0; 6 1 44.9 -2 -3 104.9 21; 14 1 200 1
+I 10
+SPL22
+== e3_beam0_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44.9 9 20 0 0.0625 0 0; 1 1 54.9 2 20 0 0.375 0 10; 1 1 64.9 3 20 0 0.03125 0 0; 1 1 74.9 0 10 0 0.125 0 0; 1 1 84.9 6 20 0 0.03125 0 0; 1 1 94.9 0 20 0 0.25 0 0; 1 1 104.9 8 10 0 0.125 0 0; 6 1 44.9 -2 -3 104.9 21; 14 1 200 1
+I 10
+SPL222
+== e3_beam1_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.5 2 20 0 0.5 0 0; 1 1 69.5 5 20 0 0.25 0 0; 1 1 79.5 2 20 0 0.25 0 0; 1 1 89.5 0 20 0 0.25 0 0; 6 1 59.5 -2 -3 89.5 21; 14 1 200 1
+I 7
+AUTO
+== e3_beam1_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.5 2 20 0 0.5 0 0; 1 1 69.5 5 20 0 0.25 0 0; 1 1 79.5 2 20 0 0.25 0 0; 1 1 89.5 0 20 0 0.25 0 0; 6 1 59.5 -2 -3 89.5 21; 14 1 200 1
+I 7
+AUTOX
+== e3_beam1_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.5 2 20 0 0.5 0 0; 1 1 69.5 5 20 0 0.25 0 0; 1 1 79.5 2 20 0 0.25 0 0; 1 1 89.5 0 20 0 0.25 0 0; 6 1 59.5 -2 -3 89.5 21; 14 1 200 1
+I 7
+SPL1
+== e3_beam1_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.5 2 20 0 0.5 0 0; 1 1 69.5 5 20 0 0.25 0 0; 1 1 79.5 2 20 0 0.25 0 0; 1 1 89.5 0 20 0 0.25 0 0; 6 1 59.5 -2 -3 89.5 21; 14 1 200 1
+I 7
+SPL2
+== e3_beam1_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.5 2 20 0 0.5 0 0; 1 1 69.5 5 20 0 0.25 0 0; 1 1 79.5 2 20 0 0.25 0 0; 1 1 89.5 0 20 0 0.25 0 0; 6 1 59.5 -2 -3 89.5 21; 14 1 200 1
+I 7
+SPL3
+== e3_beam1_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.5 2 20 0 0.5 0 0; 1 1 69.5 5 20 0 0.25 0 0; 1 1 79.5 2 20 0 0.25 0 0; 1 1 89.5 0 20 0 0.25 0 0; 6 1 59.5 -2 -3 89.5 21; 14 1 200 1
+I 7
+SPL22
+== e3_beam1_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.5 2 20 0 0.5 0 0; 1 1 69.5 5 20 0 0.25 0 0; 1 1 79.5 2 20 0 0.25 0 0; 1 1 89.5 0 20 0 0.25 0 0; 6 1 59.5 -2 -3 89.5 21; 14 1 200 1
+I 7
+SPL222
+== e3_beam2_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 42.2 6 20 0 0.125 0 0; 1 1 52.2 2 20 0 0.25 0 0; 1 1 62.2 6 10 0 0.25 0 0; 6 1 42.2 -2 -2 62.2 21; 14 1 200 1
+I 6
+AUTO
+== e3_beam2_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 42.2 6 20 0 0.125 0 0; 1 1 52.2 2 20 0 0.25 0 0; 1 1 62.2 6 10 0 0.25 0 0; 6 1 42.2 -2 -2 62.2 21; 14 1 200 1
+I 6
+AUTOX
+== e3_beam2_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 42.2 6 20 0 0.125 0 0; 1 1 52.2 2 20 0 0.25 0 0; 1 1 62.2 6 10 0 0.25 0 0; 6 1 42.2 -2 -2 62.2 21; 14 1 200 1
+I 6
+SPL1
+== e3_beam2_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 42.2 6 20 0 0.125 0 0; 1 1 52.2 2 20 0 0.25 0 0; 1 1 62.2 6 10 0 0.25 0 0; 6 1 42.2 -2 -2 62.2 21; 14 1 200 1
+I 6
+SPL2
+== e3_beam2_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 42.2 6 20 0 0.125 0 0; 1 1 52.2 2 20 0 0.25 0 0; 1 1 62.2 6 10 0 0.25 0 0; 6 1 42.2 -2 -2 62.2 21; 14 1 200 1
+I 6
+SPL3
+== e3_beam2_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 42.2 6 20 0 0.125 0 0; 1 1 52.2 2 20 0 0.25 0 0; 1 1 62.2 6 10 0 0.25 0 0; 6 1 42.2 -2 -2 62.2 21; 14 1 200 1
+I 6
+SPL22
+== e3_beam2_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 42.2 6 20 0 0.125 0 0; 1 1 52.2 2 20 0 0.25 0 0; 1 1 62.2 6 10 0 0.25 0 0; 6 1 42.2 -2 -2 62.2 21; 14 1 200 1
+I 6
+SPL222
+== e3_beam3_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 55 7 20 0 0.03125 0 0; 1 1 65 1 20 0 0.0625 0 0; 1 1 75 8 20 0 0.375 0 10; 1 1 85 9 20 0 0.5 0 0; 6 1 55 -2 -1 85 21; 14 1 200 1
+I 7
+AUTO
+== e3_beam3_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 55 7 20 0 0.03125 0 0; 1 1 65 1 20 0 0.0625 0 0; 1 1 75 8 20 0 0.375 0 10; 1 1 85 9 20 0 0.5 0 0; 6 1 55 -2 -1 85 21; 14 1 200 1
+I 7
+AUTOX
+== e3_beam3_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 55 7 20 0 0.03125 0 0; 1 1 65 1 20 0 0.0625 0 0; 1 1 75 8 20 0 0.375 0 10; 1 1 85 9 20 0 0.5 0 0; 6 1 55 -2 -1 85 21; 14 1 200 1
+I 7
+SPL1
+== e3_beam3_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 55 7 20 0 0.03125 0 0; 1 1 65 1 20 0 0.0625 0 0; 1 1 75 8 20 0 0.375 0 10; 1 1 85 9 20 0 0.5 0 0; 6 1 55 -2 -1 85 21; 14 1 200 1
+I 7
+SPL2
+== e3_beam3_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 55 7 20 0 0.03125 0 0; 1 1 65 1 20 0 0.0625 0 0; 1 1 75 8 20 0 0.375 0 10; 1 1 85 9 20 0 0.5 0 0; 6 1 55 -2 -1 85 21; 14 1 200 1
+I 7
+SPL3
+== e3_beam3_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 55 7 20 0 0.03125 0 0; 1 1 65 1 20 0 0.0625 0 0; 1 1 75 8 20 0 0.375 0 10; 1 1 85 9 20 0 0.5 0 0; 6 1 55 -2 -1 85 21; 14 1 200 1
+I 7
+SPL22
+== e3_beam3_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 55 7 20 0 0.03125 0 0; 1 1 65 1 20 0 0.0625 0 0; 1 1 75 8 20 0 0.375 0 10; 1 1 85 9 20 0 0.5 0 0; 6 1 55 -2 -1 85 21; 14 1 200 1
+I 7
+SPL222
+== e3_beam4_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 43.4 2 20 0 0.25 0 0; 1 1 53.4 5 10 0 0.1875 0 10; 1 1 63.4 0 10 0 0.1875 0 10; 1 1 73.4 3 10 0 0.1875 0 10; 1 1 83.4 2 10 0 0.375 0 10; 1 1 93.4 9 20 0 0.125 0 0; 1 1 103.4 5 10 0 0.25 0 0; 6 1 43.4 13 13 103.4 11; 14 1 200 1
+I 10
+AUTO
+== e3_beam4_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 43.4 2 20 0 0.25 0 0; 1 1 53.4 5 10 0 0.1875 0 10; 1 1 63.4 0 10 0 0.1875 0 10; 1 1 73.4 3 10 0 0.1875 0 10; 1 1 83.4 2 10 0 0.375 0 10; 1 1 93.4 9 20 0 0.125 0 0; 1 1 103.4 5 10 0 0.25 0 0; 6 1 43.4 13 13 103.4 11; 14 1 200 1
+I 10
+AUTOX
+== e3_beam4_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 43.4 2 20 0 0.25 0 0; 1 1 53.4 5 10 0 0.1875 0 10; 1 1 63.4 0 10 0 0.1875 0 10; 1 1 73.4 3 10 0 0.1875 0 10; 1 1 83.4 2 10 0 0.375 0 10; 1 1 93.4 9 20 0 0.125 0 0; 1 1 103.4 5 10 0 0.25 0 0; 6 1 43.4 13 13 103.4 11; 14 1 200 1
+I 10
+SPL1
+== e3_beam4_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 43.4 2 20 0 0.25 0 0; 1 1 53.4 5 10 0 0.1875 0 10; 1 1 63.4 0 10 0 0.1875 0 10; 1 1 73.4 3 10 0 0.1875 0 10; 1 1 83.4 2 10 0 0.375 0 10; 1 1 93.4 9 20 0 0.125 0 0; 1 1 103.4 5 10 0 0.25 0 0; 6 1 43.4 13 13 103.4 11; 14 1 200 1
+I 10
+SPL2
+== e3_beam4_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 43.4 2 20 0 0.25 0 0; 1 1 53.4 5 10 0 0.1875 0 10; 1 1 63.4 0 10 0 0.1875 0 10; 1 1 73.4 3 10 0 0.1875 0 10; 1 1 83.4 2 10 0 0.375 0 10; 1 1 93.4 9 20 0 0.125 0 0; 1 1 103.4 5 10 0 0.25 0 0; 6 1 43.4 13 13 103.4 11; 14 1 200 1
+I 10
+SPL3
+== e3_beam4_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 43.4 2 20 0 0.25 0 0; 1 1 53.4 5 10 0 0.1875 0 10; 1 1 63.4 0 10 0 0.1875 0 10; 1 1 73.4 3 10 0 0.1875 0 10; 1 1 83.4 2 10 0 0.375 0 10; 1 1 93.4 9 20 0 0.125 0 0; 1 1 103.4 5 10 0 0.25 0 0; 6 1 43.4 13 13 103.4 11; 14 1 200 1
+I 10
+SPL22
+== e3_beam4_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 43.4 2 20 0 0.25 0 0; 1 1 53.4 5 10 0 0.1875 0 10; 1 1 63.4 0 10 0 0.1875 0 10; 1 1 73.4 3 10 0 0.1875 0 10; 1 1 83.4 2 10 0 0.375 0 10; 1 1 93.4 9 20 0 0.125 0 0; 1 1 103.4 5 10 0 0.25 0 0; 6 1 43.4 13 13 103.4 11; 14 1 200 1
+I 10
+SPL222
+== e3_beam5_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60 7 20 0 0.25 0 0; 1 1 70 4 20 0 0.25 0 0; 1 1 80 4 20 0 0.03125 0 0; 6 1 60 -2 -3 80 21; 14 1 200 1
+I 6
+AUTO
+== e3_beam5_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60 7 20 0 0.25 0 0; 1 1 70 4 20 0 0.25 0 0; 1 1 80 4 20 0 0.03125 0 0; 6 1 60 -2 -3 80 21; 14 1 200 1
+I 6
+AUTOX
+== e3_beam5_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60 7 20 0 0.25 0 0; 1 1 70 4 20 0 0.25 0 0; 1 1 80 4 20 0 0.03125 0 0; 6 1 60 -2 -3 80 21; 14 1 200 1
+I 6
+SPL1
+== e3_beam5_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60 7 20 0 0.25 0 0; 1 1 70 4 20 0 0.25 0 0; 1 1 80 4 20 0 0.03125 0 0; 6 1 60 -2 -3 80 21; 14 1 200 1
+I 6
+SPL2
+== e3_beam5_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60 7 20 0 0.25 0 0; 1 1 70 4 20 0 0.25 0 0; 1 1 80 4 20 0 0.03125 0 0; 6 1 60 -2 -3 80 21; 14 1 200 1
+I 6
+SPL3
+== e3_beam5_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60 7 20 0 0.25 0 0; 1 1 70 4 20 0 0.25 0 0; 1 1 80 4 20 0 0.03125 0 0; 6 1 60 -2 -3 80 21; 14 1 200 1
+I 6
+SPL22
+== e3_beam5_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60 7 20 0 0.25 0 0; 1 1 70 4 20 0 0.25 0 0; 1 1 80 4 20 0 0.03125 0 0; 6 1 60 -2 -3 80 21; 14 1 200 1
+I 6
+SPL222
+== e3_beam6_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.6 2 20 0 0.0625 0 0; 1 1 62.6 7 20 0 0.25 0 0; 1 1 72.6 2 20 0 0.1875 0 10; 6 1 52.6 -2 -1 72.6 21; 14 1 200 1
+I 6
+AUTO
+== e3_beam6_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.6 2 20 0 0.0625 0 0; 1 1 62.6 7 20 0 0.25 0 0; 1 1 72.6 2 20 0 0.1875 0 10; 6 1 52.6 -2 -1 72.6 21; 14 1 200 1
+I 6
+AUTOX
+== e3_beam6_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.6 2 20 0 0.0625 0 0; 1 1 62.6 7 20 0 0.25 0 0; 1 1 72.6 2 20 0 0.1875 0 10; 6 1 52.6 -2 -1 72.6 21; 14 1 200 1
+I 6
+SPL1
+== e3_beam6_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.6 2 20 0 0.0625 0 0; 1 1 62.6 7 20 0 0.25 0 0; 1 1 72.6 2 20 0 0.1875 0 10; 6 1 52.6 -2 -1 72.6 21; 14 1 200 1
+I 6
+SPL2
+== e3_beam6_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.6 2 20 0 0.0625 0 0; 1 1 62.6 7 20 0 0.25 0 0; 1 1 72.6 2 20 0 0.1875 0 10; 6 1 52.6 -2 -1 72.6 21; 14 1 200 1
+I 6
+SPL3
+== e3_beam6_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.6 2 20 0 0.0625 0 0; 1 1 62.6 7 20 0 0.25 0 0; 1 1 72.6 2 20 0 0.1875 0 10; 6 1 52.6 -2 -1 72.6 21; 14 1 200 1
+I 6
+SPL22
+== e3_beam6_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 52.6 2 20 0 0.0625 0 0; 1 1 62.6 7 20 0 0.25 0 0; 1 1 72.6 2 20 0 0.1875 0 10; 6 1 52.6 -2 -1 72.6 21; 14 1 200 1
+I 6
+SPL222
+== e3_beam7_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.3 9 20 0 0.5 0 0; 1 1 77.3 7 10 0 0.125 0 0; 1 1 87.3 8 20 0 0.1875 0 10; 1 1 97.3 2 20 0 0.25 0 0; 1 1 107.3 0 20 0 0.1875 0 10; 6 1 67.3 -2 -3 107.3 21; 14 1 200 1
+I 8
+AUTO
+== e3_beam7_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.3 9 20 0 0.5 0 0; 1 1 77.3 7 10 0 0.125 0 0; 1 1 87.3 8 20 0 0.1875 0 10; 1 1 97.3 2 20 0 0.25 0 0; 1 1 107.3 0 20 0 0.1875 0 10; 6 1 67.3 -2 -3 107.3 21; 14 1 200 1
+I 8
+AUTOX
+== e3_beam7_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.3 9 20 0 0.5 0 0; 1 1 77.3 7 10 0 0.125 0 0; 1 1 87.3 8 20 0 0.1875 0 10; 1 1 97.3 2 20 0 0.25 0 0; 1 1 107.3 0 20 0 0.1875 0 10; 6 1 67.3 -2 -3 107.3 21; 14 1 200 1
+I 8
+SPL1
+== e3_beam7_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.3 9 20 0 0.5 0 0; 1 1 77.3 7 10 0 0.125 0 0; 1 1 87.3 8 20 0 0.1875 0 10; 1 1 97.3 2 20 0 0.25 0 0; 1 1 107.3 0 20 0 0.1875 0 10; 6 1 67.3 -2 -3 107.3 21; 14 1 200 1
+I 8
+SPL2
+== e3_beam7_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.3 9 20 0 0.5 0 0; 1 1 77.3 7 10 0 0.125 0 0; 1 1 87.3 8 20 0 0.1875 0 10; 1 1 97.3 2 20 0 0.25 0 0; 1 1 107.3 0 20 0 0.1875 0 10; 6 1 67.3 -2 -3 107.3 21; 14 1 200 1
+I 8
+SPL3
+== e3_beam7_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.3 9 20 0 0.5 0 0; 1 1 77.3 7 10 0 0.125 0 0; 1 1 87.3 8 20 0 0.1875 0 10; 1 1 97.3 2 20 0 0.25 0 0; 1 1 107.3 0 20 0 0.1875 0 10; 6 1 67.3 -2 -3 107.3 21; 14 1 200 1
+I 8
+SPL22
+== e3_beam7_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 67.3 9 20 0 0.5 0 0; 1 1 77.3 7 10 0 0.125 0 0; 1 1 87.3 8 20 0 0.1875 0 10; 1 1 97.3 2 20 0 0.25 0 0; 1 1 107.3 0 20 0 0.1875 0 10; 6 1 67.3 -2 -3 107.3 21; 14 1 200 1
+I 8
+SPL222
+== e3_beam8_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 68.6 9 10 0 0.375 0 10; 1 1 78.6 6 20 0 0.1875 0 10; 6 1 68.6 -2 -3 78.6 21; 14 1 200 1
+I 5
+AUTO
+== e3_beam8_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 68.6 9 10 0 0.375 0 10; 1 1 78.6 6 20 0 0.1875 0 10; 6 1 68.6 -2 -3 78.6 21; 14 1 200 1
+I 5
+AUTOX
+== e3_beam8_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 68.6 9 10 0 0.375 0 10; 1 1 78.6 6 20 0 0.1875 0 10; 6 1 68.6 -2 -3 78.6 21; 14 1 200 1
+I 5
+SPL1
+== e3_beam8_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 68.6 9 10 0 0.375 0 10; 1 1 78.6 6 20 0 0.1875 0 10; 6 1 68.6 -2 -3 78.6 21; 14 1 200 1
+I 5
+SPL2
+== e3_beam8_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 68.6 9 10 0 0.375 0 10; 1 1 78.6 6 20 0 0.1875 0 10; 6 1 68.6 -2 -3 78.6 21; 14 1 200 1
+I 5
+SPL3
+== e3_beam8_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 68.6 9 10 0 0.375 0 10; 1 1 78.6 6 20 0 0.1875 0 10; 6 1 68.6 -2 -3 78.6 21; 14 1 200 1
+I 5
+SPL22
+== e3_beam8_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 68.6 9 10 0 0.375 0 10; 1 1 78.6 6 20 0 0.1875 0 10; 6 1 68.6 -2 -3 78.6 21; 14 1 200 1
+I 5
+SPL222
+== e3_beam9_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44 2 10 0 0.0625 0 0; 1 1 54 1 10 0 0.25 0 0; 6 1 44 13 12 54 11; 14 1 200 1
+I 5
+AUTO
+== e3_beam9_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44 2 10 0 0.0625 0 0; 1 1 54 1 10 0 0.25 0 0; 6 1 44 13 12 54 11; 14 1 200 1
+I 5
+AUTOX
+== e3_beam9_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44 2 10 0 0.0625 0 0; 1 1 54 1 10 0 0.25 0 0; 6 1 44 13 12 54 11; 14 1 200 1
+I 5
+SPL1
+== e3_beam9_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44 2 10 0 0.0625 0 0; 1 1 54 1 10 0 0.25 0 0; 6 1 44 13 12 54 11; 14 1 200 1
+I 5
+SPL2
+== e3_beam9_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44 2 10 0 0.0625 0 0; 1 1 54 1 10 0 0.25 0 0; 6 1 44 13 12 54 11; 14 1 200 1
+I 5
+SPL3
+== e3_beam9_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44 2 10 0 0.0625 0 0; 1 1 54 1 10 0 0.25 0 0; 6 1 44 13 12 54 11; 14 1 200 1
+I 5
+SPL22
+== e3_beam9_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 44 2 10 0 0.0625 0 0; 1 1 54 1 10 0 0.25 0 0; 6 1 44 13 12 54 11; 14 1 200 1
+I 5
+SPL222
+== e3_beam10_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.1 3 20 0 0.0625 0 0; 1 1 59.1 8 10 0 0.03125 0 0; 1 1 69.1 9 10 0 0.125 0 0; 1 1 79.1 0 10 0 0.25 0 0; 6 1 49.1 13 12 79.1 11; 14 1 200 1
+I 7
+AUTO
+== e3_beam10_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.1 3 20 0 0.0625 0 0; 1 1 59.1 8 10 0 0.03125 0 0; 1 1 69.1 9 10 0 0.125 0 0; 1 1 79.1 0 10 0 0.25 0 0; 6 1 49.1 13 12 79.1 11; 14 1 200 1
+I 7
+AUTOX
+== e3_beam10_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.1 3 20 0 0.0625 0 0; 1 1 59.1 8 10 0 0.03125 0 0; 1 1 69.1 9 10 0 0.125 0 0; 1 1 79.1 0 10 0 0.25 0 0; 6 1 49.1 13 12 79.1 11; 14 1 200 1
+I 7
+SPL1
+== e3_beam10_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.1 3 20 0 0.0625 0 0; 1 1 59.1 8 10 0 0.03125 0 0; 1 1 69.1 9 10 0 0.125 0 0; 1 1 79.1 0 10 0 0.25 0 0; 6 1 49.1 13 12 79.1 11; 14 1 200 1
+I 7
+SPL2
+== e3_beam10_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.1 3 20 0 0.0625 0 0; 1 1 59.1 8 10 0 0.03125 0 0; 1 1 69.1 9 10 0 0.125 0 0; 1 1 79.1 0 10 0 0.25 0 0; 6 1 49.1 13 12 79.1 11; 14 1 200 1
+I 7
+SPL3
+== e3_beam10_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.1 3 20 0 0.0625 0 0; 1 1 59.1 8 10 0 0.03125 0 0; 1 1 69.1 9 10 0 0.125 0 0; 1 1 79.1 0 10 0 0.25 0 0; 6 1 49.1 13 12 79.1 11; 14 1 200 1
+I 7
+SPL22
+== e3_beam10_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.1 3 20 0 0.0625 0 0; 1 1 59.1 8 10 0 0.03125 0 0; 1 1 69.1 9 10 0 0.125 0 0; 1 1 79.1 0 10 0 0.25 0 0; 6 1 49.1 13 12 79.1 11; 14 1 200 1
+I 7
+SPL222
+== e3_beam11_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 9 20 0 0.0625 0 0; 1 1 61.6 0 20 0 0.25 0 0; 6 1 51.6 -2 -3 61.6 21; 14 1 200 1
+I 5
+AUTO
+== e3_beam11_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 9 20 0 0.0625 0 0; 1 1 61.6 0 20 0 0.25 0 0; 6 1 51.6 -2 -3 61.6 21; 14 1 200 1
+I 5
+AUTOX
+== e3_beam11_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 9 20 0 0.0625 0 0; 1 1 61.6 0 20 0 0.25 0 0; 6 1 51.6 -2 -3 61.6 21; 14 1 200 1
+I 5
+SPL1
+== e3_beam11_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 9 20 0 0.0625 0 0; 1 1 61.6 0 20 0 0.25 0 0; 6 1 51.6 -2 -3 61.6 21; 14 1 200 1
+I 5
+SPL2
+== e3_beam11_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 9 20 0 0.0625 0 0; 1 1 61.6 0 20 0 0.25 0 0; 6 1 51.6 -2 -3 61.6 21; 14 1 200 1
+I 5
+SPL3
+== e3_beam11_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 9 20 0 0.0625 0 0; 1 1 61.6 0 20 0 0.25 0 0; 6 1 51.6 -2 -3 61.6 21; 14 1 200 1
+I 5
+SPL22
+== e3_beam11_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 51.6 9 20 0 0.0625 0 0; 1 1 61.6 0 20 0 0.25 0 0; 6 1 51.6 -2 -3 61.6 21; 14 1 200 1
+I 5
+SPL222
+== e3_beam12_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.3 9 20 0 0.03125 0 0; 1 1 59.3 8 20 0 0.25 0 0; 1 1 69.3 9 20 0 0.5 0 0; 1 1 79.3 3 20 0 0.1875 0 10; 6 1 49.3 -2 -2 79.3 21; 14 1 200 1
+I 7
+AUTO
+== e3_beam12_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.3 9 20 0 0.03125 0 0; 1 1 59.3 8 20 0 0.25 0 0; 1 1 69.3 9 20 0 0.5 0 0; 1 1 79.3 3 20 0 0.1875 0 10; 6 1 49.3 -2 -2 79.3 21; 14 1 200 1
+I 7
+AUTOX
+== e3_beam12_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.3 9 20 0 0.03125 0 0; 1 1 59.3 8 20 0 0.25 0 0; 1 1 69.3 9 20 0 0.5 0 0; 1 1 79.3 3 20 0 0.1875 0 10; 6 1 49.3 -2 -2 79.3 21; 14 1 200 1
+I 7
+SPL1
+== e3_beam12_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.3 9 20 0 0.03125 0 0; 1 1 59.3 8 20 0 0.25 0 0; 1 1 69.3 9 20 0 0.5 0 0; 1 1 79.3 3 20 0 0.1875 0 10; 6 1 49.3 -2 -2 79.3 21; 14 1 200 1
+I 7
+SPL2
+== e3_beam12_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.3 9 20 0 0.03125 0 0; 1 1 59.3 8 20 0 0.25 0 0; 1 1 69.3 9 20 0 0.5 0 0; 1 1 79.3 3 20 0 0.1875 0 10; 6 1 49.3 -2 -2 79.3 21; 14 1 200 1
+I 7
+SPL3
+== e3_beam12_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.3 9 20 0 0.03125 0 0; 1 1 59.3 8 20 0 0.25 0 0; 1 1 69.3 9 20 0 0.5 0 0; 1 1 79.3 3 20 0 0.1875 0 10; 6 1 49.3 -2 -2 79.3 21; 14 1 200 1
+I 7
+SPL22
+== e3_beam12_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 49.3 9 20 0 0.03125 0 0; 1 1 59.3 8 20 0 0.25 0 0; 1 1 69.3 9 20 0 0.5 0 0; 1 1 79.3 3 20 0 0.1875 0 10; 6 1 49.3 -2 -2 79.3 21; 14 1 200 1
+I 7
+SPL222
+== e3_beam13_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.7 7 20 0 0.25 0 0; 1 1 69.7 6 20 0 0.25 0 0; 1 1 79.7 1 10 0 0.25 0 0; 1 1 89.7 0 20 0 0.03125 0 0; 1 1 99.7 0 20 0 0.5 0 0; 6 1 59.7 -2 -1 99.7 21; 14 1 200 1
+I 8
+AUTO
+== e3_beam13_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.7 7 20 0 0.25 0 0; 1 1 69.7 6 20 0 0.25 0 0; 1 1 79.7 1 10 0 0.25 0 0; 1 1 89.7 0 20 0 0.03125 0 0; 1 1 99.7 0 20 0 0.5 0 0; 6 1 59.7 -2 -1 99.7 21; 14 1 200 1
+I 8
+AUTOX
+== e3_beam13_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.7 7 20 0 0.25 0 0; 1 1 69.7 6 20 0 0.25 0 0; 1 1 79.7 1 10 0 0.25 0 0; 1 1 89.7 0 20 0 0.03125 0 0; 1 1 99.7 0 20 0 0.5 0 0; 6 1 59.7 -2 -1 99.7 21; 14 1 200 1
+I 8
+SPL1
+== e3_beam13_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.7 7 20 0 0.25 0 0; 1 1 69.7 6 20 0 0.25 0 0; 1 1 79.7 1 10 0 0.25 0 0; 1 1 89.7 0 20 0 0.03125 0 0; 1 1 99.7 0 20 0 0.5 0 0; 6 1 59.7 -2 -1 99.7 21; 14 1 200 1
+I 8
+SPL2
+== e3_beam13_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.7 7 20 0 0.25 0 0; 1 1 69.7 6 20 0 0.25 0 0; 1 1 79.7 1 10 0 0.25 0 0; 1 1 89.7 0 20 0 0.03125 0 0; 1 1 99.7 0 20 0 0.5 0 0; 6 1 59.7 -2 -1 99.7 21; 14 1 200 1
+I 8
+SPL3
+== e3_beam13_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.7 7 20 0 0.25 0 0; 1 1 69.7 6 20 0 0.25 0 0; 1 1 79.7 1 10 0 0.25 0 0; 1 1 89.7 0 20 0 0.03125 0 0; 1 1 99.7 0 20 0 0.5 0 0; 6 1 59.7 -2 -1 99.7 21; 14 1 200 1
+I 8
+SPL22
+== e3_beam13_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 59.7 7 20 0 0.25 0 0; 1 1 69.7 6 20 0 0.25 0 0; 1 1 79.7 1 10 0 0.25 0 0; 1 1 89.7 0 20 0 0.03125 0 0; 1 1 99.7 0 20 0 0.5 0 0; 6 1 59.7 -2 -1 99.7 21; 14 1 200 1
+I 8
+SPL222
+== e3_beam14_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.7 1 10 0 0.0625 0 0; 1 1 67.7 2 10 0 0.03125 0 0; 1 1 77.7 9 10 0 0.125 0 0; 1 1 87.7 7 20 0 0.0625 0 0; 1 1 97.7 9 10 0 0.0625 0 0; 6 1 57.7 13 14 97.7 11; 14 1 200 1
+I 8
+AUTO
+== e3_beam14_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.7 1 10 0 0.0625 0 0; 1 1 67.7 2 10 0 0.03125 0 0; 1 1 77.7 9 10 0 0.125 0 0; 1 1 87.7 7 20 0 0.0625 0 0; 1 1 97.7 9 10 0 0.0625 0 0; 6 1 57.7 13 14 97.7 11; 14 1 200 1
+I 8
+AUTOX
+== e3_beam14_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.7 1 10 0 0.0625 0 0; 1 1 67.7 2 10 0 0.03125 0 0; 1 1 77.7 9 10 0 0.125 0 0; 1 1 87.7 7 20 0 0.0625 0 0; 1 1 97.7 9 10 0 0.0625 0 0; 6 1 57.7 13 14 97.7 11; 14 1 200 1
+I 8
+SPL1
+== e3_beam14_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.7 1 10 0 0.0625 0 0; 1 1 67.7 2 10 0 0.03125 0 0; 1 1 77.7 9 10 0 0.125 0 0; 1 1 87.7 7 20 0 0.0625 0 0; 1 1 97.7 9 10 0 0.0625 0 0; 6 1 57.7 13 14 97.7 11; 14 1 200 1
+I 8
+SPL2
+== e3_beam14_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.7 1 10 0 0.0625 0 0; 1 1 67.7 2 10 0 0.03125 0 0; 1 1 77.7 9 10 0 0.125 0 0; 1 1 87.7 7 20 0 0.0625 0 0; 1 1 97.7 9 10 0 0.0625 0 0; 6 1 57.7 13 14 97.7 11; 14 1 200 1
+I 8
+SPL3
+== e3_beam14_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.7 1 10 0 0.0625 0 0; 1 1 67.7 2 10 0 0.03125 0 0; 1 1 77.7 9 10 0 0.125 0 0; 1 1 87.7 7 20 0 0.0625 0 0; 1 1 97.7 9 10 0 0.0625 0 0; 6 1 57.7 13 14 97.7 11; 14 1 200 1
+I 8
+SPL22
+== e3_beam14_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 57.7 1 10 0 0.0625 0 0; 1 1 67.7 2 10 0 0.03125 0 0; 1 1 77.7 9 10 0 0.125 0 0; 1 1 87.7 7 20 0 0.0625 0 0; 1 1 97.7 9 10 0 0.0625 0 0; 6 1 57.7 13 14 97.7 11; 14 1 200 1
+I 8
+SPL222
+== e3_beam15_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61 0 10 0 0.375 0 10; 1 1 71 3 20 0 0.125 0 0; 1 1 81 6 20 0 0.03125 0 0; 1 1 91 1 20 0 0.03125 0 0; 1 1 101 1 20 0 0.0625 0 0; 1 1 111 9 20 0 0.375 0 10; 1 1 121 7 10 0 0.0625 0 0; 6 1 61 -2 -3 121 21; 14 1 200 1
+I 10
+AUTO
+== e3_beam15_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61 0 10 0 0.375 0 10; 1 1 71 3 20 0 0.125 0 0; 1 1 81 6 20 0 0.03125 0 0; 1 1 91 1 20 0 0.03125 0 0; 1 1 101 1 20 0 0.0625 0 0; 1 1 111 9 20 0 0.375 0 10; 1 1 121 7 10 0 0.0625 0 0; 6 1 61 -2 -3 121 21; 14 1 200 1
+I 10
+AUTOX
+== e3_beam15_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61 0 10 0 0.375 0 10; 1 1 71 3 20 0 0.125 0 0; 1 1 81 6 20 0 0.03125 0 0; 1 1 91 1 20 0 0.03125 0 0; 1 1 101 1 20 0 0.0625 0 0; 1 1 111 9 20 0 0.375 0 10; 1 1 121 7 10 0 0.0625 0 0; 6 1 61 -2 -3 121 21; 14 1 200 1
+I 10
+SPL1
+== e3_beam15_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61 0 10 0 0.375 0 10; 1 1 71 3 20 0 0.125 0 0; 1 1 81 6 20 0 0.03125 0 0; 1 1 91 1 20 0 0.03125 0 0; 1 1 101 1 20 0 0.0625 0 0; 1 1 111 9 20 0 0.375 0 10; 1 1 121 7 10 0 0.0625 0 0; 6 1 61 -2 -3 121 21; 14 1 200 1
+I 10
+SPL2
+== e3_beam15_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61 0 10 0 0.375 0 10; 1 1 71 3 20 0 0.125 0 0; 1 1 81 6 20 0 0.03125 0 0; 1 1 91 1 20 0 0.03125 0 0; 1 1 101 1 20 0 0.0625 0 0; 1 1 111 9 20 0 0.375 0 10; 1 1 121 7 10 0 0.0625 0 0; 6 1 61 -2 -3 121 21; 14 1 200 1
+I 10
+SPL3
+== e3_beam15_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61 0 10 0 0.375 0 10; 1 1 71 3 20 0 0.125 0 0; 1 1 81 6 20 0 0.03125 0 0; 1 1 91 1 20 0 0.03125 0 0; 1 1 101 1 20 0 0.0625 0 0; 1 1 111 9 20 0 0.375 0 10; 1 1 121 7 10 0 0.0625 0 0; 6 1 61 -2 -3 121 21; 14 1 200 1
+I 10
+SPL22
+== e3_beam15_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61 0 10 0 0.375 0 10; 1 1 71 3 20 0 0.125 0 0; 1 1 81 6 20 0 0.03125 0 0; 1 1 91 1 20 0 0.03125 0 0; 1 1 101 1 20 0 0.0625 0 0; 1 1 111 9 20 0 0.375 0 10; 1 1 121 7 10 0 0.0625 0 0; 6 1 61 -2 -3 121 21; 14 1 200 1
+I 10
+SPL222
+== e3_beam16_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61.1 5 20 0 0.1875 0 10; 1 1 71.1 2 10 0 0.1875 0 10; 1 1 81.1 8 20 0 0.125 0 0; 6 1 61.1 13 14 81.1 11; 14 1 200 1
+I 6
+AUTO
+== e3_beam16_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61.1 5 20 0 0.1875 0 10; 1 1 71.1 2 10 0 0.1875 0 10; 1 1 81.1 8 20 0 0.125 0 0; 6 1 61.1 13 14 81.1 11; 14 1 200 1
+I 6
+AUTOX
+== e3_beam16_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61.1 5 20 0 0.1875 0 10; 1 1 71.1 2 10 0 0.1875 0 10; 1 1 81.1 8 20 0 0.125 0 0; 6 1 61.1 13 14 81.1 11; 14 1 200 1
+I 6
+SPL1
+== e3_beam16_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61.1 5 20 0 0.1875 0 10; 1 1 71.1 2 10 0 0.1875 0 10; 1 1 81.1 8 20 0 0.125 0 0; 6 1 61.1 13 14 81.1 11; 14 1 200 1
+I 6
+SPL2
+== e3_beam16_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61.1 5 20 0 0.1875 0 10; 1 1 71.1 2 10 0 0.1875 0 10; 1 1 81.1 8 20 0 0.125 0 0; 6 1 61.1 13 14 81.1 11; 14 1 200 1
+I 6
+SPL3
+== e3_beam16_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61.1 5 20 0 0.1875 0 10; 1 1 71.1 2 10 0 0.1875 0 10; 1 1 81.1 8 20 0 0.125 0 0; 6 1 61.1 13 14 81.1 11; 14 1 200 1
+I 6
+SPL22
+== e3_beam16_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 61.1 5 20 0 0.1875 0 10; 1 1 71.1 2 10 0 0.1875 0 10; 1 1 81.1 8 20 0 0.125 0 0; 6 1 61.1 13 14 81.1 11; 14 1 200 1
+I 6
+SPL222
+== e3_beam17_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.6 2 20 0 0.0625 0 0; 1 1 70.6 9 20 0 0.25 0 0; 1 1 80.6 3 20 0 0.0625 0 0; 1 1 90.6 3 10 0 0.03125 0 0; 1 1 100.6 5 20 0 0.0625 0 0; 1 1 110.6 8 20 0 0.0625 0 0; 1 1 120.6 6 20 0 0.03125 0 0; 6 1 60.6 -2 -1 120.6 21; 14 1 200 1
+I 10
+AUTO
+== e3_beam17_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.6 2 20 0 0.0625 0 0; 1 1 70.6 9 20 0 0.25 0 0; 1 1 80.6 3 20 0 0.0625 0 0; 1 1 90.6 3 10 0 0.03125 0 0; 1 1 100.6 5 20 0 0.0625 0 0; 1 1 110.6 8 20 0 0.0625 0 0; 1 1 120.6 6 20 0 0.03125 0 0; 6 1 60.6 -2 -1 120.6 21; 14 1 200 1
+I 10
+AUTOX
+== e3_beam17_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.6 2 20 0 0.0625 0 0; 1 1 70.6 9 20 0 0.25 0 0; 1 1 80.6 3 20 0 0.0625 0 0; 1 1 90.6 3 10 0 0.03125 0 0; 1 1 100.6 5 20 0 0.0625 0 0; 1 1 110.6 8 20 0 0.0625 0 0; 1 1 120.6 6 20 0 0.03125 0 0; 6 1 60.6 -2 -1 120.6 21; 14 1 200 1
+I 10
+SPL1
+== e3_beam17_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.6 2 20 0 0.0625 0 0; 1 1 70.6 9 20 0 0.25 0 0; 1 1 80.6 3 20 0 0.0625 0 0; 1 1 90.6 3 10 0 0.03125 0 0; 1 1 100.6 5 20 0 0.0625 0 0; 1 1 110.6 8 20 0 0.0625 0 0; 1 1 120.6 6 20 0 0.03125 0 0; 6 1 60.6 -2 -1 120.6 21; 14 1 200 1
+I 10
+SPL2
+== e3_beam17_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.6 2 20 0 0.0625 0 0; 1 1 70.6 9 20 0 0.25 0 0; 1 1 80.6 3 20 0 0.0625 0 0; 1 1 90.6 3 10 0 0.03125 0 0; 1 1 100.6 5 20 0 0.0625 0 0; 1 1 110.6 8 20 0 0.0625 0 0; 1 1 120.6 6 20 0 0.03125 0 0; 6 1 60.6 -2 -1 120.6 21; 14 1 200 1
+I 10
+SPL3
+== e3_beam17_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.6 2 20 0 0.0625 0 0; 1 1 70.6 9 20 0 0.25 0 0; 1 1 80.6 3 20 0 0.0625 0 0; 1 1 90.6 3 10 0 0.03125 0 0; 1 1 100.6 5 20 0 0.0625 0 0; 1 1 110.6 8 20 0 0.0625 0 0; 1 1 120.6 6 20 0 0.03125 0 0; 6 1 60.6 -2 -1 120.6 21; 14 1 200 1
+I 10
+SPL22
+== e3_beam17_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.6 2 20 0 0.0625 0 0; 1 1 70.6 9 20 0 0.25 0 0; 1 1 80.6 3 20 0 0.0625 0 0; 1 1 90.6 3 10 0 0.03125 0 0; 1 1 100.6 5 20 0 0.0625 0 0; 1 1 110.6 8 20 0 0.0625 0 0; 1 1 120.6 6 20 0 0.03125 0 0; 6 1 60.6 -2 -1 120.6 21; 14 1 200 1
+I 10
+SPL222
+== e3_beam18_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 53.5 5 20 0 0.25 0 0; 1 1 63.5 5 10 0 0.25 0 0; 6 1 53.5 -2 -1 63.5 21; 14 1 200 1
+I 5
+AUTO
+== e3_beam18_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 53.5 5 20 0 0.25 0 0; 1 1 63.5 5 10 0 0.25 0 0; 6 1 53.5 -2 -1 63.5 21; 14 1 200 1
+I 5
+AUTOX
+== e3_beam18_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 53.5 5 20 0 0.25 0 0; 1 1 63.5 5 10 0 0.25 0 0; 6 1 53.5 -2 -1 63.5 21; 14 1 200 1
+I 5
+SPL1
+== e3_beam18_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 53.5 5 20 0 0.25 0 0; 1 1 63.5 5 10 0 0.25 0 0; 6 1 53.5 -2 -1 63.5 21; 14 1 200 1
+I 5
+SPL2
+== e3_beam18_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 53.5 5 20 0 0.25 0 0; 1 1 63.5 5 10 0 0.25 0 0; 6 1 53.5 -2 -1 63.5 21; 14 1 200 1
+I 5
+SPL3
+== e3_beam18_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 53.5 5 20 0 0.25 0 0; 1 1 63.5 5 10 0 0.25 0 0; 6 1 53.5 -2 -1 63.5 21; 14 1 200 1
+I 5
+SPL22
+== e3_beam18_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 53.5 5 20 0 0.25 0 0; 1 1 63.5 5 10 0 0.25 0 0; 6 1 53.5 -2 -1 63.5 21; 14 1 200 1
+I 5
+SPL222
+== e3_beam19_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 63.8 9 20 0 0.5 0 0; 1 1 73.8 9 20 0 0.375 0 10; 1 1 83.8 0 10 0 0.125 0 0; 1 1 93.8 1 20 0 0.0625 0 0; 1 1 103.8 3 20 0 0.0625 0 0; 6 1 63.8 -2 -2 103.8 21; 14 1 200 1
+I 8
+AUTO
+== e3_beam19_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 63.8 9 20 0 0.5 0 0; 1 1 73.8 9 20 0 0.375 0 10; 1 1 83.8 0 10 0 0.125 0 0; 1 1 93.8 1 20 0 0.0625 0 0; 1 1 103.8 3 20 0 0.0625 0 0; 6 1 63.8 -2 -2 103.8 21; 14 1 200 1
+I 8
+AUTOX
+== e3_beam19_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 63.8 9 20 0 0.5 0 0; 1 1 73.8 9 20 0 0.375 0 10; 1 1 83.8 0 10 0 0.125 0 0; 1 1 93.8 1 20 0 0.0625 0 0; 1 1 103.8 3 20 0 0.0625 0 0; 6 1 63.8 -2 -2 103.8 21; 14 1 200 1
+I 8
+SPL1
+== e3_beam19_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 63.8 9 20 0 0.5 0 0; 1 1 73.8 9 20 0 0.375 0 10; 1 1 83.8 0 10 0 0.125 0 0; 1 1 93.8 1 20 0 0.0625 0 0; 1 1 103.8 3 20 0 0.0625 0 0; 6 1 63.8 -2 -2 103.8 21; 14 1 200 1
+I 8
+SPL2
+== e3_beam19_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 63.8 9 20 0 0.5 0 0; 1 1 73.8 9 20 0 0.375 0 10; 1 1 83.8 0 10 0 0.125 0 0; 1 1 93.8 1 20 0 0.0625 0 0; 1 1 103.8 3 20 0 0.0625 0 0; 6 1 63.8 -2 -2 103.8 21; 14 1 200 1
+I 8
+SPL3
+== e3_beam19_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 63.8 9 20 0 0.5 0 0; 1 1 73.8 9 20 0 0.375 0 10; 1 1 83.8 0 10 0 0.125 0 0; 1 1 93.8 1 20 0 0.0625 0 0; 1 1 103.8 3 20 0 0.0625 0 0; 6 1 63.8 -2 -2 103.8 21; 14 1 200 1
+I 8
+SPL22
+== e3_beam19_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 63.8 9 20 0 0.5 0 0; 1 1 73.8 9 20 0 0.375 0 10; 1 1 83.8 0 10 0 0.125 0 0; 1 1 93.8 1 20 0 0.0625 0 0; 1 1 103.8 3 20 0 0.0625 0 0; 6 1 63.8 -2 -2 103.8 21; 14 1 200 1
+I 8
+SPL222
+== e3_beam20_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 64.5 0 10 0 0.03125 0 0; 1 1 74.5 1 20 0 0.03125 0 0; 1 1 84.5 2 10 0 0.1875 0 10; 1 1 94.5 3 10 0 0.25 0 0; 1 1 104.5 5 10 0 0.375 0 10; 1 1 114.5 0 10 0 0.25 0 0; 6 1 64.5 13 13 114.5 11; 14 1 200 1
+I 9
+AUTO
+== e3_beam20_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 64.5 0 10 0 0.03125 0 0; 1 1 74.5 1 20 0 0.03125 0 0; 1 1 84.5 2 10 0 0.1875 0 10; 1 1 94.5 3 10 0 0.25 0 0; 1 1 104.5 5 10 0 0.375 0 10; 1 1 114.5 0 10 0 0.25 0 0; 6 1 64.5 13 13 114.5 11; 14 1 200 1
+I 9
+AUTOX
+== e3_beam20_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 64.5 0 10 0 0.03125 0 0; 1 1 74.5 1 20 0 0.03125 0 0; 1 1 84.5 2 10 0 0.1875 0 10; 1 1 94.5 3 10 0 0.25 0 0; 1 1 104.5 5 10 0 0.375 0 10; 1 1 114.5 0 10 0 0.25 0 0; 6 1 64.5 13 13 114.5 11; 14 1 200 1
+I 9
+SPL1
+== e3_beam20_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 64.5 0 10 0 0.03125 0 0; 1 1 74.5 1 20 0 0.03125 0 0; 1 1 84.5 2 10 0 0.1875 0 10; 1 1 94.5 3 10 0 0.25 0 0; 1 1 104.5 5 10 0 0.375 0 10; 1 1 114.5 0 10 0 0.25 0 0; 6 1 64.5 13 13 114.5 11; 14 1 200 1
+I 9
+SPL2
+== e3_beam20_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 64.5 0 10 0 0.03125 0 0; 1 1 74.5 1 20 0 0.03125 0 0; 1 1 84.5 2 10 0 0.1875 0 10; 1 1 94.5 3 10 0 0.25 0 0; 1 1 104.5 5 10 0 0.375 0 10; 1 1 114.5 0 10 0 0.25 0 0; 6 1 64.5 13 13 114.5 11; 14 1 200 1
+I 9
+SPL3
+== e3_beam20_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 64.5 0 10 0 0.03125 0 0; 1 1 74.5 1 20 0 0.03125 0 0; 1 1 84.5 2 10 0 0.1875 0 10; 1 1 94.5 3 10 0 0.25 0 0; 1 1 104.5 5 10 0 0.375 0 10; 1 1 114.5 0 10 0 0.25 0 0; 6 1 64.5 13 13 114.5 11; 14 1 200 1
+I 9
+SPL22
+== e3_beam20_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 64.5 0 10 0 0.03125 0 0; 1 1 74.5 1 20 0 0.03125 0 0; 1 1 84.5 2 10 0 0.1875 0 10; 1 1 94.5 3 10 0 0.25 0 0; 1 1 104.5 5 10 0 0.375 0 10; 1 1 114.5 0 10 0 0.25 0 0; 6 1 64.5 13 13 114.5 11; 14 1 200 1
+I 9
+SPL222
+== e3_beam21_auto
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.4 8 10 0 0.0625 0 0; 1 1 70.4 5 10 0 0.25 0 0; 1 1 80.4 3 10 0 0.5 0 0; 1 1 90.4 5 10 0 0.25 0 0; 1 1 100.4 2 10 0 0.125 0 0; 1 1 110.4 5 10 0 0.1875 0 10; 1 1 120.4 2 10 0 0.375 0 10; 6 1 60.4 13 13 120.4 11; 14 1 200 1
+I 10
+AUTO
+== e3_beam21_autox
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.4 8 10 0 0.0625 0 0; 1 1 70.4 5 10 0 0.25 0 0; 1 1 80.4 3 10 0 0.5 0 0; 1 1 90.4 5 10 0 0.25 0 0; 1 1 100.4 2 10 0 0.125 0 0; 1 1 110.4 5 10 0 0.1875 0 10; 1 1 120.4 2 10 0 0.375 0 10; 6 1 60.4 13 13 120.4 11; 14 1 200 1
+I 10
+AUTOX
+== e3_beam21_spl1
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.4 8 10 0 0.0625 0 0; 1 1 70.4 5 10 0 0.25 0 0; 1 1 80.4 3 10 0 0.5 0 0; 1 1 90.4 5 10 0 0.25 0 0; 1 1 100.4 2 10 0 0.125 0 0; 1 1 110.4 5 10 0 0.1875 0 10; 1 1 120.4 2 10 0 0.375 0 10; 6 1 60.4 13 13 120.4 11; 14 1 200 1
+I 10
+SPL1
+== e3_beam21_spl2
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.4 8 10 0 0.0625 0 0; 1 1 70.4 5 10 0 0.25 0 0; 1 1 80.4 3 10 0 0.5 0 0; 1 1 90.4 5 10 0 0.25 0 0; 1 1 100.4 2 10 0 0.125 0 0; 1 1 110.4 5 10 0 0.1875 0 10; 1 1 120.4 2 10 0 0.375 0 10; 6 1 60.4 13 13 120.4 11; 14 1 200 1
+I 10
+SPL2
+== e3_beam21_spl3
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.4 8 10 0 0.0625 0 0; 1 1 70.4 5 10 0 0.25 0 0; 1 1 80.4 3 10 0 0.5 0 0; 1 1 90.4 5 10 0 0.25 0 0; 1 1 100.4 2 10 0 0.125 0 0; 1 1 110.4 5 10 0 0.1875 0 10; 1 1 120.4 2 10 0 0.375 0 10; 6 1 60.4 13 13 120.4 11; 14 1 200 1
+I 10
+SPL3
+== e3_beam21_spl22
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.4 8 10 0 0.0625 0 0; 1 1 70.4 5 10 0 0.25 0 0; 1 1 80.4 3 10 0 0.5 0 0; 1 1 90.4 5 10 0 0.25 0 0; 1 1 100.4 2 10 0 0.125 0 0; 1 1 110.4 5 10 0 0.1875 0 10; 1 1 120.4 2 10 0 0.375 0 10; 6 1 60.4 13 13 120.4 11; 14 1 200 1
+I 10
+SPL22
+== e3_beam21_spl222
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 60.4 8 10 0 0.0625 0 0; 1 1 70.4 5 10 0 0.25 0 0; 1 1 80.4 3 10 0 0.5 0 0; 1 1 90.4 5 10 0 0.25 0 0; 1 1 100.4 2 10 0 0.125 0 0; 1 1 110.4 5 10 0 0.1875 0 10; 1 1 120.4 2 10 0 0.375 0 10; 6 1 60.4 13 13 120.4 11; 14 1 200 1
+I 10
+SPL222
+== m_cr
+base: 8 1; 1 1 20 6 10 0 1; 1 1 53 8 10 0 1; 5 1 21.3 11 14.5 52.7 6
+I 4
+CR
+== m_cr_below
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 5 1 20 3 1 40 -6
+I 4
+CR
+== m_cr_tie
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 6 10 0 1; 5 1 20 11 11 40 6 -2
+I 4
+CR
+== m_cr_ending
+base: 8 1; 14 1 20; 14 1 60; 5 1 20 15 15 60 3 1
+I 4
+CR
+== m_crv
+base: 8 1; 1 1 20 6 10 0 1; 1 1 40 8 10 0 1; 5 1 20 11 12 40 6
+I 4
+CRV
+== m_non
+base: 8 1; 14 1 60; 2 1 80 0 -2 0 4 5; 14 1 120
+I 3
+NON
+== n_beam_auto_open
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 20 0 0.5 0 1; 6 1 20 13 14 30 11 0 -1
+X
+== n_beam_auto_select
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 20 0 0.5 0 1; 6 1 20 13 14 30 11 0 -1
+I 4
+X
+== n_beam_auto_other_select
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 20 0 0.5 0 1; 6 1 20 13 14 30 11 0 -1
+I 2
+X
+== n_adof
+base: 8 1; 1 1 20 6 20 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 1 1 40 8 20 0 0.5 0 1; 6 1 20 13 14 40 11 0 0 11 30 40
+I 5
+ADOF
+== n_cnx
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 20 0 0.5 0 1; 6 1 22 13 14 28 11
+I 4
+CNX
+== n_adof_same
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11
+I 4
+ADOF
+== g5_adj_all
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11; 1 1 60 6 10 0 0.5 0 1; 1 1 70 4 10 0 0.5 0 1; 6 1 60 13 15 70 11
+ADJ
+== g5_adj_staff2
+base: 8 1; 8 2 0 0 0 200; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11; 1 2 20 6 10 0 0.5 0 1; 1 2 30 8 10 0 0.5 0 1; 6 2 20 13 15 30 11
+ADJ 2
+== g5_adj_from25
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11; 1 1 60 6 10 0 0.5 0 1; 1 1 70 4 10 0 0.5 0 1; 6 1 60 13 15 70 11
+ADJ 1 25 100
+== g5_adj_upto60
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11; 1 1 60 6 10 0 0.5 0 1; 1 1 70 4 10 0 0.5 0 1; 6 1 60 13 15 70 11
+ADJ 1 0 60
+== g5_adf_all
+base: 8 1; 1 1 20 6 10 0 0.25 0 2; 1 1 30 8 10 0 0.25 0 2; 1 1 40 7 10 0 0.25 0 2; 6 1 20 13 14 40 12
+ADF
+== g5_adx_all
+base: 8 1; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 20 0 0.5 0 1; 6 1 20 13 14 30 11
+ADX
+== g5_adj_staves_1_2
+base: 8 1; 8 2 0 0 0 200; 8 3 0 0 0 200; 1 1 20 6 10 0 0.5 0 1; 1 1 30 8 10 0 0.5 0 1; 6 1 20 13 14 30 11; 1 2 20 6 10 0 0.5 0 1; 1 2 30 8 10 0 0.5 0 1; 6 2 20 13 15 30 11; 1 3 20 6 10 0 0.5 0 1; 1 3 30 8 10 0 0.5 0 1; 6 3 20 13 15 30 11
+ADJ 1 0 0 2
+# -- FLI, FLN, FLU, FLD over an area, and TR's stem option (refit, score-input) -----------
+== fl_fli
+base: 8 1; 1 1 20 3 10 0 1; 1 1 30 9 20 0 1; 1 1 40 6 10 0 0.5 0 1; 1 1 50 7 10 0 0.5 0 1; 6 1 40 13 14 50 11
+FLI
+1 0 200
+== fl_fln
+base: 8 1; 1 1 20 3 20 0 1; 1 1 30 9 10 0 1; 1 1 40 6 20 0 0.5 0 1; 1 1 50 7 20 0 0.5 0 1; 6 1 40 -1 -1 50 21
+FLN
+1 0 0
+== fl_flu_partial
+base: 8 1; 1 1 20 3 20 0 1; 1 1 30 9 20 0 1; 1 1 40 6 20 0 1; 1 1 50 7 20 0 1
+FLU
+1 25 45
+== fl_fld_slur
+base: 8 1; 1 1 20 3 10 0 1; 1 1 30 5 10 0 1; 5 1 20 -1 1 30 -3
+FLD
+1 0 200
+== fl_fln_unsorted
+base: 8 1; 1 1 40 3 20 0 1; 1 1 20 9 10 0 1; 1 1 30 6 10 0 1
+FLN
+1 0 200
+== fl_two_staves
+base: 8 1; 8 2 0 0 0 200; 1 1 20 3 20 0 1; 1 1 30 9 10 0 1; 1 2 20 3 20 0 1; 1 2 30 9 10 0 1
+FLN
+1 0 200 2
+== fl_tremolo_refused
+base: 8 1; 1 1 20 6 10 0 1; 1 1 30 8 10 0 1; 6 1 20 13 14 30 -12; 1 1 40 3 20 0 1
+FLN
+1 0 200
+== fl_box
+base: 8 1; 1 1 100 3 20 0 1; 1 1 120 9 10 0 1
+FLN
+~x 3000 3000 40000 5000
+== fl_tr_stems_dialog
+base: 8 1; 17 1 10 0 1; 1 1 20 5 10 0 1; 1 1 30 8 10 0 1; 1 1 40 6 20 0 0.5 0 1; 1 1 50 7 20 0 0.5 0 1; 6 1 40 -1 -1 50 21
+!transpose half=2 stems=1
+TR
+1 0 0 0
+== fl_tr_stems_typed
+base: 8 1; 3 1 5 0 0; 1 1 20 6 12 0 1; 1 1 30 3 20 0 1
+TR 2 1
+== fl_tr_stems_slur
+base: 8 1; 1 1 20 5 10 0 1; 1 1 40 8 10 0 1; 5 1 20 10 12 40 3
+TR 3 1
+# -- slur ends: CV, CNL, CNR -------------------------------------------------------------
+== s2_slur0_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 6 10 0 1 -7 2; 1 1 41.9 4 1 0 1; 1 1 61.13 9 21 0 1 0 0; 1 1 76.59 3 20 0 1; 1 1 88.92 13 0 0 1; 1 1 106.47 13 10 0 1; 5 1 57.53 15 13 107.11 3; 14 1 150 1
+I 9
+CV
+== s2_slur0_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 6 10 0 1 -7 2; 1 1 41.9 4 1 0 1; 1 1 61.13 9 21 0 1 0 0; 1 1 76.59 3 20 0 1; 1 1 88.92 13 0 0 1; 1 1 106.47 13 10 0 1; 5 1 57.53 15 13 107.11 3; 14 1 150 1
+I 9
+CNL
+== s2_slur0_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 6 10 0 1 -7 2; 1 1 41.9 4 1 0 1; 1 1 61.13 9 21 0 1 0 0; 1 1 76.59 3 20 0 1; 1 1 88.92 13 0 0 1; 1 1 106.47 13 10 0 1; 5 1 57.53 15 13 107.11 3; 14 1 150 1
+I 9
+CNR
+== s2_slur1_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 108 20 0 1; 1 1 30 6 0 0 1; 1 1 49.6 14 20 0 1; 1 1 62.07 0 11 0 1; 5 1 29.74 12 15 50.66 2; 14 1 200 1
+I 7
+CV
+== s2_slur1_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 108 20 0 1; 1 1 30 6 0 0 1; 1 1 49.6 14 20 0 1; 1 1 62.07 0 11 0 1; 5 1 29.74 12 15 50.66 2; 14 1 200 1
+I 7
+CNL
+== s2_slur1_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 108 20 0 1; 1 1 30 6 0 0 1; 1 1 49.6 14 20 0 1; 1 1 62.07 0 11 0 1; 5 1 29.74 12 15 50.66 2; 14 1 200 1
+I 7
+CNR
+== s2_slur2_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 13 20 0 1; 1 1 51.7 2 10 0 1; 5 1 32.44 13 13 48.1 -2 -3
+I 5
+CV
+== s2_slur2_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 13 20 0 1; 1 1 51.7 2 10 0 1; 5 1 32.44 13 13 48.1 -2 -3
+I 5
+CNL
+== s2_slur2_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 13 20 0 1; 1 1 51.7 2 10 0 1; 5 1 32.44 13 13 48.1 -2 -3
+I 5
+CNR
+== s2_slur3_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 -1 11 0 1; 1 1 30 -3 0 0 1; 1 1 51.41 2 20 0 1; 1 1 64.91 4 11 0 1; 1 1 64.91 8 0 0 1; 1 1 83.43 12 0 0 1; 1 1 104.9 13 20 0 1; 1 1 104.9 11 0 0 1; 5 1 48.79 11 12 82.9 -2; 14 1 150 1
+I 11
+CV
+== s2_slur3_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 -1 11 0 1; 1 1 30 -3 0 0 1; 1 1 51.41 2 20 0 1; 1 1 64.91 4 11 0 1; 1 1 64.91 8 0 0 1; 1 1 83.43 12 0 0 1; 1 1 104.9 13 20 0 1; 1 1 104.9 11 0 0 1; 5 1 48.79 11 12 82.9 -2; 14 1 150 1
+I 11
+CNL
+== s2_slur3_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 -1 11 0 1; 1 1 30 -3 0 0 1; 1 1 51.41 2 20 0 1; 1 1 64.91 4 11 0 1; 1 1 64.91 8 0 0 1; 1 1 83.43 12 0 0 1; 1 1 104.9 13 20 0 1; 1 1 104.9 11 0 0 1; 5 1 48.79 11 12 82.9 -2; 14 1 150 1
+I 11
+CNR
+== s2_slur4_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 14 20 0 1; 1 1 39.92 12 20 0 1 0 1; 1 1 52.52 5 1 0 1; 1 1 52.52 9 0 0 1; 5 1 50.15 9 8 52.16 2; 14 1 200 1
+I 7
+CV
+== s2_slur4_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 14 20 0 1; 1 1 39.92 12 20 0 1 0 1; 1 1 52.52 5 1 0 1; 1 1 52.52 9 0 0 1; 5 1 50.15 9 8 52.16 2; 14 1 200 1
+I 7
+CNL
+== s2_slur4_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 14 20 0 1; 1 1 39.92 12 20 0 1 0 1; 1 1 52.52 5 1 0 1; 1 1 52.52 9 0 0 1; 5 1 50.15 9 8 52.16 2; 14 1 200 1
+I 7
+CNR
+== s2_slur5_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 -2 10 0 1 -7 1; 1 1 42.86 10 20 0 1; 5 1 28.6 9 13 39.88 2
+I 5
+CV
+== s2_slur5_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 -2 10 0 1 -7 1; 1 1 42.86 10 20 0 1; 5 1 28.6 9 13 39.88 2
+I 5
+CNL
+== s2_slur5_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 -2 10 0 1 -7 1; 1 1 42.86 10 20 0 1; 5 1 28.6 9 13 39.88 2
+I 5
+CNR
+== s2_slur6_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 5 1 0 1; 1 1 44.76 3 1 0 1 7 0; 1 1 60.15 13 10 0 1; 1 1 60.15 11 0 0 1; 1 1 75.64 12 10 0 1; 1 1 92.27 1 0 0 1; 5 1 43.07 11 15 73.65 2; 14 1 200 1
+I 9
+CV
+== s2_slur6_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 5 1 0 1; 1 1 44.76 3 1 0 1 7 0; 1 1 60.15 13 10 0 1; 1 1 60.15 11 0 0 1; 1 1 75.64 12 10 0 1; 1 1 92.27 1 0 0 1; 5 1 43.07 11 15 73.65 2; 14 1 200 1
+I 9
+CNL
+== s2_slur6_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 5 1 0 1; 1 1 44.76 3 1 0 1 7 0; 1 1 60.15 13 10 0 1; 1 1 60.15 11 0 0 1; 1 1 75.64 12 10 0 1; 1 1 92.27 1 0 0 1; 5 1 43.07 11 15 73.65 2; 14 1 200 1
+I 9
+CNR
+== s2_slur7_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 10 1 0 1; 1 1 30 14 0 0 1; 1 1 39.02 11 10 0 1; 1 1 59.11 13 20 0 1 -7 2; 1 1 78.22 3 0 0 1; 1 1 90 6 1 0 1 7 0; 1 1 90 4 0 0 1; 5 1 40.22 14 14 90.88 -3
+I 10
+CV
+== s2_slur7_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 10 1 0 1; 1 1 30 14 0 0 1; 1 1 39.02 11 10 0 1; 1 1 59.11 13 20 0 1 -7 2; 1 1 78.22 3 0 0 1; 1 1 90 6 1 0 1 7 0; 1 1 90 4 0 0 1; 5 1 40.22 14 14 90.88 -3
+I 10
+CNL
+== s2_slur7_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 10 1 0 1; 1 1 30 14 0 0 1; 1 1 39.02 11 10 0 1; 1 1 59.11 13 20 0 1 -7 2; 1 1 78.22 3 0 0 1; 1 1 90 6 1 0 1 7 0; 1 1 90 4 0 0 1; 5 1 40.22 14 14 90.88 -3
+I 10
+CNR
+== s2_slur8_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 3 10 0 1; 1 1 40.74 109 21 0 1 -7 2; 1 1 61.9 11 10 0 1 7 1; 1 1 61.9 15 0 0 1; 5 1 64.26 13 14 65.34 2; 14 1 200 1
+I 7
+CV
+== s2_slur8_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 3 10 0 1; 1 1 40.74 109 21 0 1 -7 2; 1 1 61.9 11 10 0 1 7 1; 1 1 61.9 15 0 0 1; 5 1 64.26 13 14 65.34 2; 14 1 200 1
+I 7
+CNL
+== s2_slur8_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 3 10 0 1; 1 1 40.74 109 21 0 1 -7 2; 1 1 61.9 11 10 0 1 7 1; 1 1 61.9 15 0 0 1; 5 1 64.26 13 14 65.34 2; 14 1 200 1
+I 7
+CNR
+== s2_slur9_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 2 0 0 1; 1 1 30 6 0 0 1; 1 1 40.05 6 0 0 1; 1 1 57.1 6 21 0 1 -7 0; 1 1 65.54 6 20 0 1; 1 1 82.16 3 10 0 1 7 1; 5 1 43.88 8 9 55.89 2; 14 1 150 1
+I 9
+CV
+== s2_slur9_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 2 0 0 1; 1 1 30 6 0 0 1; 1 1 40.05 6 0 0 1; 1 1 57.1 6 21 0 1 -7 0; 1 1 65.54 6 20 0 1; 1 1 82.16 3 10 0 1 7 1; 5 1 43.88 8 9 55.89 2; 14 1 150 1
+I 9
+CNL
+== s2_slur9_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 2 0 0 1; 1 1 30 6 0 0 1; 1 1 40.05 6 0 0 1; 1 1 57.1 6 21 0 1 -7 0; 1 1 65.54 6 20 0 1; 1 1 82.16 3 10 0 1 7 1; 5 1 43.88 8 9 55.89 2; 14 1 150 1
+I 9
+CNR
+== s2_slur10_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 9 21 0 1; 1 1 30 11 0 0 1; 1 1 45.67 -2 10 0 1 -7 0; 5 1 32.32 12 12 30.85 3; 14 1 200 1
+I 6
+CV
+== s2_slur10_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 9 21 0 1; 1 1 30 11 0 0 1; 1 1 45.67 -2 10 0 1 -7 0; 5 1 32.32 12 12 30.85 3; 14 1 200 1
+I 6
+CNL
+== s2_slur10_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 9 21 0 1; 1 1 30 11 0 0 1; 1 1 45.67 -2 10 0 1 -7 0; 5 1 32.32 12 12 30.85 3; 14 1 200 1
+I 6
+CNR
+== s2_slur11_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 14 11 0 1; 1 1 50.19 14 0 0 1; 1 1 50.19 12 0 0 1; 5 1 31.42 8 10 52.93 2
+I 6
+CV
+== s2_slur11_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 14 11 0 1; 1 1 50.19 14 0 0 1; 1 1 50.19 12 0 0 1; 5 1 31.42 8 10 52.93 2
+I 6
+CNL
+== s2_slur11_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 14 11 0 1; 1 1 50.19 14 0 0 1; 1 1 50.19 12 0 0 1; 5 1 31.42 8 10 52.93 2
+I 6
+CNR
+== s2_slur12_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 9 0 0 1; 1 1 48.68 4 11 0 1; 1 1 48.68 2 0 0 1; 5 1 31.26 15 13 51 2
+I 6
+CV
+== s2_slur12_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 9 0 0 1; 1 1 48.68 4 11 0 1; 1 1 48.68 2 0 0 1; 5 1 31.26 15 13 51 2
+I 6
+CNL
+== s2_slur12_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 9 0 0 1; 1 1 48.68 4 11 0 1; 1 1 48.68 2 0 0 1; 5 1 31.26 15 13 51 2
+I 6
+CNR
+== s2_slur13_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 3 10 0 1; 1 1 40.79 104 0 0 1; 1 1 53.85 9 11 0 1; 1 1 62.06 14 20 0 1; 1 1 81.02 8 1 0 1; 1 1 81.02 12 0 0 1; 1 1 97.03 0 10 0 1; 1 1 97.03 4 0 0 1; 5 1 27.39 14 14 93.83 2 0; 14 1 200 1
+I 11
+CV
+== s2_slur13_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 3 10 0 1; 1 1 40.79 104 0 0 1; 1 1 53.85 9 11 0 1; 1 1 62.06 14 20 0 1; 1 1 81.02 8 1 0 1; 1 1 81.02 12 0 0 1; 1 1 97.03 0 10 0 1; 1 1 97.03 4 0 0 1; 5 1 27.39 14 14 93.83 2 0; 14 1 200 1
+I 11
+CNL
+== s2_slur13_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 3 10 0 1; 1 1 40.79 104 0 0 1; 1 1 53.85 9 11 0 1; 1 1 62.06 14 20 0 1; 1 1 81.02 8 1 0 1; 1 1 81.02 12 0 0 1; 1 1 97.03 0 10 0 1; 1 1 97.03 4 0 0 1; 5 1 27.39 14 14 93.83 2 0; 14 1 200 1
+I 11
+CNR
+== s2_slur14_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 12 0 0 1; 1 1 48.2 12 10 0 1 0 1; 1 1 48.2 10 0 0 1; 1 1 66.33 7 11 0 1; 1 1 86.9 2 20 0 1 0 1; 1 1 86.9 4 0 0 1; 5 1 45.88 10 10 50.96 3
+I 9
+CV
+== s2_slur14_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 12 0 0 1; 1 1 48.2 12 10 0 1 0 1; 1 1 48.2 10 0 0 1; 1 1 66.33 7 11 0 1; 1 1 86.9 2 20 0 1 0 1; 1 1 86.9 4 0 0 1; 5 1 45.88 10 10 50.96 3
+I 9
+CNL
+== s2_slur14_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 12 0 0 1; 1 1 48.2 12 10 0 1 0 1; 1 1 48.2 10 0 0 1; 1 1 66.33 7 11 0 1; 1 1 86.9 2 20 0 1 0 1; 1 1 86.9 4 0 0 1; 5 1 45.88 10 10 50.96 3
+I 9
+CNR
+== s2_slur15_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 10 11 0 1; 1 1 51.99 99 0 0 1 -7 1; 1 1 62.17 2 11 0 1 -7 1; 1 1 74.64 11 0 0 1; 1 1 92.53 2 0 0 1; 5 1 31.65 16 13 59.24 -3 -3
+I 8
+CV
+== s2_slur15_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 10 11 0 1; 1 1 51.99 99 0 0 1 -7 1; 1 1 62.17 2 11 0 1 -7 1; 1 1 74.64 11 0 0 1; 1 1 92.53 2 0 0 1; 5 1 31.65 16 13 59.24 -3 -3
+I 8
+CNL
+== s2_slur15_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 10 11 0 1; 1 1 51.99 99 0 0 1 -7 1; 1 1 62.17 2 11 0 1 -7 1; 1 1 74.64 11 0 0 1; 1 1 92.53 2 0 0 1; 5 1 31.65 16 13 59.24 -3 -3
+I 8
+CNR
+== s2_slur16_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 0 10 0 1; 1 1 44.92 12 20 0 1; 5 1 32.41 14 8 47.21 2; 14 1 200 1
+I 5
+CV
+== s2_slur16_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 0 10 0 1; 1 1 44.92 12 20 0 1; 5 1 32.41 14 8 47.21 2; 14 1 200 1
+I 5
+CNL
+== s2_slur16_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 0 10 0 1; 1 1 44.92 12 20 0 1; 5 1 32.41 14 8 47.21 2; 14 1 200 1
+I 5
+CNR
+== s2_slur17_cv
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 12 0 0 1; 1 1 39.97 5 11 0 1; 1 1 54.3 -3 20 0 1; 1 1 62.43 -2 20 0 1; 1 1 75.49 13 10 0 1; 1 1 75.49 15 0 0 1; 1 1 90.45 -2 11 0 1; 5 1 76.64 12 12 93.8 -3; 14 1 150 1
+I 10
+CV
+== s2_slur17_cnl
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 12 0 0 1; 1 1 39.97 5 11 0 1; 1 1 54.3 -3 20 0 1; 1 1 62.43 -2 20 0 1; 1 1 75.49 13 10 0 1; 1 1 75.49 15 0 0 1; 1 1 90.45 -2 11 0 1; 5 1 76.64 12 12 93.8 -3; 14 1 150 1
+I 10
+CNL
+== s2_slur17_cnr
+base: 8 1 0 0 1; 3 1 2 0 0; 1 1 30 12 0 0 1; 1 1 39.97 5 11 0 1; 1 1 54.3 -3 20 0 1; 1 1 62.43 -2 20 0 1; 1 1 75.49 13 10 0 1; 1 1 75.49 15 0 0 1; 1 1 90.45 -2 11 0 1; 5 1 76.64 12 12 93.8 -3; 14 1 150 1
+I 10
+CNR
+== n_asp_sharp
+base: 8 1; 1 1 20 6 12 0 1; 1 1 20 8 11 0 1
+I 2
+ASP
+== n_asp_flat
+base: 8 1; 1 1 20 6 11 0 1; 1 1 20 8 12 0 1
+I 2
+ASP
+== n_asp_none
+base: 8 1; 1 1 20 6 10 0 1 0 0 0 0 0 0.25
+I 2
+ASP
+== n_asp_spaced
+base: 8 1; 1 1 20 6 13.5 0 1
+I 2
+ASP

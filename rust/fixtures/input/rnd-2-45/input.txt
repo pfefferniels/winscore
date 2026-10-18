@@ -1,7 +1,0 @@
-IN 1
-10 190
-FF4:B:C/B:DS:E/B/F/F/ES/FN:DN:AN/FN:DN:AN/AF3/R;
-8/24/12/8../Q/S/1/1/4./2;
--S 4:5;
-2B;
-1 4;

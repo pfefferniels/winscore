@@ -39,7 +39,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn mozart() -> MusFile {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore/mozart.mus");
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../assets/samples/mozart.mus");
         MusFile::parse(&std::fs::read(path).unwrap()).unwrap()
     }
 

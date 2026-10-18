@@ -98,18 +98,6 @@ name = "score-render"
 version = "0.1.0"
 dependencies = [
  "score-format",
- "score-testkit",
-]
-
-[[package]]
-name = "score-testkit"
-version = "0.1.0"
-dependencies = [
- "score-format",
- "score-layout",
- "score-render",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -120,7 +108,7 @@ dependencies = [
  "score-format",
  "score-input",
  "score-render",
- "score-testkit",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]

@@ -1,7 +1,0 @@
-IN 1
-30 200
-GS3/M/EF/B3/B3/Q0/AU:EF/BN/B/PFN5:GF:DN:GG;
-S/T/G/12/4/32/T/8.;
-O 4 7/C 5 6/AO 8;
-B;
-1 -3/2 +5;

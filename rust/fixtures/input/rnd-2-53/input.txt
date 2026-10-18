@@ -1,7 +1,0 @@
-IN 1 0 0 1.2
-10 190
-TE/F4/BF/DS/CN/G/DN/M/EF4/FS5/TE/CS/E:E:A/F/F/BN/B4;
-Q/1/T/4/H/G/S/1/32/T/E/4/4/Q;
-TM 3/-S 8:9;
--9 11;
-;

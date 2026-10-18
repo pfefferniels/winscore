@@ -8,7 +8,7 @@ use score_format::FontMetrics;
 macro_rules! fontlib {
     ($($number:literal => $file:literal),* $(,)?) => {
         &[$(($number, include_bytes!(concat!(
-            env!("CARGO_MANIFEST_DIR"), "/../../../WINSCORE 5.01/winscore/fontlib/", $file
+            env!("CARGO_MANIFEST_DIR"), "/../../../assets/fontlib/", $file
         )))),*]
     };
 }

@@ -1,6 +1,0 @@
-document: n:  <Legal>
-range-dialog: record [99, 1, 0, 0, 2, 200, 0, 1]
-dialog: 0x595cd0 args=['0x20b8ea0', '0x524825', '0x20b90a0']
-dialog: 0x596010 args=['0x20b8ea0', '0x1', '0x204e49']
-document: n: SCORE.MUS * (not saved -   10 Items)   <Legal>
-document: n: C:\WORK\RESULT.MUS   (saved -   10 Items)   <Legal>

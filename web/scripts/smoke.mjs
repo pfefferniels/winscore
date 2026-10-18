@@ -278,7 +278,7 @@ try {
 
   const [download] = await Promise.all([page.waitForEvent('download'), page.keyboard.press('Control+s')]);
   const saved = fs.readFileSync(await download.path());
-  const original = fs.readFileSync('../WINSCORE 5.01/winscore/mozart.mus');
+  const original = fs.readFileSync('../assets/samples/mozart.mus');
   assert.equal(saved.length, original.length);
   assert.notDeepEqual(saved, original);
 

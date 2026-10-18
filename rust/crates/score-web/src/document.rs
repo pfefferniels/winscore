@@ -158,7 +158,7 @@ mod tests {
 
     fn sample(name: &str) -> Vec<u8> {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
-        std::fs::read(root.join("WINSCORE 5.01/winscore").join(name)).unwrap()
+        std::fs::read(root.join("assets/samples").join(name)).unwrap()
     }
 
     #[test]

@@ -237,7 +237,7 @@ fn token(line: &[u8], from: usize) -> Option<(usize, usize)> {
     Some((start, end))
 }
 
-const GUITAR_DAT: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../WINSCORE 5.01/winscore/scorlib/GUITAR.DAT"));
+const GUITAR_DAT: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../assets/scorlib/GUITAR.DAT"));
 
 fn dictionary() -> &'static Dictionary {
     static DICTIONARY: OnceLock<Dictionary> = OnceLock::new();

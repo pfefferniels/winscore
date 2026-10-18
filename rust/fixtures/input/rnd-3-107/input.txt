@@ -1,7 +1,0 @@
-IN 1 0 0 0 180
-;
-DS3:EN:AF:CF/RD/RD/B5:AF/F/CS/E5:A:F:E/E5:A:F:E/D:GF:BN:C;
-8/8/2/12/24/G/8../8../T;
-PL 5:7/PL 5/PZ 2;
--1 3;
--1 3;

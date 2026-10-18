@@ -1,7 +1,0 @@
-IN 1 0 0 0 180
-10 190
-CUT/G5:F:D/FF/R/BN3/BN3/M/CF/F/D:DS:D:BN/D:DS:D:BN/M2/AF5:ES:AF:C;
-G/S/4./8./T/8../E/24/E/1;
-O 6.5 7/C- 2.5 9/S 7:8;
-3B;
-;

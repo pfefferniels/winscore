@@ -1,7 +1,0 @@
-IN 1 0 0 1.2
-;
-BA/6 8/S-/A3-/OAN/R3/PAF:B(SS:DN-:C/G:EN/DN:EN:GSJ:C/F(NJ/S-/DJ/ML2;
-32/8../W/8/G/8./Q/H;
-TR 7/CR 4/U 2:4;
-1 3;
-0 6/+6 7/4 99;

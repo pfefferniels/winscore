@@ -1,7 +1,6 @@
 //! Replays tests/refit_cases.txt (group FLI/FLN/FLU/FLD on one staff) and compares with
-//! the engine's results in tests/refit_expected.txt, both written by oracle/refit_cases.py.
-//! The commands sort the items first (0x4F7808), then refit each staff of the area.
-//! Cases listed in tests/refit_known_mismatches.txt may differ.
+//! the expected items in tests/refit_expected.txt. The commands sort the items first, then
+//! refit each staff of the area.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -69,41 +68,36 @@ fn params(item: &Item) -> Vec<f32> {
     item.params().iter().map(|w| w.as_f32()).collect()
 }
 
-fn difference(ours: &Item, engine: &Item) -> Option<String> {
-    let (a, b) = (params(ours), params(engine));
+fn difference(ours: &Item, expected: &Item) -> Option<String> {
+    let (a, b) = (params(ours), params(expected));
     let n = a.len().max(b.len());
     let get = |v: &[f32], k: usize| v.get(k).copied().unwrap_or(0.0);
-    (0..n).find(|&k| (get(&a, k) - get(&b, k)).abs() > TOLERANCE).map(|k| format!("P{}: ours {:?} engine {:?}", k + 1, a, b))
+    (0..n).find(|&k| (get(&a, k) - get(&b, k)).abs() > TOLERANCE).map(|k| format!("P{}: ours {:?} expected {:?}", k + 1, a, b))
 }
 
 #[test]
-fn refit_matches_the_engine() {
+fn refit_gives_the_expected_items() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
     let cases = cases(&fs::read_to_string(dir.join("refit_cases.txt")).expect("cases"));
     let expected_text = fs::read_to_string(dir.join("refit_expected.txt")).expect("expected");
     let expected: BTreeMap<String, Vec<Item>> =
         blocks(&format!("\n{expected_text}")).into_iter().map(|(name, lines)| (name, lines.into_iter().map(item).collect())).collect();
-    let known = fs::read_to_string(dir.join("refit_known_mismatches.txt")).unwrap_or_default();
-    let known: Vec<&str> = known.lines().filter(|l| !l.starts_with('#') && !l.trim().is_empty()).map(str::trim).collect();
 
     let mut failures = Vec::new();
-    let mut matched = 0;
     for case in &cases {
-        let Some(engine) = expected.get(&case.name) else {
+        let Some(want) = expected.get(&case.name) else {
+            failures.push(format!("{}: no expected result in refit_expected.txt", case.name));
             continue;
         };
         let ours = run(case);
-        let problem = if ours.len() != engine.len() {
-            Some(format!("{} items, engine {}", ours.len(), engine.len()))
+        let problem = if ours.len() != want.len() {
+            Some(format!("{} items, expected {}", ours.len(), want.len()))
         } else {
-            ours.iter().zip(engine).enumerate().find_map(|(i, (a, b))| difference(a, b).map(|d| format!("item {}: {d}", i + 1)))
+            ours.iter().zip(want).enumerate().find_map(|(i, (a, b))| difference(a, b).map(|d| format!("item {}: {d}", i + 1)))
         };
-        match problem {
-            None => matched += 1,
-            Some(p) if !known.contains(&case.name.as_str()) => failures.push(format!("{}: {p}", case.name)),
-            Some(_) => {}
+        if let Some(p) = problem {
+            failures.push(format!("{}: {p}", case.name));
         }
     }
-    println!("{matched} of {} refit cases match the engine", expected.len());
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }

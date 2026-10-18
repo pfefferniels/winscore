@@ -1,7 +1,0 @@
-IN 1
-2 150
-AL/K5F/CN3:E:E:E/R/E/F/M/D/B/E4:C:E:DF/A/M/FS/BF:CF:EF:F/BF:CF:EF:F/D:BS:DS;
-32/4./2/Q/4/16/4/8./8./8/S/Q;
-;
-2B;
-1 5;

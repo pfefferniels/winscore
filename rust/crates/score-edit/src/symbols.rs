@@ -4,7 +4,7 @@
 
 use score_render::symbols::SymbolLibrary;
 
-const SYMBOL_LIST: &[u8] = include_bytes!("../../../../WINSCORE 5.01/winscore/scorlib/symblist.txt");
+const SYMBOL_LIST: &[u8] = include_bytes!("../../../../assets/scorlib/symblist.txt");
 /// Symbol numbers run up to 5099 (`LB5090.DRW` would be the last file).
 const LAST_SYMBOL: i32 = 5099;
 

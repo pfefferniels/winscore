@@ -1,7 +1,0 @@
-IN 1
-;
-BB4/CCC/EEEE/DDDDD/AAF/GGFF;
-4/4/4/4/4/4;
-;
-;
-;

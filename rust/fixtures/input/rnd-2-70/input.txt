@@ -1,7 +1,0 @@
-IN 1 0 0 .8
-;
-AL/K4F/CUT/E3/SD/FN/CN3/M2/F:GS/SD/F:GS/DS4/FN;
-8../S/2/8./24/T/H;
-HW 4:5/CR 4;
-;
-+1 6/-6 7/+3 5;

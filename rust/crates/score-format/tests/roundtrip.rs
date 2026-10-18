@@ -10,16 +10,15 @@ fn project_root() -> PathBuf {
 
 fn samples() -> Vec<PathBuf> {
     [
-        "WINSCORE 5.01/winscore/carmen.mus",
-        "WINSCORE 5.01/winscore/mozart.mus",
-        "WINSCORE 5.01/winscore/sonlcs.mus",
-        "WINSCORE 5.01/winscore/000.mus",
-        "SCORE 4/SCORE/SCORE.MUS",
-        "SCORE 4/SCORE/NEWLINE.MUS",
-        "SCORE 4/SCORE/NEWLIB.MUS",
+        "carmen.mus",
+        "mozart.mus",
+        "sonlcs.mus",
+        "000.mus",
+        "NEWLINE.MUS",
+        "NEWLIB.MUS",
     ]
     .iter()
-    .map(|p| project_root().join(p))
+    .map(|p| project_root().join("assets/samples").join(p))
     .collect()
 }
 
@@ -33,10 +32,9 @@ fn samples_roundtrip_byte_for_byte() {
 }
 
 #[test]
-fn carmen_matches_engine_item_count_and_trailer() {
-    let bytes = std::fs::read(project_root().join("WINSCORE 5.01/winscore/carmen.mus")).unwrap();
+fn carmen_item_count_and_trailer() {
+    let bytes = std::fs::read(project_root().join("assets/samples/carmen.mus")).unwrap();
     let file = MusFile::parse(&bytes).unwrap();
-    // The emulated engine reports "(saved - 1059 Items)" after loading this file.
     assert_eq!(file.items.len(), 1059);
     assert_eq!(file.trailer.version(), Some(3.0));
     assert_eq!(file.trailer.measurement(), Some(0.0));
@@ -45,7 +43,7 @@ fn carmen_matches_engine_item_count_and_trailer() {
 
 #[test]
 fn text_items_expose_their_characters() {
-    let bytes = std::fs::read(project_root().join("WINSCORE 5.01/winscore/carmen.mus")).unwrap();
+    let bytes = std::fs::read(project_root().join("assets/samples/carmen.mus")).unwrap();
     let file = MusFile::parse(&bytes).unwrap();
     let first = &file.items[0];
     assert_eq!(first.code(), 16);
@@ -68,13 +66,12 @@ fn smiths_documented_example_parses() {
 }
 
 #[test]
-fn empty_file_is_shaped_like_score_4s_empty_score() {
+fn empty_file_roundtrips() {
     let empty = MusFile::empty();
     let bytes = empty.to_bytes();
     assert_eq!(MusFile::parse(&bytes).unwrap(), empty);
-    let original = MusFile::parse(&std::fs::read(project_root().join("SCORE 4/SCORE/SCORE.MUS")).unwrap()).unwrap();
-    assert_eq!(bytes.len(), original.to_bytes().len());
-    assert!(empty.items.is_empty() && original.items.is_empty());
+    assert_eq!(bytes.len(), 26);
+    assert!(empty.items.is_empty());
     assert_eq!(empty.trailer.version(), Some(6.0));
-    assert_eq!(empty.trailer.measurement(), original.trailer.measurement());
+    assert_eq!(empty.trailer.measurement(), Some(0.0));
 }

@@ -1,7 +1,0 @@
-IN 1
-;
-K5F/B5/TR/SD;
-H;
-AO 1/PZ 1/FE 1;
-;
-;

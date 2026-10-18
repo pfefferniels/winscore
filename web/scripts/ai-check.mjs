@@ -17,7 +17,7 @@ await build({
   build: { ssr: path.join(web, 'scripts', entry), outDir: out, emptyOutDir: true, rollupOptions: { output: { entryFileNames: 'entry.mjs' } } },
 });
 process.env.SCORE_WASM = path.join(web, 'src', 'wasm', 'score_web_bg.wasm');
-process.env.SCORE_SAMPLES = path.join(web, '..', 'WINSCORE 5.01', 'winscore');
+process.env.SCORE_SAMPLES = path.join(web, '..', 'assets', 'samples');
 try {
   await import(pathToFileURL(path.join(out, 'entry.mjs')).href);
 } finally {

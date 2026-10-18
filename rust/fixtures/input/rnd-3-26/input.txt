@@ -1,7 +1,0 @@
-IN 1
-;
-FF4/AN/RD/D5/SD/CF/A:G:GN/A:G:GN/BF5:CF:G;
-Q/E/4./32/Q/H/4/S;
-TME 3/-A 7;
-2 3;
-;

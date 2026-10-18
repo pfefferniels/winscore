@@ -1,7 +1,0 @@
-IN 1
-;
-CUT/DN5:EN:D:G/DN5:EN:D:G/DN/CF:EN/CF:EN/M2/E5/R/AF/B/AF;
-Q/2/E/G/4./2/16/T/S/16;
-C- 4 8/HW 9/-S 7:9/O 4 6;
-307 9;
-3 4/3 8/1 5;

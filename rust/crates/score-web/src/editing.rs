@@ -349,7 +349,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn mozart() -> Score {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore/mozart.mus");
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../assets/samples/mozart.mus");
         Score::new(&std::fs::read(path).unwrap()).unwrap_or_else(|_| panic!("mozart.mus opens"))
     }
 

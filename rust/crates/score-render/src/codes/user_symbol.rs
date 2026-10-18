@@ -86,7 +86,7 @@ fn user_library(name: &str) -> Option<&'static DrwLibrary> {
 
 macro_rules! scorlib {
     ($($file:literal),*) => {
-        &[$(($file, include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../WINSCORE 5.01/winscore/scorlib/", $file)))),*]
+        &[$(($file, include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../assets/scorlib/", $file)))),*]
     };
 }
 

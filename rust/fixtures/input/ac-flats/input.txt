@@ -1,7 +1,0 @@
-IN 1
-;
-DF4:FF:AF/EF4:GF:BF/BF4:DF5:FF5/EF4:AF:CF5:EF5;
-4/4/4/4;
-;
-;
-;

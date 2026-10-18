@@ -1,7 +1,0 @@
-IN 1 0 0 .8
-10 190
-K3S/CF3:AN:G/A/SO/DN:CF:BS/AN/FF/B/B/E:A:DF:EF;
-8/G/8./4/16/8/S/4;
-TM 3/PZ 2;
-5 7;
-;

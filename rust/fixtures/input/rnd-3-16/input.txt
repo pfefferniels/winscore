@@ -1,7 +1,0 @@
-IN 1
-;
-TE/K3S/RD/D4/DS/ES/SO/AL/C3/M;
-4/1/Q/2/T;
-A 1:4/TR 1:3/WS 4/AO 3;
-;
-;

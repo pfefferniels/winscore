@@ -1,11 +1,11 @@
-//! Font metric files shipped with WinScore 5.01.
+//! The bundled font metric files.
 
 use std::path::{Path, PathBuf};
 
 use score_format::FontMetrics;
 
 fn fontlib() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore/fontlib")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fontlib")
 }
 
 fn metrics(name: &str) -> FontMetrics {

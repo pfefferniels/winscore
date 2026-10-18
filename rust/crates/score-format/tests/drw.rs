@@ -1,4 +1,4 @@
-//! Symbol libraries, checked against geometry drawn by the emulated WScore.exe engine.
+//! The bundled symbol libraries.
 
 use std::path::{Path, PathBuf};
 
@@ -6,7 +6,7 @@ use score_format::drw::ENGINE_UNITS_PER_DRW_UNIT;
 use score_format::{DrwLibrary, PathKind};
 
 fn scorlib() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore/scorlib")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/scorlib")
 }
 
 fn library(name: &str) -> DrwLibrary {
@@ -19,10 +19,10 @@ fn lb0020_holds_the_articulation_marks() {
     assert_eq!(names, ["tail", "wedge", "accnt", "ten", "dot", "wdgdt", "accdt", "tendt", "dnbow", "upbow"]);
 }
 
-/// Code 9, P5 = 21 drawn by the engine: a stroke (17750,-4225)-(18350,-3025)
+/// The wedge (code 9, P5 = 21): a stroke (17750,-4225)-(18350,-3025)
 /// and a filled polygon starting (18350,-3025), (18950,-4225), (18700,-4225).
 #[test]
-fn wedge_matches_engine_output_up_to_translation() {
+fn wedge_geometry_up_to_translation() {
     let wedge = &library("LB0020.DRW").symbols[1];
     let kinds: Vec<PathKind> = wedge.paths.iter().map(|p| p.kind).collect();
     assert_eq!(kinds, [PathKind::Stroke, PathKind::Fill]);
@@ -39,7 +39,7 @@ fn wedge_matches_engine_output_up_to_translation() {
 }
 
 #[test]
-fn every_winscore_library_parses() {
+fn every_bundled_library_parses() {
     let parsed = std::fs::read_dir(scorlib())
         .unwrap()
         .map(|e| e.unwrap().path())
@@ -50,18 +50,8 @@ fn every_winscore_library_parses() {
     assert!(parsed.iter().all(Result::is_ok));
 }
 
-/// SCORE 4's compact LIBRB.DRW holds the same points as WinScore's float LB0010.DRW.
 #[test]
-fn compact_variant_matches_the_float_library() {
-    let score4 = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../SCORE 4/SCORE/LIB/LIBRB.DRW");
-    let compact = DrwLibrary::parse(&std::fs::read(score4).unwrap()).unwrap();
-    let float = library("LB0010.DRW");
-    assert_eq!(compact.symbols[1].name, "noir");
-    compact.symbols.iter().zip(&float.symbols).for_each(|(c, f)| assert_eq!(c.records, f.records, "{}", c.name));
-}
-
-#[test]
-fn winscore_compact_libraries() {
+fn compact_libraries() {
     let kbrhy = library("KBRHY.DRW");
     let names: Vec<&str> = kbrhy.symbols.iter().map(|s| s.name.as_str()).take(2).collect();
     assert_eq!(names, ["kbrhy", "kbrh1"]);

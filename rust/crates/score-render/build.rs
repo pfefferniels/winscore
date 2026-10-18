@@ -22,7 +22,7 @@ fn library_files(scorlib: &Path) -> Vec<(i32, PathBuf)> {
 }
 
 fn main() {
-    let scorlib = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore/scorlib");
+    let scorlib = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/scorlib");
     println!("cargo:rerun-if-changed={}", scorlib.display());
     let files = if env::var_os("CARGO_FEATURE_BUNDLED_SYMBOLS").is_some() { library_files(&scorlib) } else { Vec::new() };
     let entries: String = files

@@ -1,7 +1,0 @@
-IN 1
-;
-AL/K2S/OGS5/EF/MRD/OFS/M/PG/OG5+/OB3:C/GS/F;
-T/S/4/2/24/G/24/4;
-OB 4.25 5/-S 6:7/PZ 8/C- 8 8;
-1 2;
--6 7;

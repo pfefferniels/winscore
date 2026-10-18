@@ -1,7 +1,0 @@
-IN 1 0 0 1.2
-;
-TE/3 4/SO/PDF5:G:B:BF/FF/EF/D+/AN/CN/AF+/OA;
-2/E/8../T/4./12/Q/T;
--S 7/PL 6:7;
-;
-3 4;

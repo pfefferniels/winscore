@@ -1,7 +1,0 @@
-IN 1
-;
-CS4:EF:GN/DN4:FS:AF/EFF4:GSS:BN/CN5:EF5:GS5;
-4/4/4/4;
-;
-;
-;

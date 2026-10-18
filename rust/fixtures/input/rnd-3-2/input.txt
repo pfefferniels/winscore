@@ -1,7 +1,0 @@
-IN 1
-2 150
-BA/K3F/E3:AF/E3:AF/G:FN:A:FF/CN/RU/C/CN/G;
-H/24/T/T/2/8../4/H;
-;
-;
-;

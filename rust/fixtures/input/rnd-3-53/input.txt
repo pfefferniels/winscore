@@ -1,7 +1,0 @@
-IN 1 0 0 .8
-2 150
-TR/K5S/BS3/M/A:G:CN/F3/E/B/SU/B/BN:C:A:DN;
-12/H/8./E/8/Q/S;
-FE 7;
-3B;
--1 5/3 7/4 6;

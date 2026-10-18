@@ -1,7 +1,0 @@
-IN 1
-;
-CSS4:EFF:GSS/DFF4:FSS:AFF/BFF4:DFF5;
-4/4/4;
-;
-;
-;

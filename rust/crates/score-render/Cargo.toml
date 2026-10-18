@@ -13,6 +13,3 @@ bundled-symbols = []
 
 [dependencies]
 score-format = { path = "../score-format" }
-
-[dev-dependencies]
-score-testkit = { path = "../score-testkit" }

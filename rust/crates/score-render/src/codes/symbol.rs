@@ -107,7 +107,7 @@ impl TermLibrary {
 }
 
 #[cfg(feature = "bundled-symbols")]
-const BUNDLED_TERMS: &[u8] = include_bytes!("../../../../../WINSCORE 5.01/winscore/scorlib/CODE9.DAT");
+const BUNDLED_TERMS: &[u8] = include_bytes!("../../../../../assets/scorlib/CODE9.DAT");
 #[cfg(not(feature = "bundled-symbols"))]
 const BUNDLED_TERMS: &[u8] = b"";
 
@@ -194,8 +194,8 @@ mod tests {
         assert_eq!(TermLibrary::bundled().term(3004), Some(&b"_02l<<eger"[..]));
     }
 
-    fn loaded(fixture: &[u8]) -> Option<Font> {
-        let file = score_format::MusFile::parse(fixture).expect("fixture parses");
+    fn loaded(score: &[u8]) -> Option<Font> {
+        let file = score_format::MusFile::parse(score).expect("score parses");
         let doc = Document::new(&file);
         let item = doc.items().find(|i| i.code() == crate::codes::SYMBOL).expect("a code-9 item");
         font_loaded(&doc, item)
@@ -203,8 +203,8 @@ mod tests {
 
     #[test]
     fn fonts_loaded_by_terms_and_text_symbols() {
-        assert_eq!(loaded(include_bytes!("../../../../fixtures/code09-p5-text-3004/input.mus")), Some(Font(2)));
-        assert_eq!(loaded(include_bytes!("../../../../fixtures/code09-p5-text-66/input.mus")), Some(Font(0)));
-        assert_eq!(loaded(include_bytes!("../../../../fixtures/code09-p5-symbol-31/input.mus")), None);
+        assert_eq!(loaded(include_bytes!("../../tests/scores/code09-p5-text-3004.mus")), Some(Font(2)));
+        assert_eq!(loaded(include_bytes!("../../tests/scores/code09-p5-text-66.mus")), Some(Font(0)));
+        assert_eq!(loaded(include_bytes!("../../tests/scores/code09-p5-symbol-31.mus")), None);
     }
 }

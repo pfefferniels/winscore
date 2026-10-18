@@ -276,7 +276,7 @@ mod tests {
     /// The sample scores, saved by WinScore, store exactly the lengths we measure.
     #[test]
     fn sample_scores_keep_their_lengths() {
-        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore");
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../assets/samples");
         let differing: Vec<(&str, usize, f32, f32)> = ["carmen.mus", "mozart.mus", "sonlcs.mus", "000.mus"]
             .iter()
             .flat_map(|name| {

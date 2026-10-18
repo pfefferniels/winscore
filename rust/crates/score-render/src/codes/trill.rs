@@ -477,8 +477,8 @@ mod tests {
         assert_eq!(digits(2222, 3).collect::<Vec<_>>(), vec![22, 2, 2]);
     }
 
-    fn loaded(fixture: &[u8]) -> Option<Font> {
-        let file = score_format::MusFile::parse(fixture).expect("fixture parses");
+    fn loaded(score: &[u8]) -> Option<Font> {
+        let file = score_format::MusFile::parse(score).expect("score parses");
         let doc = Document::new(&file);
         let item = doc.items().find(|i| i.code() == crate::codes::TRILL).expect("a code-7 item");
         font_loaded(&doc, item)
@@ -486,8 +486,8 @@ mod tests {
 
     #[test]
     fn ottavas_load_italic_times() {
-        assert_eq!(loaded(include_bytes!("../../../../fixtures/code07-p7-ottava/input.mus")), Some(Font(2)));
-        assert_eq!(loaded(include_bytes!("../../../../fixtures/code07-p7-ottava-88/input.mus")), Some(Font(2)));
-        assert_eq!(loaded(include_bytes!("../../../../fixtures/code07-p7-trill/input.mus")), None);
+        assert_eq!(loaded(include_bytes!("../../tests/scores/code07-p7-ottava.mus")), Some(Font(2)));
+        assert_eq!(loaded(include_bytes!("../../tests/scores/code07-p7-ottava-88.mus")), Some(Font(2)));
+        assert_eq!(loaded(include_bytes!("../../tests/scores/code07-p7-trill.mus")), None);
     }
 }

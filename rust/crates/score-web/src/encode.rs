@@ -15,12 +15,12 @@
 //! `coords` (`Int32Array`) holds `x, y` of every point of every path, in the
 //! same order, in page coordinates (engine units, y up).
 //!
-//! `texts` is the `engine.json` document of the text runs alone
-//! (`{"shapes":[],"texts":[…]}`, see `rust/fixtures/README.md`); a run's
-//! `item` is its source item index.
+//! `texts` is the JSON document of the text runs alone
+//! (`{"shapes":[],"texts":[…]}`, see `json.rs`); a run's `item` is its source
+//! item index.
 
 use score_render::{Colour, DisplayList, ItemId, Shape, ShapeKind};
-use score_testkit::display_to_json;
+use crate::json::display_to_json;
 
 pub const FLAG_FILL: u32 = 1;
 
@@ -110,7 +110,7 @@ mod tests {
             source,
         };
         let list = DisplayList { shapes: vec![], texts: vec![run(Some(ItemId(2))), run(None)] };
-        let back = score_testkit::display_from_json(&encode(&list).texts).unwrap();
+        let back = crate::json::display_from_json(&encode(&list).texts).unwrap();
         assert_eq!(back.texts, list.texts);
     }
 }

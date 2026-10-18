@@ -1,7 +1,0 @@
-IN 1 0 0 0 180
-;
-C4/C4/C3/M/C3/FF4/B3:B/G4/RI/AN5:B:CN:GN/D:C:CS:F/M/B3/CF:GS;
-G/S/S/H/4./Q/T/4./8/T/16/S;
-M 3;
-2B;
-3 8;

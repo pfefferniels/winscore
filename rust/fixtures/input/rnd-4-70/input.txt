@@ -1,7 +1,0 @@
-IN 1
-;
-TR/K4S/12 8/A5/C4/BF3-/PE4:AF+:FF-/OG:G(F:EEE:CFU/D3+/PDS5-/AL/BB5/CU:A:G;
-16/H/12/T/24/8./S/4./8;
--AO 8/-AO 6;
-;
-;

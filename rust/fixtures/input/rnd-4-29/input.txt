@@ -1,7 +1,0 @@
-IN 1
-30 200
-AL/K2S/AN4/PEEEE/MRD/S-/C/ODN;
-G/G/24/8..;
-;
-3B1;
-0 1;

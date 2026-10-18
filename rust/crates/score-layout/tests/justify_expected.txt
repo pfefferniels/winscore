@@ -195,8 +195,6 @@
 14 2 200 1
 == j-crowded-6-4
 # question: Source Box O.K.? - -> yes
-# dialog: 0x59afc0 args=['0x0', '0x1', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
 8 1 0 0 1
 3 1 1.54265857 0 0
 1 1 10.685318 9 23 0 0.25 0 2
@@ -265,9 +263,6 @@
 14 2 289.484314 1
 == j-crowded-6-5
 # question: Source Box O.K.? - -> yes
-# dialog: 0x59afc0 args=['0x0', '0x1', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x3', '0x0']
 8 1 0 0 1
 3 1 2 0 0
 1 1 11.8999996 7 22 0 0.25 0 2
@@ -423,8 +418,6 @@
 14 3 200 1
 == j-crowded-6-7
 # question: Source Box O.K.? - -> yes
-# dialog: 0x59afc0 args=['0x0', '0x1', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
 8 1 0 0 1
 3 1 1.58990717 0 0
 1 1 10.7798157 0 10 0 0.25 0 2
@@ -566,9 +559,6 @@
 14 1 200 1
 == j-crowded-6-10
 # question: Source Box O.K.? - -> yes
-# dialog: 0x59afc0 args=['0x0', '0x1', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x3', '0x0']
 8 1 0 0 1
 3 1 1.41398335 0 0
 1 1 10.7279663 8 22 0 0.5 0 1
@@ -917,8 +907,6 @@
 14 3 200 1
 == j-crowded-6-17
 # question: Source Box O.K.? - -> yes
-# dialog: 0x59afc0 args=['0x0', '0x1', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
 8 1 0 0 1
 3 1 2 0 0
 1 1 11.5 6 11 0 1 0 0
@@ -977,9 +965,6 @@
 14 2 289.066681 1
 == j-crowded-6-18
 # question: Source Box O.K.? - -> yes
-# dialog: 0x59afc0 args=['0x0', '0x1', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x3', '0x0']
 8 1 0 0 1
 3 1 1.65134418 0 0
 1 1 11.2026882 9 0 0 0.5 0 0 10
@@ -1669,9 +1654,6 @@
 14 2 200 1
 == j-crowded-6-34
 # question: Source Box O.K.? - -> yes
-# dialog: 0x59afc0 args=['0x0', '0x1', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x3', '0x0']
 8 1 0 0 1
 3 1 1.32490349 0 0
 1 1 10.149807 8 21 0 0.5 0 1
@@ -14682,13 +14664,6 @@
 14 3 200 1
 == lja-crowded-13-4
 # question: Source Box O.K.? - -> yes
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
-# dialog: 0x59afc0 args=['0x0', '0x2', '0x0']
 8 -1 0 0 1
 3 1 2 0 0
 1 1 12 3 12 0 0.5 0 1

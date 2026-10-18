@@ -1154,7 +1154,7 @@ mod tests {
     /// coordinates and gives finite values for a drag in any direction.
     #[test]
     fn every_sample_item_has_sound_handles() {
-        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../WINSCORE 5.01/winscore");
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../assets/samples");
         let mut kinds = std::collections::BTreeSet::new();
         for name in ["mozart.mus", "carmen.mus", "sonlcs.mus", "000.mus"] {
             let file = MusFile::parse(&std::fs::read(root.join(name)).unwrap()).unwrap();

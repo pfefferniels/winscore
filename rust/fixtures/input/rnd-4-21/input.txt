@@ -1,7 +1,0 @@
-IN 1
-;
-AL/RU/OFF5:BN:F:D(NJ/R/OAAAAU/E/F(F;
-2/S/8/32/8/E;
-PZ 3;
-B;
-2 3/303 4;

@@ -1,7 +1,0 @@
-IN 1
-30 200
-AL/K6F/BN4/EN/D/C:F:D/SO/AN:C:F:A/E:F:B:AS/M/F/BN:F:CF:FS/A/DS/D/M/G5/R;
-8../32/4./2/8/2/8../8/G/4/S/T/16;
-;
-+1 2/7 8/-11 12;
-;

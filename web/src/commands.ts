@@ -1,6 +1,6 @@
 // WinScore's command table (analysis/data/command_map.tsv, generated into
 // src/generated/commands.json): SCORE command and tooltip by menu id.
-import table from './generated/commands.json';
+import table from './commands.json';
 
 export interface Command {
   command: string;

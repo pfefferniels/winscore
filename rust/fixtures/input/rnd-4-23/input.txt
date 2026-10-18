@@ -1,7 +1,0 @@
-IN 1
-;
-BA/K1S/CN3/PG/RI/G:E:BF:GN/OE/FN/F(S/EEEE/MS/OGGGGJ;
-4/32/4./12/G/8./1/E/H;
-TM 7/TRW 2 4/WS 6:7;
-;
-+3/-1 3;

@@ -1,7 +1,0 @@
-IN 1
-;
-AL/K5F/CN5:A:D/AF:EN:A/B/E3/RU/D/D5/A4:C:G:DN;
-8/8./4/Q/8/24/2/G;
-HW 3/TME 6/M 5:6;
-1 2;
-;

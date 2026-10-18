@@ -1,7 +1,0 @@
-IN 1 0 0 0 180
-2 150
-BA/2 2/PE4/MS/AS/R/ODF-/ODDDD/R/RD/C/D:F:A:C/GS/AN;
-S/T/2/T/G/4./8/8../G/32/E;
-F2 3:6/-AO 2;
-1 3;
-1 2;

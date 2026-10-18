@@ -1,7 +1,0 @@
-IN 1
-30 200
-K4S/GF5:D:CS:BN/FF3/A/F3/OG(N5/D(F3/OBB4:CF:AFJ;
-S/8/H/H/H/32/G;
-;
--1;
-+3 7;

@@ -1,0 +1,1387 @@
+command	context	added	item4
+/10 -.1 	new		
+/10 -.1 	note	1 1 30 5 10 0 1 0 0 -0.1	1 1 30 5 10 0 1 0 0 -0.1
+/10 .1 	new		
+/10 .1 	note	1 1 30 5 10 0 1 0 0 0.1	1 1 30 5 10 0 1 0 0 0.1
+/11 -.1 	new		
+/11 -.1 	note	1 1 30 5 10 0 1 0 0 0 -0.1	1 1 30 5 10 0 1 0 0 0 -0.1
+/11 .1 	new		
+/11 .1 	note	1 1 30 5 10 0 1 0 0 0 0.1	1 1 30 5 10 0 1 0 0 0 0.1
+/19 -.5 	new		
+/19 -.5 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 -0.5	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 -0.5
+/19 -5 	new		
+/19 -5 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 -5	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 -5
+/19 .5 	new		
+/19 .5 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0.5	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0.5
+/19 5 	new		
+/19 5 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 5	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 5
+/2 -1 	new		
+/2 -1 	note		
+/2 1 	new		
+/2 1 	note	1 2 30 5 10 0 1	1 2 30 5 10 0 1
+/4 -1 	new		
+/4 -1 	note	1 1 30 4 10 0 1	1 1 30 4 10 0 1
+/4 1 	new		
+/4 1 	note	1 1 30 6 10 0 1	1 1 30 6 10 0 1
+/5 -1 	new		
+/5 -1 	note	1 1 30 5 9 0 1	1 1 30 5 9 0 1
+/5 -10 	new		
+/5 -10 	note	1 1 30 5 0 0 1	1 1 30 5 0 0 1
+/5 1 	new		
+/5 1 	note	1 1 30 5 11 0 1	1 1 30 5 11 0 1
+/5 10 	new		
+/5 10 	note	1 1 30 5 20 0 1	1 1 30 5 20 0 1
+1 	new	1	
+1 	note		
+1 200 	new	1 200	
+1 200 	note		
+1 9 5 112 6 0 7 0 8 0 9 0 	new	1 9 5 112 6 0 7 0 8 0 9	
+1 9 5 112 6 0 7 0 8 0 9 0 	note	9 1 30 5 112	9 1 30 5 112
+1 9 5 120 6 0 7 0 8 0 9 0	new	1 9 5 120 6 0 7 0 8 0 9	
+1 9 5 120 6 0 7 0 8 0 9 0	note	9 1 30 5 120	9 1 30 5 120
+1 9 5 211 6 0 7 0 8 0 9 0 	new	1 9 5 211 6 0 7 0 8 0 9	
+1 9 5 211 6 0 7 0 8 0 9 0 	note	9 1 30 5 211	9 1 30 5 211
+1 9 5 212 6 0 7 0 8 0 9 0 	new	1 9 5 212 6 0 7 0 8 0 9	
+1 9 5 212 6 0 7 0 8 0 9 0 	note	9 1 30 5 212	9 1 30 5 212
+1 9 5 70 6 0 7 0 8 0 9 0 	new	1 9 5 70 6 0 7 0 8 0 9	
+1 9 5 70 6 0 7 0 8 0 9 0 	note	9 1 30 5 70	9 1 30 5 70
+1 9 5 71 6 0 7 0 8 0 	new	1 9 5 71 6 0 7 0 8	
+1 9 5 71 6 0 7 0 8 0 	note	9 1 30 5 71	9 1 30 5 71
+1 9 5 90 6 0 7 0 8 0 9 0 	new	1 9 5 90 6 0 7 0 8 0 9	
+1 9 5 90 6 0 7 0 8 0 9 0 	note	9 1 30 5 90	9 1 30 5 90
+10 	new	10	
+10 	note		
+10 0 11 0 	new	10 0 11	
+10 0 11 0 	note		
+10 10 	new	10 10	
+10 10 	note	1 1 30 5 10 0 1 0 0 10	1 1 30 5 10 0 1 0 0 10
+10 20 	new	10 20	
+10 20 	note	1 1 30 5 10 0 1 0 0 20	1 1 30 5 10 0 1 0 0 20
+10 200 	new	10 200	
+10 200 	note	1 1 30 5 10 0 1 0 0 200	1 1 30 5 10 0 1 0 0 200
+10./ 	new	10	
+10./ 	note		
+10/ 	new	10	
+10/ 	note		
+100 200 	new		
+100 200 	note		
+12 	new	12	
+12 	note		
+12 0 	new	12	
+12 0 	note		
+12 120 5 1 	new	12 120 5 1	
+12 120 5 1 	note	1 1 30 5 1 0 1 0 0 0 0 120	1 1 30 5 1 0 1 0 0 0 0 120
+12 16/ 	new	12 16	
+12 16/ 	note	1 1 30 5 10 0 1 0 0 0 0 16	1 1 30 5 10 0 1 0 0 0 0 16
+12 60 5 1 	new	12 60 5 1	
+12 60 5 1 	note	1 1 30 5 1 0 1 0 0 0 0 60	1 1 30 5 1 0 1 0 0 0 0 60
+12 72 5 1 	new	12 72 5 1	
+12 72 5 1 	note	1 1 30 5 1 0 1 0 0 0 0 72	1 1 30 5 1 0 1 0 0 0 0 72
+12 8/ 	new	12 8	
+12 8/ 	note	1 1 30 5 10 0 1 0 0 0 0 8	1 1 30 5 10 0 1 0 0 0 0 8
+13 0 	new	13	
+13 0 	note		
+13 1 	new	13 1	
+13 1 	note	1 1 30 5 10 0 1 0 0 0 0 0 1	1 1 30 5 10 0 1 0 0 0 0 0 1
+14 	new	14	
+14 	note		
+14 0 	new	14	
+14 0 	note		
+14 1 	new	14 1	
+14 1 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 1	1 1 30 5 10 0 1 0 0 0 0 0 0 1
+15 	new		
+15 	note		
+16 	new		
+16 	note		
+17 	new	17	
+17 	note		
+18 	new	18	
+18 	note		
+19 0 	new		
+19 0 	note		
+2 	new	2	
+2 	note		
+2 200 	new	2 200	
+2 200 	note	1 200 30 5 10 0 1	1 200 30 5 10 0 1
+2 4/ 	new	2 4	
+2 4/ 	note	1 4 30 5 10 0 1	1 4 30 5 10 0 1
+2 8/ 	new	2 8	
+2 8/ 	note	1 8 30 5 10 0 1	1 8 30 5 10 0 1
+20/ 	new		
+20/ 	note		
+3 	new	3	
+3 	note	1 1 0 5 10 0 1	1 1 0 5 10 0 1
+3 0 	new	3	
+3 0 	note	1 1 0 5 10 0 1	1 1 0 5 10 0 1
+3 16/ 	new	3 16	
+3 16/ 	note	1 1 16 5 10 0 1	1 1 16 5 10 0 1
+3 4/ 	new	3 4	
+3 4/ 	note	1 1 4 5 10 0 1	1 1 4 5 10 0 1
+3 8/ 	new	3 8	
+3 8/ 	note	1 1 8 5 10 0 1	1 1 8 5 10 0 1
+300 	new		
+300 	note		
+32./ 	new		
+32./ 	note		
+32/ 	new		
+32/ 	note		
+4 	new	4	
+4 	note	1 1 30 0 10 0 1	1 1 30 0 10 0 1
+4 4/ 	new	4 4	
+4 4/ 	note	1 1 30 4 10 0 1	1 1 30 4 10 0 1
+4 8/ 	new	4 8	
+4 8/ 	note	1 1 30 8 10 0 1	1 1 30 8 10 0 1
+4 999 	new	4 999	
+4 999 	note	1 1 30 999 10 0 1	1 1 30 999 10 0 1
+400 	new		
+400 	note		
+5 	new	5	
+5 	note	1 1 30 5 0 0 1	1 1 30 5 0 0 1
+5 -4 	new	5 -4	
+5 -4 	note	1 1 30 5 -4 0 1	1 1 30 5 -4 0 1
+5 -5  	new	5 -5	
+5 -5  	note	1 1 30 5 -5 0 1	1 1 30 5 -5 0 1
+5 -6 	new	5 -6	
+5 -6 	note	1 1 30 5 -6 0 1	1 1 30 5 -6 0 1
+5 .15	new	5 0.15	
+5 .15	note	1 1 30 5 0.15 0 1	1 1 30 5 0.15 0 1
+5 .8	new	5 0.8	
+5 .8	note	1 1 30 5 0.8 0 1	1 1 30 5 0.8 0 1
+5 .88	new	5 0.88	
+5 .88	note	1 1 30 5 0.88 0 1	1 1 30 5 0.88 0 1
+5 1.8	new	5 1.8	
+5 1.8	note	1 1 30 5 1.8 0 1	1 1 30 5 1.8 0 1
+5 10 4 2 	new	5 10 4 2	
+5 10 4 2 	note	1 1 30 2 10 0 1	1 1 30 2 10 0 1
+5 10 6 .25 	new	5 10 6 0.25	
+5 10 6 .25 	note	1 1 30 5 10 0.25 1	1 1 30 5 10 0.25 1
+5 1000 6 0 	new	5 1000 6	
+5 1000 6 0 	note	1 1 30 5 1000 0 1	1 1 30 5 1000 0 1
+5 1001 18 1	new	5 1001 18 1	
+5 1001 18 1	note	1 1 30 5 1001 0 1 0 0 0 0 0 0 0 0 0 0 1	1 1 30 5 1001 0 1 0 0 0 0 0 0 0 0 0 0 1
+5 1001 18 100	new	5 1001 18 100	
+5 1001 18 100	note	1 1 30 5 1001 0 1 0 0 0 0 0 0 0 0 0 0 100	1 1 30 5 1001 0 1 0 0 0 0 0 0 0 0 0 0 100
+5 1060 6 0 	new	5 1060 6	
+5 1060 6 0 	note	1 1 30 5 1060 0 1	1 1 30 5 1060 0 1
+5 109 	new	5 109	
+5 109 	note	1 1 30 5 109 0 1	1 1 30 5 109 0 1
+5 111 	new	5 111	
+5 111 	note	1 1 30 5 111 0 1	1 1 30 5 111 0 1
+5 113 	new	5 113	
+5 113 	note	1 1 30 5 113 0 1	1 1 30 5 113 0 1
+5 114 	new	5 114	
+5 114 	note	1 1 30 5 114 0 1	1 1 30 5 114 0 1
+5 118 	new	5 118	
+5 118 	note	1 1 30 5 118 0 1	1 1 30 5 118 0 1
+5 12 6 16 8 0 9 0 	new	5 12 6 16 8 0 9	
+5 12 6 16 8 0 9 0 	note	1 1 30 5 12 16 1	1 1 30 5 12 16 1
+5 12 6 8 8 0 9 0 	new	5 12 6 8 8 0 9	
+5 12 6 8 8 0 9 0 	note	1 1 30 5 12 8 1	1 1 30 5 12 8 1
+5 123 	new	5 123	
+5 123 	note	1 1 30 5 123 0 1	1 1 30 5 123 0 1
+5 127 	new	5 127	
+5 127 	note	1 1 30 5 127 0 1	1 1 30 5 127 0 1
+5 128 	new	5 128	
+5 128 	note	1 1 30 5 128 0 1	1 1 30 5 128 0 1
+5 129 	new	5 129	
+5 129 	note	1 1 30 5 129 0 1	1 1 30 5 129 0 1
+5 131 	new	5 131	
+5 131 	note	1 1 30 5 131 0 1	1 1 30 5 131 0 1
+5 160 	new	5 160	
+5 160 	note	1 1 30 5 160 0 1	1 1 30 5 160 0 1
+5 161 	new	5 161	
+5 161 	note	1 1 30 5 161 0 1	1 1 30 5 161 0 1
+5 162 	new	5 162	
+5 162 	note	1 1 30 5 162 0 1	1 1 30 5 162 0 1
+5 163 	new	5 163	
+5 163 	note	1 1 30 5 163 0 1	1 1 30 5 163 0 1
+5 164 	new	5 164	
+5 164 	note	1 1 30 5 164 0 1	1 1 30 5 164 0 1
+5 165 	new	5 165	
+5 165 	note	1 1 30 5 165 0 1	1 1 30 5 165 0 1
+5 166 	new	5 166	
+5 166 	note	1 1 30 5 166 0 1	1 1 30 5 166 0 1
+5 167 	new	5 167	
+5 167 	note	1 1 30 5 167 0 1	1 1 30 5 167 0 1
+5 168 	new	5 168	
+5 168 	note	1 1 30 5 168 0 1	1 1 30 5 168 0 1
+5 169 	new	5 169	
+5 169 	note	1 1 30 5 169 0 1	1 1 30 5 169 0 1
+5 180 	new	5 180	
+5 180 	note	1 1 30 5 180 0 1	1 1 30 5 180 0 1
+5 182 	new	5 182	
+5 182 	note	1 1 30 5 182 0 1	1 1 30 5 182 0 1
+5 2  6 2  7 2 8 0 9 0 10 0 11 0 12 0 13 0 	new	5 2 6 2 7 2 8 0 9 0 10 0 11 0 12 0 13	
+5 2  6 2  7 2 8 0 9 0 10 0 11 0 12 0 13 0 	note	1 1 30 5 2 2 2	1 1 30 5 2 2 2
+5 2 6 2 8 0 9 0 	new	5 2 6 2 8 0 9	
+5 2 6 2 8 0 9 0 	note	1 1 30 5 2 2 1	1 1 30 5 2 2 1
+5 2 6 4 8 0 9 0 	new	5 2 6 4 8 0 9	
+5 2 6 4 8 0 9 0 	note	1 1 30 5 2 4 1	1 1 30 5 2 4 1
+5 2 6 8 8 0 9 0 	new	5 2 6 8 8 0 9	
+5 2 6 8 8 0 9 0 	note	1 1 30 5 2 8 1	1 1 30 5 2 8 1
+5 221 	new	5 221	
+5 221 	note	1 1 30 5 221 0 1	1 1 30 5 221 0 1
+5 231 	new	5 231	
+5 231 	note	1 1 30 5 231 0 1	1 1 30 5 231 0 1
+5 240 	new	5 240	
+5 240 	note	1 1 30 5 240 0 1	1 1 30 5 240 0 1
+5 250 	new	5 250	
+5 250 	note	1 1 30 5 250 0 1	1 1 30 5 250 0 1
+5 270 	new	5 270	
+5 270 	note	1 1 30 5 270 0 1	1 1 30 5 270 0 1
+5 271 	new	5 271	
+5 271 	note	1 1 30 5 271 0 1	1 1 30 5 271 0 1
+5 272 	new	5 272	
+5 272 	note	1 1 30 5 272 0 1	1 1 30 5 272 0 1
+5 3 6 16 8 0 9 0 	new	5 3 6 16 8 0 9	
+5 3 6 16 8 0 9 0 	note	1 1 30 5 3 16 1	1 1 30 5 3 16 1
+5 3 6 2 8 0 9 0 	new	5 3 6 2 8 0 9	
+5 3 6 2 8 0 9 0 	note	1 1 30 5 3 2 1	1 1 30 5 3 2 1
+5 3 6 4 8 0 9 0 	new	5 3 6 4 8 0 9	
+5 3 6 4 8 0 9 0 	note	1 1 30 5 3 4 1	1 1 30 5 3 4 1
+5 3 6 8 8 0 9 0 	new	5 3 6 8 8 0 9	
+5 3 6 8 8 0 9 0 	note	1 1 30 5 3 8 1	1 1 30 5 3 8 1
+5 4 6 4 8 0 9 0 	new	5 4 6 4 8 0 9	
+5 4 6 4 8 0 9 0 	note	1 1 30 5 4 4 1	1 1 30 5 4 4 1
+5 4 6 8 8 0 9 0 	new	5 4 6 8 8 0 9	
+5 4 6 8 8 0 9 0 	note	1 1 30 5 4 8 1	1 1 30 5 4 8 1
+5 4/ 	new	5 4	
+5 4/ 	note	1 1 30 5 4 0 1	1 1 30 5 4 0 1
+5 5 6 4 8 0 9 0 	new	5 5 6 4 8 0 9	
+5 5 6 4 8 0 9 0 	note	1 1 30 5 5 4 1	1 1 30 5 5 4 1
+5 5 6 8 8 0 9 0 	new	5 5 6 8 8 0 9	
+5 5 6 8 8 0 9 0 	note	1 1 30 5 5 8 1	1 1 30 5 5 8 1
+5 50 	new	5 50	
+5 50 	note	1 1 30 5 50 0 1	1 1 30 5 50 0 1
+5 51  	new	5 51	
+5 51  	note	1 1 30 5 51 0 1	1 1 30 5 51 0 1
+5 52  	new	5 52	
+5 52  	note	1 1 30 5 52 0 1	1 1 30 5 52 0 1
+5 53  	new	5 53	
+5 53  	note	1 1 30 5 53 0 1	1 1 30 5 53 0 1
+5 54 	new	5 54	
+5 54 	note	1 1 30 5 54 0 1	1 1 30 5 54 0 1
+5 55 	new	5 55	
+5 55 	note	1 1 30 5 55 0 1	1 1 30 5 55 0 1
+5 56 	new	5 56	
+5 56 	note	1 1 30 5 56 0 1	1 1 30 5 56 0 1
+5 57 	new	5 57	
+5 57 	note	1 1 30 5 57 0 1	1 1 30 5 57 0 1
+5 58 	new	5 58	
+5 58 	note	1 1 30 5 58 0 1	1 1 30 5 58 0 1
+5 59 	new	5 59	
+5 59 	note	1 1 30 5 59 0 1	1 1 30 5 59 0 1
+5 6 	new	5 6	
+5 6 	note	1 1 30 5 6 0 1	1 1 30 5 6 0 1
+5 6 6 .25 	new	5 6 6 0.25	
+5 6 6 .25 	note	1 1 30 5 6 0.25 1	1 1 30 5 6 0.25 1
+5 6 6 16 8 0 9 0 	new	5 6 6 16 8 0 9	
+5 6 6 16 8 0 9 0 	note	1 1 30 5 6 16 1	1 1 30 5 6 16 1
+5 6 6 4 8 0 9 0 	new	5 6 6 4 8 0 9	
+5 6 6 4 8 0 9 0 	note	1 1 30 5 6 4 1	1 1 30 5 6 4 1
+5 6 6 8 8 0 9 0 	new	5 6 6 8 8 0 9	
+5 6 6 8 8 0 9 0 	note	1 1 30 5 6 8 1	1 1 30 5 6 8 1
+5 60 	new	5 60	
+5 60 	note	1 1 30 5 60 0 1	1 1 30 5 60 0 1
+5 600 6 0 	new	5 600 6	
+5 600 6 0 	note	1 1 30 5 600 0 1	1 1 30 5 600 0 1
+5 61 	new	5 61	
+5 61 	note	1 1 30 5 61 0 1	1 1 30 5 61 0 1
+5 62 	new	5 62	
+5 62 	note	1 1 30 5 62 0 1	1 1 30 5 62 0 1
+5 63 	new	5 63	
+5 63 	note	1 1 30 5 63 0 1	1 1 30 5 63 0 1
+5 64 	new	5 64	
+5 64 	note	1 1 30 5 64 0 1	1 1 30 5 64 0 1
+5 65 	new	5 65	
+5 65 	note	1 1 30 5 65 0 1	1 1 30 5 65 0 1
+5 66 	new	5 66	
+5 66 	note	1 1 30 5 66 0 1	1 1 30 5 66 0 1
+5 67 	new	5 67	
+5 67 	note	1 1 30 5 67 0 1	1 1 30 5 67 0 1
+5 68 	new	5 68	
+5 68 	note	1 1 30 5 68 0 1	1 1 30 5 68 0 1
+5 69 	new	5 69	
+5 69 	note	1 1 30 5 69 0 1	1 1 30 5 69 0 1
+5 7 	new	5 7	
+5 7 	note	1 1 30 5 7 0 1	1 1 30 5 7 0 1
+5 7 6 .25 	new	5 7 6 0.25	
+5 7 6 .25 	note	1 1 30 5 7 0.25 1	1 1 30 5 7 0.25 1
+5 73 	new	5 73	
+5 73 	note	1 1 30 5 73 0 1	1 1 30 5 73 0 1
+5 74 	new	5 74	
+5 74 	note	1 1 30 5 74 0 1	1 1 30 5 74 0 1
+5 75 	new	5 75	
+5 75 	note	1 1 30 5 75 0 1	1 1 30 5 75 0 1
+5 76 	new	5 76	
+5 76 	note	1 1 30 5 76 0 1	1 1 30 5 76 0 1
+5 77 	new	5 77	
+5 77 	note	1 1 30 5 77 0 1	1 1 30 5 77 0 1
+5 78 	new	5 78	
+5 78 	note	1 1 30 5 78 0 1	1 1 30 5 78 0 1
+5 79 	new	5 79	
+5 79 	note	1 1 30 5 79 0 1	1 1 30 5 79 0 1
+5 8 6 .25 	new	5 8 6 0.25	
+5 8 6 .25 	note	1 1 30 5 8 0.25 1	1 1 30 5 8 0.25 1
+5 8/ 	new	5 8	
+5 8/ 	note	1 1 30 5 8 0 1	1 1 30 5 8 0 1
+5 80 	new	5 80	
+5 80 	note	1 1 30 5 80 0 1	1 1 30 5 80 0 1
+5 81 	new	5 81	
+5 81 	note	1 1 30 5 81 0 1	1 1 30 5 81 0 1
+5 85 	new	5 85	
+5 85 	note	1 1 30 5 85 0 1	1 1 30 5 85 0 1
+5 86 	new	5 86	
+5 86 	note	1 1 30 5 86 0 1	1 1 30 5 86 0 1
+5 9 6 .25 	new	5 9 6 0.25	
+5 9 6 .25 	note	1 1 30 5 9 0.25 1	1 1 30 5 9 0.25 1
+5 9 6 16 8 0 9 0 	new	5 9 6 16 8 0 9	
+5 9 6 16 8 0 9 0 	note	1 1 30 5 9 16 1	1 1 30 5 9 16 1
+5 9 6 8 8 0 9 0 	new	5 9 6 8 8 0 9	
+5 9 6 8 8 0 9 0 	note	1 1 30 5 9 8 1	1 1 30 5 9 8 1
+5 9 8 1 	new	5 9 8 1	
+5 9 8 1 	note	1 1 30 5 9 0 1 1	1 1 30 5 9 0 1 1
+5 9 8 2 	new	5 9 8 2	
+5 9 8 2 	note	1 1 30 5 9 0 1 2	1 1 30 5 9 0 1 2
+5 9 8 3 	new	5 9 8 3	
+5 9 8 3 	note	1 1 30 5 9 0 1 3	1 1 30 5 9 0 1 3
+5 900 6 0 	new	5 900 6	
+5 900 6 0 	note	1 1 30 5 900 0 1	1 1 30 5 900 0 1
+5 93 	new	5 93	
+5 93 	note	1 1 30 5 93 0 1	1 1 30 5 93 0 1
+5 94 	new	5 94	
+5 94 	note	1 1 30 5 94 0 1	1 1 30 5 94 0 1
+5 98 	new	5 98	
+5 98 	note	1 1 30 5 98 0 1	1 1 30 5 98 0 1
+5 99 	new	5 99	
+5 99 	note	1 1 30 5 99 0 1	1 1 30 5 99 0 1
+5/ 	new	5	
+5/ 	note	1 1 30 5 0 0 1	1 1 30 5 0 0 1
+500 	new		
+500 	note		
+50000 4 	new		
+50000 4 	note	1 1 30 5 5 0 1	1 1 30 5 5 0 1
+6 	new	6	
+6 	note		
+6 0 	new	6	
+6 0 	note		
+6 1 	new	6 1	
+6 1 	note	1 1 30 5 10 1 1	1 1 30 5 10 1 1
+6 10 	new	6 10	
+6 10 	note	1 1 30 5 10 10 1	1 1 30 5 10 10 1
+6 11 	new	6 11	
+6 11 	note	1 1 30 5 10 11 1	1 1 30 5 10 11 1
+6 12 	new	6 12	
+6 12 	note	1 1 30 5 10 12 1	1 1 30 5 10 12 1
+6 13 	new	6 13	
+6 13 	note	1 1 30 5 10 13 1	1 1 30 5 10 13 1
+6 14 	new	6 14	
+6 14 	note	1 1 30 5 10 14 1	1 1 30 5 10 14 1
+6 15 	new	6 15	
+6 15 	note	1 1 30 5 10 15 1	1 1 30 5 10 15 1
+6 16 	new	6 16	
+6 16 	note	1 1 30 5 10 16 1	1 1 30 5 10 16 1
+6 16/ 	new	6 16	
+6 16/ 	note	1 1 30 5 10 16 1	1 1 30 5 10 16 1
+6 17 	new	6 17	
+6 17 	note	1 1 30 5 10 17 1	1 1 30 5 10 17 1
+6 18 	new	6 18	
+6 18 	note	1 1 30 5 10 18 1	1 1 30 5 10 18 1
+6 19 	new	6 19	
+6 19 	note	1 1 30 5 10 19 1	1 1 30 5 10 19 1
+6 2 	new	6 2	
+6 2 	note	1 1 30 5 10 2 1	1 1 30 5 10 2 1
+6 3 	new	6 3	
+6 3 	note	1 1 30 5 10 3 1	1 1 30 5 10 3 1
+6 4 	new	6 4	
+6 4 	note	1 1 30 5 10 4 1	1 1 30 5 10 4 1
+6 4/ 	new	6 4	
+6 4/ 	note	1 1 30 5 10 4 1	1 1 30 5 10 4 1
+6 5 	new	6 5	
+6 5 	note	1 1 30 5 10 5 1	1 1 30 5 10 5 1
+6 6 	new	6 6	
+6 6 	note	1 1 30 5 10 6 1	1 1 30 5 10 6 1
+6 7 	new	6 7	
+6 7 	note	1 1 30 5 10 7 1	1 1 30 5 10 7 1
+6 8 	new	6 8	
+6 8 	note	1 1 30 5 10 8 1	1 1 30 5 10 8 1
+6 8/ 	new	6 8	
+6 8/ 	note	1 1 30 5 10 8 1	1 1 30 5 10 8 1
+6 9 	new	6 9	
+6 9 	note	1 1 30 5 10 9 1	1 1 30 5 10 9 1
+600 	new		
+600 	note		
+7 	new	7	
+7 	note	1 1 30 5 10	1 1 30 5 10
+7 23 	new	7 23	
+7 23 	note	1 1 30 5 10 0 23	1 1 30 5 10 0 23
+7 24 	new	7 24	
+7 24 	note	1 1 30 5 10 0 24	1 1 30 5 10 0 24
+7 25 	new	7 25	
+7 25 	note	1 1 30 5 10 0 25	1 1 30 5 10 0 25
+700 -.5 	new		
+700 -.5 	note	1 1 30 5 10 0 0.5	1 1 30 5 10 0 0.5
+700 .5 	new		
+700 .5 	note	1 1 30 5 10 0 1.5	1 1 30 5 10 0 1.5
+8 	new	8	
+8 	note		
+8 -3	new	8 -3	
+8 -3	note	1 1 30 5 10 0 1 -3	1 1 30 5 10 0 1 -3
+8 .5	new	8 0.5	
+8 .5	note	1 1 30 5 10 0 1 0.5	1 1 30 5 10 0 1 0.5
+8 0 	new	8	
+8 0 	note		
+800 -.05 	new		
+800 -.05 	note	1 1 30 5 10 0 1 -0.05	1 1 30 5 10 0 1 -0.05
+800 -1 	new		
+800 -1 	note	1 1 30 5 10 0 1 -1	1 1 30 5 10 0 1 -1
+800 .05 	new		
+800 .05 	note	1 1 30 5 10 0 1 0.05	1 1 30 5 10 0 1 0.05
+800 1 	new		
+800 1 	note	1 1 30 5 10 0 1 1	1 1 30 5 10 0 1 1
+9 	new	9	
+9 	note		
+9 0	new	9	
+9 0	note		
+9 16/ 	new	9 16	
+9 16/ 	note	1 1 30 5 10 0 1 0 16	1 1 30 5 10 0 1 0 16
+9 8/ 	new	9 8	
+9 8/ 	note	1 1 30 5 10 0 1 0 8	1 1 30 5 10 0 1 0 8
+900 .5	new		
+900 .5	note	1 1 30 5 10 0 1 0 0.5	1 1 30 5 10 0 1 0 0.5
+A 	new		
+A 	note		
+A  	new		
+A  	note		
+AB   	new		
+AB   	note		
+AC 	new		
+AC 	note	1 1 30 5 10 0 1 0 0 0 5	1 1 30 5 10 0 1 0 0 0 5
+ACCORD 	new	12 1 100 18 10 0 0 101 101	
+ACCORD 	note	12 1 100 18 10 0 0 101 101	
+ACP 	new		
+ACP 	note	1 1 30 5 110 0 1	1 1 30 5 110 0 1
+ACT 	new	9 1 100 13 119	
+ACT 	note	1 1 30 5 10 0 1 0 0 0 25	1 1 30 5 10 0 1 0 0 0 25
+ADF 	new		
+ADF 	note		
+ADFX 	new		
+ADFX 	note		
+ADJ 	new		
+ADJ 	note		
+ADOF 	new		
+ADOF 	note		
+ADT 	new		
+ADT 	note	1 1 30 5 10 0 1 0 1	1 1 30 5 10 0 1 0 1
+ADX 	new		
+ADX 	note		
+ALTO	new	3 1 2 0 2	
+ALTO	note	3 1 2 0 2	
+ARP 	new	4 1 100 0 12 0 -1	
+ARP 	note	4 1 100 0 12 0 -1	
+ARS 	new		
+ARS 	note	1 1 30 5 10 0 1 0 0 0 15	1 1 30 5 10 0 1 0 0 0 15
+ASP 	new		
+ASP 	note	1 1 30 5 10 0 1 0 0 0 0 0 0.5	1 1 30 5 10 0 1 0 0 0 0 0 0.5
+AST 	new	9 1 100 -2 71	
+AST 	note	1 1 30 5 10 0 1 0 0 0 9	1 1 30 5 10 0 1 0 0 0 9
+AUTO 	new		
+AUTO 	note		
+AUTOX 	new		
+AUTOX 	note		
+B  	new		
+B  	note		
+BAR 	new	14 1 100 1	
+BAR 	note	14 1 100 1	
+BARBC 	new	14 1 100 1 8	
+BARBC 	note	14 1 100 1 8	
+BARBK 	new	14 1 100 1 9	
+BARBK 	note	14 1 100 1 9	
+BARD 	new	14 1 100 1 1	
+BARD 	note	14 1 100 1 1	
+BARH 	new	14 1 100 1 2	
+BARH 	note	14 1 100 1 2	
+BARL 	new	14 1 100 1 3	
+BARL 	note	14 1 100 1 3	
+BARR 	new	14 1 100 1 4	
+BARR 	note	14 1 100 1 4	
+BARRD 	new	14 1 100 1 5	
+BARRD 	note	14 1 100 1 5	
+BASS	new	3 1 2 0 1	
+BASS	note	3 1 2 0 1	
+BEAM 	new	6 1 100 8 8 120 11	
+BEAM 	note	6 1 100 8 8 120 11	
+BEAM+ 	new		
+BEAM+ 	note		
+BEAM2 	new	6 1 100 8 8 120 12	
+BEAM2 	note	6 1 100 8 8 120 12	
+BNUM0 	new		
+BNUM0 	note		
+BNUM3 	new		
+BNUM3 	note		
+BNUM5 	new		
+BNUM5 	note		
+BNUMP 	new		
+BNUMP 	note		
+BOX 	new	12 1 100 15 0 10	
+BOX 	note	12 1 100 15 0 10	
+BXHM 	new		
+BXHM 	note		
+BXHP 	new		
+BXHP 	note		
+BXVM 	new		
+BXVM 	note		
+BXVP 	new		
+BXVP 	note		
+BZ 	new		
+BZ 	note		
+C 	new		
+C 	note		
+C    	new		
+C    	note		
+CC   	new		
+CC   	note		
+CDSH 	new		
+CDSH 	note		
+CHSD 	new		
+CHSD 	note		
+CHSM 	new		
+CHSM 	note		
+CHSP 	new		
+CHSP 	note		
+CIRCLE 	new	12 1 100 15 1 10	
+CIRCLE 	note	12 1 100 15 1 10	
+CLEF 	new	3 1 2	
+CLEF 	note	3 1 2	
+CN 	new		
+CN 	note	1 1 50 5 10 0 1	1 1 50 5 10 0 1
+CNL 	new		
+CNL 	note		
+CNR 	new		
+CNR 	note		
+CNX 	new		
+CNX 	note	1 1 50 5 10 0 1	1 1 50 5 10 0 1
+CO	new		
+CO	note		
+CO 	new		
+CO 	note		
+CPX 	new		
+CPX 	note		
+CR 	new		
+CR 	note		
+CR- 	new	4 1 100 -1 999 120 0 0 0 0 1	
+CR- 	note	4 1 100 -1 999 120 0 0 0 0 1	
+CRH 	new	4 1 100 -1 999 120	
+CRH 	note	4 1 100 -1 999 120	
+CRV	new		
+CRV	note		
+CT 	new		
+CT 	note		
+CTN 	new		
+CTN 	note		
+CTX 	new		
+CTX 	note		
+CUE	new		
+CUE	note	1 1 30 105 10 0 1	1 1 30 105 10 0 1
+CUT/ 	new	18 1 100 0 98	
+CUT/ 	note	18 1 100 0 98	
+CUX 	new		
+CUX 	note		
+CV 	new		
+CV 	note		
+CW 	new		
+CW 	note		
+CX   	new		
+CX   	note		
+D	new		
+D	note	1 1 30 4 10 0 1	1 1 30 4 10 0 1
+D1 	new		
+D1 	note	1 1 30 4 10 0 1	1 1 30 4 10 0 1
+D10 	new		
+D10 	note	1 1 30 -5 10 0 1	1 1 30 -5 10 0 1
+DBF 	new		
+DBF 	note	1 1 30 5 14 0 1	1 1 30 5 14 0 1
+DBRS+ 	new		
+DBRS+ 	note		
+DBRS0 	new		
+DBRS0 	note		
+DBRW+ 	new		
+DBRW+ 	note		
+DBRW0 	new		
+DBRW0 	note		
+DBS 	new		
+DBS 	note	1 1 30 5 15 0 1	1 1 30 5 15 0 1
+DC- 	new	4 1 100 -1 999 120 -1 0 0 0 1	
+DC- 	note	4 1 100 -1 999 120 -1 0 0 0 1	
+DCH 	new	4 1 100 -1 999 120 -1	
+DCH 	note	4 1 100 -1 999 120 -1	
+DD 	new		
+DD 	note	1 1 30 4.5 10 0 1	1 1 30 4.5 10 0 1
+DDT 	new		
+DDT 	note	1 1 30 5 10 0 1.75 0 20	1 1 30 5 10 0 1.75 0 20
+DE 	new		
+DE 	note		2 1 50 0 0 0 1
+DEB 	new		
+DEB 	note		2 1 50 0 0 0 1
+DEN 	new		
+DEN 	note		2 1 50 0 0 0 1
+DG 	new		
+DG 	note		
+DNB 	new	9 1 100 13 28 0.25	
+DNB 	note	1 1 30 5 10 0 1 0 0 0 11	1 1 30 5 10 0 1 0 0 0 11
+DOT 	new		
+DOT 	note	1 1 30 5 10 0 1.5 0 10	1 1 30 5 10 0 1.5 0 10
+DSHL+ 	new		
+DSHL+ 	note		
+DSHL- 	new		
+DSHL- 	note		
+DSHL0 	new		
+DSHL0 	note		
+DSHS+ 	new		
+DSHS+ 	note		
+DSHS- 	new		
+DSHS- 	note		
+DSHS0 	new		
+DSHS0 	note		
+DTS4 	new		
+DTS4 	note		
+DUD 	new		
+DUD 	note	1 1 30 5 10 0 1 0 100	1 1 30 5 10 0 1 0 100
+END 	new	5 1 100 15 15 120 5 1	
+END 	note	5 1 100 15 15 120 5 1	
+END1 	new	5 1 100 15 15 120 5 1	
+END1 	note	5 1 100 15 15 120 5 1	
+END2 	new	5 1 100 15 15 120 5 2	
+END2 	note	5 1 100 15 15 120 5 2	
+ENH+1 	new		
+ENH+1 	note	1 1 30 6 14 0 1	1 1 30 6 14 0 1
+ENH-1 	new		
+ENH-1 	note	1 1 30 4 15 0 1	1 1 30 4 15 0 1
+EU2 	new		
+EU2 	note		
+EU3 	new		
+EU3 	note		
+EU4 	new		
+EU4 	note		
+EU5 	new		
+EU5 	note		
+EU6 	new		
+EU6 	note		
+EU7 	new		
+EU7 	note		
+EU8 	new		
+EU8 	note		
+EU9 	new		
+EU9 	note		
+FCF 	new		
+FCF 	note	1 1 30 5 10 0 1 0 0 0 1	1 1 30 5 10 0 1 0 0 0 1
+FCN 	new		
+FCN 	note	1 1 30 5 10 0 1 0 0 0 3	1 1 30 5 10 0 1 0 0 0 3
+FCS 	new		
+FCS 	note	1 1 30 5 10 0 1 0 0 0 2	1 1 30 5 10 0 1 0 0 0 2
+FE 	new		
+FE 	note	1 1 30 5 10 0 1 0 0 0 14	1 1 30 5 10 0 1 0 0 0 14
+FILL 	new		
+FILL 	note		
+FL 	new		
+FL 	note	1 1 30 5 11 0 1	1 1 30 5 11 0 1
+FLD 	new		
+FLD 	note		
+FLI 	new		
+FLI 	note	1 1 30 5 20 0 1	1 1 30 5 20 0 1
+FLM 	new		
+FLM 	note		
+FLN 	new		
+FLN 	note		
+FLU 	new		
+FLU 	note		
+FNT00 	new		
+FNT00 	note		
+FNT01 	new		
+FNT01 	note		
+FNT02 	new		
+FNT02 	note		
+FNT03 	new		
+FNT03 	note		
+FNT04 	new		
+FNT04 	note		
+FNT05 	new		
+FNT05 	note		
+FNT06 	new		
+FNT06 	note		
+FNT07 	new		
+FNT07 	note		
+FNT08 	new		
+FNT08 	note		
+FNT09 	new		
+FNT09 	note		
+FNT10 	new		
+FNT10 	note		
+FNT11 	new		
+FNT11 	note		
+FNT12 	new		
+FNT12 	note		
+FNT13 	new		
+FNT13 	note		
+FNT14 	new		
+FNT14 	note		
+FNT15 	new		
+FNT15 	note		
+FNT16 	new		
+FNT16 	note		
+FNT17 	new		
+FNT17 	note		
+FNT18 	new		
+FNT18 	note		
+FNT19 	new		
+FNT19 	note		
+FNT20 	new		
+FNT20 	note		
+FNT21 	new		
+FNT21 	note		
+FNT22 	new		
+FNT22 	note		
+FNT23 	new		
+FNT23 	note		
+FNT24 	new		
+FNT24 	note		
+FNT25 	new		
+FNT25 	note		
+FNT26 	new		
+FNT26 	note		
+FNT27 	new		
+FNT27 	note		
+FNT28 	new		
+FNT28 	note		
+FNT29 	new		
+FNT29 	note		
+FNT30 	new		
+FNT30 	note		
+FNT31 	new		
+FNT31 	note		
+FNT32 	new		
+FNT32 	note		
+FNT33 	new		
+FNT33 	note		
+FNT34 	new		
+FNT34 	note		
+FNT35 	new		
+FNT35 	note		
+FNT36 	new		
+FNT36 	note		
+FNT94 	new		
+FNT94 	note		
+GUIT 	new	12 1 100 16 -4 0 10	
+GUIT 	note	12 1 100 16 -4 0 10	
+HAR 	new	9 1 100 13 30 0.25	
+HAR 	note	1 1 30 5 10 0 1 0 0 0 13	1 1 30 5 10 0 1 0 0 0 13
+HARP 	new	7 1 100 -1 0 0 1 111 1111	
+HARP 	note	7 1 100 -1 0 0 1 111 1111	
+HORZ 	new		
+HORZ 	note		
+HW 	new		
+HW 	note	1 1 30 5 10 0 1 0 0 0 19	1 1 30 5 10 0 1 0 0 0 19
+I  	new		
+I  	note		
+IMO 	new		
+IMO 	note	1 1 30 5 10 0 1 0 0 0 18	1 1 30 5 10 0 1 0 0 0 18
+INV 	new	9 1 100 13 35 0.25	
+INV 	note	9 1 100 13 35 0.25	
+J 	new		
+J 	note		
+JR 	new		
+JR 	note		
+KSAL 	new		
+KSAL 	note		
+KSBA 	new		
+KSBA 	note		
+KSCU 	new		
+KSCU 	note		
+KSFL 	new		
+KSFL 	note		
+KSIG 	new	17 1 100 0 2	
+KSIG 	note	17 1 100 0 2	
+KSJU 	new		
+KSJU 	note		
+KSNA 	new		
+KSNA 	note		
+KSNJ 	new		
+KSNJ 	note		
+KSNO 	new		
+KSNO 	note		
+KSSH 	new		
+KSSH 	note		
+KSSM 	new		
+KSSM 	note		
+KSSP 	new		
+KSSP 	note		
+KSSZ 	new		
+KSSZ 	note		
+KSTN 	new		
+KSTN 	note		
+KSTR 	new		
+KSTR 	note		
+KSZR 	new		
+KSZR 	note		
+L1 	new		
+L1 	note	1 1 29 5 10 0 1	1 1 29 5 10 0 1
+L10 	new		
+L10 	note	1 1 20 5 10 0 1	1 1 20 5 10 0 1
+LAR 	new		
+LAR 	note		
+LBR 	new		
+LBR 	note		
+LBR+ 	new		
+LBR+ 	note		
+LBR- 	new		
+LBR- 	note		
+LBRD 	new		
+LBRD 	note		
+LFT 	new		
+LFT 	note		
+LI 	new		
+LI 	note	1 1 29 5 10 0 1	1 1 29 5 10 0 1
+LIB  	new	9 1 100	
+LIB  	note	9 1 100	
+LIN 	new	4 1 100 0 0 120	
+LIN 	note	4 1 100 0 0 120	
+LINE 	new	4 1 100 0 0 120	
+LINE 	note	4 1 100 0 0 120	
+LJ	new		
+LJ	note		
+LJ 	new		
+LJ 	note		
+LJA 	new	1 1 12 5 10 0 1|2 1 41 0 0 0 1	2 1 41 0 0 0 1
+LJA 	note		
+LOFF0 	new		
+LOFF0 	note		
+LOFFM 	new		
+LOFFM 	note		
+LOFFP 	new		
+LOFFP 	note		
+LROFM 	new		
+LROFM 	note		
+LROFP 	new		
+LROFP 	note		
+M 	new		
+M 	note		
+MBLM 	new		
+MBLM 	note		
+MBLP 	new		
+MBLP 	note		
+MBRM 	new		
+MBRM 	note		
+MBRP 	new		
+MBRP 	note		
+METER 	new	18 1 100 0 4 4	
+METER 	note	18 1 100 0 4 4	
+METER24 	new	18 1 100 0 2 4	
+METER24 	note	18 1 100 0 2 4	
+METER34 	new	18 1 100 0 3 4	
+METER34 	note	18 1 100 0 3 4	
+METER68 	new	18 1 100 0 6 8	
+METER68 	note	18 1 100 0 6 8	
+MEZ 	new		
+MEZ 	note		
+MF 	new	9 1 100 -2 55	
+MF 	note	9 1 100 -2 55	
+MID	new		
+MID	note		
+MID 	new		
+MID 	note		
+MID0 	new		
+MID0 	note		
+MIDL 	new		
+MIDL 	note		
+MIDR 	new		
+MIDR 	note		
+MINI 	new		
+MINI 	note		
+MINUS1 	new		
+MINUS1 	note		
+MINUS10 	new		
+MINUS10 	note		
+MINUS100 	new		
+MINUS100 	note		
+MKD 	new		
+MKD 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 -0.5	1 1 30 5 10 0 1 0 0 0 0 0 0 -0.5
+MKH 	new		
+MKH 	note		
+MKL 	new		
+MKL 	note	1 1 30 5 10 0 1 0 0 0 0 0 -0.5	1 1 30 5 10 0 1 0 0 0 0 0 -0.5
+MKR 	new		
+MKR 	note	1 1 30 5 10 0 1 0 0 0 0 0 0.5	1 1 30 5 10 0 1 0 0 0 0 0 0.5
+MKU 	new		
+MKU 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0.5	1 1 30 5 10 0 1 0 0 0 0 0 0 0.5
+MKV 	new		
+MKV 	note		
+MO 	new		
+MO 	note	1 1 30 5 10 0 1 0 0 0 17	1 1 30 5 10 0 1 0 0 0 17
+MTRM 	new		
+MTRM 	note		
+MTRP 	new		
+MTRP 	note		
+MTRS 	new		
+MTRS 	note		
+MTRSP 	new		
+MTRSP 	note		
+MU 	new		
+MU 	note		
+NAC 	new		
+NAC 	note		
+NAT 	new		
+NAT 	note	1 1 30 5 13 0 1	1 1 30 5 13 0 1
+NEX	new		
+NEX	note		
+NMO 	new		
+NMO 	note		
+NOD 	new		
+NOD 	note		
+NOFST  	new		
+NOFST  	note		
+NOM  	new		
+NOM  	note		
+NON 	new		
+NON 	note		
+NOS 	new		
+NOS 	note		
+NOTE 	new	1 1 100 1 10 0 1	
+NOTE 	note	1 1 100 1 10 0 1	
+NOTE RHE 	new	1 1 100 1 10 0 0.5 0 1	
+NOTE RHE 	note	1 1 100 1 10 0 0.5 0 1	
+NOTE RHH 	new	1 1 100 1 10 1 2	
+NOTE RHH 	note	1 1 100 1 10 1 2	
+NOTE RHS 	new	1 1 100 1 10 0 0.25 0 2	
+NOTE RHS 	note	1 1 100 1 10 0 0.25 0 2	
+NOTE RHW 	new	1 1 100 1 10 2 4	
+NOTE RHW 	note	1 1 100 1 10 2 4	
+NST 	new		
+NST 	note	1 1 30 5 0 0 1	1 1 30 5 0 0 1
+NTA 	new		
+NTA 	note		
+NUMB 	new	10 1 100 13 1	
+NUMB 	note	10 1 100 13 1	
+NUMD 	new		
+NUMD 	note		
+NUMH0 	new		
+NUMH0 	note		
+NUML 	new		
+NUML 	note		
+NUMR 	new		
+NUMR 	note		
+NUMU 	new		
+NUMU 	note		
+NUMV0 	new		
+NUMV0 	note		
+NZ 	new		
+NZ 	note		
+OBA 	new	7 1 100 -2 0 120 -8 0 0 0 0 1	
+OBA 	note	7 1 100 -2 0 120 -8 0 0 0 0 1	
+OFM  	new		
+OFM  	note	1 1 30 5 10 0 1 0 0 -0.5	1 1 30 5 10 0 1 0 0 -0.5
+OFP  	new		
+OFP  	note	1 1 30 5 10 0 1 0 0 0.5	1 1 30 5 10 0 1 0 0 0.5
+OH 	new		
+OH 	note		
+OMA 	new	7 1 100 14 0 120 15 0 0 0 0 -1	
+OMA 	note	7 1 100 14 0 120 15 0 0 0 0 -1	
+OMAU 	new	7 1 100 14 0 120 15 0 0 0 0 -1	
+OMAU 	note	7 1 100 14 0 120 15 0 0 0 0 -1	
+OS 	new		2 1 50 0 0 0 1
+OS 	note		
+OT 	new		2 1 50 0 0 0 1
+OT 	note		
+OVA 	new	7 1 100 14 0 120 8 0 0 0 0 -1	
+OVA 	note	7 1 100 14 0 120 8 0 0 0 0 -1	
+OVAD 	new	7 1 100 14 0 120 8 0 0 0 0 -1	
+OVAD 	note	7 1 100 14 0 120 8 0 0 0 0 -1	
+OVAU 	new	7 1 100 14 0 120 8 0 0 0 0 -1	
+OVAU 	note	7 1 100 14 0 120 8 0 0 0 0 -1	
+P 	new	9 1 100 -2 53	
+P 	note	9 1 100 -2 53	
+PCHNG0 	new		
+PCHNG0 	note		
+PCHNG1 	new		
+PCHNG1 	note	1 0.9 30 5 10 0 1	1 0.9 30 5 10 0 1
+PCHNG10 	new		
+PCHNG10 	note	1 6 30 5 10 0 1	1 6 30 5 10 0 1
+PCHNG11 	new		
+PCHNG11 	note	1 11 30 5 10 0 1	1 11 30 5 10 0 1
+PCHNG12 	new		
+PCHNG12 	note	1 21 30 5 10 0 1	1 21 30 5 10 0 1
+PCHNG13 	new		
+PCHNG13 	note	1 1.05 30 5 10 0 1	1 1.05 30 5 10 0 1
+PCHNG14 	new		
+PCHNG14 	note	1 0.95 30 5 10 0 1	1 0.95 30 5 10 0 1
+PCHNG2 	new		
+PCHNG2 	note	1 0.5 30 5 10 0 1	1 0.5 30 5 10 0 1
+PCHNG3 	new		
+PCHNG3 	note		
+PCHNG4 	new		
+PCHNG4 	note		
+PCHNG5 	new		
+PCHNG5 	note		
+PCHNG6 	new		
+PCHNG6 	note		
+PCHNG7 	new		
+PCHNG7 	note	1 1.1 30 5 10 0 1	1 1.1 30 5 10 0 1
+PCHNG8 	new		
+PCHNG8 	note	1 1.5 30 5 10 0 1	1 1.5 30 5 10 0 1
+PCHNG9 	new		
+PCHNG9 	note	1 2 30 5 10 0 1	1 2 30 5 10 0 1
+PDM+ 	new		
+PDM+ 	note		
+PDM- 	new		
+PDM- 	note		
+PDSZ+ 	new		
+PDSZ+ 	note		
+PDSZ- 	new		
+PDSZ- 	note		
+PED 	new	9 1 100 -2 70	
+PED 	note	9 1 100 -2 70	
+PEDB 	new	7 1 100 -1 0 140 21	
+PEDB 	note	7 1 100 -1 0 140 21	
+PEDC 	new	7 1 100 -1 0 140 22	
+PEDC 	note	7 1 100 -1 0 140 22	
+PERC	new	3 1 2 0 4	
+PERC	note	3 1 2 0 4	
+PG  	new		
+PG  	note		
+PGR 	new	8 201 0 0 1|8 202 0 0 1|3 201 2|1 201 30 5 10 0 1|2 201 50 0 0 0 1|14 201 70 1	1 201 30 5 10 0 1
+PGR 	note		
+PLU 	new	9 1 100 13 38 0.25	
+PLU 	note	1 1 30 5 10 0 1 0 0 0 24	1 1 30 5 10 0 1 0 0 0 24
+PLUS1 	new		
+PLUS1 	note		
+PLUS10 	new		
+PLUS10 	note		
+PLUS100 	new		
+PLUS100 	note		
+PRN 	new		
+PRN 	note	1 1 30 5 10 10 1	1 1 30 5 10 10 1
+PS3 	new		
+PS3 	note		
+PST 	new		
+PST 	note		
+QP10 	new		
+QP10 	note		
+QP11 	new		
+QP11 	note		
+QP12 	new		
+QP12 	note		
+QP13 	new		
+QP13 	note		
+QP14 	new		
+QP14 	note		
+QP15 	new		
+QP15 	note		
+QP16 	new		
+QP16 	note		
+QP17 	new		
+QP17 	note		
+QP18 	new		
+QP18 	note		
+QP19 	new		
+QP19 	note		
+QP2 	new		
+QP2 	note		
+QP20 	new		
+QP20 	note		
+QP21 	new		
+QP21 	note		
+QP3 	new		
+QP3 	note		
+QP4 	new		
+QP4 	note		
+QP5 	new		
+QP5 	note		
+QP6 	new		
+QP6 	note		
+QP7 	new		
+QP7 	note		
+QP8 	new		
+QP8 	note		
+QP9 	new		
+QP9 	note		
+R1 	new		
+R1 	note	1 1 31 5 10 0 1	1 1 31 5 10 0 1
+R10 	new		
+R10 	note	1 1 40 5 10 0 1	1 1 40 5 10 0 1
+RAR 	new		
+RAR 	note		
+RBR 	new		
+RBR 	note		
+RBR+ 	new		
+RBR+ 	note		
+RBR- 	new		
+RBR- 	note		
+RBRD 	new		
+RBRD 	note		
+REST 	new	2 1 100 0 0 0 1	
+REST 	note	2 1 100 0 0 0 1	
+REST RHE 	new	2 1 100 0 1 0 0.5	
+REST RHE 	note	2 1 100 0 1 0 0.5	
+REST RHH 	new	2 1 100 0 -1 0 2	
+REST RHH 	note	2 1 100 0 -1 0 2	
+REST RHS 	new	2 1 100 0 2 0 0.25	
+REST RHS 	note	2 1 100 0 2 0 0.25	
+REST RHW 	new	2 1 100 0 -2 0 4	
+REST RHW 	note	2 1 100 0 -2 0 4	
+RF 	new		
+RF 	note		
+RGT 	new		
+RGT 	note		
+RH32 	new		
+RH32 	note	1 1 30 5 10 0 0.125 0 3	1 1 30 5 10 0 0.125 0 3
+RH64 	new		
+RH64 	note	1 1 30 5 10 0 0.0625 0 4	1 1 30 5 10 0 0.0625 0 4
+RHD 	new		
+RHD 	note	1 1 30 5 10 3 8	1 1 30 5 10 3 8
+RHE 	new		
+RHE 	note	1 1 30 5 10 0 0.5 0 1	1 1 30 5 10 0 0.5 0 1
+RHG 	new		
+RHG 	note	1 1 30 105 10 0 65 101 1	1 1 30 105 10 0 65 101 1
+RHH 	new		
+RHH 	note	1 1 30 5 10 1 2	1 1 30 5 10 1 2
+RHQ 	new		
+RHQ 	note		
+RHS 	new		
+RHS 	note	1 1 30 5 10 0 0.25 0 2	1 1 30 5 10 0 0.25 0 2
+RHU 	new		
+RHU 	note	1 1 30 5 10 0 0.8	1 1 30 5 10 0 0.8
+RHW 	new		
+RHW 	note	1 1 30 5 10 2 4	1 1 30 5 10 2 4
+RINV 	new		
+RINV 	note		
+ROFF0 	new		
+ROFF0 	note		
+ROFFM 	new		
+ROFFM 	note		
+ROFFP 	new		
+ROFFP 	note		
+ROT+ 	new		
+ROT+ 	note		
+ROT- 	new		
+ROT- 	note		
+ROT0 	new		
+ROT0 	note		
+RP 	new		
+RP 	note		
+RPR	new		
+RPR	note		
+SAW 	new		
+SAW 	note		
+SAWX 	new		
+SAWX 	note		
+SHP 	new		
+SHP 	note	1 1 30 5 12 0 1	1 1 30 5 12 0 1
+SI 	new		
+SI 	note		
+SKW0 	new		
+SKW0 	note		
+SKWL 	new		
+SKWL 	note		
+SKWR 	new		
+SKWR 	note		
+SLDSH 	new		
+SLDSH 	note		
+SLDTS 	new		
+SLDTS 	note		
+SLHL 	new		
+SLHL 	note		
+SLHR 	new		
+SLHR 	note		
+SLTRIP 	new		
+SLTRIP 	note		
+SLUR 	new	5 1 100 14 14 120 3 -1	
+SLUR 	note	5 1 100 14 14 120 3 -1	
+SLUR3 	new	5 1 100 14 14 120 2 3	
+SLUR3 	note	5 1 100 14 14 120 2 3	
+SOP 	new		
+SOP 	note		
+SPA- 	new		
+SPA- 	note		
+SPD 	new		
+SPD 	note	1 1 30 5 10 0 1 0 0.05	1 1 30 5 10 0 1 0 0.05
+SPD+1 	new		
+SPD+1 	note		
+SPD- 	new		
+SPD- 	note		
+SPD0 	new		
+SPD0 	note		
+SPL1 	new		
+SPL1 	note		
+SPL2 	new		
+SPL2 	note		
+SPL222 	new		
+SPL222 	note		
+SPL3 	new		
+SPL3 	note		
+SPL4 	new		
+SPL4 	note		
+STA 	new	8 3	
+STA 	note	1 1 30 5 10 0 1 0 0 0 7	1 1 30 5 10 0 1 0 0 0 7
+STAFF 	new	8 3	
+STAFF 	note	8 3	
+STM 	new		
+STM 	note	1 1 30 5 10 0 1 -0.5	1 1 30 5 10 0 1 -0.5
+STN 	new		
+STN 	note		
+STP 	new		
+STP 	note	1 1 30 5 10 0 1 0.5	1 1 30 5 10 0 1 0.5
+SUD  	new		
+SUD  	note	1 1 30 5 10 0 1 0 0 0 0 1	1 1 30 5 10 0 1 0 0 0 0 1
+SUPDN 	new		
+SUPDN 	note		
+SZ+ 	new		
+SZ+ 	note		
+SZ- 	new		
+SZ- 	note		
+SZ.4 	new		
+SZ.4 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.4	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.4
+SZ.5 	new		
+SZ.5 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.5	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.5
+SZ.6 	new		
+SZ.6 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.6	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.6
+SZ.7 	new		
+SZ.7 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.7	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.7
+SZ.8 	new		
+SZ.8 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.8	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.8
+SZ.9 	new		
+SZ.9 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.9	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0.9
+SZ1 	new		
+SZ1 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 1	1 1 30 5 10 0 1 0 0 0 0 0 0 0 1
+TAB 	new		
+TAB 	note		
+TB4 	new		
+TB4 	note		
+TB5 	new		
+TB5 	note		
+TENOR	new	3 1 2 0 3	
+TENOR	note	3 1 2 0 3	
+THE 	new		
+THE 	note	1 1 30 5 10 0 1 0 0 0 16	1 1 30 5 10 0 1 0 0 0 16
+THK 	new		
+THK 	note		
+THK0 	new		
+THK0 	note		
+THM  	new		
+THM  	note		
+TIE 	new	5 1 100 14 14 120 3 -2	
+TIE 	note	5 1 100 14 14 120 3 -2	
+TM+ 	new		
+TM+ 	note	1 1 30 5 10 0 1 0 0 0 41	1 1 30 5 10 0 1 0 0 0 41
+TM1 	new		
+TM1 	note	1 1 30 5 10 0 1 0 0 0 41	1 1 30 5 10 0 1 0 0 0 41
+TN 	new		
+TN 	note	1 1 30 5 10 0 1 0 0 0 6	1 1 30 5 10 0 1 0 0 0 6
+TNS 	new		
+TNS 	note	1 1 30 5 10 0 1 0 0 0 10	1 1 30 5 10 0 1 0 0 0 10
+TR 	new		
+TR 	note	1 1 30 5 10 0 1 0 0 0 20	1 1 30 5 10 0 1 0 0 0 20
+TREB	new	3 1 2	
+TREB	note	3 1 2	
+TRF 	new		
+TRF 	note	1 1 30 5 10 0 1 0 0 0 21	1 1 30 5 10 0 1 0 0 0 21
+TRFW 	new		
+TRFW 	note	1 1 30 5 10 0 1 0 0 0 21	1 1 30 5 10 0 1 0 0 0 21
+TRI 	new	7 1 100 15 0 120	
+TRI 	note	7 1 100 15 0 120	
+TRILL 	new	7 1 100 15 0 120	
+TRILL 	note	7 1 100 15 0 120	
+TRM0 	new		
+TRM0 	note	1 1 30 5 10 0 1 0 0 0 41	1 1 30 5 10 0 1 0 0 0 41
+TRM1 	new		
+TRM1 	note	1 1 30 5 10 0 1 0 0 0 41	1 1 30 5 10 0 1 0 0 0 41
+TRM10 	new		
+TRM10 	note	1 1 30 5 10 0 1 0 0 0 50	1 1 30 5 10 0 1 0 0 0 50
+TRM11 	new		
+TRM11 	note	1 1 30 5 10 0 1 0 0 0 51	1 1 30 5 10 0 1 0 0 0 51
+TRM12 	new		
+TRM12 	note	1 1 30 5 10 0 1 0 0 0 52	1 1 30 5 10 0 1 0 0 0 52
+TRM2 	new		
+TRM2 	note	1 1 30 5 10 0 1 0 0 0 42	1 1 30 5 10 0 1 0 0 0 42
+TRM3 	new		
+TRM3 	note	1 1 30 5 10 0 1 0 0 0 43	1 1 30 5 10 0 1 0 0 0 43
+TRM4 	new		
+TRM4 	note	1 1 30 5 10 0 1 0 0 0 44	1 1 30 5 10 0 1 0 0 0 44
+TRM5 	new		
+TRM5 	note	1 1 30 5 10 0 1 0 0 0 45	1 1 30 5 10 0 1 0 0 0 45
+TRM6 	new		
+TRM6 	note	1 1 30 5 10 0 1 0 0 0 46	1 1 30 5 10 0 1 0 0 0 46
+TRM7 	new		
+TRM7 	note	1 1 30 5 10 0 1 0 0 0 47	1 1 30 5 10 0 1 0 0 0 47
+TRM8 	new		
+TRM8 	note	1 1 30 5 10 0 1 0 0 0 48	1 1 30 5 10 0 1 0 0 0 48
+TRM9 	new		
+TRM9 	note	1 1 30 5 10 0 1 0 0 0 49	1 1 30 5 10 0 1 0 0 0 49
+TRN 	new		
+TRN 	note	1 1 30 5 10 0 1 0 0 0 23	1 1 30 5 10 0 1 0 0 0 23
+TRNW 	new		
+TRNW 	note	1 1 30 5 10 0 1 0 0 0 23	1 1 30 5 10 0 1 0 0 0 23
+TRP 	new		
+TRP 	note	1 1 30 5 10 0 0.6666667	1 1 30 5 10 0 0.6666667
+TRS 	new		
+TRS 	note	1 1 30 5 10 0 1 0 0 0 22	1 1 30 5 10 0 1 0 0 0 22
+TRSW 	new		
+TRSW 	note	1 1 30 5 10 0 1 0 0 0 22	1 1 30 5 10 0 1 0 0 0 22
+TRZ 	new		
+TRZ 	note		
+U1 	new		
+U1 	note	1 1 30 6 10 0 1	1 1 30 6 10 0 1
+U10 	new		
+U10 	note	1 1 30 15 10 0 1	1 1 30 15 10 0 1
+UND	new		
+UND	note		
+UND 	new		
+UND 	note		
+UPB 	new	9 1 100 13 29 0.25	
+UPB 	note	1 1 30 5 10 0 1 0 0 0 12	1 1 30 5 10 0 1 0 0 0 12
+UU 	new		
+UU 	note	1 1 30 5.5 10 0 1	1 1 30 5.5 10 0 1
+VERT 	new		
+VERT 	note		
+VIB 	new		
+VIB 	note		
+W  	new		
+W  	note	1 1 30 5 10 0 1 0 0 0 4	1 1 30 5 10 0 1 0 0 0 4
+WB1 	new		
+WB1 	note		
+WB2 	new		
+WB2 	note		
+WB3 	new		
+WB3 	note		
+WB4 	new		
+WB4 	note		
+WB5 	new		
+WB5 	note		
+WB6 	new		
+WB6 	note		
+WB7 	new		
+WB7 	note		
+WB8 	new		
+WB8 	note		
+WB9 	new		
+WB9 	note		
+WID+ 	new		
+WID+ 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1.05	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1.05
+WID- 	new		
+WID- 	note	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0.95	1 1 30 5 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0.95
+WID0 	new		
+WID0 	note		
+WIG 	new		
+WIG 	note		
+WST 	new		
+WST 	note	1 1 30 5 10 0 1 0 0 0 8	1 1 30 5 10 0 1 0 0 0 8
+X  	new		
+X  	note		
+XOFF 	new		
+XOFF 	note		
+~~037x	new		
+~~037x	note	1 1 29 5 10 0 1	1 1 29 5 10 0 1
+~~038x	new		
+~~038x	note	1 1 30 6 10 0 1	1 1 30 6 10 0 1
+~~039x	new		
+~~039x	note	1 1 31 5 10 0 1	1 1 31 5 10 0 1
+~~040x	new		
+~~040x	note	1 1 30 4 10 0 1	1 1 30 4 10 0 1
