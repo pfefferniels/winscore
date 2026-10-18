@@ -8,6 +8,11 @@
 //! end offsets P17/P18, P19 where the thickness is reached, P20 note width,
 //! P27–P29 a slash. The slur is built level from its left end and then
 //! turned through the angle of P4–P5. A slur reads no other item.
+//!
+//! The engine samples the curve at two points per 200 units, which leaves
+//! short slurs and ties with visible corners and a flat top, and thickens it
+//! upright, which leaves steep ends thin. The refined style follows the same
+//! curve between the samples and thickens it along its normal ([`Smooth`]).
 
 use crate::canvas::{BufferPoint, Canvas, Pen};
 use crate::codes::number::{draw_number, number_font_loaded, NumberCall};
@@ -18,6 +23,8 @@ use crate::page::P3_UNIT;
 use crate::symbols::{draw_clef, ItemContext};
 use crate::text::Font;
 use crate::units::{constant, nint, real, trunc, Pos};
+
+use std::f64::consts::FRAC_PI_2;
 
 /// The engine's point buffer holds this many points; longer slurs are not drawn.
 const BUFFER_POINTS: usize = 50_000;
@@ -315,7 +322,9 @@ fn ending(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut C
     };
     let step = bracket.step;
     let number_y = real(bracket.top - step * constant(28.0));
-    let number_x = real(step * if doc.screen() { constant(14.5) } else { constant(13.5) });
+    // The screen and print place the number differently; the refined style as print.
+    let print_place = !doc.screen() || doc.refined();
+    let number_x = real(step * if print_place { constant(13.5) } else { constant(14.5) });
     // P13 from 0.01 to 0.99 moves the stop right; P13 >= 1 only opens the bracket.
     let p13 = if ip13 > 0 { 0.0 } else { p(13) };
     let (shift, lift) = match p(12) {
@@ -427,21 +436,64 @@ fn slur(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Can
     if slur.has_number_gap(item, params) {
         number_gap(&mut buffer, item, slur.step, slur.dx);
     }
-    if item.p(27) != 0.0 {
-        let first_y = buffer.slots.first().map_or(0, |p| p.at.y);
-        buffer.append_keeping_pens(&slur.slash(item, first_y));
-    }
+    let slash = (item.p(27) != 0.0).then(|| slur.slash(item, buffer.slots.first().map_or(0, |p| p.at.y)));
+    let smooth = doc.refined().then(|| Smooth::of(&slur, item)).flatten();
+    let mut points: Vec<BufferPoint> = match smooth {
+        // The refined style draws the slash whole, as its own object.
+        Some(smooth) if buffer.len() < BUFFER_POINTS => {
+            smooth.follow(buffer.points()).into_iter().chain(slash.iter().flatten().map(Slot::point)).collect()
+        }
+        Some(_) => Vec::new(),
+        None => {
+            if let Some(slash) = slash {
+                buffer.append_keeping_pens(&slash);
+            }
+            if buffer.len() < BUFFER_POINTS {
+                buffer.points().iter().map(Slot::point).collect()
+            } else {
+                Vec::new()
+            }
+        }
+    };
     if slur.dy != 0.0 {
         let angle = real(slur.dy.atan2(slur.length0));
-        rotate_points_radians(buffer.points_mut(), Pos::new(slur.xl, slur.y0).to_point(), angle as f32);
+        rotate_points_radians(&mut points, Pos::new(slur.xl, slur.y0).to_point(), angle as f32);
     }
-    if buffer.len() < BUFFER_POINTS {
-        canvas.buffer_mut().extend_from_slice(buffer.points());
-    }
+    canvas.buffer_mut().extend(points);
     if params.number() != 0 {
         if let Some(number) = slur_number(item, params, slur.dy != 0.0) {
             slur.draw_number(doc, item, params, canvas, &number);
         }
+    }
+}
+
+/// A point of the slur in draw_slur's buffer and, for the refined style,
+/// the sample of the curve it stands for.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Slot {
+    at: Point,
+    pen: Pen,
+    sample: Option<Sample>,
+}
+
+/// The `index`th point of the curve (from the left end), or the point of
+/// the outline's way back (`back`) over it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Sample {
+    index: usize,
+    back: bool,
+}
+
+/// What the buffer holds where nothing was written.
+const EMPTY: Slot = Slot { at: Point { x: 0, y: 0 }, pen: Pen::Continue, sample: None };
+
+impl Slot {
+    fn new(at: Point, pen: Pen) -> Self {
+        Self { at, pen, sample: None }
+    }
+
+    fn point(&self) -> BufferPoint {
+        BufferPoint { at: self.at, pen: self.pen }
     }
 }
 
@@ -450,7 +502,7 @@ fn slur(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas: &mut Can
 /// steps wrote: steps that only set coordinates there inherit those pens.
 #[derive(Debug, Clone, PartialEq)]
 struct Buffer {
-    slots: Vec<BufferPoint>,
+    slots: Vec<Slot>,
     /// The engine's NPT, the next free point: points 1 to npt - 1 are drawn.
     npt: isize,
     /// The NPT a cut that finds no place to cut leaves (the counter
@@ -460,7 +512,7 @@ struct Buffer {
 }
 
 impl Buffer {
-    fn new(points: Vec<BufferPoint>) -> Self {
+    fn new(points: Vec<Slot>) -> Self {
         let npt = points.len() as isize + 1;
         Self { slots: points, npt, fallback: None }
     }
@@ -473,35 +525,30 @@ impl Buffer {
         (self.npt - 1).max(0) as usize
     }
 
-    fn points(&self) -> &[BufferPoint] {
+    fn points(&self) -> &[Slot] {
         &self.slots[..self.len()]
     }
 
-    fn points_mut(&mut self) -> &mut [BufferPoint] {
-        let len = self.len();
-        &mut self.slots[..len]
-    }
-
-    /// Writes `at` into slot `k`, keeping the pen already there.
-    fn set_at(&mut self, k: usize, at: Point) {
+    /// Writes the point of `slot` into slot `k`, keeping the pen already there.
+    fn set_at(&mut self, k: usize, slot: Slot) {
         if k >= self.slots.len() {
-            self.slots.resize(k + 1, BufferPoint { at: Point::default(), pen: Pen::Continue });
+            self.slots.resize(k + 1, EMPTY);
         }
-        self.slots[k].at = at;
+        self.slots[k] = Slot { pen: self.slots[k].pen, ..slot };
     }
 
-    fn set(&mut self, k: usize, point: BufferPoint) {
-        self.set_at(k, point.at);
-        self.slots[k].pen = point.pen;
+    fn set(&mut self, k: usize, slot: Slot) {
+        self.set_at(k, slot);
+        self.slots[k].pen = slot.pen;
     }
 
     /// Points from point NPT on, of which only the first sets its pen.
     /// Points that land before point 1 (NPT < 1) are lost.
-    fn append_keeping_pens(&mut self, points: &[BufferPoint]) {
+    fn append_keeping_pens(&mut self, points: &[Slot]) {
         let first = self.npt - 1;
         points.iter().enumerate().for_each(|(m, &p)| match usize::try_from(first + m as isize) {
             Ok(k) if m == 0 => self.set(k, p),
-            Ok(k) => self.set_at(k, p.at),
+            Ok(k) => self.set_at(k, p),
             Err(_) => {}
         });
         self.npt += points.len() as isize;
@@ -604,8 +651,9 @@ struct Slur {
     /// Point spacing along the slur.
     dx: f64,
     points: usize,
-    /// The screen repeats triangle strokes; print (OUTPUT_MODE = -1) does not.
-    screen: bool,
+    /// The screen repeats triangle strokes; print (OUTPUT_MODE = -1) and
+    /// the refined style do not.
+    copies: bool,
 }
 
 impl Slur {
@@ -667,12 +715,13 @@ impl Slur {
         }
         let points = point_count(item, length, shape);
         let dx = real(length / f64::from(points as i32 - 1));
-        Self { step, centre, xl, y0, dy, length0, length, height, start, end, shape, dx, points, screen: doc.screen() }
+        let copies = doc.screen() && !doc.refined();
+        Self { step, centre, xl, y0, dy, length0, length, height, start, end, shape, dx, points, copies }
     }
 
     /// The closed outline: along the curve from the left end and back with
     /// the thickness added; dots, dashes or a triangle instead when asked.
-    fn outline(&self, item: ItemRef<'_>) -> Vec<BufferPoint> {
+    fn outline(&self, item: ItemRef<'_>) -> Vec<Slot> {
         if trunc(f64::from(item.p(9))) == TRIANGLE {
             return self.triangle(item);
         }
@@ -707,7 +756,7 @@ impl Slur {
             })
             .collect();
 
-        let exponent = real(f64::from(item.p(9)) + constant(2.5)).max(constant(0.1));
+        let exponent = exponent(item);
         let half = n / 2 - 1;
         let top = f64::from(trunc(self.height + self.y0)) as f32;
         let y_at = |i: usize| {
@@ -726,17 +775,11 @@ impl Slur {
     /// The curve and its way back, thickened from both ends up to P13 × 3.5
     /// steps (scaled down for short slurs), reached after a fraction P19 of
     /// each half.
-    fn with_thickness(&self, item: ItemRef<'_>, curve: &[Point]) -> Vec<BufferPoint> {
+    fn with_thickness(&self, item: ItemRef<'_>, curve: &[Point]) -> Vec<Slot> {
         let n = curve.len();
         let half = n / 2 - 1;
-        let thickness = real(self.thickness_factor(item) * real(self.step * constant(3.5)));
-        let full = trunc(thickness + constant(0.5));
-        let reach = match item.p(19) {
-            0.0 => constant(0.85),
-            p19 => f64::from(p19),
-        };
+        let Profile { thickness, full, reach, sign } = Profile::of(self, item);
         let increment = real(thickness / (reach * f64::from(half as f32)));
-        let sign = if ip7(item) < 0 { -1 } else { 1 };
 
         // The way back is written into the buffer in the engine's order:
         // forwards from the right end and, mirrored, backwards from the end.
@@ -757,9 +800,14 @@ impl Slur {
             }
         });
         back[n - 2].y = curve[0].y;
-        let start = BufferPoint { at: curve[0], pen: Pen::Fill };
-        let rest = curve[1..].iter().chain(back.iter()).map(|&at| BufferPoint { at, pen: Pen::Continue });
-        std::iter::once(start).chain(rest).collect()
+        let along = curve.iter().enumerate().map(|(index, &at)| (at, Sample { index, back: false }));
+        // The way back's point m lies over the curve's point n - 2 - m.
+        let back = back.iter().enumerate().map(|(m, &at)| (at, Sample { index: n - 2 - m, back: true }));
+        along
+            .chain(back)
+            .enumerate()
+            .map(|(k, (at, sample))| Slot { at, pen: if k == 0 { Pen::Fill } else { Pen::Continue }, sample: Some(sample) })
+            .collect()
     }
 
     /// P13 (default 0.75, at most 0.6 of it on slurs shorter than 600 units,
@@ -780,7 +828,7 @@ impl Slur {
     }
 
     /// P12 = -1: the curve's second half is mirrored about the peak level.
-    fn reverse_second_half(&self, points: &mut [BufferPoint]) {
+    fn reverse_second_half(&self, points: &mut [Slot]) {
         let n = self.points;
         let top = trunc(self.height + self.y0);
         let last = n - 1;
@@ -796,16 +844,16 @@ impl Slur {
     }
 
     /// P11 < 0: an octagonal dot on every curve point.
-    fn dots(&self, item: ItemRef<'_>, curve: &[BufferPoint]) -> Vec<BufferPoint> {
+    fn dots(&self, item: ItemRef<'_>, curve: &[Slot]) -> Vec<Slot> {
         let radius = real(self.thickness_factor(item) * self.step);
         let offsets: Vec<i32> = DOT.iter().map(|&d| nint(radius * constant(d))).collect();
         curve
             .iter()
             .flat_map(|centre| {
                 let (offsets, centre) = (&offsets, centre.at);
-                (0..9).map(move |m| BufferPoint {
-                    at: Point::new(centre.x + offsets[m], centre.y + offsets[m + 2]),
-                    pen: if m == 0 { Pen::Fill } else { Pen::Continue },
+                (0..9).map(move |m| {
+                    let at = Point::new(centre.x + offsets[m], centre.y + offsets[m + 2]);
+                    Slot::new(at, if m == 0 { Pen::Fill } else { Pen::Continue })
                 })
             })
             .collect()
@@ -813,19 +861,19 @@ impl Slur {
 
     /// P9 = 99: two strokes from the ends up to the peak at P10, repeated
     /// trunc(P13) times seven units higher on the screen.
-    fn triangle(&self, item: ItemRef<'_>) -> Vec<BufferPoint> {
+    fn triangle(&self, item: ItemRef<'_>) -> Vec<Slot> {
         let y = trunc(self.y0);
         let left = trunc(self.xl);
         let peak = trunc(self.centre * self.length + self.xl);
         let right = trunc(self.length + self.xl);
-        let copies = if self.screen { trunc(f64::from(item.p(13))).max(0) + 1 } else { 1 };
+        let copies = if self.copies { trunc(f64::from(item.p(13))).max(0) + 1 } else { 1 };
         (0..copies)
             .flat_map(|copy| {
                 let y = y + 7 * copy;
                 [
-                    BufferPoint { at: Point::new(left, y), pen: Pen::Stroke },
-                    BufferPoint { at: Point::new(peak, trunc(f64::from(y) + self.height)), pen: Pen::Continue },
-                    BufferPoint { at: Point::new(right, y), pen: Pen::Continue },
+                    Slot::new(Point::new(left, y), Pen::Stroke),
+                    Slot::new(Point::new(peak, trunc(f64::from(y) + self.height)), Pen::Continue),
+                    Slot::new(Point::new(right, y), Pen::Continue),
                 ]
             })
             .collect()
@@ -917,7 +965,7 @@ impl Slur {
 
     /// P27: a vertical bar P27 scale steps high across the slur at P29 (0.5)
     /// of its length, raised by P28 scale steps.
-    fn slash(&self, item: ItemRef<'_>, first_y: i32) -> [BufferPoint; 5] {
+    fn slash(&self, item: ItemRef<'_>, first_y: i32) -> [Slot; 5] {
         let p = |n| f64::from(item.p(n));
         let along = match p(29) {
             0.0 => constant(0.5),
@@ -932,7 +980,7 @@ impl Slur {
         }
         let (low, high) = (trunc(bottom), trunc(height + bottom));
         const HALF_WIDTH: i32 = 24;
-        let corner = |x, y, pen| BufferPoint { at: Point::new(x, y), pen };
+        let corner = |x, y, pen| Slot::new(Point::new(x, y), pen);
         [
             corner(x - HALF_WIDTH, low, Pen::Fill),
             corner(x - HALF_WIDTH, high, Pen::Continue),
@@ -940,6 +988,259 @@ impl Slur {
             corner(x + HALF_WIDTH, low, Pen::Continue),
             corner(x - HALF_WIDTH, low, Pen::Continue),
         ]
+    }
+}
+
+/// The curve's exponent: P9 + 2.5, at least 0.1.
+fn exponent(item: ItemRef<'_>) -> f64 {
+    real(f64::from(item.p(9)) + constant(2.5)).max(constant(0.1))
+}
+
+/// The thickness with_thickness adds: up to P13 × 3.5 steps (`thickness`),
+/// growing until it rounds to `full`, reached after a fraction `reach` (P19)
+/// of each half from its end, upward or (`sign` -1, for P7 < 0) downward.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Profile {
+    thickness: f64,
+    full: i32,
+    reach: f64,
+    sign: i32,
+}
+
+impl Profile {
+    fn of(slur: &Slur, item: ItemRef<'_>) -> Self {
+        let thickness = real(slur.thickness_factor(item) * real(slur.step * constant(3.5)));
+        let reach = match item.p(19) {
+            0.0 => constant(0.85),
+            p19 => f64::from(p19),
+        };
+        let sign = if ip7(item) < 0 { -1 } else { 1 };
+        Self { thickness, full: trunc(thickness + constant(0.5)), reach, sign }
+    }
+
+    /// The offset of the way back at `u`, the fraction of a half from its
+    /// end, as with_thickness's steps give it when they become small; a
+    /// thickness that rounds to nothing leaves its first offset, 2 up.
+    fn offset(&self, u: f64) -> f64 {
+        match self.full {
+            _ if u <= 0.0 => 0.0,
+            full if full <= 0 => 2.0,
+            full => f64::from(self.sign) * (u * self.thickness / self.reach).min(f64::from(full)),
+        }
+    }
+}
+
+/// Units a sample of the refined curve keeps from the engine's samples.
+const MIN_SEGMENT: f64 = 3.0;
+
+/// Turn of the refined curve per segment, at most.
+const MAX_TURN_DEGREES: f64 = 3.0;
+
+/// The curve draw_slur samples, followed between its samples: the refined
+/// style's slur. It is [`Slur::curve`]'s power curve with the same ends,
+/// peak and exponent, but without the flat top an even number of samples
+/// leaves at the peak, and its way back is offset along the normal with
+/// [`Profile::offset`]. Coordinates are level, as before the turn.
+#[derive(Debug, Clone, PartialEq)]
+struct Smooth {
+    /// The x of the engine's samples, which place them on this curve.
+    xs: Vec<f64>,
+    left: f64,
+    peak: f64,
+    right: f64,
+    top: f64,
+    /// Rise from the ends to the peak (negative for a curve downward).
+    height: f64,
+    exponent: f64,
+    /// P12 = -1: the right half mirrored about the peak's level.
+    reversed: bool,
+    profile: Profile,
+    /// Where the curve is sampled, left to right.
+    dense: Vec<f64>,
+}
+
+impl Smooth {
+    /// The curve of a slur (not a triangle) whose samples run left to right.
+    fn of(slur: &Slur, item: ItemRef<'_>) -> Option<Self> {
+        if trunc(f64::from(item.p(9))) == TRIANGLE {
+            return None;
+        }
+        let curve = slur.curve(item);
+        let n = curve.len();
+        if n < 4 {
+            return None;
+        }
+        let half = n / 2 - 1;
+        let xs: Vec<f64> = curve.iter().map(|p| f64::from(p.x)).collect();
+        // The peak lies in the middle of the flat top.
+        let (left, peak, right) = (xs[0], (xs[half] + xs[half + 1]) / 2.0, xs[n - 1]);
+        if !(left < peak && peak < right) {
+            return None;
+        }
+        let top = f64::from(curve[half].y);
+        let mut smooth = Self {
+            xs,
+            left,
+            peak,
+            right,
+            top,
+            height: top - f64::from(curve[0].y),
+            exponent: exponent(item),
+            reversed: slur.shape < 0,
+            profile: Profile::of(slur, item),
+            dense: Vec::new(),
+        };
+        smooth.dense = smooth.samples();
+        Some(smooth)
+    }
+
+    /// The x where to sample: on each half at most [`MAX_TURN_DEGREES`]
+    /// apart in direction, the peak, and where the thickness stops growing.
+    fn samples(&self) -> Vec<f64> {
+        let halves = [(self.peak - self.left, -1.0), (self.right - self.peak, 1.0)];
+        let mut xs: Vec<f64> = halves
+            .into_iter()
+            .flat_map(|(width, direction)| self.half_samples(width).into_iter().map(move |s| (width, direction, s)))
+            .map(|(width, direction, s)| self.peak + direction * s * width)
+            .collect();
+        xs.sort_by(f64::total_cmp);
+        xs.dedup();
+        xs
+    }
+
+    /// The parameters s (0 at the peak, 1 at the end) to sample a half
+    /// `width` long at: the slope is tan θ = k·s^(e-1), taken in equal steps
+    /// of θ.
+    fn half_samples(&self, width: f64) -> Vec<f64> {
+        let e = self.exponent;
+        let k = self.height.abs() * e / width;
+        let mut s = vec![0.0, 1.0];
+        if k > 0.0 && (e - 1.0).abs() > f64::EPSILON {
+            let at_end = k.atan();
+            let at_peak = if e > 1.0 { 0.0 } else { FRAC_PI_2 };
+            let steps = ((at_peak - at_end).abs() / MAX_TURN_DEGREES.to_radians()).ceil() as usize;
+            s.extend((1..steps).map(|i| {
+                let theta = at_end + (at_peak - at_end) * i as f64 / steps as f64;
+                (theta.tan() / k).powf(1.0 / (e - 1.0))
+            }));
+        }
+        let profile = &self.profile;
+        s.push(1.0 - f64::from(profile.full) * profile.reach / profile.thickness);
+        s.retain(|v| (0.0..=1.0).contains(v));
+        s
+    }
+
+    /// The half `x` lies on (true for the right one) and its parameter s.
+    fn parameter(&self, x: f64) -> (bool, f64) {
+        if x <= self.peak {
+            (false, ((self.peak - x) / (self.peak - self.left)).clamp(0.0, 1.0))
+        } else {
+            (true, ((x - self.peak) / (self.right - self.peak)).clamp(0.0, 1.0))
+        }
+    }
+
+    fn point(&self, x: f64) -> Pos {
+        let (right, s) = self.parameter(x);
+        let drop = self.height * s.powf(self.exponent);
+        Pos::new(x, if right && self.reversed { self.top + drop } else { self.top - drop })
+    }
+
+    /// The unit normal at `x` to the left of the way from left to right; at
+    /// the peak between those of the two halves.
+    fn normal(&self, x: f64) -> (f64, f64) {
+        let (right, s) = self.parameter(x);
+        let on = |right: bool| {
+            let width = if right { self.right - self.peak } else { self.peak - self.left };
+            let rate = match self.height {
+                0.0 => 0.0,
+                h => h * self.exponent * s.powf(self.exponent - 1.0) / width,
+            };
+            let slope = if right && !self.reversed { -rate } else { rate };
+            if slope.is_finite() {
+                let length = slope.hypot(1.0);
+                (-slope / length, 1.0 / length)
+            } else {
+                (-slope.signum(), 0.0)
+            }
+        };
+        if s > 0.0 {
+            return on(right);
+        }
+        let ((ax, ay), (bx, by)) = (on(false), on(true));
+        match (ax + bx).hypot(ay + by) {
+            length if length > 1e-9 => ((ax + bx) / length, (ay + by) / length),
+            _ => (0.0, 1.0),
+        }
+    }
+
+    /// The way back over the curve's point at `x`.
+    fn back(&self, x: f64) -> Pos {
+        let (_, s) = self.parameter(x);
+        let offset = self.profile.offset(1.0 - s);
+        let ((nx, ny), p) = (self.normal(x), self.point(x));
+        Pos::new(p.x + offset * nx, p.y + offset * ny)
+    }
+
+    fn at(&self, x: f64, back: bool) -> Point {
+        if back { self.back(x) } else { self.point(x) }.to_point()
+    }
+
+    /// The engine's outline with its samples moved onto this curve, and
+    /// edges between neighbouring samples following it.
+    fn follow(&self, slots: &[Slot]) -> Vec<BufferPoint> {
+        let mut out = Vec::with_capacity(slots.len());
+        let mut start = 0;
+        slots.iter().enumerate().for_each(|(k, slot)| {
+            if k > 0 && slot.pen == Pen::Continue {
+                self.between(&slots[k - 1], slot, &mut out);
+            } else {
+                self.close(&slots[start..k], &mut out);
+                start = k;
+            }
+            let at = slot.sample.map_or(slot.at, |s| self.at(self.xs[s.index], s.back));
+            out.push(BufferPoint { at, pen: slot.pen });
+        });
+        self.close(&slots[start..], &mut out);
+        out
+    }
+
+    /// A filled path closes back to its first point, along the curve too.
+    fn close(&self, path: &[Slot], out: &mut Vec<BufferPoint>) {
+        if let (Some(first), Some(last)) = (path.first(), path.last()) {
+            if path.len() > 2 && matches!(first.pen, Pen::Fill | Pen::SubPath) {
+                self.between(last, first, out);
+            }
+        }
+    }
+
+    /// The points of the curve or the way back between two neighbouring
+    /// samples; nothing for an edge across.
+    fn between(&self, from: &Slot, to: &Slot, out: &mut Vec<BufferPoint>) {
+        let (Some(a), Some(b)) = (from.sample, to.sample) else { return };
+        let Some(back) = self.side(a, b) else { return };
+        let (xa, xb) = (self.xs[a.index], self.xs[b.index]);
+        let (low, high) = (xa.min(xb) + MIN_SEGMENT, xa.max(xb) - MIN_SEGMENT);
+        let inner = self.dense.iter().copied().filter(|&x| x > low && x < high);
+        let point = |x| BufferPoint { at: self.at(x, back), pen: Pen::Continue };
+        if xa < xb {
+            out.extend(inner.map(point));
+        } else {
+            out.extend(inner.rev().map(point));
+        }
+    }
+
+    /// Whether an edge between samples `a` and `b` follows the way back
+    /// (`Some(true)`) or the curve: neighbouring samples on the same side;
+    /// the ends, without thickness, belong to both.
+    fn side(&self, a: Sample, b: Sample) -> Option<bool> {
+        let end = |s: Sample| s.index == 0 || s.index == self.xs.len() - 1;
+        match (a.index.abs_diff(b.index) == 1, a.back == b.back, end(a), end(b)) {
+            (false, ..) => None,
+            (true, true, ..) => Some(a.back),
+            (true, false, true, false) => Some(b.back),
+            (true, false, false, true) => Some(a.back),
+            _ => None,
+        }
     }
 }
 
@@ -975,13 +1276,13 @@ fn point_count(item: ItemRef<'_>, length: f64, shape: i32) -> usize {
 
 /// P11 > 0: every other segment of the outline as a quadrilateral, the
 /// first and last as the outline's ends (P12 = 1, 2 leave out one of them).
-fn dashes(points: &[BufferPoint], p12: i32) -> Vec<BufferPoint> {
-    let at = |k: usize| points.get(k.wrapping_sub(1)).map_or(Point::default(), |p| p.at);
-    let piece = |corners: &[Point]| -> Vec<BufferPoint> {
+fn dashes(points: &[Slot], p12: i32) -> Vec<Slot> {
+    let at = |k: usize| points.get(k.wrapping_sub(1)).copied().unwrap_or(EMPTY);
+    let piece = |corners: &[Slot]| -> Vec<Slot> {
         corners
             .iter()
             .enumerate()
-            .map(|(i, &at)| BufferPoint { at, pen: if i == 0 { Pen::Fill } else { Pen::Continue } })
+            .map(|(i, &corner)| Slot { pen: if i == 0 { Pen::Fill } else { Pen::Continue }, ..corner })
             .collect()
     };
     let last = points.len();
@@ -1026,13 +1327,13 @@ fn cut_before(buffer: &mut Buffer, from: i32, dashed: bool) {
     };
     // A dashed slur is moved together with the slot after its last point.
     let moved_end = if dashed { (end + 1).min(buffer.slots.len()) } else { end };
-    let moved: Vec<BufferPoint> = buffer.slots[first..moved_end].to_vec();
+    let moved: Vec<Slot> = buffer.slots[first..moved_end].to_vec();
     moved.iter().enumerate().for_each(|(k, &p)| buffer.set(k, p));
     buffer.fallback = Some(moved.len() as isize);
     buffer.npt = (end - first + 1) as isize;
     if !dashed {
         buffer.slots[0].pen = Pen::Fill;
-        let closing = buffer.slots[0].at;
+        let closing = buffer.slots[0];
         buffer.set_at(buffer.len(), closing);
     }
 }
@@ -1053,7 +1354,7 @@ fn cut_after(buffer: &mut Buffer, to: i32, dashed: bool) {
         };
         if let Some(k) = points[i + 1..].iter().position(|p| p.at.x == before) {
             let tail = &points[i + 1 + k..];
-            tail.iter().enumerate().for_each(|(m, p)| buffer.set_at(i + m, p.at));
+            tail.iter().enumerate().for_each(|(m, &p)| buffer.set_at(i + m, p));
             buffer.npt = (i + tail.len() + 1) as isize;
             return;
         }
@@ -1064,7 +1365,7 @@ fn cut_after(buffer: &mut Buffer, to: i32, dashed: bool) {
 /// 0x53BE1D: the outline split into a left and a right piece, leaving a
 /// gap of 400 units (600 for numbers from 10) at the middle.
 fn number_gap(buffer: &mut Buffer, item: ItemRef<'_>, step: f64, dx: f64) {
-    let points: Vec<Point> = buffer.points().iter().map(|p| p.at).collect();
+    let points: Vec<Slot> = buffer.points().to_vec();
     let next = points.len() + 1;
     let width = if item.p(16) > 9.0 { constant(600.0) } else { constant(400.0) };
     let width = real(width / (constant(25.0) / step * dx));
@@ -1073,8 +1374,8 @@ fn number_gap(buffer: &mut Buffer, item: ItemRef<'_>, step: f64, dx: f64) {
     if g < 1 {
         if g == 0 {
             // The right piece's first point lands in slot 1, where a slash takes its level from.
-            let after_middle = points.get(next / 2).copied().unwrap_or_default();
-            buffer.set(0, BufferPoint { at: after_middle, pen: Pen::Fill });
+            let after_middle = points.get(next / 2).copied().unwrap_or(EMPTY);
+            buffer.set(0, Slot { pen: Pen::Fill, ..after_middle });
         }
         buffer.npt = 4 * g as isize;
         return;
@@ -1084,8 +1385,8 @@ fn number_gap(buffer: &mut Buffer, item: ItemRef<'_>, step: f64, dx: f64) {
     let middle = next / 2;
     let left = range(1, g).chain(range(next - g, g));
     let right = range(middle, g).chain(range(middle + 1 - g, g - 1));
-    let arranged: Vec<Point> = left.chain(right).collect();
-    arranged.iter().enumerate().for_each(|(k, &at)| buffer.set_at(k, at));
+    let arranged: Vec<Slot> = left.chain(right).collect();
+    arranged.iter().enumerate().for_each(|(k, &slot)| buffer.set_at(k, slot));
     buffer.slots[2 * g].pen = Pen::Fill;
     buffer.npt = arranged.len() as isize + 1;
 }
@@ -1126,6 +1427,77 @@ mod tests {
         assert_eq!(loaded(font_loaded, &[5.0, 1.0, 100.0, 9.0, 9.0, 130.0, 3.0]), None);
         let p16 = [5.0, 1.0, 100.0, 9.0, 9.0, 130.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0];
         assert_eq!(loaded(font_loaded, &p16), times_italic);
+    }
+
+    /// The shapes of `item` in the given style.
+    fn shapes(item: &[f32], options: crate::Options) -> Vec<crate::Shape> {
+        let file = file(item);
+        let list = crate::render(&Document::with_options(&file, options));
+        list.shapes.into_iter().filter(|s| s.source == Some(ItemId(1))).collect()
+    }
+
+    /// A tie over a scale step's curvature, 1200 units long.
+    const TIE: [f32; 7] = [5.0, 1.0, 100.0, 9.0, 9.0, 108.0, 1.0];
+
+    fn smooth(item: &[f32]) -> Smooth {
+        let file = file(item);
+        let doc = Document::new(&file);
+        let item = doc.item(ItemId(1)).expect("the slur exists");
+        let slur = Slur::new(&doc, item, &Params::new(&doc, item));
+        Smooth::of(&slur, item).expect("a slur with a curve")
+    }
+
+    #[test]
+    fn refined_ties_follow_the_curve_with_the_peak_sampled() {
+        let smooth = smooth(&TIE);
+        assert!(smooth.dense.contains(&smooth.peak));
+        let points: Vec<Pos> = smooth.dense.iter().map(|&x| smooth.point(x)).collect();
+        let direction = |a: Pos, b: Pos| (b.y - a.y).atan2(b.x - a.x).to_degrees();
+        let turns = points.windows(3).map(|w| (direction(w[1], w[2]) - direction(w[0], w[1])).abs());
+        assert!(turns.fold(0.0, f64::max) <= MAX_TURN_DEGREES + 1e-9);
+        let engine = shapes(&TIE, crate::Options::ENGINE);
+        let refined = shapes(&TIE, crate::Options::REFINED);
+        assert_eq!((engine.len(), refined.len()), (1, 1));
+        assert!(refined[0].paths[0].len() > 2 * engine[0].paths[0].len());
+        // The ends stay where the engine has them, and the peak is a point.
+        let ends = |shape: &crate::Shape| (shape.paths[0][0], shape.paths[0].iter().map(|p| p.x).max());
+        assert_eq!(ends(&refined[0]), ends(&engine[0]));
+        let (first, left) = (refined[0].paths[0][0], smooth.point(smooth.left).to_point());
+        let peak = smooth.point(smooth.peak).to_point();
+        let peak = Point::new(peak.x + first.x - left.x, peak.y + first.y - left.y);
+        assert!(refined[0].paths[0].contains(&peak));
+    }
+
+    #[test]
+    fn refined_thickness_lies_along_the_normal() {
+        let smooth = smooth(&TIE);
+        let x = smooth.left + (smooth.peak - smooth.left) * 0.2;
+        let (point, back) = (smooth.point(x), smooth.back(x));
+        let (_, s) = smooth.parameter(x);
+        let offset = smooth.profile.offset(1.0 - s);
+        assert!(offset > 0.0);
+        assert!(((back.x - point.x).hypot(back.y - point.y) - offset).abs() < 1e-9);
+        let ahead = smooth.point(x + 1e-3);
+        let tangent = (ahead.x - point.x, ahead.y - point.y);
+        assert!(((back.x - point.x) * tangent.0 + (back.y - point.y) * tangent.1).abs() < 1e-6);
+        assert!(back.x < point.x, "the way back leans outward at the rising end");
+    }
+
+    #[test]
+    fn refined_dashed_slurs_keep_their_dashes() {
+        let dashed = [5.0, 1.0, 100.0, 9.0, 9.0, 130.0, 3.0, 0.0, 0.0, 0.0, 5.0];
+        let engine = shapes(&dashed, crate::Options::ENGINE);
+        let refined = shapes(&dashed, crate::Options::REFINED);
+        assert_eq!(engine.len(), refined.len());
+        let starts = |shapes: &[crate::Shape]| shapes.iter().map(|s| s.paths[0][0].x).collect::<Vec<_>>();
+        assert_eq!(starts(&engine), starts(&refined));
+    }
+
+    #[test]
+    fn refined_triangles_are_drawn_once_as_in_print() {
+        let triangle = [5.0, 1.0, 100.0, 9.0, 9.0, 130.0, 3.0, 0.0, 99.0, 0.0, 0.0, 0.0, 2.0];
+        assert_eq!(shapes(&triangle, crate::Options::ENGINE).len(), 3);
+        assert_eq!(shapes(&triangle, crate::Options::REFINED).len(), 1);
     }
 
     #[test]

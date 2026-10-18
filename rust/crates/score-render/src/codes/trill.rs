@@ -13,7 +13,7 @@
 //! 88/-88/155 come from draw_number, the harp pedals from draw_box.
 
 use crate::canvas::{Canvas, Pen};
-use crate::codes::boxes::{draw_box, BoxCall};
+use crate::codes::boxes::{draw_styled_box, BoxCall};
 use crate::codes::line::{self, end_mark, End, Params};
 use crate::codes::number::{draw_number, number_text, number_text_call, NumberCall};
 use crate::document::{Document, ItemRef};
@@ -205,7 +205,7 @@ fn extend(mark: &Mark<'_, '_>, style: Extension, level: f64, x: f64, (p8, p9): (
         _ => real(level + constant(0.4)),
     };
     let params = mark.params.clone().with(5, level as f32).with(7, style as i32 as f32).with(8, p8).with(9, p9);
-    line::draw_with_step(&params, Pos::new(x, mark.staff.y(level)), &mark.staff, mark.step, canvas);
+    line::draw_with_step(mark.doc, &params, Pos::new(x, mark.staff.y(level)), &mark.staff, mark.step, canvas);
 }
 
 /// P7 = 0: the trill symbol a scale step above P4, an accidental for P8 1-5,
@@ -410,10 +410,11 @@ fn harp(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
     let p4 = f64::from(mark.p(4));
     let bars = mark.params.clone().with(7, 0.0).with(8, 0.0).with(9, 0.0).with(10, 1.0).with(17, 0.0).with(18, 0.0);
     let upright = bars.clone().with(6, centre as f32).with(5, real(half_bar + p4) as f32);
-    line::draw_with_step(&upright, Pos::new(mark.at.x, mark.staff.y(real(p4 - half_bar))), &mark.staff, mark.step, canvas);
+    let bottom = Pos::new(mark.at.x, mark.staff.y(real(p4 - half_bar)));
+    line::draw_with_step(mark.doc, &upright, bottom, &mark.staff, mark.step, canvas);
     let across = bars.with(5, p4 as f32).with(6, real(unit * 12.0 + centre) as f32).with(3, centre as f32);
     let left = real((centre - unit * 9.5) * P3_UNIT);
-    line::draw_with_step(&across, Pos::new(left, mark.at.y), &mark.staff, mark.step, canvas);
+    line::draw_with_step(mark.doc, &across, Pos::new(left, mark.at.y), &mark.staff, mark.step, canvas);
 
     let rise = real(mark.staff.y(real(mark.size * 2.5 + p4)) - mark.at.y);
     let top = real(mark.at.y - rise * 2.0);
@@ -423,7 +424,8 @@ fn harp(mark: &Mark<'_, '_>, canvas: &mut Canvas<'_>) {
     sides.into_iter().for_each(|(first_x, positions, count)| {
         let xs = std::iter::successors(Some(first_x), |&x| Some(real(spacing + x)));
         digits(positions, count).zip(xs).for_each(|(position, x)| {
-            draw_box(canvas, Pos::new(x, real(rise * f64::from(position) + top)), mark.step(), &pedal);
+            let at = Pos::new(x, real(rise * f64::from(position) + top));
+            draw_styled_box(mark.doc, canvas, at, mark.step(), &pedal);
         });
     });
 }
