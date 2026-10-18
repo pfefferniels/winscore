@@ -7,6 +7,9 @@
 // curve …) is dragged instead of the item when the press is on it; moves
 // and handle drags snap onto guides unless ⌘/Ctrl is held.
 //
+// A click or tap on empty paper with nothing selected is reported, for the
+// command field to stand there.
+//
 // Touch: a tap selects, a finger dragged pans (and glides on), except from
 // an item already selected, which it moves, or from one of its handles; two
 // fingers pinch to zoom; a long press adds or removes an item, and dragging
@@ -38,6 +41,8 @@ export interface Hooks {
   box(from: Point, to: Point): void;
   /** A click on empty paper, for placing new items. */
   clickedPaper(at: Point): void;
+  /** A click or tap on empty paper that drew no box, with nothing selected after it. */
+  clickedEmpty(at: Point): void;
   /** A click or tap that became neither a drag nor a box, on an item or not: where a paste goes. */
   clicked(at: Point): void;
   /** A double click; `item` is what lies under it. */
@@ -212,7 +217,9 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
   /** A box drawn with the mouse or a finger is finished; a click answers a waiting group command too (WinScore reads it as a thin box). */
   const endBox = (box: BoxGesture, clientX: number, clientY: number) => {
     showBand(band, box, null);
-    if (box.drawn || hooks.editor()?.prompt() != null) hooks.box(hooks.pageAt(box.x, box.y), hooks.pageAt(clientX, clientY));
+    const editor = hooks.editor();
+    if (box.drawn || editor?.prompt() != null) hooks.box(hooks.pageAt(box.x, box.y), hooks.pageAt(clientX, clientY));
+    else if (editor?.selection().length === 0) hooks.clickedEmpty(hooks.pageAt(box.x, box.y));
   };
 
   viewport.addEventListener('pointerdown', (e) => {
@@ -448,6 +455,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
         hooks.selected();
       }
       hooks.clickedPaper(hooks.pageAt(e.clientX, e.clientY));
+      hooks.clickedEmpty(hooks.pageAt(e.clientX, e.clientY));
     } else pick(editor, touch.hit);
     if (previous && e.timeStamp - previous.t < DOUBLE_TAP_MS && Math.hypot(e.clientX - previous.x, e.clientY - previous.y) < 3 * TOUCH_SLOP_PX) {
       lastTap = null;

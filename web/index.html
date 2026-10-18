@@ -190,12 +190,6 @@
         </div>
       </section>
       <footer class="footer" id="footer">
-        <span id="prompt" class="prompt" hidden></span>
-        <label class="command-field">
-          <span class="command-label">Command</span>
-          <input id="command" class="command" type="text" placeholder="e.g. R 5, NOTE, DE: just type" autocomplete="off" spellcheck="false" />
-        </label>
-        <button id="prompt-cancel" type="button" hidden title="End the group edit without a change">Cancel</button>
         <span id="message" class="message"></span>
         <span class="spacer"></span>
         <span id="cursor" class="muted cursor"></span>
@@ -207,7 +201,7 @@
             <section class="touch-only">
               <h3>Touch</h3>
               <dl>
-                <dt>Tap</dt><dd>Select an item</dd>
+                <dt>Tap</dt><dd>Select an item; on empty paper, open the command field there</dd>
                 <dt>Drag</dt><dd>Scroll the page; from a selected item, move it; from one of its handles, change what it names</dd>
                 <dt>Pinch</dt><dd>Zoom</dd>
                 <dt>Long press</dt><dd>Add or remove an item</dd>
@@ -247,9 +241,9 @@
             <section>
               <h3>Commands</h3>
               <dl>
-                <dt>Type anywhere</dt><dd>Goes to the command bar; <kbd>↵</kbd> runs a SCORE command on the selection</dd>
-                <dt>With a selection</dt><dd>Typing goes to the field by it, a command in words too: “stems up”, “beam in pairs”, “add c e g” on a staff</dd>
-                <dt><kbd>↑</kbd><kbd>↓</kbd> in the bar</dt><dd>Earlier commands</dd>
+                <dt>Click empty paper</dt><dd>The command field opens there: “add c e g”, <code>LJ 1 2</code></dd>
+                <dt>Type anywhere</dt><dd>Goes to the command field, by the selection if there is one; <kbd>↵</kbd> runs a SCORE command (<code>R 5</code>, <code>FLI</code>) or a command in words (“stems up”, “beam in pairs”)</dd>
+                <dt><kbd>↑</kbd><kbd>↓</kbd> in the field</dt><dd>Earlier commands</dd>
                 <dt><code>IN 3</code></dt><dd>Music input on staff 3</dd>
               </dl>
             </section>

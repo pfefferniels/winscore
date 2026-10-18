@@ -617,15 +617,6 @@ button.icon[aria-pressed='true'] {
   z-index: 2;
 }
 
-.prompt {
-  padding: 3px 8px;
-  border-radius: 4px;
-  background: var(--accent);
-  color: #ffffff;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 .symbol-dialog,
 .text-dialog,
 .shortcuts-dialog {
@@ -1647,37 +1638,6 @@ button.danger:hover {
   background: var(--chrome);
 }
 
-/* A group command waits for its answer. */
-.footer.asking {
-  background: var(--accent-soft);
-}
-
-.command-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.command-label {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.command {
-  width: 320px;
-  height: 28px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  font-family: ui-monospace, monospace;
-}
-
-.command:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-}
-
 .message.error {
   color: #b91c1c;
 }
@@ -1692,17 +1652,12 @@ button.danger:hover {
 @media (max-width: 760px) {
   .appbar .accent span,
   .appbar .sep,
-  .zoom select,
-  .command-label {
+  .zoom select {
     display: none;
   }
 
   .panel {
     width: 260px;
-  }
-
-  .command {
-    width: 180px;
   }
 }
 
@@ -1772,8 +1727,7 @@ button.danger:hover {
   .input-range input,
   .text-fields > input,
   .text-fields > select,
-  .symbol-search input,
-  .command {
+  .symbol-search input {
     height: 36px;
   }
 
@@ -1821,8 +1775,7 @@ button.danger:hover {
 }
 
 /* A phone: one Menu button, the panel under the page (its height set with
-   the grip), the command bar beside the message, and the music input in
-   place of the command bar. */
+   the grip), and the music input in place of the status line. */
 @media (max-width: 640px) {
   .appbar {
     gap: 4px;
@@ -1908,8 +1861,6 @@ button.danger:hover {
   }
 
   .footer {
-    flex-wrap: wrap;
-    gap: 6px 8px;
     padding: 6px 8px;
   }
 
@@ -1918,28 +1869,13 @@ button.danger:hover {
     display: none;
   }
 
-  .command-field {
-    flex: 1 1 50%;
-    min-width: 0;
-  }
-
-  .command {
-    width: 100%;
-  }
-
   .message {
     display: -webkit-box;
-    flex: 1 1 40%;
+    flex: 1;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     font-size: 12px;
     line-height: 16px;
-    white-space: normal;
-  }
-
-  .prompt {
-    flex-basis: 100%;
-    order: -1;
     white-space: normal;
   }
 
@@ -2064,8 +2000,9 @@ button.danger:hover {
   }
 }
 
-/* The command field by the selection: the command, what it is read as, and
-   sliders for what it leaves open. Like the command bar, it is a line to type. */
+/* The command field by the selection or where the paper was clicked: the
+   command, what it is read as, and sliders for what it leaves open; above
+   them a group command's question while it waits for the answer. */
 .ai-prompt {
   position: absolute;
   width: min(360px, calc(100% - 16px));
@@ -2090,6 +2027,33 @@ button.danger:hover {
 /* Until it is typed in, a short line by the selection that hides little of the music. */
 .ai-prompt:not(:focus-within):has(.ai-status:empty) {
   width: min(260px, calc(100% - 16px));
+}
+
+.ai-question {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  padding: 3px 3px 3px 8px;
+  border-radius: 5px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ai-question-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-question .ai-cancel {
+  flex: none;
+  height: 24px;
+  padding: 0 8px;
+  border-color: transparent;
+  color: var(--text);
+  font-weight: 500;
 }
 
 .ai-mark {

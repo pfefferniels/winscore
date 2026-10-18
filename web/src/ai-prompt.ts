@@ -1,11 +1,14 @@
-// The command field: it stands by the selection while there is one, and what
-// is typed on the page goes into it. A command in words goes to Jev while it
-// is typed; Enter edits the score at once with what Jev read, or has Claude
-// write the edit when Jev is not sure. A SCORE command runs as it is. Numbers
-// the command leaves open appear as sliders under the field; dragging one
-// re-does the edit with the new value, live, as the same undo step.
+// The command field: it stands by the selection while there is one, or where
+// the empty paper was clicked, and what is typed on the page goes into it
+// (opening it if need be). A command in words goes to Jev while it is typed;
+// Enter edits the score at once with what Jev read, or has Claude write the
+// edit when Jev is not sure. A SCORE command runs as it is. Numbers the
+// command leaves open appear as sliders under the field; dragging one re-does
+// the edit with the new value, live, as the same undo step. While a group
+// command asks for its area, the field shows the question and takes the
+// answer. Up and Down recall earlier lines.
 import type { Box } from './display';
-import type { Editor } from './editor';
+import type { Change, Editor } from './editor';
 import { onlyParams, reach, run, selects, type Access, type Knob, type Scope, type Script } from './ai-script';
 import {
   askClaude,
@@ -35,6 +38,10 @@ export interface PromptHooks {
   catalog(): Catalog;
   /** Whether SCORE's editor knows a command line. */
   supported(line: string): boolean;
+  /** Runs a SCORE command line on the selection, as WinScore's command bar does (IN n, answers to a question too). */
+  run(line: string): Change | null;
+  /** Typing began, or a question came, with the field closed: it is to stand somewhere with nothing selected. */
+  open(): void;
   /** Where a box of the page lies on screen. */
   clientRect(box: Box): DOMRect;
   /** After an edit; `live` while a slider moves, `params` when it only changed parameters of the selected items. */
@@ -75,30 +82,58 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, props: Record<string,
 
 const format = (v: number) => (Math.abs(v) >= 10 ? v.toFixed(0) : String(Math.round(v * 100) / 100));
 
-/** A SCORE command typed as such: upper-case words and numbers (R 5, FLI, 600 5). */
-const looksLikeScore = (text: string) => /^[A-Z][A-Z0-9]*(\s+[-+]?[\d.]+)*$|^[-+]?[\d.]+(\s+[-+]?[\d.]+)+$/.test(text.trim());
+/**
+ * A SCORE command typed as such: upper-case words and numbers (R 5, FLI,
+ * 600 5), a conditional edit (IF … THEN …) or a text's quick entry ("Allegro" 1 50).
+ */
+const looksLikeScore = (text: string) => /^[A-Z][A-Z0-9]*(\s+[-+]?[\d.]+)*$|^[-+]?[\d.]+(\s+[-+]?[\d.]+)+$|^IF\s|^"/.test(text.trim());
 
-/** Whether two scopes are about the same items. */
-const sameItems = (a: Scope, b: Scope) => {
+/** IN, IN n: music input, which the page opens. */
+const opensInput = (text: string) => /^IN(\s+\d+)?$/.test(text.trim());
+
+/** Whether two scopes are about the same items, and at a place the same place. */
+const sameScope = (a: Scope, b: Scope) => {
   const sorted = (s: Scope) => String([...(s.keys ?? [])].sort((x, y) => x - y));
-  return sorted(a) === sorted(b);
+  return sorted(a) === sorted(b) && (a.keys !== null || JSON.stringify(a.region) === JSON.stringify(b.region));
 };
 
+/** Keys the page keeps for itself even though they print a character ([ and ] move staves, + and _ zoom). */
+const PAGE_KEYS = new Set(['[', ']', '+', '=', '_']);
+
+const isFormField = (target: EventTarget | null) => target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
+
+/** A key typed on the page that starts a command. */
+const startsCommand = (e: KeyboardEvent) => e.key.length === 1 && e.key !== ' ' && !PAGE_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey;
+
+const PLACEHOLDER = { selection: 'Command, e.g. stems up', place: 'Command, e.g. add c e g', answer: 'Type the answer, or draw a box' };
+
 export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
-  const input = el('input', { className: 'ai-input', type: 'text', placeholder: 'Command, e.g. stems up', autocomplete: 'off', spellcheck: false });
-  input.setAttribute('aria-label', 'Command for the selection');
+  const input = el('input', { className: 'ai-input', type: 'text', placeholder: PLACEHOLDER.selection, autocomplete: 'off', spellcheck: false });
+  input.setAttribute('aria-label', 'Command');
   const gear = el('button', { className: 'ai-gear', type: 'button', title: 'Models and keys', textContent: '⚙' });
   gear.setAttribute('aria-label', 'Models and keys');
+  const questionText = el('span', { className: 'ai-question-text' });
+  const cancel = el('button', { className: 'ai-cancel', type: 'button', title: 'End the group edit without a change', textContent: 'Cancel' });
+  const asking = el('div', { className: 'ai-question', hidden: true }, questionText, cancel);
   const status = el('div', { className: 'ai-status' });
   const knobs = el('div', { className: 'ai-knobs' });
   const settings = el('form', { className: 'ai-settings', hidden: true });
-  const box = el('div', { className: 'ai-prompt', hidden: true }, el('div', { className: 'ai-row' }, el('span', { className: 'ai-mark', textContent: '›' }), input, gear), status, knobs, settings);
+  const box = el('div', { className: 'ai-prompt', hidden: true }, asking, el('div', { className: 'ai-row' }, el('span', { className: 'ai-mark', textContent: '›' }), input, gear), status, knobs, settings);
   box.setAttribute('role', 'group');
   box.setAttribute('aria-label', 'Command');
   host.append(box);
 
   let scope: Scope | null = null;
   let anchor: Box | null = null;
+  /** Whether the field stands at a place on the paper rather than by the selection. */
+  let atPlace = false;
+  /** The question of a group command waiting for its answer, which the field takes. */
+  let question: string | null = null;
+  /** Whether the field opened for the question, and goes when it is answered. */
+  let forQuestion = false;
+  /** Lines entered, for Up and Down; `recalled` steps back from the newest. */
+  const history: string[] = [];
+  let recalled = 0;
   let reading: Reading | null = null;
   /** The request in flight for the text typed, with what it will give. */
   let pending: { text: string; controller: AbortController; done: Promise<Reading | null> } | null = null;
@@ -195,14 +230,27 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     return done;
   }
 
+  /**
+   * Whether a line goes to the page as WinScore's command bar sends it: an
+   * answer to the question, IN, or a SCORE command with nothing selected
+   * (with a selection it runs on the command's items, below).
+   */
+  function native(text: string): boolean {
+    return question !== null || opensInput(text) || (scope?.keys === null && looksLikeScore(text) && hooks.supported(text));
+  }
+
   function typed() {
     clearTimeout(typingTimer);
     reading = null;
     const text = input.value.trim();
-    if (!text) {
+    if (!text || question !== null) {
       pending?.controller.abort();
       pending = null;
       idle();
+      return;
+    }
+    if (native(text)) {
+      show(`→ ${text}`, '', 'SCORE command');
       return;
     }
     if (looksLikeScore(text) && hooks.supported(text)) {
@@ -249,10 +297,35 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     return error;
   }
 
+  /** Runs a line on the page as WinScore's command bar runs it; the text stays to be corrected when the engine objects. */
+  function runLine(text: string) {
+    pending?.controller.abort();
+    pending = null;
+    reading = null;
+    let change: Change | null;
+    own = true;
+    try {
+      change = hooks.run(text);
+    } finally {
+      own = false;
+    }
+    if (change?.message) {
+      show(change.message.replace(/^\*+ ?/, ''), 'error', 'SCORE command');
+      return;
+    }
+    input.value = '';
+    if (question === null) show(`✓ ${text}`, 'done', 'SCORE command');
+    else idle();
+    place();
+  }
+
   async function enter() {
     const text = input.value.trim();
     if (!text || !scope) return;
     clearTimeout(typingTimer);
+    if (history.at(-1) !== text) history.push(text);
+    recalled = 0;
+    if (native(text)) return void runLine(text);
     if (reading) return void apply(reading, text);
     const asked = pending?.text === text ? pending.done : askAbout(text);
     if (asked) {
@@ -382,6 +455,12 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     } else if (e.key === 'Escape') {
       e.preventDefault();
       leave();
+    } else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && history.length > 0) {
+      e.preventDefault();
+      recalled = Math.min(history.length, Math.max(0, recalled + (e.key === 'ArrowUp' ? 1 : -1)));
+      input.value = history[history.length - recalled] ?? '';
+      input.setSelectionRange(input.value.length, input.value.length);
+      typed();
     }
   });
   box.addEventListener('keydown', (e) => {
@@ -389,6 +468,22 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     e.stopPropagation();
   });
   gear.addEventListener('click', () => (settings.hidden ? showSettings() : ((settings.hidden = true), place())));
+  cancel.addEventListener('click', () => {
+    hooks.run('X');
+    hooks.left();
+  });
+
+  // Typing on the page outside a form field goes into the field, which opens if it is not there.
+  window.addEventListener('keydown', (e) => {
+    if (!hooks.editor() || isFormField(e.target) || document.querySelector('dialog[open]') || !startsCommand(e)) return;
+    if (box.hidden) hooks.open();
+    if (box.hidden) return;
+    e.preventDefault();
+    input.focus();
+    input.value = e.key;
+    recalled = 0;
+    typed();
+  });
 
   /** Escape: the text and the settings go, and the keyboard goes back to the page (where Escape then deselects). */
   function leave() {
@@ -403,11 +498,21 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     hooks.left();
   }
 
-  /** Stands by the selection: other items make a new scope, and the last command's sliders go. */
-  function follow(next: Scope, around: Box) {
-    const same = !box.hidden && (own || (scope !== null && sameItems(scope, next)));
+  function showPlaceholder() {
+    input.placeholder = question !== null ? PLACEHOLDER.answer : atPlace ? PLACEHOLDER.place : PLACEHOLDER.selection;
+  }
+
+  /**
+   * Stands by `around`: the selection's box, or with `onPaper` a point on
+   * the paper where nothing is selected. Other items or another place make a
+   * new scope, and the last command's sliders go.
+   */
+  function follow(next: Scope, around: Box, onPaper = false) {
+    const same = !box.hidden && (own || (scope !== null && sameScope(scope, next)));
     scope = next;
     anchor = around;
+    atPlace = onPaper;
+    showPlaceholder();
     if (box.hidden) {
       box.hidden = false;
       settings.hidden = true;
@@ -421,7 +526,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     place();
   }
 
-  /** Nothing is selected: the field goes, and what was typed in it. */
+  /** The field goes, and what was typed in it. */
   function close() {
     if (box.hidden) return;
     const focused = box.contains(document.activeElement);
@@ -433,15 +538,47 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     reading = null;
     applied = null;
     scope = null;
+    atPlace = false;
+    question = null;
+    forQuestion = false;
+    asking.hidden = true;
+    showKnobs([]);
+    idle();
     if (focused) hooks.left();
+  }
+
+  /**
+   * A group command's question (null once it is answered or cancelled): the
+   * field shows it and takes the answer, opening for it if it is not there,
+   * and taking the keyboard with `focus`.
+   */
+  function ask(next: string | null, focus: boolean) {
+    if (next === question) return;
+    if (next !== null && box.hidden) {
+      hooks.open();
+      if (box.hidden) return;
+      forQuestion = true;
+    }
+    question = next;
+    asking.hidden = next === null;
+    questionText.textContent = next ?? '';
+    showPlaceholder();
+    if (next === null && forQuestion) {
+      close();
+      return;
+    }
+    typed();
+    place();
+    if (next !== null && focus && document.activeElement !== input) input.focus();
   }
 
   return {
     follow,
     close,
-    /** The field while it stands by a selection: what is typed on the page goes there. */
-    get field() {
-      return box.hidden ? null : input;
+    ask,
+    /** Whether the field stays with nothing selected: it stands at a place, or takes a question's answer. */
+    get standsAlone() {
+      return !box.hidden && (atPlace || question !== null);
     },
     /** Keeps the field by its music while the page scrolls and zooms. */
     place,

@@ -1,8 +1,9 @@
 // End-to-end check of the command field in the built app (dist/), with Jev
 // and Claude answered by canned replies at the network: a selection brings
 // the field, typing on the page goes into it, what Jev reads is shown while
-// typing, Enter edits the score as one undo step, a slider re-does it, and a
-// command Jev cannot read goes to Claude.
+// typing, Enter edits the score as one undo step, a slider re-does it, a
+// command Jev cannot read goes to Claude, and a click on empty paper opens the
+// field where music it adds then goes.
 //
 // usage: npm run build && node scripts/ai-smoke.mjs
 // CHROMIUM=/path/to/chrome uses that browser instead of Playwright's own.
@@ -164,7 +165,6 @@ try {
   // Typed on the page, the command goes into the field; what Jev read shows before Enter, and Enter edits the score as one undo step.
   await page.keyboard.type('remove the stems');
   assert.equal(await page.inputValue('.ai-input'), 'remove the stems');
-  assert.equal(await page.inputValue('#command'), '', 'not the command bar');
   await read();
   assert.match(await page.textContent('.ai-reading'), /Remove stems · 8 items/);
   assert.match(await page.textContent('.ai-source'), /^Jev 90 %/);
@@ -229,8 +229,26 @@ try {
   assert.equal(await page.textContent('#item-count'), '9');
   assert.match(await page.getAttribute('#undo', 'title'), /“remove the stems”/);
 
-  // With the staff selected, music goes after the music on it.
+  // A click on empty paper above the staff, nothing selected, opens the field there; music it adds starts at the click.
   const p3s = async (rows) => (await page.$$eval(rows, (list) => list.map((li) => Number(li.querySelector('.where').textContent.split(' · ')[1]))));
+  const staff = await selectedBox(() => page.click('#items li[data-index="0"]'));
+  await page.keyboard.press('Escape');
+  const above = { x: staff.x + staff.width * 0.8, y: staff.y - staff.height / 2 };
+  await page.mouse.click(above.x, above.y);
+  assert.equal(await page.textContent('#item h2'), 'Nothing selected');
+  const field = await page.locator('.ai-prompt').boundingBox();
+  assert.ok(Math.abs(field.x - above.x) < 2 && field.y > above.y, `the field (${JSON.stringify(field)}) by the click (${JSON.stringify(above)})`);
+  await command('add notes c g d/f/a');
+  assert.match(await page.textContent('.ai-reading'), /Add c g d\/f\/a/);
+  await enter();
+  assert.equal(await page.textContent('#item-count'), '14');
+  const placed = await p3s('#items li.selected[data-code="1"]');
+  assert.equal(placed.length, 5);
+  assert.ok(Math.min(...placed) > 140, `the new notes (${placed}) start at the click, about P3 160`);
+  await page.press('.ai-input', 'Control+z');
+  assert.equal(await page.textContent('#item-count'), '9');
+
+  // With the staff selected, music goes after the music on it.
   const last = Math.max(...(await p3s('#items li[data-code="1"]')));
   await page.click('#items li[data-index="0"]');
   await page.waitForSelector('.ai-prompt:not([hidden])');

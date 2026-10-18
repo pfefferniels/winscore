@@ -50,7 +50,7 @@ export interface Editor {
   duplicateSelection(): Change | null;
   /** A box drawn on the page: answers a waiting group command, or selects what is inside. */
   drawBox(from: Point, to: Point): Change | null;
-  /** The question a group command waits to have answered on the command bar. */
+  /** The question a group command waits to have answered in the command field. */
   prompt(): string | null;
   /** Staff, P3 and P4 of a page point on the nearest staff. */
   placeAt(at: Point): Place | null;

@@ -1,7 +1,7 @@
 // The app's menus. Entries that send SCORE commands take the command and
 // its tooltip from WinScore's command table by menu id, as WinScore's own
 // menus and toolbars send them, and show the command so it can be typed on
-// the command bar next time. Commands score-edit does not handle are left out.
+// the command field next time. Commands score-edit does not handle are left out.
 import { commandById } from './commands';
 import { MOD, type Action, type Entry, type Menu } from './menu';
 

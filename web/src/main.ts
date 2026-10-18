@@ -5,7 +5,6 @@ import type { About, Catalog } from './ai-models';
 import { barlines, type Access, type Region, type Scope } from './ai-script';
 import { createPageView, type Scene } from './canvas';
 import { bindClipboard } from './clipboard';
-import { bindCommandBar } from './command-bar';
 import { bounds, decode, elementsOf, EMPTY, itemBoxes, union, type Box, type DisplayList } from './display';
 import { fontPrefix } from './commands';
 import type { Point } from './view';
@@ -109,9 +108,6 @@ const ui = {
   symbolDialog: $<HTMLDialogElement>('symbol-dialog'),
   textDialog: $<HTMLDialogElement>('text-dialog'),
   band: $<HTMLDivElement>('band'),
-  prompt: $<HTMLSpanElement>('prompt'),
-  promptCancel: $<HTMLButtonElement>('prompt-cancel'),
-  command: $<HTMLInputElement>('command'),
   zoomOut: $<HTMLButtonElement>('zoom-out'),
   zoomIn: $<HTMLButtonElement>('zoom-in'),
   zoom: $<HTMLSelectElement>('zoom'),
@@ -138,7 +134,6 @@ const ui = {
   itemCount: $<HTMLSpanElement>('item-count'),
   itemFilter: $<HTMLInputElement>('item-filter'),
   selectShown: $<HTMLButtonElement>('items-select'),
-  footer: $<HTMLElement>('footer'),
   cursor: $<HTMLSpanElement>('cursor'),
   message: $<HTMLSpanElement>('message'),
 };
@@ -223,23 +218,12 @@ function itemLine(): string {
   }
 }
 
-/** The command bar's answer: what just happened, then the item in edit mode; the engine's own message instead when it has one. */
+/** The status line: what just happened, then the item in edit mode; the engine's own message instead when it has one. */
 function report(change: Change | null) {
   if (change?.message) message(change.message, true);
   else message([change?.label, itemLine()].filter(Boolean).join(' · '));
-  showPrompt();
-}
-
-/** A group command's question, shown before the command bar, which then takes the answer. */
-function showPrompt() {
-  const question = state.editor?.prompt() ?? null;
-  ui.prompt.hidden = question === null;
-  ui.promptCancel.hidden = question === null;
-  ui.footer.classList.toggle('asking', question !== null);
-  ui.prompt.textContent = question ?? '';
-  ui.command.placeholder = question ? 'Type the answer, or draw a box' : 'e.g. R 5, NOTE, DE: just type';
-  // A touch screen would bring up its keyboard over the page the box is drawn on.
-  if (question !== null && document.activeElement !== ui.command && !matchMedia(COARSE).matches) ui.command.focus();
+  // A group command's question goes to the command field, which takes the answer. A touch screen would bring up its keyboard over the page the box is drawn on.
+  aiPrompt.ask(state.editor?.prompt() ?? null, !touchScreen());
 }
 
 function decodeAndFree(encoded: EncodedList): DisplayList {
@@ -343,7 +327,6 @@ function refreshStatus() {
   ui.redo.disabled = redo === null;
   ui.undo.title = undo === null ? 'Nothing to undo' : `Undo ${undo} (${MOD}Z)`;
   ui.redo.title = redo === null ? 'Nothing to redo' : `Redo ${redo} (${REDO_KEYS})`;
-  ui.command.disabled = !state.editor;
   ui.input.disabled = !state.editor;
   ui.input.setAttribute('aria-pressed', String(inputMode.isOpen));
   ui.app.classList.toggle('inputting', inputMode.isOpen);
@@ -494,26 +477,31 @@ function failed(err: unknown) {
   message(err instanceof Error ? err.message : String(err), true);
 }
 
-function edit(action: (editor: Editor) => Change | null) {
+/** Runs an edit and shows its outcome; what it did, with a failure as its message. */
+function edit(action: (editor: Editor) => Change | null): Change | null {
   const editor = state.editor;
-  if (!editor) return;
+  if (!editor) return null;
   try {
-    edited(action(editor), false);
+    const change = action(editor);
+    edited(change, false);
+    return change;
   } catch (err) {
     failed(err);
+    return { label: '', message: err instanceof Error ? err.message : String(err) };
   }
 }
 
-/** A SCORE command line from the command bar, a menu, the panel or a key; the result is scrolled into view. */
-function runCommand(line: string) {
+/** A SCORE command line from the command field, a menu, the panel or a key; the result is scrolled into view. */
+function runCommand(line: string): Change | null {
   // IN n: music input on staff n, typed in the input panel.
   const input = /^IN(?:\s+(\d+))?$/i.exec(line.trim());
   if (input) {
     enterInput(input[1] === undefined ? undefined : Number(input[1]));
-    return;
+    return null;
   }
-  edit((editor) => editor.execute(line));
+  const change = edit((editor) => editor.execute(line));
   revealSelection();
+  return change;
 }
 
 /** Group edits (M, CO, DG, A, CPX) start outside edit mode and ask for the area; a drawn box answers. */
@@ -1013,6 +1001,8 @@ const aiPrompt = createAiPrompt(ui.stage, {
   about: aiAbout,
   catalog: aiCatalog,
   supported: commandSupported,
+  run: runCommand,
+  open: () => commandAt(placeInView()),
   clientRect: (box) => view.clientRect(box),
   edited(live, params) {
     const score = state.score;
@@ -1073,17 +1063,46 @@ function regionIn(editor: Editor, box: Box): Region | null {
   };
 }
 
-/** The command field stands by the selection while there is one (and no music input). */
+/** The top left corner of the view, as a box of no size: where the field stands when it is about no place. */
+function viewCorner(): Box {
+  const seen = view.visibleBox();
+  return { x0: seen.x0, x1: seen.x0, y0: seen.y1, y1: seen.y1 };
+}
+
+/** The command field stands by the selection while there is one (and no music input); without one, a field at a place stays. */
 function followSelection() {
   const editor = state.editor;
   const items = selection();
-  const box = selectionBox();
-  if (!editor || !box || items.length === 0 || inputMode.isOpen) {
+  if (!editor || inputMode.isOpen) {
     aiPrompt.close();
     return;
   }
+  if (items.length === 0) {
+    if (!aiPrompt.standsAlone) aiPrompt.close();
+    return;
+  }
   const keys = editor.keys();
-  aiPrompt.follow({ keys: items.map((i) => keys[i]!), region: regionOf(items) }, box);
+  aiPrompt.follow({ keys: items.map((i) => keys[i]!), region: regionOf(items) }, selectionBox() ?? viewCorner());
+}
+
+/** The last click on the paper while it is in view. */
+function placeInView(): Point | null {
+  const at = state.lastPaper;
+  const seen = view.visibleBox();
+  return at && at.x >= seen.x0 && at.x <= seen.x1 && at.y >= seen.y0 && at.y <= seen.y1 ? at : null;
+}
+
+/**
+ * The command field with nothing selected, at page point `at` (else at the
+ * top left of the view): about the whole score, and music it adds goes on
+ * the staff nearest the point, from there to the staff's end.
+ */
+function commandAt(at: Point | null) {
+  const editor = state.editor;
+  if (!editor || inputMode.isOpen) return;
+  const place = at ? editor.placeAt(at) : null;
+  const region = place && { staff: place.staff, bottom: place.staff, top: place.staff, from: Math.min(Math.max(place.p3, 0), 200), to: 200 };
+  aiPrompt.follow({ keys: null, region }, at ? { x0: at.x, x1: at.x, y0: at.y, y1: at.y } : viewCorner(), true);
 }
 
 function bindPointer() {
@@ -1116,6 +1135,7 @@ function bindPointer() {
       selectionChanged();
     },
     clickedPaper: (at) => (state.lastPaper = at),
+    clickedEmpty: commandAt,
     clicked: (at) => (state.pasteAt = at),
     open: (item) => void openItem(item),
     handleAt: (x, y, finger) => handleAt(x, y, finger)?.index ?? null,
@@ -1131,10 +1151,6 @@ function bindPointer() {
     if (state.hover === null) return;
     state.hover = null;
     view.repaint();
-  });
-  ui.promptCancel.addEventListener('click', () => {
-    edit((editor) => editor.execute('X'));
-    ui.viewport.focus();
   });
   ui.viewport.addEventListener('pointermove', (e) => {
     const p = view.pageAt(e.clientX, e.clientY);
@@ -1281,16 +1297,13 @@ function bindControls() {
   ui.selectShown.addEventListener('click', () => select(shownItems(ui.items)));
   ui.app.querySelectorAll<HTMLButtonElement>('.appbar button').forEach((button) => button.addEventListener('click', settleFocus));
   if (MOD !== '⌘') ui.shortcuts.querySelectorAll('kbd.mod').forEach((k) => (k.textContent = 'Ctrl'));
-  bindCommandBar(ui.command, {
-    run: runCommand,
-    page: ui.viewport,
-    typing: () => aiPrompt.field,
-  });
   window.addEventListener('keydown', onAppKey);
   window.addEventListener('keydown', (e) => {
     if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey || inMenuBar(e.target)) return;
     if (e.key === '+' || e.key === '=') view.setZoom(stepZoom(view.zoom, 1));
     if (e.key === '_') view.setZoom(stepZoom(view.zoom, -1));
+    // With nothing selected Escape takes the field away from its place (with a selection it deselects, and the field goes with it).
+    if (e.key === 'Escape' && selection().length === 0 && state.editor?.prompt() == null && !document.querySelector('dialog[open]')) aiPrompt.close();
   });
   bindMenus();
   bindStart();
