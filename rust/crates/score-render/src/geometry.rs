@@ -63,6 +63,44 @@ fn turn(points: &mut [BufferPoint], centre: Point, angle: f64) {
     });
 }
 
+/// A centripetal Catmull–Rom spline through `points`, `steps` segments
+/// from each point to the next, for the refined style's smoother outlines.
+/// `before` and `after` are the neighbours that set the tangent at the
+/// first and last point; without one that end runs straight to its
+/// neighbour (the end point mirrored).
+pub fn spline_through(before: Option<Pos>, points: &[Pos], after: Option<Pos>, steps: usize) -> Vec<Pos> {
+    let [first, .., last] = points else {
+        return points.to_vec();
+    };
+    let mirrored = |end: Pos, next: Pos| Pos::new(2.0 * end.x - next.x, 2.0 * end.y - next.y);
+    let before = before.unwrap_or_else(|| mirrored(*first, points[1]));
+    let after = after.unwrap_or_else(|| mirrored(*last, points[points.len() - 2]));
+    let controls: Vec<Pos> = std::iter::once(before).chain(points.iter().copied()).chain([after]).collect();
+    let steps = steps.max(1);
+    let mut out = vec![*first];
+    controls.windows(4).for_each(|w| {
+        // Knots spaced by the square root of the chord lengths (alpha = 1/2).
+        let knot = |a: Pos, b: Pos| (a.x - b.x).hypot(a.y - b.y).sqrt().max(1e-9);
+        let t1 = knot(w[0], w[1]);
+        let t2 = t1 + knot(w[1], w[2]);
+        let t3 = t2 + knot(w[2], w[3]);
+        let lerp = |a: Pos, b: Pos, ta: f64, tb: f64, t: f64| {
+            let (u, v) = ((tb - t) / (tb - ta), (t - ta) / (tb - ta));
+            Pos::new(u * a.x + v * b.x, u * a.y + v * b.y)
+        };
+        (1..=steps).for_each(|k| {
+            let t = t1 + (t2 - t1) * k as f64 / steps as f64;
+            let a1 = lerp(w[0], w[1], 0.0, t1, t);
+            let a2 = lerp(w[1], w[2], t1, t2, t);
+            let a3 = lerp(w[2], w[3], t2, t3, t);
+            let b1 = lerp(a1, a2, 0.0, t2, t);
+            let b2 = lerp(a2, a3, t1, t3, t);
+            out.push(lerp(b1, b2, t1, t2, t));
+        });
+    });
+    out
+}
+
 /// Distance between the copies [`thicken`] adds.
 const THICKEN_STEP: i32 = 14;
 
@@ -154,6 +192,16 @@ mod tests {
         let mut points = [BufferPoint { at: Point::new(110, 100), pen: Pen::Stroke }];
         rotate_points(&mut points, Point::new(100, 100), 90.0);
         assert_eq!(points[0].at, Point::new(99, 90));
+    }
+
+    #[test]
+    fn splines_pass_through_their_points() {
+        let points = [Pos::new(0.0, 0.0), Pos::new(100.0, 40.0), Pos::new(200.0, 0.0)];
+        let spline = spline_through(None, &points, None, 4);
+        assert_eq!(spline.len(), 9);
+        assert_eq!((spline[0], spline[4], spline[8]), (points[0], points[1], points[2]));
+        // Between the points the curve bulges past the polygon's chords.
+        assert!(spline[2].y > 20.0 && spline[6].y > 20.0, "{spline:?}");
     }
 
     #[test]
