@@ -9,14 +9,16 @@
 //! symbols are drawn by the shared [`symbols::draw_library_symbol`], the
 //! symbols the engine writes as text (8va, cresc., G.P., …) by
 //! [`symbols::draw_text_symbol`], and the terms 3000-3099 from the term
-//! library (`scorlib/CODE9.DAT`) through draw_text.
+//! library (`scorlib/CODE9.DAT`) through draw_text. A symbol or term that
+//! is not there draws nothing; the refined style shows a placeholder on
+//! the screen instead ([`symbols::draw_missing_symbol`]).
 
 use std::sync::OnceLock;
 
 use crate::canvas::Canvas;
 use crate::codes::text::font_before;
 use crate::document::{Document, ItemRef};
-use crate::symbols::library::is_text_symbol;
+use crate::symbols::library::{is_missing, is_text_symbol, library_unit, normal_size, shows_missing};
 use crate::symbols::{self, ItemContext, SymbolCall, TextSymbolCall};
 use crate::text::{self, draw_text, Font, TextCall};
 use crate::units::{amod, constant, real, trunc};
@@ -24,20 +26,33 @@ use crate::units::{amod, constant, real, trunc};
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let ip = |n: usize| trunc(f64::from(item.p(n)));
     let number = ip(5).max(0);
-    if TERMS.contains(&number) {
+    let call = SymbolCall {
+        number,
+        size_x: f64::from(item.p(6)),
+        size_y: f64::from(item.p(7)),
+        thickness: ip(8),
+        rotation: f64::from(item.p(9)),
+    };
+    let step = doc.staff_of(item).step;
+    if shows_missing(doc) && missing(doc, number) {
+        let unit = library_unit(step, &call, normal_size(number));
+        symbols::draw_missing_symbol(canvas, item.staff(), doc.position(item), unit, &number.to_string());
+    } else if TERMS.contains(&number) {
         draw_term(doc, item, canvas, number);
     } else if is_text_symbol(number) {
         symbols::draw_text_symbol(doc, item, canvas, &TextSymbolCall::of(doc, item, number));
     } else {
-        let call = SymbolCall {
-            number,
-            size_x: f64::from(item.p(6)),
-            size_y: f64::from(item.p(7)),
-            thickness: ip(8),
-            rotation: f64::from(item.p(9)),
-        };
-        let step = doc.staff_of(item).step;
         symbols::draw_library_symbol(doc, &ItemContext::of(item), canvas, doc.position(item), step, &call);
+    }
+}
+
+/// Whether the item draws nothing for want of its symbol: a term past the
+/// end of the term library, or a symbol no library has.
+fn missing(doc: &Document<'_>, number: i32) -> bool {
+    if TERMS.contains(&number) {
+        TermLibrary::bundled().term(number).is_none()
+    } else {
+        is_missing(doc, number)
     }
 }
 

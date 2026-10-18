@@ -4,7 +4,8 @@
 //! Clefs, accidentals, note heads, flags, rests, articulations and the brace
 //! are all library symbols, drawn by draw_symbol 0x4293F0 (via draw_clef
 //! 0x431AE0 for most item codes). [`draw_symbol`] is the common core: every
-//! record of the symbol becomes one buffer point.
+//! record of the symbol becomes one buffer point. The refined style draws
+//! smoothed outlines instead ([`smooth::Outline`]).
 
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
@@ -16,10 +17,11 @@ use crate::units::{real, Pos};
 
 pub mod clef;
 pub mod library;
+pub mod smooth;
 pub mod text_symbol;
 
 pub use clef::draw_clef;
-pub use library::{draw_library_symbol, draw_scaled_symbol, ItemContext, SymbolCall};
+pub use library::{draw_library_symbol, draw_missing_symbol, draw_scaled_symbol, ItemContext, SymbolCall};
 pub use text_symbol::{draw_text_symbol, text_symbol_call, text_symbol_font_loaded, TextSymbolCall};
 
 include!(concat!(env!("OUT_DIR"), "/bundled_symbols.rs"));
