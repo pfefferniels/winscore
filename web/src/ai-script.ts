@@ -194,10 +194,23 @@ function systemOrder(staves: Float32Array): Map<number, number> {
   return order;
 }
 
+/** The smallest and largest value of every parameter over the targets: max_p4, min_p7, max_level … */
+function extremes(list: Target[]): Vars {
+  const vars: Vars = {};
+  const spread = (name: string, values: number[]) => {
+    vars[`min_${name}`] = Math.min(...values);
+    vars[`max_${name}`] = Math.max(...values);
+  };
+  for (let n = 1; n <= MAX_PARAM; n++) spread(`p${n}`, list.map((t) => t.params[n - 1] ?? 0));
+  spread('level', list.map((t) => level(t.params[3] ?? 0)));
+  return vars;
+}
+
 /**
  * Each target's variables: its parameters, its place in reading order (i of
  * n, t from 0 to 1; chords count once), the same on its own staff (si, sn,
- * st), and the targets' leftmost and rightmost P3 on its staff.
+ * st), the targets' leftmost and rightmost P3 on its staff, and the extremes
+ * of every parameter over the targets ("level == max_level" is the highest).
  */
 function placeVars(access: Access, list: Target[]): Vars[] {
   const systems = systemOrder(access.staves());
@@ -214,12 +227,14 @@ function placeVars(access: Access, list: Target[]): Vars[] {
   });
   const staffRanks = new Map([...perStaff].map(([staff, xs]) => [staff, [...new Set(xs)].sort((a, b) => a - b)]));
   const n = columns.length;
+  const spread = extremes(list);
   return list.map((t) => {
     const i = rank.get(name(column(t))) ?? 0;
     const xs = staffRanks.get(t.params[1]!) ?? [];
     const si = xs.indexOf(Math.round(t.params[2]! / CHORD));
     const sn = xs.length;
     return {
+      ...spread,
       ...paramVars(t.params),
       i,
       n,

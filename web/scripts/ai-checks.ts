@@ -114,6 +114,12 @@ run(last, access, notes, '“x head”');
 const heads = items().filter((q) => q[0] === 1).map((q) => q[5]);
 assert.deepEqual(heads, [0, 0, 0, 0, 0, 0, 0, 6]);
 
+// Extremes over the items: the highest note only, an octave up.
+const levels = () => items().filter((q) => q[0] === 1).map((q) => q[3]);
+const top = Math.max(...levels());
+run({ summary: 'raise', knobs: [], steps: [{ do: 'move', items: { codes: [1], where: 'level == max_level' }, up: 7 }] }, access, notes, '“raise”');
+assert.deepEqual(levels().filter((l) => l !== undefined && l > top), [top + 7]);
+
 // A failing step leaves nothing changed.
 const before = score.save().join();
 const depth = editor.mark();
