@@ -20,18 +20,23 @@ const JEV = {
   'beam always 2 notes': { action: 'beam', target: 'notes', group: '2', amount: '2' },
   'make note size gradually bigger': { action: 'grow', target: 'notes', measure: 'size' },
   'make the last note an x head': { action: 'other', target: 'notes' },
+  'make the bottom notes of the chords smaller': { action: 'other', target: 'notes' },
   'add notes c g d/f/a': { action: 'insert', target: 'all' },
 };
 
-/** Claude's script for the command Jev gives up on. */
+/** A step as Claude writes it, every field given. */
+const step = (fields) => ({
+  do: 'setting', codes: [], where: '', where_setting: '', where_is: '', setting: '', param: 0, value: '',
+  right: '', up: '', line: '', staff: 0, from: 0, to: 0, notes: '', rhythms: '', marks: '', beams: '', slurs: '', size: '',
+  ...fields,
+});
+
+/** Claude's scripts for the commands Jev gives up on: its first try, and its second when the first fails to run. */
 const CLAUDE = {
-  summary: 'Last note with an X head',
-  knobs: [],
-  steps: [
-    {
-      do: 'setting', codes: [1], where: 't == 1', where_setting: '', where_is: '', setting: 'Head', param: 0, value: 'X',
-      right: '', up: '', line: '', staff: 0, from: 0, to: 0, notes: '', rhythms: '', marks: '', beams: '', slurs: '', size: '',
-    },
+  'make the last note an x head': [{ summary: 'Last note with an X head', knobs: [], steps: [step({ codes: [1], where: 't == 1', setting: 'Head', value: 'X' })] }],
+  'make the bottom notes of the chords smaller': [
+    { summary: 'Smaller bottom notes', knobs: [], steps: [step({ codes: [1], where: 'level < mean', setting: 'Size', value: '0.8' })] },
+    { summary: 'Smaller bottom notes', knobs: [], steps: [step({ codes: [1], where: 'level == chord_low', setting: 'Size', value: '0.8' })] },
   ],
 };
 
@@ -55,13 +60,15 @@ function jevAnswers(body) {
   return { model: 'jev-1.13.0', answers, usage: { input_tokens: 300, output_tokens: 20 } };
 }
 
-function claudeMessage() {
+function claudeMessage(body) {
+  const tries = CLAUDE[/^Command: (.*)$/m.exec(body.messages[0].content)[1]];
+  const script = tries[Math.min((body.messages.length - 1) / 2, tries.length - 1)];
   return {
     id: 'msg_test',
     type: 'message',
     role: 'assistant',
     model: 'claude-sonnet-5-5',
-    content: [{ type: 'text', text: JSON.stringify(CLAUDE) }],
+    content: [{ type: 'text', text: JSON.stringify(script) }],
     stop_reason: 'end_turn',
     stop_details: null,
     usage: { input_tokens: 4000, output_tokens: 120 },
@@ -86,7 +93,7 @@ try {
   await page.route('https://api.anthropic.com/**', async (route) => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
     claudeRequest = route.request().postDataJSON();
-    await route.fulfill({ status: 200, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(claudeMessage()) });
+    await route.fulfill({ status: 200, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(claudeMessage(claudeRequest)) });
   });
 
   // Eight eighth notes on the left half of a new staff.
@@ -200,6 +207,13 @@ try {
   assert.equal(claudeRequest.output_config.format.type, 'json_schema');
   assert.match(claudeRequest.messages[0].content, /Command: make the last note an x head/);
 
+  // A script of Claude's that fails to run goes back to it once, with why.
+  await command('make the bottom notes of the chords smaller');
+  await enter();
+  assert.match(await page.textContent('.ai-status'), /✓ Smaller bottom notes/);
+  assert.equal(claudeRequest.messages.length, 3);
+  assert.match(claudeRequest.messages[2].content, /Unknown name mean/);
+
   // A SCORE command needs no model.
   const before = jevRequests.length;
   await command('FLI');
@@ -211,9 +225,7 @@ try {
   assert.equal(await page.inputValue('.ai-input'), '');
   assert.equal(await page.evaluate(() => document.activeElement?.id), 'viewport');
   assert.ok(await page.isVisible('.ai-prompt'));
-  await page.keyboard.press('Control+z');
-  await page.keyboard.press('Control+z');
-  await page.keyboard.press('Control+z');
+  for (let i = 0; i < 4; i++) await page.keyboard.press('Control+z');
   assert.equal(await page.textContent('#item-count'), '9');
   assert.match(await page.getAttribute('#undo', 'title'), /“remove the stems”/);
 

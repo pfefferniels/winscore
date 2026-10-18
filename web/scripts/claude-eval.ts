@@ -6,8 +6,8 @@
 import { readFileSync } from 'node:fs';
 import { codeName, editWords, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
-import { askClaude, type About, type Catalog } from '../src/ai-models';
-import { run, type Access, type Region, type Scope } from '../src/ai-script';
+import { askClaude, type About, type Catalog, type Failed } from '../src/ai-models';
+import { barlines, run, type Access, type Region, type Scope, type Script } from '../src/ai-script';
 
 initSync({ module: readFileSync(process.env.SCORE_WASM!) });
 const key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
@@ -27,12 +27,17 @@ interface Case {
   text: string;
   /** Item indices in mozart.mus, or null for an empty score with a region on staff 1. */
   items: number[] | null;
-  /** What must hold of the items before and after, by identity; a message when it does not. */
-  check(before: Params, after: Params): string | null;
+  /** Music put on the empty score first (passes 1 and 2), whose notes the command is then about. */
+  music?: [string, string];
+  /** What must hold of the items before and after, and of the selection after, by identity; a message when it does not. */
+  check(before: Params, after: Params, selected: number[]): string | null;
+  /** The command cannot be done: it must fail with this message, changing nothing. */
+  refused?: RegExp;
 }
 
 const notes = (m: Params) => [...m].filter(([, p]) => p[0] === 1).sort((a, b) => a[1][2]! - b[1][2]!);
 const mark = (p: Float32Array) => Math.trunc(Math.abs(p[10] ?? 0) + 1e-6);
+const beams = (m: Params) => [...m.values()].filter((p) => p[0] === 6).length;
 
 const CASES: Case[] = [
   {
@@ -99,6 +104,53 @@ const CASES: Case[] = [
     },
   },
   {
+    text: 'make lower notes start big and gradually get smaller',
+    items: null,
+    music: ['C4:E/D:F/E:G/F:A', '4/4/4/4'],
+    check(before, after) {
+      const chords = new Map<number, [number, Float32Array][]>();
+      for (const [k, p] of notes(before)) chords.set(Math.round(p[2]!), [...(chords.get(Math.round(p[2]!)) ?? []), [k, p]]);
+      const columns = [...chords.values()].map((c) => c.sort((a, b) => a[1][3]! - b[1][3]!));
+      const size = (k: number) => after.get(k)![14] || 1;
+      const lower = columns.map((c) => size(c[0]![0]));
+      const upper = columns.map((c) => size(c[1]![0]));
+      const shrinking = lower.every((s, i) => i === 0 || s < lower[i - 1]!) && lower[0]! > 1;
+      return shrinking && upper.every((s) => s === 1) ? null : `lower ${lower.join(' ')}, upper ${upper.join(' ')}`;
+    },
+  },
+  {
+    text: 'select only lower voice',
+    items: null,
+    music: ['C4:E/D:F/E:G/F:A', '4/4/4/4'],
+    check(before, after, selected) {
+      const columns = new Map<number, [number, Float32Array][]>();
+      for (const [k, p] of notes(before)) columns.set(Math.round(p[2]!), [...(columns.get(Math.round(p[2]!)) ?? []), [k, p]]);
+      const lower = [...columns.values()].map((c) => c.sort((a, b) => a[1][3]! - b[1][3]!)[0]![0]).sort();
+      const changed = [...before].filter(([k, p]) => after.get(k)?.join() !== p.join()).length;
+      const picked = [...selected].sort();
+      return picked.join() === lower.join() && !changed ? null : `selected ${picked.length} (${picked.filter((k) => !lower.includes(k)).length} not lower), ${changed} changed`;
+    },
+  },
+  {
+    text: 'beam',
+    items: null,
+    music: ['C4:E/D:F/E:G/F:A', '8/8/8/8'],
+    check: (before, after) => (beams(after) - beams(before) >= 1 ? null : 'no beam'),
+  },
+  {
+    text: 'beam those',
+    items: null,
+    music: ['C5/D/E/F/G/A/B/C', '8/8/8/8/8/8/8/8'],
+    check: (before, after) => (beams(after) - beams(before) >= 1 ? null : 'no beam'),
+  },
+  {
+    text: 'beam them',
+    items: null,
+    music: ['C4:E/D:F/E:G/F:A', '4/4/4/4'],
+    check: () => null,
+    refused: /quarter/i,
+  },
+  {
     text: 'add a c major arpeggio in eighths, up and back down',
     items: null,
     check(before, after) {
@@ -110,7 +162,7 @@ const CASES: Case[] = [
   },
 ];
 
-function setUp(items: number[] | null) {
+function setUp(items: number[] | null, music?: [string, string]) {
   const score = items ? new Score(readFileSync(`${process.env.SCORE_SAMPLES}/mozart.mus`)) : Score.empty();
   const editor = scoreEditor(score);
   const access: Access = {
@@ -124,56 +176,74 @@ function setUp(items: number[] | null) {
     },
     context: () => ({ clef: null, symbolName: () => null }),
     staves: () => score.staffGeometry(),
+    summaries: () => score.itemSummaries(),
     inputLine: (passes, staff, from, to) => new InputLine(passes, staff, from, to),
   };
-  const keys = editor.keys();
   const region: Region = { staff: 1, bottom: 1, top: 1, from: 20, to: 180 };
-  const scope: Scope = items ? { keys: items.map((i) => keys[i]!), region: null } : { keys: [], region };
+  if (music) run({ summary: 'music', knobs: [], steps: [{ do: 'insert', notes: music[0], rhythms: music[1] }] }, access, { keys: [], region }, 'music');
+  const keys = editor.keys();
+  const scope: Scope = items ? { keys: items.map((i) => keys[i]!), region: null } : music ? { keys: keys.slice(1), region } : { keys: [], region };
   /** The scope's items (or, for an empty score, every item), by identity. */
   const snapshot = (): Params => {
     const now = editor.keys();
     const wanted = items ? new Set(scope.keys) : null;
     return new Map(now.flatMap((k, i) => (!wanted || wanted.has(k) ? [[k, access.params(i)!] as const] : [])));
   };
-  return { score, editor, access, scope, snapshot };
+  const selected = () => editor.selection().map((i) => editor.keys()[i]!);
+  return { score, editor, access, scope, snapshot, selected };
 }
 
 /** One case's line of the report. */
 async function evaluate(c: Case): Promise<string> {
-  const { access, scope, snapshot } = setUp(c.items);
+  const { access, scope, snapshot, selected } = setUp(c.items, c.music);
   const counts = new Map<number, number>();
   const sample: number[][] = [];
   for (const p of snapshot().values()) {
     counts.set(p[0]!, (counts.get(p[0]!) ?? 0) + 1);
     sample.push(Array.from(p));
   }
-  const bars = new Map<number, number[]>();
   const staves = new Set(sample.map((p) => p[1]!));
-  for (let i = 0; i < access.editor.keys().length; i++) {
-    const p = access.params(i)!;
-    if (p[0] === 14 && staves.has(p[1]!)) bars.set(p[1]!, [...(bars.get(p[1]!) ?? []), p[2]!].sort((a, b) => a - b));
-  }
+  const bars = new Map([...barlines(access)].filter(([staff]) => staves.has(staff)));
   const about: About = { text: c.text, counts, whole: false, region: scope.region, middle: 34, sample, bars, codeName: (code) => codeName(code) ?? `Code ${code}` };
+  let written: Script | null = null;
+  const before = snapshot();
   try {
-    const { script, ms } = await askClaude(about, catalog, connection, new AbortController().signal);
-    const before = snapshot();
-    run(script, access, scope, `“${c.text}”`);
-    const problem = c.check(before, snapshot());
+    // As the app does: a script that fails to run goes back to Claude once, with why.
+    let failed: Failed | undefined;
+    let asked = await askClaude(about, catalog, connection, new AbortController().signal);
+    written = asked.script;
+    try {
+      run(asked.script, access, scope, `“${c.text}”`);
+    } catch (err) {
+      failed = { answer: asked.answer, error: err instanceof Error ? err.message : String(err) };
+      asked = await askClaude(about, catalog, connection, new AbortController().signal, failed);
+      written = asked.script;
+      run(asked.script, access, scope, `“${c.text}”`);
+    }
+    const { script, ms } = asked;
+    if (c.refused) return `FAIL "${c.text}" was not refused → ${JSON.stringify(script.steps)}`;
+    const problem = c.check(before, snapshot(), selected());
     return `${problem ? 'FAIL' : 'ok  '} ${(ms / 1000).toFixed(1)} s "${c.text}" → ${script.summary} ${JSON.stringify(script.steps)}${script.knobs.length ? ` knobs ${script.knobs.map((k) => `${k.id}=${k.value}`).join(', ')}` : ''}${problem ? `\n       ${problem}` : ''}`;
   } catch (err) {
-    return `ERR  "${c.text}": ${err instanceof Error ? err.message : String(err)}`;
+    const message = err instanceof Error ? err.message : String(err);
+    const unchanged = [...before].every(([k, p]) => snapshot().get(k)?.join() === p.join());
+    if (c.refused?.test(message) && unchanged) return `ok   "${c.text}" refused: ${message}`;
+    return `ERR  "${c.text}": ${message}${written ? ` in ${JSON.stringify(written.steps)}` : ''}`;
   }
 }
 
 // CLAUDE_LIMIT=1 asks one at a time, as the app does: the system prompt is then cached after the first.
-const limit = Number(process.env.CLAUDE_LIMIT ?? CASES.length);
+// CLAUDE_CASES=lower,arpeggio runs only the cases whose command has one of these words.
+const only = process.env.CLAUDE_CASES?.split(',');
+const CHOSEN = only ? CASES.filter((c) => only.some((w) => c.text.includes(w))) : CASES;
+const limit = Number(process.env.CLAUDE_LIMIT ?? CHOSEN.length);
 const results: string[] = [];
 let next = 0;
 await Promise.all(Array.from({ length: limit }, async () => {
-  while (next < CASES.length) {
+  while (next < CHOSEN.length) {
     const i = next++;
-    results[i] = await evaluate(CASES[i]!);
+    results[i] = await evaluate(CHOSEN[i]!);
   }
 }));
 console.log(results.join('\n'));
-console.log(`claude eval: ${results.filter((r) => r.startsWith('ok')).length}/${CASES.length} with ${connection.model}`);
+console.log(`claude eval: ${results.filter((r) => r.startsWith('ok')).length}/${CHOSEN.length} with ${connection.model}`);

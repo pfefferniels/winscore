@@ -448,10 +448,11 @@ Steps run in order, each on the items the command is about (the selection, or th
   - "command": the SCORE edit word in "line" on the items, such as "NST" or "FLI" (below), or a group command (FLN, FLU, FLD refit stems, beams and slurs over the items' area).
   - "insert": a line of music input on "staff" between P3 "from" and "to" (0 for all three: where new music goes, given below), from the five passes "notes", "rhythms", "marks", "beams", "slurs". Pass 1: notes C D E F G A B with accidentals F (flat), S (sharp), N, FF, SS and octave 0–8 (C4 is middle C, the octave persists), items separated by /, chord notes by : (C4:E:G), R a rest, M a barline; a P before the first note gives each note the octave nearest the one before (PC4/E/G). Pass 2: one value per note, chord or rest: 1 whole, 2 half, 4 quarter, 8 eighth, 16, 32; a dot after it dots it (4.); always give it, as notes without a value become grace notes. Passes 3–5 may stay empty.
   - "beam": beams over "size" notes or chords each ("0" for every run up to a barline); the engine refits stems and flags.
+  - "select": the items it picks become the selection, and the steps after it act on them only; nothing is edited. A command to select, keep only or pick out items is this, never a delete.
 - Which items a step acts on: "codes" (empty for all), "where" (an expression that must hold, or ""), and "where_setting" with "where_is" (only the items whose setting reads that option, e.g. "Mark" and "Staccato", or "" and "").
 - "value", "right", "up", "size": text holding a number, an expression or an option's name.
 
-Values may be expressions: numbers, + - * / % ^, comparisons, && || !, a ? b : c, functions min max abs round floor ceil sqrt pow lerp(a,b,t) clamp(x,lo,hi) snap(x,step), and these names for each item: p1 … p45 (its parameters), staff, x (P3), level (P4 without the cue-size hundred), value (the setting's current value; 0 often means the default, e.g. size 0 is size 1), mean (the mean of that parameter over the items, in set steps), t (0 for the first column of items from left to right, 1 for the last; the notes of a chord share one), i and n (that column's number from 0, and how many there are), st, si, sn (the same on the item's own staff), left and right (the leftmost and rightmost P3 of the items on its staff), count, min_p1 … min_p45 and max_p1 … max_p45 (a parameter's smallest and largest value over the items; min_level and max_level the same for level, so "level == max_level" is the highest note), and the knobs by id. There are no functions over the items: max(p4) is just p4.
+Values may be expressions: numbers, + - * / % ^, comparisons, && || !, a ? b : c, functions min max abs round floor ceil sqrt pow lerp(a,b,t) clamp(x,lo,hi) snap(x,step), and these names for each item: p1 … p45 (its parameters), staff, x (P3), level (P4 without the cue-size hundred), value (the setting's current value; 0 often means the default, e.g. size 0 is size 1), mean (the mean of that parameter over the items, in set steps), t (0 for the first column of items from left to right, 1 for the last; the notes of a chord share one), i and n (that column's number from 0, and how many there are), st, si, sn (the same on the item's own staff), bar, bi, bn, bt (its bar on its staff from 0, by the barlines, and the same as i, n, t within that bar: "bi == 0" is the first note or chord of each bar, "bi == bn - 1" the last), left and right (the leftmost and rightmost P3 of the items on its staff), count, chord_low and chord_high (the lowest and highest level among the notes of its chord, its notes at the same place on its staff, a lone note being its own chord: "level == chord_low" is the bottom note of each chord), chord_size (how many notes that chord has), min_p1 … min_p45, max_p1 … max_p45 and mean_p1 … mean_p45 (a parameter's smallest, largest and mean value over the items; min_level, max_level and mean_level the same for level, so "level == max_level" is the single highest note), and the knobs by id. There are no functions over the items: max(p4) is just p4.
 
 Knobs are numbers the command leaves open — how much bigger, how fast something grows, how far to move. Give each a slider: {"id": a name used in expressions, "label": two or three words, "min", "max", "step", "value": a sensible default}. The user drags the slider and the script runs again at once. A command that says everything needs no knobs ([]).
 
@@ -468,6 +469,8 @@ A step leaves out its unused fields here for brevity; give every field.
 "make the notes gradually bigger" → {"summary": "Notes grow", "knobs": [{"id": "to", "label": "Final size", "min": 0.5, "max": 4, "step": 0.05, "value": 1.8}, {"id": "curve", "label": "Curve", "min": 0.25, "max": 4, "step": 0.05, "value": 1}], "steps": [{"do": "setting", "codes": [1], "setting": "Size", "value": "round((1 + (to - 1) * t ^ curve) * 100) / 100"}]}
 "make the slurs flatter" → {"summary": "Flatter slurs", "knobs": [{"id": "k", "label": "Curvature ×", "min": 0, "max": 1, "step": 0.05, "value": 0.5}], "steps": [{"do": "setting", "codes": [5], "setting": "Curvature", "value": "round(value * k * 100) / 100"}]}
 "accent the last note" → {"summary": "Accent the last note", "knobs": [], "steps": [{"do": "setting", "codes": [1], "where": "t == 1", "setting": "Mark", "value": "Accent"}]}
+"stems down on the bottom notes of the chords" → {"summary": "Bottom notes stem down", "knobs": [], "steps": [{"do": "setting", "codes": [1], "where": "level == chord_low && chord_size > 1", "setting": "Stem", "value": "Down"}]}
+"select only the top notes" → {"summary": "Select the top notes", "knobs": [], "steps": [{"do": "select", "codes": [1], "where": "level == chord_high"}]}
 "add c e g" → {"summary": "Add C E G", "knobs": [], "steps": [{"do": "insert", "staff": 0, "from": 0, "to": 0, "notes": "PC5/E/G", "rhythms": "4/4/4"}]}`;
 }
 
@@ -521,7 +524,7 @@ export const SCRIPT_SCHEMA = {
         additionalProperties: false,
         required: ['do', 'codes', 'where', 'where_setting', 'where_is', 'setting', 'param', 'value', 'right', 'up', 'line', 'staff', 'from', 'to', 'notes', 'rhythms', 'marks', 'beams', 'slurs', 'size'],
         properties: {
-          do: { type: 'string', enum: ['setting', 'set', 'move', 'delete', 'command', 'insert', 'beam'] },
+          do: { type: 'string', enum: ['setting', 'set', 'move', 'delete', 'command', 'insert', 'beam', 'select'] },
           codes: { type: 'array', items: { type: 'integer' } },
           where: STRING,
           where_setting: STRING,
@@ -566,6 +569,8 @@ function stepOf(w: Written): Step {
       return { do: 'insert', staff: w.staff || null, from: w.from || null, to: w.to || null, notes: w.notes, rhythms: w.rhythms, marks: w.marks, beams: w.beams, slurs: w.slurs };
     case 'beam':
       return { do: 'beam', items, size: text(w.size) || 0 };
+    case 'select':
+      return { do: 'select', items };
   }
 }
 
@@ -592,8 +597,20 @@ async function anthropic(connection: NonNullable<Connections['claude']>): Promis
   return instance;
 }
 
-/** Claude's script for a command. */
-export async function askClaude(about: About, catalog: Catalog, connection: NonNullable<Connections['claude']>, signal: AbortSignal): Promise<{ script: Script; ms: number }> {
+/** A script of Claude's that failed: its answer as written, and why. */
+export interface Failed {
+  answer: string;
+  error: string;
+}
+
+/** Claude's script for a command; after a `failed` one, its second try, told why. */
+export async function askClaude(
+  about: About,
+  catalog: Catalog,
+  connection: NonNullable<Connections['claude']>,
+  signal: AbortSignal,
+  failed?: Failed,
+): Promise<{ script: Script; ms: number; answer: string }> {
   const started = performance.now();
   const claude = await anthropic(connection);
   const response = await claude.beta.messages.create(
@@ -604,7 +621,18 @@ export async function askClaude(about: About, catalog: Catalog, connection: NonN
       fallbacks: 'default',
       output_config: { effort: 'low', format: { type: 'json_schema', schema: SCRIPT_SCHEMA } },
       system: [{ type: 'text', text: systemPrompt(catalog), cache_control: { type: 'ephemeral' } }],
-      messages: [{ role: 'user', content: userMessage(about) }],
+      messages: [
+        { role: 'user', content: userMessage(about) },
+        ...(failed
+          ? [
+              { role: 'assistant' as const, content: failed.answer },
+              {
+                role: 'user' as const,
+                content: `Running this script failed: ${failed.error}. If the script is at fault, write it again with only the names, settings and options described; if the command cannot be done on these items, answer with no steps and say why in the summary.`,
+              },
+            ]
+          : []),
+      ],
     },
     { signal },
   );
@@ -613,7 +641,7 @@ export async function askClaude(about: About, catalog: Catalog, connection: NonN
   const written = JSON.parse(text) as { summary: string; knobs: Script['knobs']; steps: Written[] };
   if (!Array.isArray(written.steps) || written.steps.length === 0) throw new Error(`Claude found nothing to do${written.summary ? `: ${written.summary}` : ''}`);
   const script: Script = { summary: written.summary, knobs: written.knobs ?? [], steps: written.steps.map(stepOf) };
-  return { script, ms: performance.now() - started };
+  return { script, ms: performance.now() - started, answer: text };
 }
 
 /** A key for remembering readings: the same words about the same kinds of items. */
