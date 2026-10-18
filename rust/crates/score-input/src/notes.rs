@@ -1,8 +1,7 @@
 //! Pass 1: notes, rests, barlines, clefs, key signatures, meters and the switches between them.
 //!
-//! The item parser 0x4E2CC8 as analysis/engine/input.md ("Pass 1: notes") describes it. The
-//! text has been through the reader (reader.rs), and scan.rs splits it into items; spaces
-//! inside an item are passed over.
+//! The engine's item parser. The text has been through the reader (reader.rs), and scan.rs
+//! splits it into items; spaces inside an item are passed over.
 
 use crate::error::{ErrorKind, InputError, Pass};
 use crate::motives::Motives;
@@ -288,7 +287,7 @@ pub enum NoteEntry {
 
 /// How a recall `@X` inside an item joins what precedes it. The tokenizer puts the motive's
 /// text in place of the call and starts the item there, so the item's text before `@` is
-/// lost, but a chord it continued goes on with the motive's first note (0x524C4A).
+/// lost, but a chord it continued goes on with the motive's first note.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Join {
     /// A call on its own.
@@ -381,7 +380,7 @@ fn joined_recall(entry: &Entry, at: usize) -> Result<Vec<NoteEntry>, InputError>
     }
 }
 
-/// 0x524C4A: an `X` or `Z` must be followed by `[` or a digit 1-9.
+/// An `X` or `Z` must be followed by `[` or a digit 1-9.
 fn check_repeat_letters(entry: &Entry) -> Result<(), InputError> {
     let bytes = entry.text.as_bytes();
     let bad = bytes
@@ -426,7 +425,7 @@ fn chord(c: &mut Cursor) -> Result<(NoteEntry, Option<NoteEntry>), InputError> {
     }
 }
 
-/// A note: `[O|P]letter`, then the suffix loop of 0x4E2CC8.
+/// A note: `[O|P]letter`, then the item parser's suffix loop.
 fn note(c: &mut Cursor) -> Result<(NoteName, Option<NoteEntry>), InputError> {
     let mut mode = None;
     while let Some(prefix) = octave_mode(c) {

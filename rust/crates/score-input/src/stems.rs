@@ -1,4 +1,4 @@
-//! 0x40CDE4 with 0x40C1C0, run on the stored items after IN and after a refit: every note
+//! The stem fitting, run on the stored items after IN and after a refit: every note
 //! under a beam of the staff whose stem goes the beam's way gets the stem length (P8) that
 //! reaches the beam, and loses its flags (the units digit of P9).
 
@@ -13,7 +13,7 @@ const BEAM: i32 = 6;
 const HEAD_WIDTH: f32 = 2.83333;
 /// Stems of grace and cue notes are drawn at this fraction of the normal length.
 const SMALL_STEM: f32 = 0.6;
-/// The x range 0x40CDE4 takes beams from (P3), as the input routines call it.
+/// The x range the stem fitting takes beams from (P3), as the input routines call it.
 const BEAMS_FROM: f32 = 1.0;
 const BEAMS_TO: f32 = 200.0;
 /// A note this far outside a beam's ends still counts as under it.
@@ -38,8 +38,8 @@ pub(crate) fn fit_items(items: &[Item], staff: i32, step: f32, neighbours: Neigh
         .collect()
 }
 
-/// 0x40CDE4 on parameter rows: the beams of `staff` with P3 in 1..200, in item order, each
-/// fitting the notes in its x range.
+/// The stem fitting on parameter rows: the beams of `staff` with P3 in 1..200, in item order,
+/// each fitting the notes in its x range.
 pub(crate) fn fit(rows: &mut [Vec<f32>], staff: i32, step: f32, neighbours: Neighbours) {
     let beams: Vec<Vec<f32>> = rows
         .iter()
@@ -71,8 +71,8 @@ fn under_beam(beam: &[f32], note: &[f32], step: f32, neighbours: Neighbours) -> 
     if !same_way || small(par(beam, 4)) != small(par(note, 4)) {
         return None;
     }
-    // 0x40C1C0 measures a note moved to another staff (P12) from that staff; a staff that
-    // cannot exist counts as none (decision of main).
+    // A note moved to another staff (P12) is measured from that staff; a staff that
+    // cannot exist counts as none.
     let placement = match trunc(par(note, 12)) {
         1 => neighbours.above,
         2 => neighbours.below,
@@ -95,7 +95,7 @@ fn fit_note(note: &mut Vec<f32>, length: f32) {
     }
 }
 
-/// 0x40C1C0 for a note whose stem goes the beam's way (`up` for both): the length from the
+/// For a note whose stem goes the beam's way (`up` for both): the length from the
 /// note's head to the beam, with the head-width moves the engine makes before it
 /// interpolates (they show in the last bits).
 fn stem_length(beam: &[f32], note: &[f32], up: bool, step: f32) -> f32 {

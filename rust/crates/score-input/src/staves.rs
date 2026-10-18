@@ -1,6 +1,5 @@
-//! Where staves stand (analysis/engine/staves.md), as far as input needs it: a note moved
-//! to the staff above or below (S+/S-, P12) is measured from the IN staff in beams and slurs
-//! (0x41A776).
+//! Where staves stand, as far as input needs it: a note moved to the staff above or below
+//! (S+/S-, P12) is measured from the IN staff in beams and slurs.
 
 use score_format::Item;
 

@@ -6,7 +6,7 @@ pub(crate) fn trunc(x: f32) -> i32 {
     x as i32
 }
 
-/// The engine's AMOD (0x54AABA): x minus y times the truncated quotient, stored as f32.
+/// The engine's AMOD: x minus y times the truncated quotient, stored as f32.
 pub(crate) fn amod(x: f32, y: f32) -> f32 {
     let quotient = (f64::from(x) / f64::from(y)) as i64;
     (f64::from(x) - quotient as f64 * f64::from(y)) as f32

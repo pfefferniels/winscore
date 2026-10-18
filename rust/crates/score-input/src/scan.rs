@@ -1,5 +1,4 @@
-//! Splitting a pass into its entries, and a cursor for reading one entry: the tokenizer
-//! 0x524C4A as analysis/engine/input.md ("Tokenizer") describes it.
+//! Splitting a pass into its entries, and a cursor for reading one entry: the tokenizer.
 //!
 //! The engine upper-cases what is typed, ignores line breaks (a long pass continues on the
 //! next line) and stops at the first semicolon. Entries are separated by `/` or `,`; a
@@ -26,7 +25,7 @@ impl Entry {
         Cursor { bytes: self.text.as_bytes(), pos: 0, origin: self.start, pass, skip_spaces: false }
     }
 
-    /// A cursor that passes over spaces as the item parsers do (0x526EC4); a number still
+    /// A cursor that passes over spaces as the item parsers do; a number still
     /// ends at a space, so `3 4` is two numbers.
     pub fn spaced_cursor(&self, pass: Pass) -> Cursor<'_> {
         Cursor { skip_spaces: true, ..self.cursor(pass) }
@@ -82,7 +81,7 @@ pub(crate) fn entries(text: &str, pass: Pass, motives: &mut Motives) -> Result<V
         }
         at += piece_len + 1;
     }
-    // 0x524C4A: in passes 3-5 "=" is typed for "+" (same key without shift).
+    // In passes 3-5 "=" is typed for "+" (same key without shift).
     if pass > Pass::Rhythms {
         out.iter_mut().for_each(|e| e.text = e.text.replace('=', "+"));
     }

@@ -1,6 +1,6 @@
-//! Pass 5: slurs, ties and tuplet brackets as code-5 items, ported from the engine's slur
-//! routine 0x53D1E0 and its helpers 0x53DE20 (end levels), 0x53DF2A (tie levels),
-//! 0x42C60E (off the staff lines), 0x53E094 (marks) and 0x53E32F (inner notes).
+//! Pass 5: slurs, ties and tuplet brackets as code-5 items, following the engine's slur
+//! routine and its helpers (end levels, tie levels, off the staff lines, marks and inner
+//! notes).
 
 use crate::connect::{ConnectEntry, Connection, Side};
 use crate::error::{ErrorKind, InputError, Pass, Span};
@@ -12,10 +12,10 @@ const BELOW: i32 = 20;
 /// Note numbers with a meaning of their own: from before the first note, to after the last.
 const BEFORE_FIRST: usize = 0;
 const PAST_LAST: usize = 99;
-/// Marks a slur end has to clear (0x797454): wedge, accent, tenuto, staccato, their
+/// Marks a slur end has to clear: wedge, accent, tenuto, staccato, their
 /// combinations, heavy wedge, fingerings 0-5.
 const MARKS_TO_CLEAR: [i32; 14] = [4, 5, 6, 7, 8, 9, 10, 19, 30, 31, 32, 33, 34, 35];
-/// The page's right limit (0x1FBB8B8), where a staff without P6 ends.
+/// The page's right limit, where a staff without P6 ends.
 pub(crate) const STAFF_END: f32 = 200.0;
 
 /// One entry of the engine's work table as the slur routine reads it.
@@ -57,7 +57,7 @@ impl WorkEntry {
         }
     }
 
-    /// 0x53DFD6: the stem direction, or for a stemless head the side it would have.
+    /// The stem direction, or for a stemless head the side it would have.
     fn stem_direction(&self) -> i32 {
         match self.stem {
             0 if self.level > 6 => BELOW,
@@ -67,7 +67,7 @@ impl WorkEntry {
     }
 }
 
-/// 0x53DE20: level of a slur end at this note.
+/// Level of a slur end at this note.
 fn end_level(entry: &WorkEntry, direction: i32, level: f32, stem: i32) -> f32 {
     let stem_side = if entry.stem == 0 { 2.0 } else { entry.extension + 8.0 };
     match (stem < BELOW, direction == BELOW) {
@@ -78,7 +78,7 @@ fn end_level(entry: &WorkEntry, direction: i32, level: f32, stem: i32) -> f32 {
     }
 }
 
-/// 0x42C60E: an end on a staff line moves into the space outside it.
+/// An end on a staff line moves into the space outside it.
 fn off_line(level: f32, direction: i32) -> f32 {
     let on_line = (level % 2.0) == 1.0;
     match (on_line, direction) {
@@ -88,7 +88,7 @@ fn off_line(level: f32, direction: i32) -> f32 {
     }
 }
 
-/// 0x53DF2A: a tie end half a step from a head in a space, 1.2 steps from one on a line.
+/// A tie end half a step from a head in a space, 1.2 steps from one on a line.
 fn tie_level(level: f32, direction: i32) -> f32 {
     let offset = if (level as i32) % 2 != 0 { 1.2 } else { 0.5 };
     level + if direction == BELOW { -offset } else { offset }
@@ -102,7 +102,7 @@ struct SlurEnds {
 }
 
 impl SlurEnds {
-    /// End levels and P8 (0x53D1E0): with equal stems each end is placed at its own note;
+    /// End levels and P8: with equal stems each end is placed at its own note;
     /// otherwise the end on the stem side follows the other end. Both move off staff lines
     /// unless the slur began as a tie.
     fn levels_at(&self, a: &WorkEntry, b: &WorkEntry, off_lines: bool) -> (f32, f32, f32) {
@@ -155,7 +155,7 @@ struct Shape {
     tuplet: f32,
 }
 
-/// 0x53E094: an end at a note with a mark on the slur's side moves past the mark; for
+/// An end at a note with a mark on the slur's side moves past the mark; for
 /// other marks on the note-head side it is the mark that moves (its P11 grows by 0.18).
 fn clear_mark(end: &mut f32, entry: &mut WorkEntry, stem: i32, direction: i32, tuplet: bool) {
     let mark = entry.mark;
@@ -189,7 +189,7 @@ fn clear_mark(end: &mut f32, entry: &mut WorkEntry, stem: i32, direction: i32, t
     *end += if direction == BELOW { -amount } else { amount };
 }
 
-/// 0x53E32F: inner notes reaching the slur deepen its curve (or, for a tuplet bracket,
+/// Inner notes reaching the slur deepen its curve (or, for a tuplet bracket,
 /// move both ends).
 fn clear_inner_notes(shape: &mut Shape, entries: &[WorkEntry], first: usize, last: usize, direction: i32) {
     let margin = if direction == BELOW { -2.5f32 } else { 2.5 };
@@ -235,7 +235,7 @@ struct SlurInput<'a> {
     /// The input range, where slurs from before the first or past the last note end.
     begin: f32,
     end: f32,
-    /// The staff's right end (0x547AE0: P6 of the staff item, else the page's limit), where
+    /// The staff's right end (P6 of the staff item, else the page's limit), where
     /// a slur to after the last note ends.
     staff_end: f32,
 }
@@ -251,7 +251,7 @@ impl SlurInput<'_> {
 
     fn items(&mut self, connection: &Connection) -> Vec<score_format::Item> {
         let count = self.note_count() + 1;
-        // 0x41A14C: note numbers as the engine adjusts them.
+        // Note numbers as the engine adjusts them.
         let mut typed_first = connection.first;
         let mut first = typed_first;
         let mut second = connection.last.max(1);
@@ -277,7 +277,7 @@ impl SlurInput<'_> {
         let typed_direction = direction;
         let mut x1 = self.entries[a].x;
         let mut x2 = self.entries[b].x;
-        // 0x41A14C, pass 5: fractional note numbers place the ends between notes; the
+        // In pass 5, fractional note numbers place the ends between notes; the
         // engine then treats the numbers as 1 and 1, so such a slur is never a tie.
         let [f1, f2] = connection.fractions.map(f32::abs);
         let mut anchor = first;
@@ -299,7 +299,7 @@ impl SlurInput<'_> {
             typed_first = 1;
             typed_second = 1;
         }
-        // 0x41A4F9: the end notes' levels count from the staff they are placed on.
+        // The end notes' levels count from the staff they are placed on.
         let mut level1 = self.entries[a].level as f32 + self.entries[a].staff_steps;
         let mut level2 = self.entries[b].level as f32 + self.entries[b].staff_steps;
         let chord_start = self.entries.get(a + 1).is_some_and(|n| n.x == self.entries[a].x);
@@ -371,7 +371,7 @@ impl SlurInput<'_> {
             if shape.kind < -1.0 && shape.kind > -4.0 {
                 length += shape.kind * 2.0;
             }
-            // One extended-precision expression with the engine's f32 constants (0x53D1E0).
+            // One extended-precision expression with the engine's f32 constants.
             let base = f64::from(length) / f64::from(20.0f32) + f64::from(0.9f32);
             let rise = (f64::from(shape.y2) - f64::from(shape.y1)).abs();
             shape.bend = (rise * f64::from(0.1f32) + base) as f32;
@@ -423,7 +423,8 @@ pub(crate) fn apply(line: &mut Line, entries: &[ConnectEntry], (begin, end): (f3
             ConnectEntry::EveryEighths { .. } => None,
         })
         .collect();
-    // A start past the last note is invalid input: 0x41A14C reads the empty slot before note 1.
+    // A start past the last note is invalid input: the engine reads the empty slot before
+    // note 1.
     if let Some(bad) = pairs.iter().find(|c| c.first > line.note_count() && c.first != PAST_LAST) {
         return Err(InputError::new(Pass::Slurs, Span::default(), ErrorKind::NoSuchNote(bad.first as f32)));
     }

@@ -1,11 +1,11 @@
-//! Layout inside a chord: accidentals moved left so they do not collide (0x4EE442) and
-//! augmentation dots moved down or right next to seconds (0x51C824).
+//! Layout inside a chord: accidentals moved left so they do not collide and
+//! augmentation dots moved down or right next to seconds.
 
 /// Clearance in thousandths of P5 (i.e. hundredths of a step) that an accidental needs
 /// to the left of the accidental above it: `[gap][other][this]`, where gap is the
 /// distance in steps minus one (at least 1), `other` the accidental below (double flat
 /// counted as flat, double sharp as the fourth column) and `this` the accidental above.
-/// Table at 0x794D04 (Fortran order T(this, other, gap)).
+/// The engine's table, in Fortran order T(this, other, gap).
 const CLEARANCE: [[[i32; 5]; 4]; 6] = [
     [[240, 250, 215, 440, 250], [240, 290, 240, 440, 300], [240, 255, 220, 430, 280], [250, 280, 240, 500, 330]],
     [[155, 250, 180, 380, 200], [240, 290, 230, 440, 250], [200, 250, 160, 420, 180], [0, 280, 160, 0, 0]],
@@ -14,7 +14,7 @@ const CLEARANCE: [[[i32; 5]; 4]; 6] = [
     [[0, 110, 0, 0, 0], [0; 5], [0; 5], [0; 5]],
     [[0; 5]; 4],
 ];
-/// Steps an accidental reaches above and below its note (0x794CF3, 0x794CFB), by P5 code 1-5.
+/// Steps an accidental reaches above and below its note, by P5 code 1-5.
 const REACH_ABOVE: [i32; 5] = [5, 4, 4, 5, 1];
 const REACH_BELOW: [i32; 5] = [1, 3, 3, 1, 1];
 /// Offset of the accidental of a head moved to the left of the stem.
@@ -32,7 +32,7 @@ pub struct ChordHead {
     pub left_of_stem: bool,
 }
 
-/// Width of an accidental in the stacking sequence (0x4EE442, 240 or 440 for a double flat).
+/// Width of an accidental in the stacking sequence (240 or 440 for a double flat).
 fn width(accidental: i32) -> i32 {
     if accidental == DOUBLE_FLAT {
         440
@@ -152,7 +152,7 @@ fn below(add: i32) -> i32 {
     }
 }
 
-/// P9 additions for the dots of a dotted chord (0x51C824). Heads in item order (stem head
+/// P9 additions for the dots of a dotted chord. Heads in item order (stem head
 /// first), with `shifted` telling which heads sit on the other side of the stem; a lower
 /// voice (SD) starts with every dot below its line. Only chords with seconds are laid out.
 pub fn dot_offsets(levels: &[i32], shifted: &[bool], down: bool, lower_voice: bool) -> Vec<i32> {

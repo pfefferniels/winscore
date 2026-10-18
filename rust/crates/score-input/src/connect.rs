@@ -1,5 +1,4 @@
-//! Passes 4 and 5: beams and slurs between numbered notes, read by the item parser 0x4DA9C3
-//! (analysis/engine/input.md, "Passes 4 and 5").
+//! Passes 4 and 5: beams and slurs between numbered notes, read by the item parser.
 //!
 //! Both passes share a syntax: pairs of note numbers (`1 4`), separated by `/` or `,`; a
 //! third number is ignored, and a single number or an end not after the start means the
@@ -7,7 +6,7 @@
 //! (`-`). Written without a space after the first number, `1+4` is only a separator (as in
 //! SCORE 4's own files), while `1-2` is the number -12. Adding 100 times k to a note number
 //! puts the number k over the beam, or a tuplet bracket numbered k over the slur. `Xk a b c`
-//! makes the pairs (a, a + k - 1), (b, b + k - 1), ... (0x4E4D40). Pass 4 also has automatic
+//! makes the pairs (a, a + k - 1), (b, b + k - 1), ... Pass 4 also has automatic
 //! beams: `nB` or `nBp` (every n eighths, after p notes) and `B` or `A` alone (by the last
 //! meter).
 
@@ -79,7 +78,7 @@ fn endpoint(c: &mut Cursor, pass: Pass) -> Option<Endpoint> {
         None
     };
     let value = c.number()?;
-    // 0x5194D5 reads on through a `-` between digits: `1-2` is -12.
+    // The number reader reads on through a `-` between digits: `1-2` is -12.
     let (side, value) = if c.peek_raw() == Some(b'-') && c.peek_raw_at(1).is_some_and(|b| b.is_ascii_digit()) {
         c.bump();
         let rest = c.integer().unwrap_or(0);
@@ -167,7 +166,7 @@ pub fn parse(text: &str, pass: Pass, motives: &mut Motives) -> Result<Vec<Connec
         .into_iter()
         .flatten()
         .collect();
-    // 0x4DA9C3 reads a single number's partner past the `/`.
+    // The item parser reads a single number's partner past the `/`.
     let next_firsts = parsed.iter().skip(1).map(Parsed::first).chain(std::iter::once(None));
     let connections = parsed.iter().zip(next_firsts).flat_map(|(item, next)| match item {
         Parsed::Pair(a, b) => vec![connection(*a, b.or(next).unwrap_or(NEXT_NOTE))],
@@ -176,7 +175,7 @@ pub fn parse(text: &str, pass: Pass, motives: &mut Motives) -> Result<Vec<Connec
     Ok(connections.map(ConnectEntry::Pair).collect())
 }
 
-/// Pass 4's automatic beams (0x4DA9C3): `B` or `A` as the first character beams by the last
+/// Pass 4's automatic beams: `B` or `A` as the first character beams by the last
 /// meter; otherwise a digit followed by `B` in the first 10 characters (not `B[`, not after
 /// `@`) makes the first item `n B p`, its first two numbers, signs ignored. Any further item
 /// leaves no beams at all. None when the pass is not automatic; Some(None) for no beams.
@@ -207,7 +206,7 @@ fn automatic_beams(text: &str, meter: Option<Meter>) -> Option<Option<ConnectEnt
     Some(Some(ConnectEntry::EveryEighths { eighths, pickup }))
 }
 
-/// `B`/`A`: groups by the meter (0x78D918): 2 eighths in x/4 and common time, 4 in x/2 and
+/// `B`/`A`: groups by the meter: 2 eighths in x/4 and common time, 4 in x/2 and
 /// cut time, 8 in x/1; in x/8, 2 for x = 2, 4, 8 and 3 for x = 3, 6, 9, 12. None: no beams.
 fn eighths_for_meter(meter: Meter) -> Option<u32> {
     match meter {

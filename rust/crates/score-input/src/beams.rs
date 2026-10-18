@@ -1,7 +1,7 @@
 //! Pass 4: beams as code-6 items, and the stems of the beamed notes.
 //!
-//! Ported from the engine's beam routine 0x413CA8 and its beam-line routine 0x559F38; the
-//! stems reach the beams later, on the stored items (stems.rs).
+//! Follows SCORE's beam routine and its beam-line routine; the stems reach the beams later,
+//! on the stored items (stems.rs).
 
 use crate::connect::{ConnectEntry, Connection, Side};
 use crate::error::InputError;
@@ -11,7 +11,7 @@ use crate::notes::{StaffShift, StemMode};
 
 const UP: i32 = 10;
 const DOWN: i32 = 20;
-/// Steepest beam slope in steps per P3 unit (0x78B470, a preference, 0.1 by default).
+/// Steepest beam slope in steps per P3 unit (a preference, 0.1 by default).
 const MAX_SLOPE: f32 = 0.1;
 
 /// A note, chord or rest as the automatic beaming sees it.
@@ -54,7 +54,7 @@ fn grace_runs(slots: &[Slot]) -> Vec<Connection> {
         .collect()
 }
 
-/// 0x410FD8: the groups of `xB`/`xBy`. Grace-note runs are beamed first. Then, after
+/// The groups of `xB`/`xBy`. Grace-note runs are beamed first. Then, after
 /// `pickup` notes or rests, flagged notes are collected until a note without flags, or
 /// until the time reaches the next multiple of `eighths` eighths; a rest after a flagged
 /// note does not end a group. Grace notes in the pickup are skipped without being counted,
@@ -116,13 +116,13 @@ fn every_eighths(line: &Line, eighths: u32, pickup: u32) -> Vec<Connection> {
     groups
 }
 
-/// Level of the head a beam is measured from (0x41A4F9): the last in item order, which is
+/// Level of the head a beam is measured from: the last in item order, which is
 /// the head nearest the beam.
 fn beam_side_level(note: &Note) -> f32 {
     note.heads.last().map_or(0.0, |h| h.level as f32)
 }
 
-/// 0x559F38: the levels of the beam's ends (in note-level terms), and the direction when
+/// The levels of the beam's ends (in note-level terms), and the direction when
 /// none was decided yet. `levels` and `xs` hold the beamed notes in order.
 fn beam_line(levels: &[f32], xs: &[f32], (x1, x2): (f32, f32), direction: i32) -> (f32, f32, i32) {
     let n = levels.len();
@@ -245,7 +245,7 @@ fn inner_extreme(levels: &[f32], xs: &[f32], x1: f32, start: f32, end: f32, dire
     worst.filter(|(_, _, off)| if direction == DOWN { *off < -1.0 } else { *off > 1.0 }).map(|(x, level, _)| (x, level))
 }
 
-/// 0x55ADF4: the level at `x_at` of the line through (`x_from`, `y_from`) and (`x_to`, `y_to`).
+/// The level at `x_at` of the line through (`x_from`, `y_from`) and (`x_to`, `y_to`).
 fn pivot(x_from: f32, x_to: f32, x_at: f32, y_from: f32, y_to: f32) -> f32 {
     let slope = ((y_to as f64 - y_from as f64) / (x_to as f64 - x_from as f64)) as f32;
     (x_at - x_from) * slope + y_from
@@ -267,7 +267,7 @@ fn half_steps(start: f32, end: f32, direction: i32) -> (f32, f32) {
     (a as f32 / 2.0 + shift, b as f32 / 2.0 + shift)
 }
 
-/// 0x413CA8: offset of both ends for groups with three or more beams, or level beams
+/// Offset of both ends for groups with three or more beams, or level beams
 /// far from the middle.
 fn end_offset(direction: i32, start: f32, end: f32, most_tails: i32) -> f32 {
     let start_step = start as i32;
@@ -289,7 +289,7 @@ fn end_offset(direction: i32, start: f32, end: f32, most_tails: i32) -> f32 {
     offset as f32 / 2.0
 }
 
-/// Which way a one-note secondary beam points: -1 left, 1 right, 0 by position (0x413CA8).
+/// Which way a one-note secondary beam points: -1 left, 1 right, 0 by position.
 /// Grace notes (no tails counted) are passed over when looking at the neighbours.
 fn stub_directions(tails: &[i32], fewest: i32) -> Vec<i32> {
     let n = tails.len();
@@ -321,7 +321,7 @@ fn stub_directions(tails: &[i32], fewest: i32) -> Vec<i32> {
 }
 
 /// Secondary beams in slots of three parameters (code, left x, right x; 0 marks the open
-/// side of a stub), consumed level by level as in 0x413CA8.
+/// side of a stub), consumed level by level as in the engine's beam routine.
 fn secondary_beams(tails: &[i32], xs: &[f32], fewest: i32) -> Vec<[f32; 3]> {
     let n = tails.len();
     let stubs = stub_directions(tails, fewest);
@@ -377,7 +377,7 @@ fn secondary_beams(tails: &[i32], xs: &[f32], fewest: i32) -> Vec<[f32; 3]> {
 
 struct Beamer<'a> {
     line: &'a mut Line,
-    /// Stem direction a note got from its first beam (0x1F9929C), by note number.
+    /// Stem direction a note got from its first beam, by note number.
     beamed: Vec<i32>,
 }
 
@@ -409,9 +409,9 @@ impl Beamer<'_> {
             return Vec::new();
         }
         let first_grace = grace(first);
-        // 0x413CA8 encodes the beam for small notes (|P4| >= 100) when the first note is one.
+        // The beam is encoded for small notes (|P4| >= 100) when the first note is one.
         let small_first = self.line.note(first).is_some_and(Note::is_small);
-        // 0x41A4F9: a note that already has a beam direction keeps it, whatever the sign says.
+        // A note that already has a beam direction keeps it, whatever the sign says.
         let typed = |side: Option<Side>| match side {
             Some(Side::Above) => UP,
             Some(Side::Below) => DOWN,
@@ -509,7 +509,7 @@ impl Beamer<'_> {
             .collect()
     }
 
-    /// 0x4156EC: notes of the group that no beam has claimed yet (possible when the group's
+    /// Notes of the group that no beam has claimed yet (possible when the group's
     /// first note had its direction already) point their stems the beam's way, or away
     /// from the staff they were moved to. Only the stem changes; heads and marks stay.
     fn point_unclaimed_stems(&mut self, numbers: std::ops::RangeInclusive<usize>, direction: i32) {
@@ -525,7 +525,7 @@ impl Beamer<'_> {
         }
     }
 
-    /// 0x4156EC: a tremolo of pass 3 on a beamed note takes the beam's ends and direction.
+    /// A tremolo of pass 3 on a beamed note takes the beam's ends and direction.
     fn attach_tremolos(&mut self, numbers: std::ops::RangeInclusive<usize>, beam: &[f32; 9], direction: i32) {
         let notes: Vec<(f32, i32)> = numbers.filter_map(|n| self.line.note(n)).map(|n| (n.x, n.rhythm.tails())).collect();
         for tremolo in self.line.attachments.iter_mut() {
@@ -546,7 +546,7 @@ impl Beamer<'_> {
 }
 
 /// A stem direction no beam can change: SU/SD fix the stems of the notes typed under them,
-/// and pass 2 fixes the other grace stems upward (0x51CF40).
+/// and pass 2 fixes the other grace stems upward.
 fn fixed_direction(note: &Note) -> i32 {
     match (note.stem_mode, note.is_grace()) {
         (StemMode::Up, _) | (StemMode::Ordinary, true) => UP,

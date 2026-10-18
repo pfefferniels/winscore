@@ -1,15 +1,15 @@
-//! The refit of one staff's stems, beams and slurs (0x47C3E8), which the group commands
+//! The refit of one staff's stems, beams and slurs, which the group commands
 //! FLI, FLN, FLU and FLD run on each staff of their area, and TR with its stem option.
 //!
 //! The engine turns the notes in the area back into input: a pitch stream for pass 1 with
 //! stem codes for the chosen directions and cue toggles, one rhythm per chord, the stored
-//! marks, and beams and slurs as pairs of note numbers (found by position, 0x47DC96). It
+//! marks, and beams and slurs as pairs of note numbers (found by position). It
 //! runs passes 1 to 5 on that and writes P4, P5 and P8 to P11 back into the same notes,
-//! P4, P5 and P7 into the beams and slurs it could match (0x47E0A9). Here the same input
+//! P4, P5 and P7 into the beams and slurs it could match. Here the same input
 //! goes through score-input's passes.
 //!
-//! Like the engine, `refit` expects the items sorted (0x4F7808, which the commands run
-//! first) and changes no item's place in the list.
+//! Like the engine, `refit` expects the items sorted (the commands sort them first) and
+//! changes no item's place in the list.
 
 use score_format::{Item, Word};
 
@@ -37,7 +37,7 @@ const SNAP: f32 = 0.01;
 const BEAMABLE: f32 = 0.99;
 /// Marks from this code on are not P11 marks for the marks pass.
 const FIRST_SYMBOL_MARK: i32 = 45;
-/// P1 to P11 are stored for every refitted note (0x5239C9 lengthens shorter items).
+/// P1 to P11 are stored for every refitted note (shorter items are lengthened).
 const NOTE_WORDS: usize = 11;
 const WRITTEN: [usize; 6] = [4, 5, 8, 9, 10, 11];
 
@@ -71,7 +71,7 @@ pub enum RefitErrorKind {
     NoDuration { item: usize },
     /// A chord whose second and third notes both have stems.
     TwoStems { item: usize },
-    /// Input this port does not handle (the engine may do something with it).
+    /// Input this crate does not handle (the engine may do something with it).
     Unsupported(&'static str),
 }
 
@@ -118,7 +118,7 @@ pub fn refit(items: &[Item], staff: i32, area: (f32, f32), mode: RefitMode) -> R
     }
 }
 
-/// The refits of a group command (0x494302) over the staves `first..=last` of an area:
+/// The refits of a group command over the staves `first..=last` of an area:
 /// the engine goes on with the next staff when it gives up on one.
 #[derive(Debug, Clone, PartialEq)]
 pub struct StavesRefit {
@@ -128,7 +128,7 @@ pub struct StavesRefit {
 }
 
 /// Refits each staff of `first..=last` in turn, as FLI/FLN/FLU/FLD do after sorting the
-/// items. Pass 1 sets an area's left end of 0 to 1.5 (0x4ECDF8) once a staff has had
+/// items. Pass 1 sets an area's left end of 0 to 1.5 once a staff has had
 /// notes to refit, which the later staves see.
 pub fn refit_staves(items: &[Item], (first, last): (i32, i32), area: (f32, f32), mode: RefitMode) -> StavesRefit {
     let mut rows = rows_of(items);
@@ -300,7 +300,7 @@ impl Refit<'_> {
         Ok(())
     }
 
-    /// 0x47C3E8's write-back: every note takes the P4, P5 and P8 to P11 of the entry at its
+    /// The refit's write-back: every note takes the P4, P5 and P8 to P11 of the entry at its
     /// place, the beams and slurs those of the new item with their P3.
     fn write_back(&mut self, line: &Line, order: &[usize], beams: &[BeamItem], slurs: &[usize]) -> Result<(), RefitErrorKind> {
         let produced = line.items();
@@ -329,13 +329,13 @@ impl Refit<'_> {
         // when it refitted slurs.
         if !made_beams.is_empty() || !slurs.is_empty() {
             self.restore_segments(beams);
-            // 0x40CDE4, over every beam of the staff, also those outside the area.
+            // The stems are fitted over every beam of the staff, also those outside the area.
             stems::fit(self.rows, self.staff, self.staff_step(), Neighbours::defaults(self.staff.clamp(1, 255) as u8));
         }
         Ok(())
     }
 
-    /// 0x47E0A9: the items in `rows` take P4 and P5 (and P7 through `seventh`) of the new
+    /// The items in `rows` take P4 and P5 (and P7 through `seventh`) of the new
     /// items in turn, each from the next new item that starts at their P3.
     fn take_over(&mut self, rows: &[usize], made: &[&Item], seventh: impl Fn(&mut Vec<f32>, &Item)) {
         let mut made = made.iter().peekable();
@@ -396,7 +396,7 @@ impl Refit<'_> {
         25.0 * if size != 0.0 { size } else { 1.0 }
     }
 
-    /// The staff's right end (0x547AE0): its P6, else the page's limit.
+    /// The staff's right end: its P6, else the page's limit.
     fn staff_end(&self) -> f32 {
         self.staff_item().filter(|r| r.len() >= 6 && r[5] != 0.0).map_or(slurs::STAFF_END, |r| r[5])
     }
@@ -422,7 +422,7 @@ enum Pass {
     Slurs,
 }
 
-/// 0x47DC96: the note numbers of each beam or slur, found by truncated position: the last
+/// The note numbers of each beam or slur, found by truncated position: the last
 /// chord within 2 of the start, and the last other chord within 2 of the end. A beam
 /// whose ends are not both found is reported and left out; for a slur the missing numbers
 /// (0, or one past the last chord) go to the slur pass. Further beam items with the same
@@ -477,7 +477,7 @@ struct Stream {
 }
 
 impl Stream {
-    /// The stream 0x47C3E8 builds from the notes (P3, row) in item order.
+    /// The stream the refit builds from the notes (P3, row) in item order.
     fn build(rows: &[Vec<f32>], notes: &[(f32, usize)], mode: RefitMode) -> Result<Stream, RefitErrorKind> {
         let mut stream = Stream {
             events: Vec::new(),
@@ -662,7 +662,7 @@ fn accidental(code: i32) -> Result<Option<Accidental>, RefitErrorKind> {
     })
 }
 
-/// The rhythm 0x51C64F reads from the value `dots * 1000 + P7` the refit sends.
+/// The rhythm the engine reads from the value `dots * 1000 + P7` the refit sends.
 fn rhythm_of(value: f32, dots: i32) -> Rhythm {
     if value >= GRACE {
         return Rhythm::Grace;

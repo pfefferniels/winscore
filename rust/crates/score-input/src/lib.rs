@@ -10,7 +10,7 @@
 //! 5. slurs and ties between numbered notes: `1 4;`
 //!
 //! [`run`] converts them into the items the engine would create; the aim is the same items
-//! with the same parameter values as WinScore 5.01, checked against the emulated engine.
+//! with the same parameter values as WinScore 5.01.
 //!
 //! ```
 //! use score_input::{run, Options, Passes};
@@ -151,7 +151,7 @@ pub fn run_outlined(
     marks::apply(&mut line, &marks, (0.0, options.staff_end))?;
     beams::apply(&mut line, &beams)?;
     slurs::apply(&mut line, &slurs, (options.begin, options.end), options.staff_end)?;
-    // 0x5253FD stores the line, then fits the stems to the beams in the item store.
+    // The engine stores the line, then fits the stems to the beams in the item store.
     let items = stems::fit_items(&line.items(), i32::from(options.staff), 25.0 * options.size, options.neighbours);
     Ok((items, line.outline()))
 }

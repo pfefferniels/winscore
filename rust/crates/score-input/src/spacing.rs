@@ -1,6 +1,5 @@
 //! Horizontal positions (P3) of the entries of an input line, as pass 2 computes them
-//! (0x51CF40, without a spacing staff) followed by the minimum-gap pass (0x52FC56).
-//! See analysis/engine/input.md.
+//! (without a spacing staff) followed by the minimum-gap pass.
 //!
 //! Every chord member is an entry of its own, sharing the chord's position; that matters
 //! for the minimum-gap pass, which never moves the very last entry.
@@ -64,7 +63,7 @@ fn key_count(key: KeySignature) -> f32 {
     f32::from(key.count)
 }
 
-/// Width of a non-note entry (before scaling by the staff size); 0x51CF40, widths loop.
+/// Width of a non-note entry (before scaling by the staff size); pass 2's widths loop.
 fn width(entries: &[Entry], j: usize, last: usize) -> f32 {
     let next = entries.get(j + 1).copied();
     let next_code = next.map_or(0, Entry::code);
@@ -180,7 +179,7 @@ pub fn positions(entries: &[Entry], begin: f32, end: f32, size: f32) -> Vec<f32>
     x
 }
 
-/// 0x52FC56: gaps below 3 become 3 at the expense of the wide gaps. The last entry is never
+/// Gaps below 3 become 3 at the expense of the wide gaps. The last entry is never
 /// moved (the engine's copy loop stops one short), so the gap before it may stay small.
 fn enforce_minimum_gaps(x: &mut [f32], begin: f32) {
     let gaps: Vec<f32> = x.windows(2).map(|w| w[1] - w[0]).collect();

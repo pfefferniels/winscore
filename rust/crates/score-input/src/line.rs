@@ -28,7 +28,7 @@ const CAUTIONARY: i32 = 100;
 /// P7 of the further heads of a grace chord (the stem head has 65).
 const GRACE_CHORD_MEMBER: f32 = 64.0;
 
-/// Builds an item; trailing zero parameters are dropped as the engine does (0x5253FD).
+/// Builds an item; trailing zero parameters are dropped as the engine does.
 pub(crate) fn item(params: &[f32]) -> Item {
     let used = params.iter().rposition(|p| *p != 0.0).map_or(0, |i| i + 1);
     Item::new(params[..used].iter().copied().map(Word::from_f32).collect())
@@ -59,7 +59,7 @@ pub(crate) struct Note {
     pub stem_mode: StemMode,
     /// Heads whose dots were laid out again after a beam turned the chord.
     pub redotted: Option<usize>,
-    /// Heads, from the stem head on, that 0x4EE442 lays out (seconds and accidentals).
+    /// Heads, from the stem head on, that the chord layout lays out (seconds and accidentals).
     pub laid_out_heads: usize,
     /// An entry left at another x than the chord (position in item order, x): the
     /// minimum-gap pass never moves the last entry of the line, which can be the last
@@ -72,7 +72,7 @@ pub(crate) struct Note {
     /// Cue size: P4 is stored 100 further from 0, as for grace notes.
     pub cue: bool,
     /// The head (in item order) whose placement on another staff was dropped because that
-    /// staff cannot exist (0x41A776); the other heads keep theirs.
+    /// staff cannot exist; the other heads keep theirs.
     pub placement_dropped: Option<usize>,
     /// P5, P10 and dots of every head when they do not follow from the heads (a grace
     /// chord in the refit).
@@ -127,7 +127,7 @@ impl Note {
             note.heads_down = true;
         }
         note.fit_stem();
-        // 0x4ECDF8 settles a chord's stem by comparing its last head with the stem head,
+        // The builder settles a chord's stem by comparing its last head with the stem head,
         // taking the stem direction from the head before the last when they are level. With
         // three or more heads on one level that head has no stem, so the stem turns up, and
         // the accidental layout is handed only the first two heads.
@@ -144,10 +144,10 @@ impl Note {
     }
 
     /// A chord whose notes reach pass 1 in two runs (the refit sends a stem code before a
-    /// stem head that is not the chord's first note). 0x4ECDF8 sorts only the first run
+    /// stem head that is not the chord's first note). The builder sorts only the first run
     /// and appends the rest; the stem then goes up when the last note is above the first,
     /// down when below, and for a unison by the stem of the note before it; P8 spans from
-    /// the first note; 0x4EE442 lays out the heads up to that last comparison.
+    /// the first note; the chord layout lays out the heads up to that last comparison.
     pub fn set_pass1_chord(&mut self, run: &[Head], rest: &[Head]) {
         let mut sorted = run.to_vec();
         sorted.sort_by_key(|h| h.level);
@@ -188,11 +188,11 @@ impl Note {
         self.table_extension = self.extension;
     }
 
-    /// A grace chord as pass 2 leaves it inside the refit (0x47C3E8). 0x4EE442 skips the
+    /// A grace chord as pass 2 leaves it inside the refit. The chord layout skips the
     /// part that only runs in the IN pass 2 (sorting the heads, clearing P10, rounding P5),
     /// so: the heads keep pass 1's order, the lowest swapped to the front when the stem is
-    /// free (0x51CF40); P10 values stay at their places while P4 and P5 move; the
-    /// accidental offsets of pass 1 and pass 2 add up; P8 comes from a value 0x51C64F left
+    /// free; P10 values stay at their places while P4 and P5 move; the
+    /// accidental offsets of pass 1 and pass 2 add up; P8 comes from a value the engine left
     /// at 0 for the grace note.
     fn lay_out_grace_chord_for_refit(&mut self) {
         if !self.is_grace() || self.heads.len() < 2 {
@@ -247,7 +247,7 @@ impl Note {
         self.table_extension = self.extension;
     }
 
-    /// One run of 0x4EE442 without its IN-pass-2 part on heads in place order: P10 set
+    /// One run of the chord layout without its IN-pass-2 part on heads in place order: P10 set
     /// for seconds (other places keep `previous`), and the accidental offsets.
     fn refit_layout_pass(heads: &[Head], previous: &[f32], down: bool, side: f32) -> (Vec<f32>, Vec<i32>) {
         let levels: Vec<i32> = heads.iter().map(|h| h.level).collect();
@@ -262,7 +262,7 @@ impl Note {
         (shifts, offsets)
     }
 
-    /// P8 of a grace note (0x51CF40): 100 (the slash) plus a stem length that grows for notes
+    /// P8 of a grace note: 100 (the slash) plus a stem length that grows for notes
     /// below the staff; a grace chord encodes its span. `down` is the stem pass 1 gave the
     /// note before pass 2 turned every grace stem up.
     fn grace_extension(&self, down: bool) -> f32 {
@@ -293,7 +293,7 @@ impl Note {
         self.rhythm == Rhythm::Grace
     }
 
-    /// Makes the note cue size. 0x51CF40 gives cue notes their own P8: from a head below
+    /// Makes the note cue size. Pass 2 gives cue notes their own P8: from a head below
     /// the staff (stem up) or above it (stem down), and for a chord at least twice the
     /// normal P8.
     pub fn set_cue(&mut self) {
@@ -323,8 +323,8 @@ impl Note {
         self.is_grace() || self.cue
     }
 
-    /// The heads 0x413CA8 turns with the chord: those at the chord's x, which leaves out a
-    /// stray last head.
+    /// The heads the beam routine turns with the chord: those at the chord's x, which leaves
+    /// out a stray last head.
     fn run_len(&self) -> usize {
         match self.stray_head {
             Some((i, _)) if i + 1 == self.heads.len() => i,
@@ -344,7 +344,7 @@ impl Note {
         self.laid_out_heads = run;
     }
 
-    /// Turns the stem; the engine reverses the chord's heads (0x413CA8), so the head that
+    /// Turns the stem; the engine reverses the chord's heads, so the head that
     /// carried the stem ends up last.
     pub fn set_stem(&mut self, down: bool) {
         if self.down != down {
@@ -354,8 +354,8 @@ impl Note {
         self.fit_stem();
     }
 
-    /// 0x413CA8 reverses the heads of every chord in a beam group that goes the other way,
-    /// also when SU/SD or an earlier beam fixed its stem. Such a chord keeps its stem
+    /// The beam routine reverses the heads of every chord in a beam group that goes the other
+    /// way, also when SU/SD or an earlier beam fixed its stem. Such a chord keeps its stem
     /// direction and flags but lays out its heads for the beam's direction and loses its
     /// stem extension. Grace chords are left alone.
     pub fn turn_heads(&mut self, down: bool, first_entry: usize) {
@@ -528,8 +528,8 @@ impl Note {
         add
     }
 
-    /// 0x413CA8 turns a chord for its beam and has 0x51C824 lay out the dots again, but
-    /// passes an end index that 0x4EE442 has overwritten with the head count + 1, so a chord
+    /// The beam routine turns a chord for its beam and has the dots laid out again, but passes
+    /// an end index that the chord layout has overwritten with the head count + 1, so a chord
     /// whose first work-table entry is `first_entry` gets only this many heads laid out.
     pub fn redot_after_turn(&mut self, first_entry: usize) {
         let heads = self.run_len();
@@ -543,7 +543,7 @@ impl Note {
     }
 }
 
-/// 0x4EE442's accidental layout on heads in item order, `left` marking the heads with
+/// The accidental layout on heads in item order, `left` marking the heads with
 /// P10 = 20: it works through them from the first for a down stem, from the last for an up
 /// stem (from the top, when the heads are sorted).
 fn positional_accidental_offsets(heads: &[&Head], left: &[bool], down: bool) -> Vec<i32> {
@@ -563,7 +563,7 @@ fn positional_accidental_offsets(heads: &[&Head], left: &[bool], down: bool) -> 
 }
 
 /// Which heads (in item order, stem head first) sit on the other side of the stem: a head
-/// within a step of the previous head moves over unless that one moved (0x4EE442).
+/// within a step of the previous head moves over unless that one moved.
 fn second_shifts(levels: &[i32]) -> Vec<bool> {
     levels
         .iter()
@@ -713,8 +713,8 @@ fn uncentred(kind: RestKind) -> f32 {
     }
 }
 
-/// The head of a chord 0x41A776 is applied to: the beam builder steps to the chord's last
-/// entry, the slur's end-note lookup stays on the stem head.
+/// The head of a chord the staff placement is applied to: the beam builder steps to the
+/// chord's last entry, the slur's end-note lookup stays on the stem head.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Reached {
     StemHead,
@@ -742,7 +742,7 @@ pub(crate) struct Line {
 impl Line {
     pub fn new(timed: &[Timed], options: &Options) -> Self {
         let mut stems = StemMode::Ordinary;
-        // 0x4ECDF8: Q+ turns automatic stems up, Q- goes back to the mode SU/SD/SO chose.
+        // Q+ turns automatic stems up, Q- goes back to the mode SU/SD/SO chose.
         let mut chosen = StemMode::Ordinary;
         let mut shift = StaffShift::Main;
         let mut clef = options.clef;
@@ -804,7 +804,7 @@ impl Line {
         line
     }
 
-    /// 0x4ECDF8: a clef is drawn small unless it opens the line, or is the line's first
+    /// A clef is drawn small unless it opens the line, or is the line's first
     /// clef and stands right after a barline.
     fn mark_clef_changes(&mut self) {
         let mut seen = false;
@@ -889,7 +889,7 @@ impl Line {
         })
     }
 
-    /// Scale steps a staff placement adds to a note's level in beams and slurs (0x41A776);
+    /// Scale steps a staff placement adds to a note's level in beams and slurs;
     /// None for a staff that cannot exist.
     fn staff_steps(&self, shift: StaffShift) -> Option<f32> {
         match shift {
@@ -899,9 +899,9 @@ impl Line {
         }
     }
 
-    /// 0x41A776 on one head of note `number` as a beam or slur reaches it: the steps the
-    /// note's placement adds to its level. A placement on a staff that cannot exist counts
-    /// as none (decision of main), and that head's P12 is dropped.
+    /// The staff placement on one head of note `number` as a beam or slur reaches it: the
+    /// steps the note's placement adds to its level. A placement on a staff that cannot
+    /// exist counts as none, and that head's P12 is dropped.
     pub fn placement_steps(&mut self, number: usize, head: Reached) -> f32 {
         let Some(shift) = self.note(number).map(|n| n.shift) else { return 0.0 };
         self.staff_steps(shift).unwrap_or_else(|| {
@@ -980,7 +980,7 @@ impl Line {
     }
 }
 
-/// P9 of a rest centred in its measure. The input stores -1, and draw_rest (0x519C38)
+/// P9 of a rest centred in its measure. The input stores -1, and draw_rest
 /// replaces it with the middle of the measure the first time the rest is drawn, which is
 /// what the saved item holds; -1 stays when no barline follows.
 fn centre(kind: RestKind, x: f32, size: f32, bars: &[f32]) -> f32 {

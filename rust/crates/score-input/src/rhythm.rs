@@ -6,9 +6,8 @@
 //! item add up (`QE`, `4 8`). `Xn` makes n copies, `X n m` or `REP n m` repeats the last n
 //! values to m copies in all, and an empty item repeats the previous value.
 //!
-//! The engine turns each item into a token, the duration in quarters plus 1000 per dot
-//! (parser 0x4D9EA0), and reads the token back with 0x51C64F. Grammar and probes:
-//! analysis/engine/input.md, "Pass 2: rhythms".
+//! The engine turns each item into a token, the duration in quarters plus 1000 per dot,
+//! and reads the token back.
 
 use crate::error::{ErrorKind, InputError, Pass};
 use crate::motives::Motives;
@@ -32,7 +31,7 @@ pub enum Rhythm {
 }
 
 impl Rhythm {
-    /// 0x51C64F's reading of a token. An infinite duration (the value `0`) is a grace note:
+    /// The engine's reading of a token. An infinite duration (the value `0`) is a grace note:
     /// the engine's x87 comparison with 1/16 takes an unordered result for equal.
     pub fn from_token(token: f32) -> Self {
         let quarters = amod(token, DOT_TOKEN);
@@ -63,7 +62,7 @@ impl Rhythm {
         }
     }
 
-    /// Values of this length without its dots in a whole note ("type" in 0x51C64F).
+    /// Values of this length without its dots in a whole note (the engine's "type").
     fn per_whole(self) -> f32 {
         match self {
             Rhythm::Value { quarters, .. } if quarters <= 0.0 => 0.0,
@@ -72,7 +71,7 @@ impl Rhythm {
         }
     }
 
-    /// Note head (P6, 0x51C5DB): 0 black, 1 half, 2 whole, 3 breve.
+    /// Note head (P6): 0 black, 1 half, 2 whole, 3 breve.
     pub fn head(self) -> i32 {
         let per_whole = self.per_whole();
         match self {
@@ -85,7 +84,7 @@ impl Rhythm {
     }
 
     /// Number of flags (tails) on an unbeamed stem: one from 8 values per whole note on,
-    /// one more at each doubling, at most 10 (0x51C64F).
+    /// one more at each doubling, at most 10.
     pub fn tails(self) -> i32 {
         match self {
             Rhythm::Value { .. } => {
@@ -142,7 +141,7 @@ fn tokens(text: &str, motives: &mut Motives) -> Result<Vec<f32>, InputError> {
     expand(&entries, &items)
 }
 
-/// The reader (0x422D98) appends `X<notes>` when the pass ends after one or two characters.
+/// The reader appends `X<notes>` when the pass ends after one or two characters.
 fn fills_all(text: &str) -> bool {
     let body: String = text.split(';').next().unwrap_or("").chars().filter(|c| !matches!(c, '\r' | '\n')).collect();
     let body = body.to_ascii_uppercase();
@@ -150,7 +149,7 @@ fn fills_all(text: &str) -> bool {
     (1..=2).contains(&typed) && !body.starts_with('@') && !body.contains('/')
 }
 
-/// The tokens of the items, repeats applied (0x4AF456).
+/// The tokens of the items, repeats applied.
 fn expand(entries: &[Entry], items: &[Item]) -> Result<Vec<f32>, InputError> {
     let mut tokens: Vec<f32> = Vec::new();
     for (entry, item) in entries.iter().zip(items) {
@@ -207,7 +206,7 @@ fn group_repeat(c: &mut Cursor) -> Result<Item, InputError> {
     Ok(Item::Repeat { items, times })
 }
 
-/// A repeat count. The tokenizer (0x524C4A) wants a digit 1-9 right after `X`; a group
+/// A repeat count. The tokenizer wants a digit 1-9 right after `X`; a group
 /// repeat without its second number would use a stale count in the engine.
 fn count(c: &mut Cursor) -> Result<u32, InputError> {
     match c.peek() {
@@ -216,7 +215,7 @@ fn count(c: &mut Cursor) -> Result<u32, InputError> {
     }
 }
 
-/// Characters 0x4D9EA0 scans as one run before reading a value.
+/// Characters the engine scans as one run before reading a value.
 fn in_run(byte: u8) -> bool {
     byte.is_ascii_digit() || matches!(byte, b'.' | b':' | b'\'' | b'G' | b'S' | b'T' | b'E' | b'Q' | b'H' | b'W' | b'D')
 }
@@ -257,7 +256,7 @@ fn take_run(c: &mut Cursor) -> Entry {
     Entry { text, start, motive: None }
 }
 
-/// The durations in one run and the number of dots that end it. 0x4D9EA0 blanks those dots
+/// The durations in one run and the number of dots that end it. The engine blanks those dots
 /// out and gives them to the run's first value, so `QE.` is Q. + E.
 fn run_values(run: &Entry, first_run: bool) -> Result<(Vec<f32>, u8), InputError> {
     let body_len = run.text.trim_end_matches('.').len();
@@ -297,7 +296,7 @@ impl Length {
     }
 }
 
-/// Values per whole note of the letters in the table at 0x794734 (0x794710).
+/// Values per whole note of the letters in the engine's table.
 fn letter_per_whole(letter: u8) -> Option<f32> {
     Some(match letter {
         b'S' => 16.0,

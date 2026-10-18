@@ -1,13 +1,13 @@
-//! What WinScore's pass-1 reader (0x41C3B8) does to the text while it is typed, before the
-//! tokenizer sees it (analysis/engine/input.md, "Pass 1: notes", "Reader"):
+//! What WinScore's pass-1 reader does to the text while it is typed, before the tokenizer
+//! sees it:
 //!
 //! - letters are upper-cased, `'` becomes `:`;
 //! - `.` and `=` become `=` after `/` or `=` (the chord repeat), `+` elsewhere (the dyad);
 //! - `#`, `%` and `^` are dropped, `$` too unless it follows `@` or `-`;
 //! - a leading `/` is dropped;
-//! - every item closed by `/` passes the item check 0x4C2912 on its first two characters,
+//! - every item closed by `/` passes the item check on its first two characters,
 //!   and an item that fails is erased (the last item, closed by `;`, is not checked); so is
-//!   a group repeat `Xn m` reaching back further than the items typed so far (0x421651);
+//!   a group repeat `Xn m` reaching back further than the items typed so far;
 //! - `;` after a final barline `M/` or `M?/` replaces that `/`, so the barline is not repeated.
 
 use crate::error::Span;
@@ -122,7 +122,7 @@ pub(crate) fn read(typed: &str) -> ReadText {
     text.finish()
 }
 
-/// The reader of passes 4 and 5 (0x427C68): upper case, a `/` before a typed `X`, and a
+/// The reader of passes 4 and 5: upper case, a `/` before a typed `X`, and a
 /// typed `X1 ` dropped altogether.
 pub(crate) fn read_connections(typed: &str) -> ReadText {
     let mut text = Typed::default();
@@ -148,7 +148,7 @@ pub(crate) fn read_connections(typed: &str) -> ReadText {
     text.finish()
 }
 
-/// The item check 0x4C2912 on an item closed by `/`.
+/// The item check on an item closed by `/`.
 fn item_passes(item: &[u8]) -> bool {
     let item = skip_input_clef(item);
     if let [name, b'[', inner @ ..] = item {

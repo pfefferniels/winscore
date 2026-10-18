@@ -6,8 +6,6 @@
 //! a fraction rounds to the nearest note for note marks but places symbols and lines between
 //! notes. Most marks go into the note's P11; dynamics, words and `Nk` become code-9 symbols,
 //! `TM…` code-6 tremolo beams, `TRW…`, `O`, `OB` code-7 lines and `C`, `C-` code-4 hairpins.
-//! Grammar and probes: analysis/engine/input.md, "Pass 3: marks" (reader 0x426950, parser
-//! 0x4DAEB2, builder 0x4D8460).
 
 use crate::error::{ErrorKind, InputError, Pass, Span};
 use crate::line::{item, Line, Note, STEM};
@@ -43,7 +41,7 @@ pub enum MarkKind {
 }
 
 impl MarkKind {
-    /// The kind of mark number m (0x4D8460); `Nk` gives m = -k.
+    /// The kind of mark number m; `Nk` gives m = -k.
     fn of(m: i32) -> Option<Self> {
         let above = |library: i32| matches!(library, 66 | 67);
         Some(match m {
@@ -118,7 +116,7 @@ fn repeat_last_number(items: &mut [MarkItem]) {
     }
 }
 
-/// The items of an entry as the reader (0x426950) leaves them: a letter or `-` typed after a
+/// The items of an entry as the reader leaves them: a letter or `-` typed after a
 /// digit or a space starts a new item, a `+` before a letter is cut off from it, `~` is a
 /// space and `%`, `&`, `(` are not stored.
 fn reader_items(entry: &Entry) -> Vec<Entry> {
@@ -169,7 +167,7 @@ fn parse_item(entry: &Entry) -> Result<Option<MarkItem>, InputError> {
     Ok(Some(MarkItem { kind, flipped, numbers, entry: entry.clone() }))
 }
 
-/// Longer spellings 0x4DAEB2 rewrites before parsing (loop at 0x4DAF60). `TRE` also takes an
+/// Longer spellings the parser rewrites before parsing. `TRE` also takes an
 /// `M` after it, `TRI` the `L`s.
 const SPELLINGS: [(&str, &str); 14] = [
     ("TRE", "TM"),
@@ -203,7 +201,7 @@ fn spelled_short(text: &str) -> String {
     format!("{short}{rest}")
 }
 
-/// The mark number of a mark name (0x4DAEB2): its first letter and the characters right
+/// The mark number of a mark name: its first letter and the characters right
 /// after it, as far as they count. The parser takes any character there, digits included.
 fn mark_number(c: &mut Cursor) -> Result<i32, InputError> {
     let reject = c.error_here(ErrorKind::Unexpected("mark name".into()));
@@ -379,7 +377,7 @@ fn targets(item: &MarkItem) -> Result<Vec<Mark>, InputError> {
     while let Some(number) = numbers.next() {
         let target = if number.range_start {
             let end = numbers.next().ok_or_else(unpaired)?;
-            // 0x4D8460 truncates both ends of a range.
+            // The builder truncates both ends of a range.
             Target::Notes { first: end_of_range(number.value), last: end_of_range(end.value) }
         } else {
             Target::At(number.value)
@@ -393,7 +391,7 @@ fn end_of_range(value: f32) -> u32 {
     value.max(0.0) as u32
 }
 
-/// The clearance a P11 mark code gets (codes of the table at 0x7946E4).
+/// The clearance a P11 mark code gets (codes of the engine's table).
 fn clearance_of(code: i32) -> Clearance {
     match code {
         5 => Clearance::Accent,
@@ -402,15 +400,15 @@ fn clearance_of(code: i32) -> Clearance {
     }
 }
 
-/// The P11 mark `code` (negative: on the other side) on note `number`, as the refit
-/// (0x47C3E8) sends a note's stored mark to the marks pass.
+/// The P11 mark `code` (negative: on the other side) on note `number`, as the refit sends
+/// a note's stored mark to the marks pass.
 pub(crate) fn stored(code: i32, number: u32) -> Mark {
     let kind = MarkKind::Head { code: code.abs(), clearance: clearance_of(code.abs()) };
     Mark { kind, flipped: code < 0, target: Target::Notes { first: number, last: number } }
 }
 
-/// 0x4D9475 as the beam pass uses it: a note whose stem was turned by a beam gets the
-/// clearance of its mark computed again for the new stem side.
+/// The mark clearance as the beam pass uses it: a note whose stem was turned by a beam
+/// gets the clearance of its mark computed again for the new stem side.
 pub(crate) fn recompute_clearance(note: &mut Note) {
     let code = note.mark as i32;
     if code > 0 {
@@ -440,7 +438,7 @@ fn bottom(note: &Note) -> i32 {
     note.stem_level() - if note.down { STEM } else { 0 }
 }
 
-/// The notes a line mark keeps clear of (0x4D8460): from the start rounded to the nearest
+/// The notes a line mark keeps clear of: from the start rounded to the nearest
 /// note number up to the end cut down to one.
 fn covered(line: &Line, start: f32, end: f32) -> Vec<&Note> {
     let count = line.note_count() as i64;
@@ -449,11 +447,11 @@ fn covered(line: &Line, start: f32, end: f32) -> Vec<&Note> {
     (first..=last).filter_map(|n| line.note(n as usize)).collect()
 }
 
-/// The staff's left and right ends (0x547AE0), where positions before the first and after
+/// The staff's left and right ends, where positions before the first and after
 /// the last note lie.
 pub(crate) type Edges = (f32, f32);
 
-/// P3 of a position given in note numbers (0x4D8460); a fraction interpolates towards the
+/// P3 of a position given in note numbers; a fraction interpolates towards the
 /// next note, or the staff's right end after the last note.
 fn position(line: &Line, at: f32, (left, right): Edges) -> f32 {
     let whole = at.trunc();
@@ -530,7 +528,7 @@ fn line_item(line: &Line, kind: MarkKind, flipped: bool, (start, end): (f32, f32
     }
 }
 
-/// P4 of a code-9 symbol (0x4D8460 with 0x4D9475): -2 below or 14 above the staff, moved
+/// P4 of a code-9 symbol: -2 below or 14 above the staff, moved
 /// clear of a stem head below or above the staff. Symbols from `Nk` with k below 50 get the
 /// clearance of the P11 marks instead, on either side.
 fn symbol_level(note: &Note, library: i32, above: bool) -> f32 {
@@ -560,7 +558,7 @@ fn symbol_item(note: &Note, x: f32, staff: f32, library: i32, above: bool, numbe
     item(&params)
 }
 
-/// 0x4D8460: P7 is the negated P5 of the stem head (stem plus accidental), and a flagged
+/// P7 is the negated P5 of the stem head (stem plus accidental), and a flagged
 /// note gets half a step more stem with the tremolo moved clear of the flags.
 fn tremolo_item(note: &mut Note, staff: f32, beams: i32, offset: i32) -> score_format::Item {
     let stem = note.p5s()[0] % 100.0;

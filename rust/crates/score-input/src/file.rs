@@ -1,5 +1,5 @@
 //! SCORE's input files: what WinScore saves as `INPUT.TMP` (and the SAVE choice at the end of
-//! input) and reads back with READ. Example (`SCORE 4/SCORE/ADDA.MUS`):
+//! input) and reads back with READ. Example:
 //!
 //! ```text
 //! in 1
@@ -14,8 +14,8 @@
 //! Line 1 is the `IN` command, line 2 the input range (`begin end`, or `;` for the default),
 //! then the five passes, each ending at its first `;` and possibly continued over lines.
 //! A file may hold several such blocks, entered one after the other into the same score, and
-//! between them lines starting with `!` that stand for other commands (used by the test
-//! corpus; `!SP n`, the spacing staff, is not supported yet).
+//! between them lines starting with `!` that stand for other commands (`!SP n`, the spacing
+//! staff, is not supported yet).
 
 use std::collections::HashMap;
 use std::fmt;

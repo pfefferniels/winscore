@@ -1,8 +1,8 @@
 //! Pass 1 items turned into the engine's token list R, then into events.
 //!
-//! The item parser 0x4E2CC8 resolves octaves as it goes (its state is [`Octaves`]); 0x4AF456
-//! applies repeats to R; the builder 0x4ECDF8 reads R with the clef in force, so a repeated
-//! note is placed for the clef where the copy stands (analysis/engine/input.md, "Pass 1").
+//! The item parser resolves octaves as it goes (its state is [`Octaves`]); repeats are then
+//! applied to R; the builder reads R with the clef in force, so a repeated note is placed for
+//! the clef where the copy stands.
 
 use crate::error::{ErrorKind, InputError, Pass};
 use crate::motives::{transpose, Carried, Motives};
@@ -48,7 +48,7 @@ pub enum Event {
     Stems(StemMode),
     Staff(StaffShift),
     /// Cue-size notes from here on (true) or normal ones again (false); pass 1 codes 8001
-    /// and 8000, which the refit (0x47C3E8) sends for notes with |P4| >= 100.
+    /// and 8000, which the refit sends for notes with |P4| >= 100.
     Cue(bool),
 }
 
@@ -94,7 +94,7 @@ enum Token {
 }
 
 impl Token {
-    /// Whether 0x4AF456 counts the token as an item when it counts back for a repeat: a
+    /// Whether the engine counts the token as an item when it counts back for a repeat: a
     /// chord's further notes do not, unless their token rounds to -2 or -8 (an accidental
     /// code of 5 and up; an engine quirk).
     fn counts(&self) -> bool {
@@ -121,9 +121,8 @@ impl Token {
     }
 }
 
-/// The parser's octave state: the octave register c0 (0x78DEC0), the mode with the
-/// proximity reference (0x78DEC4: none for ordinary), the step and letter of the previous
-/// note (0x78DEC8, 0x78DECC).
+/// The parser's octave state: the octave register c0, the mode with the proximity reference
+/// (none for ordinary), the step and letter of the previous note.
 #[derive(Debug, Clone, Copy)]
 struct Octaves {
     base: i32,
@@ -135,7 +134,7 @@ struct Octaves {
 
 impl Octaves {
     /// A line starts in ordinary mode. (The engine starts it in the mode its typing-time parse
-    /// left, so a `P` item late in the line can change earlier notes; not imitated, D12.)
+    /// left, so a `P` item late in the line can change earlier notes; not imitated.)
     fn new(carried: &Carried) -> Self {
         Octaves { base: START_BASE, proximity: None, last_step: carried.last_step, last_letter: carried.last_letter }
     }
@@ -158,7 +157,7 @@ impl Octaves {
         step
     }
 
-    /// The step of a note (0x4E2CC8, finished by 0x4E33A4).
+    /// The step of a note.
     fn step(&mut self, name: &NoteName) -> i32 {
         self.set_mode(name.mode);
         let letter = name.letter.step() + 1;
@@ -200,7 +199,7 @@ impl Octaves {
 /// Pass-1 state while the items are read in order.
 struct Resolver<'a> {
     octaves: Octaves,
-    /// The reader's own octave state (0x41FAB5), which gives the notes of a motive
+    /// The reader's own octave state, which gives the notes of a motive
     /// definition their octave numbers; outside definitions it follows the parser's.
     reader: Octaves,
     /// The barline span, remembered from barline to barline.
@@ -290,7 +289,7 @@ impl Resolver<'_> {
     }
 
     /// The notes of a chord, the first a positive token (unless `continues` an earlier
-    /// chord), the others members; a dyad adds a member an octave away (0x4AF456). Returns
+    /// chord), the others members; a dyad adds a member an octave away. Returns
     /// the names as a motive definition stores them.
     fn chord(&mut self, names: &[NoteName], continues: bool) -> Vec<NoteName> {
         names
@@ -313,10 +312,10 @@ impl Resolver<'_> {
     }
 
     /// The step of a note, and the name as a motive stores it (with the octave it was read
-    /// in). In a definition the reader (0x41FAB5) gives a note without octave number or
+    /// in). In a definition the reader gives a note without octave number or
     /// jump the octave its own state tracks, which counts one jump per earlier note. Notes
     /// with a jump are read as written: the engine appends a stale digit there and loses
-    /// characters after `]`, which is not imitated (decision D12).
+    /// characters after `]`, which is not imitated.
     fn step(&mut self, name: &NoteName) -> (i32, NoteName) {
         let letter = name.letter.step() + 1;
         if self.defining.is_none() {
@@ -357,7 +356,7 @@ impl Resolver<'_> {
         Some((from, from + 1 + members))
     }
 
-    /// Where the last `units` items of R start, counting as 0x4AF456 does.
+    /// Where the last `units` items of R start, counting as the engine does.
     fn unit_start(&self, units: usize) -> Option<usize> {
         let back = units.checked_sub(1)?;
         self.tokens.iter().enumerate().rev().filter(|(_, t)| t.counts()).nth(back).map(|(i, _)| i)

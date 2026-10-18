@@ -5,8 +5,8 @@
 //! `.MSL`), so they outlive a line; [`Motives`] plays that part, together with the rest of
 //! what pass 1 carries from line to line (see [`Carried`]).
 //!
-//! The engine's recall (0x524C4A) substitutes text; its renumbering (0x4E5EA6) reads numbers of
-//! at most two digits, and its augmentation (0x52789C) rounds to whole rhythm numbers.
+//! The engine's recall substitutes text; its renumbering reads numbers of at most two digits,
+//! and its augmentation rounds to whole rhythm numbers.
 
 use std::collections::HashMap;
 
@@ -32,7 +32,7 @@ pub(crate) struct Carried {
 }
 
 impl Default for Carried {
-    /// A fresh engine: letter C (0x78DECC), step 0 (0x78DEC8), meter 4/4 (0x78D918).
+    /// A fresh engine: letter C, step 0, meter 4/4.
     fn default() -> Self {
         Carried { last_letter: 1, last_step: 0, last_meter: Some(Meter::Fraction(4, 4)) }
     }
