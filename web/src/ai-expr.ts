@@ -7,6 +7,9 @@
 export type Vars = Record<string, number>;
 export type Compiled = (vars: Vars) => number;
 
+/** Names that are the same for every item. */
+const CONSTANTS: Record<string, number> = { true: 1, false: 0 };
+
 const FUNCTIONS: Record<string, (...args: number[]) => number> = {
   min: Math.min,
   max: Math.max,
@@ -122,6 +125,8 @@ export function compile(text: string): Compiled {
         return (v) => fn(...args.map((a) => a(v)));
       }
       const name = t.name;
+      const constant = CONSTANTS[name.toLowerCase()];
+      if (constant !== undefined) return () => constant;
       return (v) => {
         const value = v[name];
         if (value === undefined) throw new Error(`Unknown name ${name}`);

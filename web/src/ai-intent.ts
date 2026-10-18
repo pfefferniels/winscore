@@ -207,7 +207,12 @@ export function scriptFor(intent: Intent): Script {
       return one(`Stems ${way.toLowerCase()}`, { do: 'setting', items: { codes: [1] }, setting: 'Stem', value: way }, { do: 'setting', items: { codes: [6] }, setting: 'Stems', value: way });
     }
     case 'stems-auto':
-      return one('Stems as the engine sets them', { do: 'command', items: { codes: [1] }, line: 'FLN' });
+      // The refit (FLN) sets the stems' directions, but only of notes that have stems.
+      return one(
+        'Stems as the engine sets them',
+        { do: 'setting', items: { codes: [1], setting: 'Stem', is: 'None' }, setting: 'Stem', value: 'Up' },
+        { do: 'command', items: { codes: [1] }, line: 'FLN' },
+      );
     case 'option':
       return one(`${intent.setting}: ${intent.option}`, { do: 'setting', items: target.id === 'all' ? null : items, setting: intent.setting ?? '', value: intent.option ?? '' });
     case 'number':

@@ -6,7 +6,7 @@
 // re-does the edit with the new value, live, as the same undo step.
 import type { Box } from './display';
 import type { Editor } from './editor';
-import { onlyParams, reach, run, type Access, type Knob, type Scope, type Script } from './ai-script';
+import { onlyParams, reach, run, selects, type Access, type Knob, type Scope, type Script } from './ai-script';
 import {
   askClaude,
   askJev,
@@ -24,6 +24,7 @@ import {
   type About,
   type Catalog,
   type Connections,
+  type Failed,
 } from './ai-models';
 
 export interface PromptHooks {
@@ -222,11 +223,12 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     typingTimer = window.setTimeout(() => askAbout(text), TYPING_PAUSE_MS);
   }
 
-  /** Runs a reading on the score, as one undo step named after the command. */
-  function apply(r: Reading, text: string) {
+  /** Runs a reading on the score, as one undo step named after the command; why it failed, if it did. */
+  function apply(r: Reading, text: string): string | null {
     const editor = hooks.editor();
     const access = hooks.access();
-    if (!editor || !access || !scope) return;
+    if (!editor || !access || !scope) return null;
+    let error: string | null = null;
     const label = `“${text}”`;
     const values = Object.fromEntries(r.script.knobs.map((k) => [k.id, k.value]));
     try {
@@ -234,31 +236,35 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       applied = { script: r.script, scope, label, mark: ran.mark, depth: editor.mark(), values };
       input.value = '';
       reading = null;
-      show(ran.changed ? `✓ ${r.script.summary}` : `${r.script.summary}: nothing changed`, ran.changed ? 'done' : 'error', r.source);
+      const done = ran.changed || selects(r.script);
+      show(done ? `✓ ${r.script.summary}` : `${r.script.summary}: nothing changed`, done ? 'done' : 'error', r.source);
       showKnobs(r.script.knobs);
     } catch (err) {
-      show(err instanceof Error ? err.message : String(err), 'error', r.source);
+      error = err instanceof Error ? err.message : String(err);
+      show(error, 'error', r.source);
     }
     // The command leaves what it changed selected, and the next one is about that.
     edited(false, false);
     place();
+    return error;
   }
 
   async function enter() {
     const text = input.value.trim();
     if (!text || !scope) return;
     clearTimeout(typingTimer);
-    if (reading) return apply(reading, text);
+    if (reading) return void apply(reading, text);
     const asked = pending?.text === text ? pending.done : askAbout(text);
     if (asked) {
       show('…', 'busy');
       const result = await asked;
       if (input.value.trim() !== text) return;
-      if (result) return apply(result, text);
+      if (result) return void apply(result, text);
     }
     const about = hooks.about(text, scope);
     if (writing === text) return;
-    if (!about || !links.claude) {
+    const claude = links.claude;
+    if (!about || !claude) {
       show(links.jev ? 'Jev could not read this, and no Claude key is set (⚙)' : 'Commands in words need a model: set one up with ⚙', 'error');
       return;
     }
@@ -267,10 +273,20 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     pending = { text, controller, done: Promise.resolve(null) };
     writing = text;
     try {
-      const { script, ms } = await askClaude(about, hooks.catalog(), links.claude, controller.signal);
-      const result = { script, source: `Claude · ${(ms / 1000).toFixed(1)} s` };
-      memo.set(claudeKey(about), result);
-      if (input.value.trim() === text) apply(result, text);
+      // A script that fails to run goes back to Claude once, with the error.
+      let failed: Failed | undefined;
+      for (let tries = 2; tries > 0; tries--) {
+        const { script, ms, answer } = await askClaude(about, hooks.catalog(), claude, controller.signal, failed);
+        if (input.value.trim() !== text) return;
+        const result = { script, source: `Claude · ${(ms / 1000).toFixed(1)} s` };
+        const error = apply(result, text);
+        if (error === null) {
+          memo.set(claudeKey(about), result);
+          return;
+        }
+        failed = { answer, error };
+        if (tries > 1) show(`${error}: Claude is correcting the edit…`, 'busy', 'Claude');
+      }
     } catch (err) {
       if (!controller.signal.aborted && input.value.trim() === text) show(err instanceof Error ? err.message : String(err), 'error', 'Claude');
     } finally {

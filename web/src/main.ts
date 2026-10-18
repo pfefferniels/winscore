@@ -1,8 +1,8 @@
 import './style.css';
-import init, { codeName, commandSupported, editWords, InputLine, librarySymbols, paramName, Score, type EncodedList } from './wasm/score_web.js';
+import init, { codeName, commandSupported, editWords, groupCommand, InputLine, librarySymbols, paramName, Score, type EncodedList } from './wasm/score_web.js';
 import { createAiPrompt } from './ai-prompt';
 import type { About, Catalog } from './ai-models';
-import type { Access, Region, Scope } from './ai-script';
+import { barlines, type Access, type Region, type Scope } from './ai-script';
 import { createPageView, type Scene } from './canvas';
 import { bindClipboard } from './clipboard';
 import { bindCommandBar } from './command-bar';
@@ -937,6 +937,8 @@ function aiAccess(): Access | null {
     },
     context: (index) => ({ clef: clefAt(score, index), symbolName }),
     staves: () => editor.staves(),
+    summaries: () => score.itemSummaries(),
+    groupCommand,
     inputLine: (passes, staff, from, to) => new InputLine(passes, staff, from, to),
   };
 }
@@ -991,11 +993,7 @@ function aiAbout(text: string, scope: Scope): About | null {
     if (sample.length < SAMPLE_ITEMS) sample.push(trimmed(params));
   }
   const staves = new Set([...sample.map((p) => p[1]!), ...(scope.region ? [scope.region.staff] : [])]);
-  const bars = new Map<number, number[]>();
-  itemSummaries(score).forEach(({ code, staff, p3 }) => {
-    if (code === 14 && staves.has(staff)) bars.set(staff, [...(bars.get(staff) ?? []), p3]);
-  });
-  bars.forEach((xs) => xs.sort((a, b) => a - b));
+  const bars = new Map([...barlines(access)].filter(([staff]) => staves.has(staff)));
   return { text, counts, whole: scope.keys === null, region: scope.region, middle: middleAt(score, scope.region), sample, bars, codeName: nameOf };
 }
 

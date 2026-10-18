@@ -3,7 +3,7 @@
 // a score through score-web. Run by scripts/ai-check.mjs.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { initSync, InputLine, Score } from '../src/wasm/score_web.js';
+import { groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
 import { compile } from '../src/ai-expr';
 import { musicIn, numbersIn, quartersFor } from '../src/ai-values';
@@ -21,6 +21,7 @@ assert.equal(compile('clamp(lerp(0, 10, t), 2, 8)')({ t: 0.95 }), 8);
 assert.equal(compile('t == 1 && p2 >= 1')({ t: 1, p2: 1 }), 1);
 assert.throws(() => compile('1 +')({}), /ends too early/);
 assert.throws(() => compile('nope + 1')({}), /Unknown name nope/);
+assert.equal(compile('false || TRUE')({}), 1);
 
 // Values lifted from commands.
 assert.deepEqual(numbersIn('size 1.5, move up 2 steps, 50%'), [1.5, 2, 0.5]);
@@ -74,6 +75,8 @@ const access: Access = {
   },
   context: () => ({ clef: null, symbolName: () => null }),
   staves: () => score.staffGeometry(),
+  summaries: () => score.itemSummaries(),
+  groupCommand,
   inputLine: (passes, staff, from, to) => new InputLine(passes, staff, from, to),
 };
 /** Parameter n of an item, to four places (they are single precision). */
@@ -88,6 +91,11 @@ const stems = run(scriptFor({ action: 'delete', target: 'stems' }), access, note
 assert.ok(stems.changed);
 assert.equal(editor.undoLabel(), '“remove the stems”');
 for (let i = 1; i <= 8; i++) assert.equal(Math.floor(p(i, 5) / 10) % 10, 0, `note ${i} has no stem`);
+
+// A group command (FLN) on the selected notes: run with nothing selected, given their area.
+const auto = run(scriptFor({ action: 'stems-auto', target: 'notes' }), access, notes, '“add stems”');
+for (let i = 1; i <= 8; i++) assert.notEqual(Math.floor(p(i, 5) / 10) % 10, 0, `note ${i} has a stem again`);
+editor.rollback(auto.mark);
 
 // A knob re-does the same step: rolled back and run again.
 const grow = scriptFor({ action: 'grow', target: 'notes' });
@@ -119,6 +127,42 @@ const levels = () => items().filter((q) => q[0] === 1).map((q) => q[3]);
 const top = Math.max(...levels());
 run({ summary: 'raise', knobs: [], steps: [{ do: 'move', items: { codes: [1], where: 'level == max_level' }, up: 7 }] }, access, notes, '“raise”');
 assert.deepEqual(levels().filter((l) => l !== undefined && l > top), [top + 7]);
+
+// A selection: nothing changes, and the steps after it act on what it picked.
+const unchanged = score.save().join();
+const picked = run({ summary: 'pick', knobs: [], steps: [{ do: 'select', items: { codes: [1], where: 'level == max_level' } }] }, access, notes, '“pick”');
+assert.equal(picked.changed, false);
+assert.equal(score.save().join(), unchanged);
+assert.deepEqual(editor.selection().map((i) => p(i, 4)), [top + 7]);
+run({ summary: 'pick and accent', knobs: [], steps: [{ do: 'select', items: { codes: [1], where: 'i < 2' } }, { do: 'setting', items: null, setting: 'Mark', value: 'Accent' }] }, access, notes, '“accent”');
+assert.equal(editor.selection().length, 2);
+assert.equal(items().filter((q) => q[0] === 1 && Math.trunc(Math.abs(q[10] ?? 0)) === 5).length, 2, 'only the two picked are accented');
+
+// New items made from each picked one: a line from each note to the next, none after the last.
+const lines = run({ summary: 'lines', knobs: [], steps: [{ do: 'add', items: { codes: [1], where: 'si < sn - 1' }, params: ['4', 'staff', 'x + 1.5', 'level', 'next_level', 'next_x'] }] }, access, notes, '“lines”');
+const made = items().filter((q) => q[0] === 4);
+assert.equal(made.length, 7);
+assert.equal(lines.touched.length, 7);
+const noteRows = items().filter((q) => q[0] === 1).sort((a, b) => a[2]! - b[2]!);
+assert.deepEqual([made[0]![3], made[0]![4], made[0]![5]], [noteRows[0]![3], noteRows[1]![3], noteRows[1]![2]], 'from the first note to the second');
+editor.rollback(lines.mark);
+
+// Chords: the notes at one place on a staff; and means over the items.
+const dyads = Score.empty();
+const dyadEditor = scoreEditor(dyads);
+const dyadAccess: Access = { ...access, editor: dyadEditor, params: (index) => {
+  const info = dyads.item(index);
+  if (!info) return null;
+  const params = info.params;
+  info.free();
+  return params;
+}, staves: () => dyads.staffGeometry(), summaries: () => dyads.itemSummaries() };
+run({ summary: 'add', knobs: [], steps: [{ do: 'insert', notes: 'C4:E/D:F/E', rhythms: '4/4/4' }] }, dyadAccess, { keys: [], region }, '“add”');
+const all: Scope = { keys: dyadEditor.keys().slice(1), region };
+const bottoms = run({ summary: 'bottoms', knobs: [], steps: [{ do: 'select', items: { codes: [1], where: 'level == chord_low && chord_size > 1' } }] }, dyadAccess, all, '“bottoms”');
+assert.equal(bottoms.touched.length, 2, 'the bottom notes of the two chords, not the lone E');
+const low = run({ summary: 'low', knobs: [], steps: [{ do: 'select', items: { codes: [1], where: 'level < mean_level' } }] }, dyadAccess, all, '“low”');
+assert.equal(low.touched.length, 2, 'C and D are below the mean');
 
 // A failing step leaves nothing changed.
 const before = score.save().join();

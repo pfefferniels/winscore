@@ -208,6 +208,25 @@ impl SessionWord {
     }
 }
 
+/// Whether the command of `line` is a group or layout command only (FLN, M,
+/// LJ …): it starts with nothing selected and asks for an area or staves.
+/// Words that also act on selected items (FLI flips them, D moves them down)
+/// are not.
+pub fn is_group(line: &str) -> bool {
+    let tokens = parse::tokens(line);
+    match tokens.first() {
+        Some(Token::Word(w)) => {
+            let word = w.to_ascii_uppercase();
+            let group = GroupCommand::word(&word).is_some() || LayoutCommand::word(&word).is_some();
+            let for_selection = SessionWord::parse(&word).is_some()
+                || item::is_edit_word(&word)
+                || Move::parse(&word, first_number(&tokens[1..])).is_some();
+            group && !for_selection
+        }
+        _ => false,
+    }
+}
+
 /// Whether the editor knows the command of `line` in some context; menus
 /// can grey out the entries it does not.
 pub fn is_supported(line: &str) -> bool {
@@ -739,6 +758,12 @@ mod tests {
         assert_eq!(clamp_item(99.0, 3), Some(2));
         assert_eq!(clamp_item(2.0, 3), Some(1));
         assert_eq!(clamp_item(1.0, 0), None);
+    }
+
+    #[test]
+    fn group_and_layout_commands_are_told_from_edit_words() {
+        assert!(is_group("FLN") && is_group("fln 1 0 200 2") && is_group("M") && is_group("LJ 1 2"));
+        assert!(!is_group("NST") && !is_group("R 5") && !is_group("FLI") && !is_group("D 2") && !is_group("1 1 50"));
     }
 
     #[test]
