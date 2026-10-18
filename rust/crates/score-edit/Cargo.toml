@@ -3,7 +3,7 @@ name = "score-edit"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
-description = "Editing model of the SCORE editor: stable item ids, selection, undo, and WinScore's edit commands"
+description = "Editing model of the SCORE editor: stable item ids, selection, undo, and the edit commands"
 
 [dependencies]
 score-format = { path = "../score-format" }
