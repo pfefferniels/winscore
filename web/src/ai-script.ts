@@ -48,7 +48,11 @@ export type Step =
   /** A line of music input on a staff between two positions (the region's when left out). */
   | { do: 'insert'; staff?: number | null; from?: number | null; to?: number | null; notes: string; rhythms?: string | null; marks?: string | null; beams?: string | null; slurs?: string | null }
   /** The notes under beams, `size` notes or chords each (0: all up to the next barline). */
-  | { do: 'beam'; items?: Filter | null; size: Value };
+  | { do: 'beam'; items?: Filter | null; size: Value }
+  /** The items picked become the selection, and what the steps after it act on; nothing is edited. */
+  | { do: 'select'; items?: Filter | null }
+  /** For each item picked, a new item with P1 … Pn from these values (over the item it is made for); none where P1 comes to 0. */
+  | { do: 'add'; items?: Filter | null; params: Value[] };
 
 export interface Script {
   /** What it does, in a few words. */
@@ -82,6 +86,10 @@ export interface Access {
   context(index: number): Context;
   /** Seven numbers per staff: number, left and right x, y of level 0, scale step, lowest line's level, lines. */
   staves(): Float32Array;
+  /** Code, staff and P3 of every item, three numbers each. */
+  summaries(): Float32Array;
+  /** Whether a command line is a group command only (FLN …), which starts with nothing selected. */
+  groupCommand(line: string): boolean;
   inputLine(passes: string[], staff: number, from: number, to: number): InputLine;
 }
 
@@ -103,6 +111,9 @@ const BEAMABLE = 0.99;
 const GRACE = 64;
 /** Notes closer than this in P3 form one chord. */
 const CHORD = 0.05;
+
+/** A note a beam can go over: shorter than a quarter, not a grace note. */
+const beamable = (t: Target) => t.params[0] === NOTE && t.params[6]! > 0 && t.params[6]! < BEAMABLE && t.params[6]! < GRACE;
 
 /** P4 without the hundred of cue size. */
 const level = (p4: number) => (Math.abs(p4) >= 100 ? p4 - 100 * Math.sign(p4) : p4);
@@ -126,6 +137,25 @@ function keyIndex(editor: Editor): Map<number, number> {
 
 /** The items of the scope that pass the filter, in file order. */
 function targets(access: Access, scope: Scope, filter: Filter | null | undefined, knobs: Vars): Target[] {
+  return filter?.where ? picked(access, scope, filter, knobs).list : found(access, scope, filter);
+}
+
+/**
+ * The items that pass the filter with their variables as the filter saw
+ * them: their place among all the items of the codes and setting asked for,
+ * so the last one picked still has a next one.
+ */
+function picked(access: Access, scope: Scope, filter: Filter | null | undefined, knobs: Vars): { list: Target[]; vars: Vars[] } {
+  const all = found(access, scope, filter);
+  const vars = placeVars(access, all);
+  if (!filter?.where) return { list: all, vars };
+  const where = valueOf(filter.where);
+  const keep = vars.map((v) => where({ ...knobs, ...v }) !== 0);
+  return { list: all.filter((_, k) => keep[k]), vars: vars.filter((_, k) => keep[k]) };
+}
+
+/** The items of the scope of the codes and setting value asked for, in file order. */
+function found(access: Access, scope: Scope, filter: Filter | null | undefined): Target[] {
   const keys = access.editor.keys();
   let indices: number[];
   if (scope.keys === null) indices = keys.map((_, i) => i);
@@ -134,19 +164,15 @@ function targets(access: Access, scope: Scope, filter: Filter | null | undefined
     indices = scope.keys.flatMap((key) => at.get(key) ?? []).sort((a, b) => a - b);
   }
   const codes = filter?.codes?.length ? new Set(filter.codes) : null;
-  const found: Target[] = [];
+  const list: Target[] = [];
   for (const index of indices) {
     const params = access.params(index);
     if (!params) continue;
     if (codes && !codes.has(params[0]!)) continue;
     if (filter?.setting && filter.is != null && !reads(params, filter.setting, filter.is, access.context(index))) continue;
-    found.push({ index, key: keys[index]!, params });
+    list.push({ index, key: keys[index]!, params });
   }
-  if (!filter?.where) return found;
-  // `where` sees each item's place among the others too: "t == 1" is the last.
-  const where = valueOf(filter.where);
-  const vars = placeVars(access, found);
-  return found.filter((_, k) => where({ ...knobs, ...vars[k]! }));
+  return list;
 }
 
 /** Whether setting `name` of an item reads `wanted`: an option's name, a number, on/off or text. */
@@ -194,12 +220,30 @@ function systemOrder(staves: Float32Array): Map<number, number> {
   return order;
 }
 
-/** The smallest and largest value of every parameter over the targets: max_p4, min_p7, max_level … */
+/**
+ * Where the barlines are (P3, in order) on each staff they cross: a barline
+ * on staff s with P4 k crosses staves s … s + k − 1, as a system's barlines
+ * stand on its lowest staff and cross the rest.
+ */
+export function barlines(access: Access): Map<number, number[]> {
+  const summaries = access.summaries();
+  const byStaff = new Map<number, number[]>();
+  for (let index = 0; 3 * index < summaries.length; index++) {
+    if (summaries[3 * index] !== BARLINE) continue;
+    const [, staff = 0, x = 0, crosses = 1] = access.params(index) ?? [];
+    for (let s = staff; s < staff + Math.max(1, crosses); s++) byStaff.set(s, [...(byStaff.get(s) ?? []), x]);
+  }
+  byStaff.forEach((xs, s) => byStaff.set(s, [...new Set(xs)].sort((a, b) => a - b)));
+  return byStaff;
+}
+
+/** The smallest, largest and mean value of every parameter over the targets: max_p4, min_p7, mean_level … */
 function extremes(list: Target[]): Vars {
   const vars: Vars = {};
   const spread = (name: string, values: number[]) => {
     vars[`min_${name}`] = Math.min(...values);
     vars[`max_${name}`] = Math.max(...values);
+    vars[`mean_${name}`] = values.reduce((a, b) => a + b, 0) / (values.length || 1);
   };
   for (let n = 1; n <= MAX_PARAM; n++) spread(`p${n}`, list.map((t) => t.params[n - 1] ?? 0));
   spread('level', list.map((t) => level(t.params[3] ?? 0)));
@@ -209,8 +253,11 @@ function extremes(list: Target[]): Vars {
 /**
  * Each target's variables: its parameters, its place in reading order (i of
  * n, t from 0 to 1; chords count once), the same on its own staff (si, sn,
- * st), the targets' leftmost and rightmost P3 on its staff, and the extremes
- * of every parameter over the targets ("level == max_level" is the highest).
+ * st) and in its bar (bar, bi, bn, bt: "bi == 0" is the first of each bar),
+ * the targets' leftmost and rightmost P3 on its staff, the lowest and
+ * highest level of its chord ("level == chord_low" is each chord's bottom
+ * note) and the extremes and means of every parameter over the targets
+ * ("level == max_level" is the highest).
  */
 function placeVars(access: Access, list: Target[]): Vars[] {
   const systems = systemOrder(access.staves());
@@ -226,6 +273,27 @@ function placeVars(access: Access, list: Target[]): Vars[] {
     perStaff.set(t.params[1]!, xs);
   });
   const staffRanks = new Map([...perStaff].map(([staff, xs]) => [staff, [...new Set(xs)].sort((a, b) => a - b)]));
+  // A bar: the barlines before an item on its staff (a system's opening line, at 0, is none).
+  const bars = barlines(access);
+  const barOf = (t: Target) => (bars.get(t.params[1]!) ?? []).filter((x) => x > 0 && x < t.params[2]!).length;
+  const inBar = new Map<string, number[]>();
+  list.forEach((t) => {
+    const key = `${t.params[1]}:${barOf(t)}`;
+    inBar.set(key, [...(inBar.get(key) ?? []), Math.round(t.params[2]! / CHORD)]);
+  });
+  inBar.forEach((xs, key) => inBar.set(key, [...new Set(xs)].sort((a, b) => a - b)));
+  // The next column on each staff, for items made from one to the next.
+  const levelsAt = new Map<string, number[]>();
+  list.forEach((t) => {
+    const key = `${t.params[1]}:${Math.round(t.params[2]! / CHORD)}`;
+    levelsAt.set(key, [...(levelsAt.get(key) ?? []), level(t.params[3]!)]);
+  });
+  // A chord: the targeted notes at one place on a staff (a lone note is its own).
+  const chordOf = (t: Target) => `${t.params[1]}:${Math.round(t.params[2]! / CHORD)}`;
+  const chords = new Map<string, number[]>();
+  list.forEach((t) => {
+    if (t.params[0] === NOTE) chords.set(chordOf(t), [...(chords.get(chordOf(t)) ?? []), level(t.params[3]!)]);
+  });
   const n = columns.length;
   const spread = extremes(list);
   return list.map((t) => {
@@ -233,6 +301,16 @@ function placeVars(access: Access, list: Target[]): Vars[] {
     const xs = staffRanks.get(t.params[1]!) ?? [];
     const si = xs.indexOf(Math.round(t.params[2]! / CHORD));
     const sn = xs.length;
+    const chord = (t.params[0] === NOTE && chords.get(chordOf(t))) || [level(t.params[3]!)];
+    const bar = barOf(t);
+    const barXs = inBar.get(`${t.params[1]}:${bar}`) ?? [];
+    const bi = barXs.indexOf(Math.round(t.params[2]! / CHORD));
+    const bn = barXs.length;
+    const next = xs[si + 1];
+    const own = level(t.params[3]!);
+    // The next column's level nearest this item's, as a line from note to note would go.
+    const nextLevels = next === undefined ? [own] : (levelsAt.get(`${t.params[1]}:${next}`) ?? [own]);
+    const nextLevel = nextLevels.reduce((a, b) => (Math.abs(b - own) < Math.abs(a - own) ? b : a));
     return {
       ...spread,
       ...paramVars(t.params),
@@ -242,8 +320,17 @@ function placeVars(access: Access, list: Target[]): Vars[] {
       si,
       sn,
       st: sn > 1 ? si / (sn - 1) : 0,
+      bar,
+      bi,
+      bn,
+      bt: bn > 1 ? bi / (bn - 1) : 0,
+      next_x: next === undefined ? t.params[2]! : next * CHORD,
+      next_level: nextLevel,
       left: (xs[0] ?? 0) * CHORD,
       right: (xs.at(-1) ?? 0) * CHORD,
+      chord_low: Math.min(...chord),
+      chord_high: Math.max(...chord),
+      chord_size: chord.length,
       count: list.length,
     };
   });
@@ -405,7 +492,8 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
     }
     case 'command': {
       const list = targets(access, scope, step.items, knobs);
-      editor.select(list.map((t) => t.index));
+      // A group command (FLN …) starts with nothing selected and is given the items' area.
+      editor.select(access.groupCommand(step.line) ? [] : list.map((t) => t.index));
       editor.execute(step.line);
       if (editor.prompt() !== null) {
         const answer = area(list, scope.region);
@@ -437,6 +525,30 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
     }
     case 'beam':
       return beam(access, targets(access, scope, step.items, knobs), Math.round(knobValue(step.size)));
+    case 'select':
+      return targets(access, scope, step.items, knobs).map((t) => t.key);
+    case 'add': {
+      const { list, vars } = picked(access, scope, step.items, knobs);
+      const values = step.params.map(valueOf);
+      // Every new item's numbers first: making items sorts the file.
+      const lines = list
+        .map((_, k) => values.map((value) => Math.round(value({ ...knobs, ...vars[k]! }) * 1e4) / 1e4))
+        .filter((params) => params[0] !== 0)
+        .map((params) => params.join(' '));
+      const made: number[] = [];
+      for (const line of lines) {
+        // A new item comes selected, and numbers typed then would change it.
+        editor.select([]);
+        editor.execute(line);
+        if (editor.prompt() !== null) {
+          editor.execute('X');
+          throw new Error(`No item from ${line}`);
+        }
+        const keys = editor.keys();
+        made.push(...editor.selection().map((i) => keys[i]!));
+      }
+      return made;
+    }
   }
 }
 
@@ -447,7 +559,8 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
  */
 function beam(access: Access, list: Target[], size: number): number[] {
   const editor = access.editor;
-  const notes = list.filter((t) => t.params[0] === NOTE && t.params[6]! > 0 && t.params[6]! < BEAMABLE && t.params[6]! < GRACE);
+  const notes = list.filter(beamable);
+  if (notes.length === 0 && list.some((t) => t.params[0] === NOTE)) throw new Error('Only notes shorter than a quarter take beams');
   const byStaff = new Map<number, Target[]>();
   notes.forEach((t) => byStaff.set(t.params[1]!, [...(byStaff.get(t.params[1]!) ?? []), t]));
   const made: number[] = [];
@@ -522,8 +635,13 @@ export function run(script: Script, access: Access, scope: Scope, label: string,
   const mark = editor.mark();
   const before = editor.selection();
   const touched: number[] = [];
+  let within = scope;
   try {
-    for (const step of script.steps) touched.push(...runStep(step, access, scope, knobs));
+    for (const step of script.steps) {
+      const keys = runStep(step, access, within, knobs);
+      if (step.do === 'select') within = { ...within, keys };
+      touched.push(...keys);
+    }
   } catch (err) {
     editor.rollback(mark);
     editor.select(before);
@@ -541,8 +659,13 @@ export function reach(script: Script, access: Access, scope: Scope): { count: nu
   const knobs = knobValues(script);
   const step = script.steps.find((s): s is Exclude<Step, { do: 'insert' }> => s.do !== 'insert');
   if (!step) return { count: 0, codes: [] };
-  const list = targets(access, scope, step.items, knobs);
+  const list = targets(access, scope, step.items, knobs).filter((t) => step.do !== 'beam' || beamable(t));
   return { count: list.length, codes: [...new Set(list.map((t) => t.params[0]!))] };
+}
+
+/** Whether a script picks a new selection, which is done even though nothing changed. */
+export function selects(script: Script): boolean {
+  return script.steps.some((s) => s.do === 'select');
 }
 
 /** Whether a script only changes parameters, so a slider can redraw just the items it changed. */
