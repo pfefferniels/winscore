@@ -18,7 +18,7 @@ import { createInputMode, type Shown } from './input-mode';
 import { bindInteraction } from './interaction';
 import { createMenuBar, inMenuBar, MOD } from './menu';
 import { appMenus, type DialogKind } from './menus';
-import { bindPanelGrip, filterItemList, formatParam, markSelected, renderItemList, renderSelection, shownItems, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
+import { bindPanelGrip, formatParam, renderSelection, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer, Overlay } from './paint';
 import { download, printPage } from './print';
 import { embedFonts } from './svg-fonts';
@@ -134,10 +134,6 @@ const ui = {
   panel: $<HTMLElement>('panel'),
   panelGrip: $<HTMLDivElement>('panel-grip'),
   item: $<HTMLElement>('item'),
-  items: $<HTMLOListElement>('items'),
-  itemCount: $<HTMLSpanElement>('item-count'),
-  itemFilter: $<HTMLInputElement>('item-filter'),
-  selectShown: $<HTMLButtonElement>('items-select'),
   footer: $<HTMLElement>('footer'),
   cursor: $<HTMLSpanElement>('cursor'),
   message: $<HTMLSpanElement>('message'),
@@ -352,6 +348,8 @@ function refreshStatus() {
   ui.panel.hidden = !open || !state.panel;
   ui.togglePanel.disabled = !open;
   ui.emptyHint.hidden = !open || state.score!.itemCount() > 0 || inputMode.isOpen;
+  // How many items there are, as `data-items` of the page: for tests and the browser's inspector.
+  ui.app.dataset.items = open ? String(state.score!.itemCount()) : '';
 }
 
 /** Highest parameter number an edit may set. */
@@ -418,13 +416,6 @@ function itemSummaries(score: Score): ItemSummary[] {
   });
 }
 
-function refreshItemList() {
-  const items = state.score ? itemSummaries(state.score) : [];
-  renderItemList(ui.items, items, handlers);
-  const shown = filterItemList(ui.items, ui.itemFilter.value);
-  ui.itemCount.textContent = !state.score ? '' : shown === items.length ? String(items.length) : `${shown} of ${items.length}`;
-}
-
 /** Re-renders the parameter panel, keeping the keyboard in the field it was in. */
 function refreshPanel() {
   const score = state.score;
@@ -432,7 +423,6 @@ function refreshPanel() {
   const shown = score ? items.flatMap((index) => details(score, index, items.length === 1) ?? []) : [];
   const focused = ui.item.contains(document.activeElement) ? document.activeElement?.id : undefined;
   renderSelection(ui.item, shown, handlers, score !== null);
-  markSelected(ui.items, selection());
   const field = focused ? ui.item.querySelector<HTMLElement>(`#${focused}`) : null;
   field?.focus();
   if (field instanceof HTMLInputElement && field.type === 'text') field.select();
@@ -470,7 +460,13 @@ function select(items: number[], reveal = false) {
   if (reveal) revealSelection();
 }
 
-/** Re-renders after an edit; the panel and list follow once a drag is over. */
+/** ⌘A, Edit ▸ Select all: every item of the score. */
+function selectAll() {
+  const score = state.score;
+  if (score) select(Array.from({ length: score.itemCount() }, (_, i) => i));
+}
+
+/** Re-renders after an edit; the panel follows once a drag is over. */
 function edited(change: Change | null, live: boolean) {
   const score = state.score;
   if (!score) return;
@@ -479,7 +475,6 @@ function edited(change: Change | null, live: boolean) {
   if (!live) {
     refreshHandles();
     state.modified ||= change !== null;
-    refreshItemList();
     refreshPanel();
     void loadFontsAndRepaint();
     report(change);
@@ -623,12 +618,7 @@ function insertInput(line: InputLine): boolean {
 }
 
 const handlers: PanelHandlers = {
-  select: (index) => select([index], true),
   selectItems: (items) => select(items),
-  toggle(index) {
-    const items = selection();
-    select(items.includes(index) ? items.filter((i) => i !== index) : [...items, index]);
-  },
   run: (command) => {
     runCommand(command);
     ui.viewport.focus();
@@ -663,7 +653,6 @@ function openScore(score: Score, name: string) {
   state.pasteAt = null;
   state.handles = null;
   state.drag = null;
-  refreshItemList();
   refreshPanel();
   inputMode.refresh();
   redraw();
@@ -737,8 +726,6 @@ function setPanel(shown: boolean) {
   state.panel = shown;
   ui.panel.hidden = !shown || !state.score;
   ui.togglePanel.setAttribute('aria-pressed', String(shown));
-  // The list could not scroll to the selection while it was hidden.
-  if (shown) markSelected(ui.items, selection());
   try {
     localStorage.setItem(PANEL_KEY, shown ? 'shown' : 'hidden');
   } catch {
@@ -1115,6 +1102,7 @@ function bindPointer() {
     inputTap: (x, y) => inputMode.isOpen && inputMode.click(view.pageAt(x, y), false),
     holdsKeyboard: () => inputMode.holdsKeyboard,
     selected: selectionChanged,
+    selectAll,
     edited,
     failed,
     command: runCommand,
@@ -1212,6 +1200,7 @@ function bindMenus() {
       paste: clipboard.paste,
       canPaste: () => clipboard.full,
       duplicate,
+      selectAll,
       undoLabel: () => state.editor?.undoLabel() ?? null,
       redoLabel: () => state.editor?.redoLabel() ?? null,
       input: () => enterInput(),
@@ -1279,13 +1268,6 @@ function bindControls() {
   ui.emptyInput.addEventListener('click', () => enterInput());
   ui.togglePanel.addEventListener('click', () => setPanel(!state.panel));
   ui.help.addEventListener('click', showShortcuts);
-  ui.itemFilter.addEventListener('input', refreshItemList);
-  ui.itemFilter.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    ui.itemFilter.value = '';
-    refreshItemList();
-  });
-  ui.selectShown.addEventListener('click', () => select(shownItems(ui.items)));
   ui.app.querySelectorAll<HTMLButtonElement>('.appbar button').forEach((button) => button.addEventListener('click', settleFocus));
   if (MOD !== '⌘') ui.shortcuts.querySelectorAll('kbd.mod').forEach((k) => (k.textContent = 'Ctrl'));
   bindCommandBar(ui.command, {

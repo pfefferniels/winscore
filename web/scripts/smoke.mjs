@@ -19,6 +19,30 @@ try {
     await page.click(`#menu-${name}`);
     await page.click(`.menu-popup [data-action="${action}"]`);
   };
+  /** Selects item `index` (numbered from 0, as the panel does) with SCORE's `I n` (from 1) and gives the keyboard back to the page. */
+  const pick = async (index) => {
+    await page.fill('#command', `I ${index + 1}`);
+    await page.press('#command', 'Enter');
+    await page.press('#command', 'Escape');
+  };
+  /** A point on the screen where a click selects item `index`, found on a grid across its box from the middle out. */
+  const spotOf = async (index) => {
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => document.getElementById('viewport').dataset.selection === '');
+    await pick(index);
+    await page.waitForFunction(() => document.getElementById('viewport').dataset.selection !== '');
+    const box = JSON.parse(await page.getAttribute('#viewport', 'data-selection'));
+    const steps = [0.5, 0.3, 0.7, 0.1, 0.9];
+    for (const fy of steps) {
+      for (const fx of steps) {
+        const spot = { x: box.x + box.width * fx, y: box.y + box.height * fy };
+        await page.keyboard.press('Escape');
+        await page.mouse.click(spot.x, spot.y);
+        if ((await page.textContent('#item h2')).startsWith(`Item ${index} `)) return spot;
+      }
+    }
+    throw new Error(`no click in its box selects item ${index}`);
+  };
 
   // Without a sample in the URL the start screen offers a new score, a file and the samples.
   await page.goto('http://localhost:4178/');
@@ -32,7 +56,7 @@ try {
   await page.click('#start-new');
   assert.ok(await page.isHidden('#start'));
   assert.equal(await page.textContent('#status'), 'untitled.mus');
-  assert.equal(await page.textContent('#item-count'), '0');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '0');
   assert.ok(await page.isVisible('#empty-hint'));
   await page.click('#empty-input');
   assert.ok(await page.isHidden('#empty-hint'));
@@ -41,7 +65,7 @@ try {
   await page.keyboard.type('C4/D/E/F');
   await page.waitForFunction(() => document.getElementById('input-status').textContent === 'Adds 5 items');
   await page.keyboard.press('Control+Enter');
-  await page.waitForFunction(() => document.getElementById('item-count').textContent === '5');
+  await page.waitForFunction(() => document.getElementById('app').dataset.items === '5');
   await page.click('#input');
   assert.ok(await page.isHidden('#input-panel'));
   assert.equal(await page.textContent('#doc-state'), 'Unsaved changes');
@@ -52,15 +76,15 @@ try {
   assert.equal(await page.textContent('#doc-state'), '');
 
   // Opening another score asks before unsaved changes are thrown away.
-  await page.click('#items li[data-index="1"]');
+  await pick(1);
   await page.keyboard.press('Delete');
-  assert.equal(await page.textContent('#item-count'), '4');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '4');
   page.once('dialog', (dialog) => dialog.dismiss());
   await menu('file', 'new');
-  assert.equal(await page.textContent('#item-count'), '4');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '4');
   page.once('dialog', (dialog) => dialog.accept());
   await menu('file', 'new');
-  assert.equal(await page.textContent('#item-count'), '0');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '0');
 
   // Menus work from the keyboard: ↓ opens, arrows move, Escape closes.
   await page.focus('#menu-file');
@@ -77,10 +101,10 @@ try {
   await page.goto('http://localhost:4178/?sample=mozart.mus&zoom=400');
   await page.waitForSelector('#app[data-ready="true"]');
 
-  // At 400 % the staff does not fit, so selecting it from the list scrolls it
+  // At 400 % the staff does not fit, so selecting it with `I 3` scrolls it
   // to the middle of the view. Clicks down the centre column then hit one of
   // its lines (spaced about 33 px at this zoom).
-  await page.click('#items li[data-index="2"]');
+  await pick(2);
   assert.equal(await page.textContent('#item h2'), 'Item 2 · Staff');
   await page.keyboard.press('Escape');
   assert.equal(await page.textContent('#item h2'), 'Nothing selected');
@@ -97,7 +121,7 @@ try {
   assert.ok(titles.includes('Item 2 · Staff'), `clicks selected ${[...new Set(titles)]}`);
   assert.ok(titles.includes('Nothing selected'));
   const onStaff = { x: centre.x, y: centre.y + offsets[titles.indexOf('Item 2 · Staff')] };
-  await page.click('#items li[data-index="2"]');
+  await pick(2);
   assert.match(await page.textContent('#cursor'), /^x \d+ {2}y \d+/);
 
   // Keyboard nudges, undo and redo.
@@ -157,12 +181,12 @@ try {
   await page.keyboard.type('FLI');
   assert.equal(await page.inputValue('#command'), 'FLI');
   await page.keyboard.press('Escape');
-  await page.click('#items li[data-index="2"]');
+  await pick(2);
 
   // Enter on the page moves edit mode to the next item, as in WinScore.
   await page.keyboard.press('Enter');
   assert.equal(await page.textContent('#item h2'), 'Item 3 · Clef');
-  await page.click('#items li[data-index="2"]');
+  await pick(2);
 
   // The panel's buttons send WinScore's edit-mode commands to the selection.
   await page.click('#item [data-command="U1"]');
@@ -173,7 +197,7 @@ try {
   // The panel's settings read and write a note's packed parameters: item 4 is
   // a beamed sixteenth G2 (P4 3), stem up (P5 10), after a bass clef.
   const params = (...ns) => Promise.all(ns.map(async (n) => (await page.inputValue(`#all-p${n}`)) || '0'));
-  await page.click('#items li[data-index="4"]');
+  await pick(4);
   assert.equal(await page.inputValue('#f-pitch'), 'G2');
   await page.fill('#f-pitch', 'F#3');
   await page.press('#f-pitch', 'Enter');
@@ -191,7 +215,12 @@ try {
 
   // Several selected items are edited together: shared settings show what they agree on, "Mixed"
   // where they differ, and a change goes to every one as one undo step; ↑/↓ step each on its own.
-  await page.click('#items li[data-index="7"]', { modifiers: ['Shift'] });
+  const seventh = await spotOf(7);
+  const third = await spotOf(3);
+  await pick(4);
+  await page.keyboard.down('Shift');
+  await page.mouse.click(seventh.x, seventh.y);
+  await page.keyboard.up('Shift');
   assert.match(await page.textContent('#item h2'), /^2 items/);
   assert.equal(await page.inputValue('#f-pitch'), '');
   assert.equal(await page.getAttribute('#f-pitch', 'placeholder'), 'Mixed');
@@ -205,49 +234,42 @@ try {
   await page.click('#undo');
   assert.deepEqual(await params(4), before);
   // A mixed selection offers the kinds as buttons that narrow it to one.
-  await page.click('#items li[data-index="3"]', { modifiers: ['Shift'] });
+  await page.keyboard.down('Shift');
+  await page.mouse.click(third.x, third.y);
+  await page.keyboard.up('Shift');
   assert.match(await page.textContent('#item h2'), /^3 items/);
   assert.equal(await page.locator('.item-kinds button').count(), 2);
   await page.click('.item-kinds button:has-text("Note")');
   assert.match(await page.textContent('#item h2'), /^2 items · Note/);
-  await page.click('#items li[data-index="2"]');
+  await pick(2);
 
   // The menus send WinScore's toolbar commands; TREB appends a treble clef and selects it.
   await menu('insert', 'TREB');
-  assert.equal(await page.textContent('#item-count'), '345');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '345');
   assert.match(await page.textContent('#item h2'), /^Item 344 · Clef/);
   await page.keyboard.press('Control+z');
-  assert.equal(await page.textContent('#item-count'), '344');
-  await page.click('#items li[data-index="2"]');
-
-  // The item list filters by kind or number.
-  await page.fill('#item-filter', 'clef');
-  assert.match(await page.textContent('#item-count'), /^\d+ of 344$/);
-  assert.ok(await page.isHidden('#items li[data-index="2"]'));
-  await page.fill('#item-filter', '8');
-  assert.ok(await page.isVisible('#items li[data-index="2"]'));
-  await page.press('#item-filter', 'Escape');
-  assert.equal(await page.textContent('#item-count'), '344');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
+  await pick(2);
 
   // Delete and undo it.
-  await page.click('#items li[data-index="3"]');
+  await pick(3);
   assert.equal(await page.textContent('#item h2'), 'Item 3 · Clef');
   await page.keyboard.press('Delete');
-  assert.equal(await page.textContent('#item-count'), '343');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '343');
   await page.keyboard.press('Control+z');
-  assert.equal(await page.textContent('#item-count'), '344');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
   assert.equal(await page.textContent('#item h2'), 'Item 3 · Clef');
 
   // Ctrl+C and Ctrl+V: the copy lands beside its original, selected, as one undo step; after a click
   // on the page it lands there. Edit ▸ Duplicate copies without the clipboard. Another tab pastes
   // from the system clipboard, in place.
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
-  await page.click('#items li[data-index="4"]');
+  await pick(4);
   const noteP3 = Number(await page.inputValue('#p3'));
   await page.keyboard.press('Control+c');
   assert.equal(await page.textContent('#message'), 'Copied 1 item');
   await page.keyboard.press('Control+v');
-  assert.equal(await page.textContent('#item-count'), '345');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '345');
   assert.equal(await page.textContent('#item h2'), 'Item 344 · Note');
   assert.ok(Math.abs(Number(await page.inputValue('#p3')) - (noteP3 + 10)) < 1e-6);
   assert.match(await page.getAttribute('#undo', 'title'), /^Undo Paste /);
@@ -257,7 +279,7 @@ try {
   assert.equal(await page.textContent('#item h2'), 'Item 345 · Note');
   assert.ok(Math.abs(Number(await page.inputValue('#p3')) - (clickedX - 2000) / 150) < 0.02);
   await menu('edit', 'duplicate');
-  assert.equal(await page.textContent('#item-count'), '347');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '347');
   const otherTab = await browser.newPage({ permissions: ['clipboard-read', 'clipboard-write'] });
   await otherTab.goto('http://localhost:4178/?new');
   await otherTab.waitForSelector('#app[data-ready="true"]');
@@ -268,9 +290,22 @@ try {
   await otherTab.close();
   await page.bringToFront();
   for (let i = 0; i < 3; i++) await page.keyboard.press('Control+z');
-  assert.equal(await page.textContent('#item-count'), '344');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
 
-  await page.click('#items li[data-index="2"]');
+  // Ctrl+A and Edit ▸ Select all select every item; in a field Ctrl+A selects its text.
+  await page.keyboard.press('Control+a');
+  assert.match(await page.textContent('#item h2'), /^344 items/);
+  await page.keyboard.press('Escape');
+  await menu('edit', 'select-all');
+  assert.match(await page.textContent('#item h2'), /^344 items/);
+  await page.keyboard.press('Escape');
+  await page.fill('#command', 'R 5');
+  await page.press('#command', 'Control+a');
+  assert.equal(await page.textContent('#item h2'), 'Nothing selected');
+  assert.deepEqual(await page.$eval('#command', (input) => [input.selectionStart, input.selectionEnd]), [0, 3]);
+  await page.fill('#command', '');
+
+  await pick(2);
   await page.fill('#p5', '1.2');
   await page.press('#p5', 'Enter');
   assert.equal(await page.textContent('#doc-state'), 'Unsaved changes');
@@ -329,14 +364,14 @@ try {
   await page.keyboard.type('S/');
   await page.waitForFunction(() => document.getElementById('pass-code-3').textContent === 'S 2;');
   await page.keyboard.press('Control+Enter');
-  await page.waitForFunction(() => document.getElementById('item-count').textContent === '349');
+  await page.waitForFunction(() => document.getElementById('app').dataset.items === '349');
   assert.match(await page.textContent('#item h2'), /^5 items/);
   assert.equal(await page.textContent('#pass-code-1'), ';');
   assert.equal(await page.inputValue('#input-staff'), '10');
   await page.keyboard.press('Escape');
   assert.ok(await page.isHidden('#input-panel'));
   await page.click('#undo');
-  assert.equal(await page.textContent('#item-count'), '344');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
   // IN n on the command bar opens the input on staff n.
   await page.fill('#command', 'IN 3');
   await page.press('#command', 'Enter');
@@ -346,12 +381,12 @@ try {
   assert.ok(await page.isHidden('#input-panel'));
 
   // Text: Insert ▸ Text opens the dialog; the font goes in front as _NN.
-  await page.click('#items li[data-index="2"]');
+  await pick(2);
   await menu('insert', 'text');
   await page.fill('#text-value', 'Allegro');
   await page.selectOption('#text-font', '1');
   await page.click('#text-insert');
-  await page.waitForFunction(() => document.getElementById('item-count').textContent === '345');
+  await page.waitForFunction(() => document.getElementById('app').dataset.items === '345');
   assert.match(await page.textContent('#item h2'), /^Item 344 · Text/);
   assert.equal(await page.inputValue('#item-text'), '_01Allegro');
   await page.fill('#item-text', '_01Allegro vivace');
@@ -360,10 +395,10 @@ try {
   assert.equal(await page.inputValue('#item-text'), '_01Allegro vivace');
   await page.click('#undo');
   await page.click('#undo');
-  assert.equal(await page.textContent('#item-count'), '344');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
 
   // Symbol picker: a searchable grid of library symbols drawn by the renderer.
-  await page.click('#items li[data-index="2"]');
+  await pick(2);
   await menu('insert', 'symbol');
   await page.waitForSelector('#symbol-grid .symbol-cell');
   const symbol = await page.getAttribute('#symbol-grid .symbol-cell:nth-child(2)', 'data-number');
@@ -371,7 +406,7 @@ try {
   assert.equal(await page.textContent('#symbol-count'), '0 symbols');
   await page.fill('#symbol-search', '');
   await page.click('#symbol-grid .symbol-cell:nth-child(2)');
-  await page.waitForFunction(() => document.getElementById('item-count').textContent === '345');
+  await page.waitForFunction(() => document.getElementById('app').dataset.items === '345');
   assert.match(await page.textContent('#item h2'), /^Item 344 · Symbol/);
   assert.equal(await page.inputValue('#p5'), symbol);
   await page.click('#undo');
@@ -384,7 +419,7 @@ try {
   assert.match(await page.textContent('#prompt'), /^Enter destination staff/);
   await page.click('#prompt-cancel');
   assert.ok(await page.isHidden('#prompt'));
-  assert.equal(await page.textContent('#item-count'), '344');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
 
   // Layout: LJ asks for the system, answered on the command bar; the result is one undo step.
   await menu('layout', 'LJ');
@@ -563,7 +598,7 @@ try {
   await mobile.locator('#pass-2').tap();
   await mobile.waitForSelector('#pass-2.active');
   await mobile.locator('#input-insert').tap();
-  await mobile.waitForFunction(() => document.getElementById('item-count').textContent === '348');
+  await mobile.waitForFunction(() => document.getElementById('app').dataset.items === '348');
   assert.equal(await mobile.evaluate(() => document.activeElement.id), 'input-typing', 'a tap on the panel leaves the keyboard up');
   await phone.close();
   assert.deepEqual(errors, []);

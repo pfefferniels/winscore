@@ -86,14 +86,6 @@
         <aside class="panel" id="panel">
           <div class="panel-grip" id="panel-grip" title="Drag to resize the panel" aria-hidden="true"></div>
           <section class="item" id="item" aria-label="Selected item"></section>
-          <section class="items">
-            <div class="items-head">
-              <h2>Items <span id="item-count" class="count"></span></h2>
-              <input id="item-filter" type="search" placeholder="Filter: note, text, 16 …" autocomplete="off" spellcheck="false" aria-label="Filter items" />
-              <button id="items-select" type="button" title="Select every item the filter shows, to edit them together">Select all</button>
-            </div>
-            <ol id="items" class="item-list"></ol>
-          </section>
         </aside>
       </main>
       <dialog id="symbol-dialog" class="symbol-dialog">
@@ -223,6 +215,7 @@
                 <dt>Click</dt><dd>Select an item</dd>
                 <dt><kbd>⇧</kbd> click</dt><dd>Add or remove an item</dd>
                 <dt>Drag on empty paper</dt><dd>Select the items in a box</dd>
+                <dt><kbd class="mod">⌘</kbd><kbd>A</kbd></dt><dd>Select all items</dd>
                 <dt><kbd>↵</kbd> / <kbd>⇧</kbd><kbd>↵</kbd></dt><dd>Next / previous item</dd>
                 <dt><kbd>Esc</kbd></dt><dd>Select nothing</dd>
                 <dt>Double click</dt><dd>Edit a text where it stands</dd>
