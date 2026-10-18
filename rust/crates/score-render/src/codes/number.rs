@@ -2,9 +2,9 @@
 //!
 //! draw_number writes the number as a string ([`number_text`]), hands it to
 //! the text routine draw_text 0x569AF0 and, for P8 = 1 or 2, draws a circle
-//! or box round it through draw_box and the text once more. Clefs (octave
-//! numbers), meters, staff numbers, tuplet and rest numbers call it with
-//! parameters of their own: [`draw_number`] takes them as a [`NumberCall`].
+//! or box round it through draw_box. Clefs (octave numbers), meters, staff
+//! numbers, tuplet and rest numbers call it with parameters of their own:
+//! [`draw_number`] takes them as a [`NumberCall`].
 //!
 //! P5 number (-999.999 to 999.999), 1001… letters A…, 2001… a…; P6 size;
 //! P7 font; P8 circle (1) or box (2), P10 its thickness, P11/P12 its size,
@@ -142,8 +142,8 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     number_font_loaded(doc, doc.position(item), &NumberCall::of(item))
 }
 
-/// The font draw_number leaves loaded for `call` at `at`; the frame's
-/// second drawing of the text loads the same.
+/// The font draw_number leaves loaded for `call` at `at` (the engine's
+/// second drawing of a framed number's text loads the same).
 pub fn number_font_loaded(doc: &Document<'_>, at: Pos, call: &NumberCall) -> Option<Font> {
     let text = number_text(call.value, call.p5, call.p17, call.p18);
     text::font_loaded(doc, &number_text_call(call, at, &text, Font::TIMES))
@@ -173,8 +173,8 @@ pub fn number_text_call<'t>(call: &NumberCall, at: Pos, text: &'t [u8], current_
 }
 
 /// draw_number 0x4F65A8 at X_POS, Y_POS = `at`, for the item being drawn.
-/// The engine draws a framed number's text again after the frame; the
-/// refined style draws it once.
+/// A framed number's text is drawn once; the engine draws it again after
+/// the frame.
 pub fn draw_number(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at: Pos, call: &NumberCall) {
     let text = number_text(call.value, call.p5, call.p17, call.p18);
     let text_call = number_text_call(call, at, &text, font_before(doc, item));
@@ -184,9 +184,6 @@ pub fn draw_number(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_
         let width = text::width(doc, &text_call);
         let (centre, frame) = frame(doc, call, at, step, (text.len(), width), text_call.font_override);
         draw_styled_box(doc, canvas, centre, step, &frame);
-        if !doc.refined() {
-            draw_text(doc, item, canvas, &text_call);
-        }
     }
 }
 
@@ -384,7 +381,6 @@ fn trim_end(mut text: Vec<u8>) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::Options;
     use crate::render;
     use score_format::{Item, MusFile, Word};
 
@@ -400,13 +396,10 @@ mod tests {
     }
 
     #[test]
-    fn the_refined_style_draws_a_framed_number_once() {
+    fn a_framed_number_draws_its_text_once() {
         let boxed = file(&[10.0, 1.0, 50.0, 12.0, 7.0, 1.0, 0.0, 2.0]);
-        let runs = |options: Options| {
-            let list = render(&Document::with_options(&boxed, options));
-            list.texts.iter().filter(|t| t.source == Some(crate::ItemId(1))).count()
-        };
-        assert_eq!((runs(Options::ENGINE), runs(Options::REFINED)), (2, 1));
+        let list = render(&Document::new(&boxed));
+        assert_eq!(list.texts.iter().filter(|t| t.source == Some(crate::ItemId(1))).count(), 1);
     }
 
     fn text(p5: f32, p17: i32, p18: f32) -> String {

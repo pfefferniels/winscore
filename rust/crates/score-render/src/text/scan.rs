@@ -33,7 +33,8 @@ pub struct Entry {
 enum Token {
     Glyph(i32),
     /// A byte from 128 up, read as whatever follows the character table
-    /// (é as glyph 0, "0"); the refined style draws its cp1252 character.
+    /// (é as glyph 0, which the screen shows as "0"); its cp1252 character
+    /// is drawn in the glyph's place.
     High { glyph: i32, byte: u8 },
     /// `""`: a glyph that depends on the font.
     DoubleQuote,
