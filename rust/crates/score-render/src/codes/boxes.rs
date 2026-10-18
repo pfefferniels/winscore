@@ -83,7 +83,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let call = BoxCall::of(item);
     let marked = trunc(f64::from(item.p(26))) == MARKED;
     let call = if marked {
-        canvas.colour = colour::of(MARKED_COLOUR, doc.options);
+        canvas.colour = colour::of(MARKED_COLOUR, doc.options.medium);
         BoxCall { p8: f64::from(MARKED_THICKNESS), ip8: MARKED_THICKNESS, ..call }
     } else {
         call
@@ -438,11 +438,6 @@ pub fn draw_box(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall) {
     draw_box_as(canvas, at, step, call, Thickness::Pen);
 }
 
-/// [`draw_box`] under its former name, for callers that still pass the
-/// document.
-pub fn draw_styled_box(_doc: &Document<'_>, canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall) {
-    draw_box(canvas, at, step, call);
-}
 
 /// How draw_box draws P8's thickness.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

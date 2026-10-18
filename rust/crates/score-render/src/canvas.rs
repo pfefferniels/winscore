@@ -124,8 +124,7 @@ impl<'a> Canvas<'a> {
     }
 
     /// The pen width, in engine units, of the shapes started from here on
-    /// (0, the default, is the output's pen, [`crate::display::PEN`]). The
-    /// engine has no such width, so only [`crate::Style::Refined`] sets it.
+    /// (0, the default, is the output's pen, [`crate::display::PEN`]).
     pub fn set_width(&mut self, width: f32) {
         let at = self.buffer.len();
         self.widths.retain(|&(i, _)| i < at);

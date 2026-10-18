@@ -12,7 +12,7 @@
 //! 1000 on, or letters after a rehearsal letter; P19 rotation; P20 spread.
 
 use crate::canvas::Canvas;
-use crate::codes::boxes::{draw_styled_box, BoxCall};
+use crate::codes::boxes::{draw_box, BoxCall};
 use crate::codes::text::font_before;
 use crate::document::{Document, ItemRef};
 use crate::text::{self, draw_text, Font, TextCall};
@@ -183,7 +183,7 @@ pub fn draw_number(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_
         let step = call.step.unwrap_or_else(|| doc.staves.get(call.staff).step);
         let width = text::width(doc, &text_call);
         let (centre, frame) = frame(doc, call, at, step, (text.len(), width), text_call.font_override);
-        draw_styled_box(doc, canvas, centre, step, &frame);
+        draw_box(canvas, centre, step, &frame);
     }
 }
 

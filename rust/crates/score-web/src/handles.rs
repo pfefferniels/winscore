@@ -250,7 +250,7 @@ fn parts_of(v: f32) -> f32 {
 
 /// The handles of item `index` of `file`.
 pub fn handles(file: &MusFile, index: usize) -> Handles {
-    let doc = crate::drawn(file);
+    let doc = score_render::Document::new(file);
     let Some(item) = doc.item(ItemId(index as u32)) else { return Handles::default() };
     let staff = doc.staff_of(item);
     let mut found = Handles::default();

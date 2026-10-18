@@ -315,13 +315,13 @@ mod tests {
         assert_eq!(encode(&decode(b"\xe9t\xe7")), b"<<et##c");
     }
 
-    /// What the refined renderer draws for each spelling is its character,
-    /// and what the engine measures is the letter's width.
+    /// What the renderer draws for each spelling is its character, and what
+    /// the engine measures is the letter's width.
     #[test]
     fn spellings_draw_their_characters() {
         let drawn = |text: &[u8]| {
             let file = file_with(vec![staff(), new_item(1.0, &with_font_code(text, 0)).to_item()]);
-            let doc = RenderDocument::with_options(&file, score_render::Options::REFINED);
+            let doc = RenderDocument::new(&file);
             let list = score_render::render(&doc);
             let strings = list.texts.iter().filter(|t| t.source == Some(RenderId(1))).flat_map(|t| &t.strings);
             strings.map(|s| s.text.as_str()).collect::<String>()

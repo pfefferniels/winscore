@@ -101,80 +101,28 @@ pub fn spline_through(before: Option<Pos>, points: &[Pos], after: Option<Pos>, s
     out
 }
 
-/// Distance between the copies [`thicken`] adds.
-const THICKEN_STEP: i32 = 14;
-
-/// Points left of this x keep their place in horizontal copies (0x42AAFF).
-const UNMOVED_X: i32 = -192_600;
-
-/// thicken 0x42A8AE on the points from `start` on, with n = 100·v + h:
-/// 2v copies moved up and down by 14, 28, … units, then 2h copies moved
-/// right and left, each a copy of the original points. n <= 0 turns filled
-/// objects into polylines instead. The engine doubles the counts and does
-/// the outlining only while the flag at 0x78B6A4 is set, as it is on the
-/// screen; callers guard the call where the engine does.
-pub fn thicken(points: &mut Vec<BufferPoint>, start: usize, n: i32) {
-    if n <= 0 {
-        points[start..]
-            .iter_mut()
-            .filter(|p| matches!(p.pen, Pen::Fill | Pen::SubPath))
-            .for_each(|p| p.pen = Pen::Stroke);
-        return;
-    }
-    let original = points[start..].to_vec();
-    let moved = |dx: i32, dy: i32| {
-        original.iter().map(move |p| {
-            let dx = if p.at.x >= UNMOVED_X { dx } else { 0 };
-            BufferPoint { at: p.at.shifted(dx, dy), pen: p.pen }
-        })
-    };
-    let vertical: Vec<BufferPoint> = copy_offsets(2 * (n / 100)).flat_map(|d| moved(0, d)).collect();
-    let horizontal: Vec<BufferPoint> = copy_offsets(2 * (n % 100)).flat_map(|d| moved(d, 0)).collect();
-    points.extend(vertical);
-    points.extend(horizontal);
-}
-
-/// 14, -14, 28, -28, … (`count` of them).
-fn copy_offsets(count: i32) -> impl Iterator<Item = i32> {
-    (0..count).map(|i| THICKEN_STEP * (i / 2 + 1) * if i % 2 == 0 { 1 } else { -1 })
+/// thicken 0x42A8AE with n <= 0, as P8 < 0 asks of a symbol: its filled
+/// objects become polylines, so only their outlines are drawn. (A positive
+/// n copies the points 14, 28, … units apart; the port draws such a
+/// symbol once with a wider pen instead.)
+pub fn outline_only(points: &mut [BufferPoint]) {
+    points
+        .iter_mut()
+        .filter(|p| matches!(p.pen, Pen::Fill | Pen::SubPath))
+        .for_each(|p| p.pen = Pen::Stroke);
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn at(points: &[BufferPoint]) -> Vec<(i32, i32)> {
-        points.iter().map(|p| (p.at.x, p.at.y)).collect()
-    }
-
     #[test]
-    fn thickening_alternates_sides_and_copies_the_originals() {
-        let mut points = vec![BufferPoint { at: Point::new(0, 0), pen: Pen::Fill }];
-        thicken(&mut points, 0, 102);
-        assert_eq!(at(&points), [(0, 0), (0, 14), (0, -14), (14, 0), (-14, 0), (28, 0), (-28, 0)]);
-    }
-
-    #[test]
-    fn far_left_points_stay_in_horizontal_copies() {
-        let mut points = vec![BufferPoint { at: Point::new(-192_601, 0), pen: Pen::Stroke }];
-        thicken(&mut points, 0, 1);
-        assert_eq!(at(&points), [(-192_601, 0), (-192_601, 0), (-192_601, 0)]);
-    }
-
-    #[test]
-    fn thickening_wraps_like_the_engine() {
-        let mut points = vec![BufferPoint { at: Point::new(0, i32::MIN), pen: Pen::Fill }];
-        thicken(&mut points, 0, 100);
-        assert_eq!(at(&points), [(0, i32::MIN), (0, i32::MIN + 14), (0, i32::MAX - 13)]);
-    }
-
-    #[test]
-    fn zero_or_negative_outlines_fills() {
-        let mut points = vec![
+    fn outlines_replace_fills() {
+        let mut points = [
             BufferPoint { at: Point::new(0, 0), pen: Pen::Fill },
             BufferPoint { at: Point::new(1, 0), pen: Pen::SubPath },
         ];
-        thicken(&mut points, 0, 0);
+        outline_only(&mut points);
         assert!(points.iter().all(|p| p.pen == Pen::Stroke));
     }
 

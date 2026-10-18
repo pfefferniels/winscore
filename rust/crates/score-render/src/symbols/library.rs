@@ -11,7 +11,7 @@ use crate::canvas::{Canvas, TextString, TextStyle, TEXT_BASELINE};
 use crate::codes;
 use crate::display::{print_pen, Colour, Point, PEN};
 use crate::document::{Document, ItemRef};
-use crate::geometry::{rotate_points, thicken};
+use crate::geometry::{outline_only, rotate_points};
 use crate::page::{is_recto, RECTO_SHIFT};
 use score_format::Symbol;
 use crate::staff::STEP_UNIT;
@@ -161,7 +161,7 @@ pub fn draw_scaled_symbol(
         rotate_points(&mut canvas.buffer_mut()[start..], at.to_point(), call.rotation as f32);
     }
     if call.thickness < 0 {
-        thicken(canvas.buffer_mut(), start, call.thickness);
+        outline_only(&mut canvas.buffer_mut()[start..]);
     }
     if width.is_some() {
         canvas.set_width(caller);

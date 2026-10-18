@@ -5,10 +5,10 @@ use std::process::ExitCode;
 
 use score_format::MusFile;
 use score_render::svg::{to_svg, SvgOptions, Viewport};
-use score_render::{render, Colour, DisplayList, Document, Medium, Options, Point, ShapeKind, Style};
+use score_render::{render, Colour, DisplayList, Document, Medium, Options, Point, ShapeKind};
 
-const USAGE: &str = "usage: score-cli render <in.mus> [-o <out.svg>] [--fit] [--stroke <units>] [--print] [--no-staff-numbers] [--engine]
-       score-cli dump <in.mus> [-o <out.txt>] [--print] [--no-staff-numbers] [--engine]
+const USAGE: &str = "usage: score-cli render <in.mus> [-o <out.svg>] [--fit] [--stroke <units>] [--print] [--no-staff-numbers]
+       score-cli dump <in.mus> [-o <out.txt>] [--print] [--no-staff-numbers]
 
   render               draw the page as SVG (page coordinates, y flipped)
   dump                 list the display list, one shape or text run per line
@@ -16,9 +16,7 @@ const USAGE: &str = "usage: score-cli render <in.mus> [-o <out.svg>] [--fit] [--
   --fit                crop to the drawing instead of showing the whole paper
   --stroke <units>     width of the default pen in engine units (default: 1/150 inch)
   --print              leave out screen aids (staff numbers, invisible items)
-  --no-staff-numbers   leave out the staff numbers only
-  --engine             draw as WinScore's engine does, artefacts included,
-                       instead of the refined style";
+  --no-staff-numbers   leave out the staff numbers only";
 
 /// Margin around the drawing for `--fit`: an eighth of an inch.
 const FIT_MARGIN: i32 = 500;
@@ -50,7 +48,7 @@ fn parse(args: &[String]) -> Result<Args, String> {
         },
         input: PathBuf::new(),
         output: None,
-        options: Options::REFINED,
+        options: Options::default(),
         fit: false,
         stroke: None,
     };
@@ -66,7 +64,6 @@ fn parse(args: &[String]) -> Result<Args, String> {
             }
             "--print" => parsed.options.medium = Medium::Print,
             "--no-staff-numbers" => parsed.options.staff_numbers = false,
-            "--engine" => parsed.options.style = Style::Engine,
             flag if flag.starts_with('-') => return Err(format!("unknown option {flag}\n{USAGE}")),
             path if input.is_none() => input = Some(PathBuf::from(path)),
             extra => return Err(format!("unexpected argument {extra:?}\n{USAGE}")),

@@ -386,7 +386,7 @@ impl<'c> Text<'c> {
         }
         // P16 colours the records, black without it, and what the item
         // draws after them.
-        let text_colour = self.call.colour.map(|p16| colour::of(p16, doc.options));
+        let text_colour = self.call.colour.map(|p16| colour::of(p16, doc.options.medium));
         let item_colour = canvas.colour;
         canvas.colour = text_colour.unwrap_or(Colour::BLACK);
         runs.into_iter().for_each(|(style, strings)| canvas.text(&style, strings));
@@ -601,7 +601,7 @@ mod tests {
     }
 
     fn drawn(file: &MusFile, medium: Medium) -> DisplayList {
-        let options = Options { medium, staff_numbers: false, ..Options::default() };
+        let options = Options { medium, staff_numbers: false };
         let list = render(&Document::with_options(file, options));
         let of_text = |source: Option<ItemId>| source == Some(ItemId(1));
         DisplayList {

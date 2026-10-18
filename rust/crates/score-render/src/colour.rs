@@ -10,7 +10,7 @@
 //! p as the channel p · 2.56 truncated, so that 99 gives 253.)
 
 use crate::display::Colour;
-use crate::document::{Medium, Options};
+use crate::document::Medium;
 use crate::units::trunc;
 
 /// White is shown in light grey on the screen so that it can still be found.
@@ -19,14 +19,9 @@ const SCREEN_WHITE: Colour = Colour { r: 235, g: 235, b: 235 };
 /// Invisible staves and barlines are shown in grey 0.8 on the screen.
 pub const SCREEN_INVISIBLE: Colour = Colour { r: 204, g: 204, b: 204 };
 
-/// The colour P26 asks for with `options` ([`printed`] on its medium).
-pub fn of(p26: f32, options: Options) -> Colour {
-    printed(p26, options.medium)
-}
-
 /// The colour SCORE prints for P26 (0x4D4F89): true greys, and colour
 /// percentages with 99 read as 100. White stays light grey on the screen.
-pub fn printed(p26: f32, medium: Medium) -> Colour {
+pub fn of(p26: f32, medium: Medium) -> Colour {
     match p26 {
         1.0 if medium == Medium::Screen => SCREEN_WHITE,
         grey if grey > 0.0 && grey <= 1.0 => {
@@ -60,7 +55,7 @@ mod tests {
     use super::*;
 
     fn printed_rgb(p26: f32, medium: Medium) -> (u8, u8, u8) {
-        let c = printed(p26, medium);
+        let c = of(p26, medium);
         (c.r, c.g, c.b)
     }
 

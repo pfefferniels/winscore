@@ -18,7 +18,7 @@ const STAFF_CODE: i32 = 8;
 const CLEF_CODE: i32 = 3;
 
 fn render_page(file: &MusFile) -> DisplayList {
-    render(&crate::drawn(file))
+    render(&score_render::Document::new(file))
 }
 
 /// Characters of a text item for the text field: Windows-1252, with

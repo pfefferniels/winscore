@@ -22,7 +22,7 @@ pub mod preview;
 pub mod symbols;
 
 use score_format::MusFile;
-use score_render::{DisplayList, ItemId, Options};
+use score_render::{DisplayList, ItemId};
 use wasm_bindgen::prelude::*;
 
 pub use codes::code_name;
@@ -31,12 +31,6 @@ pub use input::{InputCheck, InputLine};
 pub use preview::{InputPreview, Preview};
 pub use encode::{encode, Encoded};
 pub use hit::At;
-
-/// `file` as the app draws it: in score-render's refined style, which keeps
-/// the engine's layout but not its drawing artefacts.
-pub fn drawn(file: &MusFile) -> score_render::Document<'_> {
-    score_render::Document::with_options(file, Options::REFINED)
-}
 
 /// A display list in the flat encoding of [`encode`].
 #[wasm_bindgen]

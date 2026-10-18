@@ -21,7 +21,7 @@ pub const PEN: f32 = 4000.0 / 150.0;
 /// narrow down to PostScript's `0 setlinewidth`, the thinnest line a device
 /// draws; that is kept as a hundredth of a unit, since a [`Shape::width`]
 /// of 0 means the default pen. The engine's screen output has no such
-/// widths; [`crate::Style::Refined`] draws them on every medium.
+/// widths; the port draws them on every medium.
 pub fn print_pen(w: f32) -> f32 {
     (PEN + w * UNITS_PER_INCH as f32 / 600.0).max(THINNEST)
 }

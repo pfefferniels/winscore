@@ -23,7 +23,7 @@ struct ShapeJson {
     paths: Vec<Vec<[i32; 2]>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     raw_kind: Option<u8>,
-    /// The pen width of a refined rendering; absent in engine output.
+    /// The pen width; absent for the default pen, as in the engine's output.
     #[serde(default, skip_serializing_if = "is_zero")]
     width: f32,
 }
@@ -48,7 +48,7 @@ struct TextJson {
     italic: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     item: Option<u32>,
-    /// Outlined letters of a refined rendering; absent in engine output.
+    /// Outlined letters; absent when false, as in the engine's output.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     outline: bool,
     strings: Vec<StringJson>,

@@ -36,7 +36,7 @@ pub fn library_symbols_json() -> String {
 #[wasm_bindgen(js_name = symbolPreview)]
 pub fn symbol_preview(number: i32) -> EncodedList {
     let file = preview_file(number);
-    EncodedList::from(&render(&crate::drawn(&file)))
+    EncodedList::from(&render(&score_render::Document::new(&file)))
 }
 
 #[cfg(test)]
@@ -46,7 +46,7 @@ mod tests {
     #[test]
     fn previews_draw_something() {
         let first = library_symbols().into_iter().next().expect("the bundled library has symbols");
-        let list = render(&crate::drawn(&preview_file(first.number)));
+        let list = render(&score_render::Document::new(&preview_file(first.number)));
         assert!(!list.shapes.is_empty() || !list.texts.is_empty());
     }
 
