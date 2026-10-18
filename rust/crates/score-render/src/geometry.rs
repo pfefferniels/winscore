@@ -1,8 +1,30 @@
-//! Geometry the engine applies to buffered points, shared by several codes.
+//! Geometry the engine applies to buffered points, shared by several codes,
+//! and the pen widths of SCORE's print output that the refined style draws.
 
 use crate::canvas::{BufferPoint, Pen};
-use crate::display::Point;
+use crate::display::{print_pen, Point, UNITS_PER_INCH};
 use crate::units::{real, trunc, Pos};
+
+/// One pixel of SCORE's print output in engine units, as the refined style
+/// reads SCORE's print widths: at 600 dpi, where a print-width marker
+/// (0x4D4ED2) counts pixels and the default pen ([`crate::PEN`]) is four
+/// of them, so that `d` pixels more than the default is `print_pen(d)`.
+/// The engine's own pixel (0x78B480) follows the printer's resolution.
+pub const PRINT_PIXEL: f64 = UNITS_PER_INCH as f64 / 600.0;
+
+/// The thinnest pen, for outlines SCORE's print output leaves out (filled
+/// arcs) or narrows to nothing: the one unit the engine draws everything
+/// with, which outputs widen to a device pixel. (Width 0 is the default pen.)
+pub const HAIRLINE: f32 = 1.0;
+
+/// [`print_pen`]`(pixels)` as a width for [`crate::canvas::Canvas::set_width`]:
+/// a pen narrowed to nothing is a [`HAIRLINE`], not the default pen.
+pub fn print_width(pixels: f32) -> f32 {
+    match print_pen(pixels) {
+        w if w > 0.0 => w,
+        _ => HAIRLINE,
+    }
+}
 
 /// Degrees per radian as the REAL*4 constant at 0x75FC6C.
 const DEGREES_PER_RADIAN: f32 = 57.295_776;

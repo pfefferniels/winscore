@@ -128,7 +128,7 @@ fn draw_register(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>,
     let p4 = f64::from(item.p(4));
     draw_box(canvas, Pos::new(at.x, staff.y(p4)), step, &circle);
     let size = real(step * factor / 25.0);
-    register_lines(item, canvas, &staff, at.x, rows, size, factor);
+    register_lines(doc, item, canvas, &staff, at.x, rows, size, factor);
     let dot = BoxCall {
         kind: CIRCLE_SHAPE,
         width: real(factor * f64::from(REGISTER_DOT)),
@@ -148,7 +148,9 @@ fn draw_register(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>,
 /// The dividing lines through draw_line (0x4345EE): one through the centre
 /// (2 rows), two at ±1.35 × P6 steps (3 rows), or the centre line and two
 /// at ±1.95 × P6 (4 rows); half lengths 4.66, 4.4 and 4.08 × the size.
+#[allow(clippy::too_many_arguments)]
 fn register_lines(
+    doc: &Document<'_>,
     item: ItemRef<'_>,
     canvas: &mut Canvas<'_>,
     staff: &crate::staff::Staff,
@@ -173,7 +175,7 @@ fn register_lines(
             .with(12, 0.0)
             .with(13, 0.0)
             .with(18, factor as f32);
-        line::draw(&params, Pos::new(start, staff.y(level)), staff, canvas);
+        line::draw(doc, &params, Pos::new(start, staff.y(level)), staff, canvas);
     };
     let pair = |canvas: &mut Canvas<'_>, half: f32, lift: f32| {
         let lift = real(factor * f64::from(lift));

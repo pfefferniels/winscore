@@ -40,15 +40,22 @@ Use these instead of writing local copies; ask render-core for anything else tha
 | Where | What |
 |---|---|
 | `units` | `real` (REAL*4 store), `constant` (REAL*4 constant), `trunc`, `nint`, `amod` (0x54AABA), `Pos` |
-| `geometry` | `rotate_points` (0x42A5F4, degrees clockwise), `rotate_points_radians` (its k0 <= 0 entry, radians counter-clockwise), `thicken` (0x42A8AE) |
+| `geometry` | `rotate_points` (0x42A5F4, degrees clockwise), `rotate_points_radians` (its k0 <= 0 entry, radians counter-clockwise), `thicken` (0x42A8AE); `print_width`, `PRINT_PIXEL`, `HAIRLINE` for the refined style |
 | `trig` | `CIRCLE`: the engine's table of 100·sin/100·cos per degree |
 | `symbols` | `SymbolLibrary` (`doc.symbols()`), `draw_symbol` (core), `draw_library_symbol` (draw_symbol 0x4293F0), `draw_clef` (0x431AE0), `ItemContext` (the item globals these read) |
 | `codes::boxes` | `draw_box` (0x433530) with a `BoxCall` |
 | `codes::number` | `draw_number` (0x4F65A8) with a `NumberCall` |
-| `codes::line` | `draw` (draw_line 0x439963) with a `Params` array |
+| `codes::line` | `draw` (draw_line 0x439963) with a `Params` array, in the document's style |
 | `codes::rest` | `draw` (draw_rest at an explicit X_POS) |
 | `document` | `ItemRef::with_params` / `changed`: call a shared routine with parameters overwritten, as the engine's routines overwrite the parameter globals |
 | `colour` | `from_p26` |
+
+## Refined style
+
+`Options::style` chooses between `Style::Engine`, the engine's display list to ±1 unit with its artefacts, and `Style::Refined` (score-web and score-cli draw it; `score-cli --engine` for the other), which keeps every item where the engine puts it but draws it better: lines with real widths instead of shifted copies, smooth curves. It keeps SCORE's house style (thickness defaults and profiles, curve heights, dash lengths, line positions); where it needs to know how something should look on paper, it follows SCORE's PostScript print output.
+
+- Put every change to drawn output behind `doc.refined()`. Engine output stays byte-identical: the fixtures (`cargo test --workspace`) run in Engine style.
+- Widths: `canvas.set_width(w)` gives the shapes started after it a pen `w` engine units wide (0 is the default pen, `PEN` = 1/150 inch); set it back to 0 after the item's thick part. SCORE's print routines set widths with the marker 0x4D4ED2(&w) (`thunk_FUN_004d4ed2` in `analysis/engine/decompiled_all/`, called when OUTPUT_MODE == -1) and reset them with 0x4D4F3F; `print_pen(w)` is the pen after such a marker, `geometry::print_width(w)` the same as a `set_width` argument. Use the `w` the print path passes, on every medium, instead of the screen's copies (`geometry::thicken`, 14 units apart) or rings. Widths in print pixels (barlines, 0x4CF0D3 called directly) count `geometry::PRINT_PIXEL`.
 
 ## Tests
 
