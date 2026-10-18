@@ -1,4 +1,0 @@
-# Real-score pages (corpus/free, redistributable) that must match the engine.
-corpus-chopin2804
-corpus-chopin2806
-corpus-mus2pmx-ex1

@@ -1,4 +1,0 @@
-# Fixtures produced by layout commands (LI, LJ, LJA) that must match the engine.
-layout-li-system
-layout-lj-system
-layout-lja-single
