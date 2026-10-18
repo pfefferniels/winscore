@@ -138,7 +138,7 @@ fn flush_in_staff_colour(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Can
         return;
     }
     let own = canvas.colour;
-    canvas.colour = colour::from_p26(staff_p26, doc.options.medium);
+    canvas.colour = colour::of(staff_p26, doc.options);
     canvas.flush();
     canvas.colour = own;
 }

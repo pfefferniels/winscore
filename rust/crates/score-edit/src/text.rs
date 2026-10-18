@@ -21,6 +21,8 @@ pub const CENTRED: f32 = 1000.0;
 pub const DIVIDED_GAP: f32 = 2.0;
 /// Characters CTX leaves out when centring (help: ? ! ¿ ¡ . , : ; ").
 const PUNCTUATION: &[u8] = b"?!\xbf\xa1.,:;\"";
+/// ¡ and ¿ as [`encode`] spells them; CTX leaves them out as well.
+const SPELLED_PUNCTUATION: [&[u8]; 2] = [b"!3", b"!q"];
 /// Unicode of Windows-1252 bytes 0x80–0x9F; the other bytes are Latin-1.
 const HIGH: [char; 32] = [
     '€', '\u{81}', '‚', 'ƒ', '„', '…', '†', '‡', 'ˆ', '‰', 'Š', '‹', 'Œ', '\u{8d}', 'Ž', '\u{8f}', '\u{90}', '‘', '’',
@@ -146,9 +148,27 @@ pub fn divided(text: &[u8], font: u8) -> Vec<Vec<u8>> {
 pub fn core(text: &[u8]) -> (Vec<u8>, Vec<u8>) {
     let code_len = if font_code(text).is_some() { FONT_CODE_LEN } else { 0 };
     let (code, body) = text.split_at(code_len);
-    let start = body.iter().position(|b| !PUNCTUATION.contains(b)).unwrap_or(body.len());
-    let end = body.iter().rposition(|b| !PUNCTUATION.contains(b)).map_or(start, |i| i + 1);
+    let mut start = 0;
+    while let Some(len) = punctuation_at(&body[start..]) {
+        start += len;
+    }
+    let mut end = body.len();
+    while end > start {
+        match SPELLED_PUNCTUATION.iter().find(|s| body[start..end].ends_with(s)) {
+            Some(spelled) => end -= spelled.len(),
+            None if PUNCTUATION.contains(&body[end - 1]) => end -= 1,
+            None => break,
+        }
+    }
     ([code, &body[..start]].concat(), [code, &body[..end]].concat())
+}
+
+/// The length of the punctuation CTX leaves out at the start of `text`, if any.
+fn punctuation_at(text: &[u8]) -> Option<usize> {
+    match SPELLED_PUNCTUATION.iter().find(|s| text.starts_with(s)) {
+        Some(spelled) => Some(spelled.len()),
+        None => text.first().filter(|b| PUNCTUATION.contains(b)).map(|_| 1),
+    }
 }
 
 /// A text item's draft with new characters and their count in P12.
@@ -249,6 +269,8 @@ mod tests {
         assert_eq!(core(b"_00Hello,"), (b"_00".to_vec(), b"_00Hello".to_vec()));
         assert_eq!(core(b"_00\"Hi!\""), (b"_00\"".to_vec(), b"_00\"Hi".to_vec()));
         assert_eq!(core(b"_00(Hello)"), (b"_00".to_vec(), b"_00(Hello)".to_vec()));
+        assert_eq!(core(b"_00!qQue?"), (b"_00!q".to_vec(), b"_00!qQue".to_vec()));
+        assert_eq!(core(b"!3Hola!"), (b"!3".to_vec(), b"!3Hola".to_vec()));
     }
 
     /// The sample scores, saved by WinScore, store exactly the lengths we measure.
