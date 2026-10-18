@@ -270,6 +270,19 @@ try {
   for (let i = 0; i < 3; i++) await page.keyboard.press('Control+z');
   assert.equal(await page.textContent('#item-count'), '344');
 
+  // Ctrl+A and Edit ▸ Select all select every item; in a field Ctrl+A selects its text.
+  await page.keyboard.press('Control+a');
+  assert.match(await page.textContent('#item h2'), /^344 items/);
+  await page.keyboard.press('Escape');
+  await menu('edit', 'select-all');
+  assert.match(await page.textContent('#item h2'), /^344 items/);
+  await page.keyboard.press('Escape');
+  await page.fill('#command', 'R 5');
+  await page.press('#command', 'Control+a');
+  assert.equal(await page.textContent('#item h2'), 'Nothing selected');
+  assert.deepEqual(await page.$eval('#command', (input) => [input.selectionStart, input.selectionEnd]), [0, 3]);
+  await page.fill('#command', '');
+
   await page.click('#items li[data-index="2"]');
   await page.fill('#p5', '1.2');
   await page.press('#p5', 'Enter');

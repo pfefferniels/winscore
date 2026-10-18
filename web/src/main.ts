@@ -470,6 +470,12 @@ function select(items: number[], reveal = false) {
   if (reveal) revealSelection();
 }
 
+/** ⌘A, Edit ▸ Select all: every item of the score. */
+function selectAll() {
+  const score = state.score;
+  if (score) select(Array.from({ length: score.itemCount() }, (_, i) => i));
+}
+
 /** Re-renders after an edit; the panel and list follow once a drag is over. */
 function edited(change: Change | null, live: boolean) {
   const score = state.score;
@@ -1108,6 +1114,7 @@ function bindPointer() {
     inputTap: (x, y) => inputMode.isOpen && inputMode.click(view.pageAt(x, y), false),
     holdsKeyboard: () => inputMode.holdsKeyboard,
     selected: selectionChanged,
+    selectAll,
     edited,
     failed,
     command: runCommand,
@@ -1205,6 +1212,7 @@ function bindMenus() {
       paste: clipboard.paste,
       canPaste: () => clipboard.full,
       duplicate,
+      selectAll,
       undoLabel: () => state.editor?.undoLabel() ?? null,
       redoLabel: () => state.editor?.redoLabel() ?? null,
       input: () => enterInput(),

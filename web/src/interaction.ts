@@ -2,10 +2,11 @@
 // click and shift-click select, dragging a selected item moves it (Shift
 // keeps one axis, Escape cancels), dragging over empty paper draws a box
 // (WinScore's mouse-drawn area), Ctrl/⌘-drag or the middle button pans, a
-// double click opens an item, and WinScore's edit-mode keys move or delete
-// the selection. A handle of the selected item (its ends, size, rotation,
-// curve …) is dragged instead of the item when the press is on it; moves
-// and handle drags snap onto guides unless ⌘/Ctrl is held.
+// double click opens an item, ⌘A (Ctrl+A) selects every item, and
+// WinScore's edit-mode keys move or delete the selection. A handle of the
+// selected item (its ends, size, rotation, curve …) is dragged instead of
+// the item when the press is on it; moves and handle drags snap onto guides
+// unless ⌘/Ctrl is held.
 //
 // Touch: a tap selects, a finger dragged pans (and glides on), except from
 // an item already selected, which it moves, or from one of its handles; two
@@ -29,6 +30,8 @@ export interface Hooks {
   holdsKeyboard(): boolean;
   /** After a selection change. */
   selected(): void;
+  /** ⌘A: selects every item of the score. */
+  selectAll(): void;
   /** After an edit; `live` while a drag is still in progress. */
   edited(change: Change | null, live: boolean): void;
   failed(err: unknown): void;
@@ -501,6 +504,13 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     if (command && e.key.toLowerCase() === 'y') {
       e.preventDefault();
       run((editor) => editor.redo());
+      return;
+    }
+    if (command && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'a') {
+      if (!hooks.editor()) return;
+      // Not the browser's select-all of the page's text; a drag in progress keeps what it moves.
+      e.preventDefault();
+      if (!gesture) hooks.selectAll();
       return;
     }
     const editor = hooks.editor();
