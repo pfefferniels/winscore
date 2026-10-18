@@ -79,13 +79,17 @@ mod tests {
 
     #[test]
     fn dots_are_round_in_refined_style() {
-        // A dotted quarter in a space and a staccato quarter (P11 = 7).
-        let file = file(&[&[1.0, 1.0, 20.0, 6.0, 10.0, 0.0, 0.0, 0.0, 10.0], &[1.0, 1.0, 40.0, 6.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 7.0]]);
-        for n in [1, 2] {
+        // A dotted quarter in a space, a staccato quarter (P11 = 7), a dotted quarter rest.
+        let file = file(&[
+            &[1.0, 1.0, 20.0, 6.0, 10.0, 0.0, 0.0, 0.0, 10.0],
+            &[1.0, 1.0, 40.0, 6.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 7.0],
+            &[2.0, 1.0, 60.0, 0.0, 0.0, 1.0],
+        ]);
+        for n in [1, 2, 3] {
             let engine = shapes(&file, Options::ENGINE, n);
             let refined = shapes(&file, Options::REFINED, n);
-            let (octagon, round) = (engine.last().expect("a dot"), refined.last().expect("a dot"));
-            assert_eq!(points(octagon).count(), 10);
+            let dot = engine.iter().position(|s| points(s).count() == 10).expect("an octagon");
+            let (octagon, round) = (&engine[dot], &refined[dot]);
             assert_eq!(points(round).count(), 33);
             let (a, b) = (centre(octagon), centre(round));
             assert!((a.0 - b.0).abs() <= 1 && (a.1 - b.1).abs() <= 1, "same centre: {a:?} {b:?}");
