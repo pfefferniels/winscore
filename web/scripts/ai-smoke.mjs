@@ -215,7 +215,15 @@ try {
   await page.mouse.up();
   await page.keyboard.up('Alt');
   await page.waitForSelector('.ai-prompt:not([hidden])');
-  assert.match(await page.textContent('.ai-status'), /Empty space on staff 1/);
+  const scope = await page.textContent('.ai-status');
+  if (!/Empty space on staff 1/.test(scope)) {
+    const layout = await page.evaluate(() => {
+      const v = document.getElementById('viewport');
+      return { scroll: [v.scrollLeft, v.scrollTop], size: [v.clientWidth, v.clientHeight], zoom: document.getElementById('zoom').value, selection: v.dataset.selection };
+    });
+    console.log('empty-space lasso:', JSON.stringify({ scope, notes: box, staff, lasso: [r0, r1, y0, y1], ...layout }));
+  }
+  assert.match(scope, /Empty space on staff 1/);
   await ask('add notes c g d/f/a');
   assert.match(await page.textContent('.ai-reading'), /Add c g d\/f\/a/);
   await enter();
