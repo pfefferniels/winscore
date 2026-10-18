@@ -1304,9 +1304,9 @@ button.danger:hover {
 }
 
 .item {
+  flex: 1;
+  min-height: 0;
   padding: 12px;
-  border-bottom: 1px solid var(--border);
-  max-height: 62%;
   overflow: auto;
 }
 
@@ -1556,87 +1556,6 @@ button.danger:hover {
   border-radius: 4px;
 }
 
-.items {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 12px 0 0;
-}
-
-.items-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 12px 8px;
-}
-
-.items-head h2 {
-  margin: 0;
-  white-space: nowrap;
-}
-
-.items-head input {
-  flex: 1;
-  min-width: 0;
-  height: 28px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-
-.items-head button {
-  flex: none;
-  padding: 0 8px;
-}
-
-.items-head input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-}
-
-.count {
-  color: var(--muted);
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-}
-
-.item-list {
-  flex: 1;
-  overflow: auto;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-variant-numeric: tabular-nums;
-}
-
-.item-list li {
-  display: grid;
-  grid-template-columns: 44px 1fr 72px;
-  gap: 8px;
-  padding: 3px 12px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.item-list li:hover {
-  background: var(--hover);
-}
-
-.item-list li.selected {
-  background: var(--active);
-}
-
-.item-list .index {
-  color: var(--muted);
-  text-align: right;
-}
-
-.item-list .where {
-  color: var(--muted);
-  text-align: right;
-}
-
 .footer {
   display: flex;
   align-items: center;
@@ -1766,8 +1685,6 @@ button.danger:hover {
   .params input,
   .add-param input,
   .text-editor input,
-  .items-head input,
-  .items-head button,
   .input-head input,
   .input-range input,
   .text-fields > input,
@@ -1796,11 +1713,6 @@ button.danger:hover {
   .setting-control.toggle input {
     width: 20px;
     height: 20px;
-  }
-
-  .item-list li {
-    padding-top: 9px;
-    padding-bottom: 9px;
   }
 
   .pass {
@@ -1901,10 +1813,6 @@ button.danger:hover {
 
   .panel-grip {
     display: block;
-  }
-
-  .item {
-    max-height: 60%;
   }
 
   .footer {
