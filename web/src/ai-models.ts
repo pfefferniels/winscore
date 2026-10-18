@@ -428,7 +428,7 @@ function settingLines(code: number): string {
 }
 
 /** The system prompt: the same for every command, so it is cached. */
-export function systemPromptFor(catalog: Catalog): string {
+function systemPrompt(catalog: Catalog): string {
   const settings = catalog.codes.map(({ code, name }) => `Code ${code}, ${name}:\n${settingLines(code)}`).join('\n');
   const words = catalog.words.map(([word, codes, meaning]) => `${word} [${codes.join(',')}] ${meaning}`).join('\n');
   return `You turn an engraver's command, typed while editing a score in WinScore (Leland Smith's SCORE), into an edit script that the editor runs at once on the real score. Answer with the script only.
@@ -626,7 +626,7 @@ export async function askClaude(
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
       output_config: { effort: 'low', format: { type: 'json_schema', schema: SCRIPT_SCHEMA } },
-      system: [{ type: 'text', text: systemPromptFor(catalog), cache_control: { type: 'ephemeral' } }],
+      system: [{ type: 'text', text: systemPrompt(catalog), cache_control: { type: 'ephemeral' } }],
       messages: [
         { role: 'user', content: userMessage(about) },
         ...(failed
