@@ -161,7 +161,7 @@ impl Outline {
     }
 
     /// Adds the outline to the buffer at f32(origin + scale × coordinate)
-    /// per axis, where draw_symbol 0x4293F0 puts the records, each curve in
+    /// per axis, where draw_symbol puts the records, each curve in
     /// pieces short enough to look round at any zoom.
     pub fn draw(&self, canvas: &mut Canvas<'_>, origin: Pos, scale: Scale) {
         let place = |v: V| Pos::new(real(origin.x + v.x * scale.x), real(origin.y + v.y * scale.y));

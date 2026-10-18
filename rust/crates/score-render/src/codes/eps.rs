@@ -1,5 +1,4 @@
-//! Code 15: imported EPS files as WinScore's screen shows them (draw_eps
-//! 0x50A650).
+//! Code 15: imported EPS files as WinScore's screen shows them.
 //!
 //! P3/P4 the lower left corner, P5 horizontal size (0 = 1), P6 vertical size
 //! (0 = P5), P7-P10 the file's bounding box in points, P11 = -9999 once it

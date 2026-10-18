@@ -1,4 +1,4 @@
-//! Code 2: rests (draw_rest 0x519C38).
+//! Code 2: rests.
 //!
 //! P5 is the rest type: 0 quarter, 1–6 eighth to 256th (stacks of the
 //! eighth-rest symbol), -1 half, -2 whole, -3 multi-bar (breve) rest, -4
@@ -36,16 +36,16 @@ const T_EIGHTH: i32 = 9;
 const T_H_BAR: i32 = 3;
 const T_REPEAT: i32 = 4;
 
-/// Level of the rest symbol's origin above P4 = 0, by t = P5 + 8 (table 0x7969A8).
+/// Level of the rest symbol's origin above P4 = 0, by t = P5 + 8.
 const LEVELS: [f32; 13] = [0.0, 8.0, 8.0, 0.0, 0.0, 8.0, 9.0, 7.0, 8.0, 8.0, 6.0, 6.0, 4.0];
 /// Whole and half rests at or beyond these levels (P4 mod 100) get a ledger
-/// line (tables 0x7969C0, 0x7969C8, by t).
+/// line (by t).
 const LEDGER_FROM_ABOVE: [i32; 2] = [4, 5];
 const LEDGER_FROM_BELOW: [i32; 2] = [-7, -6];
-/// Distance of the first dot from the rest in units, by P5 + 4 (table 0x7969E4).
+/// Distance of the first dot from the rest in units, by P5 + 4.
 const DOT_GAPS: [f32; 9] = [0.0, 19.0, 19.0, 19.0, 13.0, 15.5, 18.4, 22.3, 26.2];
 /// Parentheses around a rest (P5 ± 100), by P5 + 4: left offset (units/25
-/// in P3), level of both, right offset (tables 0x79698C, 0x796954, 0x796970).
+/// in P3), level of both, right offset.
 const PAREN_LEFT: [f32; 8] = [6.17, 2.13, 2.13, 2.14, 2.33, 1.93, 2.33, 2.63];
 const PAREN_LEVEL: [f32; 8] = [0.0, 8.0, 8.9, 7.66, 7.26, 7.26, 6.76, 7.26];
 const PAREN_RIGHT: [f32; 8] = [7.26, 4.97, 4.97, 4.96, 3.97, 4.57, 4.97, 6.17];
@@ -184,9 +184,9 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, x_pos: f64, canvas: &mut Canv
     Drawing { doc, item, rest: &rest, h_bar, canvas }.from(t, x, rest.size, rest.dots, rest.number);
 }
 
-/// The P9 a redraw writes into a centred rest (CW, P9 = -1, draw_rest
-/// 0x519C38): the middle between the barlines around it, in P3 units, for
-/// whole rests and longer (P5 <= -2). None when the rest is not centred,
+/// The P9 a redraw writes into a centred rest (CW, P9 = -1): the middle
+/// between the barlines around it, in P3 units, for whole rests and longer
+/// (P5 <= -2). None when the rest is not centred,
 /// no barline follows it, or for the bar rest P5 = -5, which is spread
 /// between the barlines on every draw and keeps P9 = -1.
 pub fn centre(doc: &Document<'_>, item: ItemRef<'_>) -> Option<f32> {
@@ -268,8 +268,7 @@ struct Bars {
     right_is_barline: bool,
 }
 
-/// Inner edges of barline types 1–6 for the bar rest, in units (tables
-/// 0x796A04 left, 0x796A1C right).
+/// Inner edges of barline types 1–6 for the bar rest, in units.
 const BAR_LEFT_EDGE: [f32; 7] = [0.0, 0.0, 0.0, 0.0, 3.6, 3.4, 4.0];
 const BAR_RIGHT_EDGE: [f32; 7] = [0.0, 1.2, 2.2, 4.4, 1.0, 4.4, 3.0];
 const NO_BAR: f32 = 9999.0;
@@ -356,7 +355,7 @@ fn invisible_on_screen(doc: &Document<'_>, item: ItemRef<'_>) -> bool {
 /// draw_number's font 6 (the meter font), which rest numbers default to.
 const DEFAULT_NUMBER_FONT: i32 = 6;
 
-/// The width draw_rest allows for a number, in units of 6 steps (0x51AEFA):
+/// The width draw_rest allows for a number, in units of 6 steps:
 /// narrower for the digit 1.
 fn digits_width(number: i32) -> f32 {
     let (units, tens, hundreds) = (number % 10, number % 100 / 10, number / 100);
@@ -412,7 +411,7 @@ fn number_call(doc: &Document<'_>, item: ItemRef<'_>, rest: &Rest, number: i32, 
     }
 }
 
-/// The font a rest leaves loaded for the next item (draw_item 0x547358):
+/// The font a rest leaves loaded for the next item:
 /// that of its number. The number's position does not matter for it.
 pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     let rest = Rest::new(doc, item, page::x(item.p(3)))?;
@@ -459,7 +458,7 @@ struct Drawing<'d, 'a, 'c> {
 }
 
 impl Drawing<'_, '_, '_> {
-    /// From label 0x51A655: the level table, then marks, number, dots and the rest.
+    /// The level table, then marks, number, dots and the rest.
     fn from(&mut self, t: i32, x: f64, size: f64, dots: i32, number: i32) {
         let rest = *self.rest;
         let mut level = match t {
@@ -578,7 +577,7 @@ impl Drawing<'_, '_, '_> {
         }
     }
 
-    /// The number above (0x51AEFA): centred by a width read off its digits,
+    /// The number above: centred by a width read off its digits,
     /// at P12 × 1.2 (× 0.7 grace) size, 12 scale steps above P4 (+ P11),
     /// in the P14 font (IP7) or font 6 at P14 = 1.05.
     fn number(&mut self, t: i32, x: f64, number: i32, size: f64) {
@@ -619,7 +618,7 @@ impl Drawing<'_, '_, '_> {
         glyph::clef(self.doc, self.item, self.canvas, FERMATA_SYMBOL, Pos::new(x, y), (sx, sy), rest.step);
     }
 
-    /// From label 0x51B349: the rest symbol, repeated two scale steps up and
+    /// The rest symbol, repeated two scale steps up and
     /// 4.5 units right for each further flag, then parentheses and ledger line.
     /// `number` is P8 when the number stage was skipped (grace-size composites).
     fn symbol_stack(&mut self, t: i32, x: f64, level: f64, flag_step: f64, size: f64, number: i32) {
@@ -751,7 +750,7 @@ mod tests {
         doc.item(ItemId(3)).expect("the rest")
     }
 
-    /// Engine results editor-core recorded for WB4 and EU9 on leaving edit mode.
+    /// The engine's results for WB4 and EU9 on leaving edit mode.
     #[test]
     fn edit_mode_writes_back_bar_end_and_spacing() {
         let bar_rest = file(&[2.0, 1.0, 80.0, 0.0, -5.0, 0.0, 1.0, 4.0, -1.0]);

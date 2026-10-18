@@ -25,7 +25,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 const PARAMETERS: usize = 13;
 const COLOUR_PARAMETERS: usize = 16;
 
-/// The characters as the engine reads them (draw_text 0x569AF0): P12 of
+/// The characters as the engine reads them: P12 of
 /// them from the word after P13, or after P16 when P14 = -1, whatever the
 /// item stores there. Past the item's blank-padded characters the engine
 /// finds zeros in the cases checked.
@@ -84,7 +84,7 @@ pub fn text_call<'a>(doc: &Document<'_>, item: ItemRef<'_>, text: &'a [u8], curr
 }
 
 /// The engine's current font when it reaches `item`: draw_item sets it to
-/// the font whose metrics were loaded last (0x547358). Items are drawn in
+/// the font whose metrics were loaded last. Items are drawn in
 /// file order, several passes in a row, so that is the font loaded by the
 /// nearest item before it, or failing that after it, that loads one.
 pub fn font_before(doc: &Document<'_>, item: ItemRef<'_>) -> Font {
@@ -114,7 +114,7 @@ fn font_loaded_by(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     }
 }
 
-/// codes::staff draws the number left of the staff on the screen (0x545DE0).
+/// codes::staff draws the number left of the staff on the screen.
 fn shows_staff_number(doc: &Document<'_>, item: ItemRef<'_>) -> bool {
     doc.screen()
         && doc.options.staff_numbers

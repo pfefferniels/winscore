@@ -999,7 +999,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn keys_as_0x562cc6_moves_them() {
+    fn keys_move_by_half_steps() {
         let cases = [
             ((0, 1), (-5, 1)),
             ((0, 6), (6, 3)),

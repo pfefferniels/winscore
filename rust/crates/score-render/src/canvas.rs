@@ -1,19 +1,18 @@
 //! The drawing surface handed to an item module: the engine's point buffer.
 //!
-//! Drawing routines in the engine append points with a pen code to a buffer
-//! (add_point 0x44B820), which is flushed into the vector stream once per item
-//! (emit_points 0x54A69C); the C++ shell then cuts the stream into objects
-//! (0x5A4900). A canvas reproduces this chain for one item: modules add
-//! points in internal coordinates (see [`crate::units`]), and on flush the
-//! canvas moves them onto the page and appends them to the display list as
-//! the shell would decode them. Everything is tagged with the item's id and
+//! Drawing routines in the engine append points with a pen code to a buffer,
+//! which is flushed into the vector stream once per item; the C++ shell then
+//! cuts the stream into objects. A canvas reproduces this chain for one item:
+//! modules add points in internal coordinates (see [`crate::units`]), and on
+//! flush the canvas moves them onto the page and appends them to the display
+//! list as the shell would decode them. Everything is tagged with the item's id and
 //! drawn in the canvas colour current at flush time.
 
 use crate::display::{Colour, DisplayList, ItemId, PlacedText, Point, Shape, ShapeKind, TextRun};
 use crate::page::{page_offset, PAPER_ORIGIN};
 use crate::units::Pos;
 
-/// OnDraw (0x5E5910) puts a text record's baseline at its y + 96.
+/// OnDraw puts a text record's baseline at its y + 96.
 pub const TEXT_BASELINE: i32 = 96;
 
 /// The pen code stored with each point.
@@ -49,7 +48,7 @@ impl Stream {
         Self { list, last_pen: None }
     }
 
-    /// emit_points 0x54A69C: a start right after a start replaces it.
+    /// As in the engine's flush, a start right after a start replaces it.
     /// `width` is the pen width of a shape this point starts.
     fn write(&mut self, at: Point, pen: Pen, colour: Colour, width: f32, source: ItemId) {
         let previous_started = self.last_pen.is_some_and(|p| p != Pen::Continue);
@@ -90,7 +89,7 @@ pub struct TextStyle {
     /// Average character width in engine units (0 = font default).
     pub width: f32,
     /// Angle in tenths of a degree; the engine lays the characters of a
-    /// positive angle along a clockwise line (analysis/engine/display.md §3.4).
+    /// positive angle along a clockwise line.
     pub escapement: i32,
     pub weight: i32,
     pub italic: bool,
@@ -141,13 +140,13 @@ impl<'a> Canvas<'a> {
         self.source
     }
 
-    /// add_point 0x44B820: truncates the position (a [`Pos`], or a [`Point`]
+    /// Truncates the position (a [`Pos`], or a [`Point`]
     /// already truncated) and appends it.
     pub fn point(&mut self, at: impl Into<Pos>, pen: Pen) {
         self.buffer.push(BufferPoint { at: at.into().to_point(), pen });
     }
 
-    /// add_segment 0x44B8B1: a two-point polyline.
+    /// A two-point polyline.
     pub fn segment(&mut self, from: impl Into<Pos>, to: impl Into<Pos>) {
         self.point(from, Pen::Stroke);
         self.point(to, Pen::Continue);

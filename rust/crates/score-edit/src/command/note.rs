@@ -1,5 +1,5 @@
 //! Edit-mode transformations of notes (code 1) and rests (code 2), after
-//! the WinScore help pages code1.txt and code2.txt.
+//! the WinScore help on codes 1 and 2.
 //!
 //! Code 1's P5 packs `[100 parentheses] + 10 × stem + accidental`, with the
 //! accidental's offset after the decimal point; P9 packs `10 × dots + tails`.

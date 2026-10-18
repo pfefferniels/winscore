@@ -1,4 +1,4 @@
-//! Code 6: beams (draw_beam 0x416168).
+//! Code 6: beams.
 //!
 //! P3/P6 left and right end, P4/P5 the note levels at the ends (the beam's
 //! stem-side edge lies seven scale steps beyond them), P7 = XY stem direction
@@ -20,12 +20,12 @@ use crate::text::Font;
 use crate::units::{constant, real, trunc, Pos};
 
 /// Note-head width in step units: the stem of an up-stem note stands this
-/// far right of its P3 (global 0x78B34C, 17 after start-up).
+/// far right of its P3 (an engine global, 17 after start-up).
 const NOTE_WIDTH: f32 = 17.0;
 
 const STEMS_UP: i32 = 1;
 
-/// `BMTH -2` in PREF.DAT (int 0x78B478): beams are outlined with the pen
+/// `BMTH -2`, WinScore's default preference: beams are outlined with the pen
 /// of a print-width marker of BMTH, half the default pen, on every medium
 /// (draw_beam sets the marker only when printing).
 const BMTH: i32 = -2;
@@ -67,7 +67,7 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
 }
 
 /// A note's tremolo mark P11 = 41–44, which draw_note draws by setting up
-/// a beam item of its own (0x4F2B13) and calling draw_beam.
+/// a beam item of its own and calling draw_beam.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct NoteTremolo {
     /// P3 and P4 of that beam.
@@ -230,7 +230,7 @@ struct Beam {
     up: bool,
     /// |P4| >= 100 (without P18): a cue-size beam.
     cue: bool,
-    /// Print output closes each beam with one more point (0x4A060D).
+    /// Print output closes each beam with one more point.
     print: bool,
 }
 
@@ -322,7 +322,7 @@ impl Beam {
         }
     }
 
-    /// The tuplet number P8 (draw_beam 0x416CD9): at P16 (0.5) along the
+    /// The tuplet number P8: at P16 (0.5) along the
     /// main beam, 6.5 steps above it for stems up, 24.5 below for stems
     /// down, P19 scale steps higher; P8 = F0NN sets font F.
     fn draw_number(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, number: &BracketNumber) {
@@ -478,7 +478,7 @@ impl Beam {
         self.group(canvas, Edge { left: Pos::new(xl, yl), right: Pos::new(xr, yr) }, count, 0.0)
     }
 
-    /// One beam as the quadrilateral of 0x4A060D, started at the right end.
+    /// One beam as the quadrilateral SCORE prints, started at the right end.
     fn draw(&self, canvas: &mut Canvas<'_>, edge: Edge) {
         let inner = |p: Pos| Pos::new(p.x, real(self.thickness + p.y));
         let corners = [inner(edge.right), edge.right, edge.left, inner(edge.left), inner(edge.right)];
@@ -507,7 +507,7 @@ fn flagged(digit: i32) -> (bool, bool) {
     }
 }
 
-/// 0x417221: the shift in P3 units for a note offset (the note's P10) in
+/// The shift in P3 units for a note offset (the note's P10) in
 /// P14/P15; 10 and 20 stand for a head moved right or left of its stem.
 fn note_offset(p: f32, unit: f64, width: f64) -> f64 {
     let head = || real(unit * width * constant(2.833_333_3) / constant(25.0));

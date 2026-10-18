@@ -1,7 +1,7 @@
-//! Code 10: numbers and rehearsal letters (draw_number 0x4F65A8).
+//! Code 10: numbers and rehearsal letters.
 //!
 //! draw_number writes the number as a string ([`number_text`]), hands it to
-//! the text routine draw_text 0x569AF0 and, for P8 = 1 or 2, draws a circle
+//! the text routine draw_text and, for P8 = 1 or 2, draws a circle
 //! or box round it through draw_box. Clefs (octave numbers), meters, staff
 //! numbers, tuplet and rest numbers call it with parameters of their own:
 //! [`draw_number`] takes them as a [`NumberCall`].
@@ -92,8 +92,8 @@ impl NumberCall {
         }
     }
 
-    /// The font code draw_text receives (IP8): IP7 through the table at
-    /// 0x794FF4, from 90 on as given.
+    /// The font code draw_text receives (IP8): IP7 through the font
+    /// table, from 90 on as given.
     fn font_override(&self) -> i32 {
         match self.font.max(0) {
             f if f >= DIRECT_FONTS => f,
@@ -113,7 +113,7 @@ impl NumberCall {
     }
 }
 
-/// Font codes for P7 = 0-10 (table 0x794FF4).
+/// Font codes for P7 = 0-10.
 const FONTS: [i32; 11] = [1000, 1002, 1004, 1024, 1026, 1006, 94, 1025, 1027, 1001, 1003];
 /// P7 from this value on reaches draw_text unchanged.
 const DIRECT_FONTS: i32 = 90;
@@ -172,7 +172,7 @@ pub fn number_text_call<'t>(call: &NumberCall, at: Pos, text: &'t [u8], current_
     }
 }
 
-/// draw_number 0x4F65A8 at X_POS, Y_POS = `at`, for the item being drawn.
+/// draw_number at X_POS, Y_POS = `at`, for the item being drawn.
 /// A framed number's text is drawn once; the engine draws it again after
 /// the frame.
 pub fn draw_number(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at: Pos, call: &NumberCall) {
@@ -187,7 +187,7 @@ pub fn draw_number(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_
     }
 }
 
-/// Frame position and size factors (0x4F70C1–0x4F73B1).
+/// Frame position and size factors.
 const FRAME_X_UNIT: f32 = 75.0;
 const MUSIC_FONT_SHIFT: f32 = 1.2;
 const FRAME_LIFT: f32 = 1.55;
@@ -267,7 +267,7 @@ const P17_LOWER_OFFSET: i32 = 4;
 /// Added before the fraction is taken to three decimals.
 const FRACTION_BIAS: f32 = 0.0003;
 
-/// The string draw_number writes into the text buffer (0x20B8EA0): the
+/// The string draw_number writes into the text buffer: the
 /// integer part of `p5` (`value` is the integer the caller passes, IP5 for a
 /// code-10 item) with up to three decimals, a following letter (`p17`), or
 /// a rehearsal letter with what `p18` adds. Formats as the engine's

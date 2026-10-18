@@ -34,10 +34,10 @@ impl Default for Options {
     }
 }
 
-/// Codes whose P15 moves them right (draw_item jump tables 0x769010, 0x768FD0).
+/// Codes whose P15 moves them right.
 const P15_SHIFTED_CODES: [i32; 8] = [3, 7, 9, 10, 12, 14, 17, 18];
 
-/// Codes whose P4 keeps other information in its hundreds (item_position 0x5479AB).
+/// Codes whose P4 keeps other information in its hundreds.
 const P4_MOD_100_CODES: [i32; 4] = [1, 2, 3, 6];
 
 /// One item and its index in the file.
@@ -58,7 +58,7 @@ impl ItemRef<'_> {
         self.item.param(n)
     }
 
-    /// IPn, the engine's integer copy of parameter `n`: trunc(Pn) (draw_item 0x547210).
+    /// IPn, the engine's integer copy of parameter `n`: trunc(Pn).
     pub fn ip(&self, n: usize) -> i32 {
         trunc(f64::from(self.p(n)))
     }
@@ -141,7 +141,7 @@ impl<'a> Document<'a> {
     }
 
     /// The item's reference point from P3, P4 (and P15), in internal
-    /// coordinates, as item_position 0x5479AB computes it for every code.
+    /// coordinates, as the engine's position routine computes it for every code.
     pub fn position(&self, item: ItemRef<'_>) -> Pos {
         let code = item.code();
         let x = page::x(item.p(3));

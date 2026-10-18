@@ -1,5 +1,4 @@
-//! Code 4: lines, dashes, dots, wavy lines, hairpins and multipoint lines
-//! (draw_line 0x439963).
+//! Code 4: lines, dashes, dots, wavy lines, hairpins and multipoint lines.
 //!
 //! P3/P4 left end, P6/P5 right end (P5 = 999 makes a hairpin, P7 its
 //! spread); P7 type: 0 line, 1..99 dashes (P8 length, P9 space), -1 heavy
@@ -55,7 +54,7 @@ impl Params {
         self
     }
 
-    /// IP(n) = INT(P(n)), as draw_item 0x547210 prepares it.
+    /// IP(n) = INT(P(n)), as draw_item prepares it.
     fn ip(&self, n: usize) -> i32 {
         trunc(f64::from(self.p(n)))
     }
@@ -182,7 +181,6 @@ impl<'a> Line<'a> {
         }
         let mut x = origin.x;
         if p.p(16) == 1.0 {
-            // 0x53C1F1
             x = real(f64::from(p.p(17)) * P3_UNIT + x);
             p.set(6, real(f64::from(p.p(18)) + f64::from(p.p(6))) as f32);
         }
@@ -208,9 +206,9 @@ impl<'a> Line<'a> {
     }
 
     /// The pen SCORE's print output draws the line with: draw_line passes
-    /// 2·IP10 to the print-width marker 0x4D4ED2 below IP7 = 100, IP21 for
-    /// multipoint lines, and -1 for heavy waves (0x43A6DA, and 0x50DEFA,
-    /// which sets the width directly); `None` is the default pen.
+    /// 2·IP10 to the print-width marker below IP7 = 100, IP21 for multipoint
+    /// lines, and -1 for heavy waves (which print also sets directly);
+    /// `None` is the default pen.
     fn print_width(&self) -> Option<f32> {
         let pixels = match self.ip7 {
             k if k >= MULTIPOINT => self.p.ip(21),
@@ -291,7 +289,7 @@ pub(crate) enum End {
     Finish,
 }
 
-/// end_mark 0x43C11A: what P11 (at the start) or P12 (at the finish) adds.
+/// What P11 (at the start) or P12 (at the finish) adds.
 /// Up to 100: a bracket of that many scale steps, from which the line
 /// continues; below 200: an arrow head of spread P - 100, pointing outward;
 /// from 200: a bracket of P - 200 steps downward. `across`: the line is a
@@ -358,7 +356,7 @@ fn dash_lengths(p: &Params, scale_step: f64) -> (f64, f64) {
 }
 
 /// Dashes along y = `from.y` from `from.x` until `until` as the engine
-/// draws them (0x439598): the last dash may pass it. Returns the x after the
+/// draws them: the last dash may pass it. Returns the x after the
 /// last space.
 fn dash_row(canvas: &mut Canvas<'_>, from: Pos, until: f64, dash: f64, space: f64) -> f64 {
     let next = |x: f64| real(space + real(dash + x));
@@ -368,7 +366,7 @@ fn dash_row(canvas: &mut Canvas<'_>, from: Pos, until: f64, dash: f64, space: f6
 }
 
 /// Moves each point after the first up by `slope` times its distance in x
-/// from the first, as 0x439598 and draw_line tilt rows of dashes.
+/// from the first, as the engine's dash routine and draw_line tilt rows of dashes.
 fn shear(points: &mut [BufferPoint], slope: f64) {
     let Some((first, rest)) = points.split_first_mut() else { return };
     let x0 = first.at.x;
@@ -437,7 +435,7 @@ fn vertical_dashes(line: &Line<'_>, top: f64, scale_step: f64, canvas: &mut Canv
         .for_each(|y| canvas.segment(Pos::new(x, y), Pos::new(x, real(dash + y))));
 }
 
-/// Library units of the dot outline (0x78F6DC, 0x78F6AC), after a first
+/// Library units of the dot outline, after a first
 /// point 55.3 above the centre.
 const DOT_OUTLINE: [(f32, f32); 12] = [
     (0.0, 101.2),
@@ -454,7 +452,7 @@ const DOT_OUTLINE: [(f32, f32); 12] = [
     (0.0, 55.3),
 ];
 
-/// dot 0x43C415: a filled 13-point dot of size `r` at `at`.
+/// A filled 13-point dot of size `r` at `at`.
 fn dot(canvas: &mut Canvas<'_>, at: Pos, r: f64) {
     canvas.point(Pos::new(at.x, real(r * constant(55.3) + at.y)), Pen::Fill);
     DOT_OUTLINE.iter().for_each(|&(dx, dy)| {
@@ -474,7 +472,7 @@ fn dots(line: &Line<'_>, canvas: &mut Canvas<'_>) {
     line.rotate(canvas, p.p(13));
 }
 
-/// One wave unit in library units (0x78F5B4, 0x78F4BC), indexed from 1 as
+/// One wave unit in library units, indexed from 1 as
 /// in the engine: 1..=9 the thin wave (2..=9 after the first unit, 10 its
 /// end, 10..=14 its end with an arrow), 15..=49 the heavy wave, 50..=62 the
 /// heavy wave's arrow.
@@ -721,7 +719,7 @@ impl Wedge {
         ]);
     }
 
-    /// P14/P15 with the new slur features (int 0x78B4B8 = 1): each, when
+    /// P14/P15 with the new slur features: each, when
     /// set, cuts the hairpin at that fraction of its length from the open
     /// end (decrescendo) or from the apex (crescendo); with both, the legs
     /// are drawn between the two cuts.
@@ -764,7 +762,7 @@ impl Wedge {
     }
 }
 
-/// The two separate legs of a partial hairpin (draw_line 0x43A085): the
+/// The two separate legs of a partial hairpin: the
 /// upper from `start` to the far end, the lower from the near to the far end.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Legs {
@@ -782,7 +780,7 @@ impl Legs {
     }
 }
 
-/// P11 = 1 (0x439598): two rows of dashes from P3 to P6, tilted from P4 to
+/// P11 = 1: two rows of dashes from P3 to P6, tilted from P4 to
 /// P4 ∓ P7/2 (default 1.1 scale steps). For a decrescendo the y values of
 /// all points are reversed, which mirrors the dashes only approximately.
 fn dashed_hairpin(line: &Line<'_>, canvas: &mut Canvas<'_>) {

@@ -1,5 +1,5 @@
 //! Tablature: P6 = -n (n strings) turns a note into a fret number on a
-//! string line (0x558A40). The help text says no more than that; this
+//! string line. The help text says no more than that; this
 //! follows the engine.
 //!
 //! P6 = -(10·s + n): s chooses the tuning (0 guitar, 1 lute, 2, 3; 8, 9
@@ -21,19 +21,19 @@ use crate::staff::Staff;
 use crate::text::{draw_text, font_loaded as text_font_loaded, Font, TextCall};
 use crate::units::{amod, constant, real, trunc, Pos};
 
-/// String pitches by tuning (table 0x79EE20, from index `first + 1`).
+/// String pitches by tuning (from index `first + 1`).
 const STRING_PITCHES: [i32; 20] = [-8, 76, 71, 67, 62, 57, 52, 47, 47, 74, 71, 67, 62, 79, 0, 0, 0, 0, 0, 0];
-/// P6 = -5: five strings (table 0x79EE44).
+/// P6 = -5: five strings.
 const FIVE_STRINGS: [i32; 5] = [74, 71, 67, 62, 79];
 /// P6 = -4 with the guitar tuning.
 const FOUR_STRINGS: [i32; 4] = [76, 69, 62, 55];
 /// The top string of a six-string lute.
 const LUTE_TOP: i32 = 72;
-/// Semitones of the scale degrees C … B (table 0x79EDC8).
+/// Semitones of the scale degrees C … B.
 const DEGREES: [i32; 7] = [0, 2, 4, 5, 7, 9, 11];
-/// Semitones by P5's units digit (table 0x79EDE4).
+/// Semitones by P5's units digit.
 const ACCIDENTALS: [i32; 10] = [0, -1, 1, 0, -2, 2, 4, 1, 0, 2];
-/// Level offsets of tunings 0–3 (table 0x79EE14).
+/// Level offsets of tunings 0–3.
 const TUNING_LEVELS: [i32; 4] = [0, -12, -6, -8];
 
 const LUTE: i32 = 1;
@@ -74,7 +74,7 @@ impl Strings {
         strings
     }
 
-    /// 0x5594EB: up to 20 semitones up, 21–32 down, from 33 a pitch.
+    /// Up to 20 semitones up, 21–32 down, from 33 a pitch.
     fn retune(&mut self, string: usize, change: i32) {
         if change == 0 {
             return;
@@ -132,7 +132,7 @@ fn fingering(item: ItemRef<'_>) -> Option<Fingering> {
     Some(Fingering { string, fret, count })
 }
 
-/// 0x55953D: the pitch of a level (P4 on the tuning's staff) with an accidental.
+/// The pitch of a level (P4 on the tuning's staff) with an accidental.
 fn pitch(level: i32, accidental: i32, tuning: i32) -> i32 {
     let step = TUNING_LEVELS[tuning.clamp(0, 3) as usize] + level;
     let degree = (step + 6) % 7;
@@ -210,7 +210,7 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     text_font_loaded(doc, &text_call(doc, item, step(doc, item), &text, &fingering, level, lettered, Font::TIMES))
 }
 
-/// What 0x558A40 hands draw_text: X_POS moved left for two digits and a
+/// What the tablature routine hands draw_text: X_POS moved left for two digits and a
 /// parenthesis, Y_POS on the string's line, P5 = 0.95, P6 = 0.55 × P15
 /// (× 0.818 grace), P9 = P13, P11 = P10, the colour as P14 = -1, P16 = P26.
 #[allow(clippy::too_many_arguments)]
@@ -266,7 +266,7 @@ fn text_call<'t>(
     }
 }
 
-/// P20 = 1 (0x559733): a white box over the string line behind the number.
+/// P20 = 1: a white box over the string line behind the number.
 fn clear_behind(item: ItemRef<'_>, staff: &Staff, step: f64, level: f64, fret: i32, canvas: &mut Canvas<'_>) {
     let mut width = match fret {
         -1 => constant(2.3),

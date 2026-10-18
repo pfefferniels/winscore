@@ -1,5 +1,5 @@
 //! Text commands: quick text entry, new characters, and the words that
-//! size, centre and justify text items (WinScore help, code16.txt).
+//! size, centre and justify text items (WinScore help, code 16).
 
 use score_format::Item;
 use score_render::Document as RenderDocument;

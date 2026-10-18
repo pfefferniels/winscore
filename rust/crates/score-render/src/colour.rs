@@ -2,11 +2,10 @@
 //!
 //! P26 = 0 is black, 0 < P26 < 1 a grey level (0 black, 1 white), and larger
 //! values a six-digit `aabbcc` of red, green and blue percentages. Colours
-//! are drawn as SCORE's PostScript output sets them (0x4D4F89, called by
-//! draw_items 0x547FC8 when printing): `P26 setgray` for 0 < P26 ≤ 1, and
-//! for larger P26 `r g b setrgbcolor` with each percentage over 100, from
-//! 0.989 on 1 (0x4F0D31), so that 99 is 100 % as the help says. (The
-//! engine's screen takes a grey g as the percentages 100·g and a percentage
+//! are drawn as SCORE's PostScript output sets them when printing:
+//! `P26 setgray` for 0 < P26 ≤ 1, and for larger P26 `r g b setrgbcolor`
+//! with each percentage over 100, from 0.989 on 1, so that 99 is 100 % as
+//! the help says. (The engine's screen takes a grey g as the percentages 100·g and a percentage
 //! p as the channel p · 2.56 truncated, so that 99 gives 253.)
 
 use crate::display::Colour;
@@ -19,7 +18,7 @@ const SCREEN_WHITE: Colour = Colour { r: 235, g: 235, b: 235 };
 /// Invisible staves and barlines are shown in grey 0.8 on the screen.
 pub const SCREEN_INVISIBLE: Colour = Colour { r: 204, g: 204, b: 204 };
 
-/// The colour SCORE prints for P26 (0x4D4F89): true greys, and colour
+/// The colour SCORE prints for P26: true greys, and colour
 /// percentages with 99 read as 100. White stays light grey on the screen.
 pub fn of(p26: f32, medium: Medium) -> Colour {
     match p26 {
@@ -36,12 +35,12 @@ pub fn of(p26: f32, medium: Medium) -> Colour {
             };
             Colour { r: part(n / 10000), g: part(n % 10000 / 100), b: part(n % 100) }
         }
-        // 0, and negative values, for which draw_items sets no colour.
+        // 0, and negative values, for which the engine sets no colour.
         _ => Colour::BLACK,
     }
 }
 
-/// 0x4F0D31: a percentage over 100 from this value on is 1 (REAL*4 0.989).
+/// A percentage over 100 from this value on is 1 (REAL*4 0.989).
 const FULL: f32 = 0.989;
 const PERCENT: f32 = 100.0;
 

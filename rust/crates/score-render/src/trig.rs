@@ -1,7 +1,7 @@
 //! The engine's circle table: about 100·sin and 100·cos of every whole
-//! degree 0–360, as REAL*4, read by the engine from `scorlib/WSCORE.DAT`
-//! (exported to `analysis/engine/data/trig.tsv`). Ten entries differ from
-//! correctly rounded values, so drawing code uses the table, not `sin`.
+//! degree 0–360, as REAL*4, read by the engine from its `WSCORE.DAT`. Ten
+//! entries differ from correctly rounded values, so drawing code uses the
+//! table, not `sin`.
 
 /// (S, C) of degree `index`.
 #[rustfmt::skip]

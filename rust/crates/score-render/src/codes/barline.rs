@@ -1,11 +1,11 @@
-//! Code 14: barlines, braces and brackets (draw_barline 0x4117B0).
+//! Code 14: barlines, braces and brackets.
 //!
 //! P2 lowest staff, P3 position (+ P7 unless P15 is set), P4 staves spanned
 //! (999 = up to the highest staff, negative = invisible), P5 type, P6
 //! thickness, P8 bracket ends, P10/P11 bottom and top level in scale steps,
 //! P12 dot size, P13/P14 extra spacing, P16 dot levels, P17 spacing as on a
-//! staff of that size, P18/P19 gap. The construction follows
-//! `analysis/engine/barlines.md`; constants are REAL*4 as in the engine. The
+//! staff of that size, P18/P19 gap. The construction and its REAL*4
+//! constants are the engine's. The
 //! bars have the widths of SCORE's print output on every medium, where the
 //! engine's screen draws every bar one unit wide.
 
@@ -46,13 +46,13 @@ const BRACE_SYMBOL: i32 = 5;
 /// the parameters it changes while drawing.
 struct Barline {
     kind: i32,
-    /// The bar's x (0x1F95D58).
+    /// The bar's x.
     xb: f64,
     /// The item's x as the dot routine sees it (X_POS).
     x_pos: f64,
     bottom: f64,
     top: f64,
-    /// The spacing unit: the step unit of staff P2, or 25 × P17 (0x2052C08).
+    /// The spacing unit: the step unit of staff P2, or 25 × P17.
     unit: f64,
     /// Staves spanned.
     span: i32,
@@ -65,9 +65,9 @@ struct Barline {
     dash: (f32, f32),
 }
 
-/// barline_stroke 0x412699 adds a second stroke a print pixel (0x78B480)
-/// right of the first when printing: the bar is that much wider than the
-/// default pen, drawn as one stroke.
+/// The engine's bar stroke adds a second stroke a print pixel right of the
+/// first when printing: the bar is that much wider than the default pen,
+/// drawn as one stroke.
 const STROKE_PIXELS: f32 = 1.0;
 
 /// The rest item draw_barline draws after a two-bar-repeat bar (P5 = -44):
@@ -233,10 +233,10 @@ impl Barline {
     }
 
     /// Types 7 and above other than 8–10, and invisible bars on the screen:
-    /// a vertical dashed line drawn by the code-4 routine (draw_line
-    /// 0x439963) with P5 = the top as a level of staff P2, P6 = P3, IP7 = 1,
-    /// IP10 = IP6 or (OUTPUT_MODE != 0), which is 1 on the screen and in
-    /// print, P8 dash (default 1), P9 space (default 2).
+    /// a vertical dashed line drawn by the code-4 routine with P5 = the top
+    /// as a level of staff P2, P6 = P3, IP7 = 1, IP10 = IP6 or
+    /// (OUTPUT_MODE != 0), which is 1 on the screen and in print, P8 dash
+    /// (default 1), P9 space (default 2).
     fn dashed(&self, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         let staff = &self.low;
         let top_level = real((self.top - f64::from(staff.level0)) / (staff.step * 7.0));
@@ -256,14 +256,13 @@ impl Barline {
         line::draw(&params, Pos::new(self.x_pos, self.bottom), staff, canvas);
     }
 
-    /// barline_stroke 0x412699.
     fn stroke(&self, canvas: &mut Canvas<'_>, x: f64) {
         canvas.set_width(print_width(STROKE_PIXELS));
         canvas.segment(Pos::new(x, self.bottom), Pos::new(x, self.top));
         canvas.set_width(0.0);
     }
 
-    /// The left edge of a P6 bar (0x411F7C): P6 + 1 print pixels left of
+    /// The left edge of a P6 bar: P6 + 1 print pixels left of
     /// the bar's x (on the engine's screen no width at all).
     fn p6_left(&self, item: ItemRef<'_>) -> f64 {
         real(self.xb - (f64::from(item.p(6)) + 1.0) * PRINT_PIXEL)
@@ -280,7 +279,7 @@ impl Barline {
         self.thick(canvas, real(self.xb - self.unit * 6.0), self.xb);
     }
 
-    /// The thick bar between `a` and `b` (block 0x411FAD), emitted as the
+    /// The thick bar between `a` and `b`, emitted as the
     /// engine does: a diagonal hairline, then the filled rectangle, with a
     /// doubled last point while IP8 is 0 or 1.
     fn thick(&self, canvas: &mut Canvas<'_>, a: f64, b: f64) {
@@ -300,7 +299,7 @@ impl Barline {
         }
     }
 
-    /// barline_brace 0x412B93: draw_clef with symbol 5 at 21 steps below the
+    /// The brace: draw_clef with symbol 5 at 21 steps below the
     /// bar's bottom, stretched to its height and widened with it unless P6
     /// gives the width factor.
     fn brace(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
@@ -335,7 +334,7 @@ impl Barline {
         self.close(canvas, b);
     }
 
-    /// barline_bracket 0x412A20: the curved ends of a bracket, filled; P8 = 1
+    /// The curved ends of a bracket, filled; P8 = 1
     /// draws only the top end, 2 only the bottom end. Leaves IP8 = 1.
     fn bracket_ends(&mut self, canvas: &mut Canvas<'_>) {
         let step = real(self.unit * constant(0.15));
@@ -353,7 +352,7 @@ impl Barline {
         self.ip8 = 1;
     }
 
-    /// barline_dots 0x412749: two repeat dots on every spanned staff, `f`
+    /// Two repeat dots on every spanned staff, `f`
     /// spacing units right of X_POS, at levels 6 and 8 or as P16 = xyz says
     /// (x lower, yz upper). Leaves IP8 = 0.
     fn dots(&mut self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, f: f64) {
@@ -398,7 +397,7 @@ fn dot_call(item: ItemRef<'_>, size: f64) -> BoxCall {
     }
 }
 
-/// The bracket end outline, in 0.15 spacing units (f32 tables at 0x78B264 and 0x78B234).
+/// The bracket end outline, in 0.15 spacing units (the engine's f32 tables).
 const BRACKET_CURVE: [(f32, f32); 12] = [
     (60.0, -33.0),
     (92.0, -29.0),
@@ -432,7 +431,7 @@ fn smooth_bracket_end() -> Vec<(f32, f32)> {
 /// Segments of a bracket end's curves per point of the engine's.
 const BRACKET_STEPS: usize = 8;
 
-/// The gap barline_gap 0x412353 leaves between y0 and y1 (the bottom and
+/// The gap the engine leaves between y0 and y1 (the bottom and
 /// top of the first stroke): P19 scale steps centred P18 (a fraction, or a
 /// percentage above 1) of the way up.
 fn gap_span(item: ItemRef<'_>, bar: &Barline, y0: f64, y1: f64) -> (f64, f64) {
@@ -445,7 +444,7 @@ fn gap_span(item: ItemRef<'_>, bar: &Barline, y0: f64, y1: f64) -> (f64, f64) {
     (lo, real(size + lo))
 }
 
-/// barline_gap 0x412353: the bar drawn again below and above the gap, its
+/// The bar drawn again below and above the gap, its
 /// strokes as wide as before and a P6 bar as two rectangles (the engine
 /// replaces the strokes in the point buffer by two each, keeping only a
 /// rectangle's sides, or its diagonal on the screen).

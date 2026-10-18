@@ -1,5 +1,5 @@
-//! Code 11: user symbols from SCORE 3/4 `.DRW` files (draw_symbol 0x4293F0
-//! with IP1 = 11, file reader 0x432998).
+//! Code 11: user symbols from SCORE 3/4 `.DRW` files (draw_symbol with
+//! IP1 = 11).
 //!
 //! P5 symbol 0–9 of the file, P6/P7 size, P8 thickness, P9 rotation, P10
 //! pixel thickness; the file name is stored as characters from P14 on (128
@@ -24,7 +24,7 @@ use crate::units::trunc;
 const NAME_FROM: usize = 14;
 const NAME_LENGTH: usize = 128;
 const SYMBOLS_PER_FILE: i32 = 10;
-/// P13 = 99 suppresses the drawing (0x42A347).
+/// P13 = 99 suppresses the drawing.
 const SUPPRESSED: i32 = 99;
 
 pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {

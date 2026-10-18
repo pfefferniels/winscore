@@ -1,4 +1,4 @@
-//! The staff table: where each staff number sits (draw_staff 0x545140).
+//! The staff table: where each staff number sits.
 //!
 //! Every item hangs on a staff (its P2) and is placed through that staff's
 //! table entry: the level of P4 = 0 and the step unit. A staff number without
@@ -75,7 +75,7 @@ impl Staff {
     }
 
     /// y of scale step `p4` (0 = the level below middle C on a treble staff,
-    /// 3 = bottom line), as item_position 0x5479AB computes it.
+    /// 3 = bottom line), as the engine's position routine computes it.
     pub fn y(&self, p4: f64) -> f64 {
         real(f64::from(self.level0) + p4 * self.scale_step())
     }

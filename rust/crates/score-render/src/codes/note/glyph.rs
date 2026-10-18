@@ -26,7 +26,7 @@ fn context(item: ItemRef<'_>) -> ItemContext {
     ItemContext { pixels: 0, ..ItemContext::of(item) }
 }
 
-/// draw_clef 0x431AE0 for symbol `n` at sizes `(sx, sy)`; the dot is drawn
+/// draw_clef for symbol `n` at sizes `(sx, sy)`; the dot is drawn
 /// round.
 pub fn clef(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, n: i32, at: Pos, size: (f64, f64), step: f64) {
     if n == DOT {
@@ -47,7 +47,7 @@ pub fn mark(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, n: i
     symbols::draw_clef(doc, &ItemContext { pixels: item.ip(28), ..context(item) }, canvas, at, step, n, size);
 }
 
-/// draw_symbol 0x4293F0 for symbol `n` at sizes `(sx, sy)`, unrotated.
+/// draw_symbol for symbol `n` at sizes `(sx, sy)`, unrotated.
 pub fn library(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, n: i32, at: Pos, size: (f64, f64), step: f64) {
     draw_library_symbol(doc, &context(item), canvas, at, step, &SymbolCall::sized(n, size.0, size.1));
 }

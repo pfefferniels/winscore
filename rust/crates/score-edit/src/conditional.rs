@@ -1,4 +1,4 @@
-//! Conditional editing (WinScore help, conditional_editing.txt): a statement
+//! Conditional editing (WinScore help, "Conditional Editing"): a statement
 //! `IF condition THEN changes` applied to every item of the score, e.g.
 //! `IF P3 > 100 AND (P1=9 OR P1=18) THEN P3=P3-20, P11=5` or `… THEN DEL`.
 

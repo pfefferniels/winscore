@@ -1,7 +1,6 @@
 //! The display list: what a rendered page consists of.
 //!
-//! Mirrors the output of WinScore's FORTRAN engine (see
-//! `analysis/ARCHITECTURE.md`, "Engine output"): filled polygon sets and
+//! Mirrors the output of WinScore's FORTRAN engine: filled polygon sets and
 //! one-unit polylines in engine units of 1/4000 inch with the y axis pointing
 //! up, plus positioned text runs. Every element remembers the item it came
 //! from so the editor can hit-test.
@@ -16,9 +15,8 @@ pub const UNITS_PER_INCH: i32 = 4000;
 pub const PEN: f32 = 4000.0 / 150.0;
 
 /// The pen SCORE's PostScript output draws with after a print-width marker
-/// (0x4D4ED2, called by the drawing routines when printing) of `w`: `w` is
-/// in 1/600 inch and adds to the default pen (0x4CF0D3), which it can also
-/// narrow down to PostScript's `0 setlinewidth`, the thinnest line a device
+/// (which the drawing routines set when printing) of `w`: `w` is in
+/// 1/600 inch and adds to the default pen, which it can also narrow down to PostScript's `0 setlinewidth`, the thinnest line a device
 /// draws; that is kept as a hundredth of a unit, since a [`Shape::width`]
 /// of 0 means the default pen. The engine's screen output has no such
 /// widths; the port draws them on every medium.
@@ -91,7 +89,7 @@ pub struct Shape {
 pub struct PlacedText {
     /// The text baseline's start: the engine's y + 96. OnDraw passes it to
     /// TextOut with TA_TOP after adding the font's ascent, which in the
-    /// view's y-up mapping puts the baseline here (analysis/engine/display.md).
+    /// view's y-up mapping puts the baseline here.
     pub origin: Point,
     pub text: String,
 }
@@ -104,7 +102,7 @@ pub struct TextRun {
     /// Average character width in engine units (0 = font default).
     pub width: f32,
     /// Angle in tenths of a degree; the engine lays the characters of a
-    /// positive angle along a clockwise line (analysis/engine/display.md §3.4).
+    /// positive angle along a clockwise line.
     pub escapement: i32,
     pub colour: Colour,
     pub weight: i32,

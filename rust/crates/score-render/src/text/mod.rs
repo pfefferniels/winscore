@@ -1,13 +1,12 @@
-//! The engine's text routine, draw_text 0x569AF0: code-16 items, and the
-//! strings that draw_number 0x4F65A8 formats for numbers, meters and staff
-//! numbers.
+//! The engine's text routine, draw_text: code-16 items, and the strings
+//! that draw_number formats for numbers, meters and staff numbers.
 //!
 //! A string is read into glyphs, font changes and tab stops ([`scan`]), each
 //! glyph advancing by its width from the font metric files. The x of a glyph
 //! is NINT of a running REAL*4 x in internal units; every glyph of a string
 //! shares NINT(Y_POS), and the text record stores it 100 units lower. Each
-//! font change starts a text record (0x56CAF0). Glyphs from 80 up, and every
-//! glyph of the meter font 94, are library symbols (0x56B529).
+//! font change starts a text record. Glyphs from 80 up, and every
+//! glyph of the meter font 94, are library symbols.
 //!
 //! The engine keeps the current font in a global across items and drawing
 //! passes; [`TextCall::current_font`] carries it in.
@@ -70,11 +69,11 @@ pub struct TextCall<'t> {
     pub shift: f32,
     /// P16 when P14 = -1: a colour as in P26.
     pub colour: Option<f32>,
-    /// The engine's current font (0x78B6A0) before the call.
+    /// The engine's current font before the call.
     pub current_font: Font,
 }
 
-/// draw_text 0x569AF0: the string's text records and symbol glyphs.
+/// draw_text: the string's text records and symbol glyphs.
 pub fn draw_text(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, call: &TextCall<'_>) {
     if call.p3 < HIDDEN_P3 {
         return;
@@ -87,13 +86,13 @@ pub fn draw_text(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>,
     text.emit(doc, item, canvas, &placed);
 }
 
-/// The width the engine leaves in P13 after drawing `call` (0x42FA58): the
+/// The width the engine leaves in P13 after drawing `call`: the
 /// string's length in P3 units, times the spread factor.
 pub fn width(doc: &Document<'_>, call: &TextCall<'_>) -> f32 {
     Text::new(doc, call).length
 }
 
-/// What right-justification (JR, 0x471190) subtracts from P13 for the last
+/// What right-justification (JR) subtracts from P13 for the last
 /// glyph, in P3 units: the PostScript width less the second width of the
 /// metric file, over 638, times 3.2833 and the size (fonts from 90 on: a
 /// tenth of the symbol width). `None` if the string has no glyph or ends in
@@ -137,11 +136,11 @@ const SYMBOL_WIDTH_FONTS: i32 = 90;
 const METRIC_UNITS: f32 = 638.0;
 const ADVANCE_SCALE: f32 = 3.2833;
 
-/// The font whose metrics the string leaves loaded (0x791444), if it loads
+/// The font whose metrics the string leaves loaded, if it loads
 /// one other than the font current before it. draw_item makes the loaded
-/// font the current font of every item (0x547358), so this is what an item
+/// font the current font of every item, so this is what an item
 /// drawing `call` hands on to the next. Only text record headers load a
-/// font for good (0x56CAF0); the meter font 94 has none.
+/// font for good; the meter font 94 has none.
 pub fn font_loaded(doc: &Document<'_>, call: &TextCall<'_>) -> Option<Font> {
     let probe = TextCall { current_font: NO_FONT, ..call.clone() };
     let text = Text::new(doc, &probe);
@@ -159,22 +158,22 @@ const HIDDEN_P3: f32 = -140.0;
 const TEXT_ITEM: i32 = 16;
 /// Code-10 numbers.
 const NUMBER_ITEM: i32 = 10;
-/// The text record's y lies this far below the string's NINT(Y_POS) (0x532EC0).
+/// The text record's y lies this far below the string's NINT(Y_POS).
 const RECORD_DROP: i32 = 100;
 /// Text above this staff is drawn on the recto page.
 const LAST_VERSO_TEXT_STAFF: i32 = 200;
-/// Library symbols count recto from this staff on (emit_points 0x54A69C).
+/// Library symbols count recto from this staff on.
 const LAST_VERSO_STAFF: i32 = 199;
 /// Internal units per P3 unit (REAL*4 150.0).
 const P3_UNIT: f64 = 150.0;
 /// A tab of n tenths moves x to 15·n.
 const TAB_TENTH: f64 = 15.0;
-/// draw_text quarters P6 and P7 before drawing (0x56A4FA).
+/// draw_text quarters P6 and P7 before drawing.
 const QUARTER: f32 = 0.25;
-/// Header sizes (0x56CAF0): height and width from STEP·P/4.
+/// Header sizes: height and width from STEP·P/4.
 const HEADER_SCALE: f32 = 1.937;
 const SCREEN_WIDTH_FACTOR: f32 = 0.825;
-/// Glyph symbols are drawn at P6, P7 times this (0x56B529).
+/// Glyph symbols are drawn at P6, P7 times this.
 const SYMBOL_SCALE: f32 = 3.5714;
 
 /// IP8 from 90 to 999 other than 94 is ignored.
@@ -274,7 +273,7 @@ impl<'c> Text<'c> {
         self.call.rotation != 0.0
     }
 
-    /// Positions (0x56A67E–0x56A9A9): NINT of the running x before each
+    /// Positions: NINT of the running x before each
     /// glyph's advance; tabs set x absolutely, plus the recto shift (the
     /// engine leaves it out, so that the text after a tab lands on the verso
     /// page).
@@ -316,7 +315,7 @@ impl<'c> Text<'c> {
         }
     }
 
-    /// The text rotation (0x56F920): positions turn clockwise about the
+    /// The text rotation: positions turn clockwise about the
     /// start, then shift so that the glyphs turn about a point below it.
     /// Every glyph turns; font changes and hidden entries stay (the engine
     /// leaves glyphs 80–126 alone too, so that the symbols 80–92 and the
@@ -351,7 +350,7 @@ impl<'c> Text<'c> {
         (dx, dy)
     }
 
-    /// The emission loop (0x56AA8A–0x56ACCC).
+    /// The emission loop.
     fn emit(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, placed: &[Placed]) {
         let mut font = self.scan_font;
         let mut runs: Vec<(TextStyle, Vec<TextString>)> = Vec::new();
@@ -398,7 +397,7 @@ impl<'c> Text<'c> {
         font.0 < 100 && (glyph > 79 || meter) && (self.call.item_code != NUMBER_ITEM || meter)
     }
 
-    /// A glyph drawn as a library symbol (0x56B529).
+    /// A glyph drawn as a library symbol.
     fn draw_symbol(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, glyph: i32, font: Font, at: Point) {
         let scaled = |size: f32| real(f64::from(size) * f64::from(SYMBOL_SCALE));
         let (number, size_x, size_y) = match glyph {
@@ -408,7 +407,7 @@ impl<'c> Text<'c> {
             _ => (glyph, f64::from(self.width_q), f64::from(self.height_q)),
         };
         let recto = if self.call.staff > LAST_VERSO_STAFF { RECTO_SHIFT } else { 0 };
-        // 0x56B529 sets IP1 = 16; draw_text has cleared IP10.
+        // The glyph's symbol call sets IP1 = 16; draw_text has cleared IP10.
         let context = ItemContext { code: TEXT_ITEM, pixels: 0, ..ItemContext::of(item) };
         let call = SymbolCall { number, size_x, size_y, thickness: 0, rotation: 0.0 };
         if !self.rotated() {
@@ -419,8 +418,7 @@ impl<'c> Text<'c> {
         // On a rotated line the symbol stays on the turned line: where the
         // rotation put its position, less the shift meant for text records,
         // turned about itself. (The engine draws it at the unturned position
-        // and, in a text item, turns it about (150·P3, Y_POS): rotate_points
-        // 0x42A5F4.)
+        // and, in a text item, turns it about (150·P3, Y_POS).)
         let (dx, dy) = self.record_shift();
         let origin = Pos::new(f64::from(at.x - recto) - dx, f64::from(at.y) + dy);
         let start = canvas.buffer_mut().len();
@@ -428,7 +426,7 @@ impl<'c> Text<'c> {
         rotate_points(&mut canvas.buffer_mut()[start..], origin.to_point(), self.call.rotation);
     }
 
-    /// The record header (0x56CAF0) for font `font`.
+    /// The record header for font `font`.
     fn style(&self, font: Font) -> TextStyle {
         let metrics = self.fonts.metrics(font.number());
         let (weight, italic) = metrics.map_or((400, false), |m| weight_and_italic(&m.postscript_name));
@@ -494,7 +492,7 @@ fn recto_shift(call: &TextCall<'_>) -> f64 {
     }
 }
 
-/// X_POS for the string: recto pages above staff 200, then P11 (0x569AF0).
+/// X_POS for the string: recto pages above staff 200, then P11.
 fn start_x(call: &TextCall<'_>) -> f32 {
     let x = call.origin.x;
     let x = if call.staff > LAST_VERSO_TEXT_STAFF { real(x + f64::from(RECTO_SHIFT)) } else { x };
@@ -502,7 +500,7 @@ fn start_x(call: &TextCall<'_>) -> f32 {
     x as f32
 }
 
-/// Text items drop a font change to the font already current (0x56A0FF).
+/// Text items drop a font change to the font already current.
 fn drop_repeated_fonts(entries: &mut Vec<Entry>) {
     let mut current = None;
     entries.retain(|e| match e.code {
@@ -515,7 +513,7 @@ fn drop_repeated_fonts(entries: &mut Vec<Entry>) {
     });
 }
 
-/// P5 ≠ 1 (0x56A2D3): every advance but the last changes by the same amount
+/// P5 ≠ 1: every advance but the last changes by the same amount
 /// so that the string's length L (P13, already times P5) becomes L(2 - 1/P5).
 fn spread_advances(entries: &mut [Entry], length: f32, spread: f32) {
     if spread == 1.0 {
@@ -562,7 +560,7 @@ mod tests {
         MusFile::parse(&bytes).expect("an empty file parses")
     }
 
-    /// JR offsets measured in the emulated engine by editor-core (Times, P3 units).
+    /// The engine's JR offsets (Times, P3 units).
     #[test]
     fn right_bearings_match_the_engine() {
         let file = empty_file();

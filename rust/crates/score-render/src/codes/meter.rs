@@ -1,4 +1,4 @@
-//! Code 18: meters (draw_meter 0x4BFA59).
+//! Code 18: meters.
 //!
 //! P5/P6 top and bottom number, P7 size, P8/P9 a second meter joined by a
 //! plus (P9 = 0 shares the first meter's bottom number, as in 4+3/4; P10
@@ -7,7 +7,7 @@
 //! P19 rotation, P20 spread. P5 from 91 on draws library symbol 117 − P5
 //! (99 common time, 98 alla breve) at 0.75 × P7.
 //!
-//! Every number goes through draw_number 0x4F65A8 and draw_text; in the
+//! Every number goes through draw_number and draw_text; in the
 //! meter font its digits are library symbols 2000–2009. Those digits are
 //! set as the engine's screen sets them on every medium, and the numbers of
 //! a meter are centred on one another ([`Layout::centred`]).
@@ -25,7 +25,7 @@ use crate::units::{real, trunc, Pos};
 const FIRST_SYMBOL_P5: i32 = 91;
 const SYMBOL_BASE: i32 = 117;
 const SYMBOL_SIZE: f32 = 0.75;
-/// The plus between two meters is clef symbol 38 (0x764BE8).
+/// The plus between two meters is clef symbol 38.
 const PLUS_SYMBOL: i32 = 38;
 /// draw_meter's IP7 without P13: the meter font.
 const METER_FONT_P13: i32 = 6;
@@ -62,7 +62,7 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     text_font_loaded(doc, &number_text_call(&call, at, &text, Font::TIMES))
 }
 
-/// What draw_meter hands draw_number for one number (0x4BFC4C): P5 = the
+/// What draw_meter hands draw_number for one number: P5 = the
 /// number, P6 = the size, IP8 = 0, IP7 from P13.
 fn number_call(item: ItemRef<'_>, value: i32, size: f64) -> NumberCall {
     let font = match trunc(f64::from(item.p(13))) {
@@ -169,7 +169,7 @@ impl Frame<'_> {
         std::iter::once(top).chain(bottom).collect()
     }
 
-    /// x of a bottom number shared by both meters (0x4BFD3B).
+    /// x of a bottom number shared by both meters.
     fn shared_bottom_x(&self, x: f64, bottom: i32, first_top: i32) -> f64 {
         let offset = if bottom > 9 { c(2.4) } else { c(3.8) };
         let offset = if first_top > 9 { real(offset + c(3.4)) } else { offset };

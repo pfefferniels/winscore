@@ -2,11 +2,11 @@
 //! coordinates.
 //!
 //! Page coordinates are engine units with the origin at the bottom-left
-//! corner of the paper and y up, the frame the comparison fixtures use. They
+//! corner of the paper and y up. They
 //! are internal coordinates (see [`crate::units`]) plus a fixed integer
 //! offset, and plus [`RECTO_SHIFT`] for items on staves above 199. The
 //! engine's screen output is the same picture shifted by the view's scroll
-//! position (x + 2400, y - (top + 3000), fit_view 0x54ED0E).
+//! position (x + 2400, y - (top + 3000)).
 
 use crate::display::Point;
 use crate::units::real;
@@ -20,7 +20,7 @@ pub struct Paper {
 
 impl Paper {
     pub const LETTER: Paper = Paper { width: 34000.0, height: 44000.0 };
-    /// `PAPER 2` in the bundled `PREF.DAT`.
+    /// `PAPER 2`, WinScore's default preference.
     pub const LEGAL: Paper = Paper { width: 34000.0, height: 56000.0 };
     pub const TABLOID: Paper = Paper { width: 44000.0, height: 68000.0 };
 }
@@ -43,7 +43,7 @@ pub const P3_UNIT: f64 = 150.0;
 /// paper size: half an inch left of P3 = 0, 2948 units below staff 1.
 pub const PAPER_ORIGIN: Point = Point::new(-2000, -26948);
 
-/// Added to x for items on the recto page (VIEW_DX at 0x20527F0 + 34050).
+/// Added to x for items on the recto page.
 pub const RECTO_SHIFT: i32 = 34050;
 
 /// Staves above this number lie on the recto page.

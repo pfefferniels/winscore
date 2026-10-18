@@ -1,4 +1,4 @@
-//! Guitar chord grids, code 12 with P5 < 0 (draw_box_negative 0x49EAE0).
+//! Guitar chord grids, code 12 with P5 < 0.
 //!
 //! P5 -1 grid with a nut, -2 without, -3 the chord name only, -4 a chord
 //! from the dictionary `scorlib/GUITAR.DAT` (P7 root, P8 type, P9 variant;
@@ -69,7 +69,7 @@ impl Chord {
         }
     }
 
-    /// The dictionary lookup (0x4A07B1): root row from P7, type P8, variant
+    /// The dictionary lookup: root row from P7, type P8, variant
     /// P9; the grid takes the entry's frets, barre and fingers.
     fn looked_up(self) -> Self {
         if self.chord_type >= 21 || !(1..73).contains(&self.root) {
@@ -118,7 +118,7 @@ struct Fingering {
     fingers: i32,
 }
 
-/// GUITAR.DAT as the loader 0x430EC0 reads it: per row and type a name of
+/// GUITAR.DAT as the engine's loader reads it: per row and type a name of
 /// up to 20 characters and five fingerings.
 #[derive(Debug, Clone, PartialEq, Default)]
 struct Dictionary {
@@ -229,7 +229,7 @@ impl Dictionary {
     }
 }
 
-/// FUN_00431806: the blank-separated token from `from` (0-based), as
+/// The blank-separated token from `from` (0-based), as
 /// first and last index; `None` if only blanks remain.
 fn token(line: &[u8], from: usize) -> Option<(usize, usize)> {
     let start = (from..line.len()).find(|&i| line[i] != b' ')?;
@@ -253,7 +253,7 @@ fn c(value: f32) -> f64 {
 const FONT_PREFIX: &[u8] = b"_00";
 /// Library symbol of the barre slur (LB0200 slot 9).
 const BARRE_SYMBOL: i32 = 209;
-/// The muted-string cross: two mirrored filled outlines (tables 0x791748, 0x791734).
+/// The muted-string cross: two mirrored filled outlines.
 const CROSS_X: [f32; 5] = [-55.0, 45.0, 55.0, -45.0, -55.0];
 const CROSS_Y: [f32; 5] = [34.0, 135.0, 135.0, 34.0, 34.0];
 const FRET: i32 = 160;
@@ -621,7 +621,7 @@ fn chord_name(text: &mut Vec<u8>, item: ItemRef<'_>, chord: &Chord) -> bool {
     true
 }
 
-/// A dictionary chord's name with its own root left out (0x4A013C).
+/// A dictionary chord's name with its own root left out.
 fn dictionary_suffix(text: &mut Vec<u8>, row: i32, chord_type: i32) {
     let name = dictionary().name(row, chord_type).map_or_else(|| vec![b' '; NAME_LENGTH], <[u8]>::to_vec);
     let name = match name.first() {
@@ -639,7 +639,7 @@ fn dictionary_suffix(text: &mut Vec<u8>, row: i32, chord_type: i32) {
     text.extend_from_slice(&rest[..length]);
 }
 
-/// P8's chord type and P9–P11's additions (0x49FC9D–0x4A0137).
+/// P8's chord type and P9–P11's additions.
 fn type_suffix(text: &mut Vec<u8>, chord: &Chord) {
     let suffix: &[u8] = match chord.chord_type {
         1 => b"maj",
@@ -702,7 +702,7 @@ fn type_suffix(text: &mut Vec<u8>, chord: &Chord) {
     }
 }
 
-/// FUN_004A0729: one or two digits.
+/// One or two digits.
 fn push_degree(text: &mut Vec<u8>, degree: i32) {
     if degree == 0 {
         return;

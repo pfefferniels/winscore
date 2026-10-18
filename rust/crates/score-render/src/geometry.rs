@@ -7,9 +7,9 @@ use crate::units::{real, trunc, Pos};
 
 /// One pixel of SCORE's print output in engine units, as the refined style
 /// reads SCORE's print widths: at 600 dpi, where a print-width marker
-/// (0x4D4ED2) counts pixels and the default pen ([`crate::PEN`]) is four
+/// counts pixels and the default pen ([`crate::PEN`]) is four
 /// of them, so that `d` pixels more than the default is `print_pen(d)`.
-/// The engine's own pixel (0x78B480) follows the printer's resolution.
+/// The engine's own pixel follows the printer's resolution.
 pub const PRINT_PIXEL: f64 = UNITS_PER_INCH as f64 / 600.0;
 
 /// The thinnest pen, for outlines SCORE's print output leaves out (filled
@@ -26,10 +26,10 @@ pub fn print_width(pixels: f32) -> f32 {
     }
 }
 
-/// Degrees per radian as the REAL*4 constant at 0x75FC6C.
+/// Degrees per radian as the engine's REAL*4 constant.
 const DEGREES_PER_RADIAN: f32 = 57.295_776;
 
-/// rotate_points 0x42A5F4: turns buffered points clockwise by `degrees`
+/// Turns buffered points clockwise by `degrees`
 /// about `centre`. The angle, its sine and cosine are REAL*4; each point is
 /// truncated again after the turn. Called by draw_symbol, boxes, lines,
 /// slurs, EPS and text with the points added since a given buffer index.
@@ -45,9 +45,9 @@ pub fn turned(p: Pos, centre: Pos, degrees: f64) -> Pos {
     Pos::new(cos * dx + sin * dy + centre.x, cos * dy - sin * dx + centre.y)
 }
 
-/// rotate_points 0x42A5F4 called with a start index of 0 or below (as
+/// The engine's rotation called with a start index of 0 or below (as
 /// draw_slur does): the angle is taken in radians and negated, so the points
-/// turn counter-clockwise by `radians` (0x42A62B).
+/// turn counter-clockwise by `radians`.
 pub fn rotate_points_radians(points: &mut [BufferPoint], centre: Point, radians: f32) {
     turn(points, centre, f64::from(-radians));
 }
@@ -101,7 +101,7 @@ pub fn spline_through(before: Option<Pos>, points: &[Pos], after: Option<Pos>, s
     out
 }
 
-/// thicken 0x42A8AE with n <= 0, as P8 < 0 asks of a symbol: its filled
+/// The engine's thickening with n <= 0, as P8 < 0 asks of a symbol: its filled
 /// objects become polylines, so only their outlines are drawn. (A positive
 /// n copies the points 14, 28, … units apart; the port draws such a
 /// symbol once with a wider pen instead.)

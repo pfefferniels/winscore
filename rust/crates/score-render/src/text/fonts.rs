@@ -36,7 +36,7 @@ const FILES: &[(usize, &[u8])] = fontlib! {
 const FONT_NUMBERS: usize = 100;
 
 /// The engine substitutes Times-Roman for a font without a metric file
-/// (0x56B845, with a message).
+/// (with a message).
 const SUBSTITUTE: usize = 0;
 
 /// Metric files by font number.
@@ -71,7 +71,7 @@ impl FontLibrary {
     }
 }
 
-/// A font as the engine keeps it in 0x78B6A0: the nn of `_nn`, plus 100 for
+/// A font as the engine keeps it: the nn of `_nn`, plus 100 for
 /// an outline font (`__nn`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct Font(pub i32);
@@ -99,7 +99,7 @@ impl Font {
     }
 }
 
-/// Weight and slant as the text record header gives them (0x56CAF0): bold
+/// Weight and slant as the text record header gives them: bold
 /// for DEMI or BOLD in the PostScript name, italic for OBLI or ITAL. The
 /// engine looks at every four letters but those starting at the first.
 pub fn weight_and_italic(postscript_name: &str) -> (i32, bool) {

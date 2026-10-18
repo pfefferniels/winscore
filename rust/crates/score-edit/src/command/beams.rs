@@ -1,5 +1,5 @@
 //! Commands that fit notes to the beams and chords around them (WinScore
-//! help, code1.txt "Stems", code6.txt "Stem Adjustments").
+//! help, code 1 "Stems", code 6 "Stem Adjustments").
 
 use score_render::staff::StaffTable;
 use score_render::Document as RenderDocument;

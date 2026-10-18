@@ -1,4 +1,4 @@
-//! Marks attached to a note, P11 (0x4F2279), moved by P13 (P3 units) and
+//! Marks attached to a note, P11, moved by P13 (P3 units) and
 //! P14 (scale steps; P11's decimals × 10 when P14 is 0), sized by P18.
 //!
 //! Most marks sit on the head side, two scale steps from the head; a
@@ -47,7 +47,7 @@ const FICTA_SYMBOLS: i32 = 5;
 const ACCENT_TENUTO_SYMBOL: i32 = 119;
 const PLUS_AS_MARK: i32 = 21;
 
-/// Where a mark goes (table at 0x794EA8 for marks 0–25; 0 beyond).
+/// Where a mark goes (from a table for marks 0–25; 0 beyond).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Class {
     /// Above the staff (below for a negative P11): fermata, bowings, ornaments.
@@ -235,7 +235,7 @@ fn place(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, p11: i32, stem_leng
 /// Marks 20–23 and 29: draw_code7's trill with the note's parameters, except
 /// IP7 = 0 (trill), IP8 = mark - 20 (accidental 0–3, or 9), IP6 = 0 (no wave) and
 /// P5 = the mark size; Y_POS is the mark's level less a staff scale step,
-/// STEP the note's unit (0x4F2279).
+/// STEP the note's unit.
 fn trill(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, placed: &Placed, accidental: i32, canvas: &mut Canvas<'_>) {
     let params = Params::of(item).with(5, placed.size as f32).with(6, 0.0).with(7, 0.0).with(8, accidental as f32);
     let at = Pos::new(placed.at.x, real(placed.at.y - note.scale_step));
@@ -246,7 +246,7 @@ fn trill(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, placed: &Placed, ac
 /// Marks 30 and up (but the tremolos): the number mark - 30 by draw_number
 /// at P6 = 0.7 (× P18), font 0, 4 units right of the mark position and
 /// half a scale step lower (1.5 below a stem-up note). The note's other
-/// parameters reach draw_number as they are (0x4F2DD4).
+/// parameters reach draw_number as they are.
 fn fingering(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, placed: &Placed, value: i32, canvas: &mut Canvas<'_>) {
     let s7 = note.scale_step;
     let drop = real(s7 * 0.5);
@@ -285,7 +285,7 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>, note: &Note) -> Option
 
 /// Marks 41–44: mark - 40 tremolo beams across the stem, drawn by
 /// draw_beam as a beam item at the note (P3 + P13), five scale steps
-/// (six for two or more beams) beyond its level (+ P14) (0x4F2B13).
+/// (six for two or more beams) beyond its level (+ P14).
 fn tremolo(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, mark: i32, canvas: &mut Canvas<'_>) {
     let stems_down = item.p(5) > 19.0;
     let reach = if mark > *TREMOLO.start() { 6.0 } else { 5.0 };

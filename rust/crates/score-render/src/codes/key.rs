@@ -1,4 +1,4 @@
-//! Code 17: key signatures (draw_keysig 0x4BF4F8).
+//! Code 17: key signatures.
 //!
 //! P5 number of accidentals (positive sharps, negative flats, ±100 naturals
 //! in the sharp or flat pattern), P6 clef (0 treble, 1 bass, 2 alto, 3 tenor;
@@ -24,7 +24,7 @@ const CUE_SIZE: f32 = 0.8;
 /// and between accidentals.
 const INDENT: f32 = 15.0;
 const SPACING: f32 = 16.8;
-/// Step units above P4 = 0 of the first sharp and the first flat, by clef (0x7925AC, 0x7925BC).
+/// Step units above P4 = 0 of the first sharp and the first flat, by clef.
 const FIRST_SHARP: [f32; 4] = [77.0, 63.0, 70.0, 35.0];
 const FIRST_FLAT: [f32; 4] = [49.0, 35.0, 42.0, 56.0];
 const TENOR: usize = 3;

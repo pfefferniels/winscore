@@ -1,4 +1,4 @@
-//! Code 3: clefs (draw_clef 0x431AE0).
+//! Code 3: clefs.
 //!
 //! P5 type: 0 treble, 1 bass, 2 alto, 3 tenor, 4 percussion (5-9 and 45 on
 //! draw library symbols), 0.8/0.88/0.15 treble and 1.8 bass with an octave
@@ -126,7 +126,7 @@ const OCTAVE_SIZE: f32 = 0.7;
 const OCTAVE_FONT: i32 = 11;
 
 impl Octave {
-    /// draw_clef 0x431DB6: whether P5 asks for a number, and which.
+    /// Whether P5 asks for a number, and which.
     fn of(p5: f32) -> Option<Self> {
         let hundredths = crate::units::nint(f64::from(p5) * 100.0).abs();
         if hundredths != BASS_OCTAVE && !(1..100).contains(&hundredths) {

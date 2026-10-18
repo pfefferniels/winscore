@@ -1,4 +1,4 @@
-//! Note heads and their parentheses (0x4F14B0).
+//! Note heads and their parentheses.
 //!
 //! Heads 0–6 are symbols 11–17 drawn through draw_clef at the note's unit
 //! (P20 widens them), 8 and 9 the library symbols 95 and 139, 7 nothing;
@@ -41,7 +41,7 @@ const DOUBLE_FLAT: i32 = 4;
 
 /// AlphaNotes (P6 20 … 25, negative for hollow heads): a round library
 /// head, 1.45 units right and 1.68 scale steps down, drawn as a code-9
-/// symbol (0x4F1BD4), with the letter name inside (0x4F1D5E, P21–P24).
+/// symbol, with the letter name inside (P21–P24).
 const ALPHA_NOTES: std::ops::RangeInclusive<i32> = 20..=25;
 const ALPHA_HEAD: i32 = 89;
 const HOLLOW_ALPHA_HEAD: i32 = 88;
@@ -93,7 +93,7 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Can
 }
 
 /// An AlphaNote head: for a hollow head on a line first a white box that
-/// hides the staff line (0x4F1F69), then symbol 89 (88 hollow) through the
+/// hides the staff line, then symbol 89 (88 hollow) through the
 /// code-9 path, which places it from P3/P4 on the staff's own step. The
 /// letter needs draw_number and is not drawn yet.
 fn alpha_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
@@ -113,7 +113,7 @@ fn alpha_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
     }
 }
 
-/// The letter name in an AlphaNote (0x4F1D5E, screen only, P6 ±20 … ±23
+/// The letter name in an AlphaNote (screen only, P6 ±20 … ±23
 /// for treble, bass, alto, tenor clef names): a code-10 number item with
 /// P5 = 1001 + the letter, at P22/P23 from its default place, size P24,
 /// font P21 (default 5, bold), white in a black head.
@@ -147,7 +147,7 @@ fn alpha_size(item: ItemRef<'_>) -> f64 {
     }
 }
 
-/// The code-10 item 0x4F1D5E draws as the letter; None from P6 ±24 on.
+/// The code-10 item the engine draws as the letter; None from P6 ±24 on.
 fn letter_item(item: ItemRef<'_>, note: &Note, size: f64) -> Option<Item> {
     let kind = unparenthesised(trunc(f64::from(item.p(6)))).abs();
     let clef_shift = match kind {
@@ -185,8 +185,8 @@ fn staff_line_mask(note: &Note, staff_step: f64, canvas: &mut Canvas<'_>) {
 }
 
 /// draw_box type 0, filled, with half-widths of `size` × 3.5 steps,
-/// emitted at once (as 0x4F1F69 and 0x559733 do) in white, to match the
-/// paper; the engine uses the near-white 0xFDFDFD.
+/// emitted at once (as the engine's AlphaNote and tablature boxes are) in
+/// white, to match the paper; the engine uses the near-white 0xFDFDFD.
 pub(super) fn white_box(canvas: &mut Canvas<'_>, centre: Pos, step: f64, size: (f64, f64)) {
     let half_width = real(step * 3.5 * size.0);
     let half_height = real(step * 3.5 * size.1);

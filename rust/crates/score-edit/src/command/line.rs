@@ -1,5 +1,5 @@
 //! Edit-mode transformations of lines and hairpins (code 4), slurs and
-//! brackets (code 5) and beams (code 6), after code4.txt–code6.txt.
+//! brackets (code 5) and beams (code 6), after the WinScore help on codes 4–6.
 
 use crate::params::Draft;
 

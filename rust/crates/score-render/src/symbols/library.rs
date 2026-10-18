@@ -1,4 +1,4 @@
-//! draw_symbol 0x4293F0 for symbols drawn from the library: size factors,
+//! draw_symbol for symbols drawn from the library: size factors,
 //! the normal size of the symbol, rotation and thickness.
 //!
 //! The outlines are smoothed ([`Outline`]), thickness is a wider pen as in
@@ -74,7 +74,7 @@ impl ItemContext {
     }
 }
 
-/// Symbols 50-4999 are drawn at 0.3 of their library size (0x42A1A2).
+/// Symbols 50-4999 are drawn at 0.3 of their library size.
 const SMALL_SYMBOLS: std::ops::RangeInclusive<i32> = 50..=4999;
 const SMALL_SYMBOL_SIZE: f32 = 0.3;
 /// From this symbol on the pixel thickness counts one less.
@@ -84,7 +84,7 @@ const STAFF_INDEPENDENT_SYMBOLS: std::ops::RangeInclusive<i32> = 1300..=1304;
 /// draw_symbol's size factors drop their hundreds (part-extractor flags).
 const SIZE_FLAGS: f64 = 100.0;
 
-/// draw_symbol 0x4293F0 for a symbol drawn from the library, at `at` on a
+/// draw_symbol for a symbol drawn from the library, at `at` on a
 /// staff whose step unit is `step` (the engine's STEP). Text symbols and the
 /// code-9 term library (3000-3099) are not drawn here; neither is the
 /// rotation centre code 16 uses.
@@ -121,7 +121,7 @@ pub fn draw_library_symbol(
 }
 
 /// The size draw_symbol draws library symbol `number` at, before the size
-/// factors: 0.3 of the library size for 50-4999 (0x42A1A2).
+/// factors: 0.3 of the library size for 50-4999.
 pub fn normal_size(number: i32) -> f64 {
     if SMALL_SYMBOLS.contains(&number) {
         f64::from(SMALL_SYMBOL_SIZE)
@@ -136,9 +136,9 @@ pub fn normal_size(number: i32) -> f64 {
 /// times `normal_size` and STEP, then rotated. Where the engine thickens by
 /// copies, the outline gets a wider pen ([`symbol_pen`]) on every medium,
 /// as SCORE's print output does; P8 < 0 still turns filled parts into
-/// outlines (0x42A8AE). A symbol without a pen of its own takes the
+/// outlines. A symbol without a pen of its own takes the
 /// caller's; one with a pen of its own gives the caller's back afterwards
-/// (0x4D4F3F returns SCORE's print pen to the default instead, losing a pen
+/// (SCORE's print output returns its pen to the default instead, losing a pen
 /// the caller had set).
 pub fn draw_scaled_symbol(
     canvas: &mut Canvas<'_>,
@@ -182,7 +182,7 @@ pub fn library_unit(step: f64, call: &SymbolCall, normal_size: f64) -> Scale {
     Scale { x: real(step * size_x), y: real(step * size_y) }
 }
 
-/// Distance between the copies thicken 0x42A8AE adds, in engine units.
+/// Distance between the copies the engine's thickening adds, in engine units.
 const COPY_STEP: f32 = 14.0;
 /// The narrowest pen: the engine's own one-unit pen.
 const MIN_PEN: f32 = 1.0;
@@ -190,8 +190,8 @@ const MIN_PEN: f32 = 1.0;
 /// The pen a symbol is drawn with, `None` for the default one.
 ///
 /// When printing, draw_symbol hands its pixel thickness to the print-width
-/// marker 0x4D4ED2 instead of thickening (0x42A1E3 for library symbols,
-/// after taking one off from symbol 45 on; 0x42A382 for user symbols): the
+/// marker instead of thickening (for library symbols after taking one off
+/// from symbol 45 on): the
 /// symbol is outlined with [`print_pen`]`(pixels)`, which is narrower than
 /// the default for negative values, so symbols from 45 on with IP10 = 0
 /// print with the pen of a marker of -1. P8 = 100·v + h > 0 copies the
@@ -271,7 +271,7 @@ pub fn draw_missing_symbol(canvas: &mut Canvas<'_>, staff: i32, at: Pos, unit: S
     canvas.colour = box_colour;
 }
 
-/// Symbols draw_symbol writes as text (table 0x78EAAC; strings at 0x78EA10).
+/// Symbols draw_symbol writes as text.
 const TEXT_SYMBOLS: [(i32, &str); 21] = [
     (66, "pizz."),
     (67, "arco"),

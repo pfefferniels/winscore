@@ -2,8 +2,8 @@
 //!
 //! Code-9 symbol n is slot n % 10 of `LB{n / 10 * 10:04}.DRW` (`scorlib/symblist.txt`).
 //! Clefs, accidentals, note heads, flags, rests, articulations and the brace
-//! are all library symbols, drawn by draw_symbol 0x4293F0 (via draw_clef
-//! 0x431AE0 for most item codes). The engine turns every record of a symbol
+//! are all library symbols, drawn by draw_symbol (via draw_clef for most
+//! item codes). The engine turns every record of a symbol
 //! into one buffer point; the port draws smoothed outlines through the
 //! records ([`smooth::Outline`]).
 

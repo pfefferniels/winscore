@@ -1,11 +1,11 @@
-//! The engine's character tables for text, copied from WScore.exe.
+//! The engine's character tables for text.
 //!
 //! Glyph codes are the engine's: 0–161 index the width tables of the font
 //! metric files (`score_format::fmt`), 80–82 and 88–92 are drawn as library
 //! symbols, 83–87 and 126 are accents that combine with the next glyph, 94
 //! is the space, and codes from 162 up are further symbols.
 
-/// Glyph code of every byte of a string (0x78F164). Bytes from 128 up read
+/// Glyph code of every byte of a string. Bytes from 128 up read
 /// whatever follows the 128-entry table, as the engine does; `_` is 1100.
 #[rustfmt::skip]
 const CHAR_CODES: [i16; 256] = [
@@ -34,8 +34,7 @@ pub const DOUBLE_QUOTE: i32 = 78;
 pub const TILDE: i32 = 126;
 pub const UNDERSCORE: i32 = 1100;
 
-/// `?x`: the characters after `?` that name a glyph, and their glyphs
-/// (0x78F0B4, 0x78F03C).
+/// `?x`: the characters after `?` that name a glyph, and their glyphs.
 const QUERY_ESCAPES: [(u8, i32); 29] = [
     (b'-', 137), (b'0', 163), (b'1', 80), (b'2', 81), (b'3', 82), (b'9', 164), (b'A', 141), (b'E', 142),
     (b'L', 143), (b'O', 144), (b'[', 145), (b'\\', 146), (b']', 147), (b'a', 148), (b'c', 149), (b'd', 162),
@@ -47,25 +46,25 @@ pub fn query_escape(next: u8) -> Option<i32> {
     QUERY_ESCAPES.iter().find(|&&(c, _)| c == next).map(|&(_, code)| code)
 }
 
-/// `!x`: the k-th character of this list (from 1) names glyph 100 + k (0x78F128).
+/// `!x`: the k-th character of this list (from 1) names glyph 100 + k.
 const BANG_ESCAPES: &[u8; 31] = b"0123456789ADSZadefghijklmnpqsyz";
 
 pub fn bang_escape(next: u8) -> Option<i32> {
     BANG_ESCAPES.iter().position(|&c| c == next).map(|k| k as i32 + 101)
 }
 
-/// `~x` with one of these letters puts a tilde accent on it (0x78F028).
+/// `~x` with one of these letters puts a tilde accent on it.
 pub fn takes_tilde(next: u8) -> bool {
     b"aAnNoO".contains(&next)
 }
 
 /// `~n~` starts a tab stop when the character after the first `~` lies in
-/// this range (0x75FF48, 0x75FF44).
+/// this range.
 pub fn starts_tab(next: u8) -> bool {
     (b'.'..=b'9').contains(&next)
 }
 
-/// The character the shell draws for glyphs 0–94 (0x7A0008).
+/// The character the shell draws for glyphs 0–94.
 const GLYPH_CHARS: &[u8] =
     b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ.,()abcdefghijklmnopqrstuvwxyz:;?!+-*/=`'\"\"&#$%&[]<>@      ";
 
@@ -74,9 +73,9 @@ pub fn glyph_char(code: i32) -> u8 {
     usize::try_from(code).ok().and_then(|i| GLYPH_CHARS.get(i)).copied().unwrap_or(0)
 }
 
-/// Glyphs 95–161 and 167 as cp1252 characters (0x7970A4, 0x79706B), less
+/// Glyphs 95–161 and 167 as cp1252 characters, less
 /// the screen's stand-ins for the characters of [`printed_char`]; the
-/// emitter falls back to bytes before 0x7A0008 for codes missing there.
+/// emitter falls back to bytes before the 0–94 table for codes missing there.
 #[rustfmt::skip]
 const EXTENDED_CHARS: [(i32, u8); 49] = [
     (145, b'['), (146, b'\\'), (147, b']'), (157, b'{'), (158, b'|'), (159, b'}'), (149, 0xA9), (148, 0xE6),
@@ -94,9 +93,8 @@ pub fn extended_char(code: i32) -> u8 {
 
 /// The characters SCORE prints where the screen shows a stand-in (help:
 /// "Some characters will only appear as an X"): glyphs below 95 print as
-/// the bytes of 0x7A0008 in Adobe's standard encoding (` and ' are curly
-/// quotes), the others as the octal codes of table 0x79FD7C (0x56DAA0) in
-/// fonts re-encoded with FMFONTINIT.PSC's `acc`, where 365 is onesuperior.
+/// the bytes of the 0–94 table in Adobe's standard encoding (` and ' are
+/// curly quotes), the others as SCORE's octal codes in fonts re-encoded with FMFONTINIT.PSC's `acc`, where 365 is onesuperior.
 /// Glyph 167 is the screen's code for 126 (`!n`), an en dash. The `""`
 /// glyph 77 prints as the straight quote the screen shows.
 #[rustfmt::skip]
@@ -111,7 +109,7 @@ pub fn printed_char(code: i32) -> Option<char> {
 }
 
 /// The accented cp1252 character, or the base character if the accent does
-/// not apply to it. Accents combine with the following glyph (0x532EC0): 83
+/// not apply to it. Accents combine with the following glyph: 83
 /// acute, 84 grave, 85 circumflex, 86 dieresis, 87 cedilla, 126 tilde.
 pub fn accented(accent: i32, base: u8) -> u8 {
     let table: &[(u8, u8)] = match accent {
@@ -137,7 +135,7 @@ const CIRCUMFLEX: [(u8, u8); 10] = [
     (b'A', 0xC2), (b'a', 0xE2), (b'E', 0xCA), (b'e', 0xEA), (b'I', 0xCE), (b'i', 0xEE),
     (b'O', 0xD4), (b'o', 0xF4), (b'U', 0xDB), (b'u', 0xFB),
 ];
-/// With `%%Y` as Ÿ, as SCORE prints it (0x56EBB4); the screen leaves Y.
+/// With `%%Y` as Ÿ, as SCORE prints it; the screen leaves Y.
 const DIERESIS: [(u8, u8); 12] = [
     (b'A', 0xC4), (b'a', 0xE4), (b'E', 0xCB), (b'e', 0xEB), (b'I', 0xCF), (b'i', 0xEF),
     (b'O', 0xD6), (b'o', 0xF6), (b'U', 0xDC), (b'u', 0xFC), (b'y', 0xFF), (b'Y', 0x9F),
@@ -146,8 +144,7 @@ const CEDILLA: [(u8, u8); 2] = [(b'C', 0xC7), (b'c', 0xE7)];
 const TILDE_LETTERS: [(u8, u8); 6] = [(b'A', 0xC3), (b'a', 0xE3), (b'o', 0xF5), (b'O', 0xD5), (b'n', 0xF1), (b'N', 0xD1)];
 
 /// Widths of the library-symbol glyphs, and of every glyph of the fonts
-/// from 90 up, in the units of the metric tables (0x1C6DA5C, filled at
-/// start-up), by glyph code + 1.
+/// from 90 up, in the units of the metric tables, by glyph code + 1.
 #[rustfmt::skip]
 const SYMBOL_WIDTHS: [f32; 106] = [
     0.0, 0.8, 0.72, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 1.08, 1.08, 1.08, 1.08, 1.08,

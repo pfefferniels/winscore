@@ -1,4 +1,4 @@
-//! Code 7: trills, ottavas, harp and piano pedal marks (draw_code7 0x55F340).
+//! Code 7: trills, ottavas, harp and piano pedal marks.
 //!
 //! P7 type: 0 trill (P8 1-5 an accidental above it, P9 wave size, P11 wave
 //! level), 8/-8/15 the ottava symbols, 88/-88/155 ottava numbers with dashes
@@ -194,7 +194,7 @@ enum Extension {
     Dashes = 1,
 }
 
-/// The extension from `x` to P6 at `level` (draw_code7 0x560474): waves and
+/// The extension from `x` to P6 at `level`: waves and
 /// dashes 0.4 scale steps higher. `p8`, `p9` are draw_line's P8 and P9.
 fn extend(mark: &Mark<'_, '_>, style: Extension, level: f64, x: f64, (p8, p9): (f32, f32), canvas: &mut Canvas<'_>) {
     if mark.ip(6) == 0 {
@@ -310,7 +310,7 @@ fn ottava_number_call(mark: &Mark<'_, '_>) -> NumberCall {
     }
 }
 
-/// The font a code-7 item leaves loaded (draw_item 0x547358 makes it the
+/// The font a code-7 item leaves loaded (draw_item makes it the
 /// current font): only the ottava texts and numbers draw text.
 pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     let mark = Mark::new(doc, item, &Globals::of(doc, item), &Params::of(item));

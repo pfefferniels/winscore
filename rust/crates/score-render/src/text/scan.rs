@@ -1,5 +1,5 @@
 //! Reading a string into glyphs, font changes and tab stops with their
-//! advances, as the engine's text parser does (0x42FA58).
+//! advances, as the engine's text parser does.
 
 use super::fonts::{Font, FontLibrary};
 use super::glyphs::{
@@ -197,7 +197,7 @@ impl Tokens<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scan {
     pub entries: Vec<Entry>,
-    /// The font in effect after the string (0x78B6A0).
+    /// The font in effect after the string.
     pub font: Font,
     /// P13: the string length in P3 units, times the spread P5.
     pub length: f32,
@@ -223,10 +223,10 @@ const FIRST_HIGH_BYTE: u8 = 0x80;
 
 /// The engine's ratio between its text scale and the metric units.
 const METRIC_UNITS: f32 = 638.0;
-/// P3 units per unit of size and width (0x78F024).
+/// P3 units per unit of size and width.
 const ADVANCE_SCALE: f32 = 3.2833;
 
-/// The parser's main loop (0x42FA58).
+/// The parser's main loop.
 pub fn scan(text: &[u8], settings: &ScanSettings<'_>) -> Scan {
     let size = settings.size;
     let mut state = Scanner {
@@ -296,7 +296,7 @@ impl Scanner<'_> {
         advance as f32
     }
 
-    /// Width in metric units / 638 (0x42FA58 from 0x43066D on). The engine
+    /// Width in metric units / 638. The engine
     /// counts glyphs from 1 here.
     fn unit_width(&self, glyph: i32) -> f32 {
         let index = if glyph == 167 { 127 } else { glyph + 1 };

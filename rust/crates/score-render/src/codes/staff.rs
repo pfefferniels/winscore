@@ -1,4 +1,4 @@
-//! Code 8: staves (draw_staff 0x545140).
+//! Code 8: staves.
 //!
 //! P3/P6 left and right end (P6 = 0 is 200), P4 displacement in scale steps,
 //! P5 size (or P14 = staff height in cm), P7 lines, P8 an extra line P8
@@ -94,8 +94,8 @@ const THIN_STAFF: f32 = 0.65;
 /// P11 = 99: lines of the print command's thickness, as for P11 = 0.
 const PRINT_THICKNESS: i32 = 99;
 
-/// The print pixels draw_staff 0x545140 adds to the lines through the
-/// print-width marker 0x4D4ED2: IP11, or -1 on staves smaller than 0.65
+/// The print pixels the staff routine adds to the lines through the
+/// print-width marker: IP11, or -1 on staves smaller than 0.65
 /// when P11 is 0; nothing for P11 = 99 or invisible staves (IP7 < 0). The
 /// table keeps IP11 or -1 for ledger lines (STAFF_THICK0).
 fn print_pixels(item: ItemRef<'_>, staff: &Staff) -> i32 {
@@ -124,8 +124,8 @@ const DIGIT_ADVANCE: i32 = 352;
 const FIRST_RECTO_NUMBER: i32 = 201;
 
 /// The staff number left of the staff, one string per digit; its baseline
-/// level is scale step 6 less 100 units. Fitted to oracle output for sizes
-/// -1 to 1.429 and P3 down to -20.
+/// level is scale step 6 less 100 units, a fit for sizes -1 to 1.429 and
+/// P3 down to -20.
 fn draw_number(staff: &Staff, left: f64, canvas: &mut Canvas<'_>) {
     let digits = staff.number.to_string();
     let recto = if staff.number >= FIRST_RECTO_NUMBER { RECTO_SHIFT } else { 0 };

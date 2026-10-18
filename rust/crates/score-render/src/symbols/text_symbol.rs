@@ -1,4 +1,4 @@
-//! The library symbols draw_symbol 0x4293F0 writes as text on the screen
+//! The library symbols draw_symbol writes as text on the screen
 //! (8va, cresc., G.P., …: [`library::symbol_text`]). Unlike the outline
 //! symbols they are drawn by draw_text from the engine's current-item
 //! globals (X_POS, Y_POS, P3, P6, P7, P9, P26), not from draw_symbol's
@@ -75,14 +75,14 @@ const UPRIGHT_SYMBOLS: [i32; 3] = [66, 67, 78];
 const FIRST_SPREAD_SYMBOL: i32 = 50;
 const SPREAD: f32 = 1.05;
 const OTTAVA_SPACE: f32 = 0.6;
-/// G.P. sits on rests and is placed from P16 and P12 (0x429F5C).
+/// G.P. sits on rests and is placed from P16 and P12.
 const GENERAL_PAUSE: i32 = 276;
 const GP_FONT_BASE: i32 = 1000;
 const GP_REST_LEVEL: f32 = 12.0;
 const GP_INDENT: f32 = 3.15;
 const SIZE_FLAGS: f64 = 100.0;
 
-/// draw_symbol's text path (0x429E8B–0x42A16A) for a symbol in the text table.
+/// draw_symbol's text path for a symbol in the text table.
 pub fn draw_text_symbol(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, call: &TextSymbolCall) {
     if let Some(text_call) = text_symbol_call(doc, call, font_before(doc, item)) {
         draw_text(doc, item, canvas, &text_call);

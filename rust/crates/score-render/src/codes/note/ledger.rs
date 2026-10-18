@@ -1,4 +1,4 @@
-//! Ledger lines (0x4F0871).
+//! Ledger lines.
 //!
 //! Lines run from 5 units left of the head to 5 units beyond its right edge,
 //! one scale step of the staff apart in pairs (every second level), from the
@@ -68,13 +68,12 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Can
     flush_in_staff_colour(doc, item, canvas);
 }
 
-/// The print-width marker SCORE prints ledger lines with (0x50DDF0, from
-/// 0x4F0871 when printing), in 1/600 inch beyond the default pen: trunc(P16),
-/// or with P16 = 0 two more than the staff lines (one more for a grace
-/// note), P16 = 99 as much as they; 0 for no marker. The staff lines' value
-/// is the staff's P11, or -1 for P11 = 0 on a staff smaller than 0.65
-/// (draw_staff 0x545140). The engine reads it one entry too low, from the
-/// staff numbered one less; this takes the note's own staff.
+/// The print-width marker SCORE prints ledger lines with, in 1/600 inch
+/// beyond the default pen: trunc(P16), or with P16 = 0 two more than the
+/// staff lines (one more for a grace note), P16 = 99 as much as they; 0 for
+/// no marker. The staff lines' value is the staff's P11, or -1 for P11 = 0
+/// on a staff smaller than 0.65. The engine reads it one entry too low,
+/// from the staff numbered one less; this takes the note's own staff.
 fn print_width(doc: &Document<'_>, item: ItemRef<'_>, note: &Note) -> i32 {
     let staff = doc.staff_of(item);
     let p11 = staff.source.and_then(|id| doc.item(id)).map_or(0, |staff| trunc(f64::from(staff.p(11))));

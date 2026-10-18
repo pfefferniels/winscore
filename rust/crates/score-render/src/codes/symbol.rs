@@ -1,5 +1,5 @@
-//! Code 9: library symbols (draw_item 0x547210 calls draw_symbol 0x4293F0
-//! with X_POS, Y_POS, IP5, P6, P7, IP8, P9, IP9).
+//! Code 9: library symbols (draw_item calls draw_symbol with X_POS, Y_POS,
+//! IP5, P6, P7, IP8, P9, IP9).
 //!
 //! P5 symbol number (`scorlib/symblist.txt`; negative reads as 0), P6
 //! size (0 = 1; the hundreds are part-extractor flags; negative mirrors),
@@ -59,7 +59,7 @@ fn missing(doc: &Document<'_>, number: i32) -> bool {
 /// Symbol numbers of the term library.
 const TERMS: std::ops::RangeInclusive<i32> = 3000..=3099;
 
-/// The term library draw_symbol reads once from its file (0x4295B7): the
+/// The term library draw_symbol reads once from its file: the
 /// text of each line after the four-digit number and a space, in line
 /// order (comment lines start with `%` or a space); term 3000 + k is the
 /// line k. The engine stops after 70 terms or 700 characters.
@@ -111,14 +111,14 @@ const BUNDLED_TERMS: &[u8] = include_bytes!("../../../../../assets/scorlib/CODE9
 #[cfg(not(feature = "bundled-symbols"))]
 const BUNDLED_TERMS: &[u8] = b"";
 
-/// A line up to its last character above a space (0x54C8E5).
+/// A line up to its last character above a space.
 fn trimmed(line: &[u8]) -> &[u8] {
     let end = line.iter().rposition(|&b| b > b' ').map_or(0, |i| i + 1);
     &line[..end]
 }
 
 /// Terms are spread and sized 1.05 times the symbol size, like the text
-/// symbols from 50 on (draw_symbol 0x42987C).
+/// symbols from 50 on.
 const TERM_SCALE: f32 = 1.05;
 
 /// A term: the item's own P3, P8 (font override), P9, P10 (space, or P17
@@ -162,7 +162,7 @@ fn term_call<'t>(doc: &Document<'_>, item: ItemRef<'_>, text: &'t [u8], current_
     }
 }
 
-/// The font a code-9 item leaves loaded (draw_item 0x547358 makes it the
+/// The font a code-9 item leaves loaded (draw_item makes it the
 /// current font): that of the last text record a term or text symbol draws.
 pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
     let number = trunc(f64::from(item.p(5))).max(0);

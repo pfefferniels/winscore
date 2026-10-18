@@ -1,6 +1,6 @@
 //! Text items (code 16): their characters, character count (P12) and
 //! measured length (P13), and SCORE's quick text entry `"text" p2 p3 …`
-//! (WinScore help, code16.txt "Entering Text").
+//! (WinScore help, code 16 "Entering Text").
 
 use score_format::{Item, MusFile};
 use score_render::codes::text::{font_before, text_call};

@@ -1,4 +1,4 @@
-//! Code 1: notes (draw_note 0x4EFEC0).
+//! Code 1: notes.
 //!
 //! A note is drawn in the engine's order: ledger lines (flushed on their own,
 //! in the staff's colour), head, tails, accidental, stem, dots, mark. The parts
@@ -57,8 +57,8 @@ const OFFSET_LEFT: f32 = 20.0;
 const OFFSET_RIGHT_WITH_ACCIDENTAL: i32 = 110;
 const OFFSET_UNIT: f32 = 6.0;
 
-/// One dot of SCORE's printer at its default 600 dpi, in units (0x78B480 =
-/// 4000/dpi): print moves a thick stem inward by its extra width in dots.
+/// One dot of SCORE's printer at its default 600 dpi, in units (4000/dpi):
+/// print moves a thick stem inward by its extra width in dots.
 const PRINT_DOT: f32 = 4000.0 / 600.0;
 
 /// The stem direction from P5's tens digit. The engine tests for 2 (down)
@@ -182,7 +182,7 @@ impl Note {
     }
 
     /// The head width the parts after the head use: the head routine sets
-    /// it to 17.1 units for AlphaNotes (0x4F14B0).
+    /// it to 17.1 units for AlphaNotes.
     fn drawn_head_width(&self) -> f64 {
         if self.alpha {
             real(self.unit * constant(head::ALPHA_WIDTH))
@@ -234,7 +234,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     }
 }
 
-/// The font a note leaves loaded for the next item (draw_item 0x547358):
+/// The font a note leaves loaded for the next item:
 /// that of its last text, a fingering mark, an AlphaNote letter or a
 /// tablature number.
 pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
@@ -269,7 +269,7 @@ fn level(item: ItemRef<'_>) -> f64 {
     p4 - f64::from(trunc(p4 / 100.0) * 100)
 }
 
-/// Tails (0x4F06BB): symbol 20 at the stem end, mirrored for stems up
+/// Tails: symbol 20 at the stem end, mirrored for stems up
 /// (and for stemless notes), two scale steps apart.
 fn tails(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
     let down = note.stem.is_down();
@@ -285,7 +285,7 @@ fn tails(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas
     });
 }
 
-/// The accidental (0x4F2F31), left of the head's original position: P5's
+/// The accidental, left of the head's original position: P5's
 /// decimals move it left in units of 6 steps (.9x: right), P29 scales it.
 /// It is outlined with the pen of a print-width marker of trunc(P28), on
 /// every medium (the engine sets the marker only when printing).
@@ -316,7 +316,7 @@ fn accidental(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
     }
 }
 
-/// The stem (0x4F0EB9): from 0.3 scale steps beyond the head's centre (P17
+/// The stem: from 0.3 scale steps beyond the head's centre (P17
 /// moves it) to an octave (+ P8) beyond, at the head's right edge when up.
 /// A grace note with P8 ± 100 and a tail gets a slash first. Returns the
 /// signed length (0 for heads without a stem), which marks build on.
@@ -352,7 +352,7 @@ fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
 }
 
 /// P17's hundreds, as |trunc(P17/100)|: the stem's width in 1/600 inch
-/// beyond the default pen (a print-width marker, 0x4D4ED2, which the
+/// beyond the default pen (a print-width marker, which the
 /// engine sets only when printing); 0 for AlphaNotes, whose P17 the head
 /// routine has set to ±0.1.
 fn stem_thickness(item: ItemRef<'_>, note: &Note) -> i32 {
@@ -430,7 +430,7 @@ fn stem_source(item: ItemRef<'_>, note: &Note, head_type: i32) -> f64 {
     }
 }
 
-/// The grace-note slash across the stem near its end (in 0x4F0EB9).
+/// The grace-note slash across the stem near its end.
 fn slash(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, extension: f64, canvas: &mut Canvas<'_>) {
     let reach = real(note.unit * constant(OFFSET_UNIT));
     let length = real(tail_room(note) + extension);

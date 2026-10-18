@@ -1,11 +1,10 @@
 //! Code 12: boxes, circles, guitar grids, accordion symbols.
 //!
-//! draw_item sends P5 = 0 (box), 1 (circle) and 3 (dashed box) to draw_box
-//! 0x433530, which other codes call too (numbers in boxes, repeat dots,
-//! harp pedal boxes): [`draw_box`] takes the parameters it reads as a
-//! [`BoxCall`]. P5 = 10 (guitar grid, 0x433EEE), P5 < 0 (accordion,
-//! 0x49EAE0) and the other values (arrows and arcs, 0x432E80) are not drawn
-//! yet.
+//! draw_item sends P5 = 0 (box), 1 (circle) and 3 (dashed box) to draw_box,
+//! which other codes call too (numbers in boxes, repeat dots, harp pedal
+//! boxes): [`draw_box`] takes the parameters it reads as a [`BoxCall`].
+//! P5 = 10 (guitar grid), P5 < 0 (accordion) and the other values (arrows
+//! and arcs) are not drawn yet.
 //!
 //! Thick outlines are drawn as print draws them, as one outline with a
 //! wider PostScript pen, and circles as PostScript arcs, round; the
@@ -105,7 +104,7 @@ const REGISTER_ROWS: i32 = 3;
 const REGISTER_RADIUS: f32 = 8.0;
 const REGISTER_DOT: f32 = 1.4;
 
-/// An accordion register symbol, draw_box_grid 0x433EEE: a circle of
+/// An accordion register symbol: a circle of
 /// radius 8 × P6 half-steps (thickness P10 + 1 rings), P7 = 2, 3 (0) or 4
 /// rows divided by horizontal lines, and filled dots chosen by the digits of
 /// P8 (rows, top to bottom) and P9 (centre row: right, middle, left).
@@ -152,7 +151,7 @@ fn draw_register(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>,
     register_dots(canvas, &staff, at.x, rows, size, factor, digits, p4, &dot);
 }
 
-/// The dividing lines through draw_line (0x4345EE): one through the centre
+/// The dividing lines through draw_line: one through the centre
 /// (2 rows), two at ±1.35 × P6 steps (3 rows), or the centre line and two
 /// at ±1.95 × P6 (4 rows); half lengths 4.66, 4.4 and 4.08 × the size.
 fn register_lines(
@@ -264,7 +263,7 @@ fn register_dots(
     }
 }
 
-/// Arrows, draw_box_other 0x432E80: with P10 = 1 a straight arrow of P6
+/// Arrows: with P10 = 1 a straight arrow of P6
 /// times 5 scale steps with a head P13 (or P12) long and P12 wide; otherwise
 /// a circular arc from 90° to 180° − P11 whose end lies on the item's
 /// point, with a filled triangle as its head. P9 turns the whole arrow.
@@ -279,7 +278,7 @@ fn draw_arrow(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at
     let head_length = if item.p(13) == 0.0 { head_width } else { f64::from(item.p(13)) };
     let p9 = item.p(9);
     let centre = if call.ip10 == STRAIGHT {
-        // draw_box_other 0x432E80 sets the print width IP8 for the whole arrow.
+        // The engine sets the print width IP8 for the whole arrow.
         let pen = (call.ip8 > 0).then(|| print_width(call.ip8 as f32));
         if let Some(pen) = pen {
             canvas.set_width(pen);
@@ -341,7 +340,7 @@ const ARROWHEAD_SIDES: i32 = 120;
 
 /// The arc and its head (both through draw_box); returns the arc's centre.
 /// For P11 above 180 the engine reads its circle table below its start,
-/// where it finds zeros (verified with P11 = 270 and 405): the arc is then
+/// where it finds zeros: the arc is then
 /// centred on the item's point.
 fn draw_arc_arrow(
     doc: &Document<'_>,
@@ -421,7 +420,7 @@ const MARKED_THICKNESS: i32 = 3;
 const P16_UNIT: f32 = 22.857;
 /// Half a box side per unit of P6/P7 and step unit: 3.5 = half a scale step.
 const HALF_SIDE: f32 = 3.5;
-/// Ring spacing of thick boxes (25 × the global size factor 0x1C589F8, 1).
+/// Ring spacing of thick boxes (25 × the engine's global size factor, 1).
 const BOX_RING: f64 = 25.0;
 /// Size added per ring of a thick circle, divided by STEP.
 const CIRCLE_RING: f32 = 7.1429;
@@ -431,7 +430,7 @@ const SLANT_UNIT: f32 = 7.0;
 /// Dashed boxes: dash length per unit of P10.
 const DASH: f32 = 175.0;
 
-/// draw_box 0x433530 at the centre `at` on a staff with step unit `step`:
+/// draw_box at the centre `at` on a staff with step unit `step`:
 /// a thick outline with SCORE's print width ([`print_pen_of`]), and the
 /// circles print draws as PostScript arcs round.
 pub fn draw_box(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall) {
@@ -486,11 +485,11 @@ fn draw_box_as(canvas: &mut Canvas<'_>, at: Pos, step: f64, call: &BoxCall, thic
     }
 }
 
-/// The pen SCORE's print output outlines a box or circle with (draw_box
-/// 0x433530): with P8 set, 0x50E203 asks for 2·P8 print pixels (through the
-/// print-width marker for boxes, directly for circles); boxes without P8
-/// and dashed circles (IP12 < 0) pass IP8 to the marker. Filled circles
-/// that print draws as arcs (0x50E352) are filled without an outline.
+/// The pen SCORE's print output outlines a box or circle with. With P8
+/// set, print asks for 2·P8 print pixels (through the print-width marker
+/// for boxes, directly for circles); boxes without P8 and dashed circles
+/// (IP12 < 0) pass IP8 to the marker. Filled circles that print draws as
+/// arcs are filled without an outline.
 fn print_pen_of(call: &BoxCall) -> Option<f32> {
     if call.fill && print_arc(call) {
         return Some(HAIRLINE);
@@ -505,7 +504,7 @@ fn print_pen_of(call: &BoxCall) -> Option<f32> {
     (pixels != 0).then(|| print_width(pixels as f32))
 }
 
-/// Whether print draws a circle as a PostScript arc (0x50E352): with up to
+/// Whether print draws a circle as a PostScript arc: with up to
 /// five degrees per side.
 fn print_arc(call: &BoxCall) -> bool {
     let sides = if call.ip12 == 0 { 1 } else { call.ip12 };
@@ -562,7 +561,7 @@ impl Outline {
 }
 
 /// Boxes: the outline, then one more outline 25 units further out per
-/// thickness ring. Solid outlines continue one path (0x4A060D clears the
+/// thickness ring. Solid outlines continue one path (print clears the
 /// pen after the first point); a dashed box draws at most two outlines.
 /// With [`Thickness::Pen`] only the first outline, with [`Thickness::Band`]
 /// a solid box's rings as one band.
@@ -607,7 +606,7 @@ fn draw_rectangles(
     });
 }
 
-/// A dashed box outline (0x434B6D): an odd number of dashes per side, each
+/// A dashed box outline: an odd number of dashes per side, each
 /// side's dashes as long as the integer side length allows, continuing
 /// round the corners. The vertical sides ignore the slant.
 fn draw_dashed(canvas: &mut Canvas<'_>, outline: &Outline, p10: f64) {

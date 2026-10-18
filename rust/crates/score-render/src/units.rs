@@ -4,7 +4,7 @@
 //! y up, x = 0 at P3 = 0, staff 1's bottom line at y = -24000). The engine
 //! evaluates expressions on the x87 at 53-bit precision, stores intermediate
 //! results as REAL*4, and converts to integers by truncation toward zero when
-//! a point is added to the vector stream (add_point 0x44B820). [`real`] and
+//! a point is added to the vector stream. [`real`] and
 //! [`Pos::to_point`] reproduce those two steps; the canvas then moves the
 //! integer points onto the page.
 
@@ -20,9 +20,9 @@ pub fn constant(value: f32) -> f64 {
     f64::from(value)
 }
 
-/// Fortran AMOD (amod 0x54AABA): x - trunc(x / y)·y, with the quotient truncated.
+/// Fortran AMOD: x - trunc(x / y)·y, with the quotient truncated.
 pub fn amod(x: f64, y: f64) -> f64 {
-    // 0x54AABA: the quotient goes through FISTP into a 32-bit integer, the
+    // The quotient goes through FISTP into a 32-bit integer, the
     // result through FSTP into a REAL*4.
     real(x - f64::from(trunc(x / y)) * y)
 }
@@ -38,7 +38,7 @@ pub fn trunc(value: f64) -> i32 {
     }
 }
 
-/// FORTRAN's NINT through ANINT 0x5FF381: trunc(x ± 0.5) in f64, so halves
+/// FORTRAN's NINT through ANINT: trunc(x ± 0.5) in f64, so halves
 /// go away from zero. Text positions use it.
 pub fn nint(value: f64) -> i32 {
     trunc(value + 0.5_f64.copysign(value))

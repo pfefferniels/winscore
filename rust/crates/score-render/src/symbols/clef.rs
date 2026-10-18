@@ -1,4 +1,4 @@
-//! draw_clef 0x431AE0: the entry most item codes use to draw a library symbol.
+//! draw_clef: the entry most item codes use to draw a library symbol.
 //!
 //! The placement ([`clef_placement`]) and drawing ([`draw_clef_symbol`])
 //! serve every caller; [`draw_clef`] combines them. What draw_clef does only
@@ -20,7 +20,7 @@ const ALTO: i32 = 2;
 const TENOR: i32 = 3;
 /// Clef types 0-5 are placed by draw_clef; higher numbers are other symbols.
 const LAST_CLEF_TYPE: i32 = 5;
-/// Mini clefs (|IP4| >= 100): size factor and extra lift by clef type (table 0x78F30C).
+/// Mini clefs (|IP4| >= 100): size factor and extra lift by clef type.
 const MINI_P4: i32 = 100;
 const MINI_SIZE: f32 = 0.8;
 const MINI_LIFT: [f32; 6] = [0.35, 8.75, 5.6, 5.6, 5.6, 0.35];

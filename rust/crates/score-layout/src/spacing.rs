@@ -83,7 +83,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn layout_md_example() {
+    fn quarters_and_eighths_after_a_clef() {
         // Clef at 2, notes 1, .5, .5, 2, 1, 1, 4 quarters (P7 times 4), barline at 200.
         let entries = [START_CLEF, 4.0, 2.0, 2.0, 8.0, 4.0, 4.0, 16.0, BARLINE];
         let x = positions(&entries, 1.0, 2.0, 200.0);

@@ -1,4 +1,4 @@
-//! Code 5: slurs, ties, tuplet brackets and endings (draw_slur 0x538550).
+//! Code 5: slurs, ties, tuplet brackets and endings.
 //!
 //! P3/P6 left and right end (P6 = 0: P3 + 20, curvature 3), P4/P5 their
 //! levels, P7 curvature in scale steps, P8 where the ends sit on the notes
@@ -30,15 +30,15 @@ use std::f64::consts::FRAC_PI_2;
 /// The engine's point buffer holds this many points; longer slurs are not drawn.
 const BUFFER_POINTS: usize = 50_000;
 
-/// Slur thickness P13 = 0 stands for (PREF.DAT, global 0x78B48C).
+/// Slur thickness P13 = 0 stands for (SCORE's PREF.DAT default).
 const DEFAULT_THICKNESS: f32 = 0.75;
 
 /// Where the slur ends sit, in step units right of P3 and P6, by P8
-/// (tables at 0x7973D0 and 0x797400, indexed as `end_table_index` says).
+/// (indexed as `end_table_index` says).
 const LEFT_END: [f32; 12] = [0.0, 9.0, 27.0, 36.0, 18.0, 9.0, 18.0, 9.0, 0.0, 0.0, 17.7, 12.6];
 const RIGHT_END: [f32; 12] = [0.0, 9.0, -6.0, -6.0, 14.0, 14.0, 9.0, 0.0, 9.0, 14.0, -4.0, -4.0];
 
-/// The octagon a dot is drawn as, in multiples of P13 × STEP (0x7973A4):
+/// The octagon a dot is drawn as, in multiples of P13 × STEP:
 /// x offsets are entries 0–8, y offsets entries 2–10.
 const DOT: [f32; 11] = [-1.6, -1.6, -0.6, 0.6, 1.6, 1.6, 0.6, -0.6, -1.6, -1.6, -0.6];
 
@@ -101,7 +101,7 @@ const TUPLET_SIZE: f32 = 0.875;
 /// draw_slur sets P19 to this before the curve; draw_number then turns the number by it.
 const DEFAULT_P19: f32 = 0.85;
 
-/// A number 0x53BFC6 draws for beams, tuplet brackets, endings and slurs.
+/// A number drawn for beams, tuplet brackets, endings and slurs.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(super) struct BracketNumber {
     pub value: i32,
@@ -142,7 +142,7 @@ impl BracketNumber {
         }
     }
 
-    /// 0x53BFC6: draw_number at `at`, moved left by the indent; `at.x` is
+    /// draw_number at `at`, moved left by the indent; `at.x` is
     /// the caller's sum of two REAL*4 values, not yet stored. `step` is
     /// STEP, which draw_number uses as well (a beam's P18 scales it).
     pub(super) fn draw(&self, doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at: Pos, step: f64) {
@@ -155,7 +155,7 @@ impl BracketNumber {
         number_font_loaded(doc, Pos::default(), &self.call(item, step))
     }
 
-    /// The parameters 0x53BFC6 sets before calling draw_number.
+    /// The parameters set before calling draw_number.
     fn call(&self, item: ItemRef<'_>, step: f64) -> NumberCall {
         NumberCall {
             value: self.value,
@@ -201,7 +201,7 @@ fn tuplet_number(item: ItemRef<'_>, params: &Params) -> Option<BracketNumber> {
 }
 
 /// The number of an ending in Times-Roman (or P14), with the letter IP17
-/// unless P16 = 1 has made P17 an end offset (0x53C1F1); P9 < 0 or P12 < 0
+/// unless P16 = 1 has made P17 an end offset; P9 < 0 or P12 < 0
 /// leave it out.
 fn ending_number(item: ItemRef<'_>, params: &Params) -> Option<BracketNumber> {
     let letter = if item.p(16) == 1.0 { 0 } else { trunc(f64::from(item.p(17))) };
@@ -245,7 +245,7 @@ fn slur_number(item: ItemRef<'_>, params: &Params, sloped: bool) -> Option<Brack
 }
 
 /// Moves a number by P17 (6 steps) and P18 (a scale step), as the
-/// brackets and slurs do (0x53B421); P16 = 1 has used them as end offsets.
+/// brackets and slurs do; P16 = 1 has used them as end offsets.
 fn moved_by_p17_p18(item: ItemRef<'_>, at: Pos, step: f64) -> Pos {
     let p = |n| f64::from(item.p(n));
     if item.p(16) == 1.0 {
@@ -257,7 +257,7 @@ fn moved_by_p17_p18(item: ItemRef<'_>, at: Pos, step: f64) -> Pos {
 /// The ending's number is followed by this library symbol, a full stop.
 const ENDING_DOT: i32 = 24;
 
-/// What brackets and endings share (draw_slur from 0x53ABAA): the left
+/// What brackets and endings share: the left
 /// hook and the bracket's corners.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Bracket {
@@ -379,7 +379,7 @@ fn tuplet_bracket(doc: &Document<'_>, item: ItemRef<'_>, params: &Params, canvas
     } else {
         bottom = real(bracket.dy + bottom);
         let slope = real(bracket.dy / length);
-        // 0x53C14E: a point on the line through the left top corner.
+        // A point on the line through the left top corner.
         let along = |x: f64| Pos::new(x, real((x - params.x) * slope + top));
         if ip11 == 0 {
             canvas.point(along(real(half_gap + middle)), Pen::Continue);
@@ -505,9 +505,9 @@ struct Buffer {
     slots: Vec<Slot>,
     /// The engine's NPT, the next free point: points 1 to npt - 1 are drawn.
     npt: isize,
-    /// The NPT a cut that finds no place to cut leaves (the counter
-    /// 0x1C585D0, last set by the curve or an earlier cut); `None` where the
-    /// engine's value is stale from other work, and the port draws nothing.
+    /// The NPT a cut that finds no place to cut leaves (the counter, last
+    /// set by the curve or an earlier cut); `None` where the engine's value
+    /// is stale from other work, and the port draws nothing.
     fallback: Option<isize>,
 }
 
@@ -577,7 +577,7 @@ impl Params {
             }
         }
         let mut params = Self { x: doc.position(item).x, p6, p7, p8: p(8), p8_int: trunc(p(8)), p16: p(16) };
-        // 0x53C1F1: P16 = 1 makes P17/P18 offsets of the ends and drops P8's placement.
+        // P16 = 1 makes P17/P18 offsets of the ends and drops P8's placement.
         if p(16) == 1.0 {
             params.x = real(p(17) * P3_UNIT + params.x);
             params.p6 = real(p(18) + params.p6);
@@ -892,11 +892,10 @@ impl Slur {
         }
     }
 
-    /// Draws the number P16 (draw_slur from 0x53AA73): in the slur's gap, or
+    /// Draws the number P16: in the slur's gap, or
     /// for negative P16 inside an unbroken slur; at P10 of a level slur, at
     /// the middle of a sloped one, turned with it. A sloped slur of dashes
-    /// or dots has no gap, so its number goes inside as for negative P16
-    /// (0x538D0B).
+    /// or dots has no gap, so its number goes inside as for negative P16.
     fn draw_number(
         &self,
         doc: &Document<'_>,
@@ -945,7 +944,7 @@ impl Slur {
         number.draw(doc, item, canvas, Pos::new(base.x + along, base.y), self.step);
     }
 
-    /// A gap in the middle for the number P16 (0x53BE1D). The engine also
+    /// A gap in the middle for the number P16. The engine also
     /// cuts triangles, with the point spacing of whatever slur it drew
     /// before; the port leaves them whole.
     fn has_number_gap(&self, item: ItemRef<'_>, params: &Params) -> bool {
@@ -1353,7 +1352,7 @@ fn cut_after(buffer: &mut Buffer, to: i32, dashed: bool) {
     buffer.fall_back();
 }
 
-/// 0x53BE1D: the outline split into a left and a right piece, leaving a
+/// The outline split into a left and a right piece, leaving a
 /// gap of 400 units (600 for numbers from 10) at the middle.
 fn number_gap(buffer: &mut Buffer, item: ItemRef<'_>, step: f64, dx: f64) {
     let points: Vec<Slot> = buffer.points().to_vec();

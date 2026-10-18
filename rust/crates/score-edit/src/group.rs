@@ -1,4 +1,4 @@
-//! Group edits (WinScore help, groupedit.txt): commands that act on every
+//! Group edits (WinScore help, "Group Edit"): commands that act on every
 //! item of an area of the page. The area is typed as `staff left right
 //! [top] [codes…]` (or drawn as a box in WinScore); the command then asks
 //! for what it needs, one line at a time.
