@@ -18,11 +18,16 @@ pub const PEN: f32 = 4000.0 / 150.0;
 /// The pen SCORE's PostScript output draws with after a print-width marker
 /// (0x4D4ED2, called by the drawing routines when printing) of `w`: `w` is
 /// in 1/600 inch and adds to the default pen (0x4CF0D3), which it can also
-/// narrow, down to nothing. The engine's screen output has no such widths;
-/// [`crate::Style::Refined`] draws them on every medium.
+/// narrow down to PostScript's `0 setlinewidth`, the thinnest line a device
+/// draws; that is kept as a hundredth of a unit, since a [`Shape::width`]
+/// of 0 means the default pen. The engine's screen output has no such
+/// widths; [`crate::Style::Refined`] draws them on every medium.
 pub fn print_pen(w: f32) -> f32 {
-    (PEN + w * UNITS_PER_INCH as f32 / 600.0).max(0.0)
+    (PEN + w * UNITS_PER_INCH as f32 / 600.0).max(THINNEST)
 }
+
+/// The width [`print_pen`] gives a pen narrowed to nothing.
+const THINNEST: f32 = 0.01;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Point {
@@ -98,7 +103,8 @@ pub struct TextRun {
     pub height: f32,
     /// Average character width in engine units (0 = font default).
     pub width: f32,
-    /// Angle in tenths of a degree, counter-clockwise.
+    /// Angle in tenths of a degree; the engine lays the characters of a
+    /// positive angle along a clockwise line (analysis/engine/display.md §3.4).
     pub escapement: i32,
     pub colour: Colour,
     pub weight: i32,

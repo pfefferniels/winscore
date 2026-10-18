@@ -89,7 +89,8 @@ pub struct TextStyle {
     pub height: f32,
     /// Average character width in engine units (0 = font default).
     pub width: f32,
-    /// Angle in tenths of a degree, counter-clockwise.
+    /// Angle in tenths of a degree; the engine lays the characters of a
+    /// positive angle along a clockwise line (analysis/engine/display.md §3.4).
     pub escapement: i32,
     pub weight: i32,
     pub italic: bool,
