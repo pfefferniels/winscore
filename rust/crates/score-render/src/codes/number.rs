@@ -173,6 +173,8 @@ pub fn number_text_call<'t>(call: &NumberCall, at: Pos, text: &'t [u8], current_
 }
 
 /// draw_number 0x4F65A8 at X_POS, Y_POS = `at`, for the item being drawn.
+/// The engine draws a framed number's text again after the frame; the
+/// refined style draws it once.
 pub fn draw_number(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>, at: Pos, call: &NumberCall) {
     let text = number_text(call.value, call.p5, call.p17, call.p18);
     let text_call = number_text_call(call, at, &text, font_before(doc, item));
@@ -182,7 +184,9 @@ pub fn draw_number(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_
         let width = text::width(doc, &text_call);
         let (centre, frame) = frame(doc, call, at, step, (text.len(), width), text_call.font_override);
         draw_box(canvas, centre, step, &frame);
-        draw_text(doc, item, canvas, &text_call);
+        if !doc.refined() {
+            draw_text(doc, item, canvas, &text_call);
+        }
     }
 }
 
@@ -380,6 +384,30 @@ fn trim_end(mut text: Vec<u8>) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::document::Options;
+    use crate::render;
+    use score_format::{Item, MusFile, Word};
+
+    /// A size-1 staff 1 and `number`.
+    fn file(number: &[f32]) -> MusFile {
+        let trailer = [0.0_f32, 0.0, 6.0, 0.0, 5.0, -9999.0];
+        let mut bytes = (trailer.len() as u16).to_le_bytes().to_vec();
+        bytes.extend(trailer.iter().flat_map(|w| w.to_le_bytes()));
+        let mut file = MusFile::parse(&bytes).expect("an empty file parses");
+        let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
+        file.items = vec![words(&[8.0, 1.0, 0.0, 0.0, 1.0]), words(number)];
+        file
+    }
+
+    #[test]
+    fn the_refined_style_draws_a_framed_number_once() {
+        let boxed = file(&[10.0, 1.0, 50.0, 12.0, 7.0, 1.0, 0.0, 2.0]);
+        let runs = |options: Options| {
+            let list = render(&Document::with_options(&boxed, options));
+            list.texts.iter().filter(|t| t.source == Some(crate::ItemId(1))).count()
+        };
+        assert_eq!((runs(Options::ENGINE), runs(Options::REFINED)), (2, 1));
+    }
 
     fn text(p5: f32, p17: i32, p18: f32) -> String {
         String::from_utf8(number_text(p5 as i32, p5, p17, p18)).unwrap()

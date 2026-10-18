@@ -93,6 +93,24 @@ pub fn extended_char(code: i32) -> u8 {
     EXTENDED_CHARS.iter().find(|&&(c, _)| c == code).map_or(0, |&(_, ch)| ch)
 }
 
+/// The characters SCORE prints where the screen shows a stand-in (help:
+/// "Some characters will only appear as an X"): glyphs below 95 print as
+/// the bytes of 0x7A0008 in Adobe's standard encoding (` and ' are curly
+/// quotes), the others as the octal codes of table 0x79FD7C (0x56DAA0) in
+/// fonts re-encoded with FMFONTINIT.PSC's `acc`, where 365 is onesuperior.
+/// Glyph 167 is the screen's code for 126 (`!n`), an en dash. The `""`
+/// glyph 77 prints as the straight quote the screen shows.
+#[rustfmt::skip]
+const PRINTED_CHARS: [(i32, char); 16] = [
+    (75, '‘'), (76, '’'), (101, '•'), (106, '£'), (108, '¤'), (114, 'Ž'), (121, 'ﬁ'), (124, 'ﬂ'),
+    (131, 'ž'), (137, '−'), (143, 'Ł'), (144, 'Ø'), (151, '¹'), (152, 'ł'), (153, 'ø'), (167, '–'),
+];
+
+/// The printed character of a glyph the screen draws with a stand-in.
+pub fn printed_char(code: i32) -> Option<char> {
+    PRINTED_CHARS.iter().find(|&&(c, _)| c == code).map(|&(_, ch)| ch)
+}
+
 /// The accented cp1252 character, or the base character if the accent does
 /// not apply to it. Accents combine with the following glyph (0x532EC0): 83
 /// acute, 84 grave, 85 circumflex, 86 dieresis, 87 cedilla, 126 tilde.
@@ -106,6 +124,14 @@ pub fn accented(accent: i32, base: u8) -> u8 {
         _ => &TILDE_LETTERS,
     };
     table.iter().find(|&&(b, _)| b == base).map_or(base, |&(_, a)| a)
+}
+
+/// [`accented`] as SCORE prints it: `%%Y` is Ÿ there too (0x56EBB4).
+pub fn printed_accented(accent: i32, base: u8) -> u8 {
+    match (accent, base) {
+        (86, b'Y') => 0x9F,
+        _ => accented(accent, base),
+    }
 }
 
 const ACUTE: [(u8, u8); 12] = [
@@ -162,5 +188,15 @@ mod tests {
         assert_eq!(bang_escape(b'a').map(extended_char), Some(0xE5));
         assert_eq!(accented(86, b'o'), 0xF6);
         assert_eq!(accented(87, b'a'), b'a');
+    }
+
+    #[test]
+    fn printed_characters_replace_the_stand_ins() {
+        assert_eq!(bang_escape(b'5').and_then(printed_char), Some('£'));
+        assert_eq!(query_escape(b'L').and_then(printed_char), Some('Ł'));
+        assert_eq!(printed_char(char_code(b'\'')), Some('’'));
+        assert_eq!(printed_char(char_code(b'"')), None);
+        assert_eq!(printed_char(char_code(b'A')), None);
+        assert_eq!((accented(86, b'Y'), printed_accented(86, b'Y')), (b'Y', 0x9F));
     }
 }

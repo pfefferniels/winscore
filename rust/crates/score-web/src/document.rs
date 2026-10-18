@@ -21,19 +21,11 @@ fn render_page(file: &MusFile) -> DisplayList {
     render(&crate::drawn(file))
 }
 
-/// Characters of a text item as WinScore shows them (Windows-1252).
+/// Characters of a text item for the text field: Windows-1252, with
+/// SCORE's spellings of accented and special characters (`<<e`, `?c`)
+/// shown as the characters, which editing spells again.
 pub fn decode_text(bytes: &[u8]) -> String {
-    const HIGH: [char; 32] = [
-        '€', '\u{81}', '‚', 'ƒ', '„', '…', '†', '‡', 'ˆ', '‰', 'Š', '‹', 'Œ', '\u{8d}', 'Ž', '\u{8f}', '\u{90}', '‘',
-        '’', '“', '”', '•', '–', '—', '˜', '™', 'š', '›', 'œ', '\u{9d}', 'ž', 'Ÿ',
-    ];
-    bytes
-        .iter()
-        .map(|&b| match b {
-            0x80..=0x9F => HIGH[usize::from(b - 0x80)],
-            _ => char::from(b),
-        })
-        .collect()
+    score_edit::text::decode(bytes)
 }
 
 #[derive(Debug, Clone)]
@@ -220,5 +212,10 @@ mod tests {
     #[test]
     fn decodes_windows_1252() {
         assert_eq!(decode_text(b"\xa9 B. \x96 x"), "© B. – x");
+    }
+
+    #[test]
+    fn decodes_spellings() {
+        assert_eq!(decode_text(b"_00Caf<<e ?c S%%ohne"), "_00Café © Söhne");
     }
 }
