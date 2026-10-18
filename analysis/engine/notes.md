@@ -135,9 +135,9 @@ When printing (OUTPUT_MODE = -1) the note routines set PostScript line widths wi
 
 Print draws every black head afresh: the head cache is screen-only.
 
-## Refined style
+## What the port draws differently
 
-score-render's `Style::Refined` keeps every position, size and thickness convention of the engine (dot gaps, stem lengths including the 16th-note extension, beam thickness, head designs) and changes only how notes, rests and beams are drawn:
+score-render keeps every position, size and thickness convention of the engine (dot gaps, stem lengths including the 16th-note extension, beam thickness, head designs) and changes only how notes, rests and beams are drawn:
 
 - the print widths above on every medium, each on its own shapes only; thick stems move inward as in print at 600 dpi (the move equals the extra width) and `note::stem_end` follows them; ledger widths come from the note's own staff;
 - full beams, whose ends stand on stems, are drawn (1/150 - 1/300)/2 inch longer at either end along their slope, so that they reach the outer edges of default stems instead of letting the stems poke past them; `beam::ends` stays at the stems' centres;

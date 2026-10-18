@@ -220,9 +220,10 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
         accidental(doc, item, &note, canvas);
     }
     let stem_length = match note.stem {
-        // As for P14 >= 0, which the engine reads as a length of (about) 0.
-        Stem::None if doc.refined() => 0.0,
-        Stem::None => unwritten_stem_length(item),
+        // The engine's marks read trunc(P14)'s bits, left in the stem
+        // routine's IP14 slot, as the length: NaN for P14 <= -1, which
+        // loses the mark.
+        Stem::None => 0.0,
         _ => stem(doc, item, &note, canvas),
     };
     if ip(item, 9) >= 10 {
@@ -241,14 +242,6 @@ pub fn font_loaded(doc: &Document<'_>, item: ItemRef<'_>) -> Option<Font> {
         None => tablature::font_loaded(doc, item),
         Some(note) => mark::font_loaded(doc, item, &note).or_else(|| head::font_loaded(doc, item, &note)),
     }
-}
-
-/// The stem length the marks read when no stem routine ran: the stem
-/// routine keeps its f32 length in the IP14 slot, so without it the marks
-/// read trunc(P14)'s bits as a float (0 for P14 = 0, NaN when negative,
-/// which loses the mark; the refined style reads 0 throughout).
-fn unwritten_stem_length(item: ItemRef<'_>) -> f64 {
-    f64::from(f32::from_bits(ip(item, 14) as u32))
 }
 
 /// P8 without the 100 that asks for a grace-note slash.
@@ -294,8 +287,8 @@ fn tails(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas
 
 /// The accidental (0x4F2F31), left of the head's original position: P5's
 /// decimals move it left in units of 6 steps (.9x: right), P29 scales it.
-/// Print outlines it with the pen of a print-width marker of trunc(P28),
-/// which the refined style draws on every medium.
+/// It is outlined with the pen of a print-width marker of trunc(P28), on
+/// every medium (the engine sets the marker only when printing).
 fn accidental(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
     let p5 = ip(item, 5);
     let digit = note.accidental;
@@ -314,12 +307,11 @@ fn accidental(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
     };
     let at = Pos::new(real(note.origin.x - shift), note.origin.y);
     let pixels = ip(item, 28);
-    let widened = doc.refined() && pixels != 0;
-    if widened {
+    if pixels != 0 {
         canvas.set_width(print_pen(pixels as f32));
     }
     glyph::clef(doc, item, canvas, symbol, at, (size, size), note.unit);
-    if widened {
+    if pixels != 0 {
         canvas.set_width(0.0);
     }
 }
@@ -340,12 +332,12 @@ fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
     }
     let down = note.stem.is_down();
     let length = if down { -length } else { length };
-    let x = stem_x(doc, item, note);
+    let x = stem_x(item, note);
     let end = real(length + note.origin.y);
     let source = stem_source(item, note, head_type);
     let source = if down { -source } else { source };
     let start = real(note.unit * source + note.origin.y);
-    let thickness = stem_thickness(doc, item, note);
+    let thickness = stem_thickness(item, note);
     if thickness != 0 {
         canvas.set_width(print_pen(thickness as f32));
     }
@@ -359,25 +351,24 @@ fn stem(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
     length
 }
 
-/// P17's hundreds, as |trunc(P17/100)|: in print, the stem's width in
-/// 1/600 inch beyond the default pen (a print-width marker, 0x4D4ED2),
-/// which the refined style draws on every medium; 0 in the engine style
-/// and for AlphaNotes, whose P17 the head routine has set to ±0.1.
-fn stem_thickness(doc: &Document<'_>, item: ItemRef<'_>, note: &Note) -> i32 {
-    if !doc.refined() || note.alpha {
+/// P17's hundreds, as |trunc(P17/100)|: the stem's width in 1/600 inch
+/// beyond the default pen (a print-width marker, 0x4D4ED2, which the
+/// engine sets only when printing); 0 for AlphaNotes, whose P17 the head
+/// routine has set to ±0.1.
+fn stem_thickness(item: ItemRef<'_>, note: &Note) -> i32 {
+    if note.alpha {
         return 0;
     }
     trunc(f64::from(item.p(17)) / 100.0).abs()
 }
 
 /// The stem's x: the head's left edge for a stem down, its right edge for
-/// a stem up. Print moves a thick stem inward by its extra width (in
-/// printer dots), so that it stays within the head; so does the refined
-/// style.
-fn stem_x(doc: &Document<'_>, item: ItemRef<'_>, note: &Note) -> f64 {
+/// a stem up. A thick stem moves inward by its extra width (in printer
+/// dots), as in print, so that it stays within the head.
+fn stem_x(item: ItemRef<'_>, note: &Note) -> f64 {
     let down = note.stem.is_down();
     let x = if down { note.origin.x } else { real(note.origin.x + note.drawn_head_width()) };
-    match stem_thickness(doc, item, note) {
+    match stem_thickness(item, note) {
         0 => x,
         thickness => {
             let inward = real(f64::from(thickness) * constant(PRINT_DOT));
@@ -400,7 +391,7 @@ pub fn stem_end(doc: &Document<'_>, item: ItemRef<'_>) -> Option<(Pos, f64)> {
     }
     let per_step = real(note.unit * constant(STEPS));
     let length = real((tail_room(&note) + constant(STEPS) + stem_extension(item)) * per_step);
-    let x = stem_x(doc, item, &note);
+    let x = stem_x(item, &note);
     Some(if note.stem.is_down() {
         (Pos::new(x, note.origin.y - length), -per_step)
     } else {
@@ -510,7 +501,6 @@ fn dots(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<
 pub(crate) mod tests {
     use super::*;
     use crate::display::{ItemId, Point, Shape, PEN};
-    use crate::document::Options;
     use score_format::{Item, MusFile, Word};
 
     /// A size-1 staff 1, then `items`.
@@ -526,8 +516,8 @@ pub(crate) mod tests {
     }
 
     /// The shapes item `n` draws.
-    pub(crate) fn shapes(file: &MusFile, options: Options, n: u32) -> Vec<Shape> {
-        let list = crate::render(&Document::with_options(file, options));
+    pub(crate) fn shapes(file: &MusFile, n: u32) -> Vec<Shape> {
+        let list = crate::render(&Document::new(file));
         list.shapes.into_iter().filter(|s| s.source == Some(ItemId(n))).collect()
     }
 
@@ -549,56 +539,51 @@ pub(crate) mod tests {
 
     #[test]
     fn marks_of_stemless_notes_survive_a_negative_p14() {
-        let lowest = |options| shapes(&stemless_staccato(-1.0), options, 1).iter().flat_map(points).map(|p| p.y).min();
-        assert!(lowest(Options::ENGINE) < Some(-1_000_000), "the engine loses the mark");
-        let [_, moved] = &shapes(&stemless_staccato(-1.0), Options::REFINED, 1)[..] else { panic!("head and mark") };
-        let [_, unmoved] = &shapes(&stemless_staccato(0.0), Options::REFINED, 1)[..] else { panic!("head and mark") };
+        let [_, moved] = &shapes(&stemless_staccato(-1.0), 1)[..] else { panic!("head and mark") };
+        let [_, unmoved] = &shapes(&stemless_staccato(0.0), 1)[..] else { panic!("head and mark") };
         let (moved, unmoved) = (centre(moved), centre(unmoved));
         assert_eq!(moved.0, unmoved.0);
         assert!((unmoved.1 - moved.1 - 175).abs() <= 1, "P14 = -1 lowers the mark a scale step: {moved:?} {unmoved:?}");
     }
 
     /// The polylines among item 1's shapes: its stem or ledger lines.
-    fn strokes(file: &MusFile, options: Options) -> Vec<Shape> {
-        shapes(file, options, 1).into_iter().filter(|s| s.kind == crate::display::ShapeKind::Stroke).collect()
+    fn strokes(file: &MusFile) -> Vec<Shape> {
+        shapes(file, 1).into_iter().filter(|s| s.kind == crate::display::ShapeKind::Stroke).collect()
     }
 
     #[test]
     fn p17_hundreds_widen_stems_and_move_them_inward() {
         // A black note at P3 = 20 (x = 5000, head 425 wide), P17 = ±200 and ±300.
         let note = |p5: f32, p17: f32| file(&[&[1.0, 1.0, 20.0, 5.0, p5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, p17]]);
-        let stem = |file: &MusFile, options| {
-            let [stem] = &strokes(file, options)[..] else { panic!("one stem") };
+        let stem = |file: &MusFile| {
+            let [stem] = &strokes(file)[..] else { panic!("one stem") };
             (stem.width, stem.paths[0][0].x)
         };
-        assert_eq!(stem(&note(10.0, 200.0), Options::ENGINE), (0.0, 5425));
-        assert_eq!(stem(&note(10.0, 200.0), Options::REFINED), (print_pen(2.0), 5411));
-        assert_eq!(stem(&note(10.0, -200.0), Options::REFINED), (print_pen(2.0), 5411));
-        assert_eq!(stem(&note(20.0, 300.0), Options::REFINED), (print_pen(3.0), 5020));
-        assert_eq!(stem(&note(10.0, 0.0), Options::REFINED), (0.0, 5425));
-        let up = note(10.0, 200.0);
-        let end = |options| {
-            let doc = Document::with_options(&up, options);
+        assert_eq!(stem(&note(10.0, 200.0)), (print_pen(2.0), 5411));
+        assert_eq!(stem(&note(10.0, -200.0)), (print_pen(2.0), 5411));
+        assert_eq!(stem(&note(20.0, 300.0)), (print_pen(3.0), 5020));
+        assert_eq!(stem(&note(10.0, 0.0)), (0.0, 5425));
+        let end = |file: &MusFile| {
+            let doc = Document::new(file);
             stem_end(&doc, doc.item(ItemId(1)).expect("the note")).expect("a stem").0
         };
-        let (engine, refined) = (end(Options::ENGINE), end(Options::REFINED));
-        assert_eq!(refined.y, engine.y);
-        assert!((engine.x - refined.x - 13.333).abs() < 0.01, "the handle moves with the stem: {engine:?} {refined:?}");
+        let (thin, thick) = (end(&note(10.0, 0.0)), end(&note(10.0, 200.0)));
+        assert_eq!(thick.y, thin.y);
+        assert!((thin.x - thick.x - 13.333).abs() < 0.01, "the handle moves with the stem: {thin:?} {thick:?}");
     }
 
     #[test]
     fn ledger_lines_take_their_print_width() {
         // P4 = 13: one ledger line above the staff; P15 = 0.
         let note = |p4: f32, p16: f32| file(&[&[1.0, 1.0, 20.0, p4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, p16]]);
-        let width = |file: &MusFile, options| {
-            let [line] = &strokes(file, options)[..] else { panic!("one ledger line") };
+        let width = |file: &MusFile| {
+            let [line] = &strokes(file)[..] else { panic!("one ledger line") };
             line.width
         };
-        assert_eq!(width(&note(13.0, 0.0), Options::ENGINE), 0.0);
-        assert_eq!(width(&note(13.0, 0.0), Options::REFINED), print_pen(2.0), "two steps heavier than the staff");
-        assert_eq!(width(&note(113.0, 0.0), Options::REFINED), print_pen(1.0), "one for a grace note");
-        assert_eq!(width(&note(13.0, 5.0), Options::REFINED), print_pen(5.0));
-        assert_eq!(width(&note(13.0, 99.0), Options::REFINED), 0.0, "as the staff lines");
+        assert_eq!(width(&note(13.0, 0.0)), print_pen(2.0), "two steps heavier than the staff");
+        assert_eq!(width(&note(113.0, 0.0)), print_pen(1.0), "one for a grace note");
+        assert_eq!(width(&note(13.0, 5.0)), print_pen(5.0));
+        assert_eq!(width(&note(13.0, 99.0)), 0.0, "as the staff lines");
     }
 
     #[test]
@@ -610,11 +595,10 @@ pub(crate) mod tests {
             file(&[&params])
         };
         // The head, then the sharp's four parts.
-        let widths = |file: &MusFile, options| shapes(file, options, 1).iter().map(|s| s.width).collect::<Vec<_>>();
+        let widths = |file: &MusFile| shapes(file, 1).iter().map(|s| s.width).collect::<Vec<_>>();
         let sharp = print_pen(3.0);
-        assert_eq!(widths(&note(3.0), Options::REFINED), [0.0, sharp, sharp, sharp, sharp]);
-        assert_eq!(widths(&note(3.0), Options::ENGINE), [0.0; 5]);
-        assert_eq!(widths(&note(0.0), Options::REFINED), [0.0; 5]);
+        assert_eq!(widths(&note(3.0)), [0.0, sharp, sharp, sharp, sharp]);
+        assert_eq!(widths(&note(0.0)), [0.0; 5]);
         assert!(sharp > PEN);
     }
 }

@@ -17,7 +17,6 @@ use crate::document::{Document, ItemRef};
 use crate::units::{constant, real, trunc, Pos};
 
 const FIRST_HEAD_SYMBOL: i32 = 11;
-const BLACK: i32 = 0;
 const HEADLESS: i32 = 7;
 const DIAMOND_X: i32 = 8;
 const OVAL_X: i32 = 9;
@@ -82,7 +81,6 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Can
     };
     match unparenthesised(p6) {
         HEADLESS => {}
-        BLACK if doc.screen() && !doc.refined() => cached_black_head(doc, item, note, canvas),
         -3 => clef_head(canvas, super::BREVE),
         h if h < HEADLESS => clef_head(canvas, h),
         DIAMOND_X => library_head(canvas, DIAMOND_X_SYMBOL),
@@ -94,50 +92,6 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Can
     }
 }
 
-/// A black head on the screen comes from a one-entry cache (0x4F14B0): it
-/// keeps the last freshly drawn black head as integer offsets from
-/// (trunc X, trunc Y), keyed by the f32 scale P20 × unit, and a head of
-/// the same scale is pasted from it instead of being computed. The cache
-/// lives across items and redraws, and the engine draws a score more than
-/// once before showing it, so the head whose offsets a note gets is found
-/// by walking back cyclically through the black heads of the score to the
-/// last one whose predecessor had another scale. Print, and the refined
-/// style, draw every head afresh.
-fn cached_black_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
-    let heads: Vec<(ItemRef<'_>, Note)> = doc
-        .items()
-        .filter(|other| other.code() == crate::codes::NOTE)
-        .filter_map(|other| Some((other, Note::new(doc, other)?)))
-        .filter(|(other, other_note)| drawn(other_note) && unparenthesised(trunc(f64::from(other.p(6)))) == BLACK)
-        .collect();
-    let source = heads
-        .iter()
-        .position(|(other, _)| other.id == item.id)
-        .map(|at| cache_source(&heads, at))
-        .map_or(*note, |at| heads[at].1);
-    let start = canvas.buffer_mut().len();
-    glyph::clef(doc, item, canvas, FIRST_HEAD_SYMBOL, source.origin, (source.width, 1.0), source.unit);
-    // Integer adds wrap in the engine, also for indefinite (i32::MIN) points.
-    let shift = |own: f64, theirs: f64| trunc(own).wrapping_sub(trunc(theirs));
-    let (dx, dy) = (shift(note.origin.x, source.origin.x), shift(note.origin.y, source.origin.y));
-    canvas.buffer_mut()[start..].iter_mut().for_each(|p| {
-        p.at.x = p.at.x.wrapping_add(dx);
-        p.at.y = p.at.y.wrapping_add(dy);
-    });
-}
-
-/// The black head whose drawing head `at` is pasted from: itself when the
-/// cache misses (its scale is not exact in f32, or differs from what the
-/// previous head left), else the source of the previous head.
-fn cache_source(heads: &[(ItemRef<'_>, Note)], at: usize) -> usize {
-    let key = |i: usize| heads[i].1.width * heads[i].1.unit;
-    let previous = |i: usize| if i == 0 { heads.len() - 1 } else { i - 1 };
-    let hits = |i: usize| real(key(i)) == key(i) && real(key(previous(i))) == key(i);
-    // A full circle of hits means one scale throughout: only the first head
-    // of the first drawing missed.
-    std::iter::successors(Some(at), |&i| Some(previous(i))).take(heads.len()).find(|&i| !hits(i)).unwrap_or(0)
-}
-
 /// An AlphaNote head: for a hollow head on a line first a white box that
 /// hides the staff line (0x4F1F69), then symbol 89 (88 hollow) through the
 /// code-9 path, which places it from P3/P4 on the staff's own step. The
@@ -146,7 +100,7 @@ fn alpha_head(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut C
     let staff = doc.staff_of(item);
     let hollow = trunc(f64::from(item.p(6))) < 0;
     if hollow && note.level % 2 != 0 {
-        staff_line_mask(doc, note, staff.step, canvas);
+        staff_line_mask(note, staff.step, canvas);
     }
     let size = alpha_size(item);
     let p3 = real(note.unit * constant(1.45) / 25.0 + real(note.origin.x / P3_UNIT));
@@ -225,22 +179,22 @@ fn letter_item(item: ItemRef<'_>, note: &Note, size: f64) -> Option<Item> {
 
 /// draw_box type 0, filled, 2.4 by 0.35 half-widths of 3.5 steps, centred
 /// 210 units (at size 1) right of the note, emitted at once in white.
-fn staff_line_mask(doc: &Document<'_>, note: &Note, staff_step: f64, canvas: &mut Canvas<'_>) {
+fn staff_line_mask(note: &Note, staff_step: f64, canvas: &mut Canvas<'_>) {
     let centre = Pos::new(real(staff_step / 25.0 * 210.0 + note.origin.x), note.origin.y);
-    white_box(doc, canvas, centre, note.step, (constant(2.4), constant(0.35)));
+    white_box(canvas, centre, note.step, (constant(2.4), constant(0.35)));
 }
 
 /// draw_box type 0, filled, with half-widths of `size` × 3.5 steps,
-/// emitted at once in near-white (as 0x4F1F69 and 0x559733 do), or in
-/// white in the refined style: a mask is meant to match the paper.
-pub(super) fn white_box(doc: &Document<'_>, canvas: &mut Canvas<'_>, centre: Pos, step: f64, size: (f64, f64)) {
+/// emitted at once (as 0x4F1F69 and 0x559733 do) in white, to match the
+/// paper; the engine uses the near-white 0xFDFDFD.
+pub(super) fn white_box(canvas: &mut Canvas<'_>, centre: Pos, step: f64, size: (f64, f64)) {
     let half_width = real(step * 3.5 * size.0);
     let half_height = real(step * 3.5 * size.1);
     let (left, right) = (real(centre.x - half_width), real(half_width + centre.x));
     let (bottom, top) = (real(centre.y - half_height), real(half_height + centre.y));
     let own = canvas.colour;
     canvas.flush();
-    canvas.colour = if doc.refined() { KNOCKOUT_COLOUR } else { MASK_COLOUR };
+    canvas.colour = MASK_COLOUR;
     canvas.fill([[
         Pos::new(left, bottom),
         Pos::new(right, bottom),
@@ -252,9 +206,7 @@ pub(super) fn white_box(doc: &Document<'_>, canvas: &mut Canvas<'_>, centre: Pos
     canvas.colour = own;
 }
 
-/// The colour 0x4F1F69 emits the mask in (COLORREF 0xFDFDFD).
-const MASK_COLOUR: Colour = Colour { r: 253, g: 253, b: 253 };
-const KNOCKOUT_COLOUR: Colour = Colour { r: 255, g: 255, b: 255 };
+const MASK_COLOUR: Colour = Colour { r: 255, g: 255, b: 255 };
 
 fn parentheses(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Canvas<'_>) {
     let left = match trunc(f64::from(item.p(5))) % 10 {
@@ -279,38 +231,15 @@ fn parentheses(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut 
 #[cfg(test)]
 mod tests {
     use crate::codes::note::tests::{file, shapes};
-    use crate::document::{Medium, Options};
-
-    /// A black head at x = 150 × 30.003 = 4500.45, alone or after one at P3 = 20.
-    fn heads(alone: bool) -> score_format::MusFile {
-        let head = |p3: f32| [1.0, 1.0, p3, 5.0, 0.0];
-        if alone {
-            file(&[&head(30.003)])
-        } else {
-            file(&[&head(20.0), &head(30.003)])
-        }
-    }
+    use crate::display::Colour;
 
     #[test]
-    fn refined_black_heads_do_not_copy_each_other() {
-        let head = |file, options, n| shapes(&file, options, n).remove(0).paths;
-        let alone = head(heads(true), Options::ENGINE, 1);
-        assert_ne!(head(heads(false), Options::ENGINE, 2), alone, "the engine pastes the first head's offsets");
-        let print = Options { medium: Medium::Print, ..Options::ENGINE };
-        assert_eq!(head(heads(false), print, 2), alone, "print draws each head afresh");
-        let refined_alone = head(heads(true), Options::REFINED, 1);
-        assert_eq!(head(heads(false), Options::REFINED, 2), refined_alone);
-    }
-
-    #[test]
-    fn refined_knockouts_are_white() {
+    fn knockouts_are_white() {
         // Tablature (P6 = -6) with P20 = 1: a box behind the fret number.
         let mut params = [0.0_f32; 20];
         params[..6].copy_from_slice(&[1.0, 1.0, 20.0, 5.0, 0.0, -6.0]);
         params[19] = 1.0;
         let file = file(&[&params]);
-        let colour = |options| shapes(&file, options, 1)[0].colour;
-        assert_eq!(colour(Options::ENGINE), super::MASK_COLOUR);
-        assert_eq!(colour(Options::REFINED), super::KNOCKOUT_COLOUR);
+        assert_eq!(shapes(&file, 1)[0].colour, Colour { r: 255, g: 255, b: 255 });
     }
 }
