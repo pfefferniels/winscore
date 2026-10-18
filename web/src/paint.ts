@@ -3,11 +3,11 @@
 // physical width, the shape's own or 1/150 inch (`wdl lw`), round joins
 // (`1 setlinejoin`) and butt caps; filled objects with the even-odd rule and
 // then outlined with that same pen (`gsave eofill grestore stroke`); text on
-// its baseline at the engine's y + 96, stretched to the run's average width
-// as GDI does. Pens scale with the zoom. Drawing happens in device pixels;
-// horizontal and vertical shapes are snapped to them as the prologue's stroke
-// adjustment snaps them, so staff lines, stems and barlines stay crisp, and
-// curved and slanted outlines are antialiased.
+// its baseline at the engine's y + 96, in the run's proportions. Pens scale
+// with the zoom. Drawing happens in device pixels; horizontal and vertical
+// shapes are snapped to them as the prologue's stroke adjustment snaps them,
+// so staff lines, stems and barlines stay crisp, and curved and slanted
+// outlines are antialiased.
 import { elementsOf, type Box, type DisplayList, type Shape, type TextRun } from './display';
 import { ascent, cssFont, stretch } from './fonts';
 import { toDevice, UNITS_PER_INCH, type Transform } from './view';
@@ -292,18 +292,27 @@ function paintText(ctx: CanvasRenderingContext2D, t: Transform, run: TextRun, co
   if (size < 0.5) return;
   const angle = glyphAngle(run);
   const scaleX = stretch(run);
-  // GDI turns text about the cell's top-left corner, one ascent above the baseline.
+  // GDI turns text about the cell's top-left corner, one ascent above the
+  // baseline, and the engine's positions of rotated characters allow for it
+  // (analysis/engine/text.md, P9), so the glyphs turn about that corner here too.
   const drop = ascent(run) * t.k;
   ctx.font = cssFont(run, size);
   ctx.fillStyle = colour;
+  // Outlined letters as SCORE prints them, `false charpath lw stroke`, with
+  // the default pen and, like lines, at least a pixel wide.
+  ctx.strokeStyle = colour;
+  ctx.lineWidth = Math.max(1, PEN * t.k);
   run.strings.forEach((s) => {
     const origin = toDevice(t, s.x, s.y);
     ctx.save();
-    ctx.translate(Math.round(origin.x), Math.round(origin.y) - drop);
+    // The engine spaces the letters: x stays between pixels, or the spacing
+    // would wobble; a level baseline sits on a pixel row, which keeps it crisp.
+    ctx.translate(origin.x, (angle === 0 ? Math.round(origin.y) : origin.y) - drop);
     if (angle !== 0) ctx.rotate(angle);
     ctx.translate(0, drop);
     ctx.scale(scaleX, 1);
-    ctx.fillText(s.text, 0, 0);
+    if (run.outline) ctx.strokeText(s.text, 0, 0);
+    else ctx.fillText(s.text, 0, 0);
     if (run.underline) {
       ctx.fillRect(0, size / 10, ctx.measureText(s.text).width, Math.max(1, size / 20));
     }
