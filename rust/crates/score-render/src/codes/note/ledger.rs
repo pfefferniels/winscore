@@ -4,8 +4,8 @@
 //! one scale step of the staff apart in pairs (every second level), from the
 //! line nearest the note towards the staff. P30 overrides where they start
 //! and which way they go. They are flushed on their own, in the staff's
-//! colour unless P27 asks for the note's. Print draws them thicker than the
-//! staff lines (P16), and so does the refined style.
+//! colour unless P27 asks for the note's, and drawn thicker than the staff
+//! lines (P16), as SCORE prints them.
 
 use super::Note;
 use crate::canvas::{Canvas, Pen};
@@ -56,7 +56,7 @@ pub fn draw(doc: &Document<'_>, item: ItemRef<'_>, note: &Note, canvas: &mut Can
     let left = real(note.origin.x - overhang);
     let right = real(note.head_width + note.origin.x + overhang);
     let width = print_width(doc, item, note);
-    if doc.refined() && width != 0 {
+    if width != 0 {
         // Until the flush below.
         canvas.set_width(print_pen(width as f32));
     }
