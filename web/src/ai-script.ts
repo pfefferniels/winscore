@@ -115,6 +115,16 @@ const GRACE = 64;
 /** Notes closer than this in P3 form one chord. */
 const CHORD = 0.05;
 
+/**
+ * Runs a line on the editor. The engine's message is a failure it reports
+ * rather than throws (a refit it gave up on, for one): thrown here, under
+ * `what`, so the script's steps go back.
+ */
+function execute(editor: Editor, line: string, what = line) {
+  const message = editor.execute(line)?.message;
+  if (message) throw new Error(`${what} (${message.replace(/^\*+ ?/, '')})`);
+}
+
 /** A note a beam can go over: shorter than a quarter, not a grace note. */
 const beamable = (t: Target) => t.params[0] === NOTE && t.params[6]! > 0 && t.params[6]! < BEAMABLE && t.params[6]! < GRACE;
 
@@ -504,10 +514,10 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       const list = targets(access, scope, step.items, knobs);
       // A group command (FLN …) starts with nothing selected and is given the items' area.
       editor.select(access.groupCommand(step.line) ? [] : list.map((t) => t.index));
-      editor.execute(step.line);
+      execute(editor, step.line);
       if (editor.prompt() !== null) {
         const answer = area(list, scope.region);
-        if (answer) editor.execute(answer);
+        if (answer) execute(editor, answer, step.line);
         if (editor.prompt() !== null) {
           editor.execute('X');
           throw new Error(`${step.line} asks for more than the area`);
@@ -626,7 +636,7 @@ function beam(access: Access, list: Target[], size: number): number[] {
     }
     editor.select([]);
     editor.execute('FLN');
-    if (editor.prompt() !== null) editor.execute(`${staff} ${Math.max(0, left - 0.5)} ${Math.min(200, right + 0.5)} ${staff}`);
+    if (editor.prompt() !== null) execute(editor, `${staff} ${Math.max(0, left - 0.5)} ${Math.min(200, right + 0.5)} ${staff}`, 'Beams cannot be fitted here');
     if (editor.prompt() !== null) editor.execute('X');
   }
   return [...notes.map((t) => t.key), ...made];

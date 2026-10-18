@@ -149,6 +149,23 @@ const noteRows = items().filter((q) => q[0] === 1).sort((a, b) => a[2]! - b[2]!)
 assert.deepEqual([made[0]![3], made[0]![4], made[0]![5]], [noteRows[0]![3], noteRows[1]![3], noteRows[1]![2]], 'from the first note to the second');
 editor.rollback(lines.mark);
 
+// A refit the engine gives up on (chords with two stems) leaves no half-made beam: the step fails, nothing changes.
+const twoStems = Score.empty();
+const twoEditor = scoreEditor(twoStems);
+const twoAccess: Access = { ...access, editor: twoEditor, params: (index) => {
+  const info = twoStems.item(index);
+  if (!info) return null;
+  const params = info.params;
+  info.free();
+  return params;
+}, staves: () => twoStems.staffGeometry(), summaries: () => twoStems.itemSummaries() };
+run({ summary: 'add', knobs: [], steps: [{ do: 'insert', notes: 'C4:E:G/D:F:A', rhythms: '8/8' }] }, twoAccess, { keys: [], region }, '“add”');
+const chordNotes: Scope = { keys: twoEditor.keys().slice(1), region };
+run({ summary: 'stems', knobs: [], steps: [{ do: 'setting', items: { codes: [1] }, setting: 'Stem', value: 'Up' }] }, twoAccess, chordNotes, '“stems”');
+const unbeamed = twoStems.save().join();
+assert.throws(() => run(scriptFor({ action: 'beam', target: 'notes' }), twoAccess, chordNotes, '“beam”'), /Beams cannot be fitted here \(staff 1: .*two stems/);
+assert.equal(twoStems.save().join(), unbeamed);
+
 // Chords: the notes at one place on a staff; and means over the items.
 const dyads = Score.empty();
 const dyadEditor = scoreEditor(dyads);
