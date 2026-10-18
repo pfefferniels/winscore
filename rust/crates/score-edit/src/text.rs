@@ -27,14 +27,80 @@ const HIGH: [char; 32] = [
     '“', '”', '•', '–', '—', '˜', '™', 'š', '›', 'œ', '\u{9d}', 'ž', 'Ÿ',
 ];
 
-/// Characters as WinScore stores them (Windows-1252); others become `?`.
+/// Characters SCORE spells with escapes (help, "Inputting Special Text
+/// Characters"): an accent before the letter (`<<` acute, `>>` grave, `^^`
+/// circumflex, `%%` dieresis, `##` cedilla, `~` tilde), and `?x`, `!x` for
+/// the extended characters, as SCORE prints them (`?i` prints ¹).
+#[rustfmt::skip]
+const SPELLINGS: &[(char, &str)] = &[
+    ('Á', "<<A"), ('á', "<<a"), ('É', "<<E"), ('é', "<<e"), ('Í', "<<I"), ('í', "<<i"),
+    ('Ó', "<<O"), ('ó', "<<o"), ('Ú', "<<U"), ('ú', "<<u"), ('Ý', "<<Y"), ('ý', "<<y"),
+    ('À', ">>A"), ('à', ">>a"), ('È', ">>E"), ('è', ">>e"), ('Ì', ">>I"), ('ì', ">>i"),
+    ('Ò', ">>O"), ('ò', ">>o"), ('Ù', ">>U"), ('ù', ">>u"),
+    ('Â', "^^A"), ('â', "^^a"), ('Ê', "^^E"), ('ê', "^^e"), ('Î', "^^I"), ('î', "^^i"),
+    ('Ô', "^^O"), ('ô', "^^o"), ('Û', "^^U"), ('û', "^^u"),
+    ('Ä', "%%A"), ('ä', "%%a"), ('Ë', "%%E"), ('ë', "%%e"), ('Ï', "%%I"), ('ï', "%%i"),
+    ('Ö', "%%O"), ('ö', "%%o"), ('Ü', "%%U"), ('ü', "%%u"), ('Ÿ', "%%Y"), ('ÿ', "%%y"),
+    ('Ç', "##C"), ('ç', "##c"),
+    ('Ã', "~A"), ('ã', "~a"), ('Ñ', "~N"), ('ñ', "~n"), ('Õ', "~O"), ('õ', "~o"),
+    ('−', "?-"), ('Æ', "?A"), ('Œ', "?E"), ('Ł', "?L"), ('Ø', "?O"), ('æ', "?a"), ('©', "?c"),
+    ('œ', "?e"), ('ª', "?f"), ('¹', "?i"), ('ł', "?l"), ('º', "?m"), ('ø', "?o"), ('®', "?r"),
+    ('ß', "?s"), ('™', "?t"),
+    ('•', "!0"), ('„', "!1"), ('”', "!2"), ('¡', "!3"), ('¢', "!4"), ('£', "!5"), ('§', "!6"),
+    ('¤', "!7"), ('“', "!9"), ('Å', "!A"), ('‡', "!D"), ('Š', "!S"), ('Ž', "!Z"), ('å', "!a"),
+    ('†', "!d"), ('…', "!e"), ('ƒ', "!f"), ('«', "!g"), ('»', "!h"), ('ﬁ', "!i"), ('‹', "!j"),
+    ('›', "!k"), ('ﬂ', "!l"), ('—', "!m"), ('–', "!n"), ('¶', "!p"), ('¿', "!q"), ('š', "!s"),
+    ('¥', "!y"), ('ž', "!z"),
+];
+
+/// SCORE prints ` and ' as curly quotes.
+const QUOTES: [(char, u8); 2] = [('‘', b'`'), ('’', b'\'')];
+
+/// Characters as WinScore stores them: SCORE's spelling where it has one,
+/// so that WinScore draws and measures the character, otherwise
+/// Windows-1252, whose bytes from 128 up WinScore cannot draw (é is "0");
+/// others become `?`.
 pub fn encode(text: &str) -> Vec<u8> {
     text.chars()
-        .map(|c| match u32::from(c) {
-            code @ (0..=0x7F | 0xA0..=0xFF) => code as u8,
-            _ => HIGH.iter().position(|&h| h == c).map_or(b'?', |i| 0x80 + i as u8),
+        .flat_map(|c| {
+            if let Some(&(_, spelling)) = SPELLINGS.iter().find(|&&(s, _)| s == c) {
+                return spelling.as_bytes().to_vec();
+            }
+            let byte = match u32::from(c) {
+                code @ (0..=0x7F | 0xA0..=0xFF) => code as u8,
+                _ => QUOTES
+                    .iter()
+                    .find(|&&(q, _)| q == c)
+                    .map(|&(_, b)| b)
+                    .or_else(|| HIGH.iter().position(|&h| h == c).map(|i| 0x80 + i as u8))
+                    .unwrap_or(b'?'),
+            };
+            vec![byte]
         })
         .collect()
+}
+
+/// The characters of a text item for editing: Windows-1252, with the
+/// spellings [`encode`] writes read back as their characters.
+pub fn decode(bytes: &[u8]) -> String {
+    let mut text = String::new();
+    let mut rest = bytes;
+    while let Some(&byte) = rest.first() {
+        match SPELLINGS.iter().find(|&&(_, s)| rest.starts_with(s.as_bytes())) {
+            Some(&(c, spelling)) => {
+                text.push(c);
+                rest = &rest[spelling.len()..];
+            }
+            None => {
+                text.push(match byte {
+                    0x80..=0x9F => HIGH[usize::from(byte - 0x80)],
+                    _ => char::from(byte),
+                });
+                rest = &rest[1..];
+            }
+        }
+    }
+    text
 }
 
 /// The font number of a font code at the start of `text`, such as `_15`.
@@ -205,8 +271,43 @@ mod tests {
 
     #[test]
     fn windows_1252() {
-        assert_eq!(encode("© B. – x"), b"\xa9 B. \x96 x");
+        assert_eq!(encode("€ ‰ ×"), b"\x80 \x89 \xd7");
         assert_eq!(encode("✓"), b"?");
+        assert_eq!(decode(b"\xa9 B. \x96 x"), "© B. – x");
+    }
+
+    #[test]
+    fn spellings() {
+        assert_eq!(encode("© B. – Café Söhne, l’été"), b"?c B. !n Caf<<e S%%ohne, l'<<et<<e");
+        assert_eq!(encode("¿Año?"), b"!qA~no?");
+        assert_eq!(decode(b"_00?c 1999 Caf<<e"), "_00© 1999 Café");
+    }
+
+    #[test]
+    fn spellings_round_trip() {
+        let all: String = SPELLINGS.iter().map(|&(c, _)| c).collect();
+        assert_eq!(decode(&encode(&all)), all);
+        let stored: &[&[u8]] = &[b"_00<<<e%%%u!!a??c~~n", b"<<b %%x ?x !o ~b", b"\x80\xd7"];
+        stored.iter().for_each(|&bytes| assert_eq!(encode(&decode(bytes)), bytes, "{bytes:?}"));
+        // Older files store é as a byte, which an edit spells.
+        assert_eq!(encode(&decode(b"\xe9t\xe7")), b"<<et##c");
+    }
+
+    /// What the refined renderer draws for each spelling is its character,
+    /// and what the engine measures is the letter's width.
+    #[test]
+    fn spellings_draw_their_characters() {
+        let drawn = |text: &[u8]| {
+            let file = file_with(vec![staff(), new_item(1.0, &with_font_code(text, 0)).to_item()]);
+            let doc = RenderDocument::with_options(&file, score_render::Options::REFINED);
+            let list = score_render::render(&doc);
+            let strings = list.texts.iter().filter(|t| t.source == Some(RenderId(1))).flat_map(|t| &t.strings);
+            strings.map(|s| s.text.as_str()).collect::<String>()
+        };
+        SPELLINGS.iter().for_each(|&(c, spelling)| assert_eq!(drawn(spelling.as_bytes()), c.to_string(), "{spelling}"));
+        assert_eq!(drawn(&encode("‘quotes’")), "‘quotes’");
+        let length = |text: &str| measured_length(&file_with(vec![staff(), new_item(1.0, &encode(text)).to_item()]), 1);
+        assert_eq!(length("_00Café"), length("_00Cafe"));
     }
 
     /// Characters, parameter changes, and the engine's P13 for them.
