@@ -55,7 +55,7 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     let (accidentals, context) = if trunc(f64::from(item.p(8))) != 0 {
         (irregular(item, step, at.y), ItemContext { pixels: 0, ..item_context })
     } else {
-        (regular(p5, clef, step, at.y), item_context)
+        (regular(p5, clef, step, at.y, doc.refined()), item_context)
     };
     xs.zip(accidentals).for_each(|(x, (symbol, y))| {
         draw_clef(doc, &context, canvas, Pos::new(x, y), step, symbol, (size, size));
@@ -65,8 +65,9 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
 /// The circle-of-fifths pattern as (symbol, y): sharps from F a fourth up
 /// and a fifth down, flats from B the other way, dropping an octave when a
 /// step would rise above the clef's ceiling; tenor-clef sharps start
-/// upwards. The engine always draws the first accidental, also for P5 = 0.
-fn regular(p5: i32, clef: i32, step: f64, y0: f64) -> Vec<(i32, f64)> {
+/// upwards. The engine always draws the first accidental, so P5 = 0 shows
+/// a sharp and P5 = ±100 a natural; the `refined` style draws none.
+fn regular(p5: i32, clef: i32, step: f64, y0: f64, refined: bool) -> Vec<(i32, f64)> {
     let count = match p5.abs() {
         n if n > NATURALS => n % 100,
         n => n,
@@ -90,7 +91,7 @@ fn regular(p5: i32, clef: i32, step: f64, y0: f64) -> Vec<(i32, f64)> {
         let next = real(if rising { up } else { down } + y);
         Some(if ceiling < next { (real(next - octave), rising) } else { (next, !rising) })
     })
-    .take(count.max(1) as usize)
+    .take(if refined { count } else { count.max(1) } as usize)
     .map(|(y, _)| (symbol, y))
     .collect()
 }
@@ -103,4 +104,29 @@ fn irregular(item: ItemRef<'_>, step: f64, y0: f64) -> Vec<(i32, f64)> {
         .take_while(|&v| v != 0)
         .map(|v| (v / 100 + IRREGULAR_SYMBOL_BASE, real(step * f64::from((v % 100) * 7) + y0)))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::display::ItemId;
+    use crate::document::{Document, Options};
+    use score_format::{Item, MusFile, Word};
+
+    /// Shapes a key signature with P5 = `p5` on a treble staff draws.
+    fn shapes(p5: f32, options: Options) -> usize {
+        let words = |params: &[f32]| Item::new(params.iter().map(|&p| Word::from_f32(p)).collect());
+        let mut file = MusFile::empty();
+        file.items = vec![words(&[8.0, 1.0, 0.0, 0.0, 1.0]), words(&[17.0, 1.0, 20.0, 0.0, p5])];
+        let list = crate::render(&Document::with_options(&file, options));
+        list.shapes.iter().filter(|s| s.source == Some(ItemId(1))).count()
+    }
+
+    #[test]
+    fn no_accidentals_draw_nothing_in_the_refined_style() {
+        for p5 in [0.0, 100.0, -100.0] {
+            assert!(shapes(p5, Options::ENGINE) > 0, "the engine draws one accidental for P5 = {p5}");
+            assert_eq!(shapes(p5, Options::REFINED), 0, "P5 = {p5}");
+        }
+        assert_eq!(shapes(1.0, Options::REFINED), shapes(1.0, Options::ENGINE));
+    }
 }

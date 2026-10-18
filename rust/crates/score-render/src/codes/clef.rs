@@ -12,10 +12,11 @@ use crate::canvas::Canvas;
 use crate::codes::number::{draw_number, number_font_loaded, NumberCall};
 use crate::document::{Document, ItemRef};
 use crate::page;
-use crate::symbols::clef::{clef_placement, draw_clef_symbol, ClefPlacement};
-use crate::symbols::library::is_text_symbol;
+use crate::symbols::clef::{clef_placement, clef_symbol_call, draw_clef_symbol, ClefPlacement};
+use crate::symbols::library::{is_missing, is_text_symbol, library_unit, normal_size, shows_missing};
 use crate::symbols::{
-    draw_library_symbol, draw_text_symbol, text_symbol_font_loaded, ItemContext, SymbolCall, TextSymbolCall,
+    draw_library_symbol, draw_missing_symbol, draw_text_symbol, text_symbol_font_loaded, ItemContext, SymbolCall,
+    TextSymbolCall,
 };
 use crate::text::Font;
 use crate::units::{self, real, trunc, Pos};
@@ -50,6 +51,12 @@ pub fn render(doc: &Document<'_>, item: ItemRef<'_>, canvas: &mut Canvas<'_>) {
     match (clef.tablature, clef.text) {
         (Some(tablature), _) => draw_tablature(doc, item, canvas, &clef.placement, tablature),
         (None, Some(call)) => draw_text_symbol(doc, item, canvas, &call),
+        // A symbol no library has: a placeholder on the screen in the refined style.
+        (None, None) if shows_missing(doc) && is_missing(doc, clef.placement.number) => {
+            let call = clef_symbol_call(&clef.placement);
+            let unit = library_unit(step, &call, normal_size(call.number));
+            draw_missing_symbol(canvas, item.staff(), clef.placement.at, unit, &call.number.to_string());
+        }
         (None, None) => draw_clef_symbol(doc, &context, canvas, &clef.placement, step),
     }
 }

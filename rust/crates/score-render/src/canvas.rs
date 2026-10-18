@@ -132,6 +132,12 @@ impl<'a> Canvas<'a> {
         self.widths.push((at, width));
     }
 
+    /// The pen width the next shape started gets, for a routine that sets
+    /// its own and then restores it.
+    pub fn width(&self) -> f32 {
+        self.widths.last().map_or(0.0, |&(_, width)| width)
+    }
+
     pub fn source(&self) -> ItemId {
         self.source
     }
