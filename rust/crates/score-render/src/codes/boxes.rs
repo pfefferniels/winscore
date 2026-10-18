@@ -412,8 +412,7 @@ fn draw_arc_arrow(
 const DEGREES_PER_RADIAN: f32 = 57.295_776;
 
 /// IP26 = -1 marks a box: blue (P26 = 99) and three rings thick on the
-/// screen. In print it is not drawn (which the engine's own output does not
-/// model).
+/// screen. In print it is not drawn.
 const MARKED: i32 = -1;
 const MARKED_COLOUR: f32 = 99.0;
 const MARKED_THICKNESS: i32 = 3;
