@@ -1046,11 +1046,15 @@ function regionOf(box: Box): Region | null {
   const editor = state.editor;
   if (!editor) return null;
   const middle = (box.y0 + box.y1) / 2;
-  const centre = editor.placeAt({ x: (box.x0 + box.x1) / 2, y: middle });
+  // A lasso mostly off the paper is about the staff nearest it on the paper.
+  const paper = paperBox();
+  const mid = (box.x0 + box.x1) / 2;
+  const x = editor.placeAt({ x: mid, y: middle }) ? mid : Math.min(Math.max(mid, paper.x0), paper.x1 - 1);
+  const centre = editor.placeAt({ x, y: middle });
   const left = editor.placeAt({ x: box.x0, y: middle });
   const right = editor.placeAt({ x: box.x1, y: middle });
-  const top = editor.placeAt({ x: (box.x0 + box.x1) / 2, y: box.y1 });
-  const bottom = editor.placeAt({ x: (box.x0 + box.x1) / 2, y: box.y0 });
+  const top = editor.placeAt({ x, y: box.y1 });
+  const bottom = editor.placeAt({ x, y: box.y0 });
   if (!centre) return null;
   // An edge past the paper has no staff on its side of the page: the staff's start or end.
   const [from, to] = [left?.p3 ?? 0, right?.p3 ?? 200];

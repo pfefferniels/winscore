@@ -101,10 +101,20 @@ try {
   await page.waitForFunction(() => document.getElementById('item-count').textContent === '9');
   await page.click('#input');
 
+  /** The selection's box on screen once the page has painted it after `act` (it is written on paint). */
+  const selectedBox = async (act) => {
+    const before = await page.getAttribute('#viewport', 'data-selection');
+    await act();
+    await page.waitForFunction((b) => {
+      const now = document.getElementById('viewport').dataset.selection;
+      return now && now !== b;
+    }, before);
+    return JSON.parse(await page.getAttribute('#viewport', 'data-selection'));
+  };
+
   // The box of the notes, then a lasso around it.
   await page.fill('#item-filter', 'note');
-  await page.click('#items-select');
-  const box = JSON.parse(await page.getAttribute('#viewport', 'data-selection'));
+  const box = await selectedBox(() => page.click('#items-select'));
   await page.keyboard.press('Escape');
   await page.fill('#item-filter', '');
   const [x0, y0, x1, y1] = [box.x - 30, box.y - 30, box.x + box.width + 30, box.y + box.height + 30];
@@ -193,8 +203,11 @@ try {
   assert.equal(await page.textContent('#item-count'), '9');
   assert.match(await page.getAttribute('#undo', 'title'), /“remove the stems”/);
 
-  // A lasso around empty space on the staff, reaching past the paper's edge: the notes typed go there.
-  const [r0, r1] = [box.x + box.width + 40, box.x + box.width + 700];
+  // A lasso around empty space on the staff, from its last quarter to past the paper's
+  // edge (a tenth of the staff beyond its end), at any zoom: the notes typed go there.
+  const staff = await selectedBox(() => page.click('#items li[data-index="0"]'));
+  await page.keyboard.press('Escape');
+  const [r0, r1] = [staff.x + 0.75 * staff.width, staff.x + 1.1 * staff.width];
   await page.keyboard.down('Alt');
   await page.mouse.move(r0, y0);
   await page.mouse.down();
