@@ -26,6 +26,8 @@ Frame times while dragging: `npm run build && npm run perf [FILE.mus …]` (defa
 
 Screenshots of the built app: `npm run build && node scripts/screenshots.mjs OUT_DIR [name='sample=mozart.mus&zoom=200' …]` (needs `npx playwright install chromium` once).
 
+Crops of the painted page for judging the painter by eye: `node scripts/zoom-shots.mjs OUT_DIR [sample=mozart.mus] [at=X,Y] [size=W,H] [zooms=50,100,400] [dprs=1,2] [dist=DIR]` writes one crop per zoom and pixel ratio, its top-left corner at page point `at` (engine units); `dist` takes another build, for comparing before and after.
+
 ## Using it
 
 The page is drawn by the Rust renderer alone. The app bar holds the menus (File, Edit, Insert, Layout, View), Undo and Redo, **Input music**, the score's name (with "Unsaved changes" after an edit), zoom, the side panel switch and the keyboard shortcuts (the `?` button or F1). Menu entries that send a SCORE command show it on the right, so it can be typed on the command bar next time; they can be used with the mouse or the keyboard (↓ on a title opens, arrows move, Enter runs, Escape closes).
