@@ -161,7 +161,7 @@ const ACTIONS: Record<Action | 'other', string> = {
   create:
     'Add one new item of its own, not notes and not a mark on them: a staff, a barline, a repeat, a new clef, a key or time signature such as 3/4 or common time, a slur or tie over the notes (slur them, tie them), a hairpin, a trill, an 8va, a pedal mark, an ending, a dynamic such as mf, a fermata, a box, a number or a text in quotes',
   select: 'Select, pick out or keep only some of the items, so that the next command acts on them; nothing is changed (select the bottom notes, select the beams, keep only the accented notes)',
-  app: 'A command of the editor rather than an edit of the music: undo, redo, copy, cut, paste, duplicate, select everything, save, open, print, export, a new score, zoom, show or hide the side panel, line up or justify, music input, help',
+  app: 'A command of the editor rather than an edit of the music: undo, redo, copy, cut, paste, duplicate, select everything, save, open, print, export, a new score, zoom, show or hide the side panel, line up or justify, help',
   other: 'Something else',
 };
 
@@ -458,7 +458,8 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
       intent.notes = music.notes;
       intent.typed = music.typed;
       const rhythm = answers.rhythm && answers.rhythm.confidence >= QUITE_SURE ? choice('rhythm') : undefined;
-      intent.rhythms = rhythmsFor(rhythm, music.count);
+      // Values typed with the notes win over one Jev reads ("c e g 4 8 8").
+      intent.rhythms = music.rhythms ?? rhythmsFor(rhythm, music.count);
       return intent;
     }
     case 'beam': {

@@ -13,7 +13,6 @@ import { loadFaces } from './fonts';
 import { buildField, codeOf, moveProbes, paintGuides, snap, wantsForHandle, wantsForMove, type Field, type Guide, type Probes, type ScoreFacts } from './guides';
 import { cursorFor, decodeHandles, devicePoint, handleAt as handleUnder, paintHandles, paintPill, visibleHandles, type Handle, type HandleSet } from './handles';
 import type { Context } from './item-fields';
-import { createInputMode, type Shown } from './input-mode';
 import { bindInteraction } from './interaction';
 import { labelOf, MOD, type Action, type Menu } from './menu';
 import { appMenus, wordCommands, type DialogKind } from './menus';
@@ -44,8 +43,6 @@ interface State {
   pasteAt: Point | null;
   /** The scrollable page area; kept while a drag is in progress. */
   extent: Box | null;
-  /** The line of music input being typed, drawn over the page. */
-  preview: Shown | null;
   /** Whether the side panel (selected item, item list) is shown. */
   panel: boolean;
   /** The handles of the selected item while it is the only one selected. */
@@ -83,9 +80,6 @@ const PICK_RADIUS_PX = 12;
 /** A finger covers more than a mouse pointer: it picks from further away. */
 const TOUCH_TOLERANCE_PX = 10;
 const TOUCH_PICK_RADIUS_PX = 24;
-/** The line being typed, and in it the item at the caret. */
-const PREVIEW_TINT = '#7c3aed';
-const FOCUS_TINT = '#ea580c';
 /** Guides pull a dragged thing from this far, in CSS pixels (a finger from further). */
 const SNAP_PX = 6;
 const TOUCH_SNAP_PX = 10;
@@ -102,8 +96,6 @@ const ui = {
   docState: $<HTMLSpanElement>('doc-state'),
   undo: $<HTMLButtonElement>('undo'),
   redo: $<HTMLButtonElement>('redo'),
-  input: $<HTMLButtonElement>('input'),
-  inputPanel: $<HTMLElement>('input-panel'),
   symbolDialog: $<HTMLDialogElement>('symbol-dialog'),
   textDialog: $<HTMLDialogElement>('text-dialog'),
   band: $<HTMLDivElement>('band'),
@@ -122,7 +114,6 @@ const ui = {
   canvas: $<HTMLCanvasElement>('canvas'),
   dropHint: $<HTMLDivElement>('drop-hint'),
   emptyHint: $<HTMLDivElement>('empty-hint'),
-  emptyInput: $<HTMLButtonElement>('empty-input'),
   start: $<HTMLElement>('start'),
   startNew: $<HTMLButtonElement>('start-new'),
   startOpen: $<HTMLButtonElement>('start-open'),
@@ -160,7 +151,6 @@ const state: State = {
   lastPaper: null,
   pasteAt: null,
   extent: null,
-  preview: null,
   panel: storedPanel(),
   handles: null,
   hover: null,
@@ -175,17 +165,6 @@ function nameOf(code: number): string {
   if (!codeNames.has(code)) codeNames.set(code, codeName(code) ?? `Code ${code}`);
   return codeNames.get(code)!;
 }
-const inputMode = createInputMode(ui.inputPanel, ui.stage, {
-  score: () => state.score,
-  show: showInput,
-  insert: insertInput,
-  focusPage() {
-    ui.viewport.focus();
-    followSelection();
-  },
-  clientRect: (box) => view.clientRect(box),
-});
-view.onPaint(() => inputMode.layout());
 view.onPaint(describeSelection);
 const symbolDialog = createSymbolDialog(ui.symbolDialog);
 const textDialog = createTextDialog(ui.textDialog);
@@ -237,14 +216,12 @@ function paperBox(): Box {
 }
 
 function extent(paper: Box): Box {
-  const shown = [bounds(state.rust), state.preview ? bounds(state.preview.list) : null];
-  const content = shown.reduce(union, paper) ?? paper;
+  const content = union(bounds(state.rust), paper) ?? paper;
   return { x0: content.x0 - MARGIN, y0: content.y0 - MARGIN, x1: content.x1 + MARGIN, y1: content.y1 + MARGIN };
 }
 
 function layers(): Layer[] {
-  const page: Layer = { list: state.rust };
-  return state.preview ? [page, { list: state.preview.list, tint: PREVIEW_TINT }] : [page];
+  return [{ list: state.rust }];
 }
 
 function selection(): number[] {
@@ -262,7 +239,7 @@ const dpr = () => window.devicePixelRatio || 1;
 /** Handles, guides and the readout over the page. */
 function overlays(): Overlay[] {
   const drawn: Overlay[] = [];
-  const shown = state.handles && !inputMode.isOpen && state.editor?.prompt() == null;
+  const shown = state.handles && state.editor?.prompt() == null;
   if (shown && (!state.drag || state.drag.handle)) {
     drawn.push((ctx, t) => {
       const drag = state.drag;
@@ -293,10 +270,7 @@ function scene(live = false): Scene {
     layers: layers(),
     paper,
     extent: state.extent,
-    highlights: [
-      ...selection().map((item) => ({ list: state.rust, item })),
-      ...(state.preview?.focus.map((item) => ({ list: state.preview!.list, item, colour: FOCUS_TINT })) ?? []),
-    ],
+    highlights: selection().map((item) => ({ list: state.rust, item })),
     overlays: overlays(),
   };
 }
@@ -323,14 +297,11 @@ function refreshStatus() {
   ui.redo.disabled = redo === null;
   ui.undo.title = undo === null ? 'Nothing to undo' : `Undo ${undo} (${MOD}Z)`;
   ui.redo.title = redo === null ? 'Nothing to redo' : `Redo ${redo} (${REDO_KEYS})`;
-  ui.input.disabled = !state.editor;
-  ui.input.setAttribute('aria-pressed', String(inputMode.isOpen));
-  ui.app.classList.toggle('inputting', inputMode.isOpen);
   [ui.zoomIn, ui.zoomOut, ui.zoom, ui.fit].forEach((control) => (control.disabled = !open));
   ui.start.hidden = open;
   ui.panel.hidden = !open || !state.panel;
   ui.togglePanel.disabled = !open;
-  ui.emptyHint.hidden = !open || state.score!.itemCount() > 0 || inputMode.isOpen;
+  ui.emptyHint.hidden = !open || state.score!.itemCount() > 0;
   // How many items there are, as `data-items` of the page: for tests and the browser's inspector.
   ui.app.dataset.items = open ? String(state.score!.itemCount()) : '';
 }
@@ -461,7 +432,6 @@ function edited(change: Change | null, live: boolean) {
     refreshPanel();
     void loadFontsAndRepaint();
     report(change);
-    inputMode.refresh();
     aiPrompt.refresh();
     followSelection();
   }
@@ -488,12 +458,6 @@ function edit(action: (editor: Editor) => Change | null): Change | null {
 
 /** A SCORE command line from the command field, a menu, the panel or a key; the result is scrolled into view. */
 function runCommand(line: string): Change | null {
-  // IN n: music input on staff n, typed in the input panel.
-  const input = /^IN(?:\s+(\d+))?$/i.exec(line.trim());
-  if (input) {
-    enterInput(input[1] === undefined ? undefined : Number(input[1]));
-    return null;
-  }
   const change = edit((editor) => editor.execute(line));
   revealSelection();
   return change;
@@ -581,30 +545,6 @@ async function openItem(item: number | null) {
   ui.viewport.focus();
 }
 
-function enterInput(staff?: number) {
-  inputMode.open(staff);
-  refreshStatus();
-  followSelection();
-}
-
-/** Draws the line being typed over the page and scrolls to the cursor when it moved. */
-function showInput(shown: Shown | null) {
-  state.preview = shown;
-  redraw();
-  if (shown?.reveal) view.reveal(shown.reveal);
-}
-
-function insertInput(line: InputLine): boolean {
-  let inserted = false;
-  edit((editor) => {
-    const change = editor.insertInput(line);
-    inserted = change !== null;
-    return change;
-  });
-  revealSelection();
-  return inserted;
-}
-
 const handlers: PanelHandlers = {
   selectItems: (items) => select(items),
   run: (command) => {
@@ -629,7 +569,6 @@ function mayDiscard(): boolean {
 }
 
 function openScore(score: Score, name: string) {
-  inputMode.close();
   aiPrompt.close();
   state.score?.free();
   state.score = score;
@@ -642,7 +581,6 @@ function openScore(score: Score, name: string) {
   state.handles = null;
   state.drag = null;
   refreshPanel();
-  inputMode.refresh();
   redraw();
   view.fitWidth();
   const content = bounds(state.rust);
@@ -721,11 +659,6 @@ function setPanel(shown: boolean) {
   }
 }
 
-function toggleInput() {
-  if (inputMode.isOpen) inputMode.close();
-  else enterInput();
-}
-
 /** What the guides read from the score now. */
 function scoreFacts(editor: Editor): ScoreFacts {
   return { anchors: editor.anchors(), staves: editor.staves(), boxes: itemBoxes(state.rust, state.score?.itemCount() ?? 0) };
@@ -738,7 +671,7 @@ function snapTolerance(): number {
 
 /** The handle of the selected item under a client position. */
 function handleAt(clientX: number, clientY: number, finger = false): Handle | null {
-  if (!state.handles || inputMode.isOpen || state.editor?.prompt() != null) return null;
+  if (!state.handles || state.editor?.prompt() != null) return null;
   const radius = (finger || touchScreen() ? TOUCH_HANDLE_PX : HANDLE_PX) * dpr();
   return handleUnder(state.handles, view.transform(), dpr(), view.deviceAt(clientX, clientY), radius);
 }
@@ -864,7 +797,7 @@ function describeSelection() {
   ui.viewport.dataset.selection = rect ? JSON.stringify({ x: rect.x, y: rect.y, width: rect.width, height: rect.height }) : '';
   const set = state.handles;
   const t = view.transform();
-  const shown = set && !inputMode.isOpen ? visibleHandles(set, t, dpr()) : [];
+  const shown = set ? visibleHandles(set, t, dpr()) : [];
   const origin = ui.viewport.getBoundingClientRect();
   ui.viewport.dataset.handles = JSON.stringify(
     shown.map((h) => {
@@ -1012,7 +945,7 @@ const aiPrompt = createAiPrompt(ui.stage, {
   },
   undo: (redo) => edit((editor) => (redo ? editor.redo() : editor.undo())),
   left: () => ui.viewport.focus(),
-  ready: () => !state.drag && !inputMode.isOpen && state.editor?.prompt() == null,
+  ready: () => !state.drag && state.editor?.prompt() == null,
   select(keys) {
     const editor = state.editor;
     if (!editor) return;
@@ -1078,11 +1011,11 @@ function viewCorner(): Box {
   return { x0: seen.x0, x1: seen.x0, y0: seen.y1, y1: seen.y1 };
 }
 
-/** The command field stands by the selection while there is one (and no music input); without one, a field at a place stays. */
+/** The command field stands by the selection while there is one; without one, a field at a place stays. */
 function followSelection() {
   const editor = state.editor;
   const items = selection();
-  if (!editor || inputMode.isOpen) {
+  if (!editor) {
     aiPrompt.close();
     return;
   }
@@ -1108,33 +1041,19 @@ function placeInView(): Point | null {
  */
 function commandAt(at: Point | null) {
   const editor = state.editor;
-  if (!editor || inputMode.isOpen) return;
+  if (!editor) return;
   const place = at ? editor.placeAt(at) : null;
   const region = place && { staff: place.staff, bottom: place.staff, top: place.staff, from: Math.min(Math.max(place.p3, 0), 200), to: 200 };
   aiPrompt.follow({ keys: null, region }, at ? { x0: at.x, x1: at.x, y0: at.y, y1: at.y } : viewCorner(), true);
 }
 
 function bindPointer() {
-  // With the input open, a click on its staff puts the cursor there (a tap does, below, once it is not a scroll).
-  ui.viewport.addEventListener(
-    'pointerdown',
-    (e) => {
-      if (e.pointerType === 'touch' || e.button !== 0 || e.ctrlKey || e.metaKey || !inputMode.isOpen) return;
-      if (inputMode.click(view.pageAt(e.clientX, e.clientY), e.shiftKey)) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-      }
-    },
-    { capture: true },
-  );
   bindInteraction(ui.viewport, ui.band, {
     editor: () => state.editor,
     itemAt,
     pageAt: (x, y) => view.pageAt(x, y),
     zoom: () => view.zoom,
     zoomAt: (zoom, at, clientX, clientY) => view.zoomAt(zoom, at, { clientX, clientY }),
-    inputTap: (x, y) => inputMode.isOpen && inputMode.click(view.pageAt(x, y), false),
-    holdsKeyboard: () => inputMode.holdsKeyboard,
     selected: selectionChanged,
     selectAll,
     edited,
@@ -1235,7 +1154,6 @@ function bindMenus() {
     selectAll,
     undoLabel: () => state.editor?.undoLabel() ?? null,
     redoLabel: () => state.editor?.redoLabel() ?? null,
-    input: () => enterInput(),
     zoomIn: () => view.setZoom(stepZoom(view.zoom, 1)),
     zoomOut: () => view.setZoom(stepZoom(view.zoom, -1)),
     fitWidth: () => view.fitWidth(),
@@ -1326,8 +1244,6 @@ function bindControls() {
   ui.fit.addEventListener('click', () => view.fitWidth());
   ui.undo.addEventListener('click', () => edit((editor) => editor.undo()));
   ui.redo.addEventListener('click', () => edit((editor) => editor.redo()));
-  ui.input.addEventListener('click', toggleInput);
-  ui.emptyInput.addEventListener('click', () => enterInput());
   ui.togglePanel.addEventListener('click', () => setPanel(!state.panel));
   ui.help.addEventListener('click', showShortcuts);
   ui.app.querySelectorAll<HTMLButtonElement>('.appbar button').forEach((button) => button.addEventListener('click', settleFocus));

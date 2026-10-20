@@ -1,8 +1,8 @@
 // End-to-end check of the built app (dist/) in headless Chromium: open a
 // sample, click a staff line, edit a parameter, drag handles and guides,
 // save; start a new score.
-// Then the same app on a phone: its layout, touch gestures and music input
-// from an on-screen keyboard.
+// Then the same app on a phone: its layout, touch gestures and the list of
+// commands.
 import { chromium } from 'playwright';
 import { preview } from 'vite';
 import assert from 'node:assert/strict';
@@ -50,25 +50,22 @@ try {
   await page.waitForSelector('#app[data-ready="true"]');
   assert.ok(await page.isVisible('#start'));
   assert.ok(await page.isHidden('#panel'));
-  assert.ok(await page.isDisabled('#input'));
   assert.ok(await page.isVisible('.start-samples button:text-is("mozart.mus")'));
 
-  // A new score is empty; music input on it creates staff 1 as the engine's IN 1 does.
+  // A new score is empty; SCORE's words typed on the page make a staff and notes on it (music in words needs a model).
   await page.click('#start-new');
   assert.ok(await page.isHidden('#start'));
   assert.equal(await page.textContent('#status'), 'untitled.mus');
   assert.equal(await page.getAttribute('#app', 'data-items'), '0');
   assert.ok(await page.isVisible('#empty-hint'));
-  await page.click('#empty-input');
-  assert.ok(await page.isHidden('#empty-hint'));
-  assert.equal(await page.getAttribute('#input', 'aria-pressed'), 'true');
-  assert.equal(await page.inputValue('#input-staff'), '1');
-  await page.keyboard.type('C4/D/E/F');
-  await page.waitForFunction(() => document.getElementById('input-status').textContent === 'Adds 5 items');
-  await page.keyboard.press('Control+Enter');
+  for (const line of ['STAFF', 'NOTE 1 20', 'NOTE 1 40', 'NOTE 1 60', 'NOTE 1 80']) {
+    await page.focus('#viewport');
+    await page.keyboard.type(line);
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
+  }
   await page.waitForFunction(() => document.getElementById('app').dataset.items === '5');
-  await page.click('#input');
-  assert.ok(await page.isHidden('#input-panel'));
+  assert.ok(await page.isHidden('#empty-hint'));
   assert.equal(await page.textContent('#doc-state'), 'Unsaved changes');
   const [fresh] = await Promise.all([page.waitForEvent('download'), menu('file', 'save')]);
   assert.equal(fresh.suggestedFilename(), 'untitled.mus');
@@ -359,54 +356,6 @@ try {
   assert.ok(await page.isVisible('#print-page svg'));
   await page.emulateMedia({ media: 'screen' });
 
-  // Music input at a cursor in the music: the line is drawn as it is typed, the bubble at the
-  // cursor and the help say what the keys mean; passes 3-5 take note numbers from the cursor.
-  await page.click('#input');
-  assert.ok(await page.isVisible('#input-panel'));
-  assert.equal(await page.inputValue('#input-staff'), '9');
-  await page.keyboard.type('G');
-  await page.waitForFunction(() => document.querySelector('.input-bubble .bubble-shown')?.textContent === 'G4, quarter');
-  assert.match(await page.textContent('#input-help h3'), /^Note G/);
-  assert.match(await page.textContent('#input-help .help-keys'), /octave/);
-  await page.keyboard.type('5/K2');
-  await page.waitForFunction(() => document.querySelector('#input-help h3')?.textContent === 'Key signature, 2 accidentals');
-  assert.match(await page.textContent('#input-help .help-status'), /^Not finished/);
-  assert.equal(await page.textContent('#pass-error-1'), '');
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Control+Backspace');
-  await page.keyboard.type('C4/D/E/F');
-  await page.waitForFunction(() => document.getElementById('pass-code-1').textContent === 'C4/D/E/F;');
-  await page.keyboard.press('Enter');
-  await page.keyboard.type('4/Y');
-  await page.waitForFunction(() => document.getElementById('pass-error-2').textContent !== '');
-  assert.ok(await page.isDisabled('#input-insert'));
-  await page.keyboard.press('Backspace');
-  await page.keyboard.press('Backspace');
-  await page.waitForFunction(() => document.getElementById('input-status').textContent === 'Adds 5 items');
-  await page.keyboard.press('Enter');
-  await page.keyboard.press('ArrowRight');
-  await page.keyboard.type('S/');
-  await page.waitForFunction(() => document.getElementById('pass-code-3').textContent === 'S 2;');
-  await page.keyboard.press('Control+Enter');
-  await page.waitForFunction(() => document.getElementById('app').dataset.items === '349');
-  assert.match(await page.textContent('#item h2'), /^5 items/);
-  assert.equal(await page.textContent('#pass-code-1'), ';');
-  assert.equal(await page.inputValue('#input-staff'), '10');
-  await page.keyboard.press('Escape');
-  assert.ok(await page.isHidden('#input-panel'));
-  await page.click('#undo');
-  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
-  // IN n typed on the page opens the input on staff n.
-  await page.focus('#viewport');
-  await page.keyboard.type('IN 3');
-  await page.keyboard.press('Enter');
-  assert.ok(await page.isVisible('#input-panel'));
-  assert.ok(await page.isHidden('.ai-prompt'));
-  assert.equal(await page.evaluate(() => document.activeElement.id), 'viewport');
-  assert.equal(await page.inputValue('#input-staff'), '3');
-  await page.click('#input-close');
-  assert.ok(await page.isHidden('#input-panel'));
-
   // Text: Insert ▸ Text opens the dialog; the font goes in front as _NN.
   await pick(2);
   await menu('insert', 'text');
@@ -607,33 +556,13 @@ try {
   await swipe([sheet[0], sheet[1]], [sheet[2], sheet[3]], 600);
   assert.match(await mobile.textContent('#item h2'), /^\d+ items/);
 
-  // `?` lists the commands across the screen; music input from there.
+  // `?` lists the commands across the screen, and a tap runs one.
   await mobile.locator('#help').tap();
   const listed = await mobile.evaluate(() => document.getElementById('shortcuts-dialog').getBoundingClientRect());
   assert.ok(listed.left >= 0 && listed.right <= (await mobile.evaluate(() => innerWidth)), 'the list fits the screen');
-  await mobile.locator('.command-list [data-action="input"]').tap();
-
-  // Music input takes the on-screen keyboard's text through its typing field, and the keys it lacks from buttons.
-  assert.ok(await mobile.isHidden('#footer'));
-  assert.equal(await mobile.evaluate(() => document.activeElement.id), 'input-typing');
-  await mobile.keyboard.insertText('c4');
-  await mobile.locator('.touch-keys [data-key="/"]').tap();
-  await mobile.keyboard.insertText('d/e/f');
-  await mobile.waitForFunction(() => document.getElementById('input-status').textContent === 'Adds 5 items');
-  await mobile.keyboard.press('Backspace');
-  await mobile.waitForFunction(() => document.getElementById('input-status').textContent === 'Adds 4 items');
-  assert.equal(await mobile.evaluate(() => document.activeElement.id), 'input-typing', 'the keys leave the keyboard up');
-  await mobile.locator('.touch-keys [data-key="Enter"]').tap();
-  await mobile.waitForSelector('#pass-2.active');
-  await mobile.locator('#input-shift').tap();
-  await mobile.locator('.touch-keys [data-key="Enter"]').tap();
-  await mobile.waitForSelector('#pass-1.active');
-  assert.equal(await mobile.getAttribute('#input-shift', 'aria-pressed'), 'false');
-  await mobile.locator('#pass-2').tap();
-  await mobile.waitForSelector('#pass-2.active');
-  await mobile.locator('#input-insert').tap();
-  await mobile.waitForFunction(() => document.getElementById('app').dataset.items === '348');
-  assert.equal(await mobile.evaluate(() => document.activeElement.id), 'input-typing', 'a tap on the panel leaves the keyboard up');
+  await mobile.locator('.command-list [data-action="actual-size"]').tap();
+  await mobile.waitForFunction(() => document.getElementById('zoom').value === '100');
+  assert.ok(await mobile.isHidden('#shortcuts-dialog'));
   await phone.close();
   assert.deepEqual(errors, []);
 

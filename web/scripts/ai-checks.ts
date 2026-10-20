@@ -35,6 +35,11 @@ assert.equal(musicIn('add c e g as eighths')?.notes, 'PC5/E/G', '"as" is a word'
 assert.equal(musicIn('add fis4 bes gn4')?.notes, 'FS4/BF/GN4');
 assert.equal(musicIn('remove the stems'), null);
 assert.equal(quartersFor('PC5/G/M/D:F:A;'), '4/4/4');
+// Values typed with the notes: after them all, after each, one for all; else none.
+assert.deepEqual(['add c e g 4 8 8', 'add c e g as 4 8. 16', 'add c 4 d 8 e 8', 'add c e g 8', 'add c d | e f 2 4 4 1', 'add c e g as eighths', 'add c e g and move up 2'].map((t) => musicIn(t)?.rhythms), ['4/8/8', '4/8./16', '4/8/8', '8/8/8', '2/4/4/1', undefined, undefined]);
+assert.equal(musicIn('add c 4 d 8 e 8')?.notes, 'PC5/D/E');
+assert.equal(musicIn('add c e g 4 8 8')?.typed, 'c e g 4 8 8');
+assert.equal(musicIn('add c4 e4 g4')?.rhythms, undefined, 'octaves are not values');
 assert.deepEqual(numbersIn('move up two steps, every other one'), [2], 'spelt numbers, not "one"');
 assert.deepEqual(numberWords('add 3/4 time'), [], 'a meter is no amount');
 assert.deepEqual(meterIn('add 3/4 time'), [3, 4]);
@@ -96,6 +101,18 @@ const added = run({ summary: 'add', knobs: [], steps: [{ do: 'insert', notes: 'C
 assert.equal(score.itemCount(), 9);
 assert.equal(added.touched.length, 9, 'the staff and the notes are new');
 const notes: Scope = { keys: editor.keys().slice(1), region };
+// Without a staff and without a place, the music makes staff 1.
+const blank = Score.empty();
+const blankAccess: Access = { ...access, editor: scoreEditor(blank), params: (index) => {
+  const info = blank.item(index);
+  if (!info) return null;
+  const params = info.params;
+  info.free();
+  return params;
+}, staves: () => blank.staffGeometry(), summaries: () => blank.itemSummaries() };
+const written = run(scriptFor({ action: 'insert', target: 'all', notes: 'PC5/E/G', rhythms: '4/8/8' }), blankAccess, { keys: null, region: null }, '“add c e g 4 8 8”');
+assert.equal(written.touched.length, 4, 'a staff and three notes');
+assert.deepEqual(Array.from({ length: blank.itemCount() }, (_, i) => blankAccess.params(i)!).filter((q) => q[0] === 1).map((q) => q[6]), [1, 0.5, 0.5], 'a quarter and two eighths');
 
 const stems = run(scriptFor({ action: 'delete', target: 'stems' }), access, notes, '“remove the stems”');
 assert.ok(stems.changed);

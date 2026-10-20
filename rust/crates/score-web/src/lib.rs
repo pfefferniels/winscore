@@ -19,7 +19,6 @@ pub mod live;
 pub mod output;
 pub mod param_names;
 pub mod placing;
-pub mod preview;
 pub mod symbols;
 
 use score_format::MusFile;
@@ -29,7 +28,6 @@ use wasm_bindgen::prelude::*;
 pub use codes::code_name;
 pub use document::{decode_text, Document, TEXT_CODE};
 pub use input::{InputCheck, InputLine};
-pub use preview::{InputPreview, Preview};
 pub use encode::{encode, Encoded};
 pub use hit::At;
 

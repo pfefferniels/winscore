@@ -551,8 +551,9 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
     }
     case 'insert': {
       const region = scope.region;
-      const staff = step.staff ?? region?.staff;
-      if (staff === undefined) throw new Error('Select the staff the music goes on');
+      // A score without staves gets staff 1, which the input makes as IN 1 does.
+      const staff = step.staff ?? region?.staff ?? (access.staves().length === 0 ? 1 : undefined);
+      if (staff === undefined) throw new Error('Click the staff the music goes on');
       const from = step.from ?? region?.from ?? 10;
       const to = step.to ?? region?.to ?? 190;
       const rhythms = step.rhythms?.replace(/;$/, '').trim() ? step.rhythms : quartersFor(step.notes);

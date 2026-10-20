@@ -81,7 +81,15 @@ export interface Music {
   notes: string;
   /** How many notes, chords and rests. */
   count: number;
+  /** SCORE input, pass 2, when the values are typed with the notes ("c e g 4 8 8", "c 4 d 8 e 8", "c e g 8"). */
+  rhythms?: string;
 }
+
+/** A note value as SCORE's pass 2 writes it: 4 a quarter, 8. a dotted eighth. */
+const VALUE = /^\d{1,2}\.{0,3}$/;
+
+/** Words that may stand between the notes and their values ("c e g as 4 8 8"). */
+const BEFORE_VALUES = new Set(['as', 'in', ':']);
 
 const LETTERS = 'CDEFGABC';
 
@@ -102,21 +110,34 @@ export const TREBLE_MIDDLE = 34;
  */
 export function musicIn(text: string, middle = TREBLE_MIDDLE): Music | null {
   const words = text.trim().split(/[\s,]+/).filter(Boolean);
-  let best = { start: 0, end: 0 };
-  let start = -1;
-  for (let i = 0; i <= words.length; i++) {
-    const element = i < words.length ? scoreElement(words[i]!) : null;
-    if (element !== null && start < 0) start = i;
-    if (element === null && start >= 0) {
-      if (i - start > best.end - best.start) best = { start, end: i };
-      start = -1;
+  const isElement = (w: string | undefined) => w !== undefined && scoreElement(w) !== null;
+  // The longest run of elements; a value right after one keeps it going ("c 4 d 8").
+  let best = { start: 0, end: 0, size: 0 };
+  for (let i = 0; i < words.length; i++) {
+    if (!isElement(words[i])) continue;
+    let [end, size] = [i, 0];
+    for (; end < words.length; end++) {
+      if (isElement(words[end])) size++;
+      else if (!(VALUE.test(words[end]!) && isElement(words[end - 1]))) break;
     }
+    if (size > best.size) best = { start: i, end, size };
+    i = end;
   }
-  if (best.end === best.start) return null;
-  const run = words.slice(best.start, best.end);
+  if (best.size === 0) return null;
+  const span = words.slice(best.start, best.end);
+  const run = span.filter((w) => isElement(w));
   // A lone "a" or "b" is as likely an article as a note.
   if (run.length === 1 && /^[ab]$/i.test(run[0]!)) return null;
   const elements = run.map((w) => scoreElement(w)!);
+  const count = elements.filter((e) => e !== 'M').length;
+  // Values after each note, or after them all (one for all of them).
+  const each = span.filter((w, k) => VALUE.test(w) && isElement(span[k - 1]));
+  let after = best.end;
+  while (!isElement(words[after - 1])) after--;
+  if (BEFORE_VALUES.has(words[after]?.toLowerCase() ?? '')) after++;
+  const trailing: string[] = [];
+  while (VALUE.test(words[after] ?? '') && trailing.length < count) trailing.push(words[after++]!);
+  const values = each.length === count ? each : trailing.length === count ? trailing : trailing.length === 1 ? elements.flatMap((e) => (e === 'M' ? [] : trailing)) : null;
   const first = elements.findIndex((e) => /^[A-G]/.test(e));
   if (first >= 0 && !/\d/.test(elements[first]!.split(':')[0]!)) {
     const [head, ...rest] = elements[first]!.split(':');
@@ -125,7 +146,8 @@ export function musicIn(text: string, middle = TREBLE_MIDDLE): Music | null {
   // Octaves typed after the first note mean every octave is meant as typed.
   const explicit = run.slice(first + 1).some((w) => /\d/.test(w));
   if (first >= 0 && !explicit) elements[first] = `P${elements[first]}`;
-  return { typed: run.join(' '), notes: elements.join('/'), count: elements.filter((e) => e !== 'M').length };
+  const typed = words.slice(best.start, values === trailing ? after : best.end).join(' ');
+  return { typed, notes: elements.join('/'), count, ...(values ? { rhythms: values.join('/') } : {}) };
 }
 
 /** Note values by name, as SCORE's pass 2 writes them. */

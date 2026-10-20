@@ -48,7 +48,7 @@ export interface PromptHooks {
   catalog(): Catalog;
   /** Whether SCORE's editor knows a command line. */
   supported(line: string): boolean;
-  /** Runs a SCORE command line on the selection, as WinScore's command bar does (IN n, answers to a question too). */
+  /** Runs a SCORE command line on the selection, as WinScore's command bar does (answers to a question too). */
   run(line: string): Change | null;
   /** Typing began, or a question came, with the field closed: it is to stand somewhere with nothing selected. */
   open(): void;
@@ -60,7 +60,7 @@ export interface PromptHooks {
   undo(redo: boolean): void;
   /** The field gave the keyboard back to the page. */
   left(): void;
-  /** Whether the page can take an edit of a command sent off: not during a drag, the music input or a group command's question. */
+  /** Whether the page can take an edit of a command sent off: not during a drag or a group command's question. */
   ready(): boolean;
   /** Selects items by identity and brings them into view. */
   select(keys: number[]): void;
@@ -156,9 +156,6 @@ function namedCommand(commands: AppCommand[], text: string): AppCommand | null {
   const wanted = plain(text);
   return commands.find((c) => plain(c.label.split(' ▸ ').at(-1)!) === wanted || (/[a-z]/.test(c.id) && plain(c.id) === wanted)) ?? null;
 }
-
-/** IN, IN n: music input, which the page opens. */
-const opensInput = (text: string) => /^IN(\s+\d+)?$/.test(text.trim());
 
 /** Whether two scopes are about the same items, and at a place the same place. */
 const sameScope = (a: Scope, b: Scope) => {
@@ -357,9 +354,9 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     pending = null;
   }
 
-  /** Whether a line goes to the page as WinScore's command bar sends it: an answer to the question, IN, or a SCORE command. */
+  /** Whether a line goes to the page as WinScore's command bar sends it: an answer to the question, or a SCORE command. */
   function native(text: string): boolean {
-    return question !== null || opensInput(text) || (looksLikeScore(text) && hooks.supported(text));
+    return question !== null || (looksLikeScore(text) && hooks.supported(text));
   }
 
   function typed() {

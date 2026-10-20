@@ -82,7 +82,7 @@ svg {
   stroke-linejoin: round;
 }
 
-/* The app bar: undo and redo, music input, the score's name, zoom, the side panel, help. */
+/* The app bar: undo and redo, the score's name, zoom, the side panel, help. */
 .appbar {
   position: relative;
   z-index: 10;
@@ -146,35 +146,6 @@ button.icon svg {
 
 button.icon[aria-pressed='true'] {
   color: var(--accent);
-}
-
-.appbar .accent,
-.empty-hint .accent {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border-color: transparent;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.appbar .accent svg {
-  width: 18px;
-  height: 18px;
-}
-
-.appbar .accent:hover:not(:disabled),
-.empty-hint .accent:hover {
-  background: #dbe7fd;
-}
-
-.appbar .accent[aria-pressed='true'],
-.appbar .accent[aria-pressed='true']:hover {
-  background: var(--accent);
-  color: #ffffff;
 }
 
 .sep {
@@ -700,282 +671,6 @@ button.primary:not(:disabled) {
   margin-top: 16px;
 }
 
-/* Music input, docked below the page so the line shows on it while it is typed. Its
-   height stays fixed while typing, so the page does not move. */
-.input-panel {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 12px 10px;
-  border-top: 1px solid var(--border);
-  background: #fafafa;
-}
-
-.input-head {
-  display: flex;
-  align-items: center;
-  gap: 6px 14px;
-  flex-wrap: wrap;
-}
-
-.input-head h2 {
-  margin: 0;
-  font-size: 13px;
-}
-
-.input-head label {
-  color: var(--muted);
-}
-
-.input-head input {
-  width: 64px;
-  height: 26px;
-  margin-left: 4px;
-  padding: 0 6px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--bg);
-}
-
-.input-head input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-}
-
-.keys-legend {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-}
-
-.keys-legend kbd:not(:first-child) {
-  margin-left: 6px;
-}
-
-.input-body {
-  display: grid;
-  grid-template-columns: minmax(300px, 1fr) minmax(320px, 1.25fr);
-  gap: 12px;
-  height: min(256px, 34vh);
-}
-
-.passes {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-  overflow: auto;
-}
-
-.pass {
-  display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
-  column-gap: 8px;
-  align-items: baseline;
-  padding: 4px 8px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.pass:hover {
-  background: var(--hover);
-}
-
-.pass-name {
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.pass-name b {
-  display: inline-block;
-  width: 14px;
-  font-weight: 600;
-}
-
-.pass.active {
-  border-color: var(--accent);
-  background: var(--bg);
-}
-
-.pass.active .pass-name {
-  color: var(--text);
-  font-weight: 600;
-}
-
-/* The pass as SCORE text: read only, typed at the cursor on the page. */
-.pass-code {
-  overflow-wrap: anywhere;
-  color: var(--muted);
-  font-family: ui-monospace, monospace;
-  font-size: 13px;
-}
-
-.pass.active .pass-code {
-  color: var(--text);
-}
-
-.pass.invalid .pass-code {
-  text-decoration: underline wavy #dc2626;
-}
-
-.code-pending,
-.code-current {
-  border-radius: 2px;
-  background: #ffedd5;
-  color: #9a3412;
-}
-
-.code-caret {
-  display: inline-block;
-  width: 2px;
-  height: 1.1em;
-  margin: 0 1px;
-  vertical-align: text-bottom;
-  background: #ea580c;
-}
-
-.pass-error {
-  grid-column: 2;
-  color: #b91c1c;
-}
-
-.pass-error:empty {
-  display: none;
-}
-
-/* The cursor on the page: a caret between items (pass 1) or a box over the notes. */
-.input-caret {
-  position: absolute;
-  border: 1.5px solid #ea580c;
-  border-radius: 4px;
-  background: rgb(234 88 12 / 0.07);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.input-caret.bar {
-  border: none;
-  border-radius: 1px;
-  background: #ea580c;
-  animation: caret-blink 1.1s steps(1) infinite;
-}
-
-@keyframes caret-blink {
-  50% {
-    opacity: 0.25;
-  }
-}
-
-.input-bubble {
-  position: absolute;
-  max-width: 420px;
-  padding: 5px 9px 6px;
-  border: 1px solid #fdba74;
-  border-radius: 8px;
-  background: rgb(255 255 255 / 0.96);
-  box-shadow: 0 2px 8px rgb(17 24 39 / 0.12);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.bubble-line {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.bubble-pass {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.bubble-text {
-  font-family: ui-monospace, monospace;
-  font-size: 17px;
-  font-weight: 600;
-  color: #9a3412;
-}
-
-.bubble-prompt {
-  color: var(--muted);
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-}
-
-.bubble-caret {
-  display: inline-block;
-  width: 2px;
-  height: 1em;
-  margin-left: 1px;
-  vertical-align: text-bottom;
-  background: #ea580c;
-  animation: caret-blink 1.1s steps(1) infinite;
-}
-
-.bubble-shown {
-  margin-top: 1px;
-  color: #c2410c;
-  font-size: 12px;
-}
-
-.input-help {
-  min-width: 0;
-  overflow: auto;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-}
-
-.input-help h3 {
-  margin: 0 0 4px;
-  font-size: 14px;
-}
-
-.input-help p {
-  margin: 0 0 6px;
-}
-
-.help-detail {
-  color: var(--muted);
-}
-
-.help-status {
-  color: var(--muted);
-}
-
-.help-status.note {
-  color: #92400e;
-}
-
-.help-status.error {
-  color: #b91c1c;
-}
-
-.help-keys {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr);
-  gap: 4px 10px;
-  align-items: center;
-  margin: 8px 0 0;
-}
-
-.help-keys dt {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  white-space: nowrap;
-}
-
-.help-keys dd {
-  margin: 0;
-}
-
 kbd {
   display: inline-block;
   min-width: 20px;
@@ -988,84 +683,6 @@ kbd {
   font-size: 12px;
   line-height: 18px;
   text-align: center;
-}
-
-@media (max-width: 900px) {
-  .input-body {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
-    height: min(400px, 40vh);
-  }
-
-  .help-keys {
-    grid-template-columns: max-content minmax(0, 1fr);
-  }
-
-  .keys-legend {
-    display: none;
-  }
-}
-
-/* Keys an on-screen keyboard lacks, shown on touch screens; the first takes the keyboard. */
-.touch-keys {
-  display: none;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-}
-
-.touch-keys button {
-  min-width: 42px;
-  padding: 0 8px;
-  font-size: 16px;
-}
-
-.touch-keys button[aria-pressed='true'],
-.typing-key:focus-within {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #ffffff;
-}
-
-/* The typing field lies invisible over the keyboard button: a tap on it brings up the keyboard. */
-.typing-key {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 52px;
-  height: 36px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.typing-key svg {
-  width: 20px;
-  height: 20px;
-}
-
-.typing-key input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  opacity: 0;
-  background: transparent;
-  color: transparent;
-  caret-color: transparent;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#input-insert:not(:disabled) {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #ffffff;
 }
 
 .panel {
@@ -1483,7 +1100,6 @@ button.danger:hover {
 }
 
 @media (max-width: 760px) {
-  .appbar .accent span,
   .appbar .sep,
   .zoom select {
     display: none;
@@ -1513,10 +1129,6 @@ button.danger:hover {
 
   button.icon {
     width: 40px;
-    height: 40px;
-  }
-
-  .appbar .accent {
     height: 40px;
   }
 
@@ -1576,20 +1188,8 @@ button.danger:hover {
     height: 20px;
   }
 
-  .pass {
-    padding: 7px 8px;
-  }
-
   .start-samples .sample {
     height: 40px;
-  }
-
-  .touch-keys {
-    display: flex;
-  }
-
-  .keys-legend {
-    display: none;
   }
 }
 
@@ -1605,13 +1205,6 @@ button.danger:hover {
   .appbar .sep,
   .zoom {
     display: none;
-  }
-
-  .appbar .accent {
-    flex: none;
-    width: 40px;
-    padding: 0;
-    justify-content: center;
   }
 
   .doc {
@@ -1661,60 +1254,6 @@ button.danger:hover {
     font-size: 12px;
     line-height: 16px;
     white-space: normal;
-  }
-
-  .app.inputting .footer {
-    display: none;
-  }
-
-  .input-panel {
-    flex: 0 0 46%;
-    min-height: 0;
-    gap: 6px;
-    padding: 6px 8px 8px;
-  }
-
-  .input-head {
-    gap: 6px 10px;
-  }
-
-  .input-head h2 {
-    display: none;
-  }
-
-  .input-head input {
-    width: 52px;
-  }
-
-  .input-head .spacer {
-    display: none;
-  }
-
-  #input-insert {
-    margin-left: auto;
-  }
-
-  .input-body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 8px;
-    height: auto;
-    min-height: 0;
-  }
-
-  .passes {
-    flex: 0 1 auto;
-    min-height: 0;
-  }
-
-  .input-help {
-    flex: 1 1 0;
-    min-height: 0;
-  }
-
-  .input-bubble {
-    max-width: calc(100% - 8px);
   }
 
   .symbol-dialog,

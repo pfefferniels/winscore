@@ -35,7 +35,6 @@ export interface MenuHooks {
   selectAll(): void;
   undoLabel(): string | null;
   redoLabel(): string | null;
-  input(): void;
   zoomIn(): void;
   zoomOut(): void;
   fitWidth(): void;
@@ -163,7 +162,6 @@ export function appMenus(hooks: MenuHooks): Menu[] {
     label: 'Insert',
     entries: () =>
       tidy([
-        { label: 'Music input…', hint: 'IN', title: "Type a line of music in SCORE's five passes", id: 'input', run: hooks.input, enabled: scored },
         dialog('text', 'Text…', 'Text in one of WinScore’s fonts'),
         dialog('symbol', 'Symbol…', 'A symbol from WinScore’s libraries'),
         'separator',
@@ -220,7 +218,7 @@ export function appMenus(hooks: MenuHooks): Menu[] {
 }
 
 /** Entries of the Insert menu a command in words may ask for: its dialogs. The items it makes a command makes where the field stands. */
-const DIALOGS = new Set(['input', 'text', 'symbol']);
+const DIALOGS = new Set(['text', 'symbol']);
 
 /** The menus' entries a command in words may ask for, those that can run now: "Edit ▸ Copy", "View ▸ Zoom in". */
 export function wordCommands(menus: Menu[]): { id: string; label: string; title: string; run(): void }[] {

@@ -27,10 +27,6 @@ export interface Hooks {
   zoom(): number;
   /** Zooms so that page point `at` lies under the client position (a pinch). */
   zoomAt(zoom: number, at: Point, clientX: number, clientY: number): void;
-  /** A tap with the music input open: true when it moved the input's cursor. */
-  inputTap(clientX: number, clientY: number): boolean;
-  /** Whether a touch on the page leaves the keyboard focus where it is (the music input's typing field). */
-  holdsKeyboard(): boolean;
   /** After a selection change. */
   selected(): void;
   /** ⌘A: selects every item of the score. */
@@ -387,7 +383,6 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     // A pen or mouse gesture in progress keeps the page to itself.
     if (gesture && touches.size === 0) return;
     stopGlide();
-    if (hooks.holdsKeyboard()) e.preventDefault();
     touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
     viewport.setPointerCapture(e.pointerId);
     if (touches.size === 2 && gesture?.kind !== 'drag' && gesture?.kind !== 'handle') {
@@ -448,7 +443,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
   const tap = (touch: Touch, e: PointerEvent) => {
     const editor = hooks.editor();
     // A tap on a handle keeps the selection it belongs to.
-    if (!editor || touch.handle !== null || hooks.inputTap(e.clientX, e.clientY)) return;
+    if (!editor || touch.handle !== null) return;
     const previous = lastTap;
     lastTap = { x: e.clientX, y: e.clientY, t: e.timeStamp };
     hooks.clicked(hooks.pageAt(e.clientX, e.clientY));

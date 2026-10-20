@@ -27,6 +27,7 @@ const JEV = {
   'make the last note an x head': { action: 'other', target: 'notes' },
   'make the bottom notes of the chords smaller': { action: 'other', target: 'notes' },
   'add notes c g d/f/a': { action: 'insert', target: 'all' },
+  'add c5 d e f g a b c6 8': { action: 'insert', target: 'all' },
   'double the melody a third below': { action: 'other', target: 'notes', complexity: 'complex' },
 };
 
@@ -118,18 +119,16 @@ try {
     await route.fulfill({ status: 200, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(claudeMessage(request)) }).catch(() => {});
   });
 
-  // Eight eighth notes on the left half of a new staff.
+  // Eight eighth notes on a new score, typed in the command field at a click on its paper: they make staff 1.
   await page.goto(`http://localhost:${PORT}/?new`);
   await page.waitForSelector('#app[data-ready="true"]');
-  await page.click('#empty-input');
-  await page.fill('#input-end', '100');
-  await page.focus('#viewport');
-  await page.keyboard.type('C5/D/E/F/G/A/B/C');
-  await page.keyboard.press('Enter');
-  await page.keyboard.type('8/8/8/8/8/8/8/8');
-  await page.keyboard.press('Control+Enter');
+  const paper = await page.locator('#viewport').boundingBox();
+  await page.mouse.click(paper.x + paper.width / 2, paper.y + 160);
+  await page.waitForSelector('.ai-prompt:not([hidden])');
+  await page.fill('.ai-input', 'add c5 d e f g a b c6 8');
+  await page.waitForFunction(() => /→ Add c5 d e f g a b c6 8/.test(document.querySelector('.ai-status').textContent) && !document.querySelector('.ai-status.busy'));
+  await page.press('.ai-input', 'Enter');
   await page.waitForFunction(() => document.getElementById('app').dataset.items === '9');
-  await page.click('#input');
 
   /** Two frames: a paint already asked for (an undo's, say) has then happened. */
   const painted = () => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
