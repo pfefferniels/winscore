@@ -1,10 +1,11 @@
 // The command field: it stands by the selection while there is one, or where
 // the empty paper was clicked, and what is typed on the page goes into it
-// (opening it if need be). A command in words goes to Jev while it is typed;
-// Enter edits the score at once with what Jev read. When Jev is not sure,
-// Enter sends the command off to Claude (one Jev finds complex to the model
-// for those) and the field takes the next command at once, for these items or
-// others: the edit lands on the command's own items when it is written, and a
+// (opening it if need be). A command in words goes to Jev at every keystroke,
+// and the newest reading shows while typing goes on; Enter edits the score at
+// once with what Jev read, or runs the editor's command it read (a menu
+// entry). When Jev is not sure, Enter sends the command off to Claude (one
+// Jev finds complex to the model for those) and the field takes the next
+// command at once, for these items or others: the edit lands on the command's own items when it is written, and a
 // badge by them says how it goes. A SCORE command runs as on WinScore's
 // command bar, on the selection if there is one. Numbers the command leaves
 // open appear as sliders under the field; dragging one re-does the edit with
@@ -20,6 +21,7 @@ import {
   CLAUDE_MODELS,
   connections,
   GATEWAY_URL,
+  jevCommand,
   jevScript,
   loadSettings,
   modelName,
@@ -31,6 +33,7 @@ import {
   warmJev,
   writerFor,
   type About,
+  type AppCommand,
   type Catalog,
   type Connections,
   type Failed,
@@ -60,13 +63,25 @@ export interface PromptHooks {
   ready(): boolean;
   /** Selects items by identity and brings them into view. */
   select(keys: number[]): void;
+  /** Runs one of the editor's own commands (About.commands) by its id; false if it cannot run now. */
+  app(id: string): boolean;
 }
 
-/** A reading of the typed command, ready to run. */
-interface Reading {
+/** A reading of the typed command as an edit script, ready to run. */
+interface ScriptReading {
   script: Script;
   /** Where it came from, as shown: "Jev 93 % · 120 ms". */
   source: string;
+}
+
+/** A reading of the typed command: an edit script, or one of the editor's own commands ("save", "zoom in"). */
+type Reading = ScriptReading | { command: AppCommand; source: string };
+
+/** A request to Jev for the words typed, with what it will give. */
+interface Pending {
+  text: string;
+  controller: AbortController;
+  done: Promise<Asked | null>;
 }
 
 /** What Jev made of a command: its reading, if it has one, and whether the command takes thought. */
@@ -105,14 +120,12 @@ interface Job {
   controller: AbortController;
   badge: HTMLElement;
   /** Once it ran: what ran, and what it changed. */
-  reading?: Reading;
+  reading?: ScriptReading;
   performed?: Performed;
   /** The command could not be done: why. */
   error?: string;
 }
 
-/** Jev is asked once typing pauses this long. */
-const TYPING_PAUSE_MS = 120;
 /** A command that lands away from the field says so by its items this long. */
 const DONE_SHOWN_MS = 8000;
 /** A command waiting for the page to take its edit looks again this often. */
@@ -180,9 +193,12 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   const history: string[] = [];
   let recalled = 0;
   let reading: Reading | null = null;
-  /** Jev's request in flight for the text typed, with what it will give. */
-  let pending: { text: string; controller: AbortController; done: Promise<Asked | null> } | null = null;
-  let typingTimer = 0;
+  /** Jev's requests in flight for the field, by when they were asked; `pending` is the newest, for the text typed last. */
+  const requests = new Map<number, Pending>();
+  let pending: Pending | null = null;
+  let asked = 0;
+  /** When the request whose answer the field shows was asked. */
+  let answered = 0;
   let applied: Applied | null = null;
   let frame = 0;
   /** Set while a slider is held: commands sent off wait to land. */
@@ -266,41 +282,68 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   function counted(script: Script): string {
     const access = hooks.access();
     if (!access || !scope) return '';
-    if (script.steps.every((s) => s.do === 'insert')) return '';
+    if (script.steps.every((s) => s.do === 'insert' || s.do === 'create')) return '';
     const { count } = reach(script, access, scope);
     return count === 0 ? ' · nothing here it applies to' : ` · ${count} item${count === 1 ? '' : 's'}`;
   }
 
-  function showReading(r: Reading) {
-    reading = r;
-    show(`→ ${r.script.summary}${counted(r.script)}`, '', r.source);
+  /** Shows a reading; one of words typed before the field's (`earlier`) shows with the spinner, while the request for these is on its way. */
+  function showReading(r: Reading, earlier = false) {
+    if (!earlier) reading = r;
+    show('command' in r ? `→ ${r.command.label}` : `→ ${r.script.summary}${counted(r.script)}`, earlier ? 'busy' : '', r.source);
   }
 
-  /** Asks Jev about the text typed; the answer becomes the reading if the text is still the same. */
+  /**
+   * Asks Jev about the text typed, at once at every keystroke. The newest
+   * answer shows: as the reading if the text is still the same, else with
+   * the spinner until the answer for the text now typed comes; requests
+   * asked before the answer shown go.
+   */
   function askAbout(text: string): Promise<Asked | null> | null {
     const about = scope && hooks.about(text, scope);
     if (!about || !links.jev) return null;
-    pending?.controller.abort();
+    const at = ++asked;
     const controller = new AbortController();
     const done = askJev(about, links.jev, controller.signal)
       .then((jev) => {
         const script = jevScript(jev);
-        const result = script ? { script, source: `Jev ${Math.round(jev.confidence * 100)} % · ${Math.round(jev.ms)} ms` } : null;
+        const command = jevCommand(jev);
+        const source = `Jev ${Math.round(jev.confidence * 100)} % · ${Math.round(jev.ms)} ms`;
+        const result: Reading | null = script ? { script, source } : command ? { command, source } : null;
         if (result) memo.set(readingKey(about), result);
-        if (input.value.trim() === text) {
+        // Still asked for the field (not sent off with Enter), and newer than the answer shown.
+        if (requests.delete(at) && at > answered) {
+          answered = at;
+          for (const [earlier, request] of requests) if (earlier < at) forget(earlier, request);
+          const current = input.value.trim() === text;
           const claude = links.claude && `Claude${jev.complex ? ` ${modelName(writerFor(links.claude, true).model)}` : ''}`;
-          if (result) showReading(result);
-          else show(`${UNREAD[jev.why ?? 'unsure']}${claude ? `: ↵ has ${claude} write it` : '; Claude could write it (⚙)'}`, '', `Jev · ${Math.round(jev.ms)} ms`);
+          if (result) showReading(result, !current);
+          else show(`${UNREAD[jev.why ?? 'unsure']}${claude ? `: ↵ has ${claude} write it` : '; Claude could write it (⚙)'}`, current ? '' : 'busy', `Jev · ${Math.round(jev.ms)} ms`);
         }
         return { reading: result, complex: jev.complex };
       })
       .catch((err: unknown) => {
+        requests.delete(at);
         if (controller.signal.aborted) return null;
         if (input.value.trim() === text) show(err instanceof Error ? err.message : String(err), 'error');
         return null;
       });
     pending = { text, controller, done };
+    requests.set(at, pending);
     return done;
+  }
+
+  /** A request for the field is dropped. */
+  function forget(at: number, request: Pending) {
+    request.controller.abort();
+    requests.delete(at);
+    if (pending === request) pending = null;
+  }
+
+  /** Every request for the field is dropped: what was typed is settled, or the field is about other items. */
+  function forgetAll() {
+    for (const [at, request] of requests) forget(at, request);
+    pending = null;
   }
 
   /** Whether a line goes to the page as WinScore's command bar sends it: an answer to the question, IN, or a SCORE command. */
@@ -309,23 +352,22 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   }
 
   function typed() {
-    clearTimeout(typingTimer);
     reading = null;
-    // What Jev is being asked is about other words, or other items.
-    pending?.controller.abort();
-    pending = null;
     const text = input.value.trim();
     if (!text || question !== null) {
+      forgetAll();
       idle();
       return;
     }
     if (native(text)) {
+      forgetAll();
       show(`→ ${text}`, '', 'SCORE command');
       return;
     }
     const about = scope && hooks.about(text, scope);
     const known = about && (memo.get(readingKey(about)) ?? memo.get(claudeKey(about, scope!)));
     if (known) {
+      forgetAll();
       showReading(known);
       return;
     }
@@ -333,12 +375,14 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       show(links.claude ? '↵ has Claude write it' : 'Commands in words need a model: set one up with ⚙', links.claude ? '' : 'error');
       return;
     }
-    show('…', 'busy');
-    typingTimer = window.setTimeout(() => askAbout(text), TYPING_PAUSE_MS);
+    // The reading of the words before stays, with the spinner, until these are read; what a command did or why it failed goes.
+    if (status.childElementCount > 0 && !status.classList.contains('error') && !status.classList.contains('done')) status.classList.add('busy');
+    else show('…', 'busy');
+    askAbout(text);
   }
 
   /** Runs a reading on `items` as one undo step named after the command: what it did, or why it failed. */
-  function perform(r: Reading, text: string, items: Scope): Performed | string {
+  function perform(r: ScriptReading, text: string, items: Scope): Performed | string {
     const editor = hooks.editor();
     const access = hooks.access();
     if (!editor || !access) return 'There is no score';
@@ -353,15 +397,29 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   }
 
   /** What a command did, in the field, with its sliders. */
-  function present(r: Reading, performed: Performed) {
+  function present(r: ScriptReading, performed: Performed) {
     applied = performed.applied;
     show(performed.done ? `✓ ${r.script.summary}` : `${r.script.summary}: nothing changed`, performed.done ? 'done' : 'error', r.source);
     showKnobs(r.script.knobs.map((k) => ({ ...k, value: performed.applied.values[k.id] ?? k.value })));
   }
 
+  /** Runs one of the editor's own commands, as its menu entry does; the field says so if it is still there with nothing typed. */
+  function runApp(command: AppCommand, source: string) {
+    const ran = hooks.app(command.id);
+    if (box.hidden || input.value.trim()) return;
+    if (ran) show(`✓ ${command.label}`, 'done', source);
+    else show(`${command.label} cannot be done now`, 'error', source);
+    place();
+  }
+
   /** Runs a reading on the selection at once. */
   function apply(r: Reading, text: string) {
     if (!scope) return;
+    if ('command' in r) {
+      input.value = '';
+      reading = null;
+      return runApp(r.command, r.source);
+    }
     const performed = perform(r, text, scope);
     if (typeof performed === 'string') show(performed, 'error', r.source);
     else {
@@ -376,8 +434,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
 
   /** Runs a line on the page as WinScore's command bar runs it; the text stays to be corrected when the engine objects. */
   function runLine(text: string) {
-    pending?.controller.abort();
-    pending = null;
+    forgetAll();
     reading = null;
     // Emptied first: while the line runs the field may follow a new selection or question, with nothing to read.
     input.value = '';
@@ -397,7 +454,6 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     const text = input.value.trim();
     const editor = hooks.editor();
     if (!text || !scope || !anchor || !editor) return;
-    clearTimeout(typingTimer);
     if (history.at(-1) !== text) history.push(text);
     recalled = 0;
     if (native(text)) return runLine(text);
@@ -407,11 +463,12 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       show('Commands in words need a model: set one up with ⚙', 'error');
       return;
     }
-    // Jev's reading of these words, if it is under way, goes with the command.
+    // Jev's reading of these words, if it is under way, goes with the command, and the field asks no more about them.
     if (pending?.text !== text) askAbout(text);
-    const asked = pending?.text === text ? pending : null;
-    pending = null;
-    const job: Job = { text, scope, anchor, editor, controller: asked?.controller ?? new AbortController(), badge: badgeFor() };
+    const request = pending?.text === text ? pending : null;
+    for (const [at, r] of requests) if (r === request) requests.delete(at);
+    forgetAll();
+    const job: Job = { text, scope, anchor, editor, controller: request?.controller ?? new AbortController(), badge: badgeFor() };
     jobs.add(job);
     host.append(job.badge);
     showJob(job, text, 'busy');
@@ -419,7 +476,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     reading = null;
     idle();
     place();
-    void work(job, about, asked?.done ?? null);
+    void work(job, about, request?.done ?? null);
   }
 
   /** A command sent off: Jev's reading runs on its items, or Claude writes the edit; a script that fails to run goes back to Claude once, with the error. */
@@ -428,7 +485,12 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     try {
       const jev = asked && (await asked);
       if (signal.aborted) return;
-      if (jev?.reading) return void (await land(job, jev.reading, false));
+      const read = jev?.reading;
+      if (read && 'command' in read) {
+        finish(job);
+        return runApp(read.command, read.source);
+      }
+      if (read) return void (await land(job, read, false));
       const claude = links.claude;
       if (!claude) throw new Error(links.jev ? 'Jev could not read this, and no Claude key is set (⚙)' : 'Commands in words need a model: set one up with ⚙');
       const writer = writerFor(claude, jev?.complex ?? false);
@@ -460,7 +522,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
    * run at once does; elsewhere the selection stays, and its badge says what
    * it did. Why it failed, if it did: said, unless Claude is to `retry`.
    */
-  async function land(job: Job, r: Reading, retry: boolean): Promise<string | null> {
+  async function land(job: Job, r: ScriptReading, retry: boolean): Promise<string | null> {
     const { signal } = job.controller;
     while (!signal.aborted && (sliding || !hooks.ready())) await new Promise((wake) => setTimeout(wake, READY_POLL_MS));
     const editor = hooks.editor();
@@ -622,6 +684,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       saveSettings(next);
       links = connections(next, server);
       memo.clear();
+      forgetAll();
       settings.hidden = true;
       input.focus();
       typed();
@@ -677,9 +740,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
 
   /** Escape: the text and the settings go, and the keyboard goes back to the page (where Escape then deselects). */
   function leave() {
-    pending?.controller.abort();
-    pending = null;
-    clearTimeout(typingTimer);
+    forgetAll();
     input.value = '';
     reading = null;
     settings.hidden = true;
@@ -711,6 +772,8 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     if (!same) {
       applied = null;
       showKnobs([]);
+      // Readings asked so far are about other items.
+      forgetAll();
       typed();
     }
     place();
@@ -720,9 +783,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   function close() {
     if (box.hidden) return;
     const focused = box.contains(document.activeElement);
-    pending?.controller.abort();
-    pending = null;
-    clearTimeout(typingTimer);
+    forgetAll();
     box.hidden = true;
     input.value = '';
     reading = null;

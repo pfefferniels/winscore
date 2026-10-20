@@ -19,6 +19,9 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || 
 /** What Jev picks for each command; questions not named here get "none" or their first option. */
 const JEV = {
   'remove the stems': { action: 'delete', target: 'stems' },
+  'remove the stem': { action: 'delete', target: 'stems' },
+  'add staff': { action: 'create', item: 'staff' },
+  'zoom in': { action: 'app', menu: 'zoom-in' },
   'beam always 2 notes': { action: 'beam', target: 'notes', group: '2', amount: '2' },
   'make note size gradually bigger': { action: 'grow', target: 'notes', measure: 'size' },
   'make the last note an x head': { action: 'other', target: 'notes' },
@@ -44,11 +47,12 @@ const CLAUDE = {
   'double the melody a third below': [{ summary: 'A third below', knobs: [], steps: [step({ do: 'add', codes: [1], params: ['1', 'staff', 'x', 'level - 2', 'p5', 'p6', 'p7'] })] }],
 };
 
-/** Claude's replies held back until the check lets them go, by command. */
+/** Claude's (and Jev's) replies held back until the check lets them go, by command. */
 const held = new Map();
-const hold = (text) => {
+const heldJev = new Map();
+const hold = (text, replies = held) => {
   let release;
-  held.set(text, new Promise((resolve) => (release = resolve)));
+  replies.set(text, new Promise((resolve) => (release = resolve)));
   return release;
 };
 
@@ -99,6 +103,7 @@ try {
     const body = route.request().postDataJSON();
     if (body.state === 'warm-up') warmUps++;
     else jevRequests.push(body);
+    await heldJev.get(body.state.command);
     await route.fulfill({ status: 200, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(jevAnswers(body)) });
   });
   let claudeRequest = null;
@@ -173,7 +178,8 @@ try {
   for (let i = 0; i < 100 && warmUps === 0; i++) await page.waitForTimeout(20);
   assert.equal(warmUps, 1, 'the field opens the connection to Jev');
 
-  const read = () => page.waitForFunction(() => /→|Claude( \w+)? write/.test(document.querySelector('.ai-status').textContent));
+  /** A reading of the words in the field, not one of words before them shown while these are read. */
+  const read = () => page.waitForFunction(() => /→|Claude( \w+)? write/.test(document.querySelector('.ai-status').textContent) && !document.querySelector('.ai-status.busy'));
   const command = async (text) => {
     await page.fill('.ai-input', text);
     await read();
@@ -189,9 +195,16 @@ try {
     return (n) => params[n - 1] ?? 0;
   };
 
-  // Typed on the page, the command goes into the field; what Jev read shows before Enter, and Enter edits the score as one undo step.
+  // Typed on the page, the command goes into the field, every keystroke read at once: while the words typed last
+  // are read, the reading of those before shows with the spinner. What Jev read shows before Enter, and Enter
+  // edits the score as one undo step.
+  const letJevGo = hold('remove the stems', heldJev);
+  const typedFrom = jevRequests.length;
   await page.keyboard.type('remove the stems');
   assert.equal(await page.inputValue('.ai-input'), 'remove the stems');
+  await page.waitForFunction(() => /Remove stems/.test(document.querySelector('.ai-status.busy .ai-reading')?.textContent ?? ''));
+  assert.equal(jevRequests.length - typedFrom, 'remove the stems'.length, 'one request for each keystroke');
+  letJevGo();
   await read();
   assert.match(await page.textContent('.ai-reading'), /Remove stems · 8 items/);
   assert.match(await page.textContent('.ai-source'), /^Jev 90 %/);
@@ -271,6 +284,23 @@ try {
   assert.equal(await page.getAttribute('#app', 'data-items'), '14');
   assert.match(await page.textContent('#item h2'), /^5 items · Note/);
   assert.ok(Math.abs(placed.x - above.x) < staff.width * 0.05, `the new notes (from x ${placed.x}) start at the click (x ${above.x})`);
+  await page.press('.ai-input', 'Control+z');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '9');
+
+  // A new item where the field stands: a staff, above the highest as Insert ▸ Staff makes it. And the editor's own
+  // commands, the menus' entries: zoom in.
+  await page.mouse.click(above.x, above.y);
+  await command('add staff');
+  assert.match(await page.textContent('.ai-reading'), /→ Add a staff/);
+  await enter();
+  assert.equal(await page.getAttribute('#app', 'data-items'), '10');
+  assert.ok(jevRequests.at(-1).questions.menu.criteria['zoom-in'], 'the menus’ entries are among the answers');
+  const zoom = await page.inputValue('#zoom');
+  await command('zoom in');
+  assert.match(await page.textContent('.ai-reading'), /→ View ▸ Zoom in/);
+  await enter();
+  assert.match(await page.textContent('.ai-status'), /✓ View ▸ Zoom in/);
+  assert.notEqual(await page.inputValue('#zoom'), zoom);
   await page.press('.ai-input', 'Control+z');
   assert.equal(await page.getAttribute('#app', 'data-items'), '9');
 

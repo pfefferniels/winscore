@@ -2,14 +2,27 @@
 // the questions read commands, and how fast. Needs TYPESAFE_API_KEY.
 //
 // usage: npm run wasm && npm run eval:jev    (JEV_MODEL=jev-preview, LIMIT=3 requests at a time)
+import { readFileSync } from 'node:fs';
 import { askJev, TYPESAFE_URL, type About } from '../src/ai-models';
 import { counted, scriptFor } from '../src/ai-intent';
+import { appMenus, wordCommands, type MenuHooks } from '../src/menus';
+import { commandSupported, initSync } from '../src/wasm/score_web.js';
 
-/** Selections the commands are about: item counts by code. */
+initSync({ module: readFileSync(process.env.SCORE_WASM!) });
+
+/** The editor's commands as the app offers them, a score open and items selected. */
+const noop = () => {};
+const hooks: MenuHooks = new Proxy({} as MenuHooks, {
+  get: (_, name) =>
+    ({ hasScore: () => true, hasSelection: () => true, supported: commandSupported, samples: () => [{ title: 'Mozart', open: noop }], canPaste: () => true, undoLabel: () => '“remove the stems”', redoLabel: () => null, panelShown: () => true })[name as string] ?? noop,
+});
+const COMMANDS = wordCommands(appMenus(hooks)).map(({ id, label, title }) => ({ id, label, title }));
+
+/** Selections the commands are about: item counts by code; "place", a click on the paper with nothing selected, is about a whole score. */
 const SCOPES: Record<string, Map<number, number>> = {
   notes: new Map([[1, 8]]),
   mixed: new Map([[1, 14], [5, 2], [9, 2], [16, 1], [6, 2]]),
-  empty: new Map(),
+  place: new Map([[1, 420], [2, 35], [3, 12], [4, 6], [5, 40], [6, 60], [8, 12], [9, 25], [10, 4], [14, 48], [16, 30], [17, 12], [18, 2]]),
 };
 
 /** [selection, command, what the intent must hold]; action "(none)": Claude's to write, `complex` with the model for complex commands. */
@@ -36,8 +49,8 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["notes", "move up a third", {"action": "move", "direction": "up", "amount": 2}],
   ["notes", "transpose down an octave", {"action": "move", "direction": "down", "amount": 7}],
   ["notes", "move them 5 to the right", {"action": "move", "direction": "right", "amount": 5}],
-  ["empty", "add notes c g d/f/a", {"action": "insert", "notes": "PC5/G/D:F:A"}],
-  ["empty", "put e f# g here", {"action": "insert"}],
+  ["place", "add notes c g d/f/a", {"action": "insert", "notes": "PC5/G/D:F:A"}],
+  ["place", "put e f# g here", {"action": "insert"}],
   ["notes", "sharpen them", {"action": "option", "setting": "Accidental", "option": "♯ Sharp"}],
   ["notes", "remove the accidentals", {"action": "delete", "target": "accidentals"}],
   ["notes", "remove the staccatos", {"action": "delete", "option": "Staccato"}],
@@ -51,8 +64,8 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["mixed", "make the slurs dashed", {"action": "option", "setting": "Line", "option": "Dashed"}],
   ["mixed", "delete the slurs", {"action": "delete", "target": "slurs"}],
   ["mixed", "remove the stems", {"action": "delete", "target": "stems"}],
-  ["notes", "make the last note an x head", {"action": "(none)", "complex": false}],
-  ["notes", "accent every other note", {"action": "(none)", "complex": false}],
+  ["notes", "make the last note an x head", {"action": "option", "setting": "Head", "option": "X", "pick": "last"}],
+  ["notes", "accent every other note", {"action": "option", "option": "Accent", "pick": "every other"}],
   ["notes", "lose the accidentals", {"action": "delete", "target": "accidentals"}],
   ["notes", "staccato everything", {"action": "option", "setting": "Mark", "option": "Staccato"}],
   ["notes", "put accents on them", {"action": "option", "setting": "Mark", "option": "Accent"}],
@@ -71,7 +84,7 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["notes", "beam in threes", {"action": "beam", "amount": 3}],
   ["notes", "stems down", {"action": "stems-down"}],
   ["notes", "automatic stems", {"action": "stems-auto"}],
-  ["empty", "add c e g as eighths", {"action": "insert", "notes": "PC5/E/G", "rhythms": "8/8/8"}],
+  ["place", "add c e g as eighths", {"action": "insert", "notes": "PC5/E/G", "rhythms": "8/8/8"}],
   ["notes", "double sharp", {"action": "option", "setting": "Accidental", "option": "♯♯ Double sharp"}],
   ["mixed", "make the slurs flatter", {"action": "(none)", "complex": false}],
   ["notes", "delete the eighth notes", {"action": "(none)", "complex": false}],
@@ -93,7 +106,65 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["notes", "write a walking bass under these notes", {"complex": true}],
   ["notes", "add lines from note head to note head", {"complex": true}],
   ["mixed", "add a crescendo hairpin under each slur", {"complex": true}],
-  ["empty", "add a c major arpeggio in eighths, up and back down", {"complex": true}],
+  ["place", "add a c major arpeggio in eighths, up and back down", {"action": "(none)", "complex": true}],
+  // Some of the items, picked out by place.
+  ["notes", "accent the first note", {"action": "option", "option": "Accent", "pick": "first"}],
+  ["notes", "stems down on the bottom notes of the chords", {"action": "stems-down", "pick": "bottom"}],
+  ["notes", "make the top notes bigger", {"action": "bigger", "pick": "top"}],
+  ["notes", "staccato on the first three notes", {"action": "option", "option": "Staccato", "pick": "first few", "many": 3}],
+  ["notes", "move the highest note up an octave", {"action": "move", "direction": "up", "amount": 7, "pick": "highest"}],
+  ["notes", "accent the first note of each bar", {"action": "option", "option": "Accent", "pick": "downbeats"}],
+  ["notes", "move up two steps", {"action": "move", "direction": "up", "amount": 2, "pick": undefined}],
+  // Selecting.
+  ["notes", "select the top notes", {"action": "select", "pick": "top"}],
+  ["mixed", "select the slurs", {"action": "select", "target": "slurs"}],
+  ["notes", "select only the staccato notes", {"action": "select", "option": "Staccato"}],
+  // New items.
+  ["place", "add staff", {"action": "create", "item": "staff"}],
+  ["place", "add a new staff", {"action": "create", "item": "staff"}],
+  ["notes", "add a barline after these", {"action": "create", "item": "barline"}],
+  ["place", "add a double bar", {"action": "create", "item": "double barline"}],
+  ["place", "add a final barline", {"action": "create", "item": "final barline"}],
+  ["notes", "add an end repeat", {"action": "create", "item": "end repeat"}],
+  ["place", "add a bass clef", {"action": "create", "item": "bass clef"}],
+  ["place", "add a key signature with three flats", {"action": "create", "item": "key signature", "word": "KSIG-3"}],
+  ["place", "add a key signature for D major", {"action": "create", "item": "key signature", "word": "KSIG+2"}],
+  ["place", "add 3/4 time", {"action": "create", "item": "meter", "word": "METER34"}],
+  ["place", "common time", {"action": "create", "item": "common time"}],
+  ["notes", "slur these notes", {"action": "create", "item": "slur"}],
+  ["notes", "add a slur", {"action": "create", "item": "slur"}],
+  ["notes", "tie them", {"action": "create", "item": "tie"}],
+  ["notes", "add a crescendo", {"action": "create", "item": "crescendo"}],
+  ["notes", "diminuendo hairpin under these notes", {"action": "create", "item": "diminuendo"}],
+  ["notes", "8va over these", {"action": "create", "item": "ottava"}],
+  ["notes", "add a pedal mark", {"action": "create", "item": "pedal"}],
+  ["notes", "first ending over these bars", {"action": "create", "item": "first ending"}],
+  ["notes", "add mf", {"action": "create", "item": "mf"}],
+  ["place", "put a forte here", {"action": "create", "item": "f"}],
+  ["place", "add a fermata", {"action": "create", "item": "fermata"}],
+  ["notes", "add fermatas", {"action": "option", "option": "Fermata"}],
+  ["place", "add the text \"Allegro\"", {"action": "create", "item": "text", "text": "Allegro"}],
+  ["place", "write “dolce” here", {"action": "create", "item": "text", "text": "dolce"}],
+  ["place", "put \"dolce\" here", {"action": "create", "item": "text", "text": "dolce"}],
+  ["place", "add rehearsal number 12", {"action": "create", "item": "number", "more": [0, 12]}],
+  ["notes", "add a slur over the first three notes", {"action": "create", "item": "slur", "pick": "first few", "many": 3}],
+  // Properties of the whole score's items, at a place: no new item.
+  ["place", "make all the slurs dashed", {"action": "option", "setting": "Line", "option": "Dashed"}],
+  ["place", "add staccatos to all notes", {"action": "option", "option": "Staccato"}],
+  ["place", "make every note an eighth", {"action": "option", "option": "Eighth"}],
+  ["place", "accent all the notes", {"action": "option", "option": "Accent"}],
+  ["place", "make all the clefs bass clefs", {"action": "option", "option": "Bass"}],
+  // The editor's own commands.
+  ["notes", "undo", {"action": "app", "command": "undo"}],
+  ["notes", "copy these", {"action": "app", "command": "copy"}],
+  ["place", "save the score", {"action": "app", "command": "save"}],
+  ["place", "zoom in", {"action": "app", "command": "zoom-in"}],
+  ["place", "fit the page to the width", {"action": "app", "command": "fit"}],
+  ["place", "hide the side panel", {"action": "app", "command": "panel"}],
+  ["place", "export as svg", {"action": "app", "command": "export-svg"}],
+  ["notes", "duplicate them", {"action": "app", "command": "duplicate"}],
+  ["place", "print it", {"action": "app", "command": "print"}],
+  ["place", "show the keyboard shortcuts", {"action": "app", "command": "shortcuts"}],
 ];
 
 const key = process.env.TYPESAFE_API_KEY;
@@ -103,7 +174,7 @@ const rows: string[] = [];
 const times: number[] = [];
 let passed = 0;
 let next = 0;
-// JEV_CASES=beam,stems runs only the cases whose command has one of these words.
+// JEV_CASES=beam,stems runs only the cases whose command has one of these words; JEV_ANSWERS=1 shows Jev's answers to each.
 const only = process.env.JEV_CASES?.split(',');
 const CHOSEN = only ? CASES.filter(([, text]) => only.some((w) => text.includes(w))) : CASES;
 
@@ -115,17 +186,26 @@ function holds(got: unknown, expect: unknown): boolean {
   return JSON.stringify(got) === JSON.stringify(expect);
 }
 
+/** Jev's answers that were not none, as "action delete 98 %". */
+function answered(answers: Record<string, { choice: string; confidence: number }>): string {
+  return Object.entries(answers)
+    .filter(([, a]) => a.choice !== 'none')
+    .map(([id, a]) => `${id} ${a.choice} ${Math.round(a.confidence * 100)} %`)
+    .join(', ');
+}
+
 async function one(i: number) {
   const [scope, text, expect] = CHOSEN[i]!;
   const counts = SCOPES[scope]!;
   const about: About = {
     text,
     counts,
-    whole: false,
-    region: scope === 'empty' ? { staff: 1, bottom: 1, top: 1, from: 100, to: 180 } : null,
+    whole: scope === 'place',
+    region: scope === 'place' ? { staff: 1, bottom: 1, top: 1, from: 100, to: 180 } : null,
     middle: 34,
     sample: [],
     bars: new Map(),
+    commands: COMMANDS,
     codeName: (code) => counted(code, 2).replace(/^2 /, ''),
   };
   try {
@@ -135,7 +215,7 @@ async function one(i: number) {
     const ok = holds(got, expect);
     if (ok) passed++;
     const summary = reading.intent ? ` | ${scriptFor(reading.intent).summary}` : '';
-    rows[i] = `${ok ? 'ok  ' : 'FAIL'} ${String(Math.round(reading.ms)).padStart(4)} ms ${String(Math.round(reading.confidence * 100)).padStart(3)} % [${scope}] "${text}" → ${JSON.stringify(got)}${ok ? '' : `, expected ${JSON.stringify(expect)}`}${summary}`;
+    rows[i] = `${ok ? 'ok  ' : 'FAIL'} ${String(Math.round(reading.ms)).padStart(4)} ms ${String(Math.round(reading.confidence * 100)).padStart(3)} % [${scope}] "${text}" → ${JSON.stringify(got)}${ok ? '' : `, expected ${JSON.stringify(expect)}`}${summary}${ok && !process.env.JEV_ANSWERS ? '' : `; ${answered(reading.answers)}`}`;
   } catch (err) {
     rows[i] = `ERR  [${scope}] "${text}": ${String(err)}`;
   }

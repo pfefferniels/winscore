@@ -12,9 +12,9 @@
 // Both are reached through the dev or preview server (ai-proxy.ts, keys from
 // the environment) or directly from the page with keys kept in this browser.
 import type Anthropic from '@anthropic-ai/sdk';
-import { chainable, MEASURES, TARGETS, scriptFor, type Action, type Intent } from './ai-intent';
+import { chainable, CREATIONS, MEASURES, PICKS, TARGETS, scriptFor, type Action, type Intent } from './ai-intent';
 import { namedSettings, plain, type Filter, type Region, type Script, type Step } from './ai-script';
-import { INTERVALS, RHYTHMS, musicIn, namesCount, namesOption, numberOf, numberWords, rhythmsFor } from './ai-values';
+import { INTERVALS, RHYTHMS, meterIn, musicIn, namesCount, namesOption, numberOf, numberWords, quotedIn, rhythmsFor } from './ai-values';
 
 // ---------------------------------------------------------------------------
 // Settings and connections
@@ -110,8 +110,18 @@ export interface About {
   sample: Sampled[];
   /** Where the barlines are (P3) on the staves of the items, by staff, for Claude: where bars begin. */
   bars: Map<number, number[]>;
+  /** The editor's own commands that can run now, which the command may ask for. */
+  commands: AppCommand[];
   /** Names of item codes. */
   codeName(code: number): string;
+}
+
+/** One of the editor's own commands, an entry of its menus: "Save", "Zoom in", "Line up…". */
+export interface AppCommand {
+  id: string;
+  /** As the menus show it: "File ▸ Save". */
+  label: string;
+  title: string;
 }
 
 /** One item as Claude is shown it: its identity (the scripts' `id`), P1 … Pn, and a text's characters. */
@@ -130,7 +140,7 @@ function selectionWords(about: About): string {
 // Jev
 
 const ACTIONS: Record<Action | 'other', string> = {
-  insert: 'Write new notes, chords or rests into the score, named by their pitches such as c, f#, bb4 or chords such as d/f/a, perhaps with their note value (add c e g as eighths)',
+  insert: 'Write or put new notes, chords or rests into the score, named by their pitches such as c, f#, bb4 or chords such as d/f/a, perhaps with their note value (add c e g as eighths, put e f# g here)',
   beam: 'Join notes with beams, or beam them in groups such as pairs',
   unbeam: 'Take the beams away so the notes are no longer beamed',
   delete: 'Remove, delete, erase, clear, take away or hide something: items such as rests, slurs or dynamics, or a part of notes such as their stems, accidentals, articulation marks or dots',
@@ -139,7 +149,7 @@ const ACTIONS: Record<Action | 'other', string> = {
   'stems-down': 'Make the stems point down',
   'stems-auto': 'Give the notes their normal stem directions, or give them stems again',
   option:
-    'Give the items a named property: add or change an articulation or mark (accent them, add staccatos, a fermata), an accidental (sharpen them, flatten them, make them natural), a note value (make them eighths, half notes), a note head shape, cue size, a clef type or a line style (dashed, dotted)',
+    'Give the selected items themselves a named property: add or change an articulation or mark on them (accent them, add staccatos, fermatas on the notes), an accidental (sharpen them, flatten them, make them natural), a note value (make them eighths, half notes), a note head shape, cue size, the type of the clefs selected or a line style (dashed, dotted)',
   bigger: 'Make them all larger, longer, thicker or wider by the same amount',
   smaller: 'Make them all smaller, shorter, thinner or narrower by the same amount',
   grow: 'Make a size increase gradually across the items, each a little bigger than the one before, or from one value to a larger one (sizes from 1 to 3)',
@@ -148,15 +158,42 @@ const ACTIONS: Record<Action | 'other', string> = {
   align: 'Put the items at one height, in a straight row',
   number: 'Set a named property to a number the command gives, such as size 1.5 or stem length 3',
   command: 'A command in the SCORE program’s own language, short upper-case words and numbers such as FLI or R 5',
+  create:
+    'Add one new item of its own, not notes and not a mark on them: a staff, a barline, a repeat, a new clef, a key or time signature such as 3/4 or common time, a slur or tie over the notes (slur them, tie them), a hairpin, a trill, an 8va, a pedal mark, an ending, a dynamic such as mf, a fermata, a box, a number or a text in quotes',
+  select: 'Select, pick out or keep only some of the items, so that the next command acts on them; nothing is changed (select the bottom notes, select the beams, keep only the accented notes)',
+  app: 'A command of the editor rather than an edit of the music: undo, redo, copy, cut, paste, duplicate, select everything, save, open, print, export, a new score, zoom, show or hide the side panel, line up or justify, music input, help',
   other: 'Something else',
 };
 
 const DIRECTIONS = { none: 'no direction is given', up: 'up, higher, raise', down: 'down, lower', left: 'left, earlier, backwards', right: 'right, later, forwards' };
 
-const WHICH = {
+// Jev leans to the first option: "all" goes first, so a command must pick some out to be read so.
+const PICK = {
   all: 'all of them, or all of one kind or with one property, such as all the stems or all the staccatos',
-  some: 'only some, picked out by their place or order, such as the first, the last, every other one, the top notes or the second bar',
+  ...Object.fromEntries(Object.entries(PICKS).map(([id, p]) => [id, p.words])),
+  other: 'some picked out in another way, by their place or order, such as the second bar or the notes on the beat',
 };
+
+/** Key signatures by sharps (positive) or flats, with their keys. */
+const KEYS: Record<string, string> = {
+  none: 'no key and no number of sharps or flats is named',
+  ...Object.fromEntries(
+    ['C major, A minor', 'G major, E minor', 'D major, B minor', 'A major, F sharp minor', 'E major, C sharp minor', 'B major, G sharp minor', 'F sharp major, D sharp minor', 'C sharp major, A sharp minor'].map((keys, n) => [String(n), n === 0 ? `no sharps or flats: ${keys}` : `${numberName(n)} sharp${n > 1 ? 's' : ''}: ${keys}`]),
+  ),
+  ...Object.fromEntries(
+    ['F major, D minor', 'B flat major, G minor', 'E flat major, C minor', 'A flat major, F minor', 'D flat major, B flat minor', 'G flat major, E flat minor', 'C flat major, A flat minor'].map((keys, i) => [String(-i - 1), `${numberName(i + 1)} flat${i ? 's' : ''}: ${keys}`]),
+  ),
+};
+
+function numberName(n: number): string {
+  return ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'][n] ?? String(n);
+}
+
+/** KSIG's letter for the clef in force, by the staff's middle line (ai-values' steps from C0): bass, alto, tenor. */
+const KEY_CLEFS: Record<number, string> = { 22: 'B', 28: 'A', 26: 'T' };
+
+/** A request Jev takes longer for than this goes unanswered: Enter has Claude write the command. */
+const JEV_TIMEOUT_MS = 3000;
 
 /** Below this, a reading goes to Claude instead. */
 const SURE = 0.5;
@@ -166,7 +203,7 @@ const QUITE_SURE = 0.75;
 // Jev leans to the first option: "simple" goes first, so a command must clearly ask for thought to be complex.
 const COMPLEXITY = {
   simple:
-    'One plain edit: a property, size, place or value given to the items, or to some of them picked out by place or kind (accent the last note, remove the stems, make the slurs flatter, stems down on the bottom notes of the chords)',
+    'One plain edit: a property, size, place or value given to the items, or to some of them picked out by place or kind, one new item, or a command of the editor (accent the last note, remove the stems, make the slurs flatter, stems down on the bottom notes of the chords, add a staff, a slur over these notes, save)',
   complex:
     'Work that takes thought: new music worked out from a description or from the music there (an arpeggio, a scale, a second voice, a bass line, the melody backwards or upside down), several edits that depend on one another, or items and values worked out for each item from others (a pattern, a rule over the music, lines connecting the notes, a hairpin under each slur)',
 };
@@ -222,7 +259,7 @@ function jevQuestions(about: About): Record<string, Question> {
   const present = (target: (typeof TARGETS)[number]) => target.codes.length === 0 || target.codes.some((c) => about.counts.has(c));
   const questions: Record<string, Question> = {
     action: { type: 'choice', instructions: 'What does the `command` ask to do with the selected items of the music score?', criteria: ACTIONS },
-    which: { type: 'choice', instructions: 'Does the `command` act on all the selected items it names, or only on some of them it picks out?', criteria: WHICH },
+    pick: { type: 'choice', instructions: 'Does the `command` act on all the selected items it names, or only on some of them it picks out? Which?', criteria: PICK },
     target: {
       type: 'choice',
       instructions: 'Which items or which part of them does the `command` act on? Choose "all" when it names none and means the selection.',
@@ -246,7 +283,22 @@ function jevQuestions(about: About): Record<string, Question> {
       criteria: { none: 'only one thing is asked', ...Object.fromEntries(Object.entries(ACTIONS).filter(([id]) => id !== 'other')) },
     },
     complexity: { type: 'choice', instructions: 'How much thought does carrying out the `command` on the score take?', criteria: COMPLEXITY },
+    item: {
+      type: 'choice',
+      instructions: 'Which new item does the `command` ask to add?',
+      criteria: { none: 'no new item, or new notes', ...Object.fromEntries(Object.entries(CREATIONS).map(([id, c]) => [id, c.words])) },
+    },
   };
+  if (about.commands.length > 0) {
+    questions.menu = {
+      type: 'choice',
+      instructions: 'Which of the editor’s commands does the `command` ask for?',
+      criteria: capped({ none: 'none of these', ...Object.fromEntries(about.commands.map((c) => [c.id, c.title ? `${c.label}: ${c.title}` : c.label])) }),
+    };
+  }
+  if (/\bkey\b|major|minor|sharps|flats/i.test(about.text)) {
+    questions.key = { type: 'choice', instructions: 'Which key signature does the `command` name?', criteria: KEYS };
+  }
   if (about.counts.has(1)) {
     questions.also = {
       type: 'choice',
@@ -270,6 +322,7 @@ function jevQuestions(about: About): Record<string, Question> {
       instructions: 'Which property does the `command` set to a number?',
       criteria: capped({ none: 'no property is named', ...Object.fromEntries(numberSettings(codes).map((n) => [n, null])) }),
     };
+    questions.count = { type: 'choice', instructions: 'Which number in the `command` says how many of the items it picks out, as in "the first three notes"?', criteria: options };
     if (numbers.length > 1) {
       questions.from = { type: 'choice', instructions: 'Which number in the `command` is the starting value?', criteria: options };
       questions.to = { type: 'choice', instructions: 'Which number in the `command` is the final value?', criteria: options };
@@ -286,7 +339,7 @@ function jevQuestions(about: About): Record<string, Question> {
 }
 
 /** Why a reading has no intent, said to the user: what Claude would be asked to do. */
-export type Unread = 'unsure' | 'other' | 'some' | 'nothing' | 'detail';
+export type Unread = 'unsure' | 'other' | 'some' | 'nothing' | 'detail' | 'complex';
 
 export const UNREAD: Record<Unread, string> = {
   unsure: 'Jev is not sure what this asks',
@@ -294,6 +347,7 @@ export const UNREAD: Record<Unread, string> = {
   some: 'This picks out some of the items',
   nothing: 'There is nothing selected for this',
   detail: 'Jev misses a detail of this',
+  complex: 'This takes thought',
 };
 
 /** Jev's reading: the intent, or why there is none; the action's probability either way. */
@@ -305,6 +359,8 @@ export interface JevReading {
   /** Whether the command takes thought: Claude's model for complex commands writes it. */
   complex: boolean;
   ms: number;
+  /** Jev's answers, for seeing why. */
+  answers: Record<string, { choice: string; confidence: number }>;
 }
 
 /** What each chainable action reads from answers the two actions of a chain would share. */
@@ -354,11 +410,14 @@ function readAnswers(about: About, answers: Record<string, ChoiceAnswer>): Inten
 /** The intent of one action the command asks for, from the answers. */
 function readAction(about: About, answers: Record<string, ChoiceAnswer>, action: Action | 'other' | undefined): Intent | Unread {
   const choice = (id: string) => answers[id]?.choice;
+  /** An answer Jev is sure of, other than none. */
+  const sure = (id: string, enough = SURE) => {
+    const a = answers[id];
+    return a && a.choice !== 'none' && a.confidence >= enough ? a.choice : undefined;
+  };
   if (!action || action === 'other') return 'other';
-  // Some items picked out by place ("the last note", "every other one"): Claude writes that.
-  if (choice('which') === 'some' && answers.which!.confidence >= SURE) return 'some';
-  // Everything but new music acts on items: with none, the reading is wrong.
-  if (action !== 'insert' && about.counts.size === 0) return 'nothing';
+  // Everything but new music, new items and the editor's commands acts on items: with none, the reading is wrong.
+  if (!['insert', 'create', 'app'].includes(action) && about.counts.size === 0) return 'nothing';
   const target = choice('target') ?? 'all';
   /** The number a question picked, as written ("50%" stays a percentage). */
   const picked = (id: string) => {
@@ -381,6 +440,17 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
     intent.setting = setting;
     intent.option = value;
   }
+  // No property to give, but a new item Jev is quite sure of: that is meant ("add mf" to notes, which have no such mark).
+  if (action === 'option' && !option && sure('item', QUITE_SURE)) intent.action = action = 'create';
+  // Some items picked out by place ("the last note", "every other one"); picked some other way, Claude
+  // writes it. New music and items where nothing is selected, and the editor's commands, pick none.
+  const pick = sure('pick');
+  const picks = !['insert', 'app'].includes(action) && !(action === 'create' && about.whole);
+  if (picks && pick === 'other') return 'some';
+  if (picks && pick && PICKS[pick]) {
+    intent.pick = pick;
+    if (pick.endsWith('few')) intent.many = number('count');
+  }
   switch (action) {
     case 'insert': {
       const music = musicIn(about.text, about.middle);
@@ -399,9 +469,16 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
     }
     case 'option':
       return intent.setting && intent.option ? intent : 'detail';
+    case 'create':
+      return createIntent(about, intent, sure, number);
+    case 'app': {
+      const command = about.commands.find((c) => c.id === sure('menu'));
+      return command ? { ...intent, command: command.id, label: command.label } : 'detail';
+    }
     case 'delete':
+    case 'select':
       // "the eighth notes": only those. Half sure of a property is not enough to delete
-      // all of them instead, nor only some: Claude decides.
+      // (or select) all of them instead, nor only some: Claude decides.
       if (option && option[1].confidence < QUITE_SURE) {
         if (option[1].confidence >= 0.4) return 'detail';
         delete intent.setting;
@@ -444,13 +521,48 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
   }
 }
 
+/**
+ * A new item's intent: its creation word, with the key, meter, number or
+ * text the command gives; a key signature or text without one is Claude's.
+ */
+function createIntent(about: About, intent: Intent, sure: (id: string) => string | undefined, number: (id: string) => number | undefined): Intent | Unread {
+  const item = sure('item');
+  if (!item || !CREATIONS[item]) return 'detail';
+  const made: Intent = { ...intent, item };
+  switch (item) {
+    case 'key signature': {
+      const key = sure('key');
+      if (key === undefined) return 'detail';
+      const n = Number(key);
+      return { ...made, word: `KSIG${n < 0 ? '' : '+'}${n}${KEY_CLEFS[about.middle] ?? ''}`, label: `Add a key signature: ${KEYS[key]!.split(':')[0]}` };
+    }
+    case 'meter': {
+      const meter = meterIn(about.text);
+      return meter ? { ...made, word: `METER${meter[0]}${meter[1]}`, label: `Add a ${meter.join('/')} meter` } : made;
+    }
+    case 'number': {
+      const value = number('amount');
+      return value === undefined ? made : { ...made, more: [0, value], label: `Add the number ${value}` };
+    }
+    case 'text': {
+      const text = quotedIn(about.text);
+      return text ? { ...made, text, label: `Add “${text}”` } : 'detail';
+    }
+    default:
+      return made;
+  }
+}
+
 async function systemOne(connection: NonNullable<Connections['jev']>, body: unknown, signal: AbortSignal): Promise<Record<string, ChoiceAnswer>> {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (connection.key) headers.authorization = `Bearer ${connection.key}`;
   let response: Response;
+  const timeout = AbortSignal.timeout(JEV_TIMEOUT_MS);
   try {
-    response = await fetch(connection.url, { method: 'POST', headers, body: JSON.stringify(body), signal });
+    // Without AbortSignal.any (Safari before 17.4) the request waits as long as it takes.
+    response = await fetch(connection.url, { method: 'POST', headers, body: JSON.stringify(body), signal: 'any' in AbortSignal ? AbortSignal.any([signal, timeout]) : signal });
   } catch (err) {
+    if (timeout.aborted && !signal.aborted) throw new Error('Jev did not answer in time');
     if (signal.aborted || connection.url !== TYPESAFE_URL) throw err;
     throw new Error('Jev: TypeSafe does not answer this page directly; use the dev server or the AI Gateway (⚙)');
   }
@@ -467,10 +579,16 @@ export async function askJev(about: About, connection: NonNullable<Connections['
   const state = { command: about.text, selected: selectionWords(about) };
   const answers = await systemOne(connection, { model: connection.model, state, questions: jevQuestions(about) }, signal);
   const action = answers.action;
-  const read = action && action.confidence >= SURE ? readAnswers(about, answers) : 'unsure';
-  const [intent, why] = typeof read === 'string' ? [null, read] : [read, null];
   const complex = answers.complexity?.choice === 'complex' && answers.complexity.confidence >= SURE;
-  return { intent, why, action: action?.choice ?? 'other', confidence: action?.confidence ?? 0, complex, ms: performance.now() - started };
+  // At a place on the paper (the whole score), a new item Jev is quite sure of is meant rather than a mark on every
+  // note of the score, however sure it is that a property is asked for ("add a fermata", "put "dolce" here"), unless
+  // the command names the items it gives it ("make all the clefs bass clefs").
+  const [item, target] = [answers.item, answers.target];
+  const names = target !== undefined && target.choice !== 'all' && target.confidence >= SURE;
+  const placed = about.whole && item !== undefined && item.choice !== 'none' && item.confidence >= QUITE_SURE && (action?.choice === 'create' || (action?.choice === 'option' && !names));
+  const read = !action || (action.confidence < SURE && !placed) ? 'unsure' : complex ? 'complex' : readAnswers(about, placed ? { ...answers, action: { ...action, choice: 'create' } } : answers);
+  const [intent, why] = typeof read === 'string' ? [null, read] : [read, null];
+  return { intent, why, action: action?.choice ?? 'other', confidence: action?.confidence ?? 0, complex, ms: performance.now() - started, answers };
 }
 
 let warmed = 0;
@@ -486,9 +604,15 @@ export function warmJev(connection: NonNullable<Connections['jev']>) {
   systemOne(connection, body, new AbortController().signal).catch(() => (warmed = 0));
 }
 
-/** Jev's reading as an edit script, if it has one. */
+/** Jev's reading as an edit script, if it has one (the editor's own commands have none). */
 export function jevScript(reading: JevReading): Script | null {
-  return reading.intent ? scriptFor(reading.intent) : null;
+  return reading.intent && reading.intent.action !== 'app' ? scriptFor(reading.intent) : null;
+}
+
+/** The editor's command Jev read, if it read one. */
+export function jevCommand(reading: JevReading): AppCommand | null {
+  const intent = reading.intent;
+  return intent?.action === 'app' && intent.command ? { id: intent.command, label: intent.label ?? intent.command, title: '' } : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -568,7 +692,7 @@ A step leaves out its unused fields here for brevity; give every field ("params"
 
 /** One step as Claude writes it: every field there, none of them a union (the API allows few). */
 interface Written {
-  do: Step['do'];
+  do: Exclude<Step['do'], 'create'>;
   codes: number[];
   where: string;
   where_setting: string;

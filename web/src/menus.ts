@@ -3,7 +3,7 @@
 // menus and toolbars send them, and show the command so it can be typed on
 // the command field next time. Commands score-edit does not handle are left out.
 import { commandById } from './commands';
-import { MOD, type Action, type Entry, type Menu } from './menu';
+import { menuActions, MOD, type Action, type Entry, type Menu } from './menu';
 
 export type DialogKind = 'symbol' | 'text';
 
@@ -215,4 +215,14 @@ export function appMenus(hooks: MenuHooks): Menu[] {
   };
 
   return [file, edit, insert, layout, view];
+}
+
+/** Entries of the Insert menu a command in words may ask for: its dialogs. The items it makes a command makes where the field stands. */
+const DIALOGS = new Set(['input', 'text', 'symbol']);
+
+/** The menus' entries a command in words may ask for, those that can run now: "Edit ▸ Copy", "View ▸ Zoom in". */
+export function wordCommands(menus: Menu[]): { id: string; label: string; title: string; run(): void }[] {
+  return menuActions(menus)
+    .filter(({ menu, action }) => (action.enabled?.() ?? true) && (menu !== 'insert' || DIALOGS.has(action.id ?? '')))
+    .map(({ path, action }) => ({ id: action.id ?? path, label: path, title: action.title ?? '', run: action.run }));
 }

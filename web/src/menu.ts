@@ -47,6 +47,17 @@ export const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
 
 const labelOf = (action: Action) => (typeof action.label === 'function' ? action.label() : action.label);
 
+/** Every action of the menus with the menu's id and where it is: "Edit ▸ Copy", "Insert ▸ Note ▸ Half". */
+export function menuActions(menus: Menu[]): { menu: string; path: string; action: Action }[] {
+  return menus.flatMap((menu) =>
+    menu.entries().flatMap((entry) => {
+      if (typeof entry !== 'object') return [];
+      if ('row' in entry) return entry.actions.map((action) => ({ menu: menu.id, path: `${menu.label} ▸ ${entry.row} ▸ ${labelOf(action)}`, action }));
+      return 'run' in entry ? [{ menu: menu.id, path: `${menu.label} ▸ ${labelOf(entry)}`, action: entry }] : [];
+    }),
+  );
+}
+
 const MENU_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>';
 
 function span(className: string, text: string): HTMLSpanElement {

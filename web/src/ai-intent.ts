@@ -95,7 +95,80 @@ export type Action =
   | 'move'
   | 'align'
   | 'number'
-  | 'command';
+  | 'command'
+  | 'create'
+  | 'select'
+  | 'app';
+
+/**
+ * Some of the items picked out by their place, as a filter over the
+ * variables of edit scripts (ai-script.ts): the first, every other one, the
+ * top notes. `many` is a knob, for the first or last few.
+ */
+export const PICKS: Record<string, { words: string; noun: string; where: string; codes?: number[] }> = {
+  first: { words: 'only the first one', noun: 'the first', where: 'i == 0' },
+  last: { words: 'only the last one', noun: 'the last', where: 'i == n - 1' },
+  'every other': { words: 'every other one, from the first: the first, third, fifth …', noun: 'every other one', where: 'i % 2 == 0' },
+  'every second': { words: 'every second one: the second, fourth, sixth …', noun: 'every second one', where: 'i % 2 == 1' },
+  top: { words: 'the top note of each chord, the upper voice', noun: 'the top notes', where: 'level == chord_high', codes: [1] },
+  bottom: { words: 'the bottom note of each chord, the lower voice', noun: 'the bottom notes', where: 'level == chord_low', codes: [1] },
+  highest: { words: 'the single highest note', noun: 'the highest note', where: 'level == max_level', codes: [1] },
+  lowest: { words: 'the single lowest note', noun: 'the lowest note', where: 'level == min_level', codes: [1] },
+  downbeats: { words: 'the first of each bar, the downbeats', noun: 'the first of each bar', where: 'bi == 0' },
+  'bar ends': { words: 'the last of each bar', noun: 'the last of each bar', where: 'bi == bn - 1' },
+  'first few': { words: 'the first few, a number of them from the start', noun: 'the first few', where: 'i < many' },
+  'last few': { words: 'the last few, a number of them up to the end', noun: 'the last few', where: 'i >= n - many' },
+};
+
+/** Where a new item goes by the items: between them and the one before, at the first, between them and the next, from the first to the last; or where the engine puts it. */
+export type Place = 'before' | 'at' | 'after' | 'over' | 'page';
+
+/** New items a command can make, by SCORE's creation words; TEXT is a text of the characters the command quotes. */
+export const CREATIONS: Record<string, { word: string; at: Place; words: string }> = {
+  staff: { word: 'STAFF', at: 'page', words: 'a new staff, five lines for music' },
+  barline: { word: 'BAR', at: 'after', words: 'a barline' },
+  'double barline': { word: 'BARD', at: 'after', words: 'a double barline' },
+  'final barline': { word: 'BARH', at: 'after', words: 'a final barline, thin and heavy, at the end of a piece' },
+  'start repeat': { word: 'BARR', at: 'before', words: 'a repeat barline where a repeated passage begins, its dots to the right' },
+  'end repeat': { word: 'BARL', at: 'after', words: 'a repeat barline where a repeated passage ends, its dots to the left' },
+  'treble clef': { word: 'TREB', at: 'before', words: 'a treble clef, G clef' },
+  'bass clef': { word: 'BASS', at: 'before', words: 'a bass clef, F clef' },
+  'alto clef': { word: 'ALTO', at: 'before', words: 'an alto clef, C clef' },
+  'tenor clef': { word: 'TENOR', at: 'before', words: 'a tenor clef' },
+  'percussion clef': { word: 'PERC', at: 'before', words: 'a percussion clef' },
+  'key signature': { word: 'KSIG', at: 'before', words: 'a key signature, sharps or flats for a key' },
+  meter: { word: 'METER', at: 'before', words: 'a time signature or meter, such as 3/4 or 6/8' },
+  'common time': { word: 'COMM', at: 'before', words: 'the common time signature, C' },
+  'cut time': { word: 'CUT', at: 'before', words: 'the cut time signature, alla breve' },
+  slur: { word: 'SLUR', at: 'over', words: 'a slur or phrase mark over the notes' },
+  tie: { word: 'TIE', at: 'over', words: 'a tie between notes of the same pitch' },
+  crescendo: { word: 'CRH', at: 'over', words: 'a crescendo hairpin, an opening wedge' },
+  diminuendo: { word: 'DCH', at: 'over', words: 'a diminuendo or decrescendo hairpin, a closing wedge' },
+  line: { word: 'LINE', at: 'over', words: 'a straight line' },
+  'dashed line': { word: 'DASH', at: 'over', words: 'a dashed line' },
+  trill: { word: 'TRILL', at: 'over', words: 'a trill sign with its wavy line' },
+  ottava: { word: 'OVA', at: 'over', words: 'an 8va line, an octave higher' },
+  'ottava bassa': { word: 'OBA', at: 'over', words: 'an 8vb line, ottava bassa, an octave lower' },
+  quindicesima: { word: 'OMA', at: 'over', words: 'a 15ma line, two octaves higher' },
+  pedal: { word: 'PEDA', at: 'over', words: 'a piano pedal mark with its line' },
+  'first ending': { word: 'END1', at: 'over', words: 'a first ending, a volta bracket marked 1' },
+  'second ending': { word: 'END2', at: 'over', words: 'a second ending, a volta bracket marked 2' },
+  arpeggio: { word: 'ARP', at: 'at', words: 'an arpeggio sign, a wavy line before a chord' },
+  fermata: { word: 'FER', at: 'at', words: 'a fermata symbol of its own' },
+  ...Object.fromEntries(['pp', 'p', 'mp', 'mf', 'f', 'ff', 'sf', 'sfz'].map((d) => [d, { word: d.toUpperCase(), at: 'at' as Place, words: `the dynamic mark ${d}` }])),
+  'cresc.': { word: 'CRS', at: 'at', words: 'the word cresc.' },
+  'dim.': { word: 'DIM', at: 'at', words: 'the word dim.' },
+  'a tempo': { word: 'ATM', at: 'at', words: 'the words a tempo' },
+  'accel.': { word: 'ACL', at: 'at', words: 'the word accel.' },
+  'espr.': { word: 'ESP', at: 'at', words: 'the word espr., espressivo' },
+  'pizz.': { word: 'PIZ', at: 'at', words: 'the word pizz., pizzicato' },
+  arco: { word: 'ARC', at: 'at', words: 'the word arco' },
+  'gliss.': { word: 'GLI', at: 'at', words: 'the word gliss.' },
+  box: { word: 'BOX', at: 'at', words: 'a box' },
+  circle: { word: 'CIRCLE', at: 'at', words: 'a circle' },
+  number: { word: 'NUMB', at: 'at', words: 'a number, such as a bar number or rehearsal number' },
+  text: { word: 'TEXT', at: 'at', words: 'a text, words given in quotes such as "Allegro"' },
+};
 
 /** A number setting that "bigger", "longer" … change, and how. */
 export interface Measure {
@@ -142,6 +215,17 @@ export interface Intent {
   /** number: the value; command: the line. */
   value?: number;
   line?: string;
+  /** Some of the items by their place (PICKS), how many of the first or last few. */
+  pick?: string;
+  many?: number;
+  /** create: the item (CREATIONS), its creation word with what the command gives (KSIG-3B, METER68), the numbers after its P3 (0 keeps the default), a text's characters. */
+  item?: string;
+  word?: string;
+  more?: number[];
+  text?: string;
+  /** app: the editor's command (an entry of its menus) and its name. */
+  command?: string;
+  label?: string;
   /** A second action the command asks for ("staccato and stems up"). */
   then?: Intent;
 }
@@ -194,11 +278,28 @@ const knob = (id: string, label: string, value: number, min: number, max: number
 
 const round = (v: number) => Math.round(v * 100) / 100;
 
-/** The edit script for an intent, and for its second action after or before it. */
+/** The edit script for an intent, and for its second action after or before it; on the items it picks by place, if it does. */
 export function scriptFor(intent: Intent): Script {
-  if (!intent.then) return scriptForOne(intent);
+  if (!intent.then) return picked(intent, scriptForOne(intent));
   const [a, b] = [{ ...intent, then: undefined }, intent.then].sort((x, y) => CHAIN_ORDER[x.action]! - CHAIN_ORDER[y.action]!).map(scriptForOne);
-  return { summary: `${a!.summary}, ${lowerFirst(b!.summary)}`, knobs: [...a!.knobs, ...b!.knobs], steps: [...a!.steps, ...b!.steps] };
+  return picked(intent, { summary: `${a!.summary}, ${lowerFirst(b!.summary)}`, knobs: [...a!.knobs, ...b!.knobs], steps: [...a!.steps, ...b!.steps] });
+}
+
+/** The script on the items an intent picks by place: they are selected first, and the steps act on them. */
+function picked(intent: Intent, script: Script): Script {
+  const pick = intent.pick ? PICKS[intent.pick] : undefined;
+  if (!pick || intent.action === 'insert' || intent.action === 'app') return script;
+  const target = targetById(intent.target);
+  const where = target.where ? `(${target.where}) && ${pick.where}` : pick.where;
+  const knobs = pick.where.includes('many') ? [knob('many', 'How many', intent.many ?? 2, 1, 16, 1), ...script.knobs] : script.knobs;
+  const summary = intent.action === 'select' ? `Select ${pick.noun}${pick.codes || target.id === 'all' ? '' : ` of the ${target.noun}`}` : `${script.summary} (${pick.noun})`;
+  return { summary, knobs, steps: [{ do: 'select', items: { codes: pick.codes ?? target.codes, where } }, ...script.steps] };
+}
+
+/** "Add a staff", "Add an end repeat", "Add mf": a creation's name with the article its words give it. */
+function creationSummary(id: string): string {
+  const article = CREATIONS[id]?.words.match(/^(a|an) /)?.[0] ?? '';
+  return `Add ${article}${id}`;
 }
 
 function scriptForOne(intent: Intent): Script {
@@ -308,6 +409,20 @@ function scriptForOne(intent: Intent): Script {
       };
     case 'command':
       return one(intent.line ?? '', { do: 'command', items: target.id === 'all' ? null : items, line: intent.line ?? '' });
+    case 'create': {
+      // By all the command's items, whatever it names: "add a clef" names what it makes.
+      const creation = CREATIONS[intent.item ?? ''];
+      if (!creation) return one('Nothing to add');
+      return one(intent.label ?? creationSummary(intent.item!), { do: 'create', items: null, word: intent.word ?? creation.word, at: creation.at, more: intent.more ?? null, text: intent.text ?? null });
+    }
+    case 'select': {
+      // "the staccato notes": those whose setting reads it.
+      const only = intent.setting && intent.option && intent.setting !== target.aspect ? { setting: intent.setting, is: intent.option } : {};
+      return one(`Select ${'is' in only ? `${intent.option!.toLowerCase()} ` : ''}${noun}`, { do: 'select', items: filterOf(target, only) });
+    }
+    case 'app':
+      // The editor's own command, run by the command field rather than as steps.
+      return one(intent.label ?? intent.command ?? '');
   }
 }
 

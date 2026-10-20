@@ -6,8 +6,8 @@ import { readFileSync } from 'node:fs';
 import { groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
 import { compile } from '../src/ai-expr';
-import { musicIn, namesCount, numbersIn, quartersFor } from '../src/ai-values';
-import { scriptFor } from '../src/ai-intent';
+import { meterIn, musicIn, namesCount, numbersIn, numberWords, quartersFor, quotedIn } from '../src/ai-values';
+import { scriptFor, type Intent } from '../src/ai-intent';
 import { run, type Access, type Scope, type Script } from '../src/ai-script';
 import { SCRIPT_SCHEMA } from '../src/ai-models';
 
@@ -35,6 +35,14 @@ assert.equal(musicIn('add c e g as eighths')?.notes, 'PC5/E/G', '"as" is a word'
 assert.equal(musicIn('add fis4 bes gn4')?.notes, 'FS4/BF/GN4');
 assert.equal(musicIn('remove the stems'), null);
 assert.equal(quartersFor('PC5/G/M/D:F:A;'), '4/4/4');
+assert.deepEqual(numbersIn('move up two steps, every other one'), [2], 'spelt numbers, not "one"');
+assert.deepEqual(numberWords('add 3/4 time'), [], 'a meter is no amount');
+assert.deepEqual(meterIn('add 3/4 time'), [3, 4]);
+assert.deepEqual(meterIn('make it 12 / 8'), [12, 8]);
+assert.equal(meterIn('add notes c/e g'), null);
+assert.equal(quotedIn('add the text "Allegro"'), 'Allegro');
+assert.equal(quotedIn('write “dolce” here'), 'dolce');
+assert.equal(quotedIn('add a fermata'), null);
 assert.deepEqual(['beam them', '8th beam', 'beam the eighths', 'beam in pairs', 'beam always 2 notes', 'groups of four', 'beam in eights', 'beam in 4s'].map(namesCount), [false, false, false, true, true, true, true, true]);
 
 // Claude's schema: structured output allows few union-typed fields (16) and
@@ -268,5 +276,88 @@ for (const name of ['mozart.mus', '000.mus']) {
   }
   sample.free();
 }
+
+// Picks by place, selections, and new items placed by the notes: C5 D5 E5 F5 quarters on staff 1, stems down.
+const fresh = () => {
+  const score = Score.empty();
+  const ed = scoreEditor(score);
+  const acc: Access = { ...access, editor: ed, params: (index) => {
+    const info = score.item(index);
+    if (!info) return null;
+    const params = info.params;
+    info.free();
+    return params;
+  }, staves: () => score.staffGeometry(), summaries: () => score.itemSummaries() };
+  run({ summary: 'add', knobs: [], steps: [{ do: 'insert', notes: 'C5/D/E/F', rhythms: '4/4/4/4' }] }, acc, { keys: [], region }, '“add”');
+  const rows = () => ed.keys().map((_, i) => acc.params(i)!);
+  const notes = () => rows().filter((q) => q[0] === 1).sort((a, b) => a[2]! - b[2]!);
+  const keysOf = (n: number[]) => n.map((k) => ed.keys().find((_, i) => rows()[i]![0] === 1 && rows()[i]![2] === notes()[k]![2])!);
+  return { score, ed, acc, rows, notes, scope: (...k: number[]): Scope => ({ keys: keysOf(k.length ? k : [0, 1, 2, 3]), region }) };
+};
+const four = fresh();
+const xs = four.notes().map((q) => q[2]!);
+const accentsOf = () => four.notes().map((q) => Math.trunc(Math.abs(q[10] ?? 0)) === 5);
+let ran = run(scriptFor({ action: 'option', target: 'notes', setting: 'Mark', option: 'Accent', pick: 'every other' }), four.acc, four.scope(), '“accent every other note”');
+assert.deepEqual(accentsOf(), [true, false, true, false]);
+four.ed.rollback(ran.mark);
+const firstFew = scriptFor({ action: 'option', target: 'notes', setting: 'Mark', option: 'Accent', pick: 'first few', many: 3 });
+assert.deepEqual(firstFew.knobs.map((k) => [k.id, k.value]), [['many', 3]]);
+ran = run(firstFew, four.acc, four.scope(), '“accent the first three”');
+assert.deepEqual(accentsOf(), [true, true, true, false]);
+const selected = run(scriptFor({ action: 'select', target: 'notes', setting: 'Mark', option: 'Accent' }), four.acc, four.scope(), '“select the accented notes”');
+assert.equal(selected.touched.length, 3, 'the accented notes are selected');
+assert.equal(selected.changed, false);
+four.ed.rollback(ran.mark);
+ran = run(scriptFor({ action: 'option', target: 'notes', setting: 'Mark', option: 'Accent', pick: 'highest' }), four.acc, four.scope(), '“accent the highest”');
+assert.deepEqual(accentsOf(), [false, false, false, true]);
+four.ed.rollback(ran.mark);
+
+// A slur over the notes: from the first to the last, above the stems-down heads, each end off the lines.
+const create = (intent: Omit<Intent, 'action' | 'target'>, scope: Scope, of = four) => run(scriptFor({ action: 'create', target: 'all', ...intent }), of.acc, scope, '“add”');
+ran = create({ item: 'slur' }, four.scope());
+const slur = four.rows().find((q) => q[0] === 5)!;
+assert.deepEqual([slur[2], slur[5]], [xs[0], xs[3]], 'from the first note to the last');
+assert.deepEqual([slur[3], slur[4], slur[6]], [10, 13, 3], 'C5 + 2, F5 + 2; curving up');
+assert.equal(ran.touched.length, 1);
+four.ed.rollback(ran.mark);
+ran = create({ item: 'tie' }, four.scope(0));
+const tie = four.rows().find((q) => q[0] === 5)!;
+assert.deepEqual([tie[2], tie[5], tie[7]], [xs[0], xs[1], -2], 'one note: tied to the next');
+four.ed.rollback(ran.mark);
+// A barline between the second note and the third; a clef before the third, at its own place.
+ran = create({ item: 'barline' }, four.scope(0, 1));
+assert.equal(four.rows().find((q) => q[0] === 14)![2], (xs[1]! + xs[2]!) / 2);
+four.ed.rollback(ran.mark);
+ran = create({ item: 'bass clef' }, four.scope(2));
+const clefs = four.rows().filter((q) => q[0] === 3);
+assert.ok(clefs.some((q) => q[2] === (xs[1]! + xs[2]!) / 2 && q[4] === 1), 'a bass clef between the second note and the third');
+four.ed.rollback(ran.mark);
+// Over the notes on each staff, a hairpin; a key signature and a meter from their words; a number given.
+ran = create({ item: 'crescendo' }, four.scope());
+const hairpin = four.rows().find((q) => q[0] === 4)!;
+assert.deepEqual([hairpin[2], hairpin[4], hairpin[5]], [xs[0], 999, xs[3]]);
+four.ed.rollback(ran.mark);
+ran = create({ item: 'key signature', word: 'KSIG-3' }, four.scope(0));
+assert.equal(four.rows().find((q) => q[0] === 17 && q[4] === -3)?.[1], 1, 'three flats on staff 1');
+four.ed.rollback(ran.mark);
+ran = create({ item: 'meter', word: 'METER68' }, four.scope(0));
+assert.deepEqual([...four.rows().find((q) => q[0] === 18 && q[4] === 6)!.slice(4, 6)], [6, 8]);
+four.ed.rollback(ran.mark);
+ran = create({ item: 'number', more: [0, 12] }, four.scope(1));
+assert.deepEqual([four.rows().find((q) => q[0] === 10)![2], four.rows().find((q) => q[0] === 10)![4]], [xs[1], 12]);
+four.ed.rollback(ran.mark);
+// Where nothing is selected (the whole score), at the place clicked: a dynamic there; a text; a staff above the highest.
+const place: Scope = { keys: null, region: { ...region, from: 150 } };
+ran = create({ item: 'mf' }, place);
+const mf = four.rows().filter((q) => q[0] === 9);
+assert.deepEqual(mf.map((q) => [q[1], q[2], q[4]]), [[1, 150, 55]], 'one mf on staff 1 at 150');
+four.ed.rollback(ran.mark);
+ran = create({ item: 'text', text: 'Allegro' }, place);
+assert.equal(four.rows().filter((q) => q[0] === 16).length, 1);
+four.ed.rollback(ran.mark);
+ran = create({ item: 'staff' }, place);
+assert.deepEqual(four.rows().filter((q) => q[0] === 8).map((q) => q[1]), [1, 2]);
+four.ed.rollback(ran.mark);
+assert.throws(() => create({ item: 'barline' }, { keys: null, region: null }), /Click where it goes/);
 
 console.log('ai checks: ok');

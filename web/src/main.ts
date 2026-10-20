@@ -15,8 +15,8 @@ import { cursorFor, decodeHandles, devicePoint, handleAt as handleUnder, paintHa
 import type { Context } from './item-fields';
 import { createInputMode, type Shown } from './input-mode';
 import { bindInteraction } from './interaction';
-import { createMenuBar, inMenuBar, MOD } from './menu';
-import { appMenus, type DialogKind } from './menus';
+import { createMenuBar, inMenuBar, MOD, type Menu } from './menu';
+import { appMenus, wordCommands, type DialogKind } from './menus';
 import { bindPanelGrip, formatParam, renderSelection, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer, Overlay } from './paint';
 import { download, printPage } from './print';
@@ -978,8 +978,9 @@ function aiAbout(text: string, scope: Scope): About | null {
   }
   const staves = new Set([...sample.map(({ params }) => params[1]!), ...(scope.region ? [scope.region.staff] : [])]);
   const bars = new Map([...barlines(access)].filter(([staff]) => staves.has(staff)));
-  return { text, counts, whole: scope.keys === null, region: scope.region, middle: middleAt(score, scope.region), sample, bars, codeName: nameOf };
+  return { text, counts, whole: scope.keys === null, region: scope.region, middle: middleAt(score, scope.region), sample, bars, commands: wordCommands(menus).map(({ id, label, title }) => ({ id, label, title })), codeName: nameOf };
 }
+
 
 let catalog: Catalog | null = null;
 
@@ -1017,6 +1018,11 @@ const aiPrompt = createAiPrompt(ui.stage, {
     if (!editor) return;
     const at = new Map(editor.keys().map((key, i) => [key, i]));
     select(keys.flatMap((key) => at.get(key) ?? []), true);
+  },
+  app(id) {
+    const found = wordCommands(menus).find((command) => command.id === id);
+    found?.run();
+    return found !== undefined;
   },
 });
 view.onPaint(() => aiPrompt.place());
@@ -1202,43 +1208,43 @@ function settleFocus() {
   if (!active || active === document.body || inMenuBar(active) || ui.app.querySelector('.appbar')!.contains(active)) ui.viewport.focus();
 }
 
+/** The app's menus, which commands in words reach too. */
+let menus: Menu[] = [];
+
 function bindMenus() {
-  createMenuBar(
-    ui.menubar,
-    appMenus({
-      hasScore: () => state.score !== null,
-      hasSelection: () => selection().length > 0,
-      run: runCommand,
-      runArea,
-      supported: commandSupported,
-      openDialog: (kind) => void openDialog(kind),
-      newScore,
-      open: chooseFile,
-      samples: () => samples.map((s) => ({ title: s.title, open: () => void openSample(s) })),
-      save,
-      exportSvg: () => void exportSvg(),
-      print: () => void print(),
-      undo: () => edit((editor) => editor.undo()),
-      redo: () => edit((editor) => editor.redo()),
-      cut: clipboard.cut,
-      copy: clipboard.copy,
-      paste: clipboard.paste,
-      canPaste: () => clipboard.full,
-      duplicate,
-      selectAll,
-      undoLabel: () => state.editor?.undoLabel() ?? null,
-      redoLabel: () => state.editor?.redoLabel() ?? null,
-      input: () => enterInput(),
-      zoomIn: () => view.setZoom(stepZoom(view.zoom, 1)),
-      zoomOut: () => view.setZoom(stepZoom(view.zoom, -1)),
-      fitWidth: () => view.fitWidth(),
-      actualSize: () => view.setZoom(100),
-      panelShown: () => state.panel,
-      togglePanel: () => setPanel(!state.panel),
-      shortcuts: showShortcuts,
-    }),
-    settleFocus,
-  );
+  menus = appMenus({
+    hasScore: () => state.score !== null,
+    hasSelection: () => selection().length > 0,
+    run: runCommand,
+    runArea,
+    supported: commandSupported,
+    openDialog: (kind) => void openDialog(kind),
+    newScore,
+    open: chooseFile,
+    samples: () => samples.map((s) => ({ title: s.title, open: () => void openSample(s) })),
+    save,
+    exportSvg: () => void exportSvg(),
+    print: () => void print(),
+    undo: () => edit((editor) => editor.undo()),
+    redo: () => edit((editor) => editor.redo()),
+    cut: clipboard.cut,
+    copy: clipboard.copy,
+    paste: clipboard.paste,
+    canPaste: () => clipboard.full,
+    duplicate,
+    selectAll,
+    undoLabel: () => state.editor?.undoLabel() ?? null,
+    redoLabel: () => state.editor?.redoLabel() ?? null,
+    input: () => enterInput(),
+    zoomIn: () => view.setZoom(stepZoom(view.zoom, 1)),
+    zoomOut: () => view.setZoom(stepZoom(view.zoom, -1)),
+    fitWidth: () => view.fitWidth(),
+    actualSize: () => view.setZoom(100),
+    panelShown: () => state.panel,
+    togglePanel: () => setPanel(!state.panel),
+    shortcuts: showShortcuts,
+  });
+  createMenuBar(ui.menubar, menus, settleFocus);
 }
 
 function showShortcuts() {

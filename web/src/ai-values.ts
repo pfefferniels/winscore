@@ -4,9 +4,12 @@
 // pre-parsed extraction pattern has it; what the command means is left to
 // the models.
 
-/** The numbers in the text as written: "1.5", "-2", "50%"; not ordinals ("8th"). */
+/** Numbers spelt out; not "one", as likely a pronoun ("every other one"). */
+const SPELT: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
+
+/** The numbers in the text as written: "1.5", "-2", "50%", "three"; not ordinals ("8th") or a meter's ("3/4"). */
 export function numberWords(text: string): string[] {
-  return Array.from(text.matchAll(/(^|[^\w.])(-?\d+(?:\.\d+)?%?)(?!\w)/g), (m) => m[2]!);
+  return Array.from(text.matchAll(/(^|[^\w./])(-?\d+(?:\.\d+)?%?)(?![\w/])|\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/gi), (m) => m[2] ?? m[3]!.toLowerCase());
 }
 
 /** A count: a whole number that is not an ordinal ("4", "4s"; not "8th"), or a count's word ("pairs", "fours"; not "eighth"). */
@@ -25,8 +28,20 @@ export function namesOption(text: string, label: string): boolean {
   return word !== undefined && (VALUE_WORDS[word] ?? [word.slice(0, 6)]).some((s) => lower.includes(s));
 }
 
-/** A number as written, a percentage as a fraction ("50%" is 0.5). */
-export const numberOf = (word: string) => (word.endsWith('%') ? Number(word.slice(0, -1)) / 100 : Number(word));
+/** A number as written, a percentage as a fraction ("50%" is 0.5), a spelt one as its value. */
+export const numberOf = (word: string) => SPELT[word] ?? (word.endsWith('%') ? Number(word.slice(0, -1)) / 100 : Number(word));
+
+/** A meter written as a fraction ("3/4", "6 / 8"): its numbers. */
+export function meterIn(text: string): [number, number] | null {
+  const m = /(?:^|[^\w./])(\d{1,2})\s*\/\s*(\d{1,2})(?![\w./])/.exec(text);
+  return m ? [Number(m[1]), Number(m[2])] : null;
+}
+
+/** The characters given in double quotes ("Allegro", “dolce”). */
+export function quotedIn(text: string): string | null {
+  const m = /["“”„]([^"“”„]+)["“”]/.exec(text);
+  return m ? m[1]!.trim() || null : null;
+}
 
 /** The numbers in the text ("50%" as 0.5). */
 export function numbersIn(text: string): number[] {

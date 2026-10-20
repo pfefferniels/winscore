@@ -58,7 +58,14 @@ export type Step =
    * For each item picked, a new item with P1 … Pn from these values (over the item it is made for); none where P1 comes to 0.
    * A text (P1 16) has `text` as its characters and is made as quick entry makes it: P2 … P11 from the values, P3 + 1000 centred on P3.
    */
-  | { do: 'add'; items?: Filter | null; params: Value[]; text?: string | null };
+  | { do: 'add'; items?: Filter | null; params: Value[]; text?: string | null }
+  /**
+   * A new item from a SCORE creation word (BAR, TREB, CRH …) on each staff of the items: between them and the item
+   * before, at the first, between them and the next, or over them from the first to the last (a slur's or tie's ends
+   * at their notes); with no items, where new music goes. `more` are the numbers after its P3 (0 keeps the default).
+   * "page" leaves the place to the engine (STAFF: above the highest); TEXT makes a text of `text`, as quick entry does.
+   */
+  | { do: 'create'; items?: Filter | null; word: string; at: 'before' | 'at' | 'after' | 'over' | 'page'; more?: number[] | null; text?: string | null };
 
 export interface Script {
   /** What it does, in a few words. */
@@ -110,6 +117,7 @@ export interface Ran {
 
 const NOTE = 1;
 const BEAM = 6;
+const STAFF = 8;
 const BARLINE = 14;
 const TEXT = 16;
 /** Quick text entry takes P2 … P11. */
@@ -563,6 +571,8 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       return beam(access, targets(access, scope, step.items, knobs), Math.round(knobValue(step.size)));
     case 'select':
       return targets(access, scope, step.items, knobs).map((t) => t.key);
+    case 'create':
+      return create(access, scope, targets(access, scope, step.items, knobs), step);
     case 'add': {
       const { list, vars } = picked(access, scope, step.items, knobs);
       const values = step.params.map(valueOf);
@@ -661,6 +671,122 @@ function beam(access: Access, list: Target[], size: number): number[] {
     if (editor.prompt() !== null) editor.execute('X');
   }
   return [...notes.map((t) => t.key), ...made];
+}
+
+/** Items that stand at one place on a staff (notes, rests, clefs, symbols, barlines, texts, keys, meters): new barlines and clefs go between them. */
+const STANDING = new Set([1, 2, 3, 9, 10, 14, 16, 17, 18]);
+/** P3 between the items and a barline or clef with nothing beside them. */
+const BESIDE = 3;
+/** How far a slur or hairpin made where nothing is selected reaches. */
+const SPAN = 20;
+const TIE = -2;
+const [STEM_UP, STEM_DOWN] = [1, 2];
+
+/** One staff's stretch of the items a new item goes by, and the notes at its two ends. */
+interface Stretch {
+  staff: number;
+  left: number;
+  right: number;
+  first: Float32Array[];
+  last: Float32Array[];
+}
+
+/** Each staff's stretch of the items, by those that stand at one place if there are any; with none, the place of the region (`over` it: some way along). */
+function stretchesOf(list: Target[], region: Region | null, over: boolean): Stretch[] {
+  const standing = list.filter((t) => STANDING.has(t.params[0]!));
+  const items = standing.length ? standing : list;
+  if (items.length === 0) {
+    return region ? [{ staff: region.staff, left: region.from, right: over ? Math.min(region.to, region.from + SPAN) : region.from, first: [], last: [] }] : [];
+  }
+  const byStaff = new Map<number, Target[]>();
+  items.forEach((t) => byStaff.set(t.params[1]!, [...(byStaff.get(t.params[1]!) ?? []), t]));
+  return [...byStaff].map(([staff, on]) => {
+    const xs = on.map((t) => t.params[2]!);
+    const notes = on.filter((t) => t.params[0] === NOTE);
+    const chordAt = (x: number) => notes.filter((t) => Math.abs(t.params[2]! - x) < CHORD).map((t) => t.params);
+    const nx = notes.map((t) => t.params[2]!);
+    return { staff, left: Math.min(...xs), right: Math.max(...xs), first: nx.length ? chordAt(Math.min(...nx)) : [], last: nx.length ? chordAt(Math.max(...nx)) : [] };
+  });
+}
+
+const stemOf = (p: Float32Array) => Math.floor(Math.abs(p[4]!) / 10 + 1e-6) % 10;
+
+/** Whether a chord's stem goes up; a stemless one's would above the middle line (level 6) go down, as the engine has it. */
+function stemUp(chord: Float32Array[]): boolean {
+  const stem = chord.map(stemOf).find((s) => s === STEM_UP || s === STEM_DOWN);
+  return stem === undefined ? Math.max(...chord.map((p) => level(p[3]!))) <= 6 : stem === STEM_UP;
+}
+
+/**
+ * A slur's or tie's P4, P5 and P7 at the chords it joins, as the engine's
+ * slur pass places them: below when both stems go up (a tie: when the first
+ * does), else above; each end two steps from its outer head, or past the
+ * stem on that side, and off a staff line; a tie's half a step from a head
+ * in a space, 1.2 from one on a line.
+ */
+function slurEnds(first: Float32Array[], last: Float32Array[], tie: boolean): [number, number][] {
+  const below = stemUp(first) && (tie || stemUp(last));
+  const sign = below ? -1 : 1;
+  const end = (chord: Float32Array[]) => {
+    const levels = chord.map((p) => level(p[3]!));
+    const head = below ? Math.min(...levels) : Math.max(...levels);
+    if (tie) return head + sign * (Math.round(head) % 2 !== 0 ? 1.2 : 0.5);
+    const stemmed = chord.find((p) => stemOf(p) === STEM_UP || stemOf(p) === STEM_DOWN);
+    const y = stemmed && stemUp(chord) !== below ? head + sign * (((stemmed[7] ?? 0) % 100) + 8) : head + 2 * sign;
+    return y % 2 === 1 && (below ? y > 2 : y < 12) ? y + sign : y;
+  };
+  return [
+    [4, end(first)],
+    [5, end(last.length ? last : first)],
+    [7, 3 * sign],
+  ];
+}
+
+/** Makes an item of a creation word by each staff's stretch of the items (create steps). */
+function create(access: Access, scope: Scope, list: Target[], step: Extract<Step, { do: 'create' }>): number[] {
+  const editor = access.editor;
+  const made: number[] = [];
+  const make = (run: () => void) => {
+    editor.select([]);
+    run();
+    if (editor.prompt() !== null) editor.execute('X');
+    const index = editor.selection()[0];
+    if (index === undefined) throw new Error(`No item from ${step.word}`);
+    made.push(editor.keys()[index]!);
+    return index;
+  };
+  if (step.at === 'page') {
+    make(() => execute(editor, step.word));
+    return made;
+  }
+  // With nothing selected (the whole score), the place clicked.
+  const stretches = stretchesOf(scope.keys === null ? [] : list.filter((t) => t.params[0] !== STAFF), scope.region, step.at === 'over');
+  if (stretches.length === 0) throw new Error('Click where it goes, or select what it goes by');
+  const summaries = access.summaries();
+  for (const s of stretches) {
+    const xs: number[] = [];
+    for (let i = 0; 3 * i < summaries.length; i++) if (summaries[3 * i + 1] === s.staff && STANDING.has(summaries[3 * i]!)) xs.push(summaries[3 * i + 2]!);
+    const before = Math.max(...xs.filter((x) => x < s.left - CHORD));
+    const after = Math.min(...xs.filter((x) => x > s.right + CHORD));
+    const x =
+      step.at === 'before' ? (Number.isFinite(before) ? (before + s.left) / 2 : Math.max(0, s.left - BESIDE)) : step.at === 'after' ? (Number.isFinite(after) ? (s.right + after) / 2 : Math.min(200, s.right + BESIDE)) : s.left;
+    const index = make(() => {
+      if (step.word !== 'TEXT') return execute(editor, [step.word, s.staff, Math.round(x * 1e4) / 1e4, ...(step.more ?? [])].join(' '));
+      if (!step.text) throw new Error('A new text needs its characters');
+      editor.insertText(step.text, [s.staff, x]);
+    });
+    const params = access.params(index)!;
+    // Clefs keep their own place whatever is typed, and a 0 keeps the default.
+    const changes: [number, number][] = Math.abs(params[2]! - x) > 1e-3 ? [[3, x]] : [];
+    if (step.at === 'over') {
+      // Over one item: up to the next.
+      changes.push([6, s.right > s.left ? s.right : Math.min(200, Number.isFinite(after) ? after : s.left + SPAN)]);
+      const kind = Math.trunc(params[7] ?? 0);
+      if (params[0] === 5 && kind <= 0 && s.first.length) changes.push(...slurEnds(s.first, s.last, kind === TIE));
+    }
+    if (changes.length) editor.setParamsOf([[index, changes]]);
+  }
+  return made;
 }
 
 export function knobValues(script: Script, overrides: Record<string, number> = {}): Vars {
