@@ -1,7 +1,9 @@
-// The app's menus. Entries that send SCORE commands take the command and
-// its tooltip from WinScore's command table by menu id, as WinScore's own
-// menus and toolbars send them, and show the command so it can be typed on
-// the command field next time. Commands score-edit does not handle are left out.
+// The editor's commands, as menus of entries (menu.ts), listed by the `?`
+// dialog and reached by commands in words. Entries that send SCORE commands
+// take the command and its tooltip from WinScore's command table by menu id,
+// as WinScore's own menus and toolbars send them, and show the command so it
+// can be typed on the command field next time. Commands score-edit does not
+// handle are left out.
 import { commandById } from './commands';
 import { menuActions, MOD, type Action, type Entry, type Menu } from './menu';
 
@@ -210,7 +212,7 @@ export function appMenus(hooks: MenuHooks): Menu[] {
       'separator',
       { label: 'Side panel', id: 'panel', run: hooks.togglePanel, checked: hooks.panelShown, enabled: scored },
       'separator',
-      { label: 'Keys and gestures', hint: 'F1', id: 'shortcuts', run: hooks.shortcuts },
+      { label: 'Commands, keys and gestures', hint: 'F1', id: 'shortcuts', run: hooks.shortcuts },
     ],
   };
 

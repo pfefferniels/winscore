@@ -15,7 +15,7 @@ import { cursorFor, decodeHandles, devicePoint, handleAt as handleUnder, paintHa
 import type { Context } from './item-fields';
 import { createInputMode, type Shown } from './input-mode';
 import { bindInteraction } from './interaction';
-import { createMenuBar, inMenuBar, MOD, type Menu } from './menu';
+import { labelOf, MOD, type Action, type Menu } from './menu';
 import { appMenus, wordCommands, type DialogKind } from './menus';
 import { bindPanelGrip, formatParam, renderSelection, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer, Overlay } from './paint';
@@ -97,7 +97,6 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 
 const ui = {
   app: $<HTMLDivElement>('app'),
-  menubar: $<HTMLElement>('menubar'),
   file: $<HTMLInputElement>('file'),
   doc: $<HTMLSpanElement>('doc'),
   docState: $<HTMLSpanElement>('doc-state'),
@@ -115,6 +114,7 @@ const ui = {
   togglePanel: $<HTMLButtonElement>('toggle-panel'),
   help: $<HTMLButtonElement>('help'),
   shortcuts: $<HTMLDialogElement>('shortcuts-dialog'),
+  commandList: $<HTMLElement>('command-list'),
   status: $<HTMLSpanElement>('status'),
   stage: $<HTMLDivElement>('stage'),
   viewport: $<HTMLDivElement>('viewport'),
@@ -1205,10 +1205,10 @@ function bindDrop() {
 /** Gives the keyboard back to the page when an action left it nowhere in particular. */
 function settleFocus() {
   const active = document.activeElement;
-  if (!active || active === document.body || inMenuBar(active) || ui.app.querySelector('.appbar')!.contains(active)) ui.viewport.focus();
+  if (!active || active === document.body || ui.app.querySelector('.appbar')!.contains(active)) ui.viewport.focus();
 }
 
-/** The app's menus, which commands in words reach too. */
+/** The editor's commands, as menus of entries: the `?` dialog lists them, and commands in words reach them. */
 let menus: Menu[] = [];
 
 function bindMenus() {
@@ -1244,14 +1244,45 @@ function bindMenus() {
     togglePanel: () => setPanel(!state.panel),
     shortcuts: showShortcuts,
   });
-  createMenuBar(ui.menubar, menus, settleFocus);
 }
 
+/** The `?` dialog: every command of the menus as a button, as they are now, then keys and gestures. */
 function showShortcuts() {
   if (ui.shortcuts.open) return;
+  ui.commandList.replaceChildren(...menus.map(commandSection));
   ui.shortcuts.showModal();
   // Opened on its Close button, the dialog would start scrolled to the end on a small screen.
   ui.shortcuts.scrollTop = 0;
+}
+
+/** One menu's entries as buttons, which close the dialog and run them: a row of them as small ones after its name. */
+function commandSection(menu: Menu): HTMLElement {
+  const text = (className: string, textContent: string) => Object.assign(document.createElement('span'), { className, textContent });
+  const button = (action: Action, small = false) => {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: small ? 'command small' : 'command', title: action.title ?? '', disabled: !(action.enabled?.() ?? true) });
+    if (action.id) b.dataset.action = action.id;
+    if (action.checked) b.setAttribute('aria-pressed', String(action.checked()));
+    b.append(text('command-label', labelOf(action)), ...(action.hint && !small ? [text('command-hint', action.hint)] : []));
+    b.addEventListener('click', () => {
+      ui.shortcuts.close();
+      action.run();
+      settleFocus();
+    });
+    return b;
+  };
+  const items = menu.entries().flatMap((entry): HTMLElement[] => {
+    if (entry === 'separator') return [];
+    if ('heading' in entry) return [text('command-heading', entry.heading)];
+    if ('row' in entry) {
+      const row = Object.assign(document.createElement('div'), { className: 'command-row' });
+      row.append(text('command-row-label', entry.row), ...entry.actions.map((action) => button(action, true)));
+      return [row];
+    }
+    return [button(entry)];
+  });
+  const section = document.createElement('section');
+  section.append(Object.assign(document.createElement('h3'), { textContent: menu.label }), ...items);
+  return section;
 }
 
 function bindStart() {
@@ -1303,7 +1334,7 @@ function bindControls() {
   if (MOD !== '⌘') ui.shortcuts.querySelectorAll('kbd.mod').forEach((k) => (k.textContent = 'Ctrl'));
   window.addEventListener('keydown', onAppKey);
   window.addEventListener('keydown', (e) => {
-    if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey || inMenuBar(e.target)) return;
+    if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;
     if (e.key === '+' || e.key === '=') view.setZoom(stepZoom(view.zoom, 1));
     if (e.key === '_') view.setZoom(stepZoom(view.zoom, -1));
     // With nothing selected Escape takes the field away from its place (with a selection it deselects, and the field goes with it).

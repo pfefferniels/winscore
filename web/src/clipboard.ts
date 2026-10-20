@@ -1,6 +1,6 @@
 // Copy, cut, paste and duplicate: ⌘C, ⌘X, ⌘V and ⌘D (Ctrl elsewhere) and
-// the Edit menu. Copied items travel as a .mus file of their own: kept here
-// for the menu, and on the system clipboard as text, so that ⌘V in another
+// the Edit commands. Copied items travel as a .mus file of their own: kept here
+// for Edit ▸ Paste, and on the system clipboard as text, so that ⌘V in another
 // tab's score pastes them too. Form fields, dialogs and text selected on the
 // page keep the browser's own copy and paste.
 
@@ -21,7 +21,7 @@ export interface ClipboardHooks {
 export interface Clipboard {
   copy(): void;
   cut(): void;
-  /** Pastes what was copied last in this tab (the menu cannot read the system clipboard without asking). */
+  /** Pastes what was copied last in this tab (Edit ▸ Paste cannot read the system clipboard without asking). */
   paste(): void;
   readonly full: boolean;
 }
@@ -53,7 +53,7 @@ function pageHasKeys(target: EventTarget | null): boolean {
 export function bindClipboard(hooks: ClipboardHooks): Clipboard {
   let copied: Uint8Array | null = null;
 
-  /** Keeps `items` for the menu and puts them on the system clipboard; false when nothing was selected. */
+  /** Keeps `items` for Edit ▸ Paste and puts them on the system clipboard; false when nothing was selected. */
   const keep = (items: Uint8Array): boolean => {
     if (items.length === 0) return false;
     copied = items;

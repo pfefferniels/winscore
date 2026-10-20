@@ -2,19 +2,20 @@
 // the empty paper was clicked, and what is typed on the page goes into it
 // (opening it if need be). A command in words goes to Jev at every keystroke,
 // and the newest reading shows while typing goes on; Enter edits the score at
-// once with what Jev read, or runs the editor's command it read (a menu
-// entry). When Jev is not sure, Enter sends the command off to Claude (one
-// Jev finds complex to the model for those) and the field takes the next
-// command at once, for these items or others: the edit lands on the command's own items when it is written, and a
-// badge by them says how it goes. A SCORE command runs as on WinScore's
-// command bar, on the selection if there is one. Numbers the command leaves
-// open appear as sliders under the field; dragging one re-does the edit with
-// the new value, live, as the same undo step. While a group command asks for
-// its area, the field shows the question and takes the answer. Up and Down
-// recall earlier lines.
+// once with what Jev read, or runs the editor's command it read (an entry of
+// the `?` list, which its name typed runs without a model). When Jev is not
+// sure, Enter sends the command off to Claude (one Jev finds complex to the
+// model for those) and the field takes the next command at once, for these
+// items or others: the edit lands on the command's own items when it is
+// written, and a badge by them says how it goes. A SCORE command runs as on
+// WinScore's command bar, on the selection if there is one. Numbers the
+// command leaves open appear as sliders under the field; dragging one re-does
+// the edit with the new value, live, as the same undo step. While a group
+// command asks for its area, the field shows the question and takes the
+// answer. Up and Down recall earlier lines.
 import type { Box } from './display';
 import type { Change, Editor } from './editor';
-import { onlyParams, reach, run, selects, type Access, type Knob, type Scope, type Script } from './ai-script';
+import { onlyParams, plain, reach, run, selects, type Access, type Knob, type Scope, type Script } from './ai-script';
 import {
   askClaude,
   askJev,
@@ -145,6 +146,16 @@ const format = (v: number) => (Math.abs(v) >= 10 ? v.toFixed(0) : String(Math.ro
  * 600 5), a conditional edit (IF … THEN …) or a text's quick entry ("Allegro" 1 50).
  */
 const looksLikeScore = (text: string) => /^[A-Z][A-Z0-9]*(\s+[-+]?[\d.]+)*$|^[-+]?[\d.]+(\s+[-+]?[\d.]+)+$|^IF\s|^"/.test(text.trim());
+
+/**
+ * The editor's command a line names, as its entry is called or its id
+ * reads ("save", "zoom in", "export svg", "undo"), whatever the case and
+ * punctuation; ids that are SCORE's words run as SCORE commands.
+ */
+function namedCommand(commands: AppCommand[], text: string): AppCommand | null {
+  const wanted = plain(text);
+  return commands.find((c) => plain(c.label.split(' ▸ ').at(-1)!) === wanted || (/[a-z]/.test(c.id) && plain(c.id) === wanted)) ?? null;
+}
 
 /** IN, IN n: music input, which the page opens. */
 const opensInput = (text: string) => /^IN(\s+\d+)?$/.test(text.trim());
@@ -365,6 +376,13 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       return;
     }
     const about = scope && hooks.about(text, scope);
+    // An editor's command by its name needs no model.
+    const command = about && namedCommand(about.commands, text);
+    if (command) {
+      forgetAll();
+      showReading({ command, source: 'Editor command' });
+      return;
+    }
     const known = about && (memo.get(readingKey(about)) ?? memo.get(claudeKey(about, scope!)));
     if (known) {
       forgetAll();
@@ -403,7 +421,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     showKnobs(r.script.knobs.map((k) => ({ ...k, value: performed.applied.values[k.id] ?? k.value })));
   }
 
-  /** Runs one of the editor's own commands, as its menu entry does; the field says so if it is still there with nothing typed. */
+  /** Runs one of the editor's own commands, as its entry in the `?` list does; the field says so if it is still there with nothing typed. */
   function runApp(command: AppCommand, source: string) {
     const ran = hooks.app(command.id);
     if (box.hidden || input.value.trim()) return;

@@ -420,7 +420,7 @@ function selectionHead(members: Member[], step: HTMLElement, handlers: PanelHand
 /** The panel for the selected items, the primary one last. */
 export function renderSelection(section: HTMLElement, items: ItemDetails[], handlers: PanelHandlers, hasScore = true) {
   if (!hasScore) {
-    section.replaceChildren(...emptyState('No score open', 'Start a new score or open one from the File menu.'));
+    section.replaceChildren(...emptyState('No score open', 'Start a new score or open one from the start screen.'));
     return;
   }
   const members = items.map((item) => ({ item, p: reader(item.params) }));

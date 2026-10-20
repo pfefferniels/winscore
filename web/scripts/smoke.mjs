@@ -14,10 +14,10 @@ try {
   const page = await browser.newPage({ viewport: { width: 1400, height: 900 }, acceptDownloads: true });
   const errors = [];
   page.on('pageerror', (err) => errors.push(err.message));
-  /** Runs the entry `action` (its `data-action`) of menu `menu`. */
+  /** Runs the command `action` (its `data-action`) of menu `menu` from the list the `?` dialog shows. */
   const menu = async (name, action) => {
-    await page.click(`#menu-${name}`);
-    await page.click(`.menu-popup [data-action="${action}"]`);
+    await page.click('#help');
+    await page.click(`.command-list section:has(h3:text-is("${name.charAt(0).toUpperCase()}${name.slice(1)}")) [data-action="${action}"]`);
   };
   /** Selects item `index` (numbered from 0, as the panel does) with SCORE's `I n` (from 1), typed on the page, and gives the keyboard back to the page. */
   const pick = async (index) => {
@@ -87,17 +87,22 @@ try {
   await menu('file', 'new');
   assert.equal(await page.getAttribute('#app', 'data-items'), '0');
 
-  // Menus work from the keyboard: ↓ opens, arrows move, Escape closes.
-  await page.focus('#menu-file');
-  await page.keyboard.press('ArrowDown');
-  assert.equal(await page.evaluate(() => document.activeElement.dataset.action), 'new');
-  await page.keyboard.press('ArrowDown');
-  assert.equal(await page.evaluate(() => document.activeElement.dataset.action), 'open');
-  await page.keyboard.press('ArrowRight');
-  assert.equal(await page.getAttribute('#menu-edit', 'aria-expanded'), 'true');
+  // There is no menu bar: `?` lists every command, as the menus had them, and Escape closes it. A command's
+  // name typed on the page runs it, with no model.
+  assert.equal(await page.locator('.menubar').count(), 0);
+  await page.click('#help');
+  assert.ok((await page.locator('.command-list .command').count()) > 30);
+  assert.equal(await page.getAttribute('.command-list [data-action="panel"]', 'aria-pressed'), 'true');
   await page.keyboard.press('Escape');
-  assert.equal(await page.locator('.menu-popup').count(), 0);
-  assert.equal(await page.evaluate(() => document.activeElement.id), 'menu-edit');
+  assert.ok(await page.isHidden('#shortcuts-dialog'));
+  const zoomed = await page.inputValue('#zoom');
+  await page.focus('#viewport');
+  await page.keyboard.type('zoom in');
+  await page.waitForFunction(() => document.querySelector('.ai-source')?.textContent === 'Editor command');
+  assert.equal(await page.textContent('.ai-reading'), '→ View ▸ Zoom in');
+  await page.keyboard.press('Enter');
+  assert.notEqual(await page.inputValue('#zoom'), zoomed);
+  await page.keyboard.press('Escape');
 
   await page.goto('http://localhost:4178/?sample=mozart.mus&zoom=400');
   await page.waitForSelector('#app[data-ready="true"]');
@@ -558,7 +563,7 @@ try {
   await mobile.waitForSelector('#app[data-ready="true"]');
   assert.ok(await mobile.evaluate(() => document.querySelector('.appbar').scrollWidth <= innerWidth));
   assert.ok(await mobile.isHidden('#panel'));
-  assert.ok(await mobile.isHidden('#menu-file'));
+  assert.ok(await mobile.isVisible('#help'));
   assert.match(await mobile.textContent('#message'), /^Item 2 Staff/);
 
   // A tap selects; taps down the centre column find the staff, as the clicks above did.
@@ -602,11 +607,11 @@ try {
   await swipe([sheet[0], sheet[1]], [sheet[2], sheet[3]], 600);
   assert.match(await mobile.textContent('#item h2'), /^\d+ items/);
 
-  // The Menu button opens the menus across the screen, their titles as tabs.
-  await mobile.locator('#menu-compact').tap();
-  assert.deepEqual(await mobile.evaluate(() => [document.querySelector('.menu-popup').getBoundingClientRect().left, innerWidth - document.querySelector('.menu-popup').getBoundingClientRect().right]), [8, 8]);
-  await mobile.locator('.menu-tab[data-menu="insert"]').tap();
-  await mobile.locator('.menu-popup [data-action="input"]').tap();
+  // `?` lists the commands across the screen; music input from there.
+  await mobile.locator('#help').tap();
+  const listed = await mobile.evaluate(() => document.getElementById('shortcuts-dialog').getBoundingClientRect());
+  assert.ok(listed.left >= 0 && listed.right <= (await mobile.evaluate(() => innerWidth)), 'the list fits the screen');
+  await mobile.locator('.command-list [data-action="input"]').tap();
 
   // Music input takes the on-screen keyboard's text through its typing field, and the keys it lacks from buttons.
   assert.ok(await mobile.isHidden('#footer'));

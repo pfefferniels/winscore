@@ -82,7 +82,7 @@ svg {
   stroke-linejoin: round;
 }
 
-/* The app bar: menus, undo and redo, music input, the score's name, zoom. */
+/* The app bar: undo and redo, music input, the score's name, zoom, the side panel, help. */
 .appbar {
   position: relative;
   z-index: 10;
@@ -229,175 +229,6 @@ button.icon[aria-pressed='true'] {
   padding: 0 4px;
   text-align: center;
   font-variant-numeric: tabular-nums;
-}
-
-/* Drop-down menus. */
-.menubar {
-  display: flex;
-  align-items: center;
-  gap: 1px;
-}
-
-/* On a narrow screen one Menu button stands for the titles, which become tabs in the menu. */
-.menu-compact,
-.menu-tabs {
-  display: none;
-}
-
-.appbar .menu-compact {
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-}
-
-.menu-compact svg {
-  width: 18px;
-  height: 18px;
-}
-
-.appbar .menu-compact.open {
-  background: var(--active);
-}
-
-.menu-tabs {
-  position: sticky;
-  top: -5px;
-  z-index: 1;
-  gap: 2px;
-  margin: -5px -5px 4px;
-  padding: 5px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
-}
-
-.appbar .menu-tab {
-  flex: 1;
-  min-width: 0;
-  padding: 0 4px;
-  border-radius: 6px;
-}
-
-.appbar .menu-tab[aria-pressed='true'] {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.menu {
-  position: relative;
-}
-
-.appbar .menu-title {
-  height: 30px;
-  padding: 0 10px;
-}
-
-.appbar .menu-title.open {
-  background: var(--active);
-}
-
-.menu-popup {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  min-width: 250px;
-  max-height: calc(100vh - 64px);
-  max-height: calc(100dvh - 64px);
-  overflow: auto;
-  padding: 5px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--bg);
-  box-shadow: var(--shadow);
-  white-space: nowrap;
-}
-
-.menu-popup:focus {
-  outline: none;
-}
-
-.menu-popup .menu-item {
-  display: grid;
-  grid-template-columns: 16px 1fr auto;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  height: 30px;
-  padding: 0 10px 0 6px;
-  border: none;
-  border-radius: 5px;
-  background: transparent;
-  text-align: left;
-}
-
-.menu-popup .menu-item:hover:not(:disabled),
-.menu-popup .menu-item:focus-visible {
-  outline: none;
-  background: var(--accent-soft);
-}
-
-.menu-check {
-  color: var(--accent);
-  font-weight: 700;
-}
-
-.menu-hint {
-  padding-left: 16px;
-  color: var(--muted);
-  font-family: ui-monospace, monospace;
-  font-size: 11.5px;
-}
-
-.menu-heading {
-  padding: 8px 10px 3px 28px;
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.menu-sep {
-  height: 1px;
-  margin: 4px 2px;
-  background: var(--border);
-}
-
-.menu-row {
-  display: grid;
-  grid-template-columns: 44px 1fr;
-  align-items: center;
-  padding: 3px 6px 3px 28px;
-}
-
-.menu-row-label {
-  color: var(--muted);
-}
-
-.menu-chips {
-  display: flex;
-  gap: 3px;
-}
-
-.appbar .menu-chips .menu-chip {
-  border-color: var(--border);
-}
-
-.menu-chips .menu-chip {
-  height: 26px;
-  padding: 0 8px;
-  border-radius: 5px;
-  font-size: 12px;
-}
-
-.menu-chips .menu-chip:hover:not(:disabled),
-.menu-chips .menu-chip:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  background: var(--accent-soft);
 }
 
 .viewport:focus {
@@ -650,6 +481,89 @@ button.icon[aria-pressed='true'] {
 .shortcuts-dialog h2 {
   margin: 0 0 12px;
   font-size: 15px;
+}
+
+/* Every command of the menus, as buttons by menu. */
+.command-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 14px 24px;
+  margin-bottom: 20px;
+}
+
+.command-list section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.command-list h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.command-list .command {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  text-align: left;
+}
+
+.command-list .command:hover:not(:disabled),
+.command-list .command:focus-visible {
+  outline: none;
+  background: var(--accent-soft);
+}
+
+.command-list .command[aria-pressed='true'] .command-label::after {
+  content: ' ✓';
+  color: var(--accent);
+}
+
+.command-label {
+  flex: 1;
+}
+
+.command-hint {
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  font-size: 11.5px;
+}
+
+.command-heading {
+  padding: 6px 8px 2px;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.command-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+}
+
+.command-row-label {
+  min-width: 40px;
+  color: var(--muted);
+}
+
+.command-list .command.small {
+  min-height: 26px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.command-list .command.small:hover:not(:disabled),
+.command-list .command.small:focus-visible {
+  border-color: var(--accent);
 }
 
 .shortcuts {
@@ -1602,24 +1516,17 @@ button.danger:hover {
     height: 40px;
   }
 
-  .appbar .accent,
-  .appbar .menu-title {
+  .appbar .accent {
     height: 40px;
   }
 
-  .appbar .menu-compact {
-    width: 40px;
-    height: 40px;
+  .command-list .command {
+    min-height: 40px;
   }
 
-  .menu-popup .menu-item {
-    height: 42px;
-  }
-
-  .menu-chips .menu-chip {
-    height: 36px;
+  .command-list .command.small {
+    min-height: 36px;
     padding: 0 10px;
-    font-size: 13px;
   }
 
   .item-step button {
@@ -1696,22 +1603,8 @@ button.danger:hover {
 
   .brand,
   .appbar .sep,
-  .zoom,
-  .appbar .menu-title {
+  .zoom {
     display: none;
-  }
-
-  .menu-compact,
-  .menu-tabs {
-    display: flex;
-  }
-
-  .menubar {
-    gap: 0;
-  }
-
-  .appbar .menu-compact {
-    flex: none;
   }
 
   .appbar .accent {
@@ -1733,23 +1626,6 @@ button.danger:hover {
     padding: 0;
     background: #f59e0b;
     font-size: 0;
-  }
-
-  .menu-popup {
-    position: fixed;
-    left: 8px;
-    right: 8px;
-    min-width: 0;
-  }
-
-  .menu-label {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .menu-chips {
-    flex-wrap: wrap;
   }
 
   .main {
@@ -1864,13 +1740,6 @@ button.danger:hover {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-  }
-}
-
-/* The smallest phones: shortcuts and gestures stay in the View menu. */
-@media (max-width: 400px) {
-  #help {
-    display: none;
   }
 }
 
