@@ -41,6 +41,7 @@ assert.equal(musicIn('add c 4 d 8 e 8')?.notes, 'PC5/D/E');
 assert.equal(musicIn('add c e g 4 8 8')?.typed, 'c e g 4 8 8');
 assert.equal(musicIn('add c4 e4 g4')?.rhythms, undefined, 'octaves are not values');
 assert.deepEqual(numbersIn('move up two steps, every other one'), [2], 'spelt numbers, not "one"');
+assert.deepEqual(numbersIn('repeat twice, then thrice'), [2, 3]);
 assert.deepEqual(numberWords('add 3/4 time'), [], 'a meter is no amount');
 assert.deepEqual(meterIn('add 3/4 time'), [3, 4]);
 assert.deepEqual(meterIn('make it 12 / 8'), [12, 8]);
@@ -327,6 +328,21 @@ assert.equal(selected.changed, false);
 four.ed.rollback(ran.mark);
 ran = run(scriptFor({ action: 'option', target: 'notes', setting: 'Mark', option: 'Accent', pick: 'highest' }), four.acc, four.scope(), '“accent the highest”');
 assert.deepEqual(accentsOf(), [false, false, false, true]);
+four.ed.rollback(ran.mark);
+
+// Repeated: copies after the notes, a period on each (the stretch and the mean gap), pitches kept; drawn
+// closer, alike, where they would run past the staff's end.
+ran = run(scriptFor({ action: 'repeat', target: 'all', amount: 2 }), four.acc, four.scope(), '“repeat twice”');
+const period = ((xs[3]! - xs[0]!) * 4) / 3;
+const factor = (198 - xs[0]!) / (xs[3]! + 2 * period - xs[0]!);
+const near = (list: number[]) => list.map((x) => Math.round(x * 100) / 100);
+assert.deepEqual(near(four.notes().map((q) => q[2]!)), near([0, 1, 2].flatMap((k) => xs.map((x) => xs[0]! + (x + k * period - xs[0]!) * factor))));
+assert.deepEqual(four.notes().map((q) => q[3]), [0, 1, 2].flatMap(() => [8, 9, 10, 11]), 'C5 D5 E5 F5, three times');
+assert.equal(ran.touched.length, 8);
+four.ed.rollback(ran.mark);
+// With room after them, as they were: the first two notes once more after the second.
+ran = run(scriptFor({ action: 'repeat', target: 'all', amount: 1 }), four.acc, four.scope(0, 1), '“repeat”');
+assert.deepEqual(near(four.notes().map((q) => q[2]!)).sort((a, b) => a - b), near([...xs, xs[0]! + 2 * (xs[1]! - xs[0]!), xs[1]! + 2 * (xs[1]! - xs[0]!)]).sort((a, b) => a - b));
 four.ed.rollback(ran.mark);
 
 // A slur over the notes: from the first to the last, above the stems-down heads, each end off the lines.

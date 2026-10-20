@@ -65,7 +65,9 @@ export type Step =
    * at their notes); with no items, where new music goes. `more` are the numbers after its P3 (0 keeps the default).
    * "page" leaves the place to the engine (STAFF: above the highest); TEXT makes a text of `text`, as quick entry does.
    */
-  | { do: 'create'; items?: Filter | null; word: string; at: 'before' | 'at' | 'after' | 'over' | 'page'; more?: number[] | null; text?: string | null };
+  | { do: 'create'; items?: Filter | null; word: string; at: 'before' | 'at' | 'after' | 'over' | 'page'; more?: number[] | null; text?: string | null }
+  /** Copies of the items (staves aside) `times` times, one after another to their right, as the music goes on. */
+  | { do: 'repeat'; items?: Filter | null; times: Value };
 
 export interface Script {
   /** What it does, in a few words. */
@@ -574,6 +576,8 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       return targets(access, scope, step.items, knobs).map((t) => t.key);
     case 'create':
       return create(access, scope, targets(access, scope, step.items, knobs), step);
+    case 'repeat':
+      return repeat(access, targets(access, scope, step.items, knobs), Math.round(knobValue(step.times)));
     case 'add': {
       const { list, vars } = picked(access, scope, step.items, knobs);
       const values = step.params.map(valueOf);
@@ -786,6 +790,54 @@ function create(access: Access, scope: Scope, list: Target[], step: Extract<Step
       if (params[0] === 5 && kind <= 0 && s.first.length) changes.push(...slurEnds(s.first, s.last, kind === TIE));
     }
     if (changes.length) editor.setParamsOf([[index, changes]]);
+  }
+  return made;
+}
+
+/** Where a staff ends, in P3, and how far before it the last of repeated music may stand. */
+const STAFF_END = 200;
+const END_ROOM = 2;
+/** Codes whose P6 is the P3 of their right end: lines, slurs, beams, trills. */
+const RIGHT_ENDS = new Set([4, 5, 6, 7]);
+
+/**
+ * Copies of the items, staves aside, `times` times, each pasted a period on
+ * from the one before: the items' stretch and the mean gap between their
+ * columns (WinScore's End step, ten spaces, for one column), so the music
+ * goes on as it went. Where they do not fit on the staff, the items and
+ * their copies are drawn closer about the first, alike.
+ */
+function repeat(access: Access, list: Target[], times: number): number[] {
+  const editor = access.editor;
+  const items = list.filter((t) => t.params[0] !== STAFF);
+  if (items.length === 0 || times < 1) return [];
+  const xs = items.map((t) => t.params[2]!);
+  const [left, right] = [Math.min(...xs), Math.max(...xs)];
+  const columns = new Set(xs.map((x) => Math.round(x / CHORD))).size;
+  const period = columns > 1 ? ((right - left) * columns) / (columns - 1) : 10;
+  const last = STAFF_END - END_ROOM;
+  if (left >= last) throw new Error('There is no room on the staff for more');
+  editor.select(items.map((t) => t.index));
+  const copied = editor.copySelection();
+  const staff = Math.min(...items.map((t) => t.params[1]!));
+  const made: number[] = [];
+  for (let k = 1; k <= times; k++) {
+    editor.pasteAt(copied, { staff, p3: left + k * period, p4: 0 });
+    const keys = editor.keys();
+    made.push(...editor.selection().map((i) => keys[i]!));
+  }
+  const reach = right + times * period;
+  if (reach > last) {
+    const factor = (last - left) / (reach - left);
+    const closer = (x: number) => left + (x - left) * factor;
+    const at = keyIndex(editor);
+    const edits = [...items.map((t) => t.key), ...made].flatMap((key): [number, [number, number][]][] => {
+      const index = at.get(key);
+      const params = index === undefined ? null : access.params(index);
+      if (index === undefined || !params) return [];
+      return [[index, [[3, closer(params[2]!)], ...(RIGHT_ENDS.has(params[0]!) ? [[6, closer(params[5]!)] as [number, number]] : [])]]];
+    });
+    editor.setParamsOf(edits);
   }
   return made;
 }

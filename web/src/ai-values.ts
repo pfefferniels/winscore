@@ -4,12 +4,12 @@
 // pre-parsed extraction pattern has it; what the command means is left to
 // the models.
 
-/** Numbers spelt out; not "one", as likely a pronoun ("every other one"). */
-const SPELT: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
+/** Numbers spelt out, and twice and thrice; not "one", as likely a pronoun ("every other one"). */
+const SPELT: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, twice: 2, thrice: 3 };
 
-/** The numbers in the text as written: "1.5", "-2", "50%", "three"; not ordinals ("8th") or a meter's ("3/4"). */
+/** The numbers in the text as written: "1.5", "-2", "50%", "three", "twice"; not ordinals ("8th") or a meter's ("3/4"). */
 export function numberWords(text: string): string[] {
-  return Array.from(text.matchAll(/(^|[^\w./])(-?\d+(?:\.\d+)?%?)(?![\w/])|\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/gi), (m) => m[2] ?? m[3]!.toLowerCase());
+  return Array.from(text.matchAll(/(^|[^\w./])(-?\d+(?:\.\d+)?%?)(?![\w/])|\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twice|thrice)\b/gi), (m) => m[2] ?? m[3]!.toLowerCase());
 }
 
 /** A count: a whole number that is not an ordinal ("4", "4s"; not "8th"), or a count's word ("pairs", "fours"; not "eighth"). */

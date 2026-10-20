@@ -160,6 +160,7 @@ const ACTIONS: Record<Action | 'other', string> = {
   command: 'A command in the SCORE program’s own language, short upper-case words and numbers such as FLI or R 5',
   create:
     'Add one new item of its own, not notes and not a mark on them: a staff, a barline, a repeat, a new clef, a key or time signature such as 3/4 or common time, a slur or tie over the notes (slur them, tie them), a hairpin, a trill, an 8va, a pedal mark, an ending, a dynamic such as mf, a fermata, a box, a number or a text in quotes',
+  repeat: 'Repeat the selected music or items a number of times, each copy after the one before (repeat 3 times, play this bar twice, repeat it)',
   select: 'Select, pick out or keep only some of the items, so that the next command acts on them; nothing is changed (select the bottom notes, select the beams, keep only the accented notes)',
   app: 'A command of the editor rather than an edit of the music: undo, redo, copy, cut, paste, duplicate, select everything, save, open, print, export, a new score, zoom, show or hide the side panel, line up or justify, help',
   other: 'Something else',
@@ -472,6 +473,12 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
       return intent.setting && intent.option ? intent : 'detail';
     case 'create':
       return createIntent(about, intent, sure, number);
+    case 'repeat': {
+      // The whole score has nowhere to go on to.
+      if (about.whole) return 'detail';
+      const times = number('amount');
+      return times === undefined ? intent : { ...intent, amount: Math.round(times) };
+    }
     case 'app': {
       const command = about.commands.find((c) => c.id === sure('menu'));
       return command ? { ...intent, command: command.id, label: command.label } : 'detail';
@@ -693,7 +700,7 @@ A step leaves out its unused fields here for brevity; give every field ("params"
 
 /** One step as Claude writes it: every field there, none of them a union (the API allows few). */
 interface Written {
-  do: Exclude<Step['do'], 'create'>;
+  do: Exclude<Step['do'], 'create' | 'repeat'>;
   codes: number[];
   where: string;
   where_setting: string;

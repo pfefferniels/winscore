@@ -148,6 +148,13 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["place", "put \"dolce\" here", {"action": "create", "item": "text", "text": "dolce"}],
   ["place", "add rehearsal number 12", {"action": "create", "item": "number", "more": [0, 12]}],
   ["notes", "add a slur over the first three notes", {"action": "create", "item": "slur", "pick": "first few", "many": 3}],
+  // Repeated after themselves.
+  ["notes", "repeat 3 times", {"action": "repeat", "amount": 3}],
+  ["notes", "repeat these notes twice", {"action": "repeat", "amount": 2}],
+  ["mixed", "repeat this bar four times", {"action": "repeat", "amount": 4}],
+  ["notes", "repeat it", {"action": "repeat", "amount": undefined}],
+  ["notes", "repeat the last note 5 times", {"action": "repeat", "amount": 5, "pick": "last"}],
+  ["notes", "play this twice", {"action": "repeat", "amount": 2}],
   // Properties of the whole score's items, at a place: no new item.
   ["place", "make all the slurs dashed", {"action": "option", "setting": "Line", "option": "Dashed"}],
   ["place", "add staccatos to all notes", {"action": "option", "option": "Staccato"}],

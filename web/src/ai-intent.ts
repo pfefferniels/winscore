@@ -98,6 +98,7 @@ export type Action =
   | 'command'
   | 'create'
   | 'select'
+  | 'repeat'
   | 'app';
 
 /**
@@ -203,7 +204,7 @@ export interface Intent {
   /** bigger, smaller, grow, shrink: which measure (MEASURES), size by default. */
   measure?: string;
   direction?: 'up' | 'down' | 'left' | 'right';
-  /** move: steps or spaces; bigger: the factor; beam: notes per beam. */
+  /** move: steps or spaces; bigger: the factor; beam: notes per beam; repeat: how many copies. */
   amount?: number;
   /** grow, shrink: from and to. */
   from?: number;
@@ -420,6 +421,13 @@ function scriptForOne(intent: Intent): Script {
       const only = intent.setting && intent.option && intent.setting !== target.aspect ? { setting: intent.setting, is: intent.option } : {};
       return one(`Select ${'is' in only ? `${intent.option!.toLowerCase()} ` : ''}${noun}`, { do: 'select', items: filterOf(target, only) });
     }
+    case 'repeat':
+      // Everything selected, whatever it names: "this bar" is its notes as much as its barline.
+      return {
+        summary: 'Repeat',
+        knobs: [knob('times', 'Times', Math.max(1, Math.round(intent.amount ?? 1)), 1, 16, 1)],
+        steps: [{ do: 'repeat', items: null, times: 'times' }],
+      };
     case 'app':
       // The editor's own command, run by the command field rather than as steps.
       return one(intent.label ?? intent.command ?? '');

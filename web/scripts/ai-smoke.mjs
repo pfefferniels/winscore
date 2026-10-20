@@ -22,6 +22,7 @@ const JEV = {
   'remove the stem': { action: 'delete', target: 'stems' },
   'add staff': { action: 'create', item: 'staff' },
   'zoom in': { action: 'app', menu: 'zoom-in' },
+  'repeat it twice': { action: 'repeat', amount: 'twice' },
   'beam always 2 notes': { action: 'beam', target: 'notes', group: '2', amount: '2' },
   'make note size gradually bigger': { action: 'grow', target: 'notes', measure: 'size' },
   'make the last note an x head': { action: 'other', target: 'notes' },
@@ -381,6 +382,17 @@ try {
   await page.click('.ai-job.busy .ai-job-close');
   assert.equal(await page.locator('.ai-job').count(), 0);
   assert.match(await undoTitle(), /“double the melody a third below”/);
+
+  // A note repeated twice after itself, then three times with the slider: still one undo step.
+  await run('I 2');
+  await selection(/^Item \d+ · Note/);
+  const count = Number(await page.getAttribute('#app', 'data-items'));
+  await command('repeat it twice');
+  await enter();
+  assert.equal(Number(await page.getAttribute('#app', 'data-items')), count + 2);
+  await page.locator('.ai-knob input[aria-label="Times"]').fill('3');
+  await page.waitForFunction((n) => Number(document.getElementById('app').dataset.items) === n, count + 3);
+  assert.match(await undoTitle(), /“repeat it twice”/);
 
   assert.deepEqual(errors, []);
   console.log('ai smoke: ok');
