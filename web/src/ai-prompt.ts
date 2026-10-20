@@ -54,8 +54,8 @@ export interface PromptHooks {
   open(): void;
   /** Where a box of the page lies on screen. */
   clientRect(box: Box): DOMRect;
-  /** After an edit; `live` while a slider moves, `params` when it only changed parameters of the selected items. */
-  edited(live: boolean, params: boolean): void;
+  /** After an edit; `live` while a slider moves or a command is tried as it is typed (`trial`, which changes nothing yet), `params` when it only changed parameters of the selected items. */
+  edited(live: boolean, params: boolean, trial?: boolean): void;
   /** Undoes (or redoes) the last edit of the score. */
   undo(redo: boolean): void;
   /** The field gave the keyboard back to the page. */
@@ -109,6 +109,14 @@ interface Performed {
   done: boolean;
   /** What it changed or made, by identity. */
   touched: number[];
+}
+
+/** A reading run on the score while its command is typed: taken back when the words change, kept by Enter. */
+interface Trial {
+  reading: ScriptReading;
+  performed: Performed;
+  /** The selection before it, by identity, given back with the score. */
+  before: number[];
 }
 
 /** A command sent off with Enter: it is read or written while the field takes other commands, and edits its own items. */
@@ -208,6 +216,8 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   /** When the request whose answer the field shows was asked. */
   let answered = 0;
   let applied: Applied | null = null;
+  /** The newest reading, run on the score as it is typed. */
+  let trial: Trial | null = null;
   let frame = 0;
   /** Set while a slider is held: commands sent off wait to land. */
   let sliding = false;
@@ -220,10 +230,10 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   const jobs = new Set<Job>();
   /** Set while the page takes in an edit of this field: the selection it then follows is the command's. */
   let own = false;
-  const edited = (live: boolean, params: boolean) => {
+  const edited = (live: boolean, params: boolean, tried = false) => {
     own = true;
     try {
-      hooks.edited(live, params);
+      hooks.edited(live, params, tried);
     } finally {
       own = false;
     }
@@ -325,8 +335,11 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
           for (const [earlier, request] of requests) if (earlier < at) forget(earlier, request);
           const current = input.value.trim() === text;
           const claude = links.claude && `Claude${jev.complex ? ` ${modelName(writerFor(links.claude, true).model)}` : ''}`;
-          if (result) showReading(result, !current);
-          else show(`${UNREAD[jev.why ?? 'unsure']}${claude ? `: ↵ has ${claude} write it` : '; Claude could write it (⚙)'}`, current ? '' : 'busy', `Jev · ${Math.round(jev.ms)} ms`);
+          if (result) showTried(result, text, !current);
+          else {
+            takeBack();
+            show(`${UNREAD[jev.why ?? 'unsure']}${claude ? `: ↵ has ${claude} write it` : '; Claude could write it (⚙)'}`, current ? '' : 'busy', `Jev · ${Math.round(jev.ms)} ms`);
+          }
         }
         return { reading: result, complex: jev.complex };
       })
@@ -354,6 +367,48 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     pending = null;
   }
 
+  /**
+   * Shows a reading and runs an edit script on the score at once, as a
+   * trial in place of the one before (an editor's command waits for Enter);
+   * why it fails, if it does, is said instead.
+   */
+  function showTried(r: Reading, text: string, earlier = false) {
+    takeBack();
+    showReading(r, earlier);
+    if ('command' in r || !scope || box.hidden || sliding || !hooks.ready()) return;
+    const editor = hooks.editor();
+    if (!editor) return;
+    const keys = editor.keys();
+    const before = editor.selection().map((i) => keys[i]!);
+    const performed = perform(r, text, scope);
+    if (typeof performed === 'string') {
+      show(performed, 'error', r.source);
+      return;
+    }
+    trial = { reading: r, performed, before };
+    box.dataset.tried = r.script.summary;
+    // The sliders of the command before belong to it.
+    if (applied) {
+      applied = null;
+      showKnobs([]);
+    }
+    edited(true, onlyParams(r.script), true);
+  }
+
+  /** The trial goes back: the score as it was, and the selection (or `selection`, by identity). */
+  function takeBack(selection?: number[]) {
+    const t = trial;
+    trial = null;
+    delete box.dataset.tried;
+    const editor = hooks.editor();
+    // Undone, or followed by another edit: there is nothing to take back.
+    if (!t || !editor || editor.mark() !== t.performed.applied.depth) return;
+    editor.rollback(t.performed.applied.mark);
+    const at = new Map(editor.keys().map((key, i) => [key, i]));
+    editor.select((selection ?? t.before).flatMap((key) => at.get(key) ?? []));
+    edited(true, false, true);
+  }
+
   /** Whether a line goes to the page as WinScore's command bar sends it: an answer to the question, or a SCORE command. */
   function native(text: string): boolean {
     return question !== null || (looksLikeScore(text) && hooks.supported(text));
@@ -364,11 +419,13 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     const text = input.value.trim();
     if (!text || question !== null) {
       forgetAll();
+      takeBack();
       idle();
       return;
     }
     if (native(text)) {
       forgetAll();
+      takeBack();
       show(`→ ${text}`, '', 'SCORE command');
       return;
     }
@@ -377,16 +434,18 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     const command = about && namedCommand(about.commands, text);
     if (command) {
       forgetAll();
+      takeBack();
       showReading({ command, source: 'Editor command' });
       return;
     }
     const known = about && (memo.get(readingKey(about)) ?? memo.get(claudeKey(about, scope!)));
     if (known) {
       forgetAll();
-      showReading(known);
+      showTried(known, text);
       return;
     }
     if (!links.jev) {
+      takeBack();
       show(links.claude ? '↵ has Claude write it' : 'Commands in words need a model: set one up with ⚙', links.claude ? '' : 'error');
       return;
     }
@@ -435,7 +494,14 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       reading = null;
       return runApp(r.command, r.source);
     }
-    const performed = perform(r, text, scope);
+    // Tried as it was typed: it stays as it is.
+    const kept = trial?.reading === r && hooks.editor()?.mark() === trial.performed.applied.depth ? trial.performed : null;
+    if (kept) {
+      trial = null;
+      delete box.dataset.tried;
+    }
+    takeBack();
+    const performed = kept ?? perform(r, text, scope);
     if (typeof performed === 'string') show(performed, 'error', r.source);
     else {
       input.value = '';
@@ -450,6 +516,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   /** Runs a line on the page as WinScore's command bar runs it; the text stays to be corrected when the engine objects. */
   function runLine(text: string) {
     forgetAll();
+    takeBack();
     reading = null;
     // Emptied first: while the line runs the field may follow a new selection or question, with nothing to read.
     input.value = '';
@@ -483,6 +550,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     const request = pending?.text === text ? pending : null;
     for (const [at, r] of requests) if (r === request) requests.delete(at);
     forgetAll();
+    takeBack();
     const job: Job = { text, scope, anchor, editor, controller: request?.controller ?? new AbortController(), badge: badgeFor() };
     jobs.add(job);
     host.append(job.badge);
@@ -543,6 +611,9 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     const editor = hooks.editor();
     if (editor !== job.editor) cancel(job);
     if (signal.aborted || !editor) throw new DOMException('The command was dropped', 'AbortError');
+    // A command being tried goes back while this one lands, and is tried again on top.
+    const tried = trial && input.value.trim() ? { reading: trial.reading, text: input.value.trim() } : null;
+    takeBack();
     const here = atField(job);
     const keys = editor.keys();
     const before = editor.selection().map((i) => keys[i]!);
@@ -563,6 +634,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       setTimeout(() => finish(job), DONE_SHOWN_MS);
     }
     edited(false, false);
+    if (tried && input.value.trim() === tried.text) showTried(tried.reading, tried.text);
     place();
     return null;
   }
@@ -700,6 +772,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       links = connections(next, server);
       memo.clear();
       forgetAll();
+      takeBack();
       settings.hidden = true;
       input.focus();
       typed();
@@ -756,6 +829,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   /** Escape: the text and the settings go, and the keyboard goes back to the page (where Escape then deselects). */
   function leave() {
     forgetAll();
+    takeBack();
     input.value = '';
     reading = null;
     settings.hidden = true;
@@ -787,8 +861,9 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     if (!same) {
       applied = null;
       showKnobs([]);
-      // Readings asked so far are about other items.
+      // Readings asked so far, and the one tried, are about other items; the selection is the new one.
       forgetAll();
+      takeBack(next.keys ?? []);
       typed();
     }
     place();
@@ -799,6 +874,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     if (box.hidden) return;
     const focused = box.contains(document.activeElement);
     forgetAll();
+    takeBack();
     box.hidden = true;
     input.value = '';
     reading = null;
@@ -854,6 +930,11 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       if (applied && editor && editor.mark() !== applied.depth) {
         applied = null;
         showKnobs([]);
+      }
+      // A trial undone or built on is the score's now.
+      if (trial && editor && editor.mark() !== trial.performed.applied.depth) {
+        trial = null;
+        delete box.dataset.tried;
       }
     },
   };

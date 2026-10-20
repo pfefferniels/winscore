@@ -1,7 +1,7 @@
 // End-to-end check of the command field in the built app (dist/), with Jev
 // and Claude answered by canned replies at the network: a selection brings
-// the field, typing on the page goes into it, what Jev reads is shown while
-// typing, Enter edits the score as one undo step, a slider re-does it, a
+// the field, typing on the page goes into it, what Jev reads is shown and
+// tried on the score while typing, Enter keeps it as one undo step, a slider re-does it, a
 // command Jev cannot read goes to Claude (a complex one to Opus), while Claude
 // writes other commands run on other items, and a click on empty paper opens
 // the field where music it adds then goes.
@@ -144,6 +144,12 @@ try {
     await painted();
     return JSON.parse(await page.getAttribute('#viewport', 'data-selection'));
   };
+  /** The selection's box on screen after `act`, which may leave it as it was (a command tried while typed has selected what it changes already). */
+  const boxAfter = async (act) => {
+    await act();
+    await painted();
+    return JSON.parse(await page.getAttribute('#viewport', 'data-selection'));
+  };
 
   /** Runs a SCORE command line typed on the page, as `I n` to select item n (from 1), and gives the keyboard back to the page. */
   const run = async (line) => {
@@ -203,6 +209,8 @@ try {
   assert.equal(await page.inputValue('.ai-input'), 'remove the stems');
   await page.waitForFunction(() => /Remove stems/.test(document.querySelector('.ai-status.busy .ai-reading')?.textContent ?? ''));
   assert.equal(jevRequests.length - typedFrom, 'remove the stems'.length, 'one request for each keystroke');
+  // The reading of the words before is tried on the score already.
+  await page.waitForSelector('.ai-prompt[data-tried="Remove stems"]');
   letJevGo();
   await read();
   assert.match(await page.textContent('.ai-reading'), /Remove stems · 8 items/);
@@ -279,7 +287,7 @@ try {
   assert.ok(Math.abs(field.x - above.x) < 2 && field.y > above.y, `the field (${JSON.stringify(field)}) by the click (${JSON.stringify(above)})`);
   await command('add notes c g d/f/a');
   assert.match(await page.textContent('.ai-reading'), /Add c g d\/f\/a/);
-  const placed = await selectedBox(enter);
+  const placed = await boxAfter(enter);
   assert.equal(await page.getAttribute('#app', 'data-items'), '14');
   assert.match(await page.textContent('#item h2'), /^5 items · Note/);
   assert.ok(Math.abs(placed.x - above.x) < staff.width * 0.05, `the new notes (from x ${placed.x}) start at the click (x ${above.x})`);
@@ -288,10 +296,17 @@ try {
 
   // A new item where the field stands: a staff, above the highest as Insert ▸ Staff makes it. And the editor's own
   // commands, the menus' entries: zoom in.
+  // What Jev reads is tried on the score at once: Escape takes it back, Enter keeps it.
   await page.mouse.click(above.x, above.y);
   await command('add staff');
   assert.match(await page.textContent('.ai-reading'), /→ Add a staff/);
+  await page.waitForSelector('.ai-prompt[data-tried="Add a staff"]');
+  await page.press('.ai-input', 'Escape');
+  assert.equal(await page.getAttribute('.ai-prompt', 'data-tried'), null);
+  await command('add staff');
+  await page.waitForSelector('.ai-prompt[data-tried="Add a staff"]');
   await enter();
+  assert.equal(await page.getAttribute('.ai-prompt', 'data-tried'), null);
   assert.equal(await page.getAttribute('#app', 'data-items'), '10');
   assert.ok(jevRequests.at(-1).questions.menu.criteria['zoom-in'], 'the menus’ entries are among the answers');
   const zoom = await page.inputValue('#zoom');
@@ -308,7 +323,7 @@ try {
   await page.waitForSelector('.ai-prompt:not([hidden])');
   await command('add notes c g d/f/a');
   assert.match(await page.textContent('.ai-reading'), /Add c g d\/f\/a/);
-  const added = await selectedBox(enter);
+  const added = await boxAfter(enter);
   assert.equal(await page.getAttribute('#app', 'data-items'), '14');
   assert.match(await page.textContent('#item h2'), /^5 items · Note/);
   const last = await selectedBox(() => run('I 9'));

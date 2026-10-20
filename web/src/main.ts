@@ -934,12 +934,13 @@ const aiPrompt = createAiPrompt(ui.stage, {
   run: runCommand,
   open: () => commandAt(placeInView()),
   clientRect: (box) => view.clientRect(box),
-  edited(live, params) {
+  edited(live, params, trial = false) {
     const score = state.score;
     if (!score) return;
     if (live) {
       state.rust = decodeAndFree(params ? score.renderSelection() : score.render());
-      state.modified = true;
+      // A command tried as it is typed changes nothing until Enter keeps it.
+      if (!trial) state.modified = true;
       redraw(true);
     } else edited({ label: state.editor?.undoLabel() ?? '', message: null }, false);
   },
