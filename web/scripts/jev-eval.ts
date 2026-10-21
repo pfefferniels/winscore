@@ -172,6 +172,14 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["place", "zoom in twice", {"action": "app", "command": "zoom-in", "amount": 2}],
   ["notes", "do that again", {"action": "again", "amount": 1}],
   ["notes", "again, 3 times", {"action": "again", "amount": 3}],
+  // Horizontal spacing.
+  ["notes", "spread them out", {"action": "spread"}],
+  ["notes", "more space between the notes", {"action": "spread"}],
+  ["notes", "50% wider apart", {"action": "spread", "amount": 1.5}],
+  ["notes", "move them closer together", {"action": "closer"}],
+  ["notes", "tighter spacing", {"action": "closer"}],
+  ["notes", "space them evenly", {"action": "evenly"}],
+  ["notes", "distribute them evenly", {"action": "evenly"}],
   // Repeated after themselves.
   ["notes", "repeat 3 times", {"action": "repeat", "amount": 3}],
   ["notes", "repeat these notes twice", {"action": "repeat", "amount": 2}],

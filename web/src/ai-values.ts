@@ -111,33 +111,49 @@ export const TREBLE_MIDDLE = 34;
 export function musicIn(text: string, middle = TREBLE_MIDDLE): Music | null {
   const words = text.trim().split(/[\s,]+/).filter(Boolean);
   const isElement = (w: string | undefined) => w !== undefined && scoreElement(w) !== null;
-  // The longest run of elements; a value right after one keeps it going ("c 4 d 8").
-  let best = { start: 0, end: 0, size: 0 };
+  const isValue = (w: string | undefined) => w !== undefined && VALUE.test(w);
+  // Runs of elements and values (a value only after an element or a value, "as" before values), the one with the most notes.
+  let best = { start: 0, end: 0, notes: 0 };
   for (let i = 0; i < words.length; i++) {
     if (!isElement(words[i])) continue;
-    let [end, size] = [i, 0];
+    let [end, notes] = [i, 0];
     for (; end < words.length; end++) {
-      if (isElement(words[end])) size++;
-      else if (!(VALUE.test(words[end]!) && isElement(words[end - 1]))) break;
+      const w = words[end]!;
+      if (isElement(w)) notes += scoreElement(w) === 'M' ? 0 : 1;
+      else if (!(isValue(w) || (BEFORE_VALUES.has(w.toLowerCase()) && isValue(words[end + 1])))) break;
     }
-    if (size > best.size) best = { start: i, end, size };
+    // A run does not end in "as".
+    while (end > i && !isElement(words[end - 1]) && !isValue(words[end - 1])) end--;
+    if (notes > best.notes || (best.notes === 0 && end > best.end)) best = { start: i, end, notes };
     i = end;
   }
-  if (best.size === 0) return null;
-  const span = words.slice(best.start, best.end);
+  const span = words.slice(best.start, best.end).filter((w) => isElement(w) || isValue(w));
   const run = span.filter((w) => isElement(w));
+  if (run.length === 0) return null;
   // A lone "a" or "b" is as likely an article as a note.
   if (run.length === 1 && /^[ab]$/i.test(run[0]!)) return null;
   const elements = run.map((w) => scoreElement(w)!);
   const count = elements.filter((e) => e !== 'M').length;
-  // Values after each note, or after them all (one for all of them).
-  const each = span.filter((w, k) => VALUE.test(w) && isElement(span[k - 1]));
-  let after = best.end;
-  while (!isElement(words[after - 1])) after--;
-  if (BEFORE_VALUES.has(words[after]?.toLowerCase() ?? '')) after++;
-  const trailing: string[] = [];
-  while (VALUE.test(words[after] ?? '') && trailing.length < count) trailing.push(words[after++]!);
-  const values = each.length === count ? each : trailing.length === count ? trailing : trailing.length === 1 ? elements.flatMap((e) => (e === 'M' ? [] : trailing)) : null;
+  // Each group of values goes to the notes just before it: one each, or one for all of them.
+  const values: string[] = [];
+  let [group, valued, fits] = [0, false, true];
+  let k = 0;
+  while (k <= span.length) {
+    if (k < span.length && isElement(span[k])) {
+      if (scoreElement(span[k]!) !== 'M') group++;
+      k++;
+      continue;
+    }
+    const after: string[] = [];
+    while (k < span.length && isValue(span[k])) after.push(span[k++]!);
+    if (after.length === 0) values.push(...Array.from({ length: group }, () => '4'));
+    else if (after.length === group || after.length === 1) {
+      values.push(...(after.length === group ? after : Array.from({ length: group }, () => after[0]!)));
+      valued = true;
+    } else fits = false;
+    group = 0;
+    if (after.length === 0) k++;
+  }
   const first = elements.findIndex((e) => /^[A-G]/.test(e));
   if (first >= 0 && !/\d/.test(elements[first]!.split(':')[0]!)) {
     const [head, ...rest] = elements[first]!.split(':');
@@ -146,8 +162,8 @@ export function musicIn(text: string, middle = TREBLE_MIDDLE): Music | null {
   // Octaves typed after the first note mean every octave is meant as typed.
   const explicit = run.slice(first + 1).some((w) => /\d/.test(w));
   if (first >= 0 && !explicit) elements[first] = `P${elements[first]}`;
-  const typed = words.slice(best.start, values === trailing ? after : best.end).join(' ');
-  return { typed, notes: elements.join('/'), count, ...(values ? { rhythms: values.join('/') } : {}) };
+  const typed = words.slice(best.start, best.end).join(' ');
+  return { typed, notes: elements.join('/'), count, ...(valued && fits && values.length === count ? { rhythms: values.join('/') } : {}) };
 }
 
 /** Note values by name, as SCORE's pass 2 writes them. */

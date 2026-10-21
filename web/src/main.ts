@@ -951,7 +951,11 @@ const aiPrompt = createAiPrompt(ui.stage, {
       // A command tried as it is typed changes nothing until Enter keeps it.
       if (!trial) state.modified = true;
       redraw(true);
-    } else edited({ label: state.editor?.undoLabel() ?? '', message: null }, false);
+    } else {
+      edited({ label: state.editor?.undoLabel() ?? '', message: null }, false);
+      // What a command changed comes into view, as a SCORE command's does.
+      revealSelection();
+    }
   },
   undo: (redo) => edit((editor) => (redo ? editor.redo() : editor.undo())),
   left: () => ui.viewport.focus(),

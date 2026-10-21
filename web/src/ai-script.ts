@@ -68,6 +68,11 @@ export type Step =
   | { do: 'create'; items?: Filter | null; word: string; at: 'before' | 'at' | 'after' | 'over' | 'page'; more?: number[] | null; text?: string | null }
   /** Copies of the items (staves aside) `times` times, one after another to their right, as the music goes on. */
   | { do: 'repeat'; items?: Filter | null; times: Value }
+  /**
+   * The items drawn apart or closer about the leftmost of them (`factor`), or spaced evenly between the first and
+   * the last column (`even`); right ends of lines, slurs, beams and trills along.
+   */
+  | { do: 'space'; items?: Filter | null; factor?: Value | null; even?: boolean }
   /** The texts among the items get these characters, each in its own font. */
   | { do: 'text'; items?: Filter | null; text: string }
   /**
@@ -576,8 +581,9 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       const staff = step.staff ?? region?.staff ?? (access.staves().length === 0 ? 1 : undefined);
       if (staff === undefined) throw new Error('Click the staff the music goes on');
       const from = step.from ?? region?.from ?? 10;
-      const to = step.to ?? region?.to ?? 190;
       const rhythms = step.rhythms?.replace(/;$/, '').trim() ? step.rhythms : quartersFor(step.notes);
+      // As much of the staff as the music's values take, not all of it to its end.
+      const to = step.to ?? Math.min(region?.to ?? 190, from + widthOf(rhythms ?? '', step.notes));
       const passes = [step.notes, rhythms, step.marks, step.beams, step.slurs].map(ensureSemicolon);
       const line = access.inputLine(passes, Math.round(staff), Math.min(from, to), Math.max(from, to));
       try {
@@ -597,6 +603,8 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       return create(access, scope, targets(access, scope, step.items, knobs), step);
     case 'repeat':
       return repeat(access, targets(access, scope, step.items, knobs), Math.round(knobValue(step.times)));
+    case 'space':
+      return space(access, targets(access, scope, step.items, knobs), step.even ? null : knobValue(step.factor ?? 1));
     case 'text': {
       const list = targets(access, scope, step.items, knobs).filter((t) => t.params[0] === TEXT);
       if (list.length === 0) throw new Error('There is no text here to change');
@@ -874,6 +882,63 @@ function repeat(access: Access, list: Target[], times: number): number[] {
   return [...items.map((t) => t.key), ...made];
 }
 
+/** P3 a note value takes when music is added: a quarter 11, an eighth 8, a half 17; a barline 4. */
+const VALUE_SPACE = (quarters: number) => 5 + 6 * quarters;
+const BAR_SPACE = 4;
+
+/** How much of a staff (P3) music of these passes takes: pass 2's values ("4/8./16"), pass 1's barlines. */
+function widthOf(rhythms: string, notes: string): number {
+  const values = rhythms.replace(/;$/, '').split('/').map((v) => v.trim()).filter(Boolean);
+  const quarters = values.map((v) => {
+    const m = /^(\d+)(\.*)/.exec(v);
+    if (!m) return 1;
+    const dots = m[2]!.length;
+    return (4 / Number(m[1])) * (2 - 0.5 ** dots);
+  });
+  const bars = notes.split('/').filter((e) => e.trim().toUpperCase() === 'M').length;
+  return quarters.reduce((sum, q) => sum + VALUE_SPACE(q), 0) + bars * BAR_SPACE;
+}
+
+/**
+ * The stretch of the items drawn apart or closer (`factor`) about its
+ * left, or its columns spaced evenly (null) from the first to the last:
+ * everything on their staves in it moves along (barlines, lyrics,
+ * dynamics), and what follows on them by as much as the stretch grew.
+ * P3, and P6 where it is a right end; staves aside.
+ */
+function space(access: Access, list: Target[], factor: number | null): number[] {
+  const editor = access.editor;
+  const items = list.filter((t) => t.params[0] !== STAFF);
+  if (items.length === 0) return [];
+  const xs = items.map((t) => t.params[2]!);
+  const [left, right] = [Math.min(...xs), Math.max(...xs)];
+  const staves = new Set(items.map((t) => t.params[1]!));
+  const columns = [...new Set(items.map((t) => Math.round(t.params[2]! / CHORD)))].sort((a, b) => a - b).map((c) => c * CHORD);
+  // Evenly: each column to its place, and between two columns in proportion.
+  const even = (x: number) => {
+    if (columns.length < 2) return x;
+    const k = columns.findIndex((c) => c >= x - CHORD);
+    if (k < 0) return x;
+    const place = (j: number) => left + ((right - left) * j) / (columns.length - 1);
+    if (Math.abs(columns[k]! - x) < CHORD || k === 0) return place(k);
+    const [a, b] = [columns[k - 1]!, columns[k]!];
+    return place(k - 1) + ((x - a) / (b - a)) * (place(k) - place(k - 1));
+  };
+  const scaled = factor === null ? even : (x: number) => left + (x - left) * factor;
+  const grown = scaled(right) - right;
+  const moved = (x: number) => (x < left - CHORD ? x : x <= right + CHORD ? scaled(x) : x + grown);
+  const on: Target[] = [];
+  const keys = editor.keys();
+  for (let index = 0; index < keys.length; index++) {
+    const params = access.params(index);
+    if (params && params[0] !== STAFF && staves.has(params[1]!) && (params[2]! >= left - CHORD || (RIGHT_ENDS.has(params[0]!) && params[5]! >= left - CHORD))) on.push({ index, key: keys[index]!, params });
+  }
+  const reach = Math.max(...on.map((t) => moved(RIGHT_ENDS.has(t.params[0]!) ? Math.max(t.params[2]!, t.params[5]!) : t.params[2]!)));
+  if (reach > STAFF_END) throw new Error('There is no room on the staff to spread these so far');
+  editor.setParamsOf(on.map((t) => [t.index, [[3, moved(t.params[2]!)], ...(RIGHT_ENDS.has(t.params[0]!) ? [[6, moved(t.params[5]!)] as [number, number]] : [])]]));
+  return items.map((t) => t.key);
+}
+
 /** Where lyrics go: four steps under a staff's bottom line (level 3 on five lines). */
 const LYRICS_LEVEL = -5;
 
@@ -974,5 +1039,5 @@ export function selects(script: Script): boolean {
 
 /** Whether a script only changes parameters, so a slider can redraw just the items it changed. */
 export function onlyParams(script: Script): boolean {
-  return script.steps.every((s) => s.do === 'set' || s.do === 'setting' || s.do === 'move');
+  return script.steps.every((s) => s.do === 'set' || s.do === 'setting' || s.do === 'move' || s.do === 'space');
 }

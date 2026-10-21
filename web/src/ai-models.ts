@@ -161,6 +161,9 @@ const ACTIONS: Record<Action | 'other', string> = {
   create:
     'Add one new item of its own, not notes and not a mark on them: a staff, a barline, a repeat, a new clef, a key or time signature such as 3/4 or common time, a slur or tie over the notes (slur them, tie them), a hairpin, a trill, an 8va, a pedal mark, an ending, a dynamic such as mf, a fermata, a box, a number, a text in quotes or lyrics in quotes under the notes',
   repeat: 'Repeat the selected music: copies of it pasted after it a number of times, each after the one before (repeat these notes 3 times, play this bar twice, repeat it)',
+  spread: 'Spread the items out horizontally: more room between the notes, wider apart along the staff',
+  closer: 'Draw the items closer together horizontally: less room between the notes, tighter along the staff',
+  evenly: 'Space the items evenly along the staff, the same distance from each to the next',
   change: 'Change the selected notes to named pitches, or the selected texts to quoted words (make it an F#, change them to c e g, change the text to "Andante")',
   again: 'Do the last command once more, the same edit again on the items selected now, perhaps a number of times (again, do that again, again 3 times, once more, same again twice)',
   select: 'Select, pick out or keep only some of the items, so that the next command acts on them; nothing is changed (select the bottom notes, select the beams, keep only the accented notes)',
@@ -382,6 +385,8 @@ const READS: Partial<Record<Action, string[]>> = {
   grow: ['measure', 'amount'],
   shrink: ['measure', 'amount'],
   move: ['direction', 'amount'],
+  spread: ['amount'],
+  closer: ['amount'],
 };
 
 /** Actions a property given alongside ("8th beam") goes with. */
@@ -469,7 +474,8 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
   }
   // Only the notes with a property the command names ("accent the eighth notes"), unless it gives that
   // property ("make them eighths", "8th beam") or removes it.
-  const only = picks ? sure('only', QUITE_SURE) : undefined;
+  // The command must name the property too, so Jev's being sure is enough.
+  const only = picks ? sure('only') : undefined;
   const given = [answers.also?.choice, ...Object.entries(answers).filter(([id]) => id.startsWith('option.')).map(([, a]) => a.choice)];
   if (only && !given.includes(only)) {
     const [setting, value] = only.split(': ');
@@ -507,6 +513,13 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
       if (text && about.counts.has(16)) return { ...intent, text };
       const pitches = pitchesIn(about.text);
       return pitches && about.counts.has(1) ? { ...intent, pitches } : 'detail';
+    }
+    case 'spread':
+    case 'closer': {
+      // "50% wider" draws apart by 1.5, "20% closer" closer by 0.8; "twice as far apart" by 2.
+      const word = picked('amount');
+      if (word !== undefined) intent.amount = word.endsWith('%') ? 1 + (action === 'spread' ? 1 : -1) * numberOf(word) : numberOf(word);
+      return intent;
     }
     case 'again': {
       const times = number('amount');
@@ -637,11 +650,12 @@ export async function askJev(about: About, connection: NonNullable<Connections['
   const action = answers.action;
   const complex = answers.complexity?.choice === 'complex' && answers.complexity.confidence >= SURE;
   // At a place on the paper (the whole score), a new item Jev is quite sure of is meant rather than a mark on every
-  // note of the score, however sure it is that a property is asked for ("add a fermata", "put "dolce" here"), unless
-  // the command names the items it gives it ("make all the clefs bass clefs").
+  // note of the score, however sure it is that a property is asked for ("add a fermata", "write "dolce" here"),
+  // unless the command names the items and a property Jev is quite sure of for them ("make all the clefs bass clefs").
   const [item, target] = [answers.item, answers.target];
   const names = target !== undefined && target.choice !== 'all' && target.confidence >= SURE;
-  const placed = about.whole && item !== undefined && item.choice !== 'none' && item.confidence >= QUITE_SURE && (action?.choice === 'create' || (action?.choice === 'option' && !names));
+  const property = Object.entries(answers).some(([id, a]) => id.startsWith('option.') && a.choice !== 'none' && a.confidence >= QUITE_SURE);
+  const placed = about.whole && item !== undefined && item.choice !== 'none' && item.confidence >= QUITE_SURE && (action?.choice === 'create' || (action?.choice === 'option' && !(names && property)));
   const read = !action || (action.confidence < SURE && !placed) ? 'unsure' : complex ? 'complex' : readAnswers(about, placed ? { ...answers, action: { ...action, choice: 'create' } } : answers);
   const [intent, why] = typeof read === 'string' ? [null, read] : [read, null];
   return { intent, why, action: action?.choice ?? 'other', confidence: action?.confidence ?? 0, complex, ms: performance.now() - started, answers };
@@ -758,7 +772,7 @@ A step leaves out its unused fields here for brevity; give every field ("params"
 
 /** One step as Claude writes it: every field there, none of them a union (the API allows few). */
 interface Written {
-  do: Exclude<Step['do'], 'create' | 'repeat' | 'text' | 'lyrics'>;
+  do: Exclude<Step['do'], 'create' | 'repeat' | 'text' | 'lyrics' | 'space'>;
   codes: number[];
   where: string;
   where_setting: string;

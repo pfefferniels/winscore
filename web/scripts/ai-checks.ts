@@ -36,7 +36,8 @@ assert.equal(musicIn('add fis4 bes gn4')?.notes, 'FS4/BF/GN4');
 assert.equal(musicIn('remove the stems'), null);
 assert.equal(quartersFor('PC5/G/M/D:F:A;'), '4/4/4');
 // Values typed with the notes: after them all, after each, one for all; else none.
-assert.deepEqual(['add c e g 4 8 8', 'add c e g as 4 8. 16', 'add c 4 d 8 e 8', 'add c e g 8', 'add c d | e f 2 4 4 1', 'add c e g as eighths', 'add c e g and move up 2'].map((t) => musicIn(t)?.rhythms), ['4/8/8', '4/8./16', '4/8/8', '8/8/8', '2/4/4/1', undefined, undefined]);
+assert.deepEqual(['add c e g 4 8 8', 'add c e g as 4 8. 16', 'add c 4 d 8 e 8', 'add c e g 8', 'add c d | e f 2 4 4 1', 'add c e g as eighths', 'add c e g and move up 2', 'add c5 e g c6 4 8 8 2 | d5 f a d6 8 8 4 2', 'add c d 8 | e f'].map((t) => musicIn(t)?.rhythms), ['4/8/8', '4/8./16', '4/8/8', '8/8/8', '2/4/4/1', undefined, undefined, '4/8/8/2/8/8/4/2', '8/8/4/4']);
+assert.equal(musicIn('add c5 e g c6 4 8 8 2 | d5 f a d6 8 8 4 2')?.notes, 'C5/E/G/C6/M/D5/F/A/D6');
 assert.equal(musicIn('add c 4 d 8 e 8')?.notes, 'PC5/D/E');
 assert.equal(musicIn('add c e g 4 8 8')?.typed, 'c e g 4 8 8');
 assert.equal(musicIn('add c4 e4 g4')?.rhythms, undefined, 'octaves are not values');
@@ -337,14 +338,33 @@ four.ed.rollback(ran.mark);
 
 // Repeated: copies after the notes, a period on each (the stretch and the mean gap), pitches kept; drawn
 // closer, alike, where they would run past the staff's end.
-ran = run(scriptFor({ action: 'repeat', target: 'all', amount: 2 }), four.acc, four.scope(), '“repeat twice”');
 const period = ((xs[3]! - xs[0]!) * 4) / 3;
-const factor = (198 - xs[0]!) / (xs[3]! + 2 * period - xs[0]!);
 const near = (list: number[]) => list.map((x) => Math.round(x * 100) / 100);
-assert.deepEqual(near(four.notes().map((q) => q[2]!)), near([0, 1, 2].flatMap((k) => xs.map((x) => xs[0]! + (x + k * period - xs[0]!) * factor))));
-assert.deepEqual(four.notes().map((q) => q[3]), [0, 1, 2].flatMap(() => [8, 9, 10, 11]), 'C5 D5 E5 F5, three times');
-assert.equal(ran.touched.length, 12, 'the notes and their copies');
+// Added music takes the room its values take (four quarters, 44 spaces), not the rest of the staff.
+assert.ok(xs[3]! - xs[0]! < 44, `four quarters from ${xs[0]} to ${xs[3]}`);
+// Spread out about the first, then evenly from the first to the last.
+ran = run(scriptFor({ action: 'spread', target: 'all', amount: 2 }), four.acc, four.scope(), '“spread out”');
+assert.deepEqual(near(four.notes().map((q) => q[2]!)), near(xs.map((x) => xs[0]! + (x - xs[0]!) * 2)));
 four.ed.rollback(ran.mark);
+const uneven = run({ summary: 'move', knobs: [], steps: [{ do: 'move', items: { codes: [1], where: 'i == 1' }, right: 5 }] }, four.acc, four.scope(), '“move”');
+ran = run(scriptFor({ action: 'evenly', target: 'all' }), four.acc, four.scope(), '“space evenly”');
+assert.deepEqual(near(four.notes().map((q) => q[2]!)), near([0, 1, 2, 3].map((k) => xs[0]! + ((xs[3]! - xs[0]!) * k) / 3)));
+four.ed.rollback(uneven.mark);
+assert.throws(() => run(scriptFor({ action: 'spread', target: 'all', amount: 9 }), four.acc, four.scope(), '“spread”'), /no room on the staff to spread these so far/);
+// The first two notes drawn apart: the two after them go along, as far as the stretch grew.
+ran = run(scriptFor({ action: 'spread', target: 'all', amount: 2 }), four.acc, four.scope(0, 1), '“spread”');
+const grew = xs[1]! - xs[0]!;
+assert.deepEqual(near(four.notes().map((q) => q[2]!)), near([xs[0]!, xs[1]! + grew, xs[2]! + grew, xs[3]! + grew]));
+four.ed.rollback(ran.mark);
+for (const times of [2, 5]) {
+  const reach = xs[3]! + times * period;
+  const factor = reach > 198 ? (198 - xs[0]!) / (reach - xs[0]!) : 1;
+  ran = run(scriptFor({ action: 'repeat', target: 'all', amount: times }), four.acc, four.scope(), '“repeat”');
+  assert.deepEqual(near(four.notes().map((q) => q[2]!)), near(Array.from({ length: times + 1 }, (_, k) => xs.map((x) => xs[0]! + (x + k * period - xs[0]!) * factor)).flat()), `${times} times${factor < 1 ? ', drawn closer' : ''}`);
+  assert.deepEqual(four.notes().map((q) => q[3]), Array.from({ length: times + 1 }, () => [8, 9, 10, 11]).flat(), 'C5 D5 E5 F5 again and again');
+  assert.equal(ran.touched.length, 4 * (times + 1), 'the notes and their copies');
+  four.ed.rollback(ran.mark);
+}
 // With room after them, as they were: the first two notes once more after the second.
 ran = run(scriptFor({ action: 'repeat', target: 'all', amount: 1 }), four.acc, four.scope(0, 1), '“repeat”');
 assert.deepEqual(near(four.notes().map((q) => q[2]!)).sort((a, b) => a - b), near([...xs, xs[0]! + 2 * (xs[1]! - xs[0]!), xs[1]! + 2 * (xs[1]! - xs[0]!)]).sort((a, b) => a - b));

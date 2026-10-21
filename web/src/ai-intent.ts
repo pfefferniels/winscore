@@ -100,6 +100,9 @@ export type Action =
   | 'create'
   | 'select'
   | 'repeat'
+  | 'spread'
+  | 'closer'
+  | 'evenly'
   | 'change'
   | 'again'
   | 'app';
@@ -259,6 +262,9 @@ const CHAIN_ORDER: Partial<Record<Action, number>> = {
   flip: 3,
   move: 4,
   align: 4,
+  spread: 4,
+  closer: 4,
+  evenly: 4,
 };
 
 /** Whether an action can be chained with another: never one that deletes, adds or runs a SCORE line. */
@@ -471,6 +477,17 @@ function scriptForOne(intent: Intent): Script {
         knobs: [knob('times', 'Times', Math.max(1, Math.round(intent.amount ?? 1)), 1, 16, 1)],
         steps: [{ do: 'repeat', items: null, times: 'times' }],
       };
+    case 'spread':
+    case 'closer': {
+      const spread = intent.action === 'spread';
+      return {
+        summary: spread ? 'Spread out' : 'Closer together',
+        knobs: [knob('factor', 'Spacing ×', round(intent.amount ?? (spread ? 1.25 : 0.8)), 0.3, 3, 0.05)],
+        steps: [{ do: 'space', items: null, factor: 'factor' }],
+      };
+    }
+    case 'evenly':
+      return one('Spaced evenly', { do: 'space', items: null, even: true });
     case 'change':
       if (intent.text !== undefined) return one(`Text: “${intent.text}”`, { do: 'text', items: { codes: [16] }, text: intent.text });
       return inTurn(`Pitch: ${(intent.pitches ?? []).join(' ')}`, 'Pitch', intent.pitches ?? []);
