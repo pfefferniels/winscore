@@ -14,7 +14,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { chainable, CREATIONS, MEASURES, PICKS, TARGETS, scriptFor, type Action, type Intent } from './ai-intent';
 import { namedSettings, plain, type Filter, type Region, type Script, type Step } from './ai-script';
-import { barsIn, fingeringsIn, INTERVALS, RHYTHMS, meterIn, musicIn, namesCount, namesOption, numberOf, numberWords, pitchesIn, quotedIn, rhythmsFor, sequenceIn } from './ai-values';
+import { barsIn, fingeringsIn, halfStepsIn, intervalHalfSteps, INTERVALS, RHYTHMS, meterIn, musicIn, namesCount, namesOption, numberOf, numberWords, pitchesIn, quotedIn, rhythmsFor, sequenceIn } from './ai-values';
 
 // ---------------------------------------------------------------------------
 // Settings and connections
@@ -154,7 +154,8 @@ const ACTIONS: Record<Action | 'other', string> = {
   smaller: 'Make them all smaller, shorter, thinner or narrower by the same amount',
   grow: 'Make a size increase gradually across the items, each a little bigger than the one before, or from one value to a larger one (sizes from 1 to 3)',
   shrink: 'Make a size decrease gradually across the items, each a little smaller than the one before, or from one value to a smaller one (sizes from 2 to 1)',
-  move: 'Move, shift, raise, lower or transpose the items',
+  move: 'Move, shift, raise or lower the items by steps or spaces, as the arrow keys do (move up a third, move them 5 to the right)',
+  transpose: 'Transpose the music by an interval or to a key, with its accidentals and key signature, as the Transpose command does (transpose up a major third, down a semitone, to D major)',
   align: 'Put the items at one height, in a straight row',
   number: 'Set a named property to a number the command gives, such as size 1.5 or stem length 3',
   command: 'A command in the SCORE program’s own language, short upper-case words and numbers such as FLI or R 5',
@@ -305,6 +306,13 @@ function jevQuestions(about: About): Record<string, Question> {
   }
   if (/\bkey\b|major|minor|sharps|flats/i.test(about.text)) {
     questions.key = { type: 'choice', instructions: 'Which key signature does the `command` name?', criteria: KEYS };
+  }
+  if (/major|minor|perfect|augmented|diminished/i.test(about.text)) {
+    questions.quality = {
+      type: 'choice',
+      instructions: 'Which quality does the `command` give the interval it names?',
+      criteria: { none: 'none is given, or the command names a key', major: 'major', minor: 'minor', perfect: 'perfect', augmented: 'augmented', diminished: 'diminished' },
+    };
   }
   if (about.counts.has(1)) {
     questions.only = {
@@ -513,6 +521,19 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
       if (text && about.counts.has(16)) return { ...intent, text };
       const pitches = pitchesIn(about.text);
       return pitches && about.counts.has(1) ? { ...intent, pitches } : 'detail';
+    }
+    case 'transpose': {
+      // To a key ("to D major"), else by an interval and its quality ("up a minor third") or by half steps ("a semitone").
+      const direction = sure('direction');
+      const up = direction === 'up' ? true : direction === 'down' ? false : undefined;
+      // To a key, up or down only as the command says it, else the nearer way.
+      const key = sure('key');
+      const said = /\b(up|down|higher|lower)\b/i.test(about.text);
+      if (key !== undefined && /\bto\b|\binto\b/i.test(about.text)) return { ...intent, key: Number(key), ...(up === undefined || !said ? {} : { up }) };
+      const interval = sure('interval');
+      const half = halfStepsIn(about.text) ?? (interval ? intervalHalfSteps(interval, sure('quality')) : null);
+      if (half === null) return 'detail';
+      return { ...intent, amount: up === false ? -half : half };
     }
     case 'spread':
     case 'closer': {
@@ -772,7 +793,7 @@ A step leaves out its unused fields here for brevity; give every field ("params"
 
 /** One step as Claude writes it: every field there, none of them a union (the API allows few). */
 interface Written {
-  do: Exclude<Step['do'], 'create' | 'repeat' | 'text' | 'lyrics' | 'space'>;
+  do: Exclude<Step['do'], 'create' | 'repeat' | 'text' | 'lyrics' | 'space' | 'transpose'>;
   codes: number[];
   where: string;
   where_setting: string;

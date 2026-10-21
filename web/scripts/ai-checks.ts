@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
 import { compile } from '../src/ai-expr';
-import { barsIn, fingeringsIn, meterIn, musicIn, namesCount, numbersIn, numberWords, pitchesIn, quartersFor, quotedIn, sequenceIn } from '../src/ai-values';
+import { barsIn, fingeringsIn, halfStepsIn, intervalHalfSteps, meterIn, musicIn, namesCount, numbersIn, numberWords, pitchesIn, quartersFor, quotedIn, sequenceIn } from '../src/ai-values';
 import { scriptFor, type Intent } from '../src/ai-intent';
 import { run, syllables, type Access, type Scope, type Script } from '../src/ai-script';
 import { SCRIPT_SCHEMA } from '../src/ai-models';
@@ -412,6 +412,21 @@ titledEditor.insertText('_02dolce', [1, 50, 12]);
 const titledAccess: Access = { ...access, editor: titledEditor, params: (i) => { const info = titled.item(i); const q = info?.params ?? null; info?.free(); return q; }, text: (i) => { const info = titled.item(i); const t = info?.text ?? null; info?.free(); return t; }, staves: () => titled.staffGeometry(), summaries: () => titled.itemSummaries() };
 run(scriptFor({ action: 'change', target: 'text', text: 'espr.' }), titledAccess, { keys: titledEditor.keys(), region }, '“change the text”');
 assert.equal(titledAccess.text(0), '_02espr.', 'in its own font');
+
+// Transposed by SCORE's TR: up a major third, E F# G# A with E major's four sharps added; to D major from C, a whole step up.
+assert.equal(intervalHalfSteps('third', 'minor'), 3);
+assert.equal(intervalHalfSteps('fifth', 'diminished'), 6);
+assert.deepEqual(['up a semitone', 'down 3 half steps', 'a whole step', 'move up 2 steps'].map(halfStepsIn), [1, 3, 2, null]);
+ran = run(scriptFor({ action: 'transpose', target: 'all', amount: 4 }), four.acc, four.scope(), '“transpose up a major third”');
+assert.deepEqual(four.notes().map((q) => q[3]), [10, 11, 12, 13], 'E5 F#5 G#5 A5');
+assert.ok(four.rows().some((q) => q[0] === 17 && q[4] === 4), 'four sharps');
+four.ed.rollback(ran.mark);
+ran = run(scriptFor({ action: 'transpose', target: 'all', key: 2 }), four.acc, four.scope(), '“transpose to D major”');
+assert.deepEqual(four.notes().map((q) => q[3]), [9, 10, 11, 12], 'D5 E5 F#5 G5');
+four.ed.rollback(ran.mark);
+ran = run(scriptFor({ action: 'transpose', target: 'all', key: 2, up: false }), four.acc, four.scope(), '“transpose down to D major”');
+assert.deepEqual(four.notes().map((q) => q[3]), [2, 3, 4, 5], 'D4 E4 F#4 G4');
+four.ed.rollback(ran.mark);
 
 // A slur over the notes: from the first to the last, above the stems-down heads, each end off the lines.
 const create = (intent: Omit<Intent, 'action' | 'target'>, scope: Scope, of = four) => run(scriptFor({ action: 'create', target: 'all', ...intent }), of.acc, scope, '“add”');

@@ -100,6 +100,7 @@ export type Action =
   | 'create'
   | 'select'
   | 'repeat'
+  | 'transpose'
   | 'spread'
   | 'closer'
   | 'evenly'
@@ -234,6 +235,9 @@ export interface Intent {
   sequence?: string[];
   /** change: pitches for the notes, column by column in turn ("c e g"). */
   pitches?: string[];
+  /** transpose: to this key (sharps, flats negative), else by `amount` half steps; `up` false for down, unset the nearer way. */
+  key?: number;
+  up?: boolean;
   /** create: the item (CREATIONS), its creation word with what the command gives (KSIG-3B, METER68), the numbers after its P3 (0 keeps the default), a text's characters. */
   item?: string;
   word?: string;
@@ -477,6 +481,17 @@ function scriptForOne(intent: Intent): Script {
         knobs: [knob('times', 'Times', Math.max(1, Math.round(intent.amount ?? 1)), 1, 16, 1)],
         steps: [{ do: 'repeat', items: null, times: 'times' }],
       };
+    case 'transpose': {
+      if (intent.key !== undefined) {
+        const way = intent.up === undefined ? '' : intent.up ? ' up' : ' down';
+        return one(`Transpose${way} to ${keyName(intent.key)}`, { do: 'transpose', items: null, key: intent.key, up: intent.up ?? null });
+      }
+      return {
+        summary: 'Transpose',
+        knobs: [knob('half', 'Half steps', intent.amount ?? 0, -24, 24, 1)],
+        steps: [{ do: 'transpose', items: null, half: 'half' }],
+      };
+    }
     case 'spread':
     case 'closer': {
       const spread = intent.action === 'spread';
@@ -501,6 +516,13 @@ function scriptForOne(intent: Intent): Script {
 }
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** A key by its signature, as a major key: 2 is D major, -3 E♭ major. */
+function keyName(sharps: number): string {
+  const sharpKeys = ['C', 'G', 'D', 'A', 'E', 'B', 'F♯', 'C♯'];
+  const flatKeys = ['C', 'F', 'B♭', 'E♭', 'A♭', 'D♭', 'G♭', 'C♭'];
+  return `${(sharps >= 0 ? sharpKeys[sharps] : flatKeys[-sharps]) ?? 'C'} major`;
+}
 
 /** A setting of the notes, column by column, from values in turn ("i % 3 == 1" takes the second of three). */
 function inTurn(summary: string, setting: string, values: string[]): Script {

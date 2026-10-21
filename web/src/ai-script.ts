@@ -73,6 +73,12 @@ export type Step =
    * the last column (`even`); right ends of lines, slurs, beams and trills along.
    */
   | { do: 'space'; items?: Filter | null; factor?: Value | null; even?: boolean }
+  /**
+   * SCORE's transposition (TR) over the items' area: by `half` steps (+ up), or to key `key` (sharps, flats
+   * negative) from the one in force there, up, down or (null) the nearer way; notes respelt, key signatures
+   * rewritten or added, stems kept.
+   */
+  | { do: 'transpose'; items?: Filter | null; half?: Value | null; key?: number | null; up?: boolean | null }
   /** The texts among the items get these characters, each in its own font. */
   | { do: 'text'; items?: Filter | null; text: string }
   /**
@@ -603,6 +609,8 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       return create(access, scope, targets(access, scope, step.items, knobs), step);
     case 'repeat':
       return repeat(access, targets(access, scope, step.items, knobs), Math.round(knobValue(step.times)));
+    case 'transpose':
+      return transpose(access, scope, targets(access, scope, step.items, knobs), step.key ?? null, step.key == null ? Math.round(knobValue(step.half ?? 0)) : null, step.up ?? null);
     case 'space':
       return space(access, targets(access, scope, step.items, knobs), step.even ? null : knobValue(step.factor ?? 1));
     case 'text': {
@@ -936,6 +944,46 @@ function space(access: Access, list: Target[], factor: number | null): number[] 
   const reach = Math.max(...on.map((t) => moved(RIGHT_ENDS.has(t.params[0]!) ? Math.max(t.params[2]!, t.params[5]!) : t.params[2]!)));
   if (reach > STAFF_END) throw new Error('There is no room on the staff to spread these so far');
   editor.setParamsOf(on.map((t) => [t.index, [[3, moved(t.params[2]!)], ...(RIGHT_ENDS.has(t.params[0]!) ? [[6, moved(t.params[5]!)] as [number, number]] : [])]]));
+  return items.map((t) => t.key);
+}
+
+const KEY = 17;
+
+/** The key signature in force on a staff at P3 `x`: sharps, flats negative; 0 without one. */
+function keyAt(access: Access, staff: number, x: number): number {
+  const summaries = access.summaries();
+  let [best, at] = [0, -Infinity];
+  for (let i = 0; 3 * i < summaries.length; i++) {
+    if (summaries[3 * i] !== KEY || summaries[3 * i + 1] !== staff || summaries[3 * i + 2]! > x + CHORD || summaries[3 * i + 2]! < at) continue;
+    at = summaries[3 * i + 2]!;
+    best = access.params(i)?.[4] ?? 0;
+  }
+  return best;
+}
+
+/** A major key's tonic, as half steps above C, from its sharps (flats negative). */
+const tonic = (sharps: number) => (((7 * sharps) % 12) + 12) % 12;
+
+/**
+ * TR over the items' area (bottom staff, left, right, top staff), by `half`
+ * steps or to a key from the one in force at its start; it rewrites the
+ * key signatures there and adds the new one where a staff has none, and
+ * keeps the stems.
+ */
+function transpose(access: Access, scope: Scope, list: Target[], key: number | null, half: number | null, up: boolean | null): number[] {
+  const editor = access.editor;
+  const items = list.filter((t) => t.params[0] !== STAFF);
+  const region = area(items, scope.region);
+  if (!region) throw new Error('Select the music to transpose');
+  const [bottom, left] = region.split(' ').map(Number);
+  let steps = half ?? 0;
+  if (key !== null) {
+    const rise = (tonic(key) - tonic(keyAt(access, bottom!, left!)) + 12) % 12;
+    steps = up === true ? rise : up === false ? (rise === 0 ? 0 : rise - 12) : rise > 6 ? rise - 12 : rise;
+  }
+  if (steps === 0) return items.map((t) => t.key);
+  editor.select([]);
+  execute(editor, `TR ${steps} ${region} 1 0 1 0`, 'Transpose');
   return items.map((t) => t.key);
 }
 

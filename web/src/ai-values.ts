@@ -268,3 +268,33 @@ export function pitchesIn(text: string): string[] | null {
   return names.length ? names : null;
 }
 
+/** Half steps of intervals named for a transposition, by size, major or perfect. */
+export const HALF_STEPS: Record<string, number> = { second: 2, third: 4, fourth: 5, fifth: 7, sixth: 9, seventh: 11, octave: 12, ninth: 14, tenth: 16, 'two octaves': 24 };
+const PERFECT = new Set(['fourth', 'fifth', 'octave', 'two octaves']);
+
+/** The half steps of an interval of a size ("third") and quality ("minor"; none: major or perfect). */
+export function intervalHalfSteps(size: string, quality: string | undefined): number | null {
+  const base = HALF_STEPS[size];
+  if (base === undefined) return null;
+  const perfect = PERFECT.has(size);
+  switch (quality) {
+    case 'minor':
+      return perfect ? null : base - 1;
+    case 'diminished':
+      return base - (perfect ? 1 : 2);
+    case 'augmented':
+      return base + 1;
+    default:
+      return base;
+  }
+}
+
+/** Half steps a command names as such: "a semitone", "3 half steps", "a whole step", "two whole tones". */
+export function halfStepsIn(text: string): number | null {
+  const t = text.toLowerCase();
+  const m = /\b(a|an|one|\d+|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(semitones?|half[ -]?steps?|half[ -]?tones?|whole[ -]?steps?|whole[ -]?tones?|tones?)\b/.exec(t);
+  if (!m) return null;
+  const n = ['a', 'an', 'one'].includes(m[1]!) ? 1 : numberOf(m[1]!);
+  return /whole|^tones?$/.test(m[2]!) ? 2 * n : n;
+}
+
