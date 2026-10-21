@@ -298,3 +298,172 @@ export function halfStepsIn(text: string): number | null {
   return /whole|^tones?$/.test(m[2]!) ? 2 * n : n;
 }
 
+
+/** A key note as typed: a letter (0 C … 6 B), an accidental in half steps (-2 … 2) and an octave, if given. */
+export interface Tonic {
+  letter: number;
+  accidental: number;
+  octave?: number;
+}
+
+const TONIC_ACCIDENTALS: Record<string, number> = { '#': 1, '♯': 1, sharp: 1, b: -1, '♭': -1, flat: -1 };
+
+/** Words after a key note that say it is one ("C major", "d minor scale", "an F# arpeggio"). */
+const KIND_WORDS =
+  'major|minor|harmonic|melodic|natural|chromatic|pentatonic|dorian|phrygian|lydian|mixolydian|locrian|aeolian|ionian|whole[- ]tone|blues|dominant|diminished|augmented|half[- ]diminished|scales?|arpeggios?|triads?|seventh|7th|chords?|broken';
+
+/**
+ * The key note of a scale or chord the command names: the note name just
+ * before what it is ("a C major scale", "an e flat arpeggio") or after
+ * "from" or "on" ("a chromatic scale from E"). A lone "a" after anything
+ * but "an", "the" or such words is the article ("add a minor scale").
+ */
+export function tonicIn(text: string): Tonic | null {
+  // An octave (0–6) or a chord symbol's ending ("G7", "Dm", "Cmaj7"), which leaves the kind to the reading.
+  const note = '([a-g])(?:\\s?-?\\s?(sharp|flat)|(#|♯|♭|b(?![a-z])))?(?:([0-6])|maj7|m7|7|m|dim|aug)?';
+  const patterns = [new RegExp(`(^|\\S+\\s+)${note}\\s+(?:${KIND_WORDS})\\b`, 'gi'), new RegExp(`(\\b(?:from|on|starting at|in)\\s+)${note}(?![\\w#♯♭])`, 'gi')];
+  for (const pattern of patterns) {
+    for (const m of text.matchAll(pattern)) {
+      const [, before, letter, word, sign, octave] = m;
+      const bare = !word && !sign && !octave;
+      if (bare && letter === 'a' && !/^(an|the|of|from|on|in|at)\s+$/i.test(before ?? '')) continue;
+      const accidental = TONIC_ACCIDENTALS[(word ?? sign ?? '').toLowerCase()] ?? 0;
+      return { letter: 'CDEFGAB'.indexOf(letter!.toUpperCase()), accidental, ...(octave ? { octave: Number(octave) } : {}) };
+    }
+  }
+  return null;
+}
+
+/** How many octaves a scale or arpeggio spans: "two octaves", "over 3 octaves". */
+export function octavesIn(text: string): number | null {
+  const m = /\b(\d|two|three|four)\s+octaves?\b/i.exec(text);
+  return m ? numberOf(m[1]!.toLowerCase()) : null;
+}
+
+/** Scales by the half steps of their degrees above the key note and the letters above its own. */
+export const SCALES: Record<string, { half: number[]; letters: number[]; down?: string }> = {
+  major: { half: [0, 2, 4, 5, 7, 9, 11], letters: [0, 1, 2, 3, 4, 5, 6] },
+  minor: { half: [0, 2, 3, 5, 7, 8, 10], letters: [0, 1, 2, 3, 4, 5, 6] },
+  'harmonic minor': { half: [0, 2, 3, 5, 7, 8, 11], letters: [0, 1, 2, 3, 4, 5, 6] },
+  // Down, the melodic minor is the natural one.
+  'melodic minor': { half: [0, 2, 3, 5, 7, 9, 11], letters: [0, 1, 2, 3, 4, 5, 6], down: 'minor' },
+  'major pentatonic': { half: [0, 2, 4, 7, 9], letters: [0, 1, 2, 4, 5] },
+  'minor pentatonic': { half: [0, 3, 5, 7, 10], letters: [0, 2, 3, 4, 6] },
+  blues: { half: [0, 3, 5, 6, 7, 10], letters: [0, 2, 3, 3, 4, 6] },
+  'whole tone': { half: [0, 2, 4, 6, 8, 10], letters: [0, 1, 2, 3, 4, 5] },
+  dorian: { half: [0, 2, 3, 5, 7, 9, 10], letters: [0, 1, 2, 3, 4, 5, 6] },
+  phrygian: { half: [0, 1, 3, 5, 7, 8, 10], letters: [0, 1, 2, 3, 4, 5, 6] },
+  lydian: { half: [0, 2, 4, 6, 7, 9, 11], letters: [0, 1, 2, 3, 4, 5, 6] },
+  mixolydian: { half: [0, 2, 4, 5, 7, 9, 10], letters: [0, 1, 2, 3, 4, 5, 6] },
+  locrian: { half: [0, 1, 3, 5, 6, 8, 10], letters: [0, 1, 2, 3, 4, 5, 6] },
+  chromatic: { half: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], letters: [] },
+};
+
+/** Chords an arpeggio goes through, the same way. */
+export const CHORDS: Record<string, { half: number[]; letters: number[] }> = {
+  major: { half: [0, 4, 7], letters: [0, 2, 4] },
+  minor: { half: [0, 3, 7], letters: [0, 2, 4] },
+  diminished: { half: [0, 3, 6], letters: [0, 2, 4] },
+  augmented: { half: [0, 4, 8], letters: [0, 2, 4] },
+  'dominant seventh': { half: [0, 4, 7, 10], letters: [0, 2, 4, 6] },
+  'major seventh': { half: [0, 4, 7, 11], letters: [0, 2, 4, 6] },
+  'minor seventh': { half: [0, 3, 7, 10], letters: [0, 2, 4, 6] },
+  'diminished seventh': { half: [0, 3, 6, 9], letters: [0, 2, 4, 6] },
+  'half-diminished seventh': { half: [0, 3, 6, 10], letters: [0, 2, 4, 6] },
+};
+
+/** The chord of a kind named for a scale ("harmonic minor" arpeggios are minor ones). */
+export const chordOf = (kind: string) => (CHORDS[kind] ? kind : /minor|dorian|phrygian|aeolian/.test(kind) ? 'minor' : /locrian/.test(kind) ? 'diminished' : 'major');
+
+/** Half steps of the naturals above C. */
+const NATURAL = [0, 2, 4, 5, 7, 9, 11];
+
+/** The key note of a key signature (sharps, flats negative): its major key's, or its minor key's. */
+export function keyTonic(sharps: number, minor: boolean): Tonic {
+  // The major key's letter goes up a fifth (four letters) for each sharp; its minor key's two letters below.
+  const letter = (((4 * sharps + (minor ? 5 : 0)) % 7) + 7) % 7;
+  const half = (((7 * sharps + (minor ? 9 : 0)) % 12) + 12) % 12;
+  let accidental = half - NATURAL[letter]!;
+  if (accidental > 6) accidental -= 12;
+  if (accidental < -6) accidental += 12;
+  return { letter, accidental };
+}
+
+/** The alteration a key signature gives each letter (C … B): sharps on F C G D A E B, flats the other way. */
+function signatureOf(sharps: number): number[] {
+  const alter = [0, 0, 0, 0, 0, 0, 0];
+  const order = sharps >= 0 ? [3, 0, 4, 1, 5, 2, 6] : [6, 2, 5, 1, 4, 0, 3];
+  for (const letter of order.slice(0, Math.abs(sharps))) alter[letter] = Math.sign(sharps);
+  return alter;
+}
+
+const SIGNS: Record<number, string> = { [-2]: 'FF', [-1]: 'F', 0: 'N', 1: 'S', 2: 'SS' };
+
+export interface Recipe {
+  tonic: Tonic;
+  /** A scale (SCALES) or, for an arpeggio, a chord (CHORDS). */
+  kind: string;
+  arpeggio: boolean;
+  way: 'up' | 'down' | 'both';
+  octaves: number;
+}
+
+/**
+ * A scale or arpeggio as SCORE's pass 1, every note with its octave, from
+ * the key note up or down over the octaves and back, its accidentals as the
+ * key signature in force (`sharps`) and the ones before them in the run
+ * leave them to be written. Chromatic scales take sharps up and flats down.
+ */
+export function recipeNotes(recipe: Recipe, sharps: number): string {
+  const { tonic, octaves } = recipe;
+  // Down, the run goes from the key note as far below it.
+  const octave = (tonic.octave ?? 4) - (recipe.way === 'down' ? octaves : 0);
+  const root = { step: 7 * octave + tonic.letter, half: 12 * octave + NATURAL[tonic.letter]! + tonic.accidental };
+  /** A note by its diatonic step and half step from C0. */
+  type Note = { step: number; half: number };
+  const run = (kind: string, down: boolean): Note[] => {
+    const notes: Note[] = [];
+    if (kind === 'chromatic') {
+      for (let k = 0; k <= 12 * octaves; k++) {
+        const half = root.half + k;
+        const pc = ((half % 12) + 12) % 12;
+        const natural = NATURAL.indexOf(pc);
+        const letter = natural >= 0 ? natural : down ? NATURAL.indexOf(pc + 1) : NATURAL.indexOf(pc - 1);
+        notes.push({ step: 7 * Math.floor(half / 12) + letter, half });
+      }
+      return notes;
+    }
+    const shape = recipe.arpeggio ? CHORDS[chordOf(kind)]! : SCALES[kind] ?? SCALES.major!;
+    for (let o = 0; o < octaves; o++) shape.half.forEach((h, k) => notes.push({ step: root.step + 7 * o + shape.letters[k]!, half: root.half + 12 * o + h }));
+    notes.push({ step: root.step + 7 * octaves, half: root.half + 12 * octaves });
+    return notes;
+  };
+  const kind = recipe.arpeggio ? recipe.kind : SCALES[recipe.kind] ? recipe.kind : 'major';
+  const up = run(kind, false);
+  const downKind = (!recipe.arpeggio && SCALES[kind]?.down) || kind;
+  const downward = run(downKind, true).reverse();
+  const notes = recipe.way === 'up' ? up : recipe.way === 'down' ? downward : [...up, ...downward.slice(1)];
+  // Accidentals as written: what the signature and the run so far leave a letter in its octave.
+  const signature = signatureOf(sharps);
+  const shown = new Map<number, number>();
+  return notes
+    .map(({ step, half }) => {
+      const letter = ((step % 7) + 7) % 7;
+      const octaveOf = Math.floor(step / 7);
+      const accidental = half - (12 * octaveOf + NATURAL[letter]!);
+      const current = shown.get(step) ?? signature[letter]!;
+      shown.set(step, accidental);
+      return `${'CDEFGAB'[letter]}${accidental === current ? '' : SIGNS[accidental] ?? ''}${octaveOf}`;
+    })
+    .join('/');
+}
+
+/**
+ * The octave for a key note with none typed: up, the nearest below the
+ * staff's middle line `middle` (a diatonic step from C0); down, the nearest
+ * from it up; half an octave further for each octave more.
+ */
+export function tonicOctave(letter: number, middle: number, way: Recipe['way'], octaves: number): number {
+  const shift = 3.5 * (octaves - 1);
+  return way === 'down' ? Math.ceil((middle + shift - letter) / 7) : Math.ceil((middle - shift - letter) / 7) - 1;
+}

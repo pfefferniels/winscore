@@ -3,7 +3,7 @@
 // Intent; Claude writes scripts directly. Each intent leaves open what the
 // words do not say (how much bigger, how many notes per beam) as knobs.
 import type { Filter, Knob, Script, Step } from './ai-script';
-import type { Bars } from './ai-values';
+import { chordOf, type Bars, type Recipe, type Tonic } from './ai-values';
 
 /** What the command is about, by the side panel's names. */
 export interface Target {
@@ -101,6 +101,8 @@ export type Action =
   | 'select'
   | 'repeat'
   | 'transpose'
+  | 'scale'
+  | 'arpeggiate'
   | 'spread'
   | 'closer'
   | 'evenly'
@@ -238,6 +240,8 @@ export interface Intent {
   /** transpose: to this key (sharps, flats negative), else by `amount` half steps; `up` false for down, unset the nearer way. */
   key?: number;
   up?: boolean;
+  /** scale: a scale or arpeggio, from its key note (none: the key in force's) and kind, up, down or both, over octaves, of a note value (pass 2: "8"). */
+  scale?: { tonic?: Tonic; kind: string; arpeggio: boolean; way: Recipe['way']; octaves: number; value?: string; middle: number };
   /** create: the item (CREATIONS), its creation word with what the command gives (KSIG-3B, METER68), the numbers after its P3 (0 keeps the default), a text's characters. */
   item?: string;
   word?: string;
@@ -325,7 +329,7 @@ function barsNoun(bars: Bars): string {
  * steps act on them.
  */
 function picked(intent: Intent, script: Script): Script {
-  if (intent.action === 'insert' || intent.action === 'app') return script;
+  if (intent.action === 'insert' || intent.action === 'scale' || intent.action === 'app') return script;
   const target = targetById(intent.target);
   const steps: Step[] = [];
   let { summary, knobs } = script;
@@ -492,6 +496,27 @@ function scriptForOne(intent: Intent): Script {
         steps: [{ do: 'transpose', items: null, half: 'half' }],
       };
     }
+    case 'scale': {
+      const r = intent.scale ?? { kind: 'major', arpeggio: false, way: 'up', octaves: 1, middle: 34 };
+      const tonic = r.tonic ? `${'CDEFGAB'[r.tonic.letter]}${{ 1: 'S', [-1]: 'F', 2: 'SS', [-2]: 'FF' }[r.tonic.accidental] ?? ''}` : null;
+      const name = tonic ? tonic.replace(/SS$/, '𝄪').replace(/S$/, '♯').replace(/FF$/, '𝄫').replace(/F$/, '♭') : '';
+      const ways = { up: '', down: ', down', both: ', up and down' };
+      const kind = r.arpeggio ? chordOf(r.kind) : r.kind;
+      // "a D major scale", "a chromatic scale from E", "a major scale in the key" (the key in force's).
+      const head = r.kind === 'chromatic' || !tonic ? kind : `${name} ${kind}`;
+      const tail = r.kind === 'chromatic' ? (tonic ? ` from ${name}` : '') : tonic ? '' : ' in the key';
+      // "an F", "an E♭", "an augmented".
+      const article = /^([AEF](?![a-z])|[aeiou])/.test(head) ? 'an' : 'a';
+      return {
+        summary: `Add ${article} ${head} ${r.arpeggio ? 'arpeggio' : 'scale'}${tail}${ways[r.way]}`,
+        knobs: [knob('octaves', 'Octaves', r.octaves, 1, 4, 1)],
+        steps: [
+          { do: 'scale', tonic, octave: r.tonic?.octave ?? null, kind: r.kind, arpeggio: r.arpeggio, way: r.way, octaves: 'octaves', value: r.value ?? null, middle: r.middle },
+        ],
+      };
+    }
+    case 'arpeggiate':
+      return one(intent.up === false ? 'Arpeggiate the chords from the top' : 'Arpeggiate the chords', { do: 'arpeggiate', items: { codes: [1], where: null }, down: intent.up === false });
     case 'spread':
     case 'closer': {
       const spread = intent.action === 'spread';

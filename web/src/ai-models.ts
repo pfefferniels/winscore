@@ -14,7 +14,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { chainable, CREATIONS, MEASURES, PICKS, TARGETS, scriptFor, type Action, type Intent } from './ai-intent';
 import { namedSettings, plain, type Filter, type Region, type Script, type Step } from './ai-script';
-import { barsIn, fingeringsIn, halfStepsIn, intervalHalfSteps, INTERVALS, RHYTHMS, meterIn, musicIn, namesCount, namesOption, numberOf, numberWords, pitchesIn, quotedIn, rhythmsFor, sequenceIn } from './ai-values';
+import { barsIn, fingeringsIn, halfStepsIn, intervalHalfSteps, INTERVALS, RHYTHMS, meterIn, musicIn, namesCount, namesOption, numberOf, numberWords, octavesIn, pitchesIn, quotedIn, rhythmsFor, SCALES, sequenceIn, tonicIn, type Recipe } from './ai-values';
 
 // ---------------------------------------------------------------------------
 // Settings and connections
@@ -141,6 +141,8 @@ function selectionWords(about: About): string {
 
 const ACTIONS: Record<Action | 'other', string> = {
   insert: 'Write or put new notes, chords or rests into the score, named by their pitches such as c, f#, bb4 or chords such as d/f/a, perhaps with their note value (add c e g as eighths, put e f# g here)',
+  scale: 'Write a scale or an arpeggio as new notes, worked out from its key note and kind (add a C major scale, a D minor arpeggio in eighths, two octaves of a G major scale going down, a chromatic scale from E)',
+  arpeggiate: 'Break the selected chords into their notes played one after another, as arpeggios or broken chords, from the bottom up or the top down (arpeggiate the chords, break up the chord, turn the chords into arpeggios)',
   beam: 'Join notes with beams, or beam them in groups such as pairs',
   unbeam: 'Take the beams away so the notes are no longer beamed',
   delete: 'Remove, delete, erase, clear, take away or hide something: items such as rests, slurs or dynamics, or a part of notes such as their stems, accidentals, articulation marks or dots',
@@ -210,10 +212,57 @@ const QUITE_SURE = 0.75;
 // Jev leans to the first option: "simple" goes first, so a command must clearly ask for thought to be complex.
 const COMPLEXITY = {
   simple:
-    'One plain edit: a property, size, place or value given to the items, or to some of them picked out by place or kind, one new item, or a command of the editor (accent the last note, remove the stems, make the slurs flatter, stems down on the bottom notes of the chords, add a staff, a slur over these notes, save)',
+    'One plain edit: a property, size, place or value given to the items, or to some of them picked out by place or kind, one new item, a scale or arpeggio named by its key and kind, the chords arpeggiated, or a command of the editor (accent the last note, remove the stems, make the slurs flatter, stems down on the bottom notes of the chords, add a staff, a slur over these notes, add a D major scale, save)',
   complex:
-    'Work that takes thought: new music worked out from a description or from the music there (an arpeggio, a scale, a second voice, a bass line, the melody backwards or upside down), several edits that depend on one another, or items and values worked out for each item from others (a pattern, a rule over the music, lines connecting the notes, a hairpin under each slur)',
+    'Work that takes thought: new music worked out from a description or from the music there (a second voice, a bass line, a harmony, the melody backwards or upside down, chords broken into a pattern), several edits that depend on one another, or items and values worked out for each item from others (a pattern, a rule over the music, lines connecting the notes, a hairpin under each slur)',
 };
+
+/** Words of a command about a scale or arpeggio, for which the questions about one are asked. */
+const RECIPE = /scale|arpegg|broken chord|triad|pentatonic|chromatic/i;
+
+// Jev leans to the first option: "major" goes first, as a scale or chord with no kind named is a major one.
+const KINDS: Record<string, string> = {
+  major: 'major, or no kind is named',
+  minor: 'minor, natural minor',
+  'harmonic minor': 'harmonic minor',
+  'melodic minor': 'melodic minor',
+  chromatic: 'chromatic: every half step',
+  'major pentatonic': 'pentatonic, major pentatonic',
+  'minor pentatonic': 'minor pentatonic',
+  blues: 'blues',
+  'whole tone': 'whole tone',
+  dorian: 'dorian',
+  phrygian: 'phrygian',
+  lydian: 'lydian',
+  mixolydian: 'mixolydian',
+  locrian: 'locrian',
+  diminished: 'diminished triad',
+  augmented: 'augmented triad',
+  'dominant seventh': 'dominant seventh, a seventh chord on a major key note (G7)',
+  'major seventh': 'major seventh',
+  'minor seventh': 'minor seventh',
+  'diminished seventh': 'diminished seventh',
+  'half-diminished seventh': 'half-diminished seventh',
+};
+
+// Jev leans to the first option: "up" goes first, as scales go up unless the command says otherwise.
+const WAYS = { up: 'up, ascending, or no way is named', down: 'down, descending, from the top', both: 'up and back down, ascending and descending, there and back' };
+
+/** How commands name note values, by the last word of their names (RHYTHMS). */
+const RHYTHM_WORDS: Record<string, RegExp> = {
+  whole: /\bwhole|semibreve/i,
+  half: /\bhalf|minim|\b2nds?\b/i,
+  quarter: /quarter|crotchet|\b4ths?\b/i,
+  eighth: /eighth|quaver|\b8ths?\b/i,
+  sixteenth: /sixteenth|semiquaver|\b16ths?\b/i,
+  'thirty-second': /thirty|demisemiquaver|\b32nds?\b/i,
+};
+
+/** Kinds that are scales, not chords: an arpeggio of one is of its chord. */
+const SCALE_KINDS = new Set(Object.keys(SCALES));
+
+// Jev leans to the first option: "scale" goes first.
+const RECIPES = { scale: 'a scale: the notes of a key or mode step by step', arpeggio: 'an arpeggio, broken chord or triad: the notes of a chord one after another' };
 
 // Jev leans to the first option: "no number" goes first, so a number must be named to be chosen.
 const GROUPS = {
@@ -348,7 +397,13 @@ function jevQuestions(about: About): Record<string, Question> {
       questions.to = { type: 'choice', instructions: 'Which number in the `command` is the final value?', criteria: options };
     }
   }
-  if (musicIn(about.text)) {
+  const recipe = RECIPE.test(about.text);
+  if (recipe) {
+    questions.recipe = { type: 'choice', instructions: 'Does the `command` ask for a scale or an arpeggio?', criteria: RECIPES };
+    questions.kind = { type: 'choice', instructions: 'Which kind of scale or chord does the `command` name?', criteria: KINDS };
+    questions.way = { type: 'choice', instructions: 'Which way does the `command` have the notes go?', criteria: WAYS };
+  }
+  if (recipe || musicIn(about.text)) {
     questions.rhythm = {
       type: 'choice',
       instructions: 'Which note value does the `command` give the new notes?',
@@ -397,6 +452,12 @@ const READS: Partial<Record<Action, string[]>> = {
   closer: ['amount'],
 };
 
+/** Whether Jev hears a property more surely as which notes the command acts on ("the eighths") than as given them. */
+function whichNotes(answers: Record<string, ChoiceAnswer>, given: ChoiceAnswer): boolean {
+  const only = answers.only;
+  return only !== undefined && only.choice === given.choice && only.confidence > given.confidence;
+}
+
 /** Actions a property given alongside ("8th beam") goes with. */
 const ALONGSIDE = new Set<Action>(['beam']);
 
@@ -412,7 +473,14 @@ function readAnswers(about: About, answers: Record<string, ChoiceAnswer>): Inten
   const then = answers.then;
   // "again 3 times", "undo twice": a count is part of these, not a second repeat.
   const counted = ['again', 'repeat', 'app'].includes(first.action);
-  const second = then && then.choice !== 'none' && then.confidence >= QUITE_SURE && !counted ? (then.choice as Action) : null;
+  // A command that joins two ("and", "then", a comma) needs Jev less sure of the second.
+  const joined = /\b(and|then|also|plus)\b|[,;&+]/i.test(about.text);
+  let second = then && then.choice !== 'none' && then.confidence >= (joined ? SURE : QUITE_SURE) && !counted ? (then.choice as Action) : null;
+  // A property that says which notes ("beam the eighths") is not a second thing to give them.
+  const property = Object.entries(answers)
+    .filter(([id, a]) => id.startsWith('option.') && a.choice !== 'none')
+    .sort((a, b) => b[1].confidence - a[1].confidence)[0]?.[1];
+  if (second === 'option' && property && whichNotes(answers, property)) second = null;
   if (second && second !== first.action) {
     // Both read the same answers: only actions that take different ones, on the notes or everything, go together.
     const shared = (READS[first.action] ?? []).some((r) => (READS[second] ?? []).includes(r));
@@ -423,8 +491,9 @@ function readAnswers(about: About, answers: Record<string, ChoiceAnswer>): Inten
     if (scriptFor(other).knobs.some((k) => ids.has(k.id))) return 'detail';
     return { ...first, then: other };
   }
+  // A property the command names, which Jev hears as given rather than as which notes ("beam the eighths").
   const also = answers.also;
-  if (ALONGSIDE.has(first.action) && also && also.choice !== 'none' && also.confidence >= QUITE_SURE) {
+  if (ALONGSIDE.has(first.action) && also && also.choice !== 'none' && also.confidence >= SURE && !whichNotes(answers, also)) {
     const [setting, option] = also.choice.split(': ');
     if (setting && option && namesOption(about.text, option)) return { ...first, then: { action: 'option', target: 'notes', setting, option } };
   }
@@ -439,9 +508,14 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
     const a = answers[id];
     return a && a.choice !== 'none' && a.confidence >= enough ? a.choice : undefined;
   };
+  /** The note value Jev is quite sure of, when the command names it ("in eighths", "16ths"). */
+  const namedRhythm = () => {
+    const rhythm = sure('rhythm', QUITE_SURE);
+    return rhythm && RHYTHM_WORDS[rhythm.split(' ').at(-1)!]?.test(about.text) ? rhythm : undefined;
+  };
   if (!action || action === 'other') return 'other';
   // Everything but new music, new items and the editor's commands acts on items: with none, the reading is wrong.
-  if (!['insert', 'create', 'app'].includes(action) && about.counts.size === 0) return 'nothing';
+  if (!['insert', 'scale', 'create', 'app'].includes(action) && about.counts.size === 0) return 'nothing';
   const target = choice('target') ?? 'all';
   /** The number a question picked, as written ("50%" stays a percentage). */
   const picked = (id: string) => {
@@ -469,7 +543,7 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
   // Some items picked out by place ("the last note", "every other one"), or bars named by number, which
   // the command names whatever Jev picks ("accent bar 3"); picked some other way, Claude writes it. New
   // music and items where nothing is selected, and the editor's commands, pick none.
-  const picks = !['insert', 'app'].includes(action) && !(action === 'create' && about.whole);
+  const picks = !['insert', 'scale', 'app'].includes(action) && !(action === 'create' && about.whole);
   const bars = picks ? barsIn(about.text) : null;
   let pick = sure('pick');
   // "the last bar": its first or last is the bars'; "the last note of bar 3" picks among them.
@@ -501,6 +575,30 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
       const rhythm = answers.rhythm && answers.rhythm.confidence >= QUITE_SURE ? choice('rhythm') : undefined;
       // Values typed with the notes win over one Jev reads ("c e g 4 8 8").
       intent.rhythms = music.rhythms ?? rhythmsFor(rhythm, music.count);
+      return intent;
+    }
+    case 'scale': {
+      if (!RECIPE.test(about.text)) return 'detail';
+      const arpeggio = answers.recipe?.choice === 'arpeggio' || !SCALE_KINDS.has(choice('kind') ?? 'major');
+      const kind = sure('kind') ?? 'major';
+      const way = (sure('way') ?? 'up') as Recipe['way'];
+      const rhythm = namedRhythm();
+      const tonic = tonicIn(about.text);
+      intent.scale = {
+        ...(tonic ? { tonic } : {}),
+        kind: arpeggio && kind === 'chromatic' ? 'major' : kind,
+        arpeggio,
+        way,
+        octaves: octavesIn(about.text) ?? 1,
+        ...(rhythm && rhythm !== 'none' && RHYTHMS[rhythm] ? { value: RHYTHMS[rhythm] } : {}),
+        middle: about.middle,
+      };
+      return intent;
+    }
+    case 'arpeggiate': {
+      // Broken chords in a note value of their own ("in sixteenths") make a pattern: Claude's.
+      if (namedRhythm()) return 'complex';
+      if (sure('way') === 'down' || sure('direction') === 'down') intent.up = false;
       return intent;
     }
     case 'beam': {
@@ -676,10 +774,13 @@ export async function askJev(about: About, connection: NonNullable<Connections['
   const [item, target] = [answers.item, answers.target];
   const names = target !== undefined && target.choice !== 'all' && target.confidence >= SURE;
   const property = Object.entries(answers).some(([id, a]) => id.startsWith('option.') && a.choice !== 'none' && a.confidence >= QUITE_SURE);
-  const placed = about.whole && item !== undefined && item.choice !== 'none' && item.confidence >= QUITE_SURE && (action?.choice === 'create' || (action?.choice === 'option' && !(names && property)));
+  // So is it when Jev is unsure of the action ("write “dolce” here").
+  const unsure = action !== undefined && action.confidence < SURE;
+  const placed = about.whole && item !== undefined && item.choice !== 'none' && item.confidence >= QUITE_SURE && (action?.choice === 'create' || unsure || (action?.choice === 'option' && !(names && property)));
   const read = !action || (action.confidence < SURE && !placed) ? 'unsure' : complex ? 'complex' : readAnswers(about, placed ? { ...answers, action: { ...action, choice: 'create' } } : answers);
   const [intent, why] = typeof read === 'string' ? [null, read] : [read, null];
-  return { intent, why, action: action?.choice ?? 'other', confidence: action?.confidence ?? 0, complex, ms: performance.now() - started, answers };
+  // A reading can find thought in the command too ("broken chords in sixteenths").
+  return { intent, why, action: action?.choice ?? 'other', confidence: action?.confidence ?? 0, complex: complex || why === 'complex', ms: performance.now() - started, answers };
 }
 
 let warmed = 0;
@@ -793,7 +894,7 @@ A step leaves out its unused fields here for brevity; give every field ("params"
 
 /** One step as Claude writes it: every field there, none of them a union (the API allows few). */
 interface Written {
-  do: Exclude<Step['do'], 'create' | 'repeat' | 'text' | 'lyrics' | 'space' | 'transpose'>;
+  do: Exclude<Step['do'], 'create' | 'repeat' | 'text' | 'lyrics' | 'space' | 'transpose' | 'scale' | 'arpeggiate'>;
   codes: number[];
   where: string;
   where_setting: string;

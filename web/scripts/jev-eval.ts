@@ -92,7 +92,8 @@ const CASES: [string, string, Record<string, unknown>][] = [
   // Two actions at once, or a value given alongside a beam; the unsafe ones are Claude's.
   ["notes", "staccato and stems up", {"action": "option", "option": "Staccato", "then": {"action": "stems-up"}}],
   ["notes", "accent them and move up a step", {"then": {"action": "move"}}],
-  ["notes", "make them eighths, then beam in pairs", {"then": {"action": "beam"}}],
+  // Read as either action first, with the other second: the same script.
+  ["notes", "make them eighths, then beam in pairs", {"summary": "Value: Eighth, beam in groups"}],
   ["notes", "8th beam", {"action": "beam", "then": {"action": "option", "target": "notes", "setting": "Value", "option": "Eighth"}}],
   ["notes", "sixteenths beamed in fours", {"action": "beam", "amount": 4, "then": {"action": "option", "target": "notes", "setting": "Value", "option": "16th"}}],
   ["notes", "beam the eighths", {"then": undefined}],
@@ -106,7 +107,7 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["notes", "write a walking bass under these notes", {"complex": true}],
   ["notes", "add lines from note head to note head", {"complex": true}],
   ["mixed", "add a crescendo hairpin under each slur", {"complex": true}],
-  ["place", "add a c major arpeggio in eighths, up and back down", {"action": "(none)", "complex": true}],
+  ["place", "add a c major arpeggio in eighths, up and back down", {"action": "scale", "scale": {"tonic": {"letter": 0, "accidental": 0}, "kind": "major", "arpeggio": true, "way": "both", "value": "8"}, "complex": false}],
   // Some of the items, picked out by place.
   ["notes", "accent the first note", {"action": "option", "option": "Accent", "pick": "first"}],
   ["notes", "stems down on the bottom notes of the chords", {"action": "stems-down", "pick": "bottom"}],
@@ -179,6 +180,20 @@ const CASES: [string, string, Record<string, unknown>][] = [
   ["notes", "transpose it up a whole step", {"action": "transpose", "amount": 2}],
   ["notes", "transpose to D major", {"action": "transpose", "key": 2, "up": undefined}],
   ["place", "transpose the piece down to B flat major", {"action": "transpose", "key": -2, "up": false}],
+  // Scales and arpeggios, written out by code.
+  ["place", "add a c major scale", {"action": "scale", "scale": {"tonic": {"letter": 0, "accidental": 0}, "kind": "major", "arpeggio": false, "way": "up", "octaves": 1}}],
+  ["place", "add a D major scale in eighths", {"action": "scale", "scale": {"tonic": {"letter": 1, "accidental": 0}, "kind": "major", "value": "8"}}],
+  ["place", "write an f# harmonic minor scale going down", {"action": "scale", "scale": {"tonic": {"letter": 3, "accidental": 1}, "kind": "harmonic minor", "arpeggio": false, "way": "down"}}],
+  ["place", "two octaves of a g major scale, up and down", {"action": "scale", "scale": {"tonic": {"letter": 4, "accidental": 0}, "kind": "major", "way": "both", "octaves": 2}}],
+  ["place", "a chromatic scale from E", {"action": "scale", "scale": {"tonic": {"letter": 2, "accidental": 0}, "kind": "chromatic", "arpeggio": false}}],
+  ["place", "add an e flat major arpeggio", {"action": "scale", "scale": {"tonic": {"letter": 2, "accidental": -1}, "kind": "major", "arpeggio": true}}],
+  ["place", "add a G7 arpeggio in sixteenths", {"action": "scale", "scale": {"kind": "dominant seventh", "arpeggio": true, "value": "16"}}],
+  ["place", "add a minor scale", {"action": "scale", "scale": {"tonic": undefined, "kind": "minor", "arpeggio": false}}],
+  ["place", "add a d dorian scale", {"action": "scale", "scale": {"tonic": {"letter": 1, "accidental": 0}, "kind": "dorian"}}],
+  ["place", "add a c major pentatonic scale", {"action": "scale", "scale": {"tonic": {"letter": 0, "accidental": 0}, "kind": "major pentatonic"}}],
+  ["notes", "arpeggiate the chords", {"action": "arpeggiate", "up": undefined}],
+  ["notes", "break up the chords from the top down", {"action": "arpeggiate", "up": false}],
+  ["notes", "arpeggiate", {"action": "arpeggiate"}],
   ["notes", "move up a third", {"action": "move", "direction": "up", "amount": 2}],
   // Horizontal spacing.
   ["notes", "spread them out", {"action": "spread"}],
@@ -258,7 +273,7 @@ async function one(i: number) {
   try {
     const reading = await askJev(about, connection, new AbortController().signal);
     times.push(reading.ms);
-    const got: Record<string, unknown> = { ...(reading.intent ?? { action: '(none)', read: reading.action }), complex: reading.complex };
+    const got: Record<string, unknown> = { ...(reading.intent ? { ...reading.intent, summary: scriptFor(reading.intent).summary } : { action: '(none)', read: reading.action }), complex: reading.complex };
     const ok = holds(got, expect);
     if (ok) passed++;
     const summary = reading.intent ? ` | ${scriptFor(reading.intent).summary}` : '';

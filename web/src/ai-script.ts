@@ -6,9 +6,9 @@
 // the new value.
 import type { Editor } from './editor';
 import type { InputLine } from './wasm/score_web.js';
-import { sectionsFor, type Change, type Context, type NumberSetting, type P, type Setting } from './item-fields';
+import { inputName, sectionsFor, type Change, type Context, type NumberSetting, type P, type Setting } from './item-fields';
 import { valueOf, type Compiled, type Vars } from './ai-expr';
-import { quartersFor } from './ai-values';
+import { keyTonic, quartersFor, recipeNotes, tonicOctave, TREBLE_MIDDLE, type Recipe } from './ai-values';
 
 /** A number a step leaves open, set with a slider. */
 export interface Knob {
@@ -79,6 +79,16 @@ export type Step =
    * rewritten or added, stems kept.
    */
   | { do: 'transpose'; items?: Filter | null; half?: Value | null; key?: number | null; up?: boolean | null }
+  /**
+   * A scale or arpeggio as new notes where music goes, written out by code: from `tonic` (a letter with S,
+   * F, SS or FF; none: the key note of the key in force there, its minor one for a minor `kind`) in
+   * `octave` (none: by the staff's middle line `middle`, a diatonic step from C0), of `kind` (a scale, or
+   * for an arpeggio a chord: major, minor, dominant seventh …), up, down or up and back over `octaves`,
+   * every note of value `value` (pass 2: "8"), accidentals as the key in force leaves them to be written.
+   */
+  | { do: 'scale'; tonic?: string | null; octave?: number | null; kind: string; arpeggio?: boolean; way?: Recipe['way'] | null; octaves?: Value | null; value?: string | null; middle?: number | null }
+  /** The chords among the items broken into their notes one after another in each chord's time: from the bottom, or `down` from the top. */
+  | { do: 'arpeggiate'; items?: Filter | null; down?: boolean | null }
   /** The texts among the items get these characters, each in its own font. */
   | { do: 'text'; items?: Filter | null; text: string }
   /**
@@ -581,26 +591,24 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       }
       return list.map((t) => t.key);
     }
-    case 'insert': {
-      const region = scope.region;
-      // A score without staves gets staff 1, which the input makes as IN 1 does.
-      const staff = step.staff ?? region?.staff ?? (access.staves().length === 0 ? 1 : undefined);
-      if (staff === undefined) throw new Error('Click the staff the music goes on');
-      const from = step.from ?? region?.from ?? 10;
-      const rhythms = step.rhythms?.replace(/;$/, '').trim() ? step.rhythms : quartersFor(step.notes);
-      // As much of the staff as the music's values take, not all of it to its end.
-      const to = step.to ?? Math.min(region?.to ?? 190, from + widthOf(rhythms ?? '', step.notes));
-      const passes = [step.notes, rhythms, step.marks, step.beams, step.slurs].map(ensureSemicolon);
-      const line = access.inputLine(passes, Math.round(staff), Math.min(from, to), Math.max(from, to));
-      try {
-        editor.select([]);
-        editor.insertInput(line);
-      } finally {
-        line.free();
-      }
-      const keys = editor.keys();
-      return editor.selection().map((i) => keys[i]!);
+    case 'insert':
+      return insert(access, scope, step);
+    case 'scale': {
+      const staff = staffFor(access, scope);
+      const from = scope.region?.from ?? 10;
+      const sharps = keyAt(access, staff, from);
+      const kind = step.kind || 'major';
+      const way = step.way ?? 'up';
+      const octaves = Math.max(1, Math.min(4, Math.round(knobValue(step.octaves ?? 1))));
+      const typed = /^([A-G])(SS|FF|S|F)?$/i.exec(step.tonic ?? '');
+      const tonic = typed ? { letter: 'CDEFGAB'.indexOf(typed[1]!.toUpperCase()), accidental: { S: 1, F: -1, SS: 2, FF: -2 }[(typed[2] ?? '').toUpperCase()] ?? 0 } : keyTonic(sharps, /minor/.test(kind));
+      const octave = step.octave ?? tonicOctave(tonic.letter, step.middle ?? TREBLE_MIDDLE, way, octaves);
+      const notes = recipeNotes({ tonic: { ...tonic, octave }, kind, arpeggio: step.arpeggio ?? false, way, octaves }, sharps);
+      const value = step.value?.trim() || '4';
+      return insert(access, scope, { do: 'insert', staff, notes, rhythms: notes.split('/').map(() => value).join('/') });
     }
+    case 'arpeggiate':
+      return arpeggiate(access, targets(access, scope, step.items, knobs), step.down ?? false);
     case 'beam':
       return beam(access, targets(access, scope, step.items, knobs), Math.round(knobValue(step.size)));
     case 'select':
@@ -890,6 +898,85 @@ function repeat(access: Access, list: Target[], times: number): number[] {
   return [...items.map((t) => t.key), ...made];
 }
 
+/** The staff where music goes: the region's; a score without staves gets staff 1, which the input makes as IN 1 does. */
+function staffFor(access: Access, scope: Scope, staff?: number | null): number {
+  const found = staff ?? scope.region?.staff ?? (access.staves().length === 0 ? 1 : undefined);
+  if (found === undefined) throw new Error('Click the staff the music goes on');
+  return Math.round(found);
+}
+
+/** A line of music input on a staff, from the region's start over as much of it as the music's values take; the new items, by identity. */
+function insert(access: Access, scope: Scope, step: Extract<Step, { do: 'insert' }>): number[] {
+  const editor = access.editor;
+  const region = scope.region;
+  const staff = staffFor(access, scope, step.staff);
+  const from = step.from ?? region?.from ?? 10;
+  const rhythms = step.rhythms?.replace(/;$/, '').trim() ? step.rhythms : quartersFor(step.notes);
+  // As much of the staff as the music's values take, not all of it to its end.
+  const to = step.to ?? Math.min(region?.to ?? 190, from + widthOf(rhythms ?? '', step.notes));
+  const passes = [step.notes, rhythms, step.marks, step.beams, step.slurs].map(ensureSemicolon);
+  const line = access.inputLine(passes, staff, Math.min(from, to), Math.max(from, to));
+  try {
+    editor.select([]);
+    editor.insertInput(line);
+  } finally {
+    line.free();
+  }
+  const keys = editor.keys();
+  return editor.selection().map((i) => keys[i]!);
+}
+
+/**
+ * Each chord among the items (two notes or more at one place on a staff)
+ * broken into its notes, from the lowest up (`down`: from the highest),
+ * one after another from the chord's place up to the next item on its
+ * staff, sharing its value: the chord goes and the notes are written as
+ * music input, each with its pitch and accidental as shown.
+ */
+function arpeggiate(access: Access, list: Target[], down: boolean): number[] {
+  const editor = access.editor;
+  const notes = list.filter((t) => t.params[0] === NOTE && t.params[6]! > 0 && t.params[6]! < GRACE);
+  const chords: Target[][] = [];
+  for (const t of [...notes].sort((a, b) => a.params[1]! - b.params[1]! || a.params[2]! - b.params[2]!)) {
+    const last = chords.at(-1);
+    if (last && last[0]!.params[1] === t.params[1] && Math.abs(last[0]!.params[2]! - t.params[2]!) < CHORD) last.push(t);
+    else chords.push([t]);
+  }
+  const broken = chords.filter((c) => new Set(c.map((t) => level(t.params[3]!))).size > 1);
+  if (broken.length === 0) throw new Error('There are no chords here to arpeggiate');
+  const summaries = access.summaries();
+  const lines = broken.map((chord) => {
+    const [staff, x] = [chord[0]!.params[1]!, chord[0]!.params[2]!];
+    // Up to the next item standing on the staff, else as far as the notes' values take.
+    let next = Infinity;
+    for (let i = 0; 3 * i < summaries.length; i++) {
+      const at = summaries[3 * i + 2]!;
+      if (summaries[3 * i + 1] === staff && STANDING.has(summaries[3 * i]!) && at > x + CHORD && at < next) next = at;
+    }
+    const sorted = [...chord].sort((a, b) => (level(a.params[3]!) - level(b.params[3]!)) * (down ? -1 : 1));
+    const n = sorted.length;
+    const quarters = Math.max(...chord.map((t) => t.params[6]!));
+    // A plain value when the chord's divides into one (a quarter into two eighths), else n in its time ("3:1").
+    const code = (4 * n) / quarters;
+    const value = Number.isInteger(Math.round(code * 1e4) / 1e4) ? String(Math.round(code)) : `${n}:${Math.round(quarters * 1e4) / 1e4}`;
+    const names = sorted.map((t) => {
+      const p: P = (k) => t.params[k - 1] ?? 0;
+      return inputName(p, access.context(t.index));
+    });
+    const to = Number.isFinite(next) ? next : x + widthOf(Array(n).fill(String(Math.round(code))).join('/'), '');
+    return { staff, x, to, keys: chord.map((t) => t.key), notes: names.join('/'), rhythms: names.map(() => value).join('/') };
+  });
+  const made: number[] = [];
+  for (const line of lines) {
+    const at = keyIndex(editor);
+    editor.select(line.keys.flatMap((k) => (at.has(k) ? [at.get(k)!] : [])));
+    editor.deleteSelection();
+    made.push(...insert(access, { keys: null, region: null }, { do: 'insert', staff: line.staff, from: line.x, to: line.to, notes: line.notes, rhythms: line.rhythms }));
+  }
+  editor.select([]);
+  return made;
+}
+
 /** P3 a note value takes when music is added: a quarter 11, an eighth 8, a half 17; a barline 4. */
 const VALUE_SPACE = (quarters: number) => 5 + 6 * quarters;
 const BAR_SPACE = 4;
@@ -1074,7 +1161,7 @@ export function run(script: Script, access: Access, scope: Scope, label: string,
 /** How many of the command's items the first step that picks items would act on. */
 export function reach(script: Script, access: Access, scope: Scope): { count: number; codes: number[] } {
   const knobs = knobValues(script);
-  const step = script.steps.find((s): s is Exclude<Step, { do: 'insert' }> => s.do !== 'insert');
+  const step = script.steps.find((s): s is Exclude<Step, { do: 'insert' | 'scale' }> => s.do !== 'insert' && s.do !== 'scale');
   if (!step) return { count: 0, codes: [] };
   const list = targets(access, scope, step.items, knobs).filter((t) => step.do !== 'beam' || beamable(t));
   return { count: list.length, codes: [...new Set(list.map((t) => t.params[0]!))] };

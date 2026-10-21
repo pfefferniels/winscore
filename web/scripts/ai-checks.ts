@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
 import { compile } from '../src/ai-expr';
-import { barsIn, fingeringsIn, halfStepsIn, intervalHalfSteps, meterIn, musicIn, namesCount, numbersIn, numberWords, pitchesIn, quartersFor, quotedIn, sequenceIn } from '../src/ai-values';
+import { barsIn, fingeringsIn, halfStepsIn, intervalHalfSteps, keyTonic, meterIn, musicIn, namesCount, numbersIn, numberWords, octavesIn, pitchesIn, quartersFor, quotedIn, recipeNotes, sequenceIn, tonicIn, tonicOctave, type Recipe } from '../src/ai-values';
 import { scriptFor, type Intent } from '../src/ai-intent';
 import { run, syllables, type Access, type Scope, type Script } from '../src/ai-script';
 import { SCRIPT_SCHEMA } from '../src/ai-models';
@@ -475,5 +475,67 @@ ran = create({ item: 'staff' }, place);
 assert.deepEqual(four.rows().filter((q) => q[0] === 8).map((q) => q[1]), [1, 2]);
 four.ed.rollback(ran.mark);
 assert.throws(() => create({ item: 'barline' }, { keys: null, region: null }), /Click where it goes/);
+
+// Scales and arpeggios written out by code, accidentals as the key signature in force leaves them to be written.
+const recipe = (r: Partial<Recipe> & { tonic: Recipe['tonic'] }, sharps = 0) => recipeNotes({ kind: 'major', arpeggio: false, way: 'up', octaves: 1, ...r }, sharps);
+const D4 = { letter: 1, accidental: 0, octave: 4 };
+assert.equal(recipe({ tonic: D4 }), 'D4/E4/FS4/G4/A4/B4/CS5/D5');
+assert.equal(recipe({ tonic: D4 }, 2), 'D4/E4/F4/G4/A4/B4/C5/D5', 'in D major, no sharps shown');
+assert.equal(recipe({ tonic: { letter: 5, accidental: 0, octave: 4 }, kind: 'melodic minor', way: 'both' }), 'A4/B4/C5/D5/E5/FS5/GS5/A5/GN5/FN5/E5/D5/C5/B4/A4', 'down as the natural minor');
+assert.equal(recipe({ tonic: { letter: 0, accidental: 0, octave: 4 }, arpeggio: true, way: 'both' }), 'C4/E4/G4/C5/G4/E4/C4');
+assert.equal(recipe({ tonic: { letter: 4, accidental: 0, octave: 3 }, kind: 'dominant seventh', arpeggio: true }), 'G3/B3/D4/F4/G4');
+assert.equal(recipe({ tonic: { letter: 6, accidental: -1, octave: 4 }, way: 'down' }), 'BF4/A4/G4/F4/EF4/D4/C4/BF3', 'down from the key note');
+assert.equal(recipe({ tonic: { letter: 0, accidental: 0, octave: 4 }, kind: 'chromatic', way: 'both' }).split('/').slice(11, 16).join('/'), 'B4/C5/B4/BF4/AN4', 'sharps up, flats down');
+assert.equal(recipe({ tonic: { letter: 0, accidental: 0, octave: 4 }, kind: 'major pentatonic', octaves: 2 }), 'C4/D4/E4/G4/A4/C5/D5/E5/G5/A5/C6');
+assert.deepEqual(['add a c major scale', 'add a minor scale', 'an a minor scale', 'add an e flat arpeggio', 'a chromatic scale from F#', 'add a G7 arpeggio', 'add a c4 major scale'].map(tonicIn), [
+  { letter: 0, accidental: 0 }, null, { letter: 5, accidental: 0 }, { letter: 2, accidental: -1 }, { letter: 3, accidental: 1 }, { letter: 4, accidental: 0 }, { letter: 0, accidental: 0, octave: 4 },
+]);
+assert.deepEqual(['two octaves of a g major scale', 'a scale over 3 octaves', 'a scale'].map(octavesIn), [2, 3, null]);
+assert.deepEqual([keyTonic(2, false), keyTonic(-3, true), keyTonic(0, true)], [{ letter: 1, accidental: 0 }, { letter: 0, accidental: 0 }, { letter: 5, accidental: 0 }]);
+assert.deepEqual([tonicOctave(0, 34, 'up', 1), tonicOctave(6, 34, 'up', 1), tonicOctave(0, 34, 'down', 1), tonicOctave(0, 22, 'up', 1)], [4, 3, 5, 3], 'below the middle line up, above it down');
+const scaled = fresh();
+const scale = scriptFor({ action: 'scale', target: 'all', scale: { tonic: { letter: 1, accidental: 0 }, kind: 'major', arpeggio: false, way: 'up', octaves: 1, value: '8', middle: 34 } });
+assert.equal(scale.summary, 'Add a D major scale');
+assert.deepEqual(scale.knobs.map((k) => [k.id, k.value]), [['octaves', 1]]);
+ran = run(scale, scaled.acc, { keys: null, region: { ...region, from: 120, to: 190 } }, '“add a D major scale”');
+const scaleNotes = scaled.notes().filter((q) => q[2]! >= 120);
+assert.deepEqual(scaleNotes.map((q) => q[3]), [2, 3, 4, 5, 6, 7, 8, 9], 'D4 up to D5');
+assert.deepEqual(scaleNotes.map((q) => q[6]), Array(8).fill(0.5), 'eighths');
+assert.deepEqual(scaleNotes.map((q) => Math.abs(q[4]!) % 10), [0, 0, 2, 0, 0, 0, 2, 0], 'F♯ and C♯');
+scaled.ed.rollback(ran.mark);
+ran = run(scale, scaled.acc, { keys: null, region: { ...region, from: 100, to: 190 } }, '“add a D major scale”', { octaves: 2 });
+assert.equal(scaled.notes().filter((q) => q[2]! >= 100).length, 15, 'two octaves');
+scaled.ed.rollback(ran.mark);
+assert.equal(scriptFor({ action: 'scale', target: 'all', scale: { kind: 'minor', arpeggio: true, way: 'both', octaves: 1, middle: 34 } }).summary, 'Add a minor arpeggio in the key, up and down');
+// Without a key note, the key's: in a score with three flats, a minor scale is C minor, its flats not shown.
+const flat = fresh();
+flat.ed.select([]);
+flat.ed.execute('KSIG-3');
+ran = run(scriptFor({ action: 'scale', target: 'all', scale: { kind: 'minor', arpeggio: false, way: 'up', octaves: 1, middle: 34 } }), flat.acc, { keys: null, region: { ...region, from: 120 } }, '“add a minor scale”');
+const cMinor = flat.notes().filter((q) => q[2]! >= 120);
+assert.deepEqual(cMinor.map((q) => q[3]), [1, 2, 3, 4, 5, 6, 7, 8], 'C4 up to C5');
+assert.ok(cMinor.every((q) => Math.abs(q[4]!) % 10 === 0), 'E♭, A♭ and B♭ from the key signature');
+
+// Chords arpeggiated: C E G and D F A quarters become triplet eighths in their time, from the bottom, or from the top.
+const chorded = fresh();
+const arpeggio = (down: boolean) => {
+  const before = chorded.ed.keys().length;
+  const add = run({ summary: 'add', knobs: [], steps: [{ do: 'insert', notes: 'C4:E:G/D:F:A', rhythms: '4/4' }] }, chorded.acc, { keys: [], region: { ...region, from: 120, to: 160 } }, '“add”');
+  const keys = chorded.ed.keys().slice(before);
+  const xs = chorded.notes().filter((q) => q[2]! >= 120).map((q) => q[2]!);
+  const r = run(scriptFor({ action: 'arpeggiate', target: 'chords', ...(down ? { up: false } : {}) }), chorded.acc, { keys, region: null }, '“arpeggiate”');
+  const broken = chorded.notes().filter((q) => q[2]! >= 120);
+  return { r, xs, broken, mark: add.mark };
+};
+let arp = arpeggio(false);
+assert.deepEqual(arp.broken.map((q) => q[3]), [1, 3, 5, 2, 4, 6], 'C E G, D F A one after another');
+assert.ok(arp.broken.every((q) => Math.abs(q[6]! - 1 / 3) < 1e-3), 'triplet eighths');
+assert.equal(arp.broken[0]![2], Math.min(...arp.xs), 'from where the first chord was');
+assert.ok(arp.broken[3]![2]! >= Math.max(...arp.xs) - 0.01, 'the second from where it was');
+assert.equal(arp.r.touched.length, 6);
+chorded.ed.rollback(arp.mark);
+arp = arpeggio(true);
+assert.deepEqual(arp.broken.map((q) => q[3]), [5, 3, 1, 6, 4, 2], 'from the top');
+assert.throws(() => run(scriptFor({ action: 'arpeggiate', target: 'chords' }), four.acc, four.scope(), '“arpeggiate”'), /no chords/);
 
 console.log('ai checks: ok');

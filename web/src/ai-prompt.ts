@@ -303,7 +303,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   function counted(script: Script): string {
     const access = hooks.access();
     if (!access || !scope) return '';
-    if (script.steps.every((s) => s.do === 'insert' || s.do === 'create')) return '';
+    if (script.steps.every((s) => s.do === 'insert' || s.do === 'scale' || s.do === 'create')) return '';
     const { count } = reach(script, access, scope);
     return count === 0 ? ' · nothing here it applies to' : ` · ${count} item${count === 1 ? '' : 's'}`;
   }

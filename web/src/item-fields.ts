@@ -229,6 +229,14 @@ function pitchName(p: P, ctx: Context): string {
   return `${letter}${shown}${Math.floor(step / 7)}`;
 }
 
+const INPUT_SIGNS = ['', 'F', 'S', 'N', 'FF', 'SS'];
+
+/** A note's pitch as SCORE's music input writes it (FS4, BF3, read in the clef in force), its accidental as shown; quarter tones aside. */
+export function inputName(p: P, ctx: Context): string {
+  const step = stepOf(level(p(4)), ctx);
+  return `${LETTERS[((step % 7) + 7) % 7]}${INPUT_SIGNS[digit(p(5), 1)] ?? ''}${Math.floor(step / 7)}`;
+}
+
 const ACCIDENTAL_WORDS: Record<string, number> = { '': 0, b: 1, '♭': 1, '#': 2, '♯': 2, s: 2, n: 3, '♮': 3, bb: 4, '♭♭': 4, '##': 5, x: 5, '♯♯': 5, ss: 5 };
 
 /** "F#4", "Bb3", "c5", or a letter alone for the nearest one: P4 and the accidental in P5. */
