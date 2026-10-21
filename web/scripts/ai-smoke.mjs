@@ -327,6 +327,21 @@ try {
   await page.waitForFunction(() => /✓ View ▸ Zoom out/.test(document.querySelector('.ai-status').textContent));
   assert.ok(parseFloat(await page.inputValue('#zoom')) < parseFloat(zoomed), 'zoomed out');
   assert.match(claudeRequest.messages[0].content, /zoom-out: View ▸ Zoom out/);
+  // Suggestions while typing, an earlier command first: none with the caret before the end; Tab types it.
+  await page.fill('.ai-input', 'zoo');
+  await page.waitForSelector('.ai-prompt[data-suggestion="m in"]');
+  await page.press('.ai-input', 'ArrowLeft');
+  await page.waitForSelector('.ai-prompt:not([data-suggestion])');
+  await page.press('.ai-input', 'End');
+  await page.waitForSelector('.ai-prompt[data-suggestion="m in"]');
+  await page.press('.ai-input', 'Tab');
+  assert.equal(await page.inputValue('.ai-input'), 'zoom in');
+  await read();
+  assert.match(await page.textContent('.ai-reading'), /→ View ▸ Zoom in/);
+  await page.fill('.ai-input', 'arpeggiate the ch');
+  await page.waitForSelector('.ai-prompt[data-suggestion="ords"]');
+  await page.fill('.ai-input', '');
+  await page.waitForSelector('.ai-prompt:not([data-suggestion])');
   await page.press('.ai-input', 'Control+z');
   assert.equal(await page.getAttribute('#app', 'data-items'), '9');
 

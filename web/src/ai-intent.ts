@@ -353,7 +353,7 @@ function picked(intent: Intent, script: Script): Script {
 }
 
 /** "Add a staff", "Add an end repeat", "Add mf": a creation's name with the article its words give it. */
-function creationSummary(id: string): string {
+export function creationSummary(id: string): string {
   const article = /^(a|an) /.test(CREATIONS[id]?.words ?? '') ? (/^[aeiou]/i.test(id) ? 'an ' : 'a ') : '';
   return `Add ${article}${id}`;
 }

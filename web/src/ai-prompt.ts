@@ -16,6 +16,7 @@
 import type { Box } from './display';
 import type { Change, Editor } from './editor';
 import { onlyParams, plain, reach, run, selects, type Access, type Knob, type Scope, type Script } from './ai-script';
+import { CREATIONS, creationSummary } from './ai-intent';
 import {
   askClaude,
   askJev,
@@ -180,6 +181,17 @@ const isFormField = (target: EventTarget | null) => target instanceof HTMLInputE
 /** A key typed on the page that starts a command. */
 const startsCommand = (e: KeyboardEvent) => e.key.length === 1 && e.key !== ' ' && !PAGE_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey;
 
+/** Commands as Jev reads them well, suggested as they are typed: on items, and anywhere (new music and items). */
+const ON_ITEMS = [
+  'stems up', 'stems down', 'flip the stems', 'remove the stems', 'beam them', 'beam in pairs', 'remove the beams',
+  'add staccatos', 'accent them', 'accent every other note', 'accent the first note of each bar', 'make them eighths', 'make them bigger', 'make them smaller',
+  'make the notes gradually bigger', 'move up a step', 'move down a step', 'move them to the right', 'transpose up a major third', 'transpose down an octave',
+  'transpose to D major', 'repeat 2 times', 'do that again', 'spread them out', 'move them closer together', 'space them evenly',
+  'select the top notes', 'select the bottom notes', 'select the first note', 'arpeggiate the chords', 'change them to c e g', 'fingering 1 2 3',
+  'add lyrics "', 'delete them',
+];
+const ANYWHERE = ['add c e g', 'add a C major scale', 'add a C major arpeggio', 'add the text "', ...Object.keys(CREATIONS).filter((id) => id !== 'lyrics').map((id) => creationSummary(id).toLowerCase())];
+
 const PLACEHOLDER = { selection: 'Command, e.g. stems up', place: 'Command, e.g. add c e g', answer: 'Type the answer, or draw a box' };
 
 export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
@@ -193,7 +205,13 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   const status = el('div', { className: 'ai-status' });
   const knobs = el('div', { className: 'ai-knobs' });
   const settings = el('form', { className: 'ai-settings', hidden: true });
-  const box = el('div', { className: 'ai-prompt', hidden: true }, asking, el('div', { className: 'ai-row' }, el('span', { className: 'ai-mark', textContent: '›' }), input, gear), status, knobs, settings);
+  // What Tab would complete the command to, shown faintly after what is typed.
+  const ghostTyped = el('span', { className: 'ai-ghost-typed' });
+  const ghostRest = el('span', { className: 'ai-ghost-rest' });
+  const ghost = el('span', { className: 'ai-ghost' }, ghostTyped, ghostRest);
+  ghost.setAttribute('aria-hidden', 'true');
+  const line = el('span', { className: 'ai-line' }, ghost, input);
+  const box = el('div', { className: 'ai-prompt', hidden: true }, asking, el('div', { className: 'ai-row' }, el('span', { className: 'ai-mark', textContent: '›' }), line, gear), status, knobs, settings);
   box.setAttribute('role', 'group');
   box.setAttribute('aria-label', 'Command');
   host.append(box);
@@ -209,6 +227,44 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   /** Lines entered, for Up and Down; `recalled` steps back from the newest. */
   const history: string[] = [];
   let recalled = 0;
+  /** The editor's commands as the last reading knew them, by their names, for suggestions. */
+  let commandNames: string[] = [];
+  /** What Tab adds to the typed text, if anything. */
+  let suggestion = '';
+
+  /**
+   * The suggestion for what is typed: an earlier command (the newest first),
+   * else a command as Jev reads it well, a new item, or one of the editor's
+   * commands by its name, that begins with it; none in an answer, or with
+   * the caret before the end.
+   */
+  function suggest() {
+    const typedText = input.value;
+    const start = typedText.trimStart().toLowerCase();
+    const atEnd = input.selectionStart === typedText.length && input.selectionEnd === typedText.length;
+    let found = '';
+    if (start && question === null && atEnd && !box.hidden) {
+      const candidates = [...[...history].reverse(), ...(scope?.keys === null ? [] : ON_ITEMS), ...ANYWHERE, ...commandNames];
+      found = candidates.find((c) => c.toLowerCase().startsWith(start) && c.length > start.length) ?? '';
+    }
+    suggestion = found ? found.slice(typedText.trimStart().length) : '';
+    ghostTyped.textContent = typedText;
+    ghostRest.textContent = suggestion;
+    // Text longer than the field scrolls, which the faint text would not follow.
+    ghost.hidden = !suggestion || input.scrollWidth > input.clientWidth;
+    if (suggestion) box.dataset.suggestion = suggestion;
+    else delete box.dataset.suggestion;
+  }
+
+  /** Tab (or → at the end): the suggestion is typed. */
+  function complete(): boolean {
+    if (!suggestion) return false;
+    input.value += suggestion;
+    input.setSelectionRange(input.value.length, input.value.length);
+    recalled = 0;
+    typed();
+    return true;
+  }
   let reading: Reading | null = null;
   /** Jev's requests in flight for the field, by when they were asked; `pending` is the newest, for the text typed last. */
   const requests = new Map<number, Pending>();
@@ -261,6 +317,8 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   }
 
   function place() {
+    // The field's text may have changed with what moved it (a command sent, put back): so may the suggestion.
+    suggest();
     const origin = host.getBoundingClientRect();
     /** Where the field and the badges placed so far lie, so that the next badge goes clear of them. */
     const taken: { left: number; top: number; right: number; bottom: number }[] = [];
@@ -424,6 +482,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
 
   function typed() {
     reading = null;
+    suggest();
     const text = input.value.trim();
     if (!text || question !== null) {
       forgetAll();
@@ -438,6 +497,8 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       return;
     }
     const about = scope && hooks.about(text, scope);
+    if (about) commandNames = about.commands.map((c) => c.label.split(' ▸ ').at(-1)!.toLowerCase());
+    suggest();
     // An editor's command by its name needs no model.
     const command = about && namedCommand(about.commands, text);
     if (command) {
@@ -812,6 +873,11 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   }
 
   input.addEventListener('input', typed);
+  // The caret moved away from the end: no suggestion there.
+  input.addEventListener('keyup', (e) => {
+    if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End') suggest();
+  });
+  input.addEventListener('click', suggest);
   input.addEventListener('keydown', (e) => {
     e.stopPropagation();
     // With nothing typed, ⌘Z undoes the last command rather than the field's text.
@@ -823,6 +889,8 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     if (e.key === 'Enter') {
       e.preventDefault();
       enter();
+    } else if ((e.key === 'Tab' && !e.shiftKey) || (e.key === 'ArrowRight' && !e.shiftKey && !e.metaKey && !e.altKey && !e.ctrlKey)) {
+      if (complete()) e.preventDefault();
     } else if (e.key === 'Escape') {
       e.preventDefault();
       leave();

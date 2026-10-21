@@ -1378,7 +1378,15 @@ button.danger:hover {
   font-family: ui-monospace, monospace;
 }
 
+.ai-line {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
 .ai-input {
+  position: relative;
   flex: 1;
   min-width: 0;
   height: 26px;
@@ -1387,6 +1395,27 @@ button.danger:hover {
   outline: none;
   background: transparent;
   font-family: ui-monospace, monospace;
+}
+
+/* The suggestion: the typed text, unseen, and what Tab adds, faint, behind the field's own text. */
+.ai-ghost {
+  position: absolute;
+  inset: 0;
+  padding: 0 4px;
+  overflow: hidden;
+  font-family: ui-monospace, monospace;
+  line-height: 26px;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.ai-ghost-typed {
+  color: transparent;
+}
+
+.ai-ghost-rest {
+  color: var(--muted);
+  opacity: 0.75;
 }
 
 .ai-gear {
@@ -1599,6 +1628,7 @@ button.danger:hover {
 
 @media (pointer: coarse) {
   .ai-input,
+  .ai-ghost,
   .ai-settings input {
     font-size: 16px;
   }
