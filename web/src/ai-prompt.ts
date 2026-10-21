@@ -605,8 +605,13 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       showJob(job, job.text, 'busy', name);
       let failed: Failed | undefined;
       for (let tries = 2; tries > 0; tries--) {
-        const { script, ms, answer } = await askClaude(about, hooks.catalog(), claude, writer, signal, failed);
-        const result = { script, source: `${name} · ${(ms / 1000).toFixed(1)} s` };
+        const { script, command, ms, answer } = await askClaude(about, hooks.catalog(), claude, writer, signal, failed);
+        const source = `${name} · ${(ms / 1000).toFixed(1)} s`;
+        if (command) {
+          finish(job);
+          return runApp(command, source, 1);
+        }
+        const result = { script, source };
         const error = await land(job, result, tries > 1);
         if (error === null) {
           memo.set(claudeKey(about, job.scope), result);

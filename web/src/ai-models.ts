@@ -14,7 +14,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { chainable, CREATIONS, MEASURES, PICKS, TARGETS, scriptFor, type Action, type Intent } from './ai-intent';
 import { namedSettings, plain, type Filter, type Region, type Script, type Step } from './ai-script';
-import { barsIn, fingeringsIn, halfStepsIn, intervalHalfSteps, INTERVALS, RHYTHMS, meterIn, musicIn, namesCount, namesOption, numberOf, numberWords, octavesIn, pitchesIn, quotedIn, rhythmsFor, SCALES, sequenceIn, tonicIn, type Recipe } from './ai-values';
+import { barsIn, CHORDS, fingeringsIn, halfStepsIn, intervalHalfSteps, INTERVALS, RHYTHMS, meterIn, musicIn, namesCount, namesOption, numberOf, numberWords, octavesIn, pitchesIn, quotedIn, rhythmsFor, SCALES, sequenceIn, tonicIn, type Recipe } from './ai-values';
 
 // ---------------------------------------------------------------------------
 // Settings and connections
@@ -845,6 +845,13 @@ function settingLines(code: number): string {
 function systemPrompt(catalog: Catalog): string {
   const settings = catalog.codes.map(({ code, name }) => `Code ${code}, ${name}:\n${settingLines(code)}`).join('\n');
   const words = catalog.words.map(([word, codes, meaning]) => `${word} [${codes.join(',')}] ${meaning}`).join('\n');
+  const creations = [
+    ...Object.values(CREATIONS)
+      .filter((c) => !['KSIG', 'METER', 'LYRICS'].includes(c.word))
+      .map((c) => `${c.word} (${c.at === 'page' ? 'above the highest staff' : c.at === 'over' ? 'over the items' : `${c.at} the items`}): ${c.words}`),
+    'KSIG+n, KSIG-n (before the items): a key signature of n sharps (+) or flats (-), KSIG+0 none; B, A or T after it for a bass, alto or tenor clef (KSIG-3B)',
+    'METERnm (before the items): a meter of n over m, METER34 for 3/4, METER68 for 6/8',
+  ].join('\n');
   return `You turn an engraver's command, typed while editing a score in WinScore (Leland Smith's SCORE), into an edit script that the editor runs at once on the real score. Answer with the script only.
 
 # The score
@@ -864,22 +871,35 @@ Steps run in order, each on the items the command is about (the selection, or th
   - "beam": beams over "size" notes or chords each ("0" for every run up to a barline); the engine refits stems and flags.
   - "select": the items it picks become the selection, and the steps after it act on them only; nothing is edited. A command to select, keep only or pick out items is this, never a delete.
   - "add": for each item it picks, a new item whose P1, P2, P3 … are "params" (numbers or expressions over the item it is made for; the settings below give each code's parameter numbers); an item whose P1 comes to 0 is not made. Lines (code 4) and slurs (code 5) run from P3, P4 to P6, P5. A text (code 16) has the characters in "text" and is made as SCORE's quick entry makes it: P2 … P11 from "params" (0 keeps the default), P3 plus 1000 centres it on P3.
+  - "create": one new item by its word in "line", on each staff of the items, placed as the editor places it (before them, at the first, after them, or over them from the first to the last, as listed under "New items"); with nothing selected, where new music goes. Prefer this to "add" for the items listed there: a slur's ends, a barline's place, a key signature's accidentals are worked out for you.
+  - "repeat": copies of the items pasted after them, one after another, "size" times (a number or a knob's id), as the music goes on.
+  - "transpose": the items' music transposed by "value" half steps (up positive), its accidentals and key signatures with it. "move" only shifts notes along the staff; this is a real transposition.
+  - "scale": a scale or arpeggio written out where new music goes: "text" "scale" or "arpeggio", "setting" its kind (${Object.keys(SCALES).join(', ')}; for an arpeggio ${Object.keys(CHORDS).join(', ')}), "notes" its key note (C, FS, BF …, with an octave to fix it, D4; "" for the key note of the key in force), "line" "up", "down" or "both" (up and back), "size" its octaves (a number or a knob's id), "rhythms" the value of every note ("8"); the editor writes the notes and their accidentals.
+  - "arpeggiate": each chord among the items broken into its notes one after another, in the chord's time; "up" "down" goes from the top note.
+  - "lyrics": "text" as lyrics under the notes of the items' fullest staff, a syllable under each note or chord, words split at spaces and syllables at hyphens ("Ky-ri-e e-le-i-son").
+  - "text": the texts among the items get the characters in "text", each keeping its font.
+  - "space": the items drawn apart ("value" above 1) or closer (below 1) along the staff by that factor (a number or a knob's id), or evenly ("value" "even"); everything on their staves in that stretch moves with them, and what follows by as much as it grew.
 - Which items a step acts on: "codes" (empty for all), "where" (an expression that must hold, or ""), and "where_setting" with "where_is" (only the items whose setting reads that option, e.g. "Mark" and "Staccato", or "" and "").
 - "value", "right", "up", "size": text holding a number, an expression or an option's name.
 - "text": the characters of the texts an "add" makes.
 
 Values may be expressions: numbers, + - * / % ^, comparisons, && || !, a ? b : c, functions min max abs round floor ceil sqrt pow lerp(a,b,t) clamp(x,lo,hi) snap(x,step), and these names for each item: p1 … p45 (its parameters), id (its identity, as the items are listed: "id == 412 || id == 415" picks those two), staff, x (P3), level (P4 without the cue-size hundred), value (the setting's current value; 0 often means the default, e.g. size 0 is size 1), mean (the mean of that parameter over the items, in set steps), t (0 for the first column of items from left to right, 1 for the last; the notes of a chord share one), i and n (that column's number from 0, and how many there are), st, si, sn (the same on the item's own staff), next_x and next_level (the position of the next note or chord, or item of the step's codes, on its staff, for a text the next text on its line (within a step of its level), and its level nearest this item's; the item's own for the last), bar, bi, bn, bt (its bar on its staff from 0, by the barlines, and the same as i, n, t within that bar: "bi == 0" is the first note or chord of each bar, "bi == bn - 1" the last), measure and measures (its bar among the bars of the items in reading order, from 1, and how many there are: "measure == 2" is their second bar), left and right (the leftmost and rightmost P3 of the items on its staff), count, chord_low and chord_high (the lowest and highest level among the notes of its chord, its notes at the same place on its staff, a lone note being its own chord: "level == chord_low" is the bottom note of each chord), chord_size (how many notes that chord has), min_p1 … min_p45, max_p1 … max_p45 and mean_p1 … mean_p45 (a parameter's smallest, largest and mean value over the items; min_level, max_level and mean_level the same for level, so "level == max_level" is the single highest note), and the knobs by id. There are no functions over the items: max(p4) is just p4.
 
+The script's "command" is "" unless the command asks for one of the editor's own commands, listed with the items (save, undo, copy, zoom in, show the side panel …): then it is that command's id, with no steps, and the editor runs it.
+
 Knobs are numbers the command leaves open — how much bigger, how fast something grows, how far to move. Give each a slider: {"id": a name used in expressions, "label": two or three words, "min", "max", "step", "value": a sensible default}. The user drags the slider and the script runs again at once. A command that says everything needs no knobs ([]).
 
 # Settings by code
 ${settings}
 
+# New items ("create": the word, where it goes, what it is)
+${creations}
+
 # Edit words ([codes] they apply to)
 ${words}
 
 # Examples
-A step leaves out its unused fields here for brevity; give every field ("params" [] when unused).
+A step and a script leave out their unused fields here for brevity; give every field ("params" [] and "command" "" when unused).
 "remove the stems" → {"summary": "Remove stems", "knobs": [], "steps": [{"do": "setting", "codes": [1], "setting": "Stem", "value": "None"}]}
 "remove the staccatos" → {"summary": "Remove staccatos", "knobs": [], "steps": [{"do": "setting", "codes": [1], "where_setting": "Mark", "where_is": "Staccato", "setting": "Mark", "value": "None"}]}
 "make the notes gradually bigger" → {"summary": "Notes grow", "knobs": [{"id": "to", "label": "Final size", "min": 0.5, "max": 4, "step": 0.05, "value": 1.8}, {"id": "curve", "label": "Curve", "min": 0.25, "max": 4, "step": 0.05, "value": 1}], "steps": [{"do": "setting", "codes": [1], "setting": "Size", "value": "round((1 + (to - 1) * t ^ curve) * 100) / 100"}]}
@@ -889,12 +909,17 @@ A step leaves out its unused fields here for brevity; give every field ("params"
 "select only the top notes" → {"summary": "Select the top notes", "knobs": [], "steps": [{"do": "select", "codes": [1], "where": "level == chord_high"}]}
 "connect the notes with lines" → {"summary": "Lines from note to note", "knobs": [], "steps": [{"do": "add", "codes": [1], "where": "si < sn - 1", "params": ["4", "staff", "x + 1.5", "level", "next_level", "next_x"]}]}
 "add c e g" → {"summary": "Add C E G", "knobs": [], "steps": [{"do": "insert", "staff": 0, "from": 0, "to": 0, "notes": "PC5/E/G", "rhythms": "4/4/4"}]}
+"add a slur" → {"summary": "Add a slur", "knobs": [], "steps": [{"do": "create", "line": "SLUR"}]}
+"repeat this twice" → {"summary": "Repeat twice", "knobs": [{"id": "times", "label": "Times", "min": 1, "max": 16, "step": 1, "value": 2}], "steps": [{"do": "repeat", "size": "times"}]}
+"transpose down a minor third" → {"summary": "Transpose down a minor third", "knobs": [], "steps": [{"do": "transpose", "value": "-3"}]}
+"add a d minor scale in eighths, up and down" → {"summary": "Add a D minor scale", "knobs": [], "steps": [{"do": "scale", "text": "scale", "setting": "minor", "notes": "D", "line": "both", "size": "1", "rhythms": "8"}]}
+"zoom in" → {"summary": "Zoom in", "command": "zoom-in", "knobs": [], "steps": []}
 "add the missing hyphens to the lyrics" (412 and 415 are syllables a word goes on from) → {"summary": "Hyphens between syllables", "knobs": [], "steps": [{"do": "add", "codes": [16], "where": "id == 412 || id == 415", "params": ["16", "staff", "1000 + (x + p13 + next_x) / 2", "p4", "p5", "p6"], "text": "-"}]}`;
 }
 
 /** One step as Claude writes it: every field there, none of them a union (the API allows few). */
 interface Written {
-  do: Exclude<Step['do'], 'create' | 'repeat' | 'text' | 'lyrics' | 'space' | 'transpose' | 'scale' | 'arpeggiate'>;
+  do: Step['do'];
   codes: number[];
   where: string;
   where_setting: string;
@@ -925,9 +950,10 @@ const NUMBER = { type: 'number' };
 export const SCRIPT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['summary', 'knobs', 'steps'],
+  required: ['summary', 'command', 'knobs', 'steps'],
   properties: {
     summary: STRING,
+    command: STRING,
     knobs: {
       type: 'array',
       items: {
@@ -944,7 +970,7 @@ export const SCRIPT_SCHEMA = {
         additionalProperties: false,
         required: ['do', 'codes', 'where', 'where_setting', 'where_is', 'setting', 'param', 'value', 'right', 'up', 'line', 'staff', 'from', 'to', 'notes', 'rhythms', 'marks', 'beams', 'slurs', 'size', 'params', 'text'],
         properties: {
-          do: { type: 'string', enum: ['setting', 'set', 'move', 'delete', 'command', 'insert', 'beam', 'select', 'add'] },
+          do: { type: 'string', enum: ['setting', 'set', 'move', 'delete', 'command', 'insert', 'beam', 'select', 'add', 'create', 'repeat', 'transpose', 'scale', 'arpeggiate', 'lyrics', 'text', 'space'] },
           codes: { type: 'array', items: { type: 'integer' } },
           where: STRING,
           where_setting: STRING,
@@ -972,8 +998,17 @@ export const SCRIPT_SCHEMA = {
   },
 };
 
-/** A step as the script runs it. */
-function stepOf(w: Written): Step {
+/** The creation a word makes, by the longest word it begins with (BARD before BAR, KSIG for KSIG-3). */
+function creationOf(line: string): { word: string; at: Extract<Step, { do: 'create' }>['at'] } {
+  const word = line.trim().toUpperCase();
+  const found = Object.values(CREATIONS)
+    .filter((c) => word.startsWith(c.word))
+    .sort((a, b) => b.word.length - a.word.length)[0];
+  return { word, at: found?.at ?? 'at' };
+}
+
+/** A step as the script runs it; new music goes by the staff's middle line `middle`. */
+function stepOf(w: Written, middle: number): Step {
   const items: Filter = { codes: w.codes?.length ? w.codes : null, where: w.where || null, setting: (w.where_is && w.where_setting) || null, is: w.where_is || null };
   const text = (v: string | undefined) => (v ?? '').trim();
   switch (w.do) {
@@ -995,6 +1030,28 @@ function stepOf(w: Written): Step {
       return { do: 'select', items };
     case 'add':
       return { do: 'add', items, params: w.params ?? [], text: w.text || null };
+    case 'create': {
+      const { word, at } = creationOf(w.line);
+      if (word === 'LYRICS') return { do: 'lyrics', items, text: w.text };
+      return { do: 'create', items, word, at, text: w.text || null };
+    }
+    case 'repeat':
+      return { do: 'repeat', items, times: text(w.size) || 1 };
+    case 'transpose':
+      return { do: 'transpose', items, half: text(w.value) || 0 };
+    case 'scale': {
+      const tonic = /^([A-G](?:SS|FF|S|F)?)(\d)?$/i.exec(text(w.notes));
+      const way = ['up', 'down', 'both'].includes(text(w.line)) ? (text(w.line) as Recipe['way']) : 'up';
+      return { do: 'scale', tonic: tonic?.[1]?.toUpperCase() ?? null, octave: tonic?.[2] ? Number(tonic[2]) : null, kind: text(w.setting) || 'major', arpeggio: /arpeggio/i.test(w.text), way, octaves: text(w.size) || 1, value: text(w.rhythms) || null, middle };
+    }
+    case 'arpeggiate':
+      return { do: 'arpeggiate', items, down: text(w.up) === 'down' };
+    case 'lyrics':
+      return { do: 'lyrics', items, text: w.text };
+    case 'text':
+      return { do: 'text', items, text: w.text };
+    case 'space':
+      return text(w.value) === 'even' ? { do: 'space', items, even: true } : { do: 'space', items, factor: text(w.value) || 1 };
   }
 }
 
@@ -1007,7 +1064,8 @@ Selected: ${selectionWords(about)}
 New music goes: ${region}
 Barlines (P3) on these staves: ${[...about.bars].map(([staff, xs]) => `staff ${staff}: ${xs.map((x) => +x.toFixed(2)).join(', ') || 'none'}`).join('; ') || 'none'}
 Items (P1 … Pn, a text's characters, the id)${some ? `, the first of them${about.counts.has(16) ? ' and the texts' : ''}` : ''}:
-${rows}`;
+${rows}
+Editor commands (id: where it is): ${about.commands.map((c) => `${c.id}: ${c.label}`).join('; ') || 'none'}`;
 }
 
 let client: { key: string; instance: Anthropic } | null = null;
@@ -1055,7 +1113,7 @@ export async function askClaude(
   writer: Writer,
   signal: AbortSignal,
   failed?: Failed,
-): Promise<{ script: Script; ms: number; answer: string }> {
+): Promise<{ script: Script; command: AppCommand | null; ms: number; answer: string }> {
   const started = performance.now();
   const claude = await anthropic(connection);
   const response = await claude.beta.messages.create(
@@ -1083,10 +1141,16 @@ export async function askClaude(
   );
   if (response.stop_reason === 'refusal') throw new Error('Claude declined this command');
   const text = response.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])).join('');
-  const written = JSON.parse(text) as { summary: string; knobs: Script['knobs']; steps: Written[] };
-  if (!Array.isArray(written.steps) || written.steps.length === 0) throw new Error(`Claude found nothing to do${written.summary ? `: ${written.summary}` : ''}`);
-  const script: Script = { summary: written.summary, knobs: written.knobs ?? [], steps: written.steps.map(stepOf) };
-  return { script, ms: performance.now() - started, answer: text };
+  const written = JSON.parse(text) as { summary: string; command?: string; knobs: Script['knobs']; steps: Written[] };
+  const script: Script = { summary: written.summary, knobs: written.knobs ?? [], steps: (written.steps ?? []).map((w) => stepOf(w, about.middle)) };
+  // One of the editor's commands, which the command field runs.
+  if (written.command) {
+    const command = about.commands.find((c) => c.id === written.command);
+    if (!command) throw new Error(`Claude named a command the editor does not have now: ${written.command}`);
+    return { script, command, ms: performance.now() - started, answer: text };
+  }
+  if (script.steps.length === 0) throw new Error(`Claude found nothing to do${written.summary ? `: ${written.summary}` : ''}`);
+  return { script, command: null, ms: performance.now() - started, answer: text };
 }
 
 /** A key for remembering readings: the same words about the same kinds of items. */

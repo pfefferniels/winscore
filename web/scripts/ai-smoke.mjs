@@ -31,6 +31,7 @@ const JEV = {
   'add notes c g d/f/a': { action: 'insert', target: 'all' },
   'add c5 d e f g a b c6 8': { action: 'insert', target: 'all' },
   'double the melody a third below': { action: 'other', target: 'notes', complexity: 'complex' },
+  'could you make it smaller on screen': { action: 'other' },
 };
 
 /** A step as Claude writes it, every field given. */
@@ -48,6 +49,7 @@ const CLAUDE = {
     { summary: 'Smaller bottom notes', knobs: [], steps: [step({ codes: [1], where: 'level == chord_low', setting: 'Size', value: '0.8' })] },
   ],
   'double the melody a third below': [{ summary: 'A third below', knobs: [], steps: [step({ do: 'add', codes: [1], params: ['1', 'staff', 'x', 'level - 2', 'p5', 'p6', 'p7'] })] }],
+  'could you make it smaller on screen': [{ summary: 'Zoom out', command: 'zoom-out', knobs: [], steps: [] }],
 };
 
 /** Claude's (and Jev's) replies held back until the check lets them go, by command. */
@@ -317,6 +319,14 @@ try {
   await enter();
   assert.match(await page.textContent('.ai-status'), /✓ View ▸ Zoom in/);
   assert.notEqual(await page.inputValue('#zoom'), zoom);
+  // Claude may answer with one of them too, which the field runs: it is told those there are.
+  const zoomed = await page.inputValue('#zoom');
+  await page.fill('.ai-input', 'could you make it smaller on screen');
+  await read();
+  await page.press('.ai-input', 'Enter');
+  await page.waitForFunction(() => /✓ View ▸ Zoom out/.test(document.querySelector('.ai-status').textContent));
+  assert.ok(parseFloat(await page.inputValue('#zoom')) < parseFloat(zoomed), 'zoomed out');
+  assert.match(claudeRequest.messages[0].content, /zoom-out: View ▸ Zoom out/);
   await page.press('.ai-input', 'Control+z');
   assert.equal(await page.getAttribute('#app', 'data-items'), '9');
 

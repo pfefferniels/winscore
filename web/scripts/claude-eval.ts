@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { codeName, editWords, groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
-import { askClaude, type About, type Catalog, type Failed, type Sampled, type Writer } from '../src/ai-models';
+import { askClaude, type About, type AppCommand, type Catalog, type Failed, type Sampled, type Writer } from '../src/ai-models';
 import { barlines, run, type Access, type Region, type Scope, type Script } from '../src/ai-script';
 
 initSync({ module: readFileSync(process.env.SCORE_WASM!) });
@@ -18,6 +18,12 @@ const catalog: Catalog = {
   codes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 18].map((code) => ({ code, name: codeName(code) ?? `Code ${code}` })),
   words: JSON.parse(editWords()) as Catalog['words'],
 };
+
+/** Some of the editor's commands, as the command field offers them. */
+const COMMANDS: AppCommand[] = [
+  ['save', 'File ▸ Save'], ['undo', 'Edit ▸ Undo'], ['redo', 'Edit ▸ Redo'], ['copy', 'Edit ▸ Copy'], ['select-all', 'Edit ▸ Select all'],
+  ['zoom-in', 'View ▸ Zoom in'], ['zoom-out', 'View ▸ Zoom out'], ['fit', 'View ▸ Fit width'], ['panel', 'View ▸ Side panel'], ['shortcuts', 'View ▸ Commands, keys and gestures'],
+].map(([id, label]) => ({ id: id!, label: label!, title: '' }));
 
 /** Items of mozart.mus by index: the melody (staff 8) and the bass (staff 7) of the first bars. */
 const MELODY = [317, 318, 320, 321, 322, 324, 325, 326, 327, 329];
@@ -38,6 +44,8 @@ interface Case {
   check(before: Params, after: Params, selected: number[], text: (key: number) => string | null): string | null;
   /** The command cannot be done: it must fail with this message, changing nothing. */
   refused?: RegExp;
+  /** The editor's command it asks for, instead of an edit. */
+  command?: string;
 }
 
 const notes = (m: Params) => [...m].filter(([, p]) => p[0] === 1).sort((a, b) => a[1][2]! - b[1][2]!);
@@ -213,10 +221,15 @@ const CASES: Case[] = [
   {
     text: 'retrograde the melody',
     items: MELODY,
+    // The melody's notes moved, or written again backwards: the notes on its staff over its stretch, whichever they are.
+    all: true,
     check(before, after) {
-      const levels = (m: Params) => notes(m).map(([, p]) => p[3]);
-      const want = levels(before).reverse().join(' ');
-      return levels(after).join(' ') === want ? null : `levels ${levels(after).join(' ')}, expected ${want}`;
+      const melody = notes(before).filter(([k]) => MELODY_KEYS.has(k));
+      const [staff, left, right] = [melody[0]![1][1], melody[0]![1][2]! - 1, melody.at(-1)![1][2]! + 1];
+      const levels = (m: [number, Float32Array][]) => m.map(([, p]) => p[3]).join(' ');
+      const there = notes(after).filter(([, p]) => p[1] === staff && p[2]! >= left && p[2]! <= right && p[6]! < 64);
+      const want = levels(melody.filter(([, p]) => p[6]! < 64).reverse());
+      return levels(there) === want ? null : `levels ${levels(there)}, expected ${want}`;
     },
   },
   {
@@ -230,6 +243,70 @@ const CASES: Case[] = [
       return got === want ? null : `levels ${got}, expected ${want}`;
     },
   },
+  // The steps that make the editor's own edits: a slur, copies, a transposition, a scale, broken chords, lyrics; an editor command.
+  {
+    text: 'put a phrase mark over these notes',
+    items: null,
+    music: ['C5/D/E/F', '4/4/4/4'],
+    check(before, after) {
+      const slurs = [...after].filter(([k, p]) => !before.has(k) && p[0] === 5);
+      return slurs.length === 1 ? null : `${slurs.length} slurs made`;
+    },
+  },
+  {
+    text: 'play these notes three times in all',
+    items: null,
+    music: ['C5/D/E', '8/8/4'],
+    check(before, after) {
+      const n = notes(after).length;
+      return n === 9 ? null : `${n} notes, expected 9`;
+    },
+  },
+  {
+    text: 'put this music a perfect fifth higher, with the right accidentals',
+    items: null,
+    music: ['C5/D/E/F', '4/4/4/4'],
+    all: true,
+    check(before, after) {
+      const levels = notes(after).map(([, p]) => p[3]).join(' ');
+      const sharps = [...after.values()].some((p) => p[0] === 17 && p[4] === 1);
+      return levels === '12 13 14 15' && sharps ? null : `levels ${levels}${sharps ? '' : ', no G major signature'}`;
+    },
+  },
+  {
+    text: 'write out a g major scale going up, as eighth notes',
+    items: null,
+    check(before, after) {
+      const added = notes(after).filter(([k]) => !before.has(k));
+      const sharps = added.filter(([, p]) => Math.abs(p[4]!) % 10 === 2).length;
+      return added.length === 8 && sharps === 1 && added.every(([, p]) => p[6] === 0.5) ? null : `${added.length} notes, ${sharps} sharps`;
+    },
+  },
+  {
+    text: 'spread each chord out into its notes',
+    items: null,
+    music: ['C4:E:G/D:F:A', '4/4'],
+    check(_before, after) {
+      const all = notes(after);
+      const xs = new Set(all.map(([, p]) => Math.round(p[2]! * 10)));
+      return all.length === 6 && xs.size === 6 ? null : `${all.length} notes at ${xs.size} places`;
+    },
+  },
+  {
+    text: 'underlay the words "Glo-ri-a in" under the notes',
+    items: null,
+    music: ['C5/D/E/F', '4/4/4/4'],
+    check(before, after, _selected, text) {
+      const sung = texts(new Map([...after].filter(([k]) => !before.has(k))), text).map((t) => t.text.replace(/^_\d\d/, '')).join(' ');
+      return sung === 'Glo - ri - a in' ? null : `texts ${sung}`;
+    },
+  },
+  {
+    text: 'could you make everything look bigger on screen',
+    items: MELODY,
+    command: 'zoom-in',
+    check: () => null,
+  },
   {
     text: 'add a c major arpeggio in eighths, up and back down',
     items: null,
@@ -241,6 +318,9 @@ const CASES: Case[] = [
     },
   },
 ];
+
+/** The melody's notes by identity, for a check that sees every item. */
+let MELODY_KEYS = new Set<number>();
 
 function setUp(items: number[] | null, music?: [string, string], lyrics?: string, all = false) {
   const score = items ? new Score(readFileSync(`${process.env.SCORE_SAMPLES}/mozart.mus`)) : Score.empty();
@@ -288,6 +368,7 @@ function setUp(items: number[] | null, music?: [string, string], lyrics?: string
     });
   }
   const keys = editor.keys();
+  if (items) MELODY_KEYS = new Set(MELODY.map((i) => keys[i]!));
   const scope: Scope = items ? { keys: items.map((i) => keys[i]!), region: null } : music ? { keys: keys.slice(1), region } : { keys: [], region };
   /** The scope's items (or, for an empty score, every item), by identity; every item for a check that sees `all`. */
   const itemsOf = (whole: boolean): Params => {
@@ -312,7 +393,7 @@ async function evaluate(c: Case): Promise<string> {
   }
   const staves = new Set(sample.map(({ params }) => params[1]!));
   const bars = new Map([...barlines(access)].filter(([staff]) => staves.has(staff)));
-  const about: About = { text: c.text, counts, whole: false, region: scope.region, middle: 34, sample, bars, codeName: (code) => codeName(code) ?? `Code ${code}` };
+  const about: About = { text: c.text, counts, whole: false, region: scope.region, middle: 34, sample, bars, commands: COMMANDS, codeName: (code) => codeName(code) ?? `Code ${code}` };
   let written: Script | null = null;
   const before = snapshot();
   try {
@@ -320,6 +401,11 @@ async function evaluate(c: Case): Promise<string> {
     let failed: Failed | undefined;
     let asked = await askClaude(about, catalog, connection, writer, new AbortController().signal);
     written = asked.script;
+    // An editor command is the field's to run: the right one is the check.
+    if (asked.command || c.command) {
+      const ok = asked.command?.id === c.command;
+      return `${ok ? 'ok  ' : 'FAIL'} ${(asked.ms / 1000).toFixed(1)} s "${c.text}" → command ${asked.command?.id ?? 'none'}${ok ? '' : `, expected ${c.command ?? 'an edit'} ${JSON.stringify(asked.script.steps)}`}`;
+    }
     try {
       run(asked.script, access, scope, `“${c.text}”`);
     } catch (err) {
