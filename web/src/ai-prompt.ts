@@ -22,6 +22,7 @@ import {
   CLAUDE_MODELS,
   connections,
   GATEWAY_URL,
+  jevAgain,
   jevCommand,
   jevScript,
   loadSettings,
@@ -75,8 +76,8 @@ interface ScriptReading {
   source: string;
 }
 
-/** A reading of the typed command: an edit script, or one of the editor's own commands ("save", "zoom in"). */
-type Reading = ScriptReading | { command: AppCommand; source: string };
+/** A reading of the typed command: an edit script, or one of the editor's own commands ("save", "undo 3 times"). */
+type Reading = ScriptReading | { command: AppCommand; times: number; source: string };
 
 /** A request to Jev for the words typed, with what it will give. */
 interface Pending {
@@ -216,6 +217,8 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   /** When the request whose answer the field shows was asked. */
   let answered = 0;
   let applied: Applied | null = null;
+  /** The last command done, for doing it again ("again"), with its sliders' values as they were left. */
+  let last: Applied | null = null;
   /** The newest reading, run on the score as it is typed. */
   let trial: Trial | null = null;
   let frame = 0;
@@ -308,7 +311,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   /** Shows a reading; one of words typed before the field's (`earlier`) shows with the spinner, while the request for these is on its way. */
   function showReading(r: Reading, earlier = false) {
     if (!earlier) reading = r;
-    show('command' in r ? `→ ${r.command.label}` : `→ ${r.script.summary}${counted(r.script)}`, earlier ? 'busy' : '', r.source);
+    show('command' in r ? `→ ${r.command.label}${r.times > 1 ? ` × ${r.times}` : ''}` : `→ ${r.script.summary}${counted(r.script)}`, earlier ? 'busy' : '', r.source);
   }
 
   /**
@@ -325,10 +328,12 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     const done = askJev(about, links.jev, controller.signal)
       .then((jev) => {
         const script = jevScript(jev);
-        const command = jevCommand(jev);
+        const app = jevCommand(jev);
+        const again = jevAgain(jev);
         const source = `Jev ${Math.round(jev.confidence * 100)} % · ${Math.round(jev.ms)} ms`;
-        const result: Reading | null = script ? { script, source } : command ? { command, source } : null;
-        if (result) memo.set(readingKey(about), result);
+        const result: Reading | null = script ? { script, source } : app ? { ...app, source } : again !== null ? againReading(again, source) : null;
+        // "Again" is the last command, which changes.
+        if (result && again === null) memo.set(readingKey(about), result);
         // Still asked for the field (not sent off with Enter), and newer than the answer shown.
         if (requests.delete(at) && at > answered) {
           answered = at;
@@ -336,7 +341,10 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
           const current = input.value.trim() === text;
           const claude = links.claude && `Claude${jev.complex ? ` ${modelName(writerFor(links.claude, true).model)}` : ''}`;
           if (result) showTried(result, text, !current);
-          else {
+          else if (again !== null) {
+            takeBack();
+            show('There is no command yet to do again', current ? 'error' : 'busy', source);
+          } else {
             takeBack();
             show(`${UNREAD[jev.why ?? 'unsure']}${claude ? `: ↵ has ${claude} write it` : '; Claude could write it (⚙)'}`, current ? '' : 'busy', `Jev · ${Math.round(jev.ms)} ms`);
           }
@@ -435,7 +443,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     if (command) {
       forgetAll();
       takeBack();
-      showReading({ command, source: 'Editor command' });
+      showReading({ command, times: 1, source: 'Editor command' });
       return;
     }
     const known = about && (memo.get(readingKey(about)) ?? memo.get(claudeKey(about, scope!)));
@@ -473,15 +481,31 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
   /** What a command did, in the field, with its sliders. */
   function present(r: ScriptReading, performed: Performed) {
     applied = performed.applied;
+    last = performed.applied;
     show(performed.done ? `✓ ${r.script.summary}` : `${r.script.summary}: nothing changed`, performed.done ? 'done' : 'error', r.source);
     showKnobs(r.script.knobs.map((k) => ({ ...k, value: performed.applied.values[k.id] ?? k.value })));
   }
 
-  /** Runs one of the editor's own commands, as its entry in the `?` list does; the field says so if it is still there with nothing typed. */
-  function runApp(command: AppCommand, source: string) {
-    const ran = hooks.app(command.id);
+  /** The last command once more, `times` times over, on the items it is about now; null if there was none. */
+  function againReading(times: number, source: string): ScriptReading | null {
+    if (!last) return null;
+    const { script, values } = last;
+    return {
+      script: {
+        summary: times > 1 ? `${script.summary}, ${times} times` : `${script.summary} again`,
+        knobs: script.knobs.map((k) => ({ ...k, value: values[k.id] ?? k.value })),
+        steps: Array.from({ length: times }, () => script.steps).flat(),
+      },
+      source,
+    };
+  }
+
+  /** Runs one of the editor's own commands, `times` times, as its entry in the `?` list does; the field says so if it is still there with nothing typed. */
+  function runApp(command: AppCommand, source: string, times = 1) {
+    let ran = false;
+    for (let k = 0; k < times; k++) ran = hooks.app(command.id) || ran;
     if (box.hidden || input.value.trim()) return;
-    if (ran) show(`✓ ${command.label}`, 'done', source);
+    if (ran) show(`✓ ${command.label}${times > 1 ? ` × ${times}` : ''}`, 'done', source);
     else show(`${command.label} cannot be done now`, 'error', source);
     place();
   }
@@ -492,7 +516,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     if ('command' in r) {
       input.value = '';
       reading = null;
-      return runApp(r.command, r.source);
+      return runApp(r.command, r.source, r.times);
     }
     // Tried as it was typed: it stays as it is.
     const kept = trial?.reading === r && hooks.editor()?.mark() === trial.performed.applied.depth ? trial.performed : null;
@@ -571,7 +595,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
       const read = jev?.reading;
       if (read && 'command' in read) {
         finish(job);
-        return runApp(read.command, read.source);
+        return runApp(read.command, read.source, read.times);
       }
       if (read) return void (await land(job, read, false));
       const claude = links.claude;
@@ -624,6 +648,7 @@ export function createAiPrompt(host: HTMLElement, hooks: PromptHooks) {
     }
     job.reading = r;
     job.performed = performed;
+    last = performed.applied;
     if (here) {
       finish(job);
       present(r, performed);

@@ -178,3 +178,77 @@ export function quartersFor(notes: string): string {
 
 /** Diatonic steps of an interval named in a command ("a third" up is 2 steps). */
 export const INTERVALS: Record<string, number> = { second: 1, third: 2, fourth: 3, fifth: 4, sixth: 5, seventh: 6, octave: 7, ninth: 8, tenth: 9, 'two octaves': 14 };
+
+const ORDINALS: Record<string, number> = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10, eleventh: 11, twelfth: 12 };
+
+/** Bars named by number: from and to (1 the first), counted back from the last with `end` (1 the last). */
+export interface Bars {
+  from: number;
+  to: number;
+  end: boolean;
+  /** The words that name them ("the last bar"): a first or last outside them picks among their items. */
+  phrase?: string;
+}
+
+const BAR = '(?:bars?|measures?)';
+const BAR_COUNT = '(\\d+|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)';
+
+/** The bars a command names: "bar 3", "bars 2 to 4", "the second bar", "the first two bars", "the last bar". */
+export function barsIn(text: string): Bars | null {
+  const t = text.toLowerCase();
+  const found = (m: RegExpExecArray, bars: Omit<Bars, 'phrase'>): Bars => ({ ...bars, phrase: m[0] });
+  let m = new RegExp(`\\b${BAR}\\s+(\\d+)(?:\\s*(?:-|–|to|through|until)\\s*(\\d+))?`).exec(t);
+  if (m) {
+    const [from, to] = [Number(m[1]), Number(m[2] ?? m[1])];
+    return found(m, { from: Math.min(from, to), to: Math.max(from, to), end: false });
+  }
+  m = new RegExp(`\\b(first|last)\\s+${BAR_COUNT}\\s+${BAR}\\b`).exec(t);
+  if (m) return found(m, { from: 1, to: numberOf(m[2]!), end: m[1] === 'last' });
+  m = new RegExp(`\\blast\\s+${BAR}\\b`).exec(t);
+  if (m) return found(m, { from: 1, to: 1, end: true });
+  m = new RegExp(`\\b(${Object.keys(ORDINALS).join('|')}|\\d+(?:st|nd|rd|th))\\s+${BAR}\\b`).exec(t);
+  if (m) {
+    const n = ORDINALS[m[1]!] ?? parseInt(m[1]!, 10);
+    return found(m, { from: n, to: n, end: false });
+  }
+  return null;
+}
+
+/**
+ * Options named one after another ("staccato, accent, staccato"): the
+ * longest run of words each naming one of `labels` by its whole name (or
+ * plural), when there are two or more. "and" ends a run: "accent and
+ * staccato" may mean both at once.
+ */
+export function sequenceIn(text: string, labels: string[]): string[] | null {
+  const byWord = new Map(labels.filter((l) => /^\p{L}+$/u.test(l)).map((l) => [l.toLowerCase(), l]));
+  const named = (w: string) => byWord.get(w) ?? byWord.get(w.replace(/e?s$/, ''));
+  let [best, run] = [[] as string[], [] as string[]];
+  for (const word of text.toLowerCase().split(/[\s,;]+/).filter(Boolean)) {
+    const label = named(word);
+    if (label) run.push(label);
+    else [best, run] = [run.length > best.length ? run : best, []];
+  }
+  if (run.length > best.length) best = run;
+  return best.length >= 2 ? best : null;
+}
+
+/** Fingerings typed after "fingering" ("fingering 1 2 3 1"): their numbers, 0 to 5. */
+export function fingeringsIn(text: string): number[] | null {
+  const m = /\bfinger(?:ing)?s?\b([\s,\d]+)/i.exec(text);
+  const numbers = m ? m[1]!.split(/[\s,]+/).filter(Boolean).map(Number).filter((n) => n >= 0 && n <= 5) : [];
+  return numbers.length ? numbers : null;
+}
+
+const SPELLINGS: Record<string, string> = { SS: '##', FF: 'bb', S: '#', F: 'b', N: 'n' };
+
+/** Note names typed one after another ("f#", "c e g", "bb4"), as the side panel's Pitch reads them: F#, C, Bb4. Chords, rests and barlines aside. */
+export function pitchesIn(text: string): string[] | null {
+  const words = musicIn(text)?.typed.split(' ') ?? [];
+  const names = words.flatMap((w) => {
+    const m = /^([A-G])(SS|FF|S|F|N)?(\d)?$/.exec(scoreNote(w) ?? '');
+    return m ? [`${m[1]}${SPELLINGS[m[2] ?? ''] ?? ''}${m[3] ?? ''}`] : [];
+  });
+  return names.length ? names : null;
+}
+

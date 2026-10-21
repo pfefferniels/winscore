@@ -254,6 +254,12 @@ function setUp(items: number[] | null, music?: [string, string], lyrics?: string
       info.free();
       return params;
     },
+    text(index) {
+      const info = score.item(index);
+      const text = info?.text ?? null;
+      info?.free();
+      return text;
+    },
     context: () => ({ clef: null, symbolName: () => null }),
     staves: () => score.staffGeometry(),
     summaries: () => score.itemSummaries(),

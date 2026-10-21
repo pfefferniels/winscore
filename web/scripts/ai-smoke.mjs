@@ -23,6 +23,7 @@ const JEV = {
   'add staff': { action: 'create', item: 'staff' },
   'zoom in': { action: 'app', menu: 'zoom-in' },
   'repeat it twice': { action: 'repeat', amount: 'twice' },
+  'do that again': { action: 'again' },
   'beam always 2 notes': { action: 'beam', target: 'notes', group: '2', amount: '2' },
   'make note size gradually bigger': { action: 'grow', target: 'notes', measure: 'size' },
   'make the last note an x head': { action: 'other', target: 'notes' },
@@ -393,6 +394,11 @@ try {
   await page.locator('.ai-knob input[aria-label="Times"]').fill('3');
   await page.waitForFunction((n) => Number(document.getElementById('app').dataset.items) === n, count + 3);
   assert.match(await undoTitle(), /“repeat it twice”/);
+  // Again: the last command as it was left (three copies) on what is selected now, the note and its copies.
+  await command('do that again');
+  assert.match(await page.textContent('.ai-reading'), /→ Repeat again/);
+  await enter();
+  assert.equal(Number(await page.getAttribute('#app', 'data-items')), count + 3 + 12);
 
   assert.deepEqual(errors, []);
   console.log('ai smoke: ok');

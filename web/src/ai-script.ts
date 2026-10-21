@@ -67,7 +67,14 @@ export type Step =
    */
   | { do: 'create'; items?: Filter | null; word: string; at: 'before' | 'at' | 'after' | 'over' | 'page'; more?: number[] | null; text?: string | null }
   /** Copies of the items (staves aside) `times` times, one after another to their right, as the music goes on. */
-  | { do: 'repeat'; items?: Filter | null; times: Value };
+  | { do: 'repeat'; items?: Filter | null; times: Value }
+  /** The texts among the items get these characters, each in its own font. */
+  | { do: 'text'; items?: Filter | null; text: string }
+  /**
+   * Lyrics under the notes of the items' fullest staff: a syllable under each column from the first (words
+   * split at spaces, syllables at hyphens), a hyphen between the syllables of a word.
+   */
+  | { do: 'lyrics'; items?: Filter | null; text: string };
 
 export interface Script {
   /** What it does, in a few words. */
@@ -98,6 +105,8 @@ export interface Access {
   editor: Editor;
   /** P1 … Pn of item `index`. */
   params(index: number): Float32Array | null;
+  /** A text's characters (with its font, _NN), null for other items. */
+  text(index: number): string | null;
   context(index: number): Context;
   /** Seven numbers per staff: number, left and right x, y of level 0, scale step, lowest line's level, lines. */
   staves(): Float32Array;
@@ -313,6 +322,14 @@ function placeVars(access: Access, list: Target[]): Vars[] {
     inBar.set(key, [...(inBar.get(key) ?? []), Math.round(t.params[2]! / CHORD)]);
   });
   inBar.forEach((xs, key) => inBar.set(key, [...new Set(xs)].sort((a, b) => a - b)));
+  // The bars of the items in reading order, systems top to bottom, from 1: "measure == 3" is their third.
+  const measureOf = (t: Target) => `${systems.get(t.params[1]!) ?? 0}:${barOf(t)}`;
+  const measureKeys = [...new Set(list.map(measureOf))].sort((a, b) => {
+    const [sa, ba] = a.split(':').map(Number);
+    const [sb, bb] = b.split(':').map(Number);
+    return sa! - sb! || ba! - bb!;
+  });
+  const measureRank = new Map(measureKeys.map((key, k) => [key, k + 1]));
   // The next column on each staff, for items made from one to the next.
   const levelsAt = new Map<string, number[]>();
   list.forEach((t) => {
@@ -360,6 +377,8 @@ function placeVars(access: Access, list: Target[]): Vars[] {
       sn,
       st: sn > 1 ? si / (sn - 1) : 0,
       bar,
+      measure: measureRank.get(measureOf(t)) ?? 1,
+      measures: measureKeys.length,
       bi,
       bn,
       bt: bn > 1 ? bi / (bn - 1) : 0,
@@ -578,6 +597,18 @@ function runStep(step: Step, access: Access, scope: Scope, knobs: Vars): number[
       return create(access, scope, targets(access, scope, step.items, knobs), step);
     case 'repeat':
       return repeat(access, targets(access, scope, step.items, knobs), Math.round(knobValue(step.times)));
+    case 'text': {
+      const list = targets(access, scope, step.items, knobs).filter((t) => t.params[0] === TEXT);
+      if (list.length === 0) throw new Error('There is no text here to change');
+      for (const t of list) {
+        // Each keeps its font: _NN in front.
+        const font = /^_\d\d/.exec(access.text(keyIndex(editor).get(t.key)!) ?? '')?.[0] ?? '';
+        editor.setText(keyIndex(editor).get(t.key)!, /^_\d\d/.test(step.text) ? step.text : `${font}${step.text}`);
+      }
+      return list.map((t) => t.key);
+    }
+    case 'lyrics':
+      return lyrics(access, targets(access, scope, step.items, knobs), step.text);
     case 'add': {
       const { list, vars } = picked(access, scope, step.items, knobs);
       const values = step.params.map(valueOf);
@@ -839,7 +870,56 @@ function repeat(access: Access, list: Target[], times: number): number[] {
     });
     editor.setParamsOf(edits);
   }
-  return made;
+  // The music and its copies: what follows (again, a slur over it) is about all of it.
+  return [...items.map((t) => t.key), ...made];
+}
+
+/** Where lyrics go: four steps under a staff's bottom line (level 3 on five lines). */
+const LYRICS_LEVEL = -5;
+
+/** The syllables of lyrics as typed ("Ky-ri-e e-le-i-son"), each with whether a hyphen follows it. */
+export function syllables(text: string): { text: string; hyphen: boolean }[] {
+  return text
+    .trim()
+    .split(/\s+/)
+    .flatMap((word) => {
+      const parts = word.split(/-+/).filter(Boolean);
+      return parts.map((part, k) => ({ text: part, hyphen: k < parts.length - 1 }));
+    });
+}
+
+/**
+ * Lyrics under the columns of notes on the items' staff with the most of
+ * them, a syllable centred under each, and a hyphen centred between the
+ * syllables of a word, as quick entry makes texts.
+ */
+function lyrics(access: Access, list: Target[], text: string): number[] {
+  const editor = access.editor;
+  const notes = list.filter((t) => t.params[0] === NOTE);
+  if (notes.length === 0) throw new Error('Select the notes the words go under');
+  const byStaff = new Map<number, Target[]>();
+  notes.forEach((t) => byStaff.set(t.params[1]!, [...(byStaff.get(t.params[1]!) ?? []), t]));
+  const [staff, on] = [...byStaff].sort((a, b) => b[1].length - a[1].length)[0]!;
+  const columns = [...new Set(on.map((t) => Math.round(t.params[2]! / CHORD)))].sort((a, b) => a - b).map((c) => c * CHORD);
+  const sung = syllables(text).slice(0, columns.length);
+  const made: { key: number; hyphen: boolean }[] = [];
+  const insert = (characters: string, x: number) => {
+    editor.select([]);
+    editor.insertText(characters, [staff, 1000 + x, LYRICS_LEVEL]);
+    const keys = editor.keys();
+    return keys[editor.selection()[0]!]!;
+  };
+  sung.forEach((syllable, k) => made.push({ key: insert(syllable.text, columns[k]!), hyphen: syllable.hyphen }));
+  // Hyphens once the syllables stand: halfway between one's end and the next one's start.
+  const hyphens: number[] = [];
+  made.forEach(({ key, hyphen }, k) => {
+    const next = made[k + 1];
+    if (!hyphen || !next) return;
+    const at = keyIndex(editor);
+    const [a, b] = [access.params(at.get(key)!)!, access.params(at.get(next.key)!)!];
+    hyphens.push(insert('-', (a[2]! + a[12]! + b[2]!) / 2));
+  });
+  return [...made.map((m) => m.key), ...hyphens];
 }
 
 export function knobValues(script: Script, overrides: Record<string, number> = {}): Vars {
@@ -859,7 +939,11 @@ export function run(script: Script, access: Access, scope: Scope, label: string,
   try {
     for (const step of script.steps) {
       const keys = runStep(step, access, within, knobs);
-      if (step.do === 'select') within = { ...within, keys };
+      // A selection narrows what came before: its items are what the command reaches.
+      if (step.do === 'select') {
+        within = { ...within, keys };
+        touched.length = 0;
+      }
       touched.push(...keys);
     }
   } catch (err) {

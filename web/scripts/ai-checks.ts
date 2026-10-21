@@ -6,9 +6,9 @@ import { readFileSync } from 'node:fs';
 import { groupCommand, initSync, InputLine, Score } from '../src/wasm/score_web.js';
 import { scoreEditor } from '../src/editor';
 import { compile } from '../src/ai-expr';
-import { meterIn, musicIn, namesCount, numbersIn, numberWords, quartersFor, quotedIn } from '../src/ai-values';
+import { barsIn, fingeringsIn, meterIn, musicIn, namesCount, numbersIn, numberWords, pitchesIn, quartersFor, quotedIn, sequenceIn } from '../src/ai-values';
 import { scriptFor, type Intent } from '../src/ai-intent';
-import { run, type Access, type Scope, type Script } from '../src/ai-script';
+import { run, syllables, type Access, type Scope, type Script } from '../src/ai-script';
 import { SCRIPT_SCHEMA } from '../src/ai-models';
 
 initSync({ module: readFileSync(process.env.SCORE_WASM!) });
@@ -44,6 +44,10 @@ assert.deepEqual(numbersIn('move up two steps, every other one'), [2], 'spelt nu
 assert.deepEqual(numbersIn('repeat twice, then thrice'), [2, 3]);
 assert.deepEqual(numberWords('add 3/4 time'), [], 'a meter is no amount');
 assert.deepEqual(meterIn('add 3/4 time'), [3, 4]);
+assert.deepEqual(['accent bar 3', 'stems up in bars 2 to 4', 'delete measures 5-3', 'the second bar', 'the 3rd measure', 'the first two bars', 'the last bar', 'the last 3 bars', 'add a barline', 'beam in pairs'].map((t) => barsIn(t) && { ...barsIn(t), phrase: undefined }), [
+  { from: 3, to: 3, end: false, phrase: undefined }, { from: 2, to: 4, end: false, phrase: undefined }, { from: 3, to: 5, end: false, phrase: undefined }, { from: 2, to: 2, end: false, phrase: undefined }, { from: 3, to: 3, end: false, phrase: undefined },
+  { from: 1, to: 2, end: false, phrase: undefined }, { from: 1, to: 1, end: true, phrase: undefined }, { from: 1, to: 3, end: true, phrase: undefined }, null, null,
+]);
 assert.deepEqual(meterIn('make it 12 / 8'), [12, 8]);
 assert.equal(meterIn('add notes c/e g'), null);
 assert.equal(quotedIn('add the text "Allegro"'), 'Allegro');
@@ -89,6 +93,7 @@ const access: Access = {
     info.free();
     return params;
   },
+  text: () => null,
   context: () => ({ clef: null, symbolName: () => null }),
   staves: () => score.staffGeometry(),
   summaries: () => score.itemSummaries(),
@@ -338,12 +343,55 @@ const factor = (198 - xs[0]!) / (xs[3]! + 2 * period - xs[0]!);
 const near = (list: number[]) => list.map((x) => Math.round(x * 100) / 100);
 assert.deepEqual(near(four.notes().map((q) => q[2]!)), near([0, 1, 2].flatMap((k) => xs.map((x) => xs[0]! + (x + k * period - xs[0]!) * factor))));
 assert.deepEqual(four.notes().map((q) => q[3]), [0, 1, 2].flatMap(() => [8, 9, 10, 11]), 'C5 D5 E5 F5, three times');
-assert.equal(ran.touched.length, 8);
+assert.equal(ran.touched.length, 12, 'the notes and their copies');
 four.ed.rollback(ran.mark);
 // With room after them, as they were: the first two notes once more after the second.
 ran = run(scriptFor({ action: 'repeat', target: 'all', amount: 1 }), four.acc, four.scope(0, 1), '“repeat”');
 assert.deepEqual(near(four.notes().map((q) => q[2]!)).sort((a, b) => a - b), near([...xs, xs[0]! + 2 * (xs[1]! - xs[0]!), xs[1]! + 2 * (xs[1]! - xs[0]!)]).sort((a, b) => a - b));
 four.ed.rollback(ran.mark);
+
+// Bars by number: C5 D5 | E5 F5 | G5, bar 2 is E and F; the last bar is G; only the notes with a property.
+const barred = fresh();
+barred.ed.rollback(0);
+const line = run({ summary: 'add', knobs: [], steps: [{ do: 'insert', notes: 'C5/D/M/E/F/M/G', rhythms: '4/4/4/4/4' }] }, barred.acc, { keys: [], region: { ...region, from: 10, to: 190 } }, '“add”');
+const barredNotes = (): Scope => ({ keys: line.touched.filter((key) => barred.acc.params(barred.ed.keys().indexOf(key))![0] === 1), region });
+const levelsPicked = (intent: Intent) => {
+  const r = run(scriptFor(intent), barred.acc, barredNotes(), '“pick”');
+  const levels = [...new Set(r.touched)].map((key) => barred.acc.params(barred.ed.keys().indexOf(key))![3]).sort((a, b) => a! - b!);
+  barred.ed.rollback(r.mark);
+  return levels;
+};
+assert.deepEqual(levelsPicked({ action: 'select', target: 'notes', bars: { from: 2, to: 2, end: false } }), [10, 11], 'E5 and F5, the second bar');
+assert.deepEqual(levelsPicked({ action: 'select', target: 'notes', bars: { from: 1, to: 1, end: true } }), [12], 'G5, the last bar');
+assert.deepEqual(levelsPicked({ action: 'select', target: 'notes', bars: { from: 1, to: 2, end: false }, pick: 'last' }), [11], 'the last note of bars 1 to 2');
+assert.equal(scriptFor({ action: 'option', target: 'notes', setting: 'Mark', option: 'Accent', bars: { from: 2, to: 4, end: false } }).summary, 'Mark: Accent (bars 2 to 4)');
+const accented = run(scriptFor({ action: 'option', target: 'notes', setting: 'Mark', option: 'Accent', pick: 'first' }), barred.acc, barredNotes(), '“accent the first”');
+assert.deepEqual(levelsPicked({ action: 'select', target: 'notes', only: { setting: 'Mark', option: 'Accent' } }), [8], 'only the accented C5');
+barred.ed.rollback(accented.mark);
+
+// Marks in turn, pitches in turn, a text's new characters in its own font, lyrics under the notes.
+assert.deepEqual(sequenceIn('staccato, accent, staccato', ['None', 'Accent', 'Staccato', 'Accent + staccato']), ['Staccato', 'Accent', 'Staccato']);
+assert.equal(sequenceIn('accent and staccato', ['Accent', 'Staccato']), null, '"and" may mean both at once');
+assert.deepEqual(fingeringsIn('fingering 1 2 3 1'), [1, 2, 3, 1]);
+assert.deepEqual(pitchesIn('make them f# bb4 e'), ['F#', 'Bb4', 'E']);
+assert.deepEqual(syllables('Ky-ri-e e-le-i-son'), [{ text: 'Ky', hyphen: true }, { text: 'ri', hyphen: true }, { text: 'e', hyphen: false }, { text: 'e', hyphen: true }, { text: 'le', hyphen: true }, { text: 'i', hyphen: true }, { text: 'son', hyphen: false }]);
+ran = run(scriptFor({ action: 'option', target: 'notes', setting: 'Mark', option: 'Staccato', sequence: ['Staccato', 'Accent'] }), four.acc, four.scope(), '“staccato, accent”');
+assert.deepEqual(four.notes().map((q) => Math.trunc(Math.abs(q[10] ?? 0))), [7, 5, 7, 5]);
+four.ed.rollback(ran.mark);
+ran = run(scriptFor({ action: 'change', target: 'notes', pitches: ['G4', 'A4'] }), four.acc, four.scope(), '“make them g4 a4”');
+assert.deepEqual(four.notes().map((q) => q[3]), [5, 6, 5, 6], 'G4 A4 G4 A4');
+four.ed.rollback(ran.mark);
+const sungFour = run(scriptFor({ action: 'create', target: 'all', item: 'lyrics', text: 'Ky-ri-e e' }), four.acc, four.scope(), '“lyrics”');
+const sungTexts = four.rows().filter((q) => q[0] === 16);
+assert.equal(sungTexts.length, 6, 'four syllables and two hyphens');
+assert.ok(sungTexts.every((q) => q[3] === -5), 'on the lyric line');
+four.ed.rollback(sungFour.mark);
+const titled = Score.empty();
+const titledEditor = scoreEditor(titled);
+titledEditor.insertText('_02dolce', [1, 50, 12]);
+const titledAccess: Access = { ...access, editor: titledEditor, params: (i) => { const info = titled.item(i); const q = info?.params ?? null; info?.free(); return q; }, text: (i) => { const info = titled.item(i); const t = info?.text ?? null; info?.free(); return t; }, staves: () => titled.staffGeometry(), summaries: () => titled.itemSummaries() };
+run(scriptFor({ action: 'change', target: 'text', text: 'espr.' }), titledAccess, { keys: titledEditor.keys(), region }, '“change the text”');
+assert.equal(titledAccess.text(0), '_02espr.', 'in its own font');
 
 // A slur over the notes: from the first to the last, above the stems-down heads, each end off the lines.
 const create = (intent: Omit<Intent, 'action' | 'target'>, scope: Scope, of = four) => run(scriptFor({ action: 'create', target: 'all', ...intent }), of.acc, scope, '“add”');

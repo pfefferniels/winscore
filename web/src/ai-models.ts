@@ -14,7 +14,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { chainable, CREATIONS, MEASURES, PICKS, TARGETS, scriptFor, type Action, type Intent } from './ai-intent';
 import { namedSettings, plain, type Filter, type Region, type Script, type Step } from './ai-script';
-import { INTERVALS, RHYTHMS, meterIn, musicIn, namesCount, namesOption, numberOf, numberWords, quotedIn, rhythmsFor } from './ai-values';
+import { barsIn, fingeringsIn, INTERVALS, RHYTHMS, meterIn, musicIn, namesCount, namesOption, numberOf, numberWords, pitchesIn, quotedIn, rhythmsFor, sequenceIn } from './ai-values';
 
 // ---------------------------------------------------------------------------
 // Settings and connections
@@ -159,8 +159,10 @@ const ACTIONS: Record<Action | 'other', string> = {
   number: 'Set a named property to a number the command gives, such as size 1.5 or stem length 3',
   command: 'A command in the SCORE program’s own language, short upper-case words and numbers such as FLI or R 5',
   create:
-    'Add one new item of its own, not notes and not a mark on them: a staff, a barline, a repeat, a new clef, a key or time signature such as 3/4 or common time, a slur or tie over the notes (slur them, tie them), a hairpin, a trill, an 8va, a pedal mark, an ending, a dynamic such as mf, a fermata, a box, a number or a text in quotes',
-  repeat: 'Repeat the selected music or items a number of times, each copy after the one before (repeat 3 times, play this bar twice, repeat it)',
+    'Add one new item of its own, not notes and not a mark on them: a staff, a barline, a repeat, a new clef, a key or time signature such as 3/4 or common time, a slur or tie over the notes (slur them, tie them), a hairpin, a trill, an 8va, a pedal mark, an ending, a dynamic such as mf, a fermata, a box, a number, a text in quotes or lyrics in quotes under the notes',
+  repeat: 'Repeat the selected music: copies of it pasted after it a number of times, each after the one before (repeat these notes 3 times, play this bar twice, repeat it)',
+  change: 'Change the selected notes to named pitches, or the selected texts to quoted words (make it an F#, change them to c e g, change the text to "Andante")',
+  again: 'Do the last command once more, the same edit again on the items selected now, perhaps a number of times (again, do that again, again 3 times, once more, same again twice)',
   select: 'Select, pick out or keep only some of the items, so that the next command acts on them; nothing is changed (select the bottom notes, select the beams, keep only the accented notes)',
   app: 'A command of the editor rather than an edit of the music: undo, redo, copy, cut, paste, duplicate, select everything, save, open, print, export, a new score, zoom, show or hide the side panel, line up or justify, help',
   other: 'Something else',
@@ -281,7 +283,8 @@ function jevQuestions(about: About): Record<string, Question> {
     then: {
       type: 'choice',
       instructions: 'Besides its main action, does the `command` ask for a second, different thing? Which?',
-      criteria: { none: 'only one thing is asked', ...Object.fromEntries(Object.entries(ACTIONS).filter(([id]) => id !== 'other')) },
+      // Selecting comes with what the command acts on ("on the bottom notes"), not as a second thing.
+      criteria: { none: 'only one thing is asked', ...Object.fromEntries(Object.entries(ACTIONS).filter(([id]) => !['other', 'select', 'again'].includes(id))) },
     },
     complexity: { type: 'choice', instructions: 'How much thought does carrying out the `command` on the score take?', criteria: COMPLEXITY },
     item: {
@@ -301,6 +304,11 @@ function jevQuestions(about: About): Record<string, Question> {
     questions.key = { type: 'choice', instructions: 'Which key signature does the `command` name?', criteria: KEYS };
   }
   if (about.counts.has(1)) {
+    questions.only = {
+      type: 'choice',
+      instructions: 'Does the `command` act only on the notes that already have a property, such as "the eighth notes", "the staccato notes" or "the sharps"? Which? Choose none when it gives that property or names no such notes.',
+      criteria: capped(optionCriteria(1)),
+    };
     questions.also = {
       type: 'choice',
       instructions:
@@ -389,7 +397,9 @@ function readAnswers(about: About, answers: Record<string, ChoiceAnswer>): Inten
   const first = readAction(about, answers, action);
   if (typeof first === 'string') return first;
   const then = answers.then;
-  const second = then && then.choice !== 'none' && then.confidence >= QUITE_SURE ? (then.choice as Action) : null;
+  // "again 3 times", "undo twice": a count is part of these, not a second repeat.
+  const counted = ['again', 'repeat', 'app'].includes(first.action);
+  const second = then && then.choice !== 'none' && then.confidence >= QUITE_SURE && !counted ? (then.choice as Action) : null;
   if (second && second !== first.action) {
     // Both read the same answers: only actions that take different ones, on the notes or everything, go together.
     const shared = (READS[first.action] ?? []).some((r) => (READS[second] ?? []).includes(r));
@@ -443,14 +453,30 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
   }
   // No property to give, but a new item Jev is quite sure of: that is meant ("add mf" to notes, which have no such mark).
   if (action === 'option' && !option && sure('item', QUITE_SURE)) intent.action = action = 'create';
-  // Some items picked out by place ("the last note", "every other one"); picked some other way, Claude
-  // writes it. New music and items where nothing is selected, and the editor's commands, pick none.
-  const pick = sure('pick');
+  // Some items picked out by place ("the last note", "every other one"), or bars named by number, which
+  // the command names whatever Jev picks ("accent bar 3"); picked some other way, Claude writes it. New
+  // music and items where nothing is selected, and the editor's commands, pick none.
   const picks = !['insert', 'app'].includes(action) && !(action === 'create' && about.whole);
-  if (picks && pick === 'other') return 'some';
+  const bars = picks ? barsIn(about.text) : null;
+  let pick = sure('pick');
+  // "the last bar": its first or last is the bars'; "the last note of bar 3" picks among them.
+  if (bars && (pick === 'bars' || (['first', 'last', 'first few', 'last few'].includes(pick ?? '') && !/\b(first|last)\b/.test(about.text.toLowerCase().replace(bars.phrase ?? '', ''))))) pick = undefined;
+  if (picks && (pick === 'other' || (pick === 'bars' && !bars))) return 'some';
+  if (picks && bars) intent.bars = bars;
   if (picks && pick && PICKS[pick]) {
     intent.pick = pick;
     if (pick.endsWith('few')) intent.many = number('count');
+  }
+  // Only the notes with a property the command names ("accent the eighth notes"), unless it gives that
+  // property ("make them eighths", "8th beam") or removes it.
+  const only = picks ? sure('only', QUITE_SURE) : undefined;
+  const given = [answers.also?.choice, ...Object.entries(answers).filter(([id]) => id.startsWith('option.')).map(([, a]) => a.choice)];
+  if (only && !given.includes(only)) {
+    const [setting, value] = only.split(': ');
+    if (setting && value && namesOption(about.text, value)) {
+      if (['delete', 'select'].includes(action) && !intent.setting) [intent.setting, intent.option] = [setting, value];
+      else if (!['delete', 'select'].includes(action)) intent.only = { setting, option: value };
+    }
   }
   switch (action) {
     case 'insert': {
@@ -469,8 +495,23 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
       intent.amount = group && group !== 'runs' ? Number(group) : number('amount');
       return intent;
     }
-    case 'option':
+    case 'option': {
+      // Marks named one after another, or fingerings, go to the notes in turn.
+      const fingerings = fingeringsIn(about.text);
+      const marks = fingerings?.map((n) => `Fingering ${n}`) ?? sequenceIn(about.text, markLabels());
+      if (marks && (intent.setting === 'Mark' || fingerings)) return { ...intent, setting: 'Mark', option: marks[0], sequence: marks };
       return intent.setting && intent.option ? intent : 'detail';
+    }
+    case 'change': {
+      const text = quotedIn(about.text);
+      if (text && about.counts.has(16)) return { ...intent, text };
+      const pitches = pitchesIn(about.text);
+      return pitches && about.counts.has(1) ? { ...intent, pitches } : 'detail';
+    }
+    case 'again': {
+      const times = number('amount');
+      return { ...intent, amount: times === undefined ? 1 : Math.max(1, Math.round(times)) };
+    }
     case 'create':
       return createIntent(about, intent, sure, number);
     case 'repeat': {
@@ -480,14 +521,17 @@ function readAction(about: About, answers: Record<string, ChoiceAnswer>, action:
       return times === undefined ? intent : { ...intent, amount: Math.round(times) };
     }
     case 'app': {
+      // "undo 3 times", "zoom in twice".
       const command = about.commands.find((c) => c.id === sure('menu'));
-      return command ? { ...intent, command: command.id, label: command.label } : 'detail';
+      const times = number('amount');
+      return command ? { ...intent, command: command.id, label: command.label, amount: times === undefined ? 1 : Math.max(1, Math.min(20, Math.round(times))) } : 'detail';
     }
     case 'delete':
     case 'select':
       // "the eighth notes": only those. Half sure of a property is not enough to delete
       // (or select) all of them instead, nor only some: Claude decides.
-      if (option && option[1].confidence < QUITE_SURE) {
+      // Jev sure the command picks the notes by that property ("only") makes the property sure.
+      if (option && option[1].confidence < QUITE_SURE && option[1].choice !== only) {
         if (option[1].confidence >= 0.4) return 'detail';
         delete intent.setting;
         delete intent.option;
@@ -556,6 +600,10 @@ function createIntent(about: About, intent: Intent, sure: (id: string) => string
       const text = quotedIn(about.text);
       return text ? { ...made, text, label: `Add “${text}”` } : 'detail';
     }
+    case 'lyrics': {
+      const text = quotedIn(about.text);
+      return text ? { ...made, text } : 'detail';
+    }
     default:
       return made;
   }
@@ -612,15 +660,25 @@ export function warmJev(connection: NonNullable<Connections['jev']>) {
   systemOne(connection, body, new AbortController().signal).catch(() => (warmed = 0));
 }
 
-/** Jev's reading as an edit script, if it has one (the editor's own commands have none). */
+/** Jev's reading as an edit script, if it has one (the editor's own commands have none, nor "again", the command field's). */
 export function jevScript(reading: JevReading): Script | null {
-  return reading.intent && reading.intent.action !== 'app' ? scriptFor(reading.intent) : null;
+  return reading.intent && reading.intent.action !== 'app' && reading.intent.action !== 'again' ? scriptFor(reading.intent) : null;
 }
 
-/** The editor's command Jev read, if it read one. */
-export function jevCommand(reading: JevReading): AppCommand | null {
+/** The editor's command Jev read, if it read one, and how many times. */
+export function jevCommand(reading: JevReading): { command: AppCommand; times: number } | null {
   const intent = reading.intent;
-  return intent?.action === 'app' && intent.command ? { id: intent.command, label: intent.label ?? intent.command, title: '' } : null;
+  return intent?.action === 'app' && intent.command ? { command: { id: intent.command, label: intent.label ?? intent.command, title: '' }, times: intent.amount ?? 1 } : null;
+}
+
+/** How many times the last command is to be done again, if Jev read that. */
+export function jevAgain(reading: JevReading): number | null {
+  return reading.intent?.action === 'again' ? (reading.intent.amount ?? 1) : null;
+}
+
+/** The names of a note's marks. */
+function markLabels(): string[] {
+  return namedSettings(1).get('mark')?.flatMap(({ setting }) => (setting.kind === 'choice' ? setting.options.map((o) => o.label) : [])) ?? [];
 }
 
 // ---------------------------------------------------------------------------
@@ -674,7 +732,7 @@ Steps run in order, each on the items the command is about (the selection, or th
 - "value", "right", "up", "size": text holding a number, an expression or an option's name.
 - "text": the characters of the texts an "add" makes.
 
-Values may be expressions: numbers, + - * / % ^, comparisons, && || !, a ? b : c, functions min max abs round floor ceil sqrt pow lerp(a,b,t) clamp(x,lo,hi) snap(x,step), and these names for each item: p1 … p45 (its parameters), id (its identity, as the items are listed: "id == 412 || id == 415" picks those two), staff, x (P3), level (P4 without the cue-size hundred), value (the setting's current value; 0 often means the default, e.g. size 0 is size 1), mean (the mean of that parameter over the items, in set steps), t (0 for the first column of items from left to right, 1 for the last; the notes of a chord share one), i and n (that column's number from 0, and how many there are), st, si, sn (the same on the item's own staff), next_x and next_level (the position of the next note or chord, or item of the step's codes, on its staff, for a text the next text on its line (within a step of its level), and its level nearest this item's; the item's own for the last), bar, bi, bn, bt (its bar on its staff from 0, by the barlines, and the same as i, n, t within that bar: "bi == 0" is the first note or chord of each bar, "bi == bn - 1" the last), left and right (the leftmost and rightmost P3 of the items on its staff), count, chord_low and chord_high (the lowest and highest level among the notes of its chord, its notes at the same place on its staff, a lone note being its own chord: "level == chord_low" is the bottom note of each chord), chord_size (how many notes that chord has), min_p1 … min_p45, max_p1 … max_p45 and mean_p1 … mean_p45 (a parameter's smallest, largest and mean value over the items; min_level, max_level and mean_level the same for level, so "level == max_level" is the single highest note), and the knobs by id. There are no functions over the items: max(p4) is just p4.
+Values may be expressions: numbers, + - * / % ^, comparisons, && || !, a ? b : c, functions min max abs round floor ceil sqrt pow lerp(a,b,t) clamp(x,lo,hi) snap(x,step), and these names for each item: p1 … p45 (its parameters), id (its identity, as the items are listed: "id == 412 || id == 415" picks those two), staff, x (P3), level (P4 without the cue-size hundred), value (the setting's current value; 0 often means the default, e.g. size 0 is size 1), mean (the mean of that parameter over the items, in set steps), t (0 for the first column of items from left to right, 1 for the last; the notes of a chord share one), i and n (that column's number from 0, and how many there are), st, si, sn (the same on the item's own staff), next_x and next_level (the position of the next note or chord, or item of the step's codes, on its staff, for a text the next text on its line (within a step of its level), and its level nearest this item's; the item's own for the last), bar, bi, bn, bt (its bar on its staff from 0, by the barlines, and the same as i, n, t within that bar: "bi == 0" is the first note or chord of each bar, "bi == bn - 1" the last), measure and measures (its bar among the bars of the items in reading order, from 1, and how many there are: "measure == 2" is their second bar), left and right (the leftmost and rightmost P3 of the items on its staff), count, chord_low and chord_high (the lowest and highest level among the notes of its chord, its notes at the same place on its staff, a lone note being its own chord: "level == chord_low" is the bottom note of each chord), chord_size (how many notes that chord has), min_p1 … min_p45, max_p1 … max_p45 and mean_p1 … mean_p45 (a parameter's smallest, largest and mean value over the items; min_level, max_level and mean_level the same for level, so "level == max_level" is the single highest note), and the knobs by id. There are no functions over the items: max(p4) is just p4.
 
 Knobs are numbers the command leaves open — how much bigger, how fast something grows, how far to move. Give each a slider: {"id": a name used in expressions, "label": two or three words, "min", "max", "step", "value": a sensible default}. The user drags the slider and the script runs again at once. A command that says everything needs no knobs ([]).
 
@@ -700,7 +758,7 @@ A step leaves out its unused fields here for brevity; give every field ("params"
 
 /** One step as Claude writes it: every field there, none of them a union (the API allows few). */
 interface Written {
-  do: Exclude<Step['do'], 'create' | 'repeat'>;
+  do: Exclude<Step['do'], 'create' | 'repeat' | 'text' | 'lyrics'>;
   codes: number[];
   where: string;
   where_setting: string;

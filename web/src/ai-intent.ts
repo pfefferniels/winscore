@@ -3,6 +3,7 @@
 // Intent; Claude writes scripts directly. Each intent leaves open what the
 // words do not say (how much bigger, how many notes per beam) as knobs.
 import type { Filter, Knob, Script, Step } from './ai-script';
+import type { Bars } from './ai-values';
 
 /** What the command is about, by the side panel's names. */
 export interface Target {
@@ -99,6 +100,8 @@ export type Action =
   | 'create'
   | 'select'
   | 'repeat'
+  | 'change'
+  | 'again'
   | 'app';
 
 /**
@@ -117,6 +120,7 @@ export const PICKS: Record<string, { words: string; noun: string; where: string;
   lowest: { words: 'the single lowest note', noun: 'the lowest note', where: 'level == min_level', codes: [1] },
   downbeats: { words: 'the first of each bar, the downbeats', noun: 'the first of each bar', where: 'bi == 0' },
   'bar ends': { words: 'the last of each bar', noun: 'the last of each bar', where: 'bi == bn - 1' },
+  bars: { words: 'certain bars named by number or place, such as bar 3, bars 2 to 4, the second bar, the last bar', noun: 'the bars', where: '' },
   'first few': { words: 'the first few, a number of them from the start', noun: 'the first few', where: 'i < many' },
   'last few': { words: 'the last few, a number of them up to the end', noun: 'the last few', where: 'i >= n - many' },
 };
@@ -169,6 +173,7 @@ export const CREATIONS: Record<string, { word: string; at: Place; words: string 
   circle: { word: 'CIRCLE', at: 'at', words: 'a circle' },
   number: { word: 'NUMB', at: 'at', words: 'a number, such as a bar number or rehearsal number' },
   text: { word: 'TEXT', at: 'at', words: 'a text, words given in quotes such as "Allegro"' },
+  lyrics: { word: 'LYRICS', at: 'at', words: 'lyrics, words sung under the notes, given in quotes, with hyphens between syllables' },
 };
 
 /** A number setting that "bigger", "longer" … change, and how. */
@@ -216,9 +221,16 @@ export interface Intent {
   /** number: the value; command: the line. */
   value?: number;
   line?: string;
-  /** Some of the items by their place (PICKS), how many of the first or last few. */
+  /** Some of the items by their place (PICKS), how many of the first or last few, which bars. */
   pick?: string;
   many?: number;
+  bars?: Bars;
+  /** Only the items whose setting already reads this: "accent the eighth notes" (Value: Eighth). */
+  only?: { setting: string; option: string };
+  /** option: one option for each column in turn, again from the first after the last ("staccato, accent"). */
+  sequence?: string[];
+  /** change: pitches for the notes, column by column in turn ("c e g"). */
+  pitches?: string[];
   /** create: the item (CREATIONS), its creation word with what the command gives (KSIG-3B, METER68), the numbers after its P3 (0 keeps the default), a text's characters. */
   item?: string;
   word?: string;
@@ -286,20 +298,49 @@ export function scriptFor(intent: Intent): Script {
   return picked(intent, { summary: `${a!.summary}, ${lowerFirst(b!.summary)}`, knobs: [...a!.knobs, ...b!.knobs], steps: [...a!.steps, ...b!.steps] });
 }
 
-/** The script on the items an intent picks by place: they are selected first, and the steps act on them. */
+/** The filter of bars named by number, over the scripts' `measure` (and `measures`, to count back from the last). */
+function barsWhere(bars: Bars): string {
+  return bars.end ? `measure > measures - ${bars.to} && measure <= measures - ${bars.from - 1}` : `measure >= ${bars.from} && measure <= ${bars.to}`;
+}
+
+/** "bar 3", "bars 2 to 4", "the last two bars": as said in a summary. */
+function barsNoun(bars: Bars): string {
+  if (bars.end) return bars.to === 1 ? 'the last bar' : `the last ${bars.to} bars`;
+  return bars.from === bars.to ? `bar ${bars.from}` : `bars ${bars.from} to ${bars.to}`;
+}
+
+/**
+ * The script on the items an intent picks: those with the property it
+ * names ("the eighth notes"), then by place, are selected first, and the
+ * steps act on them.
+ */
 function picked(intent: Intent, script: Script): Script {
-  const pick = intent.pick ? PICKS[intent.pick] : undefined;
-  if (!pick || intent.action === 'insert' || intent.action === 'app') return script;
+  if (intent.action === 'insert' || intent.action === 'app') return script;
   const target = targetById(intent.target);
-  const where = target.where ? `(${target.where}) && ${pick.where}` : pick.where;
-  const knobs = pick.where.includes('many') ? [knob('many', 'How many', intent.many ?? 2, 1, 16, 1), ...script.knobs] : script.knobs;
-  const summary = intent.action === 'select' ? `Select ${pick.noun}${pick.codes || target.id === 'all' ? '' : ` of the ${target.noun}`}` : `${script.summary} (${pick.noun})`;
-  return { summary, knobs, steps: [{ do: 'select', items: { codes: pick.codes ?? target.codes, where } }, ...script.steps] };
+  const steps: Step[] = [];
+  let { summary, knobs } = script;
+  if (intent.only) {
+    steps.push({ do: 'select', items: { codes: [1], where: null, setting: intent.only.setting, is: intent.only.option } });
+    summary = `${summary} (${intent.only.option.toLowerCase()} notes)`;
+  }
+  // Bars hold all kinds of items: bars narrow by place only.
+  if (intent.bars) {
+    steps.push({ do: 'select', items: { codes: target.id === 'all' ? [] : target.codes, where: target.where ? `(${target.where}) && ${barsWhere(intent.bars)}` : barsWhere(intent.bars) } });
+    summary = intent.action === 'select' && !intent.pick ? `Select ${barsNoun(intent.bars)}` : `${summary} (${barsNoun(intent.bars)})`;
+  }
+  const pick = intent.pick ? PICKS[intent.pick] : undefined;
+  if (pick && pick.where) {
+    const where = target.where ? `(${target.where}) && ${pick.where}` : pick.where;
+    if (pick.where.includes('many')) knobs = [knob('many', 'How many', intent.many ?? 2, 1, 16, 1), ...knobs];
+    summary = intent.action === 'select' ? `Select ${pick.noun}${pick.codes || target.id === 'all' ? '' : ` of the ${target.noun}`}` : `${summary} (${pick.noun})`;
+    steps.push({ do: 'select', items: { codes: pick.codes ?? target.codes, where } });
+  }
+  return steps.length ? { summary, knobs, steps: [...steps, ...script.steps] } : script;
 }
 
 /** "Add a staff", "Add an end repeat", "Add mf": a creation's name with the article its words give it. */
 function creationSummary(id: string): string {
-  const article = CREATIONS[id]?.words.match(/^(a|an) /)?.[0] ?? '';
+  const article = /^(a|an) /.test(CREATIONS[id]?.words ?? '') ? (/^[aeiou]/i.test(id) ? 'an ' : 'a ') : '';
   return `Add ${article}${id}`;
 }
 
@@ -347,6 +388,7 @@ function scriptForOne(intent: Intent): Script {
         { do: 'command', items: { codes: [1] }, line: 'FLN' },
       );
     case 'option':
+      if (intent.sequence) return inTurn(`${intent.setting}: ${intent.sequence.join(', ').toLowerCase()}`, intent.setting ?? '', intent.sequence);
       return one(`${intent.setting}: ${intent.option}`, { do: 'setting', items: target.id === 'all' ? null : items, setting: intent.setting ?? '', value: intent.option ?? '' });
     case 'number':
       return one(`${intent.setting} ${intent.value}`, { do: 'setting', items: target.id === 'all' ? null : items, setting: intent.setting ?? '', value: intent.value ?? 0 });
@@ -414,6 +456,7 @@ function scriptForOne(intent: Intent): Script {
       // By all the command's items, whatever it names: "add a clef" names what it makes.
       const creation = CREATIONS[intent.item ?? ''];
       if (!creation) return one('Nothing to add');
+      if (intent.item === 'lyrics') return one(`Lyrics: “${intent.text ?? ''}”`, { do: 'lyrics', items: null, text: intent.text ?? '' });
       return one(intent.label ?? creationSummary(intent.item!), { do: 'create', items: null, word: intent.word ?? creation.word, at: creation.at, more: intent.more ?? null, text: intent.text ?? null });
     }
     case 'select': {
@@ -428,6 +471,12 @@ function scriptForOne(intent: Intent): Script {
         knobs: [knob('times', 'Times', Math.max(1, Math.round(intent.amount ?? 1)), 1, 16, 1)],
         steps: [{ do: 'repeat', items: null, times: 'times' }],
       };
+    case 'change':
+      if (intent.text !== undefined) return one(`Text: “${intent.text}”`, { do: 'text', items: { codes: [16] }, text: intent.text });
+      return inTurn(`Pitch: ${(intent.pitches ?? []).join(' ')}`, 'Pitch', intent.pitches ?? []);
+    case 'again':
+      // The last command once more, which the command field knows.
+      return one('Again');
     case 'app':
       // The editor's own command, run by the command field rather than as steps.
       return one(intent.label ?? intent.command ?? '');
@@ -435,3 +484,9 @@ function scriptForOne(intent: Intent): Script {
 }
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** A setting of the notes, column by column, from values in turn ("i % 3 == 1" takes the second of three). */
+function inTurn(summary: string, setting: string, values: string[]): Script {
+  const steps: Step[] = values.map((value, k) => ({ do: 'setting', items: { codes: [1], where: values.length > 1 ? `i % ${values.length} == ${k}` : null }, setting, value }));
+  return { summary, knobs: [], steps };
+}

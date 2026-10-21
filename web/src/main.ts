@@ -843,6 +843,15 @@ function aiAccess(): Access | null {
         info.free();
       }
     },
+    text(index) {
+      const info = score.item(index);
+      if (!info) return null;
+      try {
+        return info.text ?? null;
+      } finally {
+        info.free();
+      }
+    },
     context: (index) => ({ clef: clefAt(score, index), symbolName }),
     staves: () => editor.staves(),
     summaries: () => score.itemSummaries(),
