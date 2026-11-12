@@ -1,6 +1,7 @@
-// End-to-end check of the built app (dist/) in headless Chromium: open a
-// sample, click a staff line, edit a parameter, drag handles and guides,
-// save; start a new score.
+// End-to-end check of the built app (dist/) in headless Chromium: start a
+// new score and put a staff and notes on it with the insertion modes; open a
+// sample, click a staff line, edit a parameter, insert notes, slurs and clefs
+// with the mouse, drag handles and guides, answer group commands, save.
 // Then the same app on a phone: its layout, touch gestures and the list of
 // commands.
 import { chromium } from 'playwright';
@@ -19,12 +20,10 @@ try {
     await page.click('#help');
     await page.click(`.command-list section:has(h3:text-is("${name.charAt(0).toUpperCase()}${name.slice(1)}")) [data-action="${action}"]`);
   };
-  /** Selects item `index` (numbered from 0, as the panel does) with SCORE's `I n` (from 1), typed on the page, and gives the keyboard back to the page. */
+  /** Selects item `index` (numbered from 0, as the panel does), scrolled into view, and gives the keyboard to the page. */
   const pick = async (index) => {
+    await page.evaluate((i) => window.winscore.select([i]), index);
     await page.focus('#viewport');
-    await page.keyboard.type(`I ${index + 1}`);
-    await page.keyboard.press('Enter');
-    await page.keyboard.press('Escape');
   };
   /** A point on the screen where a click selects item `index`, found on a grid across its box from the middle out. */
   const spotOf = async (index) => {
@@ -52,18 +51,29 @@ try {
   assert.ok(await page.isHidden('#panel'));
   assert.ok(await page.isVisible('.start-samples button:text-is("mozart.mus")'));
 
-  // A new score is empty; SCORE's words typed on the page make a staff and notes on it (music in words needs a model).
+  // A new score is empty; F puts a staff where the paper is clicked, and N notes on it, each where it is clicked.
   await page.click('#start-new');
   assert.ok(await page.isHidden('#start'));
   assert.equal(await page.textContent('#status'), 'untitled.mus');
   assert.equal(await page.getAttribute('#app', 'data-items'), '0');
   assert.ok(await page.isVisible('#empty-hint'));
-  for (const line of ['STAFF', 'NOTE 1 20', 'NOTE 1 40', 'NOTE 1 60', 'NOTE 1 80']) {
-    await page.focus('#viewport');
-    await page.keyboard.type(line);
-    await page.keyboard.press('Enter');
-    await page.keyboard.press('Escape');
-  }
+  assert.ok(await page.isVisible('#palette'));
+  const blank = await page.evaluate(() => {
+    const r = document.getElementById('viewport').getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 3 };
+  });
+  await page.focus('#viewport');
+  await page.keyboard.press('f');
+  assert.equal(await page.getAttribute('#viewport', 'data-tool'), 'staff');
+  await page.mouse.move(blank.x, blank.y);
+  await page.waitForFunction(() => /^New staff \d+$/.test(document.getElementById('stage').dataset.preview));
+  await page.mouse.click(blank.x, blank.y);
+  assert.equal(await page.getAttribute('#app', 'data-items'), '1');
+  assert.match(await page.textContent('#item h2'), /^Item 0 · Staff/);
+  await page.keyboard.press('n');
+  for (let i = 0; i < 4; i++) await page.mouse.click(blank.x - 150 + 60 * i, blank.y);
+  await page.keyboard.press('Escape');
+  assert.equal(await page.getAttribute('#viewport', 'data-tool'), '');
   await page.waitForFunction(() => document.getElementById('app').dataset.items === '5');
   assert.ok(await page.isHidden('#empty-hint'));
   assert.equal(await page.textContent('#doc-state'), 'Unsaved changes');
@@ -84,22 +94,16 @@ try {
   await menu('file', 'new');
   assert.equal(await page.getAttribute('#app', 'data-items'), '0');
 
-  // There is no menu bar: `?` lists every command, as the menus had them, and Escape closes it. A command's
-  // name typed on the page runs it, with no model.
+  // There is no menu bar and no command field: `?` lists every command, as the menus had them, and
+  // Escape closes it.
   assert.equal(await page.locator('.menubar').count(), 0);
   await page.click('#help');
   assert.ok((await page.locator('.command-list .command').count()) > 30);
   assert.equal(await page.getAttribute('.command-list [data-action="panel"]', 'aria-pressed'), 'true');
+  assert.equal(await page.getAttribute('.command-list [data-action="tool:note"]', 'aria-pressed'), 'false');
   await page.keyboard.press('Escape');
   assert.ok(await page.isHidden('#shortcuts-dialog'));
-  const zoomed = await page.inputValue('#zoom');
-  await page.focus('#viewport');
-  await page.keyboard.type('zoom in');
-  await page.waitForFunction(() => document.querySelector('.ai-source')?.textContent === 'Editor command');
-  assert.equal(await page.textContent('.ai-reading'), '→ View ▸ Zoom in');
-  await page.keyboard.press('Enter');
-  assert.notEqual(await page.inputValue('#zoom'), zoomed);
-  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.ai-prompt, .ai-input').count(), 0);
 
   await page.goto('http://localhost:4178/?sample=mozart.mus&zoom=400');
   await page.waitForSelector('#app[data-ready="true"]');
@@ -120,8 +124,6 @@ try {
   for (const dy of offsets) {
     await page.mouse.click(centre.x, centre.y + dy);
     titles.push(await page.textContent('#item h2'));
-    // A click on empty paper opens the command field there, which would take the next clicks.
-    await page.keyboard.press('Escape');
   }
   assert.ok(titles.includes('Item 2 · Staff'), `clicks selected ${[...new Set(titles)]}`);
   assert.ok(titles.includes('Nothing selected'));
@@ -149,57 +151,57 @@ try {
   await page.keyboard.press('Control+z');
   assert.equal(await page.inputValue('#p3'), '0');
 
-  // Typing on the page goes to the command field by the selection; a SCORE command acts on the selection, as one undo step.
+  // Insertion modes. N, then a click puts a note on the staff nearest the pointer, at the height
+  // clicked, selected, as one undo step; the preview says what it will be, and 4 makes it an eighth.
+  // A click a line higher puts the next note two steps higher.
+  await page.keyboard.press('Escape');
   await page.focus('#viewport');
-  await page.keyboard.type('R 5');
-  assert.equal(await page.inputValue('.ai-input'), 'R 5');
-  await page.keyboard.press('Enter');
-  assert.equal(await page.inputValue('#p3'), '5');
-  assert.match(await page.textContent('#message'), /^R 5 · Item 2 Staff: 8 1 5 24/);
-  await page.keyboard.type('U 2');
-  await page.keyboard.press('Enter');
-  assert.equal(await page.inputValue('#p4'), '26');
-  // Up recalls the earlier lines; Escape empties the field and returns to the page.
-  await page.keyboard.press('ArrowUp');
-  assert.equal(await page.inputValue('.ai-input'), 'U 2');
-  await page.keyboard.press('ArrowUp');
-  assert.equal(await page.inputValue('.ai-input'), 'R 5');
+  await page.keyboard.press('n');
+  assert.equal(await page.getAttribute('#viewport', 'data-tool'), 'note');
+  assert.equal(await page.getAttribute('.palette [data-tool="note"]', 'aria-pressed'), 'true');
+  const noteAt = { x: onStaff.x + 40, y: onStaff.y };
+  await page.mouse.move(noteAt.x, noteAt.y);
+  await page.waitForFunction(() => /· quarter · staff 1$/.test(document.getElementById('stage').dataset.preview));
+  await page.keyboard.press('4');
+  assert.equal(await page.getAttribute('[data-option="value:4"]', 'aria-pressed'), 'true');
+  await page.waitForFunction(() => /· eighth · staff 1$/.test(document.getElementById('stage').dataset.preview));
+  await page.mouse.click(noteAt.x, noteAt.y);
+  assert.equal(await page.getAttribute('#app', 'data-items'), '345');
+  assert.equal(await page.textContent('#item h2'), 'Item 344 · Note');
+  assert.match(await page.getAttribute('#undo', 'title'), /^Undo Insert note /);
+  assert.deepEqual(await Promise.all([2, 7].map((n) => page.inputValue(`#all-p${n}`))), ['1', '0.5']);
+  const firstLevel = Number(await page.inputValue('#all-p4'));
+  // Staff lines lie about 33 px apart at 400 %.
+  await page.mouse.click(noteAt.x + 40, noteAt.y - 33);
+  assert.equal(await page.textContent('#item h2'), 'Item 345 · Note');
+  assert.equal(Number(await page.inputValue('#all-p4')), firstLevel + 2);
+  // S draws a slur from where the button goes down to where it comes up.
+  await page.keyboard.press('s');
+  await page.mouse.move(noteAt.x, noteAt.y - 60);
+  await page.mouse.down();
+  await page.mouse.move(noteAt.x + 100, noteAt.y - 60, { steps: 5 });
+  assert.match(await page.getAttribute('#stage', 'data-preview'), /^Slur, curving up · staff 1$/);
+  await page.mouse.up();
+  assert.equal(await page.textContent('#item h2'), 'Item 346 · Slur, tie, ending');
+  const [slurP3, slurP6] = await Promise.all([3, 6].map(async (n) => Number(await page.inputValue(`#all-p${n}`))));
+  assert.ok(slurP6 - slurP3 > 5 && slurP6 - slurP3 < 9, `the slur spans the drag: P3 ${slurP3}, P6 ${slurP6}`);
+  // Esc goes back to selecting, the new item still selected; each insertion undoes on its own.
   await page.keyboard.press('Escape');
-  assert.equal(await page.inputValue('.ai-input'), '');
-  assert.equal(await page.evaluate(() => document.activeElement.id), 'viewport');
-  await page.keyboard.press('Control+z');
-  await page.keyboard.press('Control+z');
-  assert.equal(await page.inputValue('#p4'), '24');
-  assert.equal(await page.inputValue('#p3'), '0');
-
-  // A click on empty paper opens the field there, with nothing selected. A SCORE command runs as on
-  // WinScore's command bar, and the engine's objection shows under it. Escape on the page takes it away;
-  // typing opens it again where the paper was clicked.
-  const paper = { x: centre.x, y: centre.y + offsets[titles.indexOf('Nothing selected')] };
-  await page.mouse.click(paper.x, paper.y);
-  assert.equal(await page.textContent('#item h2'), 'Nothing selected');
-  assert.ok(await page.isVisible('.ai-prompt'));
-  const fieldAt = async () => {
-    const at = await page.locator('.ai-prompt').boundingBox();
-    return Math.abs(at.x - paper.x) < 2 && at.y > paper.y && at.y < paper.y + 20;
-  };
-  assert.ok(await fieldAt(), 'the field stands by the click');
-  assert.equal(await page.getAttribute('.ai-input', 'placeholder'), 'Command, e.g. add c e g');
-  await page.keyboard.type('NST');
-  assert.equal(await page.inputValue('.ai-input'), 'NST');
-  assert.match(await page.textContent('.ai-reading'), /→ NST/);
-  await page.keyboard.press('Enter');
-  assert.match(await page.textContent('.ai-status.error'), /\S/);
-  assert.equal(await page.inputValue('.ai-input'), 'NST', 'kept to be corrected');
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
-  assert.ok(await page.isHidden('.ai-prompt'));
-  await page.keyboard.type('F');
-  assert.ok(await page.isVisible('.ai-prompt'));
-  assert.ok(await fieldAt(), 'again by the click');
-  assert.equal(await page.inputValue('.ai-input'), 'F');
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
+  assert.equal(await page.getAttribute('#viewport', 'data-tool'), '');
+  assert.equal(await page.textContent('#item h2'), 'Item 346 · Slur, tie, ending');
+  for (let i = 0; i < 3; i++) await page.click('#undo');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
+  // Insert lists the modes; one chosen there waits for the click. A clef clicked mid-staff is a small one.
+  await menu('insert', 'tool:clef');
+  assert.equal(await page.getAttribute('#viewport', 'data-tool'), 'clef');
+  await page.click('[data-option="clef:1"]');
+  await page.mouse.click(noteAt.x, noteAt.y);
+  assert.equal(await page.textContent('#item h2'), 'Item 344 · Clef');
+  assert.deepEqual(await Promise.all([4, 5].map((n) => page.inputValue(`#all-p${n}`))), ['100', '1']);
+  await page.keyboard.press('v');
+  assert.equal(await page.getAttribute('#viewport', 'data-tool'), '');
+  await page.click('#undo');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
   await pick(2);
 
   // Enter on the page moves edit mode to the next item, as in WinScore.
@@ -262,12 +264,12 @@ try {
   assert.match(await page.textContent('#item h2'), /^2 items · Note/);
   await pick(2);
 
-  // The menus send WinScore's toolbar commands; TREB appends a treble clef and selects it.
-  await menu('insert', 'TREB');
-  assert.equal(await page.getAttribute('#app', 'data-items'), '345');
-  assert.match(await page.textContent('#item h2'), /^Item 344 · Clef/);
+  // The menus send WinScore's commands to the selection: Flip turns a note's stem over.
+  await pick(4);
+  await menu('edit', 'FLI');
+  assert.match(await page.getAttribute('#undo', 'title'), /^Undo FLI /);
+  assert.equal(await page.inputValue('#all-p5'), '20');
   await page.keyboard.press('Control+z');
-  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
   await pick(2);
 
   // Delete and undo it.
@@ -318,12 +320,11 @@ try {
   await menu('edit', 'select-all');
   assert.match(await page.textContent('#item h2'), /^344 items/);
   await page.keyboard.press('Escape');
-  await page.focus('#viewport');
-  await page.keyboard.type('R 5');
+  await pick(2);
+  await page.focus('#p3');
   await page.keyboard.press('Control+a');
-  assert.equal(await page.textContent('#item h2'), 'Nothing selected');
-  assert.deepEqual(await page.$eval('.ai-input', (input) => [input.selectionStart, input.selectionEnd]), [0, 3]);
-  await page.keyboard.press('Escape');
+  assert.equal(await page.textContent('#item h2'), 'Item 2 · Staff');
+  assert.deepEqual(await page.$eval('#p3', (input) => [input.selectionStart, input.selectionEnd]), [0, 1]);
   await page.keyboard.press('Escape');
 
   await pick(2);
@@ -387,33 +388,33 @@ try {
   assert.equal(await page.inputValue('#p5'), symbol);
   await page.click('#undo');
 
-  // Group edit: the command asks for the area, then the destination, in the command field, which
-  // takes the answer and goes with the question; Cancel ends it.
+  // Group edit: the command asks for the area, then the destination, in a bar over the page, whose
+  // field takes numbers as an answer; Cancel ends it. An insertion mode gives way to the question.
+  await page.focus('#viewport');
+  await page.keyboard.press('n');
   await menu('edit', 'M');
-  assert.match(await page.textContent('.ai-question'), /^Enter staff, left position/);
-  assert.equal(await page.evaluate(() => document.activeElement.className), 'ai-input');
+  assert.equal(await page.getAttribute('#viewport', 'data-tool'), '');
+  assert.match(await page.textContent('.question-text'), /^Enter staff, left position/);
+  assert.equal(await page.evaluate(() => document.activeElement.className), 'question-answer');
   await page.keyboard.type('1 0 200 2');
   await page.keyboard.press('Enter');
-  assert.match(await page.textContent('.ai-question'), /^Enter destination staff/);
-  await page.click('.ai-cancel');
-  assert.ok(await page.isHidden('.ai-prompt'));
+  assert.match(await page.textContent('.question-text'), /^Enter destination staff/);
+  await page.click('.question-cancel');
+  assert.ok(await page.isHidden('.question'));
   assert.equal(await page.getAttribute('#app', 'data-items'), '344');
 
-  // Layout: LJ asks for the system, answered in the field; the result is one undo step.
+  // Layout: LJ asks for the system; the result is one undo step. LJA's objection to this score
+  // (unequal beats) shows in the status line.
   await menu('layout', 'LJ');
-  assert.match(await page.textContent('.ai-question'), /Lowest Staff/);
+  assert.match(await page.textContent('.question-text'), /Lowest Staff/);
   await page.keyboard.type('1 2');
   await page.keyboard.press('Enter');
-  assert.ok(await page.isHidden('.ai-question'));
+  assert.ok(await page.isHidden('.question'));
   assert.ok(await page.isEnabled('#undo'));
   await page.click('#undo');
-  await page.focus('#viewport');
-  await page.keyboard.press('Escape');
-  await page.keyboard.type('LJA');
-  await page.keyboard.press('Enter');
-  // The engine's objection to this score (unequal beats) shows under the field.
-  assert.match(await page.textContent('.ai-status.error'), /beats/);
-  assert.ok(await page.isHidden('.ai-question'));
+  await menu('layout', 'LJA');
+  assert.match(await page.textContent('#message.error'), /beats/);
+  assert.ok(await page.isHidden('.question'));
   await page.click('#undo');
 
   // A box drawn over empty paper selects the items inside it (fresh view: scrolled to the music).
@@ -436,9 +437,9 @@ try {
   // While a group command waits for its area, the box answers it.
   await menu('edit', 'M');
   await drawBox();
-  assert.match(await page.textContent('.ai-question'), /^Enter destination staff/);
-  await page.click('.ai-cancel');
-  assert.ok(await page.isHidden('.ai-question'));
+  assert.match(await page.textContent('.question-text'), /^Enter destination staff/);
+  await page.click('.question-cancel');
+  assert.ok(await page.isHidden('.question'));
 
   // Handles: the page lists the selected item's handles (data-handles, client pixels). A slur's
   // curve handle sets its curvature live and as one undo step; Escape cancels a handle drag.
@@ -494,7 +495,7 @@ try {
 
   assert.deepEqual(errors, []);
 
-  // On a phone: one Menu button for the menus, the panel hidden until asked for.
+  // On a phone: the app bar's essentials, the modes in a row over the page, the panel hidden until asked for.
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const mobile = await phone.newPage();
   mobile.on('pageerror', (err) => errors.push(err.message));
@@ -513,6 +514,7 @@ try {
   assert.ok(await mobile.evaluate(() => document.querySelector('.appbar').scrollWidth <= innerWidth));
   assert.ok(await mobile.isHidden('#panel'));
   assert.ok(await mobile.isVisible('#help'));
+  assert.ok(await mobile.isVisible('#palette'));
   assert.match(await mobile.textContent('#message'), /^Item 2 Staff/);
 
   // A tap selects; taps down the centre column find the staff, as the clicks above did.
@@ -525,8 +527,6 @@ try {
     await touch('touchStart', [[middle[0], middle[1] + dy]]);
     await touch('touchEnd', []);
     if ((await mobile.textContent('#message')).startsWith('Item 2 Staff')) staffAt = [middle[0], middle[1] + dy];
-    // A tap on empty paper opens the command field there, which would take the next taps.
-    else await mobile.keyboard.press('Escape');
   }
   assert.ok(staffAt, 'a tap selects the staff');
 

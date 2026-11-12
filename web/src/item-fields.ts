@@ -229,6 +229,11 @@ function pitchName(p: P, ctx: Context): string {
   return `${letter}${shown}${Math.floor(step / 7)}`;
 }
 
+/** The name of a note at level `lvl` with accidental `accidental` (P5's units digit) in clef `clef`, e.g. "F♯4". */
+export function noteName(lvl: number, accidental: number, clef: Context['clef']): string {
+  return pitchName((n) => (n === 4 ? lvl : n === 5 ? accidental : 0), { clef, symbolName: () => null });
+}
+
 const INPUT_SIGNS = ['', 'F', 'S', 'N', 'FF', 'SS'];
 
 /** A note's pitch as SCORE's music input writes it (FS4, BF3, read in the clef in force), its accidental as shown; quarter tones aside. */
@@ -289,7 +294,7 @@ const PITCH: TextSetting = {
 };
 
 /** Note and rest values in quarters (P7), with what notes draw for them. */
-const VALUES = [
+export const VALUES = [
   { quarters: 8, name: 'Breve', head: 3, tails: 0, rest: -3 },
   { quarters: 4, name: 'Whole', head: 2, tails: 0, rest: -2 },
   { quarters: 2, name: 'Half', head: 1, tails: 0, rest: -1 },
@@ -300,7 +305,7 @@ const VALUES = [
   { quarters: 0.0625, name: '64th', head: 0, tails: 4, rest: 4 },
   { quarters: 0.03125, name: '128th', head: 0, tails: 5, rest: 5 },
 ];
-const DOT_FACTOR = [1, 1.5, 1.75, 1.875];
+export const DOT_FACTOR = [1, 1.5, 1.75, 1.875];
 const TUPLETS: [number, string][] = [
   [1, 'None'],
   [2 / 3, 'Triplet (3 in 2)'],

@@ -1,11 +1,11 @@
 // The editor's commands, as menus of entries (menu.ts), listed by the `?`
-// dialog and reached by commands in words. Entries that send SCORE commands
-// take the command and its tooltip from WinScore's command table by menu id,
-// as WinScore's own menus and toolbars send them, and show the command so it
-// can be typed on the command field next time. Commands score-edit does not
-// handle are left out.
+// dialog. Entries that send SCORE commands take the command and its tooltip
+// from WinScore's command table by menu id, as WinScore's own menus and
+// toolbars send them, and show the command beside them. Commands score-edit
+// does not handle are left out. Insert lists the insertion modes of the
+// toolbar, with their keys.
 import { commandById } from './commands';
-import { menuActions, MOD, type Action, type Entry, type Menu } from './menu';
+import { MOD, type Action, type Entry, type Menu } from './menu';
 
 export type DialogKind = 'symbol' | 'text';
 
@@ -42,6 +42,11 @@ export interface MenuHooks {
   panelShown(): boolean;
   togglePanel(): void;
   shortcuts(): void;
+  /** The toolbar's insertion modes. */
+  tools(): { id: string; key: string; label: string; title: string }[];
+  /** The mode in force; null while selecting. */
+  tool(): string | null;
+  chooseTool(id: string | null): void;
 }
 
 /** How an entry sends its command. */
@@ -69,10 +74,6 @@ function tidy(entries: (Entry | null)[]): Entry[] {
     const next = kept[i + 1];
     return i > 0 && next !== undefined && next !== 'separator';
   });
-}
-
-function row(label: string, actions: (Action | null)[]): Entry {
-  return { row: label, actions: actions.filter((a): a is Action => a !== null) };
 }
 
 export function appMenus(hooks: MenuHooks): Menu[] {
@@ -162,26 +163,31 @@ export function appMenus(hooks: MenuHooks): Menu[] {
     label: 'Insert',
     entries: () =>
       tidy([
-        dialog('text', 'Text…', 'Text in one of WinScore’s fonts'),
-        dialog('symbol', 'Symbol…', 'A symbol from WinScore’s libraries'),
+        { heading: 'Modes: a click puts one on the page' },
+        {
+          label: 'Select',
+          hint: 'V',
+          title: 'Select and edit items; Esc in a mode comes back here',
+          id: 'tool:select',
+          run: () => hooks.chooseTool(null),
+          checked: () => hooks.tool() === null,
+          enabled: scored,
+        },
+        ...hooks.tools().map(
+          (t): Action => ({
+            label: t.label,
+            hint: t.key.toUpperCase(),
+            title: t.title,
+            id: `tool:${t.id}`,
+            run: () => hooks.chooseTool(t.id),
+            checked: () => hooks.tool() === t.id,
+            enabled: scored,
+          }),
+        ),
         'separator',
-        row('Note', [cmd(32920, 'Whole'), cmd(32921, 'Half'), cmd(32855, 'Quarter'), cmd(32922, '8th'), cmd(32924, '16th')]),
-        row('Rest', [cmd(32925, 'Whole'), cmd(32926, 'Half'), cmd(32702, 'Quarter'), cmd(32927, '8th'), cmd(32928, '16th')]),
-        row('Clef', [cmd(32871, 'Treble'), cmd(32868, 'Bass'), cmd(32870, 'Alto'), cmd(32869, 'Tenor'), cmd(32875, 'Perc.')]),
-        'separator',
-        cmd(32857, 'Staff'),
-        cmd(32686, 'Bar line'),
-        cmd(32859, 'Key signature'),
-        cmd(32682, 'Meter'),
-        'separator',
-        cmd(32856, 'Slur'),
-        cmd(32698, 'Beam'),
-        cmd(32797, 'Line'),
-        cmd(32696, 'Trill'),
-        cmd(32692, 'Number'),
-        cmd(32690, 'Box'),
-        cmd(32688, 'Circle'),
-        cmd(32858, 'Guitar grid'),
+        { heading: 'By numbers' },
+        dialog('text', 'Text…', 'Text in one of WinScore’s fonts, at a staff and position typed in'),
+        dialog('symbol', 'Symbol…', 'A symbol from WinScore’s libraries, at the selection'),
       ]),
   };
 
@@ -215,14 +221,4 @@ export function appMenus(hooks: MenuHooks): Menu[] {
   };
 
   return [file, edit, insert, layout, view];
-}
-
-/** Entries of the Insert menu a command in words may ask for: its dialogs. The items it makes a command makes where the field stands. */
-const DIALOGS = new Set(['text', 'symbol']);
-
-/** The menus' entries a command in words may ask for, those that can run now: "Edit ▸ Copy", "View ▸ Zoom in". */
-export function wordCommands(menus: Menu[]): { id: string; label: string; title: string; run(): void }[] {
-  return menuActions(menus)
-    .filter(({ menu, action }) => (action.enabled?.() ?? true) && (menu !== 'insert' || DIALOGS.has(action.id ?? '')))
-    .map(({ path, action }) => ({ id: action.id ?? path, label: path, title: action.title ?? '', run: action.run }));
 }

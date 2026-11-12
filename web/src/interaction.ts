@@ -8,8 +8,10 @@
 // the item when the press is on it; moves and handle drags snap onto guides
 // unless ⌘/Ctrl is held.
 //
-// A click or tap on empty paper with nothing selected is reported, for the
-// command field to stand there.
+// In an insertion mode (toolbar.ts) a press puts a new item on the page
+// instead: where the button comes up, or for a span from where it went down
+// to there, with a preview following the pointer; Escape cancels it. A tap
+// does the same on a touch screen, where a drag still pans.
 //
 // Touch: a tap selects, a finger dragged pans (and glides on), except from
 // an item already selected, which it moves, or from one of its handles; two
@@ -40,8 +42,6 @@ export interface Hooks {
   box(from: Point, to: Point): void;
   /** A click on empty paper, for placing new items. */
   clickedPaper(at: Point): void;
-  /** A click or tap on empty paper that drew no box, with nothing selected after it. */
-  clickedEmpty(at: Point): void;
   /** A click or tap that became neither a drag nor a box, on an item or not: where a paste goes. */
   clicked(at: Point): void;
   /** A double click; `item` is what lies under it. */
@@ -60,6 +60,18 @@ export interface Hooks {
   moveEnd(): void;
   /** The mouse or pen moved over the page with no gesture in progress. */
   hover(clientX: number, clientY: number): void;
+  /** Whether an insertion mode is on: a press puts a new item on the page. */
+  inserting(): boolean;
+  /** Where the pointer is in an insertion mode (client), and where the press began while it is down; `at` null takes the preview away. */
+  insertPreview(at: Client | null, from: Client | null): void;
+  /** Puts a new item: pressed at `from`, released at `to` (client positions); `dragged` when it moved between. */
+  insert(from: Client, to: Client, dragged: boolean): void;
+}
+
+/** A position in client pixels. */
+export interface Client {
+  x: number;
+  y: number;
 }
 
 const DRAG_THRESHOLD_PX = 4;
@@ -91,6 +103,8 @@ interface Sample {
 
 type Gesture =
   | { kind: 'press'; x: number; y: number; onItem: boolean }
+  /** A press in an insertion mode, from where it went down. */
+  | { kind: 'insert'; x: number; y: number }
   | { kind: 'drag' }
   | { kind: 'handle' }
   | { kind: 'box'; x: number; y: number; drawn: boolean }
@@ -119,7 +133,7 @@ function showBand(band: HTMLElement, from: { x: number; y: number }, to: { x: nu
   });
 }
 
-export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks: Hooks) {
+export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks: Hooks): { busy(): boolean } {
   let gesture: Gesture | null = null;
   let pending: { at: Point; constrain: boolean; free: boolean } | null = null;
   let pendingHandle: { x: number; y: number; constrain: boolean; free: boolean } | null = null;
@@ -218,7 +232,6 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     showBand(band, box, null);
     const editor = hooks.editor();
     if (box.drawn || editor?.prompt() != null) hooks.box(hooks.pageAt(box.x, box.y), hooks.pageAt(clientX, clientY));
-    else if (editor?.selection().length === 0) hooks.clickedEmpty(hooks.pageAt(box.x, box.y));
   };
 
   viewport.addEventListener('pointerdown', (e) => {
@@ -236,6 +249,12 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       return;
     }
     if (e.button !== 0 || !editor) return;
+    if (hooks.inserting() && editor.prompt() === null) {
+      gesture = { kind: 'insert', x: e.clientX, y: e.clientY };
+      hooks.insertPreview({ x: e.clientX, y: e.clientY }, { x: e.clientX, y: e.clientY });
+      viewport.setPointerCapture(e.pointerId);
+      return;
+    }
     // A handle takes the press even with Shift, which then constrains its drag.
     const handle = editor.prompt() === null ? hooks.handleAt(e.clientX, e.clientY) : null;
     if (handle !== null && hooks.handleBegin(handle, e.clientX, e.clientY)) {
@@ -265,7 +284,12 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       return;
     }
     if (!gesture) {
-      hooks.hover(e.clientX, e.clientY);
+      if (hooks.inserting()) hooks.insertPreview({ x: e.clientX, y: e.clientY }, null);
+      else hooks.hover(e.clientX, e.clientY);
+      return;
+    }
+    if (gesture.kind === 'insert') {
+      hooks.insertPreview({ x: e.clientX, y: e.clientY }, { x: gesture.x, y: gesture.y });
       return;
     }
     if (gesture.kind === 'handle') {
@@ -294,6 +318,13 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       touchUp(e);
       return;
     }
+    if (gesture?.kind === 'insert') {
+      const from = { x: gesture.x, y: gesture.y };
+      gesture = null;
+      hooks.insert(from, { x: e.clientX, y: e.clientY }, Math.hypot(e.clientX - from.x, e.clientY - from.y) >= DRAG_THRESHOLD_PX);
+      hooks.insertPreview({ x: e.clientX, y: e.clientY }, null);
+      return;
+    }
     if (gesture?.kind === 'drag') endDrag(true);
     if (gesture?.kind === 'press' || (gesture?.kind === 'box' && !gesture.drawn)) hooks.clicked(hooks.pageAt(e.clientX, e.clientY));
     if (gesture?.kind === 'handle') endHandle(true);
@@ -306,13 +337,14 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
     if (e.pointerType === 'touch') touches.clear();
     if (gesture?.kind === 'touch') clearTimeout(gesture.timer);
     if (gesture?.kind === 'box') showBand(band, gesture, null);
+    if (gesture?.kind === 'insert') hooks.insertPreview(null, null);
     endDrag(false);
     endHandle(false);
     gesture = null;
   });
   viewport.addEventListener('dblclick', (e) => {
     // A double tap is told apart from two taps by the touch code itself.
-    if (lastPointer !== 'touch') hooks.open(hooks.itemAt(e.clientX, e.clientY), e.clientX, e.clientY);
+    if (lastPointer !== 'touch' && !hooks.inserting()) hooks.open(hooks.itemAt(e.clientX, e.clientY), e.clientX, e.clientY);
   });
   // A long press is a gesture of its own, not the browser's context menu or text selection.
   viewport.addEventListener('contextmenu', (e) => {
@@ -405,7 +437,7 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       if (gesture !== touch || !editor) return;
       touch.held = true;
       navigator.vibrate?.(10);
-      if (hit !== null) toggle(editor, hit);
+      if (hit !== null && !hooks.inserting()) toggle(editor, hit);
     }, LONG_PRESS_MS);
     gesture = touch;
   };
@@ -442,8 +474,15 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
 
   const tap = (touch: Touch, e: PointerEvent) => {
     const editor = hooks.editor();
+    if (!editor) return;
+    // In an insertion mode a tap puts the new item there.
+    if (hooks.inserting() && editor.prompt() === null) {
+      const at = { x: e.clientX, y: e.clientY };
+      hooks.insert(at, at, false);
+      return;
+    }
     // A tap on a handle keeps the selection it belongs to.
-    if (!editor || touch.handle !== null) return;
+    if (touch.handle !== null) return;
     const previous = lastTap;
     lastTap = { x: e.clientX, y: e.clientY, t: e.timeStamp };
     hooks.clicked(hooks.pageAt(e.clientX, e.clientY));
@@ -453,7 +492,6 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
         hooks.selected();
       }
       hooks.clickedPaper(hooks.pageAt(e.clientX, e.clientY));
-      hooks.clickedEmpty(hooks.pageAt(e.clientX, e.clientY));
     } else pick(editor, touch.hit);
     if (previous && e.timeStamp - previous.t < DOUBLE_TAP_MS && Math.hypot(e.clientX - previous.x, e.clientY - previous.y) < 3 * TOUCH_SLOP_PX) {
       lastTap = null;
@@ -499,6 +537,11 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       gesture = null;
       return;
     }
+    if (e.key === 'Escape' && gesture?.kind === 'insert') {
+      gesture = null;
+      hooks.insertPreview(null, null);
+      return;
+    }
     if (command && e.key.toLowerCase() === 'z') {
       e.preventDefault();
       run((editor) => (e.shiftKey ? editor.redo() : editor.undo()));
@@ -536,4 +579,6 @@ export function bindInteraction(viewport: HTMLElement, band: HTMLElement, hooks:
       hooks.selected();
     }
   });
+
+  return { busy: () => gesture !== null };
 }

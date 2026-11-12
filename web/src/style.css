@@ -1193,8 +1193,8 @@ button.danger:hover {
   }
 }
 
-/* A phone: one Menu button, the panel under the page (its height set with
-   the grip), and the music input in place of the status line. */
+/* A phone: the app bar's essentials, the panel under the page (its height
+   set with the grip). */
 @media (max-width: 640px) {
   .appbar {
     gap: 4px;
@@ -1316,325 +1316,233 @@ button.danger:hover {
   }
 }
 
-/* The command field by the selection or where the paper was clicked: the
-   command, what it is read as, and sliders for what it leaves open; above
-   them a group command's question while it waits for the answer. */
-.ai-prompt {
+
+/* The palette beside the page: selecting and the insertion modes, each
+   with its key; above the page the options of the mode in force
+   (toolbar.ts). */
+.palette {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 4px;
+  border-right: 1px solid var(--border);
+  background: var(--chrome);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.tool {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 32px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+.tool:hover {
+  background: var(--active);
+}
+
+.tool svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tool kbd {
   position: absolute;
-  width: min(360px, calc(100% - 16px));
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-  box-shadow: var(--shadow);
-  z-index: 3;
+  right: 1px;
+  bottom: 0;
+  min-width: 0;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 8.5px;
+  line-height: 10px;
 }
 
-.ai-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.ai-prompt:focus-within {
+.tool[aria-pressed='true'] {
   border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
-/* Until it is typed in, a short line by the selection that hides little of the music. */
-.ai-prompt:not(:focus-within):has(.ai-status:empty) {
-  width: min(260px, calc(100% - 16px));
+.tool[aria-pressed='true'] kbd {
+  color: var(--accent);
 }
 
-.ai-question {
+.tool-sep {
+  flex: none;
+  width: 22px;
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border);
+}
+
+.tool-options {
+  position: relative;
+  z-index: 9;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-  padding: 3px 3px 3px 8px;
-  border-radius: 5px;
-  background: var(--accent);
-  color: #ffffff;
-  font-size: 12px;
+  gap: 14px;
+  min-height: 40px;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--chrome);
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tool-name {
   font-weight: 600;
 }
 
-.ai-question-text {
-  flex: 1;
-  min-width: 0;
+.tool-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.ai-question .ai-cancel {
+.tool-group-label,
+.tool-hint {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.tool-options .segmented {
+  display: inline-flex;
+}
+
+.tool-options .segmented button {
   flex: none;
-  height: 24px;
+  height: 28px;
   padding: 0 8px;
-  border-color: transparent;
-  color: var(--text);
+}
+
+.tool-options .segmented button.has-icon {
+  width: 30px;
+  padding: 0;
+}
+
+.tool-options .segmented button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tool-options .segmented button[aria-pressed='true'] {
+  position: relative;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
   font-weight: 500;
 }
 
-.ai-mark {
-  padding-left: 6px;
-  color: var(--muted);
-  font-family: ui-monospace, monospace;
+.tool-options select {
+  max-width: 260px;
 }
 
-.ai-line {
-  position: relative;
-  display: flex;
-  flex: 1;
-  min-width: 0;
-}
-
-.ai-input {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  height: 26px;
-  padding: 0 4px;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: ui-monospace, monospace;
-}
-
-/* The suggestion: the typed text, unseen, and what Tab adds, faint, behind the field's own text. */
-.ai-ghost {
-  position: absolute;
-  inset: 0;
-  padding: 0 4px;
-  overflow: hidden;
-  font-family: ui-monospace, monospace;
-  line-height: 26px;
-  white-space: pre;
-  pointer-events: none;
-}
-
-.ai-ghost-typed {
-  color: transparent;
-}
-
-.ai-ghost-rest {
-  color: var(--muted);
-  opacity: 0.75;
-}
-
-.ai-gear {
-  height: 26px;
-  padding: 0 7px;
-  border-color: transparent;
-  color: var(--muted);
-}
-
-.ai-status:empty {
-  display: none;
-}
-
-.ai-status {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-height: 18px;
-  padding: 2px 6px 2px 22px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.ai-reading {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ai-status.done .ai-reading {
-  color: #15803d;
-}
-
-.ai-status.error .ai-reading {
-  color: var(--danger);
-  white-space: normal;
-}
-
-.ai-status.busy .ai-reading::after {
-  content: '';
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  margin-left: 6px;
-  border: 2px solid var(--accent-soft);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: ai-spin 0.7s linear infinite;
-}
-
-@keyframes ai-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.ai-source {
-  flex: none;
-  font-size: 11px;
-}
-
-/* A command sent off, above its items while it is written and once it lands away from the field. */
-.ai-job {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  max-width: min(320px, calc(100% - 16px));
-  padding: 2px 2px 2px 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg);
-  box-shadow: var(--shadow);
-  color: var(--muted);
-  font-size: 12px;
-  z-index: 3;
-}
-
-/* A command Jev reads in a moment shows no badge. */
-.ai-job.busy {
-  animation: ai-job-in 0.15s 0.3s both;
-}
-
-@keyframes ai-job-in {
-  from {
-    opacity: 0;
-  }
-}
-
-.ai-job-text {
-  min-width: 0;
-  height: 22px;
-  padding: 0;
-  overflow: hidden;
-  border: none;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ai-job.busy .ai-job-text {
-  font-family: ui-monospace, monospace;
-}
-
-.ai-job.busy::before {
-  content: '';
-  flex: none;
-  width: 9px;
-  height: 9px;
-  border: 2px solid var(--accent-soft);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: ai-spin 0.7s linear infinite;
-}
-
-.ai-job.done .ai-job-text {
-  color: #15803d;
-}
-
-.ai-job.error {
-  border-color: var(--danger);
-}
-
-.ai-job.error .ai-job-text {
-  color: var(--danger);
-}
-
-.ai-job-source {
-  flex: none;
-  font-size: 11px;
-}
-
-.ai-job-close {
-  flex: none;
-  height: 22px;
-  padding: 0 7px;
-  border-color: transparent;
-  border-radius: 999px;
-  color: var(--muted);
-}
-
-.ai-knobs {
-  display: grid;
-  gap: 4px;
-  margin-top: 6px;
-  padding: 6px 6px 2px 22px;
-  border-top: 1px solid var(--border);
-}
-
-.ai-knob {
-  display: grid;
-  grid-template-columns: 7.5em 1fr 3.2em;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.ai-knob input {
-  width: 100%;
-  accent-color: var(--accent);
-}
-
-.ai-knob input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-.ai-knob output {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.ai-settings {
-  display: grid;
-  gap: 8px;
-  margin-top: 6px;
-  padding: 8px 6px 2px 22px;
-  border-top: 1px solid var(--border);
-}
-
-.ai-settings label {
-  display: grid;
-  gap: 3px;
-  font-size: 12px;
-}
-
-.ai-settings input {
+.tool-options input[type='number'] {
+  width: 64px;
   height: 28px;
-  padding: 0 8px;
+  padding: 0 6px;
   border: 1px solid var(--border);
   border-radius: 6px;
 }
 
-.ai-settings small {
-  color: var(--muted);
-  font-size: 11px;
+/* In an insertion mode the pointer aims; the preview shows what goes there. */
+.viewport.inserting {
+  cursor: crosshair;
 }
 
-.ai-settings-actions {
+canvas.preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+/* A group command's question while it waits for its answer (question.ts). */
+.question {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 3;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
+  width: min(640px, calc(100% - 24px));
+  padding: 5px 5px 5px 12px;
+  border-radius: 8px;
+  background: var(--accent);
+  box-shadow: var(--shadow);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  transform: translateX(-50%);
+}
+
+.question-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.question-answer {
+  flex: 0 1 220px;
+  min-width: 80px;
+  height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 5px;
+  color: var(--text);
+  font-weight: 400;
+}
+
+.question-cancel {
+  flex: none;
+  border-color: transparent;
+  font-weight: 500;
 }
 
 @media (pointer: coarse) {
-  .ai-input,
-  .ai-ghost,
-  .ai-settings input {
-    font-size: 16px;
+  .tool {
+    width: 40px;
+    height: 40px;
   }
 
-  .ai-knob {
-    grid-template-columns: 6.5em 1fr 3em;
-    min-height: 36px;
+  .tool-options .segmented button,
+  .tool-options input[type='number'],
+  .question-answer {
+    height: 36px;
+  }
+}
+
+/* A phone: the palette is a row over the page. */
+@media (max-width: 640px) {
+  .palette {
+    flex-direction: row;
+    padding: 4px 6px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .tool-sep {
+    width: 1px;
+    height: 22px;
+    margin: 0 4px;
+  }
+
+  .tool-hint {
+    display: none;
   }
 }

@@ -43,7 +43,9 @@
         </button>
         <input id="file" type="file" accept=".mus,.MUS" hidden />
       </header>
+      <div class="tool-options" id="tool-options" hidden></div>
       <main class="main">
+        <nav class="palette" id="palette" hidden></nav>
         <div class="stage" id="stage">
           <canvas id="canvas"></canvas>
           <div class="viewport" id="viewport" tabindex="0" aria-label="Page"><div class="content" id="content"></div></div>
@@ -52,7 +54,7 @@
           <div class="empty-hint" id="empty-hint" hidden>
             <div>
               <strong>This score is empty.</strong>
-              <span class="muted">Click the paper and type the music: “add c e g 4 8 8” makes the first staff with a quarter and two eighths on it.</span>
+              <span class="muted">Press <kbd>F</kbd> (Staff) and click the paper to put a staff there, then <kbd>N</kbd> (Note) and click on the staff for each note.</span>
             </div>
           </div>
           <section class="start" id="start" hidden aria-label="Start">
@@ -133,13 +135,13 @@
             <section class="touch-only">
               <h3>Touch</h3>
               <dl>
-                <dt>Tap</dt><dd>Select an item; on empty paper, open the command field there</dd>
+                <dt>Tap</dt><dd>Select an item; in an insertion mode, put a new one there</dd>
                 <dt>Drag</dt><dd>Scroll the page; from a selected item, move it; from one of its handles, change what it names</dd>
                 <dt>Pinch</dt><dd>Zoom</dd>
                 <dt>Long press</dt><dd>Add or remove an item</dd>
                 <dt>Long press, drag</dt><dd>Select the items in a box</dd>
                 <dt>Double tap</dt><dd>Edit a text where it stands</dd>
-                <dt>Copy, paste</dt><dd>Edit above, or “copy” and “paste” in the command field; a paste goes where you tapped last</dd>
+                <dt>Copy, paste</dt><dd>Edit above; a paste goes where you tapped last</dd>
                 <dt>Group commands</dt><dd>One finger draws the box, two scroll</dd>
               </dl>
             </section>
@@ -172,13 +174,13 @@
               </dl>
             </section>
             <section>
-              <h3>Commands</h3>
+              <h3>Insert</h3>
               <dl>
-                <dt>Click empty paper</dt><dd>The command field opens there: “add c e g”, <code>LJ 1 2</code></dd>
-                <dt>Type anywhere</dt><dd>Goes to the command field, by the selection if there is one; <kbd>↵</kbd> runs a SCORE command (<code>R 5</code>, <code>FLI</code>) or a command in words (“stems up”, “beam in pairs”)</dd>
-                <dt>A command's name</dt><dd>Runs it, as its button above does: “save”, “zoom in”, “export svg”</dd>
-                <dt><kbd>↑</kbd><kbd>↓</kbd> in the field</dt><dd>Earlier commands</dd>
-                <dt>“add c e g 4 8 8”</dt><dd>Notes where you clicked on a staff, or after the music of a selected staff: values after them all or after each (“c 4 d 8”), one for all (“c e g 8”), or none for quarters; octaves as in “c4”, chords as in “c/e/g”, “r” a rest, “|” a barline</dd>
+                <dt><kbd>N</kbd> <kbd>R</kbd> <kbd>C</kbd> <kbd>S</kbd> <kbd>T</kbd> …</dt><dd>An insertion mode (Insert above, or the buttons at the left): a click puts a note, rest, clef, slur, text … on the staff nearest the pointer, at the height clicked; the new item is selected, and the side panel sets all its parameters</dd>
+                <dt><kbd>V</kbd>, <kbd>Esc</kbd></dt><dd>Back to selecting; the mode's own key again too</dd>
+                <dt><kbd>1</kbd> … <kbd>8</kbd></dt><dd>Notes and rests: 64th … breve; in other modes the first row of options</dd>
+                <dt><kbd>.</kbd></dt><dd>A dot, or none</dd>
+                <dt>Drag</dt><dd>Slurs, ties, endings, lines, hairpins, beams, trills, ottavas: from start to end; barlines, braces and brackets: across the staves they join</dd>
               </dl>
             </section>
             <section>

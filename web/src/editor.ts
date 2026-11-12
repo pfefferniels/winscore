@@ -1,7 +1,7 @@
 // What the UI asks of the editing model, and its implementation by
 // score-edit through score-web. Items are named by file index; every action
 // returns the name of the undo step it made.
-import type { InputLine, Outcome, Score } from './wasm/score_web.js';
+import type { Outcome, Score } from './wasm/score_web.js';
 import type { Point } from './view';
 
 /** Where an item goes in SCORE's terms. */
@@ -30,8 +30,10 @@ export interface Editor {
   deleteSelection(): Change | null;
   /** A SCORE edit-mode command line, e.g. "R 5" or "600 5". */
   execute(command: string): Change | null;
-  /** Adds one line of five-pass input; the new items become the selection. */
-  insertInput(line: InputLine): Change | null;
+  /** One new item with parameters P1, P2, … (an insertion mode's), selected, as the undo step `label`. */
+  insertItem(params: number[], label: string): Change | null;
+  /** Number and P4 of a new staff whose middle line lies nearest page point `at`. */
+  newStaffAt(at: Point): { staff: number; p4: number };
   /** New text items as SCORE's quick entry makes them; `params` are P2, P3, … (0 = default). */
   insertText(text: string, params: number[]): Change | null;
   /** Replaces a text item's characters. */
@@ -50,7 +52,7 @@ export interface Editor {
   duplicateSelection(): Change | null;
   /** A box drawn on the page: answers a waiting group command, or selects what is inside. */
   drawBox(from: Point, to: Point): Change | null;
-  /** The question a group command waits to have answered in the command field. */
+  /** The question a group command waits to have answered (by a box drawn, a click or numbers typed). */
   prompt(): string | null;
   /** Staff, P3 and P4 of a page point on the nearest staff. */
   placeAt(at: Point): Place | null;
@@ -74,14 +76,6 @@ export interface Editor {
   redo(): Change | null;
   undoLabel(): string | null;
   redoLabel(): string | null;
-  /** A point in the history; the actions after it can be rolled back or made one undo step. */
-  mark(): number;
-  /** Reverts the actions after `mark`; they cannot be redone. */
-  rollback(mark: number): void;
-  /** Makes the actions after `mark` one undo step called `label`; false when there are none. */
-  combine(mark: number, label: string): boolean;
-  /** Every item's identity in file order; it stays with the item through edits, sorting and undo. */
-  keys(): number[];
 }
 
 /** The UI's view of an outcome; null when nothing changed and nothing was reported. */
@@ -111,7 +105,11 @@ export function scoreEditor(score: Score): Editor {
     moveStaff: (step) => change(score.moveStaff(step)),
     deleteSelection: () => change(score.deleteSelection()),
     execute: (command) => change(score.execute(command)),
-    insertInput: (line) => change(score.insertInput(line)),
+    insertItem: (params, label) => change(score.insertItem(Float32Array.from(params), label)),
+    newStaffAt(at) {
+      const [staff = 1, p4 = 0] = score.newStaffAt(at.x, at.y);
+      return { staff, p4 };
+    },
     insertText: (text, params) => change(score.insertText(text, Float32Array.from(params))),
     setText: (item, text) => change(score.setText(item, text)),
     insertSymbol: (symbol, place) => change(score.insertSymbol(symbol, place.staff, place.p3, place.p4)),
@@ -139,9 +137,5 @@ export function scoreEditor(score: Score): Editor {
     redo: () => stepped(score.redo() ? `Redo ${score.undoLabel()}` : null),
     undoLabel: () => score.undoLabel() ?? null,
     redoLabel: () => score.redoLabel() ?? null,
-    mark: () => score.mark(),
-    rollback: (mark) => score.rollback(mark),
-    combine: (mark, label) => score.combine(mark, label),
-    keys: () => Array.from(score.keys()),
   };
 }

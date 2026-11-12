@@ -345,6 +345,16 @@ impl Editor {
         })
     }
 
+    /// One new item with parameters P1, P2, … (`params`), as an insertion
+    /// tool places it with the mouse, selected; the undo step is `label`.
+    pub fn insert_item(&mut self, params: &[f32], label: &str) -> Result<Change, EditError> {
+        let item = Draft::new(params).to_item();
+        self.act(label, |run| {
+            run.session.clear();
+            run.append_items(vec![item])
+        })
+    }
+
     /// TR: transposes the staves and positions of `region` with the values
     /// of WinScore's Transpose Setup dialog.
     pub fn transpose(&mut self, region: &Region, how: &Transposition) -> Result<Change, EditError> {

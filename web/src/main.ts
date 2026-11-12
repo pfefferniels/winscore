@@ -1,27 +1,28 @@
 import './style.css';
-import init, { codeName, commandSupported, editWords, groupCommand, InputLine, librarySymbols, paramName, Score, type EncodedList } from './wasm/score_web.js';
-import { createAiPrompt } from './ai-prompt';
-import type { About, Catalog, Sampled } from './ai-models';
-import { barlines, type Access, type Region, type Scope } from './ai-script';
+import init, { codeName, commandSupported, creationParams, librarySymbols, paramName, Score, type EncodedList } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
 import { bindClipboard } from './clipboard';
 import { bounds, decode, elementsOf, EMPTY, itemBoxes, union, type Box, type DisplayList } from './display';
-import { fontPrefix } from './commands';
+import { fontCodes, fontPrefix } from './commands';
 import type { Point } from './view';
 import { scoreEditor, type Change, type Editor, type Place } from './editor';
 import { loadFaces } from './fonts';
 import { buildField, codeOf, moveProbes, paintGuides, snap, wantsForHandle, wantsForMove, type Field, type Guide, type Probes, type ScoreFacts } from './guides';
 import { cursorFor, decodeHandles, devicePoint, handleAt as handleUnder, paintHandles, paintPill, visibleHandles, type Handle, type HandleSet } from './handles';
 import type { Context } from './item-fields';
-import { bindInteraction } from './interaction';
+import { bindInteraction, type Client } from './interaction';
 import { labelOf, MOD, type Action, type Menu } from './menu';
-import { appMenus, wordCommands, type DialogKind } from './menus';
+import { appMenus, type DialogKind } from './menus';
 import { bindPanelGrip, formatParam, renderSelection, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import type { Layer, Overlay } from './paint';
+import { createPreview, type Sketch } from './preview';
 import { download, printPage } from './print';
+import { createQuestion } from './question';
 import { embedFonts } from './svg-fonts';
 import { createSymbolDialog } from './symbol-dialog';
-import { createTextDialog, editInPlace } from './text-dialog';
+import { createTextDialog, editInPlace, withFont } from './text-dialog';
+import { createToolbar } from './toolbar';
+import { createTools, type Facts, type Tool } from './tools';
 import { stepZoom, toDevice, ZOOM_LEVELS } from './view';
 
 interface Sample {
@@ -105,6 +106,8 @@ const ui = {
   fit: $<HTMLButtonElement>('fit'),
   togglePanel: $<HTMLButtonElement>('toggle-panel'),
   help: $<HTMLButtonElement>('help'),
+  palette: $<HTMLElement>('palette'),
+  toolOptions: $<HTMLDivElement>('tool-options'),
   shortcuts: $<HTMLDialogElement>('shortcuts-dialog'),
   commandList: $<HTMLElement>('command-list'),
   status: $<HTMLSpanElement>('status'),
@@ -168,6 +171,15 @@ function nameOf(code: number): string {
 view.onPaint(describeSelection);
 const symbolDialog = createSymbolDialog(ui.symbolDialog);
 const textDialog = createTextDialog(ui.textDialog);
+/** A group command's question, answered by drawing on the page or in its field. */
+const question = createQuestion(ui.stage, {
+  answer: (line) => void runCommand(line),
+  cancel: () => void runCommand('X'),
+  left: () => ui.viewport.focus(),
+});
+/** Where an insertion mode's new item would go, over the page. */
+const preview = createPreview(ui.stage, ui.canvas, () => view.transform());
+view.onPaint(() => preview.repaint());
 let samples: Sample[] = [];
 
 function showZoom(zoom: number) {
@@ -197,8 +209,11 @@ function itemLine(): string {
 function report(change: Change | null) {
   if (change?.message) message(change.message, true);
   else message([change?.label, itemLine()].filter(Boolean).join(' · '));
-  // A group command's question goes to the command field, which takes the answer. A touch screen would bring up its keyboard over the page the box is drawn on.
-  aiPrompt.ask(state.editor?.prompt() ?? null, !touchScreen());
+  // A group command's question shows over the page, where the mouse answers it; an insertion mode gives way to it.
+  // A touch screen would bring up its keyboard over the page the box is drawn on.
+  const asked = state.editor?.prompt() ?? null;
+  if (asked !== null && toolbar.tool) toolbar.choose(null);
+  question.ask(asked, !touchScreen());
 }
 
 function decodeAndFree(encoded: EncodedList): DisplayList {
@@ -239,7 +254,8 @@ const dpr = () => window.devicePixelRatio || 1;
 /** Handles, guides and the readout over the page. */
 function overlays(): Overlay[] {
   const drawn: Overlay[] = [];
-  const shown = state.handles && state.editor?.prompt() == null;
+  // In an insertion mode a press puts a new item down, so the selection's handles are not offered.
+  const shown = state.handles && state.editor?.prompt() == null && !toolbar.tool;
   if (shown && (!state.drag || state.drag.handle)) {
     drawn.push((ctx, t) => {
       const drag = state.drag;
@@ -299,6 +315,7 @@ function refreshStatus() {
   ui.redo.title = redo === null ? 'Nothing to redo' : `Redo ${redo} (${REDO_KEYS})`;
   [ui.zoomIn, ui.zoomOut, ui.zoom, ui.fit].forEach((control) => (control.disabled = !open));
   ui.start.hidden = open;
+  toolbar.setVisible(open);
   ui.panel.hidden = !open || !state.panel;
   ui.togglePanel.disabled = !open;
   ui.emptyHint.hidden = !open || state.score!.itemCount() > 0;
@@ -397,7 +414,6 @@ function selectionChanged() {
   refreshPanel();
   redraw();
   report(null);
-  followSelection();
 }
 
 /** Scrolls the selected items into view unless they are visible. */
@@ -432,8 +448,6 @@ function edited(change: Change | null, live: boolean) {
     refreshPanel();
     void loadFontsAndRepaint();
     report(change);
-    aiPrompt.refresh();
-    followSelection();
   }
   redraw(live);
 }
@@ -456,7 +470,7 @@ function edit(action: (editor: Editor) => Change | null): Change | null {
   }
 }
 
-/** A SCORE command line from the command field, a menu, the panel or a key; the result is scrolled into view. */
+/** A SCORE command line from a menu, the panel, a key or a group command's answer; the result is scrolled into view. */
 function runCommand(line: string): Change | null {
   const change = edit((editor) => editor.execute(line));
   revealSelection();
@@ -569,7 +583,7 @@ function mayDiscard(): boolean {
 }
 
 function openScore(score: Score, name: string) {
-  aiPrompt.close();
+  preview.show(null);
   state.score?.free();
   state.score = score;
   state.editor = scoreEditor(score);
@@ -671,7 +685,7 @@ function snapTolerance(): number {
 
 /** The handle of the selected item under a client position. */
 function handleAt(clientX: number, clientY: number, finger = false): Handle | null {
-  if (!state.handles || state.editor?.prompt() != null) return null;
+  if (!state.handles || state.editor?.prompt() != null || toolbar.tool) return null;
   const radius = (finger || touchScreen() ? TOUCH_HANDLE_PX : HANDLE_PX) * dpr();
   return handleUnder(state.handles, view.transform(), dpr(), view.deviceAt(clientX, clientY), radius);
 }
@@ -826,243 +840,214 @@ function itemAt(clientX: number, clientY: number, coarse = false): number | null
 }
 
 // ---------------------------------------------------------------------------
-// The AI command
+// Insertion modes
 
-/** The edit script's view of the score. */
-function aiAccess(): Access | null {
-  const { score, editor } = state;
-  if (!score || !editor) return null;
-  return {
-    editor,
-    params(index) {
-      const info = score.item(index);
-      if (!info) return null;
-      try {
-        return info.params;
-      } finally {
-        info.free();
-      }
-    },
-    text(index) {
-      const info = score.item(index);
-      if (!info) return null;
-      try {
-        return info.text ?? null;
-      } finally {
-        info.free();
-      }
-    },
-    context: (index) => ({ clef: clefAt(score, index), symbolName }),
-    staves: () => editor.staves(),
-    summaries: () => score.itemSummaries(),
-    groupCommand,
-    inputLine: (passes, staff, from, to) => new InputLine(passes, staff, from, to),
-  };
+/** A staff's lines as score-web gives them (page units): its ends, level 0, one scale step, the lowest line's level and the number of lines. */
+interface StaffLines {
+  left: number;
+  right: number;
+  y0: number;
+  step: number;
+  lowest: number;
+  lines: number;
 }
 
-/** P1 … Pn without trailing zeros. */
-function trimmed(params: Float32Array): number[] {
-  const list = Array.from(params);
-  while (list.length > 4 && list.at(-1) === 0) list.pop();
-  return list;
-}
+/** A normal staff's scale step, for a staff not made yet. */
+const NORMAL_STEP = 175;
+/** A clef's own P3 at the start of the line: clefs at or before it are in force from the start. */
+const CLEF_CODE = 3;
 
-/** The middle line of a staff by clef type, as a diatonic step from C0: B4, D3, C4, A3, B4. */
-const CLEF_MIDDLES = [34, 22, 28, 26, 34];
+let layoutKnown: { list: DisplayList; staves: Map<number, StaffLines>; clefs: Map<number, { p3: number; index: number }[]> } | null = null;
 
-/** The middle line of the region's staff for the clef in force there, where typed notes start. */
-function middleAt(score: Score, region: Region | null): number {
-  if (!region) return CLEF_MIDDLES[0]!;
-  const clefs = itemSummaries(score)
-    .filter(({ code, staff, p3 }) => code === 3 && staff === region.staff && p3 <= region.from + 1)
-    .sort((a, b) => a.p3 - b.p3);
-  const last = clefs.at(-1);
-  const info = last ? score.item(last.index) : undefined;
-  if (!info) return CLEF_MIDDLES[0]!;
-  const type = Math.trunc(Math.abs(info.params[4] ?? 0));
-  info.free();
-  return CLEF_MIDDLES[type] ?? CLEF_MIDDLES[0]!;
-}
-
-const SAMPLE_ITEMS = 60;
-/** Texts are shown besides those: commands about words need their characters. */
-const SAMPLE_TEXTS = 200;
-const TEXT = 16;
-
-/** What the models are told about a command and the items it is about. */
-function aiAbout(text: string, scope: Scope): About | null {
-  const score = state.score;
-  const access = aiAccess();
-  if (!score || !access) return null;
-  const counts = new Map<number, number>();
-  const sample: Sampled[] = [];
-  const keys = access.editor.keys();
-  let indices: number[];
-  if (scope.keys === null) {
-    const all = itemSummaries(score);
-    all.forEach(({ code }) => counts.set(code, (counts.get(code) ?? 0) + 1));
-    const sampled = [...all.filter(({ code }) => code !== TEXT).slice(0, SAMPLE_ITEMS), ...all.filter(({ code }) => code === TEXT).slice(0, SAMPLE_TEXTS)];
-    indices = sampled.map(({ index }) => index).sort((a, b) => a - b);
-  } else {
-    const at = new Map(keys.map((key, i) => [key, i]));
-    indices = scope.keys.flatMap((key) => at.get(key) ?? []);
+/** The staves' lines and the clefs on them, read once per rendering. */
+function scoreLayout() {
+  if (layoutKnown?.list === state.rust) return layoutKnown;
+  const staves = new Map<number, StaffLines>();
+  const numbers = state.editor?.staves() ?? new Float32Array();
+  for (let i = 0; i + 7 <= numbers.length; i += 7) {
+    const [number = 0, left = 0, right = 0, y0 = 0, step = NORMAL_STEP, lowest = 3, lines = 5] = numbers.subarray(i, i + 7);
+    staves.set(number, { left, right, y0, step, lowest: Math.round(lowest), lines });
   }
-  let [others, texts] = [0, 0];
-  for (const index of indices) {
-    const info = score.item(index);
-    if (!info) continue;
-    const params = info.params;
-    const characters = info.text ?? null;
-    info.free();
-    if (scope.keys !== null) counts.set(params[0]!, (counts.get(params[0]!) ?? 0) + 1);
-    const shown = params[0] === TEXT ? texts++ < SAMPLE_TEXTS : others++ < SAMPLE_ITEMS;
-    if (shown) sample.push({ id: keys[index]!, params: trimmed(params), text: characters });
-  }
-  const staves = new Set([...sample.map(({ params }) => params[1]!), ...(scope.region ? [scope.region.staff] : [])]);
-  const bars = new Map([...barlines(access)].filter(([staff]) => staves.has(staff)));
-  return { text, counts, whole: scope.keys === null, region: scope.region, middle: middleAt(score, scope.region), sample, bars, commands: wordCommands(menus).map(({ id, label, title }) => ({ id, label, title })), codeName: nameOf };
-}
-
-
-let catalog: Catalog | null = null;
-
-function aiCatalog(): Catalog {
-  catalog ??= {
-    codes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 18].map((code) => ({ code, name: nameOf(code) })),
-    words: JSON.parse(editWords()) as Catalog['words'],
-  };
-  return catalog;
-}
-
-const aiPrompt = createAiPrompt(ui.stage, {
-  editor: () => state.editor,
-  access: aiAccess,
-  about: aiAbout,
-  catalog: aiCatalog,
-  supported: commandSupported,
-  run: runCommand,
-  open: () => commandAt(placeInView()),
-  clientRect: (box) => view.clientRect(box),
-  edited(live, params, trial = false) {
-    const score = state.score;
-    if (!score) return;
-    if (live) {
-      state.rust = decodeAndFree(params ? score.renderSelection() : score.render());
-      // A command tried as it is typed changes nothing until Enter keeps it.
-      if (!trial) state.modified = true;
-      redraw(true);
-    } else {
-      edited({ label: state.editor?.undoLabel() ?? '', message: null }, false);
-      // What a command changed comes into view, as a SCORE command's does.
-      revealSelection();
+  const clefs = new Map<number, { p3: number; index: number }[]>();
+  if (state.score) {
+    for (const { code, staff, p3, index } of itemSummaries(state.score)) {
+      if (code !== CLEF_CODE) continue;
+      clefs.set(staff, [...(clefs.get(staff) ?? []), { p3, index }].sort((a, b) => a.p3 - b.p3));
     }
+  }
+  layoutKnown = { list: state.rust, staves, clefs };
+  return layoutKnown;
+}
+
+/** Page y of scale step `level` on a staff. */
+function levelY(staff: number, level: number): number {
+  const lines = scoreLayout().staves.get(staff);
+  return lines ? lines.y0 + level * lines.step : 0;
+}
+
+/** The scale step of page height `y` on a staff, which need not be the nearest one. */
+function levelOn(staff: number, y: number): number {
+  const lines = scoreLayout().staves.get(staff);
+  return lines ? Math.round((y - lines.y0) / lines.step) : 0;
+}
+
+/** The levels of a staff's bottom and top lines. */
+function outerLines(staff: number): [number, number] {
+  const lines = scoreLayout().staves.get(staff);
+  return lines ? [lines.lowest, lines.lowest + 2 * (lines.lines - 1)] : [3, 11];
+}
+
+/** What an insertion mode reads of the score. */
+const facts: Facts = {
+  creation(word) {
+    const params = creationParams(word);
+    return params ? Array.from(params) : null;
   },
-  undo: (redo) => edit((editor) => (redo ? editor.redo() : editor.undo())),
-  left: () => ui.viewport.focus(),
-  ready: () => !state.drag && state.editor?.prompt() == null,
-  select(keys) {
-    const editor = state.editor;
-    if (!editor) return;
-    const at = new Map(editor.keys().map((key, i) => [key, i]));
-    select(keys.flatMap((key) => at.get(key) ?? []), true);
+  clefAt(staff, p3) {
+    const found = (scoreLayout().clefs.get(staff) ?? []).filter((c) => c.p3 <= p3 + 0.5).at(-1);
+    const info = found ? state.score?.item(found.index) : undefined;
+    if (!info) return null;
+    const params = info.params;
+    info.free();
+    return { p4: params[3] ?? 0, p5: params[4] ?? 0 };
   },
-  app(id) {
-    const found = wordCommands(menus).find((command) => command.id === id);
-    found?.run();
-    return found !== undefined;
+  middle(staff) {
+    const [bottom, top] = outerLines(staff);
+    return (bottom + top) / 2;
   },
+};
+
+const tools = createTools();
+const fonts = tools.find((t) => t.id === 'text')?.groups.find((g) => g.id === 'font');
+if (fonts) fonts.options = [{ value: '-1', label: 'Default font' }, ...fontCodes().map((f) => ({ value: String(f.code), label: `${fontPrefix(f.code)} ${f.name}` }))];
+
+/** The pointer over the page (client), for the preview when the mode or an option changes. */
+let pointer: Client | null = null;
+let interaction: { busy(): boolean } | null = null;
+
+const toolbar = createToolbar(ui.palette, ui.toolOptions, tools, {
+  ready: () => state.score !== null,
+  busy: () => interaction?.busy() ?? false,
+  changed(tool) {
+    ui.viewport.classList.toggle('inserting', tool !== null);
+    ui.viewport.dataset.tool = tool?.id ?? '';
+    ui.viewport.style.cursor = '';
+    state.hover = null;
+    showPreview(pointer, null);
+    redraw();
+  },
+  optionChanged: () => showPreview(pointer, null),
+  async choose() {
+    const symbol = await symbolDialog.choose();
+    return symbol === null ? null : { value: String(symbol), label: `${symbol} ${symbolName(symbol) ?? ''}`.trim() };
+  },
+  done: () => ui.viewport.focus(),
 });
-view.onPaint(() => aiPrompt.place());
 
-/** SCORE's code for a staff. */
-const STAFF = 8;
-/** P3 between the music on a staff and music a command adds after it. */
-const AFTER_MUSIC = 3;
-
-/** Where music added by a command goes: after the music on a selected staff, else over the selection. */
-function regionOf(items: number[]): Region | null {
-  const { score, editor } = state;
-  const box = selectionBox();
-  if (!score || !editor || !box) return null;
-  const summaries = itemSummaries(score);
-  if (!items.every((i) => summaries[i]?.code === STAFF)) return regionIn(editor, box);
-  const staff = summaries[items[0]!]!.staff;
-  const music = summaries
-    .filter((s) => s.staff === staff && s.code !== STAFF)
-    .map((s) => bounds(elementsOf(state.rust, s.index)))
-    .reduce(union, null);
-  const region = regionIn(editor, music ? { ...box, x0: music.x1 } : box);
-  return region && music ? { ...region, from: Math.min(region.from + AFTER_MUSIC, region.to) } : region;
+/** The ledger lines a note at `level` needs on a staff, as page y. */
+function ledgersAt(staff: number, level: number): number[] {
+  const [bottom, top] = outerLines(staff);
+  const ys: number[] = [];
+  for (let l = bottom - 2; l >= level; l -= 2) ys.push(levelY(staff, l));
+  for (let l = top + 2; l <= level; l += 2) ys.push(levelY(staff, l));
+  return ys;
 }
 
-/** Staff and P3 span of page box `box`. */
-function regionIn(editor: Editor, box: Box): Region | null {
-  const middle = (box.y0 + box.y1) / 2;
-  // A box mostly off the paper is about the staff nearest it on the paper.
-  const paper = paperBox();
-  const mid = (box.x0 + box.x1) / 2;
-  const x = editor.placeAt({ x: mid, y: middle }) ? mid : Math.min(Math.max(mid, paper.x0), paper.x1 - 1);
-  const centre = editor.placeAt({ x, y: middle });
-  const left = editor.placeAt({ x: box.x0, y: middle });
-  const right = editor.placeAt({ x: box.x1, y: middle });
-  const top = editor.placeAt({ x, y: box.y1 });
-  const bottom = editor.placeAt({ x, y: box.y0 });
-  if (!centre) return null;
-  // An edge past the paper has no staff on its side of the page: the staff's start or end.
-  const [from, to] = [left?.p3 ?? 0, right?.p3 ?? 200];
-  return {
-    staff: centre.staff,
-    bottom: Math.min(bottom?.staff ?? centre.staff, centre.staff),
-    top: Math.max(top?.staff ?? centre.staff, centre.staff),
-    from: Math.max(0, Math.min(from, to)),
-    to: Math.min(200, Math.max(from, to)),
-  };
-}
-
-/** The top left corner of the view, as a box of no size: where the field stands when it is about no place. */
-function viewCorner(): Box {
-  const seen = view.visibleBox();
-  return { x0: seen.x0, x1: seen.x0, y0: seen.y1, y1: seen.y1 };
-}
-
-/** The command field stands by the selection while there is one; without one, a field at a place stays. */
-function followSelection() {
+/** What the preview draws for `tool` with the pointer at page point `at`, pressed at `from`. */
+function sketchFor(tool: Tool, at: Point, from: Point | null): Sketch | null {
   const editor = state.editor;
-  const items = selection();
-  if (!editor) {
-    aiPrompt.close();
+  if (!editor) return null;
+  const sketch = (more: Partial<Sketch> & Pick<Sketch, 'look' | 'from' | 'label'>): Sketch => ({ to: null, step: NORMAL_STEP, ledgers: [], lines: [], x0: 0, x1: 0, cursor: at, ...more });
+  if (tool.shape === 'staff') {
+    const { staff, p4 } = editor.newStaffAt(at);
+    const near = editor.placeAt(at);
+    const like = near ? scoreLayout().staves.get(near.staff) : undefined;
+    const lines = [-2, -1, 0, 1, 2].map((i) => at.y + 2 * i * NORMAL_STEP);
+    return sketch({ look: 'staff', from: at, lines, x0: like?.left ?? 2000, x1: like?.right ?? 32000, label: tool.describe({ staff, p3: 0, p4 }, facts) });
+  }
+  const here = editor.placeAt(at);
+  if (!here) return sketch({ look: 'mark', from: at, label: 'No staff here: add one first (F)' });
+  const step = scoreLayout().staves.get(here.staff)?.step ?? NORMAL_STEP;
+  const pressed = from ? editor.placeAt(from) : null;
+  if (tool.shape === 'span') {
+    const start = pressed ?? here;
+    const startAt = { x: (pressed ? from! : at).x, y: levelY(start.staff, start.p4) };
+    const end = pressed ? { x: at.x, y: levelY(start.staff, tool.level === 'both' ? levelOn(start.staff, at.y) : start.p4) } : null;
+    return sketch({ look: tool.look(), from: startAt, to: end, step, label: tool.describe(start, facts) });
+  }
+  if (tool.shape === 'reach') {
+    const start = pressed ?? here;
+    const [low, high] = [Math.min(start.staff, here.staff), Math.max(start.staff, here.staff)];
+    const x = (pressed ? from! : at).x;
+    const label = `${tool.describe({ ...start, staff: low }, facts)}${high > low ? ` to ${high}` : ''}`;
+    return sketch({ look: 'barline', from: { x, y: levelY(low, outerLines(low)[0]) }, to: { x, y: levelY(high, outerLines(high)[1]) }, step, label });
+  }
+  const level = tool.level === 'none' ? facts.middle(here.staff) : here.p4;
+  const ledgers = tool.look() === 'head' ? ledgersAt(here.staff, here.p4) : [];
+  return sketch({ look: tool.look(), from: { x: at.x, y: levelY(here.staff, level) }, step, ledgers, label: tool.describe(here, facts) });
+}
+
+/** The preview of the mode in force for the pointer at client point `at` (none: away), pressed at `from`. */
+function showPreview(at: Client | null, from: Client | null) {
+  const tool = toolbar.tool;
+  if (!at || !tool || !state.score || state.editor?.prompt() != null) {
+    preview.show(null);
     return;
   }
-  if (items.length === 0) {
-    if (!aiPrompt.standsAlone) aiPrompt.close();
-    return;
-  }
-  const keys = editor.keys();
-  aiPrompt.follow({ keys: items.map((i) => keys[i]!), region: regionOf(items) }, selectionBox() ?? viewCorner());
+  preview.show(sketchFor(tool, view.pageAt(at.x, at.y), from ? view.pageAt(from.x, from.y) : null));
 }
 
-/** The last click on the paper while it is in view. */
-function placeInView(): Point | null {
-  const at = state.lastPaper;
-  const seen = view.visibleBox();
-  return at && at.x >= seen.x0 && at.x <= seen.x1 && at.y >= seen.y0 && at.y <= seen.y1 ? at : null;
-}
-
-/**
- * The command field with nothing selected, at page point `at` (else at the
- * top left of the view): about the whole score, and music it adds goes on
- * the staff nearest the point, from there to the staff's end.
- */
-function commandAt(at: Point | null) {
+/** Puts the mode's new item on the page: pressed at client point `from`, released at `to`. */
+function insert(from: Client, to: Client, dragged: boolean) {
+  const tool = toolbar.tool;
   const editor = state.editor;
-  if (!editor) return;
-  const place = at ? editor.placeAt(at) : null;
-  const region = place && { staff: place.staff, bottom: place.staff, top: place.staff, from: Math.min(Math.max(place.p3, 0), 200), to: 200 };
-  aiPrompt.follow({ keys: null, region }, at ? { x0: at.x, x1: at.x, y0: at.y, y1: at.y } : viewCorner(), true);
+  if (!tool || !editor) return;
+  const down = view.pageAt(from.x, from.y);
+  const up = view.pageAt(to.x, to.y);
+  state.lastPaper = up;
+  let params: number[] | null;
+  if (tool.shape === 'staff') {
+    const { staff, p4 } = editor.newStaffAt(up);
+    params = tool.make({ staff, p3: 0, p4 }, null, facts);
+  } else {
+    // A span starts where the button went down; anything else goes where it came up.
+    const start = editor.placeAt(tool.shape === 'span' || tool.shape === 'reach' ? down : up);
+    if (!start) {
+      message('There is no staff to put it on: add one first (F, then click the paper)', true);
+      return;
+    }
+    if (tool.shape === 'text') {
+      void typeText(tool, start, to);
+      return;
+    }
+    let end: Place | null = null;
+    if (dragged && tool.shape === 'span') {
+      const across = editor.placeAt(up);
+      end = { staff: start.staff, p3: across?.p3 ?? start.p3, p4: tool.level === 'both' ? levelOn(start.staff, up.y) : start.p4 };
+    } else if (dragged && tool.shape === 'reach') end = editor.placeAt(up);
+    params = tool.make(start, end, facts);
+  }
+  if (!params) return;
+  const made = params;
+  const change = edit((ed) => ed.insertItem(made, `Insert ${tool.noun()}`));
+  if (change?.label) {
+    tool.placed?.();
+    showPreview(to, null);
+  }
+}
+
+/** The text mode: the characters typed where the page was clicked, as a text item there in the font chosen. */
+async function typeText(tool: Tool, place: Place, at: Client) {
+  preview.show(null);
+  const typed = await editInPlace(ui.stage, new DOMRect(at.x, at.y - 18, 0, 22), '');
+  ui.viewport.focus();
+  if (!typed?.trim()) return;
+  const font = Number(tool.groups.find((g) => g.id === 'font')?.value ?? -1);
+  edit((editor) => editor.insertText(withFont(typed, font), [place.staff, place.p3, place.p4]));
 }
 
 function bindPointer() {
-  bindInteraction(ui.viewport, ui.band, {
+  interaction = bindInteraction(ui.viewport, ui.band, {
     editor: () => state.editor,
     itemAt,
     pageAt: (x, y) => view.pageAt(x, y),
@@ -1078,7 +1063,6 @@ function bindPointer() {
       selectionChanged();
     },
     clickedPaper: (at) => (state.lastPaper = at),
-    clickedEmpty: commandAt,
     clicked: (at) => (state.pasteAt = at),
     open: (item) => void openItem(item),
     handleAt: (x, y, finger) => handleAt(x, y, finger)?.index ?? null,
@@ -1089,13 +1073,19 @@ function bindPointer() {
     moveTo,
     moveEnd: () => (state.drag = null),
     hover,
+    inserting: () => toolbar.tool !== null && state.score !== null,
+    insertPreview: showPreview,
+    insert,
   });
   ui.viewport.addEventListener('pointerleave', () => {
+    pointer = null;
+    if (!interaction?.busy()) preview.show(null);
     if (state.hover === null) return;
     state.hover = null;
     view.repaint();
   });
   ui.viewport.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'touch') pointer = { x: e.clientX, y: e.clientY };
     const p = view.pageAt(e.clientX, e.clientY);
     ui.cursor.textContent = state.score ? `x ${Math.round(p.x)}  y ${Math.round(p.y)}  (${(p.x / 4000).toFixed(2)} in, ${(p.y / 4000).toFixed(2)} in)` : '';
   });
@@ -1141,7 +1131,7 @@ function settleFocus() {
   if (!active || active === document.body || ui.app.querySelector('.appbar')!.contains(active)) ui.viewport.focus();
 }
 
-/** The editor's commands, as menus of entries: the `?` dialog lists them, and commands in words reach them. */
+/** The editor's commands, as menus of entries: the `?` dialog lists them. */
 let menus: Menu[] = [];
 
 function bindMenus() {
@@ -1175,6 +1165,9 @@ function bindMenus() {
     panelShown: () => state.panel,
     togglePanel: () => setPanel(!state.panel),
     shortcuts: showShortcuts,
+    tools: () => tools,
+    tool: () => toolbar.tool?.id ?? null,
+    chooseTool: (id) => toolbar.choose(id),
   });
 }
 
@@ -1267,8 +1260,6 @@ function bindControls() {
     if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;
     if (e.key === '+' || e.key === '=') view.setZoom(stepZoom(view.zoom, 1));
     if (e.key === '_') view.setZoom(stepZoom(view.zoom, -1));
-    // With nothing selected Escape takes the field away from its place (with a selection it deselects, and the field goes with it).
-    if (e.key === 'Escape' && selection().length === 0 && state.editor?.prompt() == null && !document.querySelector('dialog[open]')) aiPrompt.close();
   });
   bindMenus();
   bindStart();
@@ -1326,6 +1317,8 @@ async function main() {
   bindControls();
   refreshStatus();
   renderSelection(ui.item, [], handlers, false);
+  // For tests and the browser's console: items selected by number, as the panel numbers them.
+  Object.assign(window, { winscore: { select: (items: number[]) => select(items, true) } });
   await applyQuery();
 }
 

@@ -6,7 +6,7 @@
 //! (`score_render::page`). Only staves defined by a code-8 item count.
 
 use score_format::MusFile;
-use score_render::page::{page_offset, P3_UNIT, RECTO_SHIFT};
+use score_render::page::{page_offset, LAST_VERSO_STAFF, P3_UNIT, RECTO_SHIFT};
 use score_render::staff::Staff;
 use score_render::Document;
 
@@ -46,6 +46,44 @@ pub fn place_at(file: &MusFile, x: f64, y: f64) -> Option<Place> {
     Some(Place { staff: staff.number, p3, p4 })
 }
 
+/// Number and P4 of a new staff whose middle line lies nearest page height
+/// `y`, on the page side of `x`. SCORE numbers staves from the bottom of the
+/// page up, each with a place on a default grid that P4 moves it from: the
+/// new staff takes the number whose default place is nearest, so that P4
+/// stays small, as long as that number is free and keeps the numbers rising
+/// up the page; otherwise the one above the highest (below the lowest when
+/// it goes under them all).
+pub fn new_staff_at(file: &MusFile, x: f64, y: f64) -> (i32, f32) {
+    let first = if is_recto_x(x) { LAST_VERSO_STAFF + 1 } else { 1 };
+    let last = first + LAST_VERSO_STAFF - 1;
+    let defined = staves_at(file, x);
+    let fits = |n: i32| {
+        defined.iter().all(|s| match s.number.cmp(&n) {
+            std::cmp::Ordering::Less => mid_y(s) < y,
+            std::cmp::Ordering::Greater => mid_y(s) > y,
+            std::cmp::Ordering::Equal => false,
+        })
+    };
+    let nearest = (first..=last).min_by(|&a, &b| {
+        let (da, db) = ((mid_y(&Staff::default_for(a)) - y).abs(), (mid_y(&Staff::default_for(b)) - y).abs());
+        da.total_cmp(&db)
+    });
+    let highest = defined.iter().map(|s| s.number).max();
+    let lowest = defined.iter().map(|s| s.number).min();
+    let below_all = defined.iter().all(|s| mid_y(s) > y);
+    let number = match nearest.filter(|&n| fits(n)) {
+        Some(n) => n,
+        None => match (lowest, highest) {
+            (Some(low), _) if below_all && low > first => low - 1,
+            (_, Some(high)) => high + 1,
+            _ => first,
+        },
+    };
+    let staff = Staff::default_for(number);
+    let p4 = ((y - mid_y(&staff)) / staff.scale_step()).round() as f32;
+    (number, p4)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -69,5 +107,34 @@ mod tests {
         let staff = Document::new(&file).staves.get(3);
         let mid_line_step = (f64::from(staff.mid - staff.level0) / staff.scale_step()).round() as f32;
         assert_eq!(place.p4, mid_line_step);
+    }
+
+    /// `file` with a staff item of `number` moved by `p4`, and that staff's middle line.
+    fn with_staff(file: &MusFile, number: i32, p4: f32) -> f64 {
+        let mut moved = file.clone();
+        moved.items.push(score_format::Item::new([8.0, number as f32, 0.0, p4].into_iter().map(score_format::Word::from).collect()));
+        staff_mid(&moved, number)
+    }
+
+    #[test]
+    fn a_new_staff_above_the_others_is_numbered_above_them_where_it_is_put() {
+        let file = mozart();
+        let highest = Document::new(&file).staves.highest().unwrap();
+        let wanted = staff_mid(&file, highest) + 3000.0;
+        let (number, p4) = new_staff_at(&file, 5000.0, wanted);
+        assert!(number > highest);
+        let step = Staff::default_for(number).scale_step();
+        assert!((with_staff(&file, number, p4) - wanted).abs() <= step / 2.0 + 1.0);
+        assert!(p4.abs() < 18.0, "near its place on the grid: P4 {p4}");
+    }
+
+    #[test]
+    fn a_staff_on_an_empty_page_takes_the_number_of_its_place() {
+        let empty = MusFile::empty();
+        let top = mid_y(&Staff::default_for(17));
+        let (number, p4) = new_staff_at(&empty, 5000.0, top + 100.0);
+        assert_eq!((number, p4), (17, 1.0));
+        let (low, _) = new_staff_at(&empty, 5000.0, mid_y(&Staff::default_for(1)) - 5000.0);
+        assert_eq!(low, 1);
     }
 }

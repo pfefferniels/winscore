@@ -248,6 +248,27 @@ impl Score {
         self.finish(result)
     }
 
+    /// One new item with parameters P1, P2, … (`params`, at least P1 to
+    /// P4), placed by an insertion tool, selected; `label` names the undo step.
+    #[wasm_bindgen(js_name = insertItem)]
+    pub fn insert_item(&mut self, params: Vec<f32>, label: &str) -> Result<Outcome, JsError> {
+        if params.len() < 4 || params[0] < 1.0 {
+            return Err(JsError::new("a new item needs a code and P2 to P4"));
+        }
+        let result = self.0.editor_mut().insert_item(&params, label);
+        self.finish(result)
+    }
+
+    /// Number and P4 of a new staff whose middle line lies nearest page
+    /// point (`x`, `y`): the number above the highest on that side of the
+    /// page, moved from its default place by P4 scale steps (`Float32Array`
+    /// of two).
+    #[wasm_bindgen(js_name = newStaffAt)]
+    pub fn new_staff_at(&self, x: f64, y: f64) -> Vec<f32> {
+        let (number, p4) = placing::new_staff_at(self.0.file(), x, y);
+        vec![number as f32, p4]
+    }
+
     /// Staff, P3 and P4 of page point (`x`, `y`) on the nearest staff, for
     /// placing new items (`Float32Array` of three, or `undefined` without staves).
     #[wasm_bindgen(js_name = placeAt)]
@@ -343,6 +364,15 @@ pub fn edit_words() -> String {
     serde_json::to_string(&rows).expect("words and numbers serialise")
 }
 
+/// P1, P2 (0, the staff is the caller's), P3, … that SCORE gives a new item
+/// of creation word `word` (NOTE, REST, TREB, SLUR, TIE, BEAM, CRH, OVA,
+/// KSIG+2, METER34, FER, BOX, …, any case); `undefined` for other words.
+#[wasm_bindgen(js_name = creationParams)]
+pub fn creation_params(word: &str) -> Option<Vec<f32>> {
+    let draft = score_edit::command::create::template(&word.to_ascii_uppercase())?.place(0.0, &[]);
+    Some((1..=draft.len()).map(|n| draft.get(n)).collect())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -383,6 +413,32 @@ mod tests {
         assert!(!lj.label.is_empty() || lj.message.is_some(), "{lj:?}");
         let lja = score.execute("LJA").unwrap_or_else(|_| panic!("LJA"));
         assert!(lja.label.is_empty() || lja.label == "LJA", "{lja:?}");
+    }
+
+    #[test]
+    fn an_insertion_tool_adds_one_item_selected_as_one_undo_step() {
+        let mut score = mozart();
+        let count = score.0.file().items.len();
+        let mut note = creation_params("note").unwrap();
+        assert_eq!(note[..5], [1.0, 0.0, 100.0, 1.0, 10.0]);
+        note[1..4].copy_from_slice(&[2.0, 42.5, 0.0]);
+        let outcome = score.insert_item(note, "Insert note").unwrap_or_else(|_| panic!("insert"));
+        assert_eq!(outcome.label, "Insert note");
+        assert_eq!(score.0.file().items.len(), count + 1);
+        let selected = score.selection();
+        assert_eq!(selected.len(), 1);
+        let item = score.0.item(ItemId(selected[0])).unwrap();
+        assert_eq!([item.code() as f32, item.param(2), item.param(3), item.param(4)], [1.0, 2.0, 42.5, 0.0]);
+        assert!(score.undo().is_some());
+        assert_eq!(score.0.file().items.len(), count);
+    }
+
+    #[test]
+    fn creation_words_give_their_defaults() {
+        assert_eq!(creation_params("slur").unwrap()[..6], [5.0, 0.0, 100.0, 14.0, 14.0, 120.0]);
+        assert_eq!(creation_params("KSIG-3").unwrap()[4], -3.0);
+        assert_eq!(creation_params("treb").unwrap()[2], 2.0);
+        assert!(creation_params("nonsense").is_none());
     }
 
     #[test]
