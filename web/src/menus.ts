@@ -46,6 +46,8 @@ export interface MenuHooks {
   panelShown(): boolean;
   togglePanel(): void;
   shortcuts(): void;
+  /** How AI assistants reach the desktop app (MCP). */
+  mcp?: () => void;
   /** The toolbar's insertion modes. */
   tools(): { id: string; key: string; label: string; title: string }[];
   /** The mode in force; null while selecting. */
@@ -222,6 +224,7 @@ export function appMenus(hooks: MenuHooks): Menu[] {
       { label: 'Side panel', id: 'panel', run: hooks.togglePanel, checked: hooks.panelShown, enabled: scored },
       'separator',
       { label: 'Commands, keys and gestures', hint: 'F1', id: 'shortcuts', run: hooks.shortcuts },
+      ...(hooks.mcp ? [{ label: 'AI assistants (MCP)…', title: 'Let Claude Code and other assistants read and edit the open score', id: 'mcp', run: hooks.mcp }] : []),
     ],
   };
 

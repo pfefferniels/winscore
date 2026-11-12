@@ -51,12 +51,32 @@
         ],
         "name": "SCORE score",
         "description": "A score in Leland Smith's SCORE format",
-        "role": "Editor"
+        "role": "Editor",
+        "rank": "Owner",
+        "mimeType": "application/x-score",
+        "exportedType": {
+          "identifier": "io.github.pfefferniels.winscore.mus",
+          "conformsTo": [
+            "public.data",
+            "public.content"
+          ]
+        }
+      },
+      {
+        "ext": [
+          "mus",
+          "MUS"
+        ],
+        "name": "SCORE score (any .mus file)",
+        "description": "A .mus file the system knows by another type",
+        "role": "Editor",
+        "rank": "Default"
       }
     ],
     "macOS": {
       "minimumSystemVersion": "11.0",
       "signingIdentity": "-"
     }
-  }
+  },
+  "mainBinaryName": "WinScore"
 }

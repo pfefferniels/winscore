@@ -3,7 +3,14 @@
 //! dialogs, files read and written where they are, files opened from the
 //! Finder or dropped on the window, and a question before unsaved changes
 //! are lost. The page finds these through `window.__TAURI__`
-//! (`web/src/desktop.ts`).
+//! (`web/src/desktop.ts`). AI assistants reach the open score through an MCP
+//! endpoint ([`mcp`]), or the executable run with `--mcp-stdio` ([`stdio`]).
+//! WinScore opens `.mus` files ([`default_app`]).
+
+pub mod default_app;
+pub mod mcp;
+pub mod settings;
+pub mod stdio;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
@@ -14,7 +21,7 @@ use tauri::{AppHandle, DragDropEvent, Emitter, Manager, RunEvent, Runtime, Webvi
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 /// The label of the editor's window.
-const MAIN: &str = "main";
+pub(crate) const MAIN: &str = "main";
 
 /// Files the system asked the app to open (Finder, Open With, a drop) that
 /// the page has not taken yet.
@@ -38,6 +45,20 @@ impl Closing {
 
 fn path_string(path: std::path::PathBuf) -> String {
     path.to_string_lossy().into_owned()
+}
+
+/// A path from the page: `~/…` in the home folder; only absolute paths, the
+/// app's own working folder meaning nothing to the person who gave it.
+fn resolved(path: &str) -> Result<std::path::PathBuf, String> {
+    let path = match path.strip_prefix("~/") {
+        Some(rest) => std::path::Path::new(&std::env::var("HOME").map_err(|_| "no home folder to put ~ in")?).join(rest),
+        None => std::path::PathBuf::from(path),
+    };
+    if path.is_absolute() {
+        Ok(path)
+    } else {
+        Err(format!("{}: give the whole path (from /, or ~/…)", path.display()))
+    }
 }
 
 /// Decodes the `%XX` escapes of `encodeURIComponent`.
@@ -86,7 +107,7 @@ async fn pick_save(app: AppHandle, name: String, extension: String, kind: String
 /// The bytes of the file at `path`, as an `ArrayBuffer` in the page.
 #[tauri::command]
 fn read_file(path: String) -> Result<Response, String> {
-    std::fs::read(&path).map(Response::new).map_err(|err| format!("{path}: {err}"))
+    std::fs::read(resolved(&path)?).map(Response::new).map_err(|err| format!("{path}: {err}"))
 }
 
 /// Writes the request's body to the path in its `path` header (URI-encoded).
@@ -101,7 +122,7 @@ fn write_file(request: Request<'_>) -> Result<(), String> {
     let InvokeBody::Raw(bytes) = request.body() else {
         return Err("the contents to write must be bytes".into());
     };
-    std::fs::write(&path, bytes).map_err(|err| format!("{path}: {err}"))
+    std::fs::write(resolved(&path)?, bytes).map_err(|err| format!("{path}: {err}"))
 }
 
 /// The system's alert with `message`, the button `ok` and Cancel; whether `ok` was chosen.
@@ -130,10 +151,20 @@ fn opened_files(opened: tauri::State<'_, Opened>) -> Vec<String> {
     std::mem::take(&mut *opened.0.lock().unwrap_or_else(|poisoned| poisoned.into_inner()))
 }
 
-/// The page listens for `close-requested` and asks about unsaved changes.
+/// The page listens for `close-requested` (and asks about unsaved changes)
+/// and for MCP requests.
 #[tauri::command]
-fn page_ready(closing: tauri::State<'_, Closing>) {
+fn page_ready(closing: tauri::State<'_, Closing>, mcp: tauri::State<'_, mcp::Mcp>) {
     closing.page_listens.store(true, Ordering::SeqCst);
+    mcp.page_ready();
+}
+
+/// Makes WinScore the app that opens .mus files; what happened, in words.
+#[tauri::command]
+fn make_default(app: AppHandle) -> Result<String, String> {
+    default_app::set_default(&app.config().identifier)?;
+    settings::update(&app, |s| s.default_app_set = true);
+    Ok("WinScore now opens .mus files".into())
 }
 
 /// The page agreed to close: the app quits.
@@ -176,6 +207,8 @@ fn menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         true,
         &[
             &PredefinedMenuItem::about(app, Some("About WinScore"), Some(about))?,
+            &separator()?,
+            &item("default-app", "Open .mus Files with WinScore", None)?,
             &separator()?,
             &PredefinedMenuItem::services(app, None)?,
             &separator()?,
@@ -241,7 +274,12 @@ fn menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         true,
         &[&PredefinedMenuItem::minimize(app, None)?, &PredefinedMenuItem::maximize(app, None)?],
     )?;
-    let help = Submenu::with_items(app, "Help", true, &[&item("shortcuts", "Commands, Keys and Gestures", Some("F1"))?])?;
+    let help = Submenu::with_items(
+        app,
+        "Help",
+        true,
+        &[&item("shortcuts", "Commands, Keys and Gestures", Some("F1"))?, &item("mcp", "AI Assistants (MCP)…", None)?],
+    )?;
     Menu::with_items(app, &[&app_menu, &file, &edit, &view, &window, &help])
 }
 
@@ -250,7 +288,20 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(Opened::default())
         .manage(Closing::default())
+        .manage(mcp::Mcp::default())
         .menu(menu)
+        .setup(|app| {
+            let handle = app.handle();
+            let settings = settings::load(handle);
+            if !settings.mcp_off {
+                mcp::start(handle);
+            }
+            // Once: the app that opens .mus files from now on, unless the person chooses another one later.
+            if cfg!(target_os = "macos") && !settings.default_app_set && default_app::set_default(&handle.config().identifier).is_ok() {
+                settings::update(handle, |s| s.default_app_set = true);
+            }
+            Ok(())
+        })
         .on_menu_event(|app, event| match event.id().as_ref() {
             "quit" if app.state::<Closing>().may_close() => app.exit(0),
             "quit" => {
@@ -292,6 +343,10 @@ pub fn run() {
             opened_files,
             page_ready,
             close_window,
+            make_default,
+            mcp::mcp_respond,
+            mcp::mcp_status,
+            mcp::mcp_enable,
         ])
         .build(tauri::generate_context!())
         .expect("the app starts");

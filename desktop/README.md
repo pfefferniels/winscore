@@ -16,9 +16,34 @@ xattr -dr com.apple.quarantine /Applications/WinScore.app
 
 - **Menu bar**: File (New Score ⌘N, Open… ⌘O, Save ⌘S, Save As… ⇧⌘S, Export SVG… ⌘E, Print… ⌘P), Edit (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete, Select All), View (Zoom In ⌘=, Zoom Out ⌘−, Actual Size ⌘0, Fit Width ⌘9, Side Panel ⌥⌘P, Full Screen), Window, Help (Commands, Keys and Gestures, F1). The commands go to the page as `menu` events; Cut, Copy, Paste and Select All are the system's, so text fields keep them.
 - **Files**: Open and Save As use the system's panels; Save writes back to the file that was opened (a new score or a sample asks where). Export SVG asks where to put the page. The window's title is the file's name, with "Edited" while there are unsaved changes.
-- **Opening from outside**: WinScore registers `.mus` files, so the Finder opens them with it (double click, Open With, a drop on the Dock icon); a file dropped on the window opens too.
+- **Opening from outside**: WinScore is the app for `.mus` files: the bundle declares the file type and claims it as its owner (`fileAssociations` in `tauri.conf.json`: an exported type `io.github.pfefferniels.winscore.mus`, rank Owner), and at its first start the app asks Launch Services to make it the default for them (`src-tauri/src/default_app.rs`). After that the Finder opens `.mus` files with it (double click, a drop on the Dock icon), unless another app is chosen in the Finder's Get Info ▸ Open With ▸ Change All; WinScore ▸ Open .mus Files with WinScore makes it the default again. A file dropped on the window opens too.
 - **Unsaved changes**: closing the window, Quit (⌘Q), New and Open ask before they are thrown away, with the system's alert.
 - **Print** opens the system's print panel for the page as printed (no staff numbers); its PDF button saves a PDF with real paths and text.
+- **AI assistants (MCP)**: see below.
+
+## AI assistants (MCP)
+
+While WinScore runs, Claude Code and other assistants that speak the [Model Context Protocol](https://modelcontextprotocol.io) can read and edit the score open in its window. Help ▸ AI Assistants (MCP)… shows the address and the commands below, and a switch that turns it off (remembered in `settings.json` in the app's folder under `~/Library/Application Support`).
+
+For Claude Code, once:
+
+```bash
+claude mcp add --transport http --scope user winscore http://127.0.0.1:7341/mcp
+```
+
+For assistants that start their servers themselves (Claude Desktop, and any client configured with a command), the app's executable with `--mcp-stdio` is a bridge from standard input and output to the running app, and starts WinScore if it is not running:
+
+```bash
+claude mcp add --scope user winscore -- /Applications/WinScore.app/Contents/MacOS/WinScore --mcp-stdio
+```
+
+```json
+{ "mcpServers": { "winscore": { "command": "/Applications/WinScore.app/Contents/MacOS/WinScore", "args": ["--mcp-stdio"] } } }
+```
+
+The tools (`web/src/mcp.ts`): `get_document`, `list_items`, `get_items` (every parameter with the SCORE help's name for it, and the side panel's settings by name: Pitch, Value, Stem …), `render_page` (an image of the page or some staves, as the window draws it), `select`, `set_settings` (by those names, as the panel writes them), `set_parameters`, `add_notes` (by pitch name and duration), `insert_items` (from SCORE's creation words or raw parameters), `insert_text`, `set_text`, `move_items`, `delete_items`, `run_command` (SCORE's edit commands, and group and layout commands such as LJ with their answers), `undo`, `redo`, `describe_kind`, `list_words`, `list_commands`, `open_file`, `new_score`, `save`, `export_svg`. Items are named by an id that stays with them through edits and undo. Each call that changes the score is one undo step in the window, which shows it at once and says in the status line which assistant made it; an edit waits while something is being dragged.
+
+The endpoint (`src-tauri/src/mcp.rs`) is the protocol's Streamable HTTP transport, answered with single JSON responses; the app passes each message to the page, which answers it with the editor. It listens on the loopback address only, takes only this computer's host names (against DNS rebinding), no origin of a web site and only JSON bodies, so web pages cannot reach it; any program on the computer can, as it can reach your files. `WINSCORE_MCP_PORT` sets another port than 7341 (for the bridge too).
 
 ## Build
 

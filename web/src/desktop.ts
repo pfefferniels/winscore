@@ -15,6 +15,17 @@ interface Tauri {
   };
 }
 
+/** The MCP endpoint (desktop/src-tauri/src/mcp.rs). */
+export interface McpStatus {
+  enabled: boolean;
+  /** Where clients reach it, e.g. http://127.0.0.1:7341/mcp. */
+  url: string;
+  /** The app's executable, which `--mcp-stdio` makes a bridge for clients that run their servers. */
+  executable: string;
+  /** Why it is not listening, if it should be. */
+  error: string | null;
+}
+
 export interface Desktop {
   /** Asks for a .mus file to open; its path, or null when cancelled. */
   pickOpen(): Promise<string | null>;
@@ -36,8 +47,15 @@ export interface Desktop {
   /** The window or the app is to close: call `close` to let it. */
   onCloseRequested(handler: () => void): void;
   close(): void;
-  /** The page listens: closing asks it from now on. */
+  /** The page listens: closing asks it from now on, and MCP requests come to it. */
   ready(): void;
+  /** A JSON-RPC message of an MCP client, to be answered with `mcpRespond` (null: no answer). */
+  onMcpRequest(handler: (id: number, message: unknown) => void): void;
+  mcpRespond(id: number, response: unknown): void;
+  mcpStatus(): Promise<McpStatus>;
+  setMcpEnabled(on: boolean): Promise<McpStatus>;
+  /** Makes WinScore the app that opens .mus files (macOS); what it did. */
+  makeDefault(): Promise<string>;
 }
 
 function bridge(tauri: Tauri): Desktop {
@@ -58,6 +76,11 @@ function bridge(tauri: Tauri): Desktop {
     onCloseRequested: (handler) => listen<null>('close-requested', () => handler()),
     close: () => void invoke('close_window'),
     ready: () => void invoke('page_ready'),
+    onMcpRequest: (handler) => listen<{ id: number; message: unknown }>('mcp-request', ({ id, message }) => handler(id, message)),
+    mcpRespond: (id, response) => void invoke('mcp_respond', { id, response }).catch(() => {}),
+    mcpStatus: () => invoke<McpStatus>('mcp_status'),
+    setMcpEnabled: (on) => invoke<McpStatus>('mcp_enable', { on }),
+    makeDefault: () => invoke<string>('make_default'),
   };
 }
 

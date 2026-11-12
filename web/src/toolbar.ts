@@ -217,7 +217,8 @@ export function createToolbar(toolRow: HTMLElement, options: HTMLElement, tools:
     true,
   );
 
-  choose(null);
+  toolRow.querySelector(`[data-tool="${SELECT.id}"]`)?.setAttribute('aria-pressed', 'true');
+  renderOptions();
   return {
     get tool() {
       return tool;

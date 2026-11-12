@@ -373,6 +373,17 @@ pub fn creation_params(word: &str) -> Option<Vec<f32>> {
     Some((1..=draft.len()).map(|n| draft.get(n)).collect())
 }
 
+/// SCORE's creation words that stand alone, each with the parameters it
+/// gives a new item (P2 = 0), as JSON: `[["NOTE", [1, 0, 100, 1, 10, 0, 1]], …]`.
+#[wasm_bindgen(js_name = creationWords)]
+pub fn creation_words() -> String {
+    let rows: Vec<(String, Vec<f32>)> = score_edit::command::create::words()
+        .into_iter()
+        .filter_map(|word| creation_params(&word).map(|params| (word, params)))
+        .collect();
+    serde_json::to_string(&rows).expect("words and numbers serialise")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

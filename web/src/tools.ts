@@ -193,6 +193,48 @@ function valueGroup(): Group {
 
 const valueName = (g: Group) => VALUES[Number(g.value)]!.name.toLowerCase();
 
+/** A note's look and length: its value (an index of `VALUES`), dots, accidental (P5's units), stem and size. */
+export interface NoteSpec {
+  value: number;
+  dots: number;
+  accidental: number;
+  /** Auto: up below the staff's middle line, down from it. */
+  stem: 'auto' | 'up' | 'down';
+  size: 'normal' | 'cue' | 'grace';
+}
+
+/** P1 … P9 of a note at `place` (P4 its level), from SCORE's defaults for NOTE. */
+export function noteParams(facts: Facts, place: Place, spec: NoteSpec): number[] | null {
+  const p = at(facts, 'NOTE', place, true, 9);
+  if (!p) return null;
+  const lvl = place.p4;
+  if (spec.size === 'grace') {
+    // As the panel's Value makes one: small, value 65, slashed stem up, one tail.
+    Object.assign(p, { 3: small(lvl), 4: 10 + spec.accidental, 5: 0, 6: 65, 7: 101, 8: 1 });
+    return p;
+  }
+  const up = spec.stem === 'up' || (spec.stem === 'auto' && lvl < facts.middle(place.staff));
+  const v = VALUES[spec.value]!;
+  p[3] = spec.size === 'cue' ? small(lvl) : lvl;
+  p[4] = (up ? 10 : 20) + spec.accidental;
+  p[5] = v.head;
+  p[6] = v.quarters * DOT_FACTOR[spec.dots]!;
+  p[8] = spec.dots * 10 + v.tails;
+  return p;
+}
+
+/** P1 … P7 of a rest of value `value` (an index of `VALUES`) with `dots` on `place`'s staff, at its usual height. */
+export function restParams(facts: Facts, place: Place, value: number, dots: number): number[] | null {
+  const p = at(facts, 'REST', place, false, 7);
+  if (!p) return null;
+  const v = VALUES[value]!;
+  p[3] = 0;
+  p[4] = v.rest;
+  p[5] = dots;
+  p[6] = v.quarters * DOT_FACTOR[dots]!;
+  return p;
+}
+
 export function createTools(): Tool[] {
   // Note and rest share their value and dots, as the keys 1 … 8 and . set them.
   const value = valueGroup();
@@ -201,7 +243,6 @@ export function createTools(): Tool[] {
     ['1', '•', 'Dotted (. toggles)'],
     ['2', '••', 'Double-dotted'],
   ]);
-  const quarters = () => VALUES[Number(value.value)]!.quarters * DOT_FACTOR[Number(dots.value)]!;
   const dotted = () => ['', 'dotted ', 'double-dotted '][Number(dots.value)] ?? '';
 
   const accidental = group('accidental', 'Accidental', [
@@ -234,25 +275,14 @@ export function createTools(): Tool[] {
     level: 'start',
     groups: [value, dots, accidental, stem, size],
     noun: () => (size.value === 'grace' ? 'grace note' : 'note'),
-    make(from, _to, facts) {
-      const p = at(facts, 'NOTE', from, true, 9);
-      if (!p) return null;
-      const lvl = from.p4;
-      const acc = Number(accidental.value);
-      if (size.value === 'grace') {
-        // As the panel's Value makes one: small, value 65, slashed stem up, one tail.
-        Object.assign(p, { 3: small(lvl), 4: 10 + acc, 5: 0, 6: 65, 7: 101, 8: 1 });
-        return p;
-      }
-      const up = stem.value === 'up' || (stem.value === 'auto' && lvl < facts.middle(from.staff));
-      const v = VALUES[Number(value.value)]!;
-      p[3] = size.value === 'cue' ? small(lvl) : lvl;
-      p[4] = (up ? 10 : 20) + acc;
-      p[5] = v.head;
-      p[6] = quarters();
-      p[8] = Number(dots.value) * 10 + v.tails;
-      return p;
-    },
+    make: (from, _to, facts) =>
+      noteParams(facts, from, {
+        value: Number(value.value),
+        dots: Number(dots.value),
+        accidental: Number(accidental.value),
+        stem: stem.value as NoteSpec['stem'],
+        size: size.value as NoteSpec['size'],
+      }),
     describe(place, facts) {
       const name = noteName(place.p4, Number(accidental.value), facts.clefAt(place.staff, place.p3));
       const kind = size.value === 'grace' ? 'grace note' : `${dotted()}${valueName(value)}`;
@@ -272,15 +302,7 @@ export function createTools(): Tool[] {
     level: 'none',
     groups: [value, dots],
     noun: () => 'rest',
-    make(from, _to, facts) {
-      const p = at(facts, 'REST', from, false, 7);
-      if (!p) return null;
-      p[3] = 0;
-      p[4] = VALUES[Number(value.value)]!.rest;
-      p[5] = Number(dots.value);
-      p[6] = quarters();
-      return p;
-    },
+    make: (from, _to, facts) => restParams(facts, from, Number(value.value), Number(dots.value)),
     describe: (place) => `${dotted()}${valueName(value)} rest · staff ${place.staff}`,
     look: () => 'mark',
   };

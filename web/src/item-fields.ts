@@ -264,6 +264,15 @@ function parsePitch(text: string, p: P, ctx: Context): Change[] | null {
   ];
 }
 
+/** The level and accidental (P5's units digit) of a pitch named with its octave, "F#4", "Bb3", "C5", in clef `clef`; null when it cannot be read. */
+export function pitchLevel(text: string, clef: Context['clef']): { level: number; accidental: number } | null {
+  const match = /^\s*([a-g])\s*(bb|b|♭♭|♭|##|#|♯♯|♯|x|ss|s|n|♮)?\s*(-?\d)\s*$/i.exec(text);
+  if (!match) return null;
+  const accidental = ACCIDENTAL_WORDS[(match[2] ?? '').toLowerCase()] ?? 0;
+  const step = 7 * Number(match[3]) + LETTERS.indexOf(match[1]!.toUpperCase());
+  return { level: step - 27 + clefShift({ clef, symbolName: () => null }), accidental };
+}
+
 const ORDINALS = ['', '1st', '2nd', '3rd', '4th'];
 
 /** Where a level lies on a five-line staff, e.g. "middle line", "2 ledger lines below". */

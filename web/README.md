@@ -89,6 +89,7 @@ The page is drawn by the Rust renderer alone. The app bar holds Undo and Redo, t
 | `src/item-fields.ts` | the settings of each item code: labels, controls, and how they read and write the parameters |
 | `src/fonts.ts`, `src/fonts.css` | engine font names → bundled faces |
 | `src/desktop.ts` | the desktop app's side: file panels, files, alerts, the menu bar's commands, files opened from outside, closing |
+| `src/mcp.ts` | the desktop app's MCP server: the tools AI assistants read and edit the open score with (`desktop/README.md`); `window.winscore.mcp` answers its messages in any build, for tests |
 | `src/print.ts`, `src/svg-fonts.ts` | print and SVG export: the page's SVG in the document for print, its faces embedded in exported files |
 | `scripts/` | wasm build, asset copy, screenshots, the smoke test (`smoke.mjs`) |
 

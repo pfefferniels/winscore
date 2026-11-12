@@ -493,6 +493,41 @@ try {
   assert.notEqual(await page.inputValue('#p4'), '-5');
   await page.click('#undo');
 
+  // MCP, as the desktop app answers assistants (the same server, through the page's test hook): read the
+  // score, change a note by its settings, write notes by pitch, insert by SCORE's words, look at the page.
+  await page.goto('http://localhost:4178/?sample=mozart.mus');
+  await page.waitForSelector('#app[data-ready="true"]');
+  let rpc = 0;
+  const mcp = async (method, params = {}) => (await page.evaluate((m) => window.winscore.mcp(m), { jsonrpc: '2.0', id: ++rpc, method, params })).result;
+  const tool = async (name, args = {}) => {
+    const result = await mcp('tools/call', { name, arguments: args });
+    const text = result.content.find((c) => c.type === 'text')?.text ?? '';
+    return { result, text, data: result.isError ? null : JSON.parse(text.startsWith('{') || text.startsWith('[') ? text : 'null') };
+  };
+  const init = await mcp('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'smoke' } });
+  assert.equal(init.serverInfo.name, 'winscore');
+  assert.ok((await mcp('tools/list')).tools.some((t) => t.name === 'add_notes'));
+  assert.equal((await tool('get_document')).data.items, 344);
+  const [melody] = (await tool('list_items', { staff: 8, code: 1, limit: 1 })).data.items;
+  assert.equal(melody.summary, 'C5 Half');
+  await tool('set_settings', { ids: [melody.id], settings: { Pitch: 'D5', Value: 'Quarter' } });
+  const [changed] = (await tool('get_items', { ids: [melody.id] })).data;
+  assert.deepEqual([changed.settings.Pitch, changed.settings.Value, changed.p4], ['D5', 'Quarter', 9]);
+  assert.match(await page.getAttribute('#undo', 'title'), /^Undo Set Pitch, Value /);
+  assert.equal(await page.textContent('#message'), 'smoke: Set Pitch, Value');
+  const notes = (await tool('add_notes', { staff: 8, notes: [{ position: 150, pitch: 'F#5', duration: 'eighth', dots: 1 }, { position: 165, pitch: 'rest' }] })).data;
+  assert.equal(notes.ids.length, 2);
+  const [sharp] = (await tool('get_items', { ids: [notes.ids[0]] })).data;
+  assert.deepEqual([sharp.settings.Pitch, sharp.settings.Value, sharp.settings.Dots], ['F♯5', 'Eighth', '1']);
+  assert.equal((await tool('insert_items', { items: [{ word: 'MF', staff: 8, position: 150, level: -4 }] })).data.ids.length, 1);
+  assert.ok((await tool('set_settings', { ids: [melody.id], settings: { Colour: 'red' } })).result.isError);
+  assert.equal(await page.getAttribute('#app', 'data-items'), '347');
+  const image = (await mcp('tools/call', { name: 'render_page', arguments: { staves: [7, 8] } })).content[0];
+  assert.equal(image.mimeType, 'image/png');
+  assert.ok(Buffer.from(image.data, 'base64').length > 10000);
+  assert.deepEqual((await tool('undo', { steps: 4 })).data.undone.length, 3);
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
+
   assert.deepEqual(errors, []);
 
   // On a phone: the app bar's essentials, the modes in a row over the page, the panel hidden until asked for.

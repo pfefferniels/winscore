@@ -267,6 +267,24 @@ fn symbol(word: &str) -> Option<Template> {
     Some(Template::new(9.0, &[DEFAULT_P3, level, symbol, size]))
 }
 
+/// Every creation word [`template`] knows that stands alone, without the
+/// digits of the numbered forms (METER34, KSIG+2, KSIG-3B, BAR2, BEAM3,
+/// SLUR2, SLURD2, TREM2, TREMD2).
+pub fn words() -> Vec<String> {
+    let mut words: Vec<String> = Vec::new();
+    for down in ["", "D"] {
+        for accidental in ["", "F", "S", "N"] {
+            words.push(format!("NOTE{down}{accidental}"));
+        }
+    }
+    words.extend(PLAIN.iter().map(|(word, ..)| (*word).to_owned()));
+    words.extend(SYMBOLS.iter().map(|(word, ..)| (*word).to_owned()));
+    words.extend(CLEFS.iter().map(|(word, _)| (*word).to_owned()));
+    words.extend(MINI_CAPABLE.iter().map(|word| format!("{word}M")));
+    words.push("STAFF".to_owned());
+    words
+}
+
 /// The template a creation word stands for (words are upper case); a
 /// trailing slash, as rhythm input lines end (`CUT/`), is ignored.
 pub fn template(word: &str) -> Option<Template> {
@@ -288,6 +306,13 @@ mod tests {
     fn made(word: &str, staff: f32, args: &[f32]) -> Vec<f32> {
         let draft = template(word).unwrap().place(staff, args);
         (1..=draft.len()).map(|n| draft.get(n)).collect()
+    }
+
+    #[test]
+    fn every_listed_word_makes_an_item() {
+        let words = words();
+        assert!(words.len() > 80);
+        assert!(words.iter().all(|word| template(word).is_some()), "{words:?}");
     }
 
     #[test]

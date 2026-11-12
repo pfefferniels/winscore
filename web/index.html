@@ -121,6 +121,24 @@
           </div>
         </form>
       </dialog>
+      <dialog id="mcp-dialog" class="mcp-dialog">
+        <form method="dialog">
+          <h2>AI assistants (MCP)</h2>
+          <p class="muted">Claude Code and other assistants that speak the Model Context Protocol can read and edit the score open in this window while WinScore runs. Each change they make is one undo step here, and you see it at once.</p>
+          <label class="mcp-switch"><input id="mcp-enabled" type="checkbox" /> Let assistants on this computer read and edit the open score</label>
+          <p id="mcp-state" class="muted"></p>
+          <h3>Claude Code</h3>
+          <p class="muted">Run once in a terminal:</p>
+          <div class="mcp-command"><input id="mcp-http" type="text" readonly spellcheck="false" /><button type="button" data-copy="mcp-http">Copy</button></div>
+          <h3>Assistants that start their servers themselves</h3>
+          <p class="muted">Give them this command (Claude Desktop: <code>"command"</code> with <code>"args": ["--mcp-stdio"]</code>); it starts WinScore if it is not running.</p>
+          <div class="mcp-command"><input id="mcp-stdio" type="text" readonly spellcheck="false" /><button type="button" data-copy="mcp-stdio">Copy</button></div>
+          <div class="dialog-actions">
+            <span class="spacer"></span>
+            <button value="close" class="primary">Close</button>
+          </div>
+        </form>
+      </dialog>
       <footer class="footer" id="footer">
         <span id="message" class="message"></span>
         <span class="spacer"></span>

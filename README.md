@@ -1,6 +1,6 @@
 # SCORE editor
 
-An editor for scores in the file format of Leland Smith's music engraving program SCORE and its Windows version WinScore: a Rust library that reads, renders, edits and writes `.mus` files, and a graphical editor built on it (Rust via WebAssembly), in the browser at https://pfefferniels.github.io/winscore/ and as a Mac app (`desktop/README.md`). Items are put on the page with the mouse, in insertion modes chosen by key (N a note, S a slur, T a text …), and every parameter is set in the side panel.
+An editor for scores in the file format of Leland Smith's music engraving program SCORE and its Windows version WinScore: a Rust library that reads, renders, edits and writes `.mus` files, and a graphical editor built on it (Rust via WebAssembly), in the browser at https://pfefferniels.github.io/winscore/ and as a Mac app (`desktop/README.md`). Items are put on the page with the mouse, in insertion modes chosen by key (N a note, S a slur, T a text …), and every parameter is set in the side panel. The Mac app opens `.mus` files from the Finder, and AI assistants such as Claude Code can read and edit the open score through its MCP server.
 
 ## Layout
 

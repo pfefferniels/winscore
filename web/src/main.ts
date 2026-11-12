@@ -15,7 +15,8 @@ import { bindInteraction, type Client } from './interaction';
 import { labelOf, MOD, type Action, type Menu } from './menu';
 import { appMenus, type DialogKind } from './menus';
 import { bindPanelGrip, formatParam, renderSelection, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
-import type { Layer, Overlay } from './paint';
+import { createMcpServer, type McpHost } from './mcp';
+import { paint, type Layer, type Overlay } from './paint';
 import { createPreview, type Sketch } from './preview';
 import { download, printPage } from './print';
 import { createQuestion } from './question';
@@ -24,7 +25,7 @@ import { createSymbolDialog } from './symbol-dialog';
 import { createTextDialog, editInPlace, withFont } from './text-dialog';
 import { createToolbar } from './toolbar';
 import { createTools, type Facts, type Tool } from './tools';
-import { stepZoom, toDevice, ZOOM_LEVELS } from './view';
+import { cssPerUnit, stepZoom, toDevice, ZOOM_LEVELS } from './view';
 
 interface Sample {
   title: string;
@@ -101,6 +102,7 @@ const ui = {
   undo: $<HTMLButtonElement>('undo'),
   redo: $<HTMLButtonElement>('redo'),
   symbolDialog: $<HTMLDialogElement>('symbol-dialog'),
+  mcpDialog: $<HTMLDialogElement>('mcp-dialog'),
   textDialog: $<HTMLDialogElement>('text-dialog'),
   band: $<HTMLDivElement>('band'),
   zoomOut: $<HTMLButtonElement>('zoom-out'),
@@ -647,14 +649,29 @@ async function chooseFile() {
 
 /** The desktop app: the score in the file at `path`, which Save then writes. */
 async function openPath(path: string) {
-  if (!desktop) return;
   try {
-    openScore(new Score(await desktop.read(path)), baseName(path));
-    state.path = path;
-    refreshStatus();
+    await readScore(path);
   } catch (err) {
     message(`Cannot open ${baseName(path)}: ${String(err)}`, true);
   }
+}
+
+/** The desktop app: opens the file at `path`; a failure is thrown. */
+async function readScore(path: string) {
+  if (!desktop) throw new Error('Files are opened by path only in the desktop app');
+  openScore(new Score(await desktop.read(path)), baseName(path));
+  state.path = path;
+  refreshStatus();
+}
+
+/** The desktop app: writes the score to `path`, which becomes its file. */
+async function writeScore(path: string) {
+  if (!desktop || !state.score) throw new Error('No score to save');
+  await desktop.write(path, state.score.save() as Uint8Array<ArrayBuffer>);
+  state.path = path;
+  state.fileName = baseName(path);
+  state.modified = false;
+  refreshStatus();
 }
 
 async function openFile(file: File) {
@@ -678,15 +695,11 @@ async function save(as = false) {
   const path = !as && state.path ? state.path : await desktop.pickSave(state.fileName || 'untitled.mus', 'mus', 'SCORE file');
   if (!path) return;
   try {
-    await desktop.write(path, bytes);
+    await writeScore(path);
   } catch (err) {
     failed(err);
     return;
   }
-  state.path = path;
-  state.fileName = baseName(path);
-  state.modified = false;
-  refreshStatus();
   message(`Saved ${path}`);
 }
 
@@ -1230,6 +1243,7 @@ function bindMenus() {
     panelShown: () => state.panel,
     togglePanel: () => setPanel(!state.panel),
     shortcuts: showShortcuts,
+    mcp: desktop ? () => void showMcp(desktop!) : undefined,
     tools: () => tools,
     tool: () => toolbar.tool?.id ?? null,
     chooseTool: (id) => toolbar.choose(id),
@@ -1370,6 +1384,132 @@ async function loadSamples(): Promise<Sample[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Assistants through MCP (mcp.ts), in the desktop app
+
+/** The largest side of an image `render_page` makes, in pixels. */
+const MAX_RENDER_PX = 4000;
+/** Above and below the staves an image of some of them shows, in engine units (half an inch). */
+const RENDER_MARGIN = 2000;
+
+/** The staves with their bottom and top lines' heights on the page. */
+function staffLines() {
+  return [...scoreLayout().staves]
+    .map(([number, s]) => ({ number, lines: s.lines, bottom: s.y0 + s.lowest * s.step, top: s.y0 + (s.lowest + 2 * (s.lines - 1)) * s.step }))
+    .sort((a, b) => a.number - b.number);
+}
+
+/** The page, or staves `staves` of it, drawn as the window draws it, as a PNG (base64). */
+async function renderPng(zoom: number, staves: [number, number] | null, withSelection: boolean) {
+  await loadFaces(state.rust.texts);
+  const paper = paperBox();
+  let box = paper;
+  if (staves) {
+    const [low, high] = [Math.min(...staves), Math.max(...staves)];
+    const shown = staffLines().filter((s) => s.number >= low && s.number <= high);
+    if (shown.length === 0) throw new Error(`There are no staves from ${low} to ${high}`);
+    const bottom = Math.min(...shown.map((s) => s.bottom));
+    const top = Math.max(...shown.map((s) => s.top));
+    box = { ...paper, y0: Math.max(paper.y0, bottom - RENDER_MARGIN), y1: Math.min(paper.y1, top + RENDER_MARGIN) };
+  }
+  let k = cssPerUnit(zoom);
+  k = Math.min(k, MAX_RENDER_PX / (box.x1 - box.x0), MAX_RENDER_PX / (box.y1 - box.y0));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round((box.x1 - box.x0) * k));
+  canvas.height = Math.max(1, Math.round((box.y1 - box.y0) * k));
+  const ctx = canvas.getContext('2d')!;
+  const highlights = withSelection ? selection().map((item) => ({ list: state.rust, item })) : [];
+  paint(ctx, { transform: { k, ox: -box.x0 * k, oy: box.y1 * k }, paper, layers: layers(), highlights });
+  return { data: canvas.toDataURL('image/png').replace(/^data:image\/png;base64,/, ''), width: canvas.width, height: canvas.height };
+}
+
+const mcpHost: McpHost = {
+  score: () => state.score,
+  editor: () => state.editor,
+  file: () => ({ name: state.fileName, path: state.path, modified: state.modified }),
+  busy: () => state.drag !== null || (interaction?.busy() ?? false),
+  batch(label, action) {
+    const { score, editor } = state;
+    if (!score || !editor) throw new Error('No score is open');
+    const mark = score.mark();
+    try {
+      action(editor, score);
+    } catch (err) {
+      score.rollback(mark);
+      edited(null, false);
+      throw err;
+    }
+    const step = score.combine(mark, label) ? label : null;
+    edited(step ? { label: step, message: null } : null, false);
+    revealSelection();
+    return step;
+  },
+  select: (indices) => select(indices, true),
+  undo: () => edit((editor) => editor.undo())?.label || null,
+  redo: () => edit((editor) => editor.redo())?.label || null,
+  facts,
+  context(index) {
+    const score = state.score;
+    const info = score?.item(index);
+    const code = info?.code;
+    info?.free();
+    return { clef: score && code === 1 ? clefAt(score, index) : null, symbolName };
+  },
+  nameOf,
+  paramNames,
+  staves: staffLines,
+  paper() {
+    const box = paperBox();
+    return { width: box.x1 - box.x0, height: box.y1 - box.y0 };
+  },
+  render: renderPng,
+  open: readScore,
+  newScore: () => openScore(Score.empty(), 'untitled.mus'),
+  async save(path) {
+    const target = path ?? state.path;
+    if (!target) throw new Error('The score has no file yet: give a path');
+    await writeScore(target);
+    return target;
+  },
+  async exportSvg(path) {
+    if (!desktop || !state.score) throw new Error('No score to export');
+    await desktop.write(path, new TextEncoder().encode(await embedFonts(state.score.exportSvg())));
+  },
+  notify: (text) => message(text),
+};
+
+/** Answers MCP messages: the desktop app's clients, and tests through `window.winscore.mcp`. */
+const mcp = createMcpServer(mcpHost);
+
+/** The MCP dialog: whether assistants may control the window, and how to connect them. */
+async function showMcp(app: NonNullable<typeof desktop>) {
+  const dialog = ui.mcpDialog;
+  const enabled = dialog.querySelector<HTMLInputElement>('#mcp-enabled')!;
+  const fill = (status: Awaited<ReturnType<typeof app.mcpStatus>>) => {
+    enabled.checked = status.enabled;
+    dialog.querySelector('#mcp-state')!.textContent = status.error
+      ? `Not available: ${status.error}`
+      : status.enabled
+        ? `Listening at ${status.url}`
+        : 'Off: assistants cannot reach WinScore.';
+    dialog.querySelector<HTMLInputElement>('#mcp-http')!.value = `claude mcp add --transport http --scope user winscore ${status.url}`;
+    dialog.querySelector<HTMLInputElement>('#mcp-stdio')!.value = `"${status.executable}" --mcp-stdio`;
+  };
+  fill(await app.mcpStatus());
+  enabled.onchange = async () => fill(await app.setMcpEnabled(enabled.checked));
+  dialog.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((button) => {
+    button.onclick = () => {
+      const field = dialog.querySelector<HTMLInputElement>(`#${button.dataset.copy}`)!;
+      field.select();
+      document.execCommand('copy');
+      void navigator.clipboard?.writeText(field.value).catch(() => {});
+      button.textContent = 'Copied';
+      setTimeout(() => (button.textContent = 'Copy'), 1500);
+    };
+  });
+  if (!dialog.open) dialog.showModal();
+}
+
+// ---------------------------------------------------------------------------
 // The desktop app
 
 /** Whether the page has started, so files opened from outside can be taken. */
@@ -1411,16 +1551,23 @@ function bindDesktop(app: NonNullable<typeof desktop>) {
     fit: () => state.score && view.fitWidth(),
     panel: () => state.score && setPanel(!state.panel),
     shortcuts: showShortcuts,
+    mcp: () => void showMcp(app),
+    'default-app': () =>
+      void app.makeDefault().then(
+        (said) => message(said),
+        (err) => failed(err),
+      ),
   };
   app.onMenu((id) => {
     const modal = document.querySelector('dialog[open]');
-    if (modal && id !== 'undo' && id !== 'redo') return;
+    if (modal && id !== 'undo' && id !== 'redo' && id !== 'mcp') return;
     commands[id]?.();
     if (!modal) settleFocus();
   });
   app.onOpened(() => void takeOpened());
   app.onDragging((over) => (ui.dropHint.hidden = !over));
   app.onCloseRequested(() => void mayDiscard().then((close) => close && app.close()));
+  app.onMcpRequest((id, request) => void mcp.handle(request).then((response) => app.mcpRespond(id, response)));
   app.ready();
 }
 
@@ -1439,7 +1586,7 @@ async function main() {
   refreshStatus();
   renderSelection(ui.item, [], handlers, false);
   // For tests and the browser's console: items selected by number, as the panel numbers them.
-  Object.assign(window, { winscore: { select: (items: number[]) => select(items, true) } });
+  Object.assign(window, { winscore: { select: (items: number[]) => select(items, true), mcp: (message: unknown) => mcp.handle(message) } });
   await applyQuery();
   started = true;
   await takeOpened();

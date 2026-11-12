@@ -421,7 +421,8 @@ button.icon[aria-pressed='true'] {
 
 .symbol-dialog,
 .text-dialog,
-.shortcuts-dialog {
+.shortcuts-dialog,
+.mcp-dialog {
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1545,4 +1546,43 @@ canvas.preview {
   .tool-hint {
     display: none;
   }
+}
+
+/* How assistants reach the desktop app through MCP. */
+.mcp-dialog {
+  width: min(620px, calc(100vw - 32px));
+}
+
+.mcp-dialog h3 {
+  margin: 18px 0 4px;
+  font-size: 13px;
+}
+
+.mcp-dialog p {
+  margin: 4px 0 8px;
+}
+
+.mcp-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-weight: 500;
+}
+
+.mcp-command {
+  display: flex;
+  gap: 6px;
+}
+
+.mcp-command input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--chrome);
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
 }
