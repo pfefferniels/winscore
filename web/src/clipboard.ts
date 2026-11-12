@@ -1,8 +1,9 @@
 // Copy, cut, paste and duplicate: ⌘C, ⌘X, ⌘V and ⌘D (Ctrl elsewhere) and
-// the Edit commands. Copied items travel as a .mus file of their own: kept here
-// for Edit ▸ Paste, and on the system clipboard as text, so that ⌘V in another
-// tab's score pastes them too. Form fields, dialogs and text selected on the
-// page keep the browser's own copy and paste.
+// the Edit commands, the browser's (or the desktop app's) Edit menu too.
+// Copied items travel as a .mus file of their own: kept here for Edit ▸
+// Paste, and on the system clipboard as text, so that ⌘V in another tab's
+// score pastes them too. Form fields, dialogs and text selected on the page
+// keep the browser's own copy and paste.
 
 /** How copied items start on the system clipboard, before the base64 of their .mus file. */
 const MARKER = 'winscore-items:';
@@ -10,6 +11,8 @@ const MARKER = 'winscore-items:';
 export interface ClipboardHooks {
   /** Whether a score is open to copy from and paste into. */
   ready(): boolean;
+  /** Whether items are selected, to copy. */
+  hasSelection(): boolean;
   /** The selected items as `.mus` bytes; empty without a selection. */
   copy(): Uint8Array;
   /** The same, the selection then deleted. */
@@ -50,7 +53,12 @@ function pageHasKeys(target: EventTarget | null): boolean {
   return !field && !editable && selectedText === '' && document.querySelector('dialog[open]') === null;
 }
 
-export function bindClipboard(hooks: ClipboardHooks): Clipboard {
+/**
+ * `pasteKey`: ⌘V pastes what was copied here at once. A web view without an
+ * editable place to paste into may not pass the key on to a paste event (the
+ * desktop app's), which a browser does.
+ */
+export function bindClipboard(hooks: ClipboardHooks, pasteKey = false): Clipboard {
   let copied: Uint8Array | null = null;
 
   /** Keeps `items` for Edit ▸ Paste and puts them on the system clipboard; false when nothing was selected. */
@@ -70,9 +78,30 @@ export function bindClipboard(hooks: ClipboardHooks): Clipboard {
     else if (key === 'd') {
       e.preventDefault();
       hooks.duplicate();
+    } else if (key === 'v' && pasteKey && copied) {
+      e.preventDefault();
+      hooks.paste(copied);
     }
-    // ⌘V goes on to the browser's paste event, which can read the system clipboard.
+    // Otherwise ⌘V goes on to the browser's paste event, which can read the system clipboard.
   });
+
+  // The Edit menu's Cut, Copy and Paste chosen with the mouse: WebKit offers them
+  // where a page takes the clipboard (it cancels the before… events).
+  const offer = (e: Event, when: () => boolean) => {
+    if (pageHasKeys(e.target) && hooks.ready() && when()) e.preventDefault();
+  };
+  document.addEventListener('beforecopy', (e) => offer(e, hooks.hasSelection));
+  document.addEventListener('beforecut', (e) => offer(e, hooks.hasSelection));
+  document.addEventListener('beforepaste', (e) => offer(e, () => copied !== null));
+  const take = (e: ClipboardEvent, cut: boolean) => {
+    if (!pageHasKeys(e.target) || !hooks.ready() || !hooks.hasSelection()) return;
+    const items = cut ? hooks.cut() : hooks.copy();
+    if (!keep(items)) return;
+    e.preventDefault();
+    e.clipboardData?.setData('text/plain', MARKER + toBase64(items));
+  };
+  document.addEventListener('copy', (e) => take(e, false));
+  document.addEventListener('cut', (e) => take(e, true));
 
   document.addEventListener('paste', (e) => {
     if (!pageHasKeys(e.target) || !hooks.ready()) return;

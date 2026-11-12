@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The editor's window: events, its title and printing; files go through the app's own commands",
+  "windows": ["main"],
+  "permissions": ["core:default", "core:webview:allow-print"]
+}

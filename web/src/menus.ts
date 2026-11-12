@@ -22,6 +22,10 @@ export interface MenuHooks {
   open(): void;
   samples(): { title: string; open(): void }[];
   save(): void;
+  /** Save As, in the desktop app. */
+  saveAs?: () => void;
+  /** Whether this is the desktop app, which saves to files rather than downloading them. */
+  desktop: boolean;
   exportSvg(): void;
   print(): void;
   undo(): void;
@@ -98,7 +102,8 @@ export function appMenus(hooks: MenuHooks): Menu[] {
         { heading: 'Samples' },
         ...hooks.samples().map((s): Action => ({ label: s.title, id: `sample:${s.title}`, run: s.open })),
         'separator',
-        { label: 'Save', hint: `${MOD}S`, title: 'Download the score as a .mus file', id: 'save', run: hooks.save, enabled: scored },
+        { label: 'Save', hint: `${MOD}S`, title: hooks.desktop ? 'Save the score to its file' : 'Download the score as a .mus file', id: 'save', run: hooks.save, enabled: scored },
+        hooks.saveAs ? { label: 'Save as…', hint: `⇧${MOD}S`, title: 'Save the score to another file', id: 'save-as', run: hooks.saveAs, enabled: scored } : null,
         { label: 'Export SVG', title: 'The page as printed, without staff numbers', id: 'export-svg', run: hooks.exportSvg, enabled: scored },
         { label: 'Print…', hint: `${MOD}P`, title: 'Print the page (without staff numbers)', id: 'print', run: hooks.print, enabled: scored },
       ]),

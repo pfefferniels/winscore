@@ -1,6 +1,7 @@
 import './style.css';
 import init, { codeName, commandSupported, creationParams, librarySymbols, paramName, Score, type EncodedList } from './wasm/score_web.js';
 import { createPageView, type Scene } from './canvas';
+import { baseName, desktop } from './desktop';
 import { bindClipboard } from './clipboard';
 import { bounds, decode, elementsOf, EMPTY, itemBoxes, union, type Box, type DisplayList } from './display';
 import { fontCodes, fontPrefix } from './commands';
@@ -36,6 +37,8 @@ interface State {
   score: Score | null;
   editor: Editor | null;
   fileName: string;
+  /** Where the score's file is on disk, in the desktop app; null for a new score or a sample. */
+  path: string | null;
   rust: DisplayList;
   modified: boolean;
   /** The last click on empty paper, where new items go when nothing is selected. */
@@ -149,6 +152,7 @@ const state: State = {
   score: null,
   editor: null,
   fileName: '',
+  path: null,
   rust: EMPTY,
   modified: false,
   lastPaper: null,
@@ -301,8 +305,13 @@ function refreshHandles() {
 
 const REDO_KEYS = MOD === '⌘' ? '⇧⌘Z' : 'Ctrl+Y';
 
+let shownTitle = '';
+
 function refreshStatus() {
   const open = state.score !== null;
+  const title = open ? `${state.fileName}${state.modified ? ' — Edited' : ''}` : 'WinScore';
+  if (desktop && title !== shownTitle) desktop.setTitle(title);
+  shownTitle = title;
   ui.doc.hidden = !open;
   ui.status.textContent = state.fileName;
   ui.docState.textContent = state.modified ? 'Unsaved changes' : '';
@@ -521,13 +530,17 @@ function duplicate() {
   revealSelection();
 }
 
-const clipboard = bindClipboard({
+const clipboard = bindClipboard(
+  {
   ready: () => state.editor !== null,
+  hasSelection: () => selection().length > 0,
   copy: () => copySelection(false),
   cut: () => copySelection(true),
   paste,
   duplicate,
-});
+  },
+  desktop !== null,
+);
 
 async function openDialog(kind: DialogKind) {
   if (!state.editor) return;
@@ -578,8 +591,10 @@ const handlers: PanelHandlers = {
 };
 
 /** Asks before changes that were not saved are thrown away. */
-function mayDiscard(): boolean {
-  return !state.modified || window.confirm(`Discard the unsaved changes to ${state.fileName}?`);
+async function mayDiscard(): Promise<boolean> {
+  if (!state.modified) return true;
+  const question = `Discard the unsaved changes to ${state.fileName}?`;
+  return desktop ? desktop.confirm(question, 'Discard') : window.confirm(question);
 }
 
 function openScore(score: Score, name: string) {
@@ -588,6 +603,7 @@ function openScore(score: Score, name: string) {
   state.score = score;
   state.editor = scoreEditor(score);
   state.fileName = name;
+  state.path = null;
   state.rust = decodeAndFree(score.render());
   state.modified = false;
   state.lastPaper = null;
@@ -603,13 +619,13 @@ function openScore(score: Score, name: string) {
   report(null);
 }
 
-function newScore() {
-  if (!mayDiscard()) return;
+async function newScore() {
+  if (!(await mayDiscard())) return;
   openScore(Score.empty(), 'untitled.mus');
 }
 
 async function openSample(sample: Sample) {
-  if (!mayDiscard()) return;
+  if (!(await mayDiscard())) return;
   try {
     const base64 = (await (await fetch(sample.url)).text()).trim();
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
@@ -619,8 +635,26 @@ async function openSample(sample: Sample) {
   }
 }
 
-function chooseFile() {
-  if (mayDiscard()) ui.file.click();
+async function chooseFile() {
+  if (!(await mayDiscard())) return;
+  if (!desktop) {
+    ui.file.click();
+    return;
+  }
+  const path = await desktop.pickOpen();
+  if (path) await openPath(path);
+}
+
+/** The desktop app: the score in the file at `path`, which Save then writes. */
+async function openPath(path: string) {
+  if (!desktop) return;
+  try {
+    openScore(new Score(await desktop.read(path)), baseName(path));
+    state.path = path;
+    refreshStatus();
+  } catch (err) {
+    message(`Cannot open ${baseName(path)}: ${String(err)}`, true);
+  }
 }
 
 async function openFile(file: File) {
@@ -631,11 +665,29 @@ async function openFile(file: File) {
   }
 }
 
-function save() {
+/** Saves the score: in a browser as a download, in the desktop app to its file (`as`, or without one: where the save panel says). */
+async function save(as = false) {
   if (!state.score) return;
-  download(state.score.save() as Uint8Array<ArrayBuffer>, state.fileName || 'score.mus', 'application/octet-stream');
+  const bytes = state.score.save() as Uint8Array<ArrayBuffer>;
+  if (!desktop) {
+    download(bytes, state.fileName || 'score.mus', 'application/octet-stream');
+    state.modified = false;
+    refreshStatus();
+    return;
+  }
+  const path = !as && state.path ? state.path : await desktop.pickSave(state.fileName || 'untitled.mus', 'mus', 'SCORE file');
+  if (!path) return;
+  try {
+    await desktop.write(path, bytes);
+  } catch (err) {
+    failed(err);
+    return;
+  }
+  state.path = path;
+  state.fileName = baseName(path);
   state.modified = false;
   refreshStatus();
+  message(`Saved ${path}`);
 }
 
 /** The score's file name with another extension. */
@@ -647,7 +699,16 @@ function exportName(extension: string): string {
 async function exportSvg() {
   if (!state.score) return;
   try {
-    download(await embedFonts(state.score.exportSvg()), exportName('svg'), 'image/svg+xml');
+    const svg = await embedFonts(state.score.exportSvg());
+    if (!desktop) {
+      download(svg, exportName('svg'), 'image/svg+xml');
+      return;
+    }
+    const path = await desktop.pickSave(exportName('svg'), 'svg', 'SVG image');
+    if (path) {
+      await desktop.write(path, new TextEncoder().encode(svg));
+      message(`Exported ${path}`);
+    }
   } catch (err) {
     failed(err);
   }
@@ -1121,7 +1182,9 @@ function bindDrop() {
     e.preventDefault();
     hint(false);
     const file = e.dataTransfer?.files[0];
-    if (file && mayDiscard()) void openFile(file);
+    if (file) void mayDiscard().then(async (discard) => {
+      if (discard) await openFile(file);
+    });
   });
 }
 
@@ -1142,10 +1205,12 @@ function bindMenus() {
     runArea,
     supported: commandSupported,
     openDialog: (kind) => void openDialog(kind),
-    newScore,
-    open: chooseFile,
+    newScore: () => void newScore(),
+    open: () => void chooseFile(),
     samples: () => samples.map((s) => ({ title: s.title, open: () => void openSample(s) })),
-    save,
+    save: () => void save(),
+    saveAs: desktop ? () => void save(true) : undefined,
+    desktop: desktop !== null,
     exportSvg: () => void exportSvg(),
     print: () => void print(),
     undo: () => edit((editor) => editor.undo()),
@@ -1211,8 +1276,8 @@ function commandSection(menu: Menu): HTMLElement {
 }
 
 function bindStart() {
-  ui.startNew.addEventListener('click', newScore);
-  ui.startOpen.addEventListener('click', chooseFile);
+  ui.startNew.addEventListener('click', () => void newScore());
+  ui.startOpen.addEventListener('click', () => void chooseFile());
   ui.startSamples.replaceChildren(
     ...samples.map((sample) => {
       const button = Object.assign(document.createElement('button'), { type: 'button', className: 'sample', textContent: sample.title });
@@ -1233,7 +1298,7 @@ function onAppKey(e: KeyboardEvent) {
   }
   const command = e.metaKey || e.ctrlKey;
   if (!command || e.altKey) return;
-  const action = { o: chooseFile, s: save, p: () => void print() }[e.key.toLowerCase()];
+  const action = { o: () => void chooseFile(), s: () => void save(), p: () => void print() }[e.key.toLowerCase()];
   if (!action || e.shiftKey) return;
   e.preventDefault();
   if (state.score || e.key.toLowerCase() === 'o') action();
@@ -1275,7 +1340,7 @@ async function applyQuery() {
   const wanted = query.get('sample');
   const sample = samples.find((s) => s.title === wanted || s.case === wanted);
   if (sample) await openSample(sample);
-  else if (query.has('new')) newScore();
+  else if (query.has('new')) await newScore();
   const zoom = Number(query.get('zoom'));
   if (zoom > 0 && state.score) view.setZoom(zoom);
   const selected = query.get('select');
@@ -1304,7 +1369,63 @@ async function loadSamples(): Promise<Sample[]> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// The desktop app
+
+/** Whether the page has started, so files opened from outside can be taken. */
+let started = false;
+
+function textFocused(): boolean {
+  const active = document.activeElement;
+  return active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || (active instanceof HTMLElement && active.isContentEditable);
+}
+
+/** The file the system asked the desktop app to open last (Finder, a drop), unless unsaved changes are to stay. */
+async function takeOpened() {
+  if (!desktop || !started) return;
+  const path = (await desktop.openedFiles()).at(-1);
+  if (path && (await mayDiscard())) await openPath(path);
+}
+
+/** The menu bar's commands, files opened from outside and closing, in the desktop app. */
+function bindDesktop(app: NonNullable<typeof desktop>) {
+  document.title = 'WinScore';
+  ui.start.querySelector('h1')!.textContent = 'WinScore';
+  ui.start.querySelector('h1 + p')!.textContent = "Leland Smith's SCORE: open, engrave and save .mus files.";
+  const zoom = (step: 1 | -1) => state.score && view.setZoom(stepZoom(view.zoom, step));
+  const commands: Record<string, () => void> = {
+    new: () => void newScore(),
+    open: () => void chooseFile(),
+    save: () => void save(),
+    'save-as': () => void save(true),
+    'export-svg': () => void exportSvg(),
+    print: () => void print(),
+    // In a text field Undo and Redo are its own.
+    undo: () => (textFocused() ? document.execCommand('undo') : edit((editor) => editor.undo())),
+    redo: () => (textFocused() ? document.execCommand('redo') : edit((editor) => editor.redo())),
+    duplicate: () => !textFocused() && duplicate(),
+    delete: () => !textFocused() && selection().length > 0 && edit((editor) => editor.deleteSelection()),
+    'zoom-in': () => zoom(1),
+    'zoom-out': () => zoom(-1),
+    'actual-size': () => state.score && view.setZoom(100),
+    fit: () => state.score && view.fitWidth(),
+    panel: () => state.score && setPanel(!state.panel),
+    shortcuts: showShortcuts,
+  };
+  app.onMenu((id) => {
+    const modal = document.querySelector('dialog[open]');
+    if (modal && id !== 'undo' && id !== 'redo') return;
+    commands[id]?.();
+    if (!modal) settleFocus();
+  });
+  app.onOpened(() => void takeOpened());
+  app.onDragging((over) => (ui.dropHint.hidden = !over));
+  app.onCloseRequested(() => void mayDiscard().then((close) => close && app.close()));
+  app.ready();
+}
+
 async function main() {
+  if (desktop) bindDesktop(desktop);
   try {
     await init();
   } catch (err) {
@@ -1320,6 +1441,8 @@ async function main() {
   // For tests and the browser's console: items selected by number, as the panel numbers them.
   Object.assign(window, { winscore: { select: (items: number[]) => select(items, true) } });
   await applyQuery();
+  started = true;
+  await takeOpened();
 }
 
 main().catch((err) => fatal('The app failed to start.', err));

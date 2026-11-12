@@ -20,6 +20,8 @@ npm run dev        # builds the wasm, copies the samples, serves http://localhos
 
 `npm run build` writes a self-contained static site to `web/dist/` (relative paths; wasm, fonts and samples included). `npm run preview` serves it at http://localhost:4173.
 
+The same build is the Mac app (`desktop/README.md`): `src/desktop.ts` finds Tauri in the page and then saves to files rather than downloading them, asks with the system's alerts and takes the menu bar's commands and files opened from the Finder.
+
 Environment variables: `CARGO_TARGET_DIR` (default `rust/target`), `WASM_PROFILE` (default `release`).
 
 Frame times while dragging: `npm run build && npm run perf [FILE.mus …]` (default the largest sample); it fails if a frame during the drag takes more than 50 ms. Drags re-render only the moved items (`rust/crates/score-web/src/live.rs`); the full render follows on drop.
@@ -86,6 +88,7 @@ The page is drawn by the Rust renderer alone. The app bar holds Undo and Redo, t
 | `src/panel.ts` | side panel: the selected item's actions, settings and parameters, the grip that sizes it under the page |
 | `src/item-fields.ts` | the settings of each item code: labels, controls, and how they read and write the parameters |
 | `src/fonts.ts`, `src/fonts.css` | engine font names → bundled faces |
+| `src/desktop.ts` | the desktop app's side: file panels, files, alerts, the menu bar's commands, files opened from outside, closing |
 | `src/print.ts`, `src/svg-fonts.ts` | print and SVG export: the page's SVG in the document for print, its faces embedded in exported files |
 | `scripts/` | wasm build, asset copy, screenshots, the smoke test (`smoke.mjs`) |
 

@@ -1,0 +1,29 @@
+[package]
+name = "winscore-desktop"
+version = "0.1.0"
+description = "The SCORE editor as a desktop app: the web app in the system's web view"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+
+# Not a member of rust/'s workspace: it needs the system's web view libraries,
+# which the crates' tests do not.
+[workspace]
+
+[lib]
+name = "winscore_desktop"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
