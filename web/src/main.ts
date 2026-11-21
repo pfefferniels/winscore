@@ -16,9 +16,10 @@ import { labelOf, MOD, type Action, type Menu } from './menu';
 import { appMenus, type DialogKind } from './menus';
 import { bindPanelGrip, formatParam, renderSelection, type ItemDetails, type ItemSummary, type PanelHandlers } from './panel';
 import { createMcpServer, type McpHost } from './mcp';
+import { byName, createPageBar, folderOf, listed, nextName } from './pages';
 import { paint, type Layer, type Overlay } from './paint';
 import { createPreview, type Sketch } from './preview';
-import { download, printPage } from './print';
+import { download, printPages } from './print';
 import { createQuestion } from './question';
 import { embedFonts } from './svg-fonts';
 import { createSymbolDialog } from './symbol-dialog';
@@ -34,14 +35,29 @@ interface Sample {
   case: string;
 }
 
-interface State {
-  score: Score | null;
-  editor: Editor | null;
+/** One page of the score: a .mus file of its own (pages.ts). */
+interface Page {
+  score: Score;
+  editor: Editor;
   fileName: string;
-  /** Where the score's file is on disk, in the desktop app; null for a new score or a sample. */
+  /** Where the page's file is on disk, in the desktop app; null for a new page or a sample. */
   path: string | null;
-  rust: DisplayList;
   modified: boolean;
+  /** Where the view was when another page was shown: the zoom and the scroll offsets. */
+  view: { zoom: number; left: number; top: number } | null;
+}
+
+interface State {
+  /** The open pages in their order; the window shows and edits one of them. */
+  pages: Page[];
+  /** The index of the page shown. */
+  current: number;
+  /** The page shown, and its score and editor; null while no score is open. */
+  readonly page: Page | null;
+  readonly score: Score | null;
+  readonly editor: Editor | null;
+  /** The display list of the page shown. */
+  rust: DisplayList;
   /** The last click on empty paper, where new items go when nothing is selected. */
   lastPaper: Point | null;
   /** Where pastes go: the last click on the page since the copy, if any. */
@@ -97,6 +113,8 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 const ui = {
   app: $<HTMLDivElement>('app'),
   file: $<HTMLInputElement>('file'),
+  pagebar: $<HTMLElement>('pagebar'),
+  pageTabs: $<HTMLDivElement>('page-tabs'),
   doc: $<HTMLSpanElement>('doc'),
   docState: $<HTMLSpanElement>('doc-state'),
   undo: $<HTMLButtonElement>('undo'),
@@ -151,12 +169,18 @@ function storedPanel(): boolean {
 }
 
 const state: State = {
-  score: null,
-  editor: null,
-  fileName: '',
-  path: null,
+  pages: [],
+  current: 0,
+  get page() {
+    return this.pages[this.current] ?? null;
+  },
+  get score() {
+    return this.page?.score ?? null;
+  },
+  get editor() {
+    return this.page?.editor ?? null;
+  },
   rust: EMPTY,
-  modified: false,
   lastPaper: null,
   pasteAt: null,
   extent: null,
@@ -186,6 +210,19 @@ const question = createQuestion(ui.stage, {
 /** Where an insertion mode's new item would go, over the page. */
 const preview = createPreview(ui.stage, ui.canvas, () => view.transform());
 view.onPaint(() => preview.repaint());
+/** The tabs of the open pages, above the page while there are several. */
+const pageBar = createPageBar(ui.pagebar, ui.pageTabs, {
+  show: (index) => {
+    goToPage(index);
+    ui.viewport.focus();
+  },
+  close: (index) => void closePage(index),
+  newPage: () => {
+    newPage();
+    ui.viewport.focus();
+  },
+  addPages: () => void chooseFiles(true),
+});
 let samples: Sample[] = [];
 
 function showZoom(zoom: number) {
@@ -310,14 +347,22 @@ const REDO_KEYS = MOD === '⌘' ? '⇧⌘Z' : 'Ctrl+Y';
 let shownTitle = '';
 
 function refreshStatus() {
-  const open = state.score !== null;
-  const title = open ? `${state.fileName}${state.modified ? ' — Edited' : ''}` : 'WinScore';
+  const page = state.page;
+  const open = page !== null;
+  const name = page?.fileName ?? '';
+  const modified = page?.modified ?? false;
+  const of = state.pages.length > 1 ? ` (page ${state.current + 1} of ${state.pages.length})` : '';
+  const title = open ? `${name}${of}${modified ? ' — Edited' : ''}` : 'WinScore';
   if (desktop && title !== shownTitle) desktop.setTitle(title);
   shownTitle = title;
   ui.doc.hidden = !open;
-  ui.status.textContent = state.fileName;
-  ui.docState.textContent = state.modified ? 'Unsaved changes' : '';
-  ui.doc.title = state.modified ? `${state.fileName}: changed since it was opened or saved` : state.fileName;
+  ui.status.textContent = name;
+  ui.docState.textContent = modified ? 'Unsaved changes' : '';
+  ui.doc.title = modified ? `${name}: changed since it was opened or saved` : name;
+  pageBar.render(
+    state.pages.map((p) => ({ name: p.fileName, path: p.path, modified: p.modified })),
+    state.current,
+  );
   const undo = state.editor?.undoLabel() ?? null;
   const redo = state.editor?.redoLabel() ?? null;
   ui.undo.disabled = undo === null;
@@ -332,6 +377,8 @@ function refreshStatus() {
   ui.emptyHint.hidden = !open || state.score!.itemCount() > 0;
   // How many items there are, as `data-items` of the page: for tests and the browser's inspector.
   ui.app.dataset.items = open ? String(state.score!.itemCount()) : '';
+  ui.app.dataset.pages = String(state.pages.length);
+  ui.app.dataset.page = open ? String(state.current + 1) : '';
 }
 
 /** Highest parameter number an edit may set. */
@@ -455,7 +502,7 @@ function edited(change: Change | null, live: boolean) {
   if (live && state.drag && !state.drag.handle) state.drag.readout = moveReadout();
   if (!live) {
     refreshHandles();
-    state.modified ||= change !== null;
+    if (state.page && change !== null) state.page.modified = true;
     refreshPanel();
     void loadFontsAndRepaint();
     report(change);
@@ -592,38 +639,145 @@ const handlers: PanelHandlers = {
   },
 };
 
-/** Asks before changes that were not saved are thrown away. */
-async function mayDiscard(): Promise<boolean> {
-  if (!state.modified) return true;
-  const question = `Discard the unsaved changes to ${state.fileName}?`;
+/** Asks before changes to `pages` (default all of them) that were not saved are thrown away. */
+async function mayDiscard(pages: Page[] = state.pages): Promise<boolean> {
+  const unsaved = pages.filter((page) => page.modified).map((page) => page.fileName);
+  if (unsaved.length === 0) return true;
+  const question = `Discard the unsaved changes to ${listed(unsaved)}?`;
   return desktop ? desktop.confirm(question, 'Discard') : window.confirm(question);
 }
 
-function openScore(score: Score, name: string) {
+function makePage(score: Score, fileName: string, path: string | null = null): Page {
+  return { score, editor: scoreEditor(score), fileName, path, modified: false, view: null };
+}
+
+/** Whether a drag, a box or an insertion is under way, which a change of page must not cut into. */
+function busy(): boolean {
+  return state.drag !== null || (interaction?.busy() ?? false);
+}
+
+/** Keeps where the view is on the page shown, for when it is shown again. */
+function rememberView() {
+  if (state.page) state.page.view = { zoom: view.zoom, left: ui.viewport.scrollLeft, top: ui.viewport.scrollTop };
+}
+
+/** Shows page `index` and edits it: the view as it was there, else the top of the page (`fit`: at the window's width). */
+function showPage(index: number, fit = false) {
+  const page = state.pages[index];
+  if (!page) return;
   preview.show(null);
-  state.score?.free();
-  state.score = score;
-  state.editor = scoreEditor(score);
-  state.fileName = name;
-  state.path = null;
-  state.rust = decodeAndFree(score.render());
-  state.modified = false;
+  state.current = index;
+  state.rust = decodeAndFree(page.score.render());
   state.lastPaper = null;
   state.pasteAt = null;
+  state.hover = null;
+  state.drag = null;
+  state.extent = null;
+  refreshHandles();
+  refreshPanel();
+  redraw();
+  if (fit) view.fitWidth();
+  if (!fit && page.view && Math.abs(page.view.zoom - view.zoom) < 0.01) {
+    ui.viewport.scrollLeft = page.view.left;
+    ui.viewport.scrollTop = page.view.top;
+  } else {
+    const content = bounds(state.rust);
+    if (content) view.scrollToTop(content.y1 + MARGIN);
+  }
+  view.repaint();
+  void loadFontsAndRepaint();
+  report(null);
+}
+
+/** Changes to page `index`, unless something is being dragged. */
+function goToPage(index: number) {
+  if (index === state.current || !state.pages[index] || busy()) return;
+  rememberView();
+  showPage(index);
+}
+
+/** F2 and F3: the page before or after the one shown. */
+function stepPage(step: 1 | -1) {
+  const index = state.current + step;
+  if (state.pages[index]) goToPage(index);
+  else if (state.pages.length > 0) message(step < 0 ? 'This is the first page' : 'This is the last page');
+}
+
+/** Puts `pages` in the window and shows the first: in place of the pages open, or (`add`) after the one shown. */
+function openPages(pages: Page[], add = false) {
+  if (pages.length === 0) return;
+  if (add && state.pages.length > 0) {
+    rememberView();
+    const at = state.current + 1;
+    state.pages.splice(at, 0, ...pages);
+    showPage(at);
+    return;
+  }
+  const closed = state.pages;
+  state.pages = pages;
+  closed.forEach((page) => page.score.free());
+  showPage(0, true);
+}
+
+/** One page, the score of `score`, in place of the pages open. */
+function openScore(score: Score, name: string) {
+  openPages([makePage(score, name)]);
+}
+
+/** Closes page `index` (default the one shown), asking about its unsaved changes; the last page closed leaves the start screen. */
+async function closePage(index = state.current): Promise<boolean> {
+  const page = state.pages[index];
+  if (!page || busy() || !(await mayDiscard([page]))) return false;
+  removePage(page);
+  return true;
+}
+
+/** Takes `page` out of the window without asking. */
+function removePage(page: Page) {
+  const at = state.pages.indexOf(page);
+  if (at < 0) return;
+  const shown = state.page;
+  if (shown !== page) rememberView();
+  state.pages.splice(at, 1);
+  page.score.free();
+  if (state.pages.length === 0) {
+    closeAll();
+    return;
+  }
+  showPage(shown === page ? Math.min(at, state.pages.length - 1) : state.pages.indexOf(shown!));
+}
+
+/** No score open: the start screen. */
+function closeAll() {
+  preview.show(null);
+  state.pages.forEach((page) => page.score.free());
+  state.pages = [];
+  state.current = 0;
+  state.rust = EMPTY;
   state.handles = null;
+  state.hover = null;
   state.drag = null;
   refreshPanel();
   redraw();
-  view.fitWidth();
-  const content = bounds(state.rust);
-  if (content) view.scrollToTop(content.y1 + MARGIN);
-  void loadFontsAndRepaint();
   report(null);
 }
 
 async function newScore() {
   if (!(await mayDiscard())) return;
   openScore(Score.empty(), 'untitled.mus');
+}
+
+/** An empty page after the one shown, named by the next number (sonata01.mus → sonata02.mus); a new score when none is open. */
+function newPage() {
+  const page = state.page;
+  if (!page) {
+    void newScore();
+    return;
+  }
+  if (busy()) return;
+  const name = nextName(page.fileName || 'untitled.mus', state.pages.map((p) => p.fileName));
+  openPages([makePage(page.score.blank(), name)], true);
+  message(`New page ${name}: it is saved as a file of its own`);
 }
 
 async function openSample(sample: Sample) {
@@ -637,75 +791,145 @@ async function openSample(sample: Sample) {
   }
 }
 
-async function chooseFile() {
-  if (!(await mayDiscard())) return;
+/** Whether the browser's file chooser adds pages to the score open rather than opening files in its place. */
+let chooserAdds = false;
+
+/** Open… asks for .mus files (several chosen together are the pages of one score) to open in place of the pages open; `add` (Add pages…) puts them after the page shown. */
+async function chooseFiles(add = false) {
+  const adding = add && state.page !== null;
+  if (!adding && !(await mayDiscard())) return;
   if (!desktop) {
+    chooserAdds = adding;
     ui.file.click();
     return;
   }
-  const path = await desktop.pickOpen();
-  if (path) await openPath(path);
+  const paths = await desktop.pickOpen(folderOf(state.page?.path ?? null));
+  if (paths.length > 0) await openPaths(paths, adding);
 }
 
-/** The desktop app: the score in the file at `path`, which Save then writes. */
-async function openPath(path: string) {
-  try {
-    await readScore(path);
-  } catch (err) {
-    message(`Cannot open ${baseName(path)}: ${String(err)}`, true);
+/** What could not be opened, in the status line. */
+function cannotOpen(failures: string[]) {
+  if (failures.length > 0) message(`Cannot open ${failures.join('; ')}`, true);
+}
+
+/** Opens `files` as pages, in the order of their names: in place of the pages open, or (`add`) after the page shown. */
+async function openFiles(files: File[], add = false) {
+  const pages: Page[] = [];
+  const failures: string[] = [];
+  for (const file of [...files].sort((a, b) => byName(a.name, b.name))) {
+    try {
+      pages.push(makePage(new Score(new Uint8Array(await file.arrayBuffer())), file.name));
+    } catch (err) {
+      failures.push(`${file.name}: ${String(err)}`);
+    }
   }
+  openPages(pages, add);
+  if (pages.length > 1) message(`Opened ${pages.length} pages`);
+  cannotOpen(failures);
 }
 
-/** The desktop app: opens the file at `path`; a failure is thrown. */
-async function readScore(path: string) {
+/** The desktop app: the files at `paths` as pages in the order of their names, as `openFiles` puts them; a file open already is shown. How many were opened; a failure is thrown. */
+async function readPaths(paths: string[], add = false): Promise<number> {
   if (!desktop) throw new Error('Files are opened by path only in the desktop app');
-  openScore(new Score(await desktop.read(path)), baseName(path));
-  state.path = path;
-  refreshStatus();
+  const open = add ? new Map(state.pages.map((page) => [page.path, page])) : new Map<string | null, Page>();
+  const wanted = [...new Set(paths)].sort((a, b) => byName(baseName(a), baseName(b)));
+  const pages: Page[] = [];
+  const failures: string[] = [];
+  for (const path of wanted.filter((p) => !open.has(p))) {
+    try {
+      pages.push(makePage(new Score(await desktop.read(path)), baseName(path), path));
+    } catch (err) {
+      failures.push(`${baseName(path)}: ${String(err)}`);
+    }
+  }
+  if (pages.length > 0) openPages(pages, add);
+  else if (open.has(wanted[0]!)) goToPage(state.pages.indexOf(open.get(wanted[0]!)!));
+  if (failures.length > 0) throw new Error(failures.join('; '));
+  return pages.length;
 }
 
-/** The desktop app: writes the score to `path`, which becomes its file. */
-async function writeScore(path: string) {
-  if (!desktop || !state.score) throw new Error('No score to save');
-  await desktop.write(path, state.score.save() as Uint8Array<ArrayBuffer>);
-  state.path = path;
-  state.fileName = baseName(path);
-  state.modified = false;
-  refreshStatus();
-}
-
-async function openFile(file: File) {
+/** The desktop app: the files at `paths`, which Save then writes; what fails is said in the status line. */
+async function openPaths(paths: string[], add = false) {
   try {
-    openScore(new Score(new Uint8Array(await file.arrayBuffer())), file.name);
+    const opened = await readPaths(paths, add);
+    if (opened > 1) message(`Opened ${opened} pages`);
   } catch (err) {
-    message(`Cannot open ${file.name}: ${String(err)}`, true);
+    message(`Cannot open ${err instanceof Error ? err.message : String(err)}`, true);
   }
 }
 
-/** Saves the score: in a browser as a download, in the desktop app to its file (`as`, or without one: where the save panel says). */
-async function save(as = false) {
-  if (!state.score) return;
-  const bytes = state.score.save() as Uint8Array<ArrayBuffer>;
+/** The desktop app: writes `page` to `path`, which becomes its file. */
+async function writePage(page: Page, path: string) {
+  if (!desktop) throw new Error('No file to save to');
+  await desktop.write(path, page.score.save() as Uint8Array<ArrayBuffer>);
+  page.path = path;
+  page.fileName = baseName(path);
+  page.modified = false;
+  refreshStatus();
+}
+
+/** Where a page without a file is saved first: the folder of the page shown or of another page with a file. */
+function folderFor(page: Page): string | null {
+  return folderOf(page.path ?? state.page?.path ?? state.pages.find((p) => p.path)?.path ?? null);
+}
+
+/** Saves `page`: in a browser as a download, in the desktop app to its file (`as`, or without one: where the save panel says). The path written (a name in a browser), or null. */
+async function savePage(page: Page, as = false): Promise<string | null> {
+  const bytes = page.score.save() as Uint8Array<ArrayBuffer>;
   if (!desktop) {
-    download(bytes, state.fileName || 'score.mus', 'application/octet-stream');
-    state.modified = false;
+    download(bytes, page.fileName || 'score.mus', 'application/octet-stream');
+    page.modified = false;
     refreshStatus();
+    return page.fileName;
+  }
+  const path = !as && page.path ? page.path : await desktop.pickSave(page.fileName || 'untitled.mus', 'mus', 'SCORE file', folderFor(page));
+  if (!path) return null;
+  await writePage(page, path);
+  return path;
+}
+
+/** Saves the page shown (Save, Save As). */
+async function save(as = false) {
+  const page = state.page;
+  if (!page) return;
+  try {
+    const written = await savePage(page, as);
+    if (written && desktop) message(`Saved ${written}`);
+  } catch (err) {
+    failed(err);
+  }
+}
+
+/** Browsers drop downloads that start together: the pages go one after another. */
+const DOWNLOAD_GAP_MS = 300;
+
+/** Save all: every page with unsaved changes, each to its file (a page without one where the save panel says; Cancel stops), or as downloads. */
+async function saveAll() {
+  const unsaved = state.pages.filter((page) => page.modified);
+  if (unsaved.length === 0) {
+    message(state.pages.length > 1 ? 'Every page is saved' : 'The score is saved');
     return;
   }
-  const path = !as && state.path ? state.path : await desktop.pickSave(state.fileName || 'untitled.mus', 'mus', 'SCORE file');
-  if (!path) return;
+  const saved: string[] = [];
   try {
-    await writeScore(path);
+    for (const page of unsaved) {
+      if (!state.pages.includes(page)) continue;
+      if (!desktop && saved.length > 0) await new Promise((done) => setTimeout(done, DOWNLOAD_GAP_MS));
+      const written = await savePage(page);
+      if (!written) break;
+      saved.push(baseName(written));
+    }
   } catch (err) {
     failed(err);
     return;
   }
-  message(`Saved ${path}`);
+  const left = state.pages.filter((page) => page.modified).length;
+  message(`Saved ${saved.length ? listed(saved) : 'nothing'}${left ? `; ${left} ${left === 1 ? 'page has' : 'pages have'} unsaved changes still` : ''}`, left > 0);
 }
 
-/** The score's file name with another extension. */
+/** The page's file name with another extension. */
 function exportName(extension: string): string {
-  return `${(state.fileName || 'score').replace(/\.[^.]*$/, '')}.${extension}`;
+  return `${(state.page?.fileName || 'score').replace(/\.[^.]*$/, '')}.${extension}`;
 }
 
 /** The printed page as an SVG file, with the faces of its text embedded. */
@@ -717,7 +941,7 @@ async function exportSvg() {
       download(svg, exportName('svg'), 'image/svg+xml');
       return;
     }
-    const path = await desktop.pickSave(exportName('svg'), 'svg', 'SVG image');
+    const path = await desktop.pickSave(exportName('svg'), 'svg', 'SVG image', folderFor(state.page!));
     if (path) {
       await desktop.write(path, new TextEncoder().encode(svg));
       message(`Exported ${path}`);
@@ -727,10 +951,14 @@ async function exportSvg() {
   }
 }
 
+/** Prints every page, in their order, on paper of the page shown's size. */
 async function print() {
   if (!state.score) return;
   try {
-    await printPage(state.score.exportSvg(), paperBox());
+    await printPages(
+      state.pages.map((page) => page.score.exportSvg()),
+      paperBox(),
+    );
   } catch (err) {
     failed(err);
   }
@@ -1194,10 +1422,10 @@ function bindDrop() {
   window.addEventListener('drop', (e) => {
     e.preventDefault();
     hint(false);
-    const file = e.dataTransfer?.files[0];
-    if (file) void mayDiscard().then(async (discard) => {
-      if (discard) await openFile(file);
-    });
+    // Files dropped on an open score are pages added to it; without one, they are opened.
+    const files = [...(e.dataTransfer?.files ?? [])].filter((file) => /\.mus$/i.test(file.name));
+    if (files.length > 0) void openFiles(files, state.page !== null);
+    else if ((e.dataTransfer?.files.length ?? 0) > 0) message('Only .mus files can be opened', true);
   });
 }
 
@@ -1219,10 +1447,16 @@ function bindMenus() {
     supported: commandSupported,
     openDialog: (kind) => void openDialog(kind),
     newScore: () => void newScore(),
-    open: () => void chooseFile(),
+    open: () => void chooseFiles(),
     samples: () => samples.map((s) => ({ title: s.title, open: () => void openSample(s) })),
     save: () => void save(),
     saveAs: desktop ? () => void save(true) : undefined,
+    saveAll: () => void saveAll(),
+    pages: () => state.pages.map((page, index) => ({ name: page.fileName, modified: page.modified, current: index === state.current, show: () => goToPage(index) })),
+    newPage,
+    addPages: () => void chooseFiles(true),
+    closePage: () => void closePage(),
+    stepPage,
     desktop: desktop !== null,
     exportSvg: () => void exportSvg(),
     print: () => void print(),
@@ -1291,7 +1525,7 @@ function commandSection(menu: Menu): HTMLElement {
 
 function bindStart() {
   ui.startNew.addEventListener('click', () => void newScore());
-  ui.startOpen.addEventListener('click', () => void chooseFile());
+  ui.startOpen.addEventListener('click', () => void chooseFiles());
   ui.startSamples.replaceChildren(
     ...samples.map((sample) => {
       const button = Object.assign(document.createElement('button'), { type: 'button', className: 'sample', textContent: sample.title });
@@ -1302,7 +1536,7 @@ function bindStart() {
   ui.startSamples.previousElementSibling!.toggleAttribute('hidden', samples.length === 0);
 }
 
-/** Shortcuts that act on the whole app: open, save, print, help. */
+/** Shortcuts that act on the whole app: open, save, print, help, the pages. */
 function onAppKey(e: KeyboardEvent) {
   if (document.querySelector('dialog[open]')) return;
   if (e.key === 'F1') {
@@ -1310,9 +1544,21 @@ function onAppKey(e: KeyboardEvent) {
     showShortcuts();
     return;
   }
+  // SCORE's NB and NX: the previous and the next page (not while a text is typed, which belongs to the page shown).
+  if ((e.key === 'F2' || e.key === 'F3') && !e.metaKey && !e.ctrlKey && !e.altKey && !textFocused()) {
+    e.preventDefault();
+    stepPage(e.key === 'F2' ? -1 : 1);
+    return;
+  }
   const command = e.metaKey || e.ctrlKey;
-  if (!command || e.altKey) return;
-  const action = { o: () => void chooseFile(), s: () => void save(), p: () => void print() }[e.key.toLowerCase()];
+  if (!command) return;
+  if (e.altKey && !e.shiftKey && e.code === 'KeyS') {
+    e.preventDefault();
+    if (state.score) void saveAll();
+    return;
+  }
+  if (e.altKey) return;
+  const action = { o: () => void chooseFiles(), s: () => void save(), p: () => void print() }[e.key.toLowerCase()];
   if (!action || e.shiftKey) return;
   e.preventDefault();
   if (state.score || e.key.toLowerCase() === 'o') action();
@@ -1320,8 +1566,8 @@ function onAppKey(e: KeyboardEvent) {
 
 function bindControls() {
   ui.file.addEventListener('change', () => {
-    const file = ui.file.files?.[0];
-    if (file) void openFile(file);
+    const files = [...(ui.file.files ?? [])];
+    if (files.length > 0) void openFiles(files, chooserAdds);
     ui.file.value = '';
   });
   ui.zoomIn.addEventListener('click', () => view.setZoom(stepZoom(view.zoom, 1)));
@@ -1425,8 +1671,15 @@ async function renderPng(zoom: number, staves: [number, number] | null, withSele
 const mcpHost: McpHost = {
   score: () => state.score,
   editor: () => state.editor,
-  file: () => ({ name: state.fileName, path: state.path, modified: state.modified }),
-  busy: () => state.drag !== null || (interaction?.busy() ?? false),
+  file: () => ({ name: state.page?.fileName ?? '', path: state.page?.path ?? null, modified: state.page?.modified ?? false }),
+  pages: () => state.pages.map((page) => ({ name: page.fileName, path: page.path, modified: page.modified })),
+  current: () => state.current,
+  showPage: goToPage,
+  closePage(index) {
+    const page = state.pages[index];
+    if (page) removePage(page);
+  },
+  busy,
   batch(label, action) {
     const { score, editor } = state;
     if (!score || !editor) throw new Error('No score is open');
@@ -1462,13 +1715,25 @@ const mcpHost: McpHost = {
     return { width: box.x1 - box.x0, height: box.y1 - box.y0 };
   },
   render: renderPng,
-  open: readScore,
-  newScore: () => openScore(Score.empty(), 'untitled.mus'),
+  open: async (path, add) => void (await readPaths([path], add)),
+  newScore: (add) => (add && state.page ? newPage() : openScore(Score.empty(), 'untitled.mus')),
   async save(path) {
-    const target = path ?? state.path;
-    if (!target) throw new Error('The score has no file yet: give a path');
-    await writeScore(target);
+    const page = state.page;
+    const target = path ?? page?.path;
+    if (!page || !target) throw new Error('The page has no file yet: give a path');
+    await writePage(page, target);
     return target;
+  },
+  async saveAll() {
+    const saved: string[] = [];
+    const withoutFile: string[] = [];
+    for (const page of state.pages.filter((p) => p.modified)) {
+      if (page.path) {
+        await writePage(page, page.path);
+        saved.push(page.path);
+      } else withoutFile.push(page.fileName);
+    }
+    return { saved, withoutFile };
   },
   async exportSvg(path) {
     if (!desktop || !state.score) throw new Error('No score to export');
@@ -1520,11 +1785,11 @@ function textFocused(): boolean {
   return active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || (active instanceof HTMLElement && active.isContentEditable);
 }
 
-/** The file the system asked the desktop app to open last (Finder, a drop), unless unsaved changes are to stay. */
+/** The files the system asked the desktop app to open (Finder, a drop): pages added to the score open, else opened together. */
 async function takeOpened() {
   if (!desktop || !started) return;
-  const path = (await desktop.openedFiles()).at(-1);
-  if (path && (await mayDiscard())) await openPath(path);
+  const paths = await desktop.openedFiles();
+  if (paths.length > 0) await openPaths(paths, state.page !== null);
 }
 
 /** The menu bar's commands, files opened from outside and closing, in the desktop app. */
@@ -1535,9 +1800,15 @@ function bindDesktop(app: NonNullable<typeof desktop>) {
   const zoom = (step: 1 | -1) => state.score && view.setZoom(stepZoom(view.zoom, step));
   const commands: Record<string, () => void> = {
     new: () => void newScore(),
-    open: () => void chooseFile(),
+    open: () => void chooseFiles(),
+    'new-page': newPage,
+    'add-pages': () => void chooseFiles(true),
+    'close-page': () => void closePage(),
+    'previous-page': () => !textFocused() && stepPage(-1),
+    'next-page': () => !textFocused() && stepPage(1),
     save: () => void save(),
     'save-as': () => void save(true),
+    'save-all': () => void saveAll(),
     'export-svg': () => void exportSvg(),
     print: () => void print(),
     // In a text field Undo and Redo are its own.

@@ -53,6 +53,13 @@ impl Document {
         self.editor.file()
     }
 
+    /// An empty page of the same score: this file's header width and trailer
+    /// (program version, inches or metric), without items or undo history.
+    pub fn blank(&self) -> Self {
+        let file = self.file();
+        Self::new(MusFile { width: file.width, items: Vec::new(), trailer: file.trailer.clone() })
+    }
+
     pub fn items(&self) -> &[Item] {
         &self.file().items
     }
@@ -207,6 +214,16 @@ mod tests {
         let items = crate::input::line_items(doc.file(), &line, &mut Motives::new()).unwrap();
         assert_eq!(items[0].code(), STAFF_CODE);
         assert_eq!(MusFile::parse(&doc.save()).unwrap(), MusFile::empty());
+    }
+
+    #[test]
+    fn a_blank_page_keeps_the_file_format() {
+        let doc = Document::open(&sample("mozart.mus")).unwrap();
+        let blank = doc.blank();
+        assert!(blank.items().is_empty());
+        assert_eq!((blank.file().width, &blank.file().trailer), (doc.file().width, &doc.file().trailer));
+        assert!(blank.editor().undo_label().is_none());
+        assert_eq!(MusFile::parse(&blank.save()).unwrap(), *blank.file());
     }
 
     #[test]

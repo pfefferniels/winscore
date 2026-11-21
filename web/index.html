@@ -41,15 +41,24 @@
         <button id="help" class="icon" type="button" title="Commands, keys and gestures (F1)" aria-label="Commands, keys and gestures">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" /><path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 1.9-2.8 2.6-2.8 2.6M12 17h.01" /></svg>
         </button>
-        <input id="file" type="file" accept=".mus,.MUS" hidden />
+        <input id="file" type="file" accept=".mus,.MUS" multiple hidden />
       </header>
+      <nav class="pagebar" id="pagebar" aria-label="Pages" hidden>
+        <div class="page-tabs" id="page-tabs"></div>
+        <button id="page-new" class="icon" type="button" title="New page after this one" aria-label="New page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        </button>
+        <button id="page-add" class="icon" type="button" title="Add pages: .mus files after this one" aria-label="Add pages">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19V6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v3" /><path d="M3 19h9M18 14v6M15 17h6" /></svg>
+        </button>
+      </nav>
       <div class="tool-options" id="tool-options" hidden></div>
       <main class="main">
         <nav class="palette" id="palette" hidden></nav>
         <div class="stage" id="stage">
           <canvas id="canvas"></canvas>
           <div class="viewport" id="viewport" tabindex="0" aria-label="Page"><div class="content" id="content"></div></div>
-          <div class="drop-hint" id="drop-hint" hidden>Drop a .mus file to open it</div>
+          <div class="drop-hint" id="drop-hint" hidden>Drop .mus files to open them (as pages of the score open)</div>
           <div class="band" id="band" hidden></div>
           <div class="empty-hint" id="empty-hint" hidden>
             <div>
@@ -70,7 +79,7 @@
                 <button id="start-open" class="tile" type="button">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19V6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v2" /><path d="M3 19l2.6-7.1A1.5 1.5 0 0 1 7 11h13.5a1 1 0 0 1 .95 1.3L19.4 19z" /></svg>
                   <strong>Open…</strong>
-                  <span class="muted">A .mus file from your computer, or drop one here</span>
+                  <span class="muted">A .mus file from your computer, or several: the pages of one score. Or drop them here</span>
                 </button>
               </div>
               <h2>Samples</h2>
@@ -205,7 +214,9 @@
               <h3>File and view</h3>
               <dl>
                 <dt><kbd class="mod">⌘</kbd><kbd>Z</kbd> / <kbd class="mod">⌘</kbd><kbd>⇧</kbd><kbd>Z</kbd></dt><dd>Undo / redo</dd>
-                <dt><kbd class="mod">⌘</kbd><kbd>O</kbd> <kbd class="mod">⌘</kbd><kbd>S</kbd> <kbd class="mod">⌘</kbd><kbd>P</kbd></dt><dd>Open, save, print</dd>
+                <dt><kbd class="mod">⌘</kbd><kbd>O</kbd> <kbd class="mod">⌘</kbd><kbd>S</kbd> <kbd class="mod">⌘</kbd><kbd>P</kbd></dt><dd>Open, save the page, print every page</dd>
+                <dt><kbd>⌥</kbd><kbd class="mod">⌘</kbd><kbd>S</kbd></dt><dd>Save all pages</dd>
+                <dt><kbd>F2</kbd> <kbd>F3</kbd></dt><dd>Previous, next page (SCORE’s NB, NX)</dd>
                 <dt><kbd>+</kbd> <kbd>_</kbd></dt><dd>Zoom in, out</dd>
                 <dt><kbd class="mod">⌘</kbd> wheel</dt><dd>Zoom at the pointer</dd>
                 <dt><kbd class="mod">⌘</kbd> drag, middle drag</dt><dd>Pan</dd>

@@ -1,8 +1,8 @@
 //! The SCORE editor as a desktop app: the web app (`web/dist`) in the
 //! system's web view (WKWebView on macOS), with a native menu bar, file
 //! dialogs, files read and written where they are, files opened from the
-//! Finder or dropped on the window, and a question before unsaved changes
-//! are lost. The page finds these through `window.__TAURI__`
+//! Finder or dropped on the window (several at once: the pages of a score,
+//! each a file of its own), and a question before unsaved changes are lost. The page finds these through `window.__TAURI__`
 //! (`web/src/desktop.ts`). AI assistants reach the open score through an MCP
 //! endpoint ([`mcp`]), or the executable run with `--mcp-stdio` ([`stdio`]).
 //! WinScore opens `.mus` files ([`default_app`]).
@@ -82,20 +82,34 @@ fn percent_decoded(text: &str) -> String {
     String::from_utf8_lossy(&out).into_owned()
 }
 
-/// The open panel for `.mus` files; the path chosen.
+/// `folder` from the page, if it is one: where a panel starts.
+fn start_folder(folder: Option<String>) -> Option<std::path::PathBuf> {
+    folder.and_then(|folder| resolved(&folder).ok()).filter(|folder| folder.is_dir())
+}
+
+/// The open panel for `.mus` files, several of which may be chosen (the
+/// pages of a score), starting in `folder`; the paths chosen.
 #[tauri::command]
-async fn pick_open(app: AppHandle) -> Option<String> {
+async fn pick_open(app: AppHandle, folder: Option<String>) -> Vec<String> {
     let mut dialog = app.dialog().file().add_filter("SCORE files", &["mus", "MUS"]);
+    if let Some(folder) = start_folder(folder) {
+        dialog = dialog.set_directory(folder);
+    }
     if let Some(window) = app.get_webview_window(MAIN) {
         dialog = dialog.set_parent(&window);
     }
-    dialog.blocking_pick_file().and_then(|file| file.into_path().ok()).map(path_string)
+    let files = dialog.blocking_pick_files().unwrap_or_default();
+    files.into_iter().filter_map(|file| file.into_path().ok()).map(path_string).collect()
 }
 
-/// The save panel for a file `name` with `extension`, a `kind` of file; the path chosen.
+/// The save panel for a file `name` with `extension`, a `kind` of file,
+/// starting in `folder`; the path chosen.
 #[tauri::command]
-async fn pick_save(app: AppHandle, name: String, extension: String, kind: String) -> Option<String> {
+async fn pick_save(app: AppHandle, name: String, extension: String, kind: String, folder: Option<String>) -> Option<String> {
     let mut dialog = app.dialog().file().set_file_name(name).add_filter(kind, &[extension.as_str()]);
+    if let Some(folder) = start_folder(folder) {
+        dialog = dialog.set_directory(folder);
+    }
     if let Some(window) = app.get_webview_window(MAIN) {
         dialog = dialog.set_parent(&window);
     }
@@ -226,10 +240,15 @@ fn menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         true,
         &[
             &item("new", "New Score", Some("CmdOrCtrl+N"))?,
+            &item("new-page", "New Page", Some("CmdOrCtrl+Shift+N"))?,
             &item("open", "Open…", Some("CmdOrCtrl+O"))?,
+            &item("add-pages", "Add Pages…", Some("CmdOrCtrl+Shift+O"))?,
+            &separator()?,
+            &item("close-page", "Close Page", None)?,
             &separator()?,
             &item("save", "Save", Some("CmdOrCtrl+S"))?,
             &item("save-as", "Save As…", Some("CmdOrCtrl+Shift+S"))?,
+            &item("save-all", "Save All Pages", Some("CmdOrCtrl+Alt+S"))?,
             &item("export-svg", "Export SVG…", Some("CmdOrCtrl+E"))?,
             &separator()?,
             &item("print", "Print…", Some("CmdOrCtrl+P"))?,
@@ -262,6 +281,9 @@ fn menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
             &item("zoom-out", "Zoom Out", Some("CmdOrCtrl+-"))?,
             &item("actual-size", "Actual Size", Some("CmdOrCtrl+0"))?,
             &item("fit", "Fit Width", Some("CmdOrCtrl+9"))?,
+            &separator()?,
+            &item("previous-page", "Previous Page", Some("CmdOrCtrl+Alt+Left"))?,
+            &item("next-page", "Next Page", Some("CmdOrCtrl+Alt+Right"))?,
             &separator()?,
             &item("panel", "Side Panel", Some("CmdOrCtrl+Alt+P"))?,
             &separator()?,

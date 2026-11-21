@@ -24,6 +24,17 @@ export interface MenuHooks {
   save(): void;
   /** Save As, in the desktop app. */
   saveAs?: () => void;
+  /** Saves every page with unsaved changes. */
+  saveAll(): void;
+  /** The open pages (pages.ts), in their order. */
+  pages(): { name: string; modified: boolean; current: boolean; show(): void }[];
+  /** An empty page after the one shown. */
+  newPage(): void;
+  /** .mus files as pages after the one shown. */
+  addPages(): void;
+  closePage(): void;
+  /** The previous (−1) or next (+1) page. */
+  stepPage(step: 1 | -1): void;
   /** Whether this is the desktop app, which saves to files rather than downloading them. */
   desktop: boolean;
   exportSvg(): void;
@@ -100,14 +111,22 @@ export function appMenus(hooks: MenuHooks): Menu[] {
     entries: () =>
       tidy([
         { label: 'New score', title: 'Start from an empty page', id: 'new', run: hooks.newScore },
-        { label: 'Open…', hint: `${MOD}O`, title: 'Open a .mus file (or drop one on the window)', id: 'open', run: hooks.open },
+        { label: 'Open…', hint: `${MOD}O`, title: 'Open .mus files: several chosen together are the pages of one score (or drop them on the window)', id: 'open', run: hooks.open },
         { heading: 'Samples' },
         ...hooks.samples().map((s): Action => ({ label: s.title, id: `sample:${s.title}`, run: s.open })),
         'separator',
-        { label: 'Save', hint: `${MOD}S`, title: hooks.desktop ? 'Save the score to its file' : 'Download the score as a .mus file', id: 'save', run: hooks.save, enabled: scored },
-        hooks.saveAs ? { label: 'Save as…', hint: `⇧${MOD}S`, title: 'Save the score to another file', id: 'save-as', run: hooks.saveAs, enabled: scored } : null,
-        { label: 'Export SVG', title: 'The page as printed, without staff numbers', id: 'export-svg', run: hooks.exportSvg, enabled: scored },
-        { label: 'Print…', hint: `${MOD}P`, title: 'Print the page (without staff numbers)', id: 'print', run: hooks.print, enabled: scored },
+        { label: 'Save', hint: `${MOD}S`, title: hooks.desktop ? 'Save the page shown to its file' : 'Download the page shown as a .mus file', id: 'save', run: hooks.save, enabled: scored },
+        hooks.saveAs ? { label: 'Save as…', hint: `⇧${MOD}S`, title: 'Save the page shown to another file', id: 'save-as', run: hooks.saveAs, enabled: scored } : null,
+        {
+          label: 'Save all pages',
+          hint: MOD === '⌘' ? '⌥⌘S' : 'Ctrl+Alt+S',
+          title: hooks.desktop ? 'Save every page with unsaved changes, each to its file' : 'Download every page with unsaved changes, each as a .mus file',
+          id: 'save-all',
+          run: hooks.saveAll,
+          enabled: () => scored() && hooks.pages().some((p) => p.modified),
+        },
+        { label: 'Export SVG', title: 'The page shown as printed, without staff numbers', id: 'export-svg', run: hooks.exportSvg, enabled: scored },
+        { label: 'Print…', hint: `${MOD}P`, title: 'Print every page (without staff numbers)', id: 'print', run: hooks.print, enabled: scored },
       ]),
   };
 
@@ -212,6 +231,35 @@ export function appMenus(hooks: MenuHooks): Menu[] {
       ]),
   };
 
+  const pages: Menu = {
+    id: 'pages',
+    label: 'Pages',
+    entries: () => {
+      const open = hooks.pages();
+      const shown = () => hooks.pages().findIndex((p) => p.current);
+      return tidy([
+        { label: 'New page', title: 'An empty page after this one, a file of its own named by the next number', id: 'new-page', run: hooks.newPage, enabled: scored },
+        { label: 'Add pages…', title: 'Open .mus files as pages after this one', id: 'add-pages', run: hooks.addPages, enabled: scored },
+        { label: 'Close page', title: 'Close the page shown (its file stays as it is)', id: 'close-page', run: hooks.closePage, enabled: scored },
+        'separator',
+        { label: 'Previous page', hint: 'F2', title: 'Show the page before this one (SCORE’s NB)', id: 'previous-page', run: () => hooks.stepPage(-1), enabled: () => shown() > 0 },
+        { label: 'Next page', hint: 'F3', title: 'Show the page after this one (SCORE’s NX)', id: 'next-page', run: () => hooks.stepPage(1), enabled: () => shown() >= 0 && shown() < hooks.pages().length - 1 },
+        ...(open.length > 1 ? [{ heading: 'Open pages' } as Entry] : []),
+        ...(open.length > 1
+          ? open.map(
+              (page, index): Action => ({
+                label: `${index + 1}  ${page.name}${page.modified ? ' •' : ''}`,
+                title: page.modified ? `${page.name}: unsaved changes` : page.name,
+                id: `page:${index + 1}`,
+                run: page.show,
+                checked: () => hooks.pages()[index]?.current ?? false,
+              }),
+            )
+          : []),
+      ]);
+    },
+  };
+
   const view: Menu = {
     id: 'view',
     label: 'View',
@@ -228,5 +276,5 @@ export function appMenus(hooks: MenuHooks): Menu[] {
     ],
   };
 
-  return [file, edit, insert, layout, view];
+  return [file, pages, edit, insert, layout, view];
 }

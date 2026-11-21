@@ -190,6 +190,126 @@ button.icon[aria-pressed='true'] {
   display: none;
 }
 
+/* The page bar: a tab for each open page (a .mus file of its own) while
+   there are several, and buttons for a new page and pages from files. */
+.pagebar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  height: 36px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--chrome);
+  white-space: nowrap;
+}
+
+.pagebar > button.icon {
+  width: 28px;
+  height: 28px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.pagebar > button.icon:hover {
+  background: var(--active);
+}
+
+.pagebar > button.icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.page-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  height: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.page-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.page-tab {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.page-tab:hover {
+  background: var(--active);
+}
+
+.page-tab.current {
+  border-color: var(--border);
+  background: var(--bg);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+}
+
+.page-tab .page-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  height: 26px;
+  padding: 0 2px 0 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+}
+
+.page-tab.current .page-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.page-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+.page-tab .page-close {
+  width: 22px;
+  height: 22px;
+  margin: 0 3px 0 2px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  opacity: 0;
+}
+
+.page-tab:hover .page-close,
+.page-tab.current .page-close,
+.page-tab .page-close:focus-visible {
+  opacity: 1;
+}
+
+.page-tab .page-close:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.page-tab .page-close svg {
+  width: 13px;
+  height: 13px;
+}
+
 .zoom {
   display: inline-flex;
   align-items: center;
@@ -1119,6 +1239,26 @@ button.danger:hover {
     height: 36px;
   }
 
+  .pagebar {
+    height: 44px;
+  }
+
+  .page-tab,
+  .page-tab .page-name {
+    height: 36px;
+  }
+
+  .page-tab .page-close {
+    width: 32px;
+    height: 32px;
+    opacity: 1;
+  }
+
+  .pagebar > button.icon {
+    width: 40px;
+    height: 40px;
+  }
+
   input,
   select {
     font-size: 16px;
@@ -1300,6 +1440,11 @@ button.danger:hover {
 
   .print-page {
     display: block;
+  }
+
+  /* A page to a sheet. */
+  .print-page svg:not(:last-child) {
+    break-after: page;
   }
 
   /* The page's SVG draws with its own attributes, not the app's icon style

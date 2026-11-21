@@ -2,7 +2,8 @@
 // new score and put a staff and notes on it with the insertion modes; open a
 // sample, click a staff line, edit a parameter, insert notes, slurs and clefs
 // with the mouse, drag handles and guides, answer group commands, save.
-// Then the same app on a phone: its layout, touch gestures and the list of
+// Open several files as the pages of one score, change between them, copy
+// from one to another and save them all. Then the same app on a phone: its layout, touch gestures and the list of
 // commands.
 import { chromium } from 'playwright';
 import { preview } from 'vite';
@@ -528,6 +529,106 @@ try {
   assert.deepEqual((await tool('undo', { steps: 4 })).data.undone.length, 3);
   assert.equal(await page.getAttribute('#app', 'data-items'), '344');
 
+  assert.deepEqual(errors, []);
+
+  // Pages: .mus files chosen together open as the pages of one score, in the order of their names,
+  // with a tab for each over the page. The tabs, F2 and F3 and the `?` list change the page shown,
+  // each page keeping its own undo history; items copied on one page paste onto another. Save all
+  // downloads each page with unsaved changes; a new page is named by the next number; closing a page
+  // with changes asks first, and with one page left the tabs go.
+  await page.goto('http://localhost:4178/');
+  await page.waitForSelector('#app[data-ready="true"]');
+  assert.ok(await page.isHidden('#pagebar'));
+  await page.setInputFiles('#file', ['../assets/samples/mozart.mus', '../assets/samples/carmen.mus']);
+  await page.waitForFunction(() => document.getElementById('app').dataset.pages === '2');
+  assert.ok(await page.isVisible('#pagebar'));
+  const tabs = () => page.locator('.page-label').allTextContents();
+  assert.deepEqual(await tabs(), ['carmen.mus', 'mozart.mus']);
+  assert.equal(await page.textContent('#status'), 'carmen.mus');
+  assert.equal(await page.getAttribute('.page-name[aria-current="page"]', 'data-page'), '0');
+  const carmenItems = Number(await page.getAttribute('#app', 'data-items'));
+  await page.click('.page-name[data-page="1"]');
+  assert.equal(await page.textContent('#status'), 'mozart.mus');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
+  assert.equal(await page.getAttribute('#app', 'data-page'), '2');
+  await page.keyboard.press('F2');
+  assert.equal(await page.textContent('#status'), 'carmen.mus');
+  await page.keyboard.press('F2');
+  assert.equal(await page.textContent('#message'), 'This is the first page');
+  await page.keyboard.press('F3');
+  assert.equal(await page.textContent('#status'), 'mozart.mus');
+  await pick(4);
+  await page.keyboard.press('Control+c');
+  await page.keyboard.press('F2');
+  await page.keyboard.press('Control+v');
+  assert.equal(Number(await page.getAttribute('#app', 'data-items')), carmenItems + 1);
+  assert.match(await page.textContent('#item h2'), /· Note$/);
+  assert.match(await page.getAttribute('#undo', 'title'), /^Undo Paste /);
+  assert.equal(await page.locator('.page-tab .page-dot').count(), 1);
+  assert.equal(await page.locator('.page-name[data-page="0"] .page-dot').count(), 1);
+  await page.keyboard.press('F3');
+  assert.ok(await page.isDisabled('#undo'), 'mozart.mus has nothing to undo');
+  assert.equal(await page.textContent('#doc-state'), '');
+  const [one] = await Promise.all([page.waitForEvent('download'), menu('file', 'save-all')]);
+  assert.equal(one.suggestedFilename(), 'carmen.mus');
+  assert.ok(fs.readFileSync(await one.path()).length > fs.readFileSync('../assets/samples/carmen.mus').length, 'the pasted note is saved');
+  assert.equal(await page.locator('.page-tab .page-dot').count(), 0);
+  await pick(4);
+  await page.keyboard.press('Delete');
+  await page.keyboard.press('F2');
+  await pick(1);
+  await page.keyboard.press('Delete');
+  const both = [];
+  const collect = (d) => both.push(d.suggestedFilename());
+  page.on('download', collect);
+  await page.keyboard.press('Control+Alt+s');
+  await page.waitForFunction(() => document.querySelectorAll('.page-tab .page-dot').length === 0);
+  await page.waitForTimeout(200);
+  page.off('download', collect);
+  assert.deepEqual(both.sort(), ['carmen.mus', 'mozart.mus']);
+  assert.match(await page.textContent('#message'), /^Saved carmen\.mus and mozart\.mus$/);
+
+  // A new page goes after the page shown, empty, named by the next number; the `?` list shows the pages.
+  await page.click('#page-new');
+  assert.deepEqual(await tabs(), ['carmen.mus', 'carmen2.mus', 'mozart.mus']);
+  assert.equal(await page.textContent('#status'), 'carmen2.mus');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '0');
+  assert.ok(await page.isVisible('#empty-hint'));
+  await page.click('#help');
+  assert.equal(await page.getAttribute('.command-list [data-action="page:2"]', 'aria-pressed'), 'true');
+  await page.click('.command-list [data-action="page:3"]');
+  assert.equal(await page.textContent('#status'), 'mozart.mus');
+  await pick(4);
+  await page.keyboard.press('Delete');
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await page.click('.page-close[data-page="2"]');
+  assert.equal(await page.getAttribute('#app', 'data-pages'), '3');
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.click('.page-close[data-page="2"]');
+  await page.waitForFunction(() => document.getElementById('app').dataset.pages === '2');
+  assert.equal(await page.textContent('#status'), 'carmen2.mus');
+
+  // Print puts every page on a sheet of its own.
+  await page.evaluate(() => (window.print = () => (document.body.dataset.printed = String(document.querySelectorAll('#print-page svg').length))));
+  await menu('file', 'print');
+  await page.waitForSelector('body[data-printed="2"]', { state: 'attached' });
+
+  // Assistants see the pages and change them through MCP.
+  const pages = (await tool('get_document')).data;
+  assert.equal(pages.page, 2);
+  assert.deepEqual(pages.pages.map((p) => p.file), ['carmen.mus', 'carmen2.mus']);
+  assert.equal((await tool('show_page', { file: 'carmen.mus' })).data.page, 1);
+  assert.equal(await page.textContent('#status'), 'carmen.mus');
+  assert.equal((await tool('new_score', { add_page: true })).data.opened, 'carmen3.mus');
+  assert.deepEqual(await tabs(), ['carmen.mus', 'carmen3.mus', 'carmen2.mus']);
+  await tool('insert_items', { items: [{ word: 'STAFF', staff: 1, position: 0, level: 0 }] });
+  assert.ok((await tool('close_page', {})).result.isError, 'a page with changes stays without discard_changes');
+  assert.deepEqual((await tool('save', { all_pages: true })).data.notSavedWithoutFile, ['carmen3.mus']);
+  assert.equal((await tool('close_page', { page: 2, discard_changes: true })).data.pages, 2);
+  await page.click('.page-close[data-page="1"]');
+  await page.waitForFunction(() => document.getElementById('app').dataset.pages === '1');
+  assert.ok(await page.isHidden('#pagebar'));
+  assert.equal(await page.textContent('#status'), 'carmen.mus');
   assert.deepEqual(errors, []);
 
   // On a phone: the app bar's essentials, the modes in a row over the page, the panel hidden until asked for.

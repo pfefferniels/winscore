@@ -1,6 +1,7 @@
-// Printing and SVG export of the page. Print puts the page, drawn for print
+// Printing and SVG export of the pages. Print puts the pages, drawn for print
 // as SVG by score_render::svg, into a container that a print stylesheet
-// shows alone on paper of the score's size; the app's chrome is hidden.
+// shows alone, a page to a sheet of paper of the score's size; the app's
+// chrome is hidden.
 // Lines, curves and text stay vectors at the printer's resolution, and a
 // PDF saved from the print dialog has real paths and text.
 import type { Box } from './display';
@@ -26,19 +27,21 @@ function setPageSize(widthIn: number, heightIn: number) {
   style.textContent = `@page { size: ${widthIn}in ${heightIn}in; margin: 0; }`;
 }
 
-/** Prints `svg`, the page as the score's exportSvg draws it, on paper `paper`. */
-export async function printPage(svg: string, paper: Box) {
+/** Prints `pages`, each drawn as the score's exportSvg draws a page, one to a sheet of paper `paper`. */
+export async function printPages(pages: string[], paper: Box) {
   const widthIn = (paper.x1 - paper.x0) / UNITS_PER_INCH;
   const heightIn = (paper.y1 - paper.y0) / UNITS_PER_INCH;
-  const parsed = new DOMParser().parseFromString(svg, 'image/svg+xml');
-  if (parsed.documentElement.localName !== 'svg' || parsed.querySelector('parsererror')) {
-    throw new Error('The page could not be drawn for print');
-  }
+  const drawn = pages.map((svg) => {
+    const parsed = new DOMParser().parseFromString(svg, 'image/svg+xml');
+    if (parsed.documentElement.localName !== 'svg' || parsed.querySelector('parsererror')) {
+      throw new Error('The page could not be drawn for print');
+    }
+    return document.importNode(parsed.documentElement, true);
+  });
   // Inline in the document, its text takes the app's faces (fonts.css); the
   // container is hidden on screen, so nothing would load them before print.
-  const page = document.importNode(parsed.documentElement, true);
-  await loadSvgFaces(page);
-  printRoot().replaceChildren(page);
+  await Promise.all(drawn.map(loadSvgFaces));
+  printRoot().replaceChildren(...drawn);
   setPageSize(widthIn, heightIn);
   window.print();
 }

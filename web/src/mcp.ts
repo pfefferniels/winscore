@@ -20,7 +20,16 @@ import { creationWords, editWords, groupCommand, type Score } from './wasm/score
 export interface McpHost {
   score(): Score | null;
   editor(): Editor | null;
+  /** The page shown, which the tools read and edit. */
   file(): { name: string; path: string | null; modified: boolean };
+  /** Every open page (a .mus file of its own), in their order. */
+  pages(): { name: string; path: string | null; modified: boolean }[];
+  /** The index of the page shown in `pages`. */
+  current(): number;
+  /** Shows page `index`, which the tools then act on. */
+  showPage(index: number): void;
+  /** Closes page `index`, its unsaved changes with it. */
+  closePage(index: number): void;
   /** Whether the person at the window is in the middle of a gesture (a drag), which an edit must not cut into. */
   busy(): boolean;
   /** Runs `action` as one undo step `label`, then shows the score; undone if it throws. The step's name, or null if nothing changed. */
@@ -40,10 +49,14 @@ export interface McpHost {
   paper(): { width: number; height: number };
   /** The page (or the staves `staves` of it) as a PNG at `zoom` percent (100: 96 dpi), base64. */
   render(zoom: number, staves: [number, number] | null, selection: boolean): Promise<{ data: string; width: number; height: number }>;
-  open(path: string): Promise<void>;
-  newScore(): void;
-  /** Saves to `path`, else to the score's file; the path written. */
+  /** Opens the file at `path`: in place of the pages open, or (`add`) as a page after the one shown. */
+  open(path: string, add: boolean): Promise<void>;
+  /** An empty score in place of the pages open, or (`add`) an empty page after the one shown. */
+  newScore(add: boolean): void;
+  /** Saves the page shown to `path`, else to its file; the path written. */
   save(path: string | null): Promise<string>;
+  /** Saves every page with unsaved changes that has a file; the paths written, and the pages without a file. */
+  saveAll(): Promise<{ saved: string[]; withoutFile: string[] }>;
   exportSvg(path: string): Promise<void>;
   /** Shows in the status line what an assistant did. */
   notify(text: string): void;
@@ -79,9 +92,17 @@ const INSTRUCTIONS = `WinScore edits the score open in its window: a file of Lel
 
 How SCORE places things: staves are numbered from the bottom of the page up (staff 1 lowest). On a staff, P3 is the horizontal position, 0 at its left end to 200 at its right end; P4 is the vertical position in scale steps from the staff's reference level, whatever the clef: on a five-line staff 3 is the bottom line, 7 the middle line, 11 the top line, 1 the first ledger line below. Every item is a list of numbers P1 … Pn: P1 its code (1 note, 2 rest, 3 clef, 4 line or hairpin, 5 slur, tie or ending, 6 beam, 7 trill, ottava or pedal line, 8 staff, 9 symbol, 10 number, 12 box or circle, 14 barline, 16 text, 17 key signature, 18 meter), P2 its staff, P3 and P4 its place. Notes of a chord share a P3. SCORE draws what the numbers say: it does not respace music or add accidentals by itself.
 
-Items are named by "id", which stays with an item through edits and undo. Start with get_document and render_page (an image of the page) to see the score; list_items and get_items read items, with their settings: the side panel's named values (Pitch "F#4", Value "Eighth", Stem "Up" …). set_settings changes items by those names; set_parameters by raw P numbers. add_notes writes notes and rests by pitch name and duration; insert_items makes any item from a SCORE creation word (list_words) or raw parameters; insert_text adds text. run_command runs SCORE's edit commands on items (list_commands), and group and layout commands such as LJ (line up and justify a system), answering their questions. describe_kind explains the parameters of an item code.`;
+Items are named by "id", which stays with an item through edits and undo. Start with get_document and render_page (an image of the page) to see the score; list_items and get_items read items, with their settings: the side panel's named values (Pitch "F#4", Value "Eighth", Stem "Up" …). set_settings changes items by those names; set_parameters by raw P numbers. add_notes writes notes and rests by pitch name and duration; insert_items makes any item from a SCORE creation word (list_words) or raw parameters; insert_text adds text. run_command runs SCORE's edit commands on items (list_commands), and group and layout commands such as LJ (line up and justify a system), answering their questions. describe_kind explains the parameters of an item code.
+
+A score of several pages is a .mus file for each page (SCORE numbers them by name: SONATA01.MUS, SONATA02.MUS …); the window can hold them all, and the tools act on the page shown. get_document lists the pages; show_page shows another, open_file and new_score with add_page add pages, close_page closes one, and save with all_pages saves every page. Ids belong to their page: after show_page, read the items again.`;
 
 const NO_SCORE = 'No score is open: open_file opens one, new_score starts an empty one.';
+
+/** Unsaved pages as an error says them. */
+function unsavedOf(pages: { name: string; modified: boolean }[]): string | null {
+  const names = pages.filter((p) => p.modified).map((p) => p.name);
+  return names.length === 0 ? null : `${names.join(', ')} ${names.length === 1 ? 'has' : 'have'} unsaved changes: save first (save with all_pages), or pass discard_changes`;
+}
 
 // ---------------------------------------------------------------------------
 // Reading items
@@ -291,6 +312,20 @@ export function createMcpServer(host: McpHost) {
     return json({ done: step ?? 'nothing changed', ...(messages.length ? { engine: messages } : {}), ...extra, selection: selected });
   };
 
+  /** The index of the page `args` name by `page` (from 1) or `file`. */
+  const pageIndex = (args: Args): number => {
+    const pages = host.pages();
+    if (args.file !== undefined) {
+      const name = text(args.file, 'file').toLowerCase();
+      const index = pages.findIndex((p) => p.name.toLowerCase() === name || p.path?.toLowerCase() === name);
+      if (index < 0) throw new Error(`No page is the file ${String(args.file)}: get_document lists the pages`);
+      return index;
+    }
+    const page = Number(args.page);
+    if (!Number.isInteger(page) || page < 1 || page > pages.length) throw new Error(`Give a page from 1 to ${pages.length}, or a file name`);
+    return page - 1;
+  };
+
   /** The items `action` adds, by their ids. */
   const added = (score: Score, before: Set<number>) => keys(score).filter((key) => !before.has(key));
 
@@ -298,7 +333,7 @@ export function createMcpServer(host: McpHost) {
     {
       name: 'get_document',
       title: 'The open score',
-      description: 'The score open in the window: its file, whether it has unsaved changes, the paper, its staves (bottom to top, with their clefs) and how many items each has, the selection and the undo history.',
+      description: 'The page open in the window: its file, whether it has unsaved changes, the paper, its staves (bottom to top, with their clefs) and how many items each has, the selection and the undo history; and every open page of the score, by number.',
       inputSchema: { type: 'object', properties: {} },
       annotations: { readOnlyHint: true },
       run() {
@@ -314,6 +349,8 @@ export function createMcpServer(host: McpHost) {
           file: file.name,
           path: file.path,
           unsavedChanges: file.modified,
+          page: host.current() + 1,
+          pages: host.pages().map((p, i) => ({ page: i + 1, file: p.name, path: p.path, unsavedChanges: p.modified })),
           paperInches: [paper.width / 4000, paper.height / 4000],
           items: score.itemCount(),
           staves: host.staves().map((s) => {
@@ -813,36 +850,78 @@ export function createMcpServer(host: McpHost) {
     {
       name: 'open_file',
       title: 'Open a file',
-      description: 'Opens a .mus file by its absolute path (or ~/…) in the window, in place of the score there. Unsaved changes are only thrown away with discard_changes.',
-      inputSchema: { type: 'object', properties: { path: { type: 'string' }, discard_changes: { type: 'boolean' } }, required: ['path'] },
+      description: 'Opens a .mus file by its absolute path (or ~/…) in the window, in place of the pages there; with add_page, as a page after the one shown (a file open already is shown). Unsaved changes are only thrown away with discard_changes.',
+      inputSchema: { type: 'object', properties: { path: { type: 'string' }, add_page: { type: 'boolean' }, discard_changes: { type: 'boolean' } }, required: ['path'] },
       annotations: { destructiveHint: true },
       async run(args) {
         const path = text(args.path, 'path');
-        if (host.file().modified && args.discard_changes !== true) throw new Error(`${host.file().name} has unsaved changes: save it first, or pass discard_changes`);
-        await host.open(path);
+        const add = args.add_page === true && host.score() !== null;
+        const unsaved = add ? null : unsavedOf(host.pages());
+        if (unsaved && args.discard_changes !== true) throw new Error(unsaved);
+        if (host.busy()) throw new Error('A drag is in progress in the window; try again in a moment.');
+        await host.open(path, add);
         host.notify(`${client}: opened ${path}`);
-        return json({ opened: path, items: host.score()?.itemCount() ?? 0 });
+        return json({ opened: path, page: host.current() + 1, pages: host.pages().length, items: host.score()?.itemCount() ?? 0 });
       },
     },
     {
       name: 'new_score',
       title: 'New score',
-      description: 'An empty score in the window, in place of the one there (insert_items with STAFF makes its staves). Unsaved changes are only thrown away with discard_changes.',
-      inputSchema: { type: 'object', properties: { discard_changes: { type: 'boolean' } } },
+      description: 'An empty score in the window, in place of the pages there (insert_items with STAFF makes its staves); with add_page, an empty page after the one shown, named by the next number (sonata01.mus → sonata02.mus), which save then writes as a file of its own. Unsaved changes are only thrown away with discard_changes.',
+      inputSchema: { type: 'object', properties: { add_page: { type: 'boolean' }, discard_changes: { type: 'boolean' } } },
       annotations: { destructiveHint: true },
       run(args) {
-        if (host.file().modified && args.discard_changes !== true) throw new Error(`${host.file().name} has unsaved changes: save it first, or pass discard_changes`);
-        host.newScore();
-        return json({ opened: 'untitled.mus' });
+        const add = args.add_page === true && host.score() !== null;
+        const unsaved = add ? null : unsavedOf(host.pages());
+        if (unsaved && args.discard_changes !== true) throw new Error(unsaved);
+        if (host.busy()) throw new Error('A drag is in progress in the window; try again in a moment.');
+        host.newScore(add);
+        return json({ opened: host.file().name, page: host.current() + 1, pages: host.pages().length });
+      },
+    },
+    {
+      name: 'show_page',
+      title: 'Show a page',
+      description: 'Shows another open page of the score, by its number (get_document lists them) or its file name; the other tools then read and edit that page.',
+      inputSchema: { type: 'object', properties: { page: { type: 'integer', minimum: 1 }, file: { type: 'string' } } },
+      run(args) {
+        need();
+        const index = pageIndex(args);
+        if (host.busy()) throw new Error('A drag is in progress in the window; try again in a moment.');
+        host.showPage(index);
+        return json({ page: host.current() + 1, file: host.file().name, items: host.score()?.itemCount() ?? 0 });
+      },
+    },
+    {
+      name: 'close_page',
+      title: 'Close a page',
+      description: 'Closes an open page (default the one shown), by its number or file name; its file stays as it was. Unsaved changes are only thrown away with discard_changes.',
+      inputSchema: { type: 'object', properties: { page: { type: 'integer', minimum: 1 }, file: { type: 'string' }, discard_changes: { type: 'boolean' } } },
+      annotations: { destructiveHint: true },
+      run(args) {
+        need();
+        const index = args.page === undefined && args.file === undefined ? host.current() : pageIndex(args);
+        const page = host.pages()[index]!;
+        if (page.modified && args.discard_changes !== true) throw new Error(unsavedOf([page])!);
+        if (host.busy()) throw new Error('A drag is in progress in the window; try again in a moment.');
+        host.closePage(index);
+        host.notify(`${client}: closed ${page.name}`);
+        return json({ closed: page.name, pages: host.pages().length, ...(host.score() ? { page: host.current() + 1, file: host.file().name } : {}) });
       },
     },
     {
       name: 'save',
       title: 'Save',
-      description: 'Saves the score to its file, or to path (absolute, or ~/…), which then becomes its file.',
-      inputSchema: { type: 'object', properties: { path: { type: 'string' } } },
+      description: 'Saves the page shown to its file, or to path (absolute, or ~/…), which then becomes its file; with all_pages, every page with unsaved changes to its own file (pages without one are listed: show_page and save with a path names them).',
+      inputSchema: { type: 'object', properties: { path: { type: 'string' }, all_pages: { type: 'boolean' } } },
       async run(args) {
         need();
+        if (args.all_pages === true) {
+          if (args.path !== undefined) throw new Error('all_pages saves each page to its own file: give no path');
+          const { saved, withoutFile } = await host.saveAll();
+          if (saved.length) host.notify(`${client}: saved ${saved.length} ${saved.length === 1 ? 'page' : 'pages'}`);
+          return json({ saved, ...(withoutFile.length ? { notSavedWithoutFile: withoutFile } : {}) });
+        }
         const path = args.path === undefined ? null : text(args.path, 'path');
         if (!path && !host.file().path) throw new Error(`${host.file().name} has no file yet: give a path`);
         const written = await host.save(path);

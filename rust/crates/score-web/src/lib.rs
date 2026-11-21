@@ -113,6 +113,11 @@ impl Score {
         Score(Document::new(MusFile::empty()))
     }
 
+    /// A new page for the same score: empty, in this file's format.
+    pub fn blank(&self) -> Score {
+        Score(self.0.blank())
+    }
+
     #[wasm_bindgen(js_name = itemCount)]
     pub fn item_count(&self) -> usize {
         self.0.items().len()

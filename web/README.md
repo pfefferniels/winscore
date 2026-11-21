@@ -20,6 +20,8 @@ npm run dev        # builds the wasm, copies the samples, serves http://localhos
 
 `npm run build` writes a self-contained static site to `web/dist/` (relative paths; wasm, fonts and samples included). `npm run preview` serves it at http://localhost:4173.
 
+**Pages.** SCORE keeps each page of a score in a `.mus` file of its own. Open… takes several files at once (and a drop several), which open as the pages of one score in the order of their names (`src/pages.ts`); a tab bar over the page lists them while there are more than one. Each page has its own undo history and selection; the clipboard is shared. The `?` dialog's Pages menu adds a new page (named by the next number: `sonata01.mus` → `sonata02.mus`), adds pages from files, closes the page shown and goes to the previous or next one (F2, F3, SCORE's NB and NX). Save saves the page shown, Save all pages (⌥⌘S, Ctrl+Alt+S) every page with unsaved changes (in a browser as downloads, one after another), and Print prints every page, one to a sheet.
+
 The same build is the Mac app (`desktop/README.md`): `src/desktop.ts` finds Tauri in the page and then saves to files rather than downloading them, asks with the system's alerts and takes the menu bar's commands and files opened from the Finder.
 
 Environment variables: `CARGO_TARGET_DIR` (default `rust/target`), `WASM_PROFILE` (default `release`).

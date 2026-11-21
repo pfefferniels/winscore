@@ -1,7 +1,8 @@
 // The desktop app (desktop/, built with Tauri): this same page in the
 // system's web view, with a native menu bar, file dialogs and files on disk.
-// Save writes the file that was opened, Save As and Export SVG ask where,
-// questions are the system's alerts, and Finder opens .mus files with it.
+// Open takes several files at once (the pages of a score), Save writes the
+// file a page was opened from, Save As and Export SVG ask where, questions
+// are the system's alerts, and Finder opens .mus files with it.
 // Printing is the page's window.print(), which Tauri hands to the system's
 // print panel.
 // In a browser `desktop` is null, and the page downloads and asks as before.
@@ -27,10 +28,10 @@ export interface McpStatus {
 }
 
 export interface Desktop {
-  /** Asks for a .mus file to open; its path, or null when cancelled. */
-  pickOpen(): Promise<string | null>;
-  /** Asks where to save a file named `name` with `extension` (a `kind` of file); its path, or null. */
-  pickSave(name: string, extension: string, kind: string): Promise<string | null>;
+  /** Asks for .mus files to open, starting in `folder` if given; their paths, none when cancelled. */
+  pickOpen(folder?: string | null): Promise<string[]>;
+  /** Asks where to save a file named `name` with `extension` (a `kind` of file), starting in `folder` if given; its path, or null. */
+  pickSave(name: string, extension: string, kind: string, folder?: string | null): Promise<string | null>;
   read(path: string): Promise<Uint8Array>;
   write(path: string, bytes: Uint8Array): Promise<void>;
   /** The system's alert with `message`, the default button `ok` and Cancel; whether `ok` was chosen. */
@@ -38,7 +39,7 @@ export interface Desktop {
   setTitle(title: string): void;
   /** Files the system asked the app to open (Finder, Open With, a drop on the Dock icon or the window) not yet taken. */
   openedFiles(): Promise<string[]>;
-  /** A command of the menu bar, by its id: new, open, save, save-as, export-svg, print, undo, redo, zoom-in … */
+  /** A command of the menu bar, by its id: new, open, new-page, next-page, save, save-as, save-all, export-svg, print, undo, redo, zoom-in … */
   onMenu(handler: (id: string) => void): void;
   /** Files were opened from outside the page: take them with `openedFiles`. */
   onOpened(handler: () => void): void;
@@ -62,8 +63,8 @@ function bridge(tauri: Tauri): Desktop {
   const invoke = tauri.core.invoke;
   const listen = <T>(event: string, handler: (payload: T) => void) => void tauri.event.listen<T>(event, (e) => handler(e.payload));
   return {
-    pickOpen: () => invoke<string | null>('pick_open'),
-    pickSave: (name, extension, kind) => invoke<string | null>('pick_save', { name, extension, kind }),
+    pickOpen: (folder) => invoke<string[]>('pick_open', { folder: folder ?? null }),
+    pickSave: (name, extension, kind, folder) => invoke<string | null>('pick_save', { name, extension, kind, folder: folder ?? null }),
     read: async (path) => new Uint8Array(await invoke<ArrayBuffer>('read_file', { path })),
     // The bytes go as the request's body, the path (any characters) in a header.
     write: (path, bytes) => invoke<void>('write_file', bytes, { headers: { path: encodeURIComponent(path) } }),
