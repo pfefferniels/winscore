@@ -1740,7 +1740,11 @@ const mcpHost: McpHost = {
     await desktop.write(path, new TextEncoder().encode(await embedFonts(state.score.exportSvg())));
   },
   notify: (text) => message(text),
+  scripts: () => scriptsAllowed,
 };
+
+/** Whether assistants may run scripts in the page (run_script): the desktop app's setting, else allowed (tests). */
+let scriptsAllowed = true;
 
 /** Answers MCP messages: the desktop app's clients, and tests through `window.winscore.mcp`. */
 const mcp = createMcpServer(mcpHost);
@@ -1749,8 +1753,11 @@ const mcp = createMcpServer(mcpHost);
 async function showMcp(app: NonNullable<typeof desktop>) {
   const dialog = ui.mcpDialog;
   const enabled = dialog.querySelector<HTMLInputElement>('#mcp-enabled')!;
+  const scripts = dialog.querySelector<HTMLInputElement>('#mcp-scripts')!;
   const fill = (status: Awaited<ReturnType<typeof app.mcpStatus>>) => {
     enabled.checked = status.enabled;
+    scripts.checked = scriptsAllowed = status.scripts;
+    scripts.disabled = !status.enabled;
     dialog.querySelector('#mcp-state')!.textContent = status.error
       ? `Not available: ${status.error}`
       : status.enabled
@@ -1761,6 +1768,7 @@ async function showMcp(app: NonNullable<typeof desktop>) {
   };
   fill(await app.mcpStatus());
   enabled.onchange = async () => fill(await app.setMcpEnabled(enabled.checked));
+  scripts.onchange = async () => fill(await app.setMcpScripts(scripts.checked));
   dialog.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((button) => {
     button.onclick = () => {
       const field = dialog.querySelector<HTMLInputElement>(`#${button.dataset.copy}`)!;
@@ -1838,7 +1846,12 @@ function bindDesktop(app: NonNullable<typeof desktop>) {
   app.onOpened(() => void takeOpened());
   app.onDragging((over) => (ui.dropHint.hidden = !over));
   app.onCloseRequested(() => void mayDiscard().then((close) => close && app.close()));
-  app.onMcpRequest((id, request) => void mcp.handle(request).then((response) => app.mcpRespond(id, response)));
+  // Requests wait for the app's settings: whether scripts are allowed.
+  const settled = app
+    .mcpStatus()
+    .then((status) => void (scriptsAllowed = status.scripts))
+    .catch(() => void (scriptsAllowed = false));
+  app.onMcpRequest((id, request) => void settled.then(() => mcp.handle(request)).then((response) => app.mcpRespond(id, response)));
   app.ready();
 }
 

@@ -136,6 +136,8 @@
           <p class="muted">Claude Code and other assistants that speak the Model Context Protocol can read and edit the score open in this window while WinScore runs. Each change they make is one undo step here, and you see it at once.</p>
           <label class="mcp-switch"><input id="mcp-enabled" type="checkbox" /> Let assistants on this computer read and edit the open score</label>
           <p id="mcp-state" class="muted"></p>
+          <label class="mcp-switch"><input id="mcp-scripts" type="checkbox" /> Let them run scripts</label>
+          <p class="muted">A script is code an assistant writes to make many changes at once, such as transposing a passage; it runs in WinScore with WinScore's rights, as one undo step. Turned off, assistants make the same changes one step at a time.</p>
           <h3>Claude Code</h3>
           <p class="muted">Run once in a terminal:</p>
           <div class="mcp-command"><input id="mcp-http" type="text" readonly spellcheck="false" /><button type="button" data-copy="mcp-http">Copy</button></div>

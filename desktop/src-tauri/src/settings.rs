@@ -9,6 +9,8 @@ use tauri::{AppHandle, Manager, Runtime};
 pub struct Settings {
     /// The MCP endpoint was turned off.
     pub mcp_off: bool,
+    /// Assistants may not run scripts in the page (the MCP tool `run_script`).
+    pub mcp_scripts_off: bool,
     /// WinScore has made itself the app that opens .mus files once already.
     pub default_app_set: bool,
 }

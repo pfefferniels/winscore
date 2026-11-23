@@ -25,6 +25,8 @@ export interface McpStatus {
   executable: string;
   /** Why it is not listening, if it should be. */
   error: string | null;
+  /** Whether assistants may run scripts in the page (run_script). */
+  scripts: boolean;
 }
 
 export interface Desktop {
@@ -55,6 +57,8 @@ export interface Desktop {
   mcpRespond(id: number, response: unknown): void;
   mcpStatus(): Promise<McpStatus>;
   setMcpEnabled(on: boolean): Promise<McpStatus>;
+  /** Allows assistants to run scripts, or not, for this and later launches. */
+  setMcpScripts(on: boolean): Promise<McpStatus>;
   /** Makes WinScore the app that opens .mus files (macOS); what it did. */
   makeDefault(): Promise<string>;
 }
@@ -81,6 +85,7 @@ function bridge(tauri: Tauri): Desktop {
     mcpRespond: (id, response) => void invoke('mcp_respond', { id, response }).catch(() => {}),
     mcpStatus: () => invoke<McpStatus>('mcp_status'),
     setMcpEnabled: (on) => invoke<McpStatus>('mcp_enable', { on }),
+    setMcpScripts: (on) => invoke<McpStatus>('mcp_scripts', { on }),
     makeDefault: () => invoke<string>('make_default'),
   };
 }

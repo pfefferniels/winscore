@@ -12,6 +12,7 @@
 // panel writes them.
 import type { Editor } from './editor';
 import { pitchLevel, sameValue, sectionsFor, VALUES, type Change as ParamChange, type Context, type P, type Setting } from './item-fields';
+import { clipped, runScript, SCRIPT_DESCRIPTION, SCRIPT_SCHEMA, type ScriptKit } from './mcp-script';
 import { withFont } from './text-dialog';
 import { noteParams, restParams, type Facts, type NoteSpec } from './tools';
 import { creationWords, editWords, groupCommand, type Score } from './wasm/score_web.js';
@@ -60,6 +61,8 @@ export interface McpHost {
   exportSvg(path: string): Promise<void>;
   /** Shows in the status line what an assistant did. */
   notify(text: string): void;
+  /** Whether assistants may run scripts in the page (run_script). */
+  scripts(): boolean;
 }
 
 interface JsonRpc {
@@ -82,6 +85,8 @@ interface Tool {
   description: string;
   inputSchema: Record<string, unknown>;
   annotations?: Record<string, boolean>;
+  /** Whether it is offered now (default: always). */
+  enabled?: () => boolean;
   run(args: Args): ToolResult | Promise<ToolResult>;
 }
 
@@ -92,7 +97,7 @@ const INSTRUCTIONS = `WinScore edits the score open in its window: a file of Lel
 
 How SCORE places things: staves are numbered from the bottom of the page up (staff 1 lowest). On a staff, P3 is the horizontal position, 0 at its left end to 200 at its right end; P4 is the vertical position in scale steps from the staff's reference level, whatever the clef: on a five-line staff 3 is the bottom line, 7 the middle line, 11 the top line, 1 the first ledger line below. Every item is a list of numbers P1 … Pn: P1 its code (1 note, 2 rest, 3 clef, 4 line or hairpin, 5 slur, tie or ending, 6 beam, 7 trill, ottava or pedal line, 8 staff, 9 symbol, 10 number, 12 box or circle, 14 barline, 16 text, 17 key signature, 18 meter), P2 its staff, P3 and P4 its place. Notes of a chord share a P3. SCORE draws what the numbers say: it does not respace music or add accidentals by itself.
 
-Items are named by "id", which stays with an item through edits and undo. Start with get_document and render_page (an image of the page) to see the score; list_items and get_items read items, with their settings: the side panel's named values (Pitch "F#4", Value "Eighth", Stem "Up" …). set_settings changes items by those names; set_parameters by raw P numbers. add_notes writes notes and rests by pitch name and duration; insert_items makes any item from a SCORE creation word (list_words) or raw parameters; insert_text adds text. run_command runs SCORE's edit commands on items (list_commands), and group and layout commands such as LJ (line up and justify a system), answering their questions. describe_kind explains the parameters of an item code.
+Items are named by "id", which stays with an item through edits and undo. Start with get_document and render_page (an image of the page) to see the score; list_items and get_items read items, with their settings: the side panel's named values (Pitch "F#4", Value "Eighth", Stem "Up" …). set_settings changes items by those names; set_parameters by raw P numbers. add_notes writes notes and rests by pitch name and duration; insert_items makes any item from a SCORE creation word (list_words) or raw parameters; insert_text adds text. run_command runs SCORE's edit commands on items (list_commands), and group and layout commands such as LJ (line up and justify a system), answering their questions. describe_kind explains the parameters of an item code. run_script (where the person at the window allows it) runs JavaScript against the page as one undo step: use it for edits worked out from the music or touching many items, and to read and analyse the whole page, rather than many single calls.
 
 A score of several pages is a .mus file for each page (SCORE numbers them by name: SONATA01.MUS, SONATA02.MUS …); the window can hold them all, and the tools act on the page shown. get_document lists the pages; show_page shows another, open_file and new_score with add_page add pages, close_page closes one, and save with all_pages saves every page. Ids belong to their page: after show_page, read the items again.`;
 
@@ -227,6 +232,24 @@ function valueIndex(value: unknown): number {
 
 const ACCIDENTALS: Record<string, number> = { none: 0, flat: 1, sharp: 2, natural: 3, 'double flat': 4, 'double sharp': 5 };
 
+/** P1 … of a note or rest on `staff` as add_notes takes it ({position, pitch, duration, dots, accidental, stem, size}); `where` names it in errors. */
+function noteFrom(facts: Facts, staff: number, entry: unknown, where: string): number[] | null {
+  const note = (entry ?? {}) as Args;
+  const position = num(note.position, `${where}.position`);
+  const value = valueIndex(note.duration);
+  const dots = optionalNum(note.dots, `${where}.dots`) ?? 0;
+  if (![0, 1, 2, 3].includes(dots)) throw new Error(`${where}.dots must be 0 to 3`);
+  const pitch = text(note.pitch, `${where}.pitch`);
+  const place = { staff, p3: position, p4: 0 };
+  if (/^(r|rest)$/i.test(pitch.trim())) return restParams(facts, place, value, dots);
+  const read = pitchLevel(pitch, facts.clefAt(staff, position));
+  if (!read) throw new Error(`${where}.pitch "${pitch}": give a letter, an accidental if any and the octave, e.g. "C4", "F#5", "Bb3"`);
+  const accidental = note.accidental === undefined ? read.accidental : ACCIDENTALS[String(note.accidental)];
+  if (accidental === undefined) throw new Error(`${where}.accidental: ${Object.keys(ACCIDENTALS).join(', ')}`);
+  const spec: NoteSpec = { value, dots, accidental, stem: (note.stem as NoteSpec['stem']) ?? 'auto', size: (note.size as NoteSpec['size']) ?? 'normal' };
+  return noteParams(facts, { ...place, p4: read.level }, spec);
+}
+
 const json = (value: unknown): ToolResult => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 1) }] });
 
 // ---------------------------------------------------------------------------
@@ -328,6 +351,51 @@ export function createMcpServer(host: McpHost) {
 
   /** The items `action` adds, by their ids. */
   const added = (score: Score, before: Set<number>) => keys(score).filter((key) => !before.has(key));
+
+  /** The parameter changes that give item `index` the side panel's settings `wanted` (name → value), as the panel makes them. */
+  const settingChanges = (score: Score, index: number, wanted: [string, unknown][]): [number, number][] => {
+    const info = score.item(index)!;
+    const params = Array.from(info.params);
+    const code = info.code;
+    info.free();
+    const p: P = (n) => params[n - 1] ?? 0;
+    const named = settingsOf(code, p);
+    const changed = new Map<number, number>();
+    for (const [name, value] of wanted) {
+      const key = [...named.keys()].find((k) => plain(k) === plain(name));
+      if (!key) throw new Error(`A ${host.nameOf(code)} has no setting "${name}" (it has ${[...named.keys()].join(', ')})`);
+      for (const [n, v] of writeSetting(key, named.get(key)!, value, (m) => changed.get(m) ?? p(m), host.context(index))) changed.set(n, v);
+    }
+    return [...changed];
+  };
+
+  /** P1 … of an item as insert_items takes it ({word or params, staff, position, level, set}), with the undo step's name for it. */
+  const itemFrom = (entry: unknown, where: string): { params: number[]; label: string } => {
+    const item = (entry ?? {}) as Args;
+    let params: number[];
+    if (item.params !== undefined) {
+      params = list(item.params, `${where}.params`).map((v) => num(v, `${where}.params`));
+      if (params.length < 4) throw new Error(`${where}.params needs P1 to P4 at least`);
+    } else {
+      const word = text(item.word, `${where}.word`).toUpperCase();
+      const base = host.facts.creation(word);
+      if (!base) throw new Error(`${where}: "${word}" is not a SCORE creation word (list_words lists them)`);
+      params = [...base];
+      while (params.length < 4) params.push(0);
+      params[1] = num(item.staff, `${where}.staff`);
+      if (item.position !== undefined) params[2] = num(item.position, `${where}.position`);
+      if (item.level !== undefined) params[3] = num(item.level, `${where}.level`);
+    }
+    for (const [n, v] of Object.entries((item.set ?? {}) as Record<string, unknown>)) {
+      const k = Number(String(n).replace(/^p/i, ''));
+      if (!Number.isInteger(k) || k < 2 || k > 45) throw new Error(`${where}.set: P${n} cannot be set`);
+      while (params.length < k) params.push(0);
+      params[k - 1] = num(v, `${where}.set P${k}`);
+    }
+    return { params, label: item.word ? String(item.word).toUpperCase() : host.nameOf(params[0]!) };
+  };
+
+  const scriptKit: ScriptKit = { host, read, settingChanges, noteFrom, itemFrom, groupCommand };
 
   const tools: Tool[] = [
     {
@@ -466,21 +534,7 @@ export function createMcpServer(host: McpHost) {
         const indices = indicesOf(score, args.ids);
         const wanted = Object.entries((args.settings ?? {}) as Record<string, unknown>);
         if (wanted.length === 0) throw new Error('settings is empty');
-        const edits: [number, [number, number][]][] = indices.map((index) => {
-          const info = score.item(index)!;
-          const params = Array.from(info.params);
-          const code = info.code;
-          info.free();
-          const p: P = (n) => params[n - 1] ?? 0;
-          const named = settingsOf(code, p);
-          const changed = new Map<number, number>();
-          for (const [name, value] of wanted) {
-            const key = [...named.keys()].find((k) => plain(k) === plain(name));
-            if (!key) throw new Error(`A ${host.nameOf(code)} has no setting "${name}" (it has ${[...named.keys()].join(', ')})`);
-            for (const [n, v] of writeSetting(key, named.get(key)!, value, (m) => changed.get(m) ?? p(m), host.context(index))) changed.set(n, v);
-          }
-          return [index, [...changed]];
-        });
+        const edits: [number, [number, number][]][] = indices.map((index) => [index, settingChanges(score, index, wanted)]);
         return change(`Set ${wanted.map(([n]) => n).join(', ')}`, (editor) => {
           editor.setParamsOf(edits);
           editor.select(indices);
@@ -550,22 +604,7 @@ export function createMcpServer(host: McpHost) {
         const { score } = need();
         const staff = num(args.staff, 'staff');
         if (!host.staves().some((s) => s.number === staff)) throw new Error(`There is no staff ${staff}: get_document lists the staves (insert_items with the word STAFF makes one)`);
-        const notes = list(args.notes, 'notes').map((entry, i) => {
-          const note = entry as Args;
-          const position = num(note.position, `notes[${i}].position`);
-          const value = valueIndex(note.duration);
-          const dots = optionalNum(note.dots, `notes[${i}].dots`) ?? 0;
-          if (![0, 1, 2, 3].includes(dots)) throw new Error(`notes[${i}].dots must be 0 to 3`);
-          const pitch = text(note.pitch, `notes[${i}].pitch`);
-          const place = { staff, p3: position, p4: 0 };
-          if (/^(r|rest)$/i.test(pitch.trim())) return restParams(host.facts, place, value, dots);
-          const read = pitchLevel(pitch, host.facts.clefAt(staff, position));
-          if (!read) throw new Error(`notes[${i}].pitch "${pitch}": give a letter, an accidental if any and the octave, e.g. "C4", "F#5", "Bb3"`);
-          const accidental = note.accidental === undefined ? read.accidental : ACCIDENTALS[String(note.accidental)];
-          if (accidental === undefined) throw new Error(`notes[${i}].accidental: ${Object.keys(ACCIDENTALS).join(', ')}`);
-          const spec: NoteSpec = { value, dots, accidental, stem: (note.stem as NoteSpec['stem']) ?? 'auto', size: (note.size as NoteSpec['size']) ?? 'normal' };
-          return noteParams(host.facts, { ...place, p4: read.level }, spec);
-        });
+        const notes = list(args.notes, 'notes').map((entry, i) => noteFrom(host.facts, staff, entry, `notes[${i}]`));
         const before = new Set(keys(score));
         let ids: number[] = [];
         return change(
@@ -610,30 +649,7 @@ export function createMcpServer(host: McpHost) {
       },
       run(args) {
         const { score } = need();
-        const made = list(args.items, 'items').map((entry, i) => {
-          const item = entry as Args;
-          let params: number[];
-          if (item.params !== undefined) {
-            params = list(item.params, `items[${i}].params`).map((v) => num(v, `items[${i}].params`));
-            if (params.length < 4) throw new Error(`items[${i}].params needs P1 to P4 at least`);
-          } else {
-            const word = text(item.word, `items[${i}].word`).toUpperCase();
-            const base = host.facts.creation(word);
-            if (!base) throw new Error(`items[${i}]: "${word}" is not a SCORE creation word (list_words lists them)`);
-            params = [...base];
-            while (params.length < 4) params.push(0);
-            params[1] = num(item.staff, `items[${i}].staff`);
-            if (item.position !== undefined) params[2] = num(item.position, `items[${i}].position`);
-            if (item.level !== undefined) params[3] = num(item.level, `items[${i}].level`);
-          }
-          for (const [n, v] of Object.entries((item.set ?? {}) as Record<string, unknown>)) {
-            const k = Number(String(n).replace(/^p/i, ''));
-            if (!Number.isInteger(k) || k < 2 || k > 45) throw new Error(`items[${i}].set: P${n} cannot be set`);
-            while (params.length < k) params.push(0);
-            params[k - 1] = num(v, `items[${i}].set P${k}`);
-          }
-          return { params, label: item.word ? String(item.word).toUpperCase() : host.nameOf(params[0]!) };
-        });
+        const made = list(args.items, 'items').map((entry, i) => itemFrom(entry, `items[${i}]`));
         const before = new Set(keys(score));
         let ids: number[] = [];
         return change(
@@ -770,6 +786,40 @@ export function createMcpServer(host: McpHost) {
             },
           },
         );
+      },
+    },
+    {
+      name: 'run_script',
+      title: 'Run a script',
+      description: SCRIPT_DESCRIPTION,
+      inputSchema: SCRIPT_SCHEMA,
+      annotations: { destructiveHint: true },
+      enabled: () => host.scripts(),
+      run(args) {
+        need();
+        if (host.busy()) throw new Error('The score is being edited in the window right now (a drag is in progress); try again in a moment.');
+        const code = text(args.code, 'code');
+        const label = args.label === undefined ? 'Script' : text(args.label, 'label').slice(0, 80);
+        let outcome;
+        try {
+          outcome = runScript(scriptKit, code, label);
+        } catch (err) {
+          const log = (err as { log?: string[] }).log ?? [];
+          const message = err instanceof Error ? err.message : String(err);
+          return { content: [{ type: 'text', text: clipped(log.length ? `${message}\nIts log:\n${log.join('\n')}` : message) }], isError: true };
+        }
+        const { step, value, log, engine } = outcome;
+        if (step) host.notify(`${client}: ${step}`);
+        const score = host.score()!;
+        const ids = keys(score);
+        const answer = {
+          done: step ?? 'nothing changed',
+          result: value,
+          ...(log.length ? { log } : {}),
+          ...(engine.length ? { engine } : {}),
+          selection: Array.from(score.selection(), (i) => ids[i]),
+        };
+        return { content: [{ type: 'text', text: clipped(JSON.stringify(answer, null, 1)) }] };
       },
     },
     {
@@ -966,10 +1016,17 @@ export function createMcpServer(host: McpHost) {
       case 'ping':
         return reply({});
       case 'tools/list':
-        return reply({ tools: tools.map(({ name, title, description, inputSchema, annotations }) => ({ name, title, description, inputSchema, ...(annotations ? { annotations } : {}) })) });
+        return reply({
+          tools: tools
+            .filter((t) => t.enabled?.() ?? true)
+            .map(({ name, title, description, inputSchema, annotations }) => ({ name, title, description, inputSchema, ...(annotations ? { annotations } : {}) })),
+        });
       case 'tools/call': {
         const tool = tools.find((t) => t.name === params.name);
         if (!tool) return fail(-32602, `Unknown tool: ${String(params.name)}`);
+        if (!(tool.enabled?.() ?? true)) {
+          return reply({ content: [{ type: 'text', text: `${tool.title} is turned off in WinScore (Help ▸ AI Assistants (MCP)…); the other tools do the same step by step.` }], isError: true });
+        }
         try {
           return reply(await tool.run((params.arguments ?? {}) as Args));
         } catch (err) {

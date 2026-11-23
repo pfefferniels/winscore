@@ -56,20 +56,22 @@ pub struct Mcp {
     page_ready: AtomicBool,
 }
 
-/// What the page's MCP dialog shows.
+/// What the page's MCP dialog shows, and whether the page may run assistants' scripts.
 #[derive(Serialize)]
 pub struct Status {
     enabled: bool,
     url: String,
     executable: String,
     error: Option<String>,
+    scripts: bool,
 }
 
 impl Mcp {
-    fn status(&self) -> Status {
+    fn status<R: Runtime>(&self, app: &AppHandle<R>) -> Status {
         let enabled = lock(&self.server).is_some();
         let executable = std::env::current_exe().map(|path| path.to_string_lossy().into_owned()).unwrap_or_default();
-        Status { enabled, url: url(), executable, error: lock(&self.error).clone() }
+        let scripts = !settings::load(app).mcp_scripts_off;
+        Status { enabled, url: url(), executable, error: lock(&self.error).clone(), scripts }
     }
 
     /// The page listens for requests.
@@ -228,8 +230,8 @@ pub fn mcp_respond(mcp: State<'_, Mcp>, id: u64, response: Value) {
 }
 
 #[tauri::command]
-pub fn mcp_status(mcp: State<'_, Mcp>) -> Status {
-    mcp.status()
+pub fn mcp_status(app: AppHandle, mcp: State<'_, Mcp>) -> Status {
+    mcp.status(&app)
 }
 
 /// Turns the endpoint on or off, for this and later launches.
@@ -241,7 +243,14 @@ pub fn mcp_enable(app: AppHandle, on: bool) -> Status {
         stop(&app);
     }
     settings::update(&app, |s| s.mcp_off = !on);
-    app.state::<Mcp>().status()
+    app.state::<Mcp>().status(&app)
+}
+
+/// Lets assistants run scripts in the page (`run_script`), or not, for this and later launches; the page asks before it answers.
+#[tauri::command]
+pub fn mcp_scripts(app: AppHandle, on: bool) -> Status {
+    settings::update(&app, |s| s.mcp_scripts_off = !on);
+    app.state::<Mcp>().status(&app)
 }
 
 #[cfg(test)]

@@ -369,6 +369,7 @@ pub fn run() {
             mcp::mcp_respond,
             mcp::mcp_status,
             mcp::mcp_enable,
+            mcp::mcp_scripts,
         ])
         .build(tauri::generate_context!())
         .expect("the app starts");

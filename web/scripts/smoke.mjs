@@ -529,6 +529,41 @@ try {
   assert.deepEqual((await tool('undo', { steps: 4 })).data.undone.length, 3);
   assert.equal(await page.getAttribute('#app', 'data-items'), '344');
 
+  // run_script: code an assistant writes runs against the page as one undo step; its reads follow its own
+  // edits, it gets back what the code returns and logs, and a failure undoes all of it.
+  assert.ok((await mcp('tools/list')).tools.some((t) => t.name === 'run_script'));
+  const script = (code, label) => tool('run_script', { code, ...(label ? { label } : {}) });
+  const bars = 'const bars = [...new Set(score.items({ staff: 7, code: 14 }).map((b) => b.p3))].filter((p3) => p3 < 200);';
+  const survey = (await script(`${bars}
+    console.log(bars.length, 'bars');
+    return { staves: score.staves().length, notes: score.items({ staff: 8, code: 1 }).length, bars, clef: score.clefAt(1, 50) };`)).data;
+  assert.equal(survey.done, 'nothing changed');
+  assert.deepEqual(survey.result, { staves: 8, notes: 15, bars: [0, 57.87, 106.48, 152.2], clef: 'bass' });
+  assert.deepEqual(survey.log, ['4 bars']);
+  assert.equal(await page.getAttribute('#undo', 'title'), 'Nothing to undo');
+  const edited = (await script(`${bars}
+    const before = score.items({ staff: 8, code: 1 }).map((n) => n.settings.Pitch);
+    for (const n of score.items({ staff: 8, code: 1 })) n.move(0, 2);
+    const marks = bars.map((bar) => score.insert({ word: 'P', staff: 8, position: score.items({ staff: 8, code: 1, from: bar + 0.01 })[0].p3, level: -4 }));
+    const low = score.addNote({ staff: 1, position: 190, pitch: 'C3', duration: 'half' });
+    score.select(marks);
+    return { before: before.slice(0, 3), after: score.items({ staff: 8, code: 1 }).slice(0, 3).map((n) => n.settings.Pitch), marks: marks.map((m) => m.p3), low: low.summary };`, 'Up a third, p in each bar')).data;
+  assert.equal(edited.done, 'Up a third, p in each bar');
+  assert.deepEqual(edited.result, { before: ['C5', 'E5', 'G5'], after: ['E5', 'G5', 'B5'], marks: [15.19, 60.91, 109.52, 155.24], low: 'C3 Half' });
+  assert.equal(edited.selection.length, 4);
+  assert.equal(await page.getAttribute('#app', 'data-items'), '349');
+  assert.match(await page.getAttribute('#undo', 'title'), /^Undo Up a third, p in each bar /);
+  assert.equal(await page.textContent('#message'), 'smoke: Up a third, p in each bar');
+  const failed = await script(`for (const n of score.items({ staff: 8, code: 1 })) n.delete(); console.log('deleted'); score.item(-1);`);
+  assert.ok(failed.result.isError);
+  assert.equal(failed.text, 'No item has the id -1 (deleted?) (line 1). Nothing was changed.\nIts log:\ndeleted');
+  assert.equal(await page.getAttribute('#app', 'data-items'), '349');
+  assert.match((await script('await score.items();')).text, /^The script does not parse/);
+  assert.match((await script('return Promise.resolve(1);')).text, /runs synchronously/);
+  assert.deepEqual((await tool('undo')).data.undone, ['Undo Up a third, p in each bar']);
+  assert.equal(await page.getAttribute('#app', 'data-items'), '344');
+  assert.equal((await tool('get_items', { ids: [melody.id] })).data[0].settings.Pitch, 'C5');
+
   assert.deepEqual(errors, []);
 
   // Pages: .mus files chosen together open as the pages of one score, in the order of their names,
