@@ -143,7 +143,6 @@ const ui = {
   start: $<HTMLElement>('start'),
   startNew: $<HTMLButtonElement>('start-new'),
   startOpen: $<HTMLButtonElement>('start-open'),
-  startSamples: $<HTMLDivElement>('start-samples'),
   panel: $<HTMLElement>('panel'),
   panelGrip: $<HTMLDivElement>('panel-grip'),
   item: $<HTMLElement>('item'),
@@ -1527,14 +1526,6 @@ function commandSection(menu: Menu): HTMLElement {
 function bindStart() {
   ui.startNew.addEventListener('click', () => void newScore());
   ui.startOpen.addEventListener('click', () => void chooseFiles());
-  ui.startSamples.replaceChildren(
-    ...samples.map((sample) => {
-      const button = Object.assign(document.createElement('button'), { type: 'button', className: 'sample', textContent: sample.title });
-      button.addEventListener('click', () => void openSample(sample));
-      return button;
-    }),
-  );
-  ui.startSamples.parentElement!.toggleAttribute('hidden', samples.length === 0);
 }
 
 /** Shortcuts that act on the whole app: open, save, print, help, the pages. */
@@ -1804,8 +1795,6 @@ async function takeOpened() {
 /** The menu bar's commands, files opened from outside and closing, in the desktop app. */
 function bindDesktop(app: NonNullable<typeof desktop>) {
   document.title = 'WinScore';
-  ui.start.querySelector('h1')!.textContent = 'WinScore';
-  ui.start.querySelector('h1 + p')!.textContent = "Leland Smith's SCORE";
   const zoom = (step: 1 | -1) => state.score && view.setZoom(stepZoom(view.zoom, step));
   const commands: Record<string, () => void> = {
     new: () => void newScore(),

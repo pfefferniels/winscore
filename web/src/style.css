@@ -1,15 +1,20 @@
 :root {
+  /* Black on white: the chrome is the paper's white, and what is chosen or
+     pressed is black with white on it. Colour is left to the score: the
+     selection, handles and guides drawn on it (paint.ts, handles.ts,
+     preview.ts, guides.ts). */
   --bg: #ffffff;
-  --chrome: #f8f9fb;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --hover: #f1f3f6;
-  --active: #e5e8ee;
-  --accent: #2563eb;
-  --accent-soft: #eaf1fe;
+  --chrome: #ffffff;
+  --text: #111111;
+  --muted: #737373;
+  --border: #e5e5e5;
+  --hover: #f5f5f5;
+  --active: #ebebeb;
+  --accent: #111111;
+  --on-accent: #ffffff;
+  --accent-soft: #f2f2f2;
   --danger: #b91c1c;
-  --shadow: 0 10px 28px rgb(15 23 42 / 0.14), 0 1px 3px rgb(15 23 42 / 0.08);
+  --shadow: 0 10px 28px rgb(0 0 0 / 0.12), 0 1px 3px rgb(0 0 0 / 0.08);
 }
 
 * {
@@ -145,7 +150,7 @@ button.icon svg {
 }
 
 button.icon[aria-pressed='true'] {
-  color: var(--accent);
+  background: var(--active);
 }
 
 .sep {
@@ -181,8 +186,8 @@ button.icon[aria-pressed='true'] {
 .doc-state {
   padding: 1px 8px;
   border-radius: 999px;
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--accent-soft);
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -265,7 +270,7 @@ button.icon[aria-pressed='true'] {
 .page-tab.current {
   border-color: var(--border);
   background: var(--bg);
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
 }
 
 .page-tab .page-name {
@@ -297,7 +302,7 @@ button.icon[aria-pressed='true'] {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #f59e0b;
+  background: var(--text);
 }
 
 .page-tab .page-close {
@@ -343,8 +348,9 @@ button.icon[aria-pressed='true'] {
   outline: none;
 }
 
+/* The page has the keyboard most of the time: a quiet frame, not a black one. */
 .viewport:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid #d4d4d4;
   outline-offset: -2px;
 }
 
@@ -434,8 +440,7 @@ button.icon[aria-pressed='true'] {
   display: none;
 }
 
-/* Over the page while no score is open: the name, a new score or a file,
-   and the samples, quietly. */
+/* Over the page while no score is open: a new score or a file, nothing else. */
 .start {
   position: absolute;
   inset: 0;
@@ -448,43 +453,9 @@ button.icon[aria-pressed='true'] {
   background: var(--chrome);
 }
 
-.start-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: min(440px, 100%);
-  margin: auto;
-  text-align: center;
-}
-
-.start-mark {
-  width: 28px;
-  height: 28px;
-  margin-bottom: 14px;
-  color: var(--accent);
-  stroke-width: 1.8;
-}
-
-.start-mark circle {
-  fill: currentColor;
-}
-
-.start h1 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.start-card > p {
-  margin: 4px 0 0;
-  font-size: 14px;
-}
-
 .start-actions {
   display: flex;
   gap: 8px;
-  margin-top: 28px;
 }
 
 .start-actions button {
@@ -492,40 +463,6 @@ button.icon[aria-pressed='true'] {
   height: 36px;
   padding: 0 18px;
   border-radius: 8px;
-}
-
-.start-card > .start-drop {
-  margin-top: 10px;
-  font-size: 12px;
-}
-
-.start-samples-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: baseline;
-  gap: 2px 10px;
-  margin-top: 40px;
-  font-size: 12px;
-}
-
-.start-samples {
-  display: contents;
-}
-
-.start-samples .sample {
-  height: auto;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.start-samples .sample:hover {
-  background: transparent;
-  color: var(--accent);
-  text-decoration: underline;
 }
 
 /* Over an empty score, until it has items. */
@@ -556,7 +493,7 @@ button.icon[aria-pressed='true'] {
 .band {
   position: absolute;
   border: 1px dashed var(--accent);
-  background: rgb(37 99 235 / 0.08);
+  background: rgb(0 0 0 / 0.04);
   pointer-events: none;
 }
 
@@ -596,7 +533,7 @@ button.icon[aria-pressed='true'] {
 .symbol-dialog::backdrop,
 .text-dialog::backdrop,
 .shortcuts-dialog::backdrop {
-  background: rgb(17 24 39 / 0.25);
+  background: rgb(0 0 0 / 0.25);
 }
 
 .symbol-dialog h2,
@@ -827,10 +764,10 @@ kbd {
   display: inline-block;
   min-width: 20px;
   padding: 0 5px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #d4d4d4;
   border-bottom-width: 2px;
   border-radius: 4px;
-  background: #f9fafb;
+  background: #fafafa;
   font-family: ui-monospace, monospace;
   font-size: 12px;
   line-height: 18px;
@@ -864,7 +801,7 @@ kbd {
   width: 36px;
   height: 4px;
   border-radius: 2px;
-  background: #d1d5db;
+  background: #d4d4d4;
 }
 
 .panel h2 {
@@ -1168,8 +1105,8 @@ button.danger:hover {
 .segmented button.on {
   position: relative;
   border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 500;
 }
 
@@ -1355,10 +1292,6 @@ button.danger:hover {
     width: 20px;
     height: 20px;
   }
-
-  .start-samples .sample {
-    height: 32px;
-  }
 }
 
 /* A phone: the app bar's essentials, the panel under the page (its height
@@ -1405,7 +1338,7 @@ button.danger:hover {
     width: 8px;
     height: 8px;
     padding: 0;
-    background: #f59e0b;
+    background: var(--text);
     font-size: 0;
   }
 
@@ -1564,12 +1497,12 @@ button.danger:hover {
 
 .tool[aria-pressed='true'] {
   border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .tool[aria-pressed='true'] kbd {
-  color: var(--accent);
+  color: rgb(255 255 255 / 0.7);
 }
 
 .tool-sep {
@@ -1634,8 +1567,8 @@ button.danger:hover {
 .tool-options .segmented button[aria-pressed='true'] {
   position: relative;
   border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 500;
 }
 

@@ -41,11 +41,11 @@ export interface Scene {
 /** The default pen in engine units, score_render::PEN: 1/150 inch, SCORE's PostScript `wdl lw`. */
 const PEN = UNITS_PER_INCH / 150;
 /** Around the paper: a quiet grey a step darker than the app's chrome (style.css `--chrome`, `--border`). */
-const DESK = '#eceef2';
+const DESK = '#f0f0f0';
 const PAPER = '#ffffff';
 /** The paper's edge and shadow on the desk; sizes in CSS pixels. */
-const PAPER_EDGE = 'rgb(15 23 42 / 0.14)';
-const PAPER_SHADOW = 'rgb(15 23 42 / 0.12)';
+const PAPER_EDGE = 'rgb(0 0 0 / 0.14)';
+const PAPER_SHADOW = 'rgb(0 0 0 / 0.1)';
 const SHADOW_BLUR = 6;
 const SHADOW_DROP = 1;
 const HIGHLIGHT = '#2563eb';
@@ -341,9 +341,13 @@ function paintText(ctx: CanvasRenderingContext2D, t: Transform, run: TextRun, co
   });
 }
 
+/** The staff numbers at the left (score-render draws them in Helvetica-Narrow, WinScore's dark green): grey here, in the window's black and white. */
+const STAFF_NUMBER_FONT = 'Helvetica-Narrow';
+const STAFF_NUMBER = '#a3a3a3';
+
 function paintList(ctx: CanvasRenderingContext2D, t: Transform, list: DisplayList, tint: string | null) {
   list.shapes.forEach((shape) => paintShape(ctx, t, shape, tint ?? hex(shape.colour)));
-  list.texts.forEach((run) => paintText(ctx, t, run, tint ?? rgb(run.colour)));
+  list.texts.forEach((run) => paintText(ctx, t, run, tint ?? (run.font === STAFF_NUMBER_FONT ? STAFF_NUMBER : rgb(run.colour))));
 }
 
 /** SCORE's line style: round joins (`1 setlinejoin`), PostScript's default butt caps. */

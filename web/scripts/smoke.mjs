@@ -50,7 +50,7 @@ try {
   await page.waitForSelector('#app[data-ready="true"]');
   assert.ok(await page.isVisible('#start'));
   assert.ok(await page.isHidden('#panel'));
-  assert.ok(await page.isVisible('.start-samples button:text-is("mozart.mus")'));
+  assert.deepEqual(await page.locator('#start button').allTextContents(), ['New score', 'Open…']);
 
   // A new score is empty; F puts a staff where the paper is clicked, and N notes on it, each where it is clicked.
   await page.click('#start-new');
