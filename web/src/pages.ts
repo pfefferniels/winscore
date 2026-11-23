@@ -1,7 +1,7 @@
 // The pages of a score: SCORE keeps each page in a .mus file of its own,
 // numbered by name (SONATA01.MUS, SONATA02.MUS …). The window holds the
 // pages opened together, shows and edits one of them at a time, and lists
-// them in the page bar above the page while there is more than one. Each
+// them in the page bar (in the app bar, after undo and redo) while there is more than one. Each
 // page keeps its own undo history, selection and file; the clipboard is
 // shared, so items copied on one page paste onto another.
 

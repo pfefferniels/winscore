@@ -7,7 +7,7 @@
     <title>WinScore Web</title>
   </head>
   <body>
-    <div id="app" class="app">
+    <div id="app" class="app" data-open="false">
       <header class="appbar">
         <span class="brand" title="WinScore Web">
           <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /></svg>
@@ -19,6 +19,15 @@
         <button id="redo" class="icon" type="button" title="Redo (⇧⌘Z / Ctrl+Y)" aria-label="Redo">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5" /><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" /></svg>
         </button>
+        <nav class="pagebar" id="pagebar" aria-label="Pages" hidden>
+          <div class="page-tabs" id="page-tabs"></div>
+          <button id="page-new" class="icon" type="button" title="New page after this one" aria-label="New page">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+          <button id="page-add" class="icon" type="button" title="Add pages: .mus files after this one" aria-label="Add pages">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19V6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v3" /><path d="M3 19h9M18 14v6M15 17h6" /></svg>
+          </button>
+        </nav>
         <span class="spacer"></span>
         <span class="doc" id="doc" hidden><span id="status" class="doc-name"></span><span id="doc-state" class="doc-state"></span></span>
         <span class="spacer"></span>
@@ -43,15 +52,6 @@
         </button>
         <input id="file" type="file" accept=".mus,.MUS" multiple hidden />
       </header>
-      <nav class="pagebar" id="pagebar" aria-label="Pages" hidden>
-        <div class="page-tabs" id="page-tabs"></div>
-        <button id="page-new" class="icon" type="button" title="New page after this one" aria-label="New page">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-        </button>
-        <button id="page-add" class="icon" type="button" title="Add pages: .mus files after this one" aria-label="Add pages">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19V6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v3" /><path d="M3 19h9M18 14v6M15 17h6" /></svg>
-        </button>
-      </nav>
       <div class="tool-options" id="tool-options" hidden></div>
       <main class="main">
         <nav class="palette" id="palette" hidden></nav>
@@ -68,22 +68,18 @@
           </div>
           <section class="start" id="start" hidden aria-label="Start">
             <div class="start-card">
+              <svg class="start-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /></svg>
               <h1>WinScore Web</h1>
-              <p class="muted">Leland Smith's SCORE, in the browser: open, engrave and save <code>.mus</code> files.</p>
+              <p class="muted">Leland Smith's SCORE, in the browser</p>
               <div class="start-actions">
-                <button id="start-new" class="tile" type="button">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z" /><path d="M14 3v5h5M12 11v6M9 14h6" /></svg>
-                  <strong>New score</strong>
-                  <span class="muted">Start from an empty page</span>
-                </button>
-                <button id="start-open" class="tile" type="button">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19V6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v2" /><path d="M3 19l2.6-7.1A1.5 1.5 0 0 1 7 11h13.5a1 1 0 0 1 .95 1.3L19.4 19z" /></svg>
-                  <strong>Open…</strong>
-                  <span class="muted">A .mus file from your computer, or several: the pages of one score. Or drop them here</span>
-                </button>
+                <button id="start-new" class="primary" type="button">New score</button>
+                <button id="start-open" type="button" title="A .mus file, or several: the pages of one score">Open…</button>
               </div>
-              <h2>Samples</h2>
-              <div class="start-samples" id="start-samples"></div>
+              <p class="start-drop muted">or drop .mus files here</p>
+              <div class="start-samples-row">
+                <span class="muted">Samples</span>
+                <div class="start-samples" id="start-samples"></div>
+              </div>
             </div>
           </section>
         </div>

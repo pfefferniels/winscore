@@ -190,18 +190,31 @@ button.icon[aria-pressed='true'] {
   display: none;
 }
 
-/* The page bar: a tab for each open page (a .mus file of its own) while
-   there are several, and buttons for a new page and pages from files. */
+/* The page bar, in the app bar after undo and redo: a tab for each open
+   page (a .mus file of its own) while there are several, and buttons for a
+   new page and pages from files. The tabs name the page shown, so the
+   score's name in the middle of the bar gives way to them. */
 .pagebar {
   display: flex;
-  flex: none;
+  flex: 0 1 auto;
   align-items: center;
   gap: 2px;
-  height: 36px;
-  padding: 0 8px;
-  border-bottom: 1px solid var(--border);
-  background: var(--chrome);
+  min-width: 0;
+  height: 100%;
   white-space: nowrap;
+}
+
+.pagebar::before {
+  content: '';
+  flex: none;
+  width: 1px;
+  height: 20px;
+  margin: 0 8px 0 6px;
+  background: var(--border);
+}
+
+.pagebar:not([hidden]) ~ .doc {
+  display: none;
 }
 
 .pagebar > button.icon {
@@ -234,10 +247,12 @@ button.icon[aria-pressed='true'] {
   display: none;
 }
 
+/* Tabs narrow, their names cut short, before they scroll, as a browser's do. */
 .page-tab {
   display: inline-flex;
-  flex: none;
+  flex: 0 1 auto;
   align-items: center;
+  min-width: 76px;
   height: 28px;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -255,8 +270,10 @@ button.icon[aria-pressed='true'] {
 
 .page-tab .page-name {
   display: inline-flex;
+  flex: 1 1 auto;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   max-width: 220px;
   height: 26px;
   padding: 0 2px 0 10px;
@@ -411,7 +428,14 @@ button.icon[aria-pressed='true'] {
   white-space: pre-wrap;
 }
 
-/* Over the page while no score is open. */
+/* Before a score is open there is nothing to undo, zoom or select: the app
+   bar keeps the mark and help. */
+.app[data-open='false'] .appbar > :is(.sep, #undo, #redo, .zoom, #toggle-panel) {
+  display: none;
+}
+
+/* Over the page while no score is open: the name, a new score or a file,
+   and the samples, quietly. */
 .start {
   position: absolute;
   inset: 0;
@@ -425,76 +449,83 @@ button.icon[aria-pressed='true'] {
 }
 
 .start-card {
-  width: min(640px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(440px, 100%);
   margin: auto;
+  text-align: center;
+}
+
+.start-mark {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 14px;
+  color: var(--accent);
+  stroke-width: 1.8;
+}
+
+.start-mark circle {
+  fill: currentColor;
 }
 
 .start h1 {
-  margin: 0 0 6px;
-  font-size: 26px;
-  font-weight: 650;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.start > .start-card > p {
-  margin: 0 0 24px;
+.start-card > p {
+  margin: 4px 0 0;
   font-size: 14px;
 }
 
-.start h2 {
-  margin: 28px 0 10px;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
-}
-
 .start-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
+  display: flex;
+  gap: 8px;
+  margin-top: 28px;
 }
 
-.tile {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
-  column-gap: 14px;
-  row-gap: 2px;
-  align-items: center;
-  height: auto;
-  padding: 16px 18px;
-  border-radius: 10px;
-  text-align: left;
-  white-space: normal;
+.start-actions button {
+  min-width: 120px;
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 8px;
 }
 
-.tile svg {
-  grid-row: span 2;
-  width: 30px;
-  height: 30px;
-  color: var(--accent);
-  stroke-width: 1.6;
+.start-card > .start-drop {
+  margin-top: 10px;
+  font-size: 12px;
 }
 
-.tile strong {
-  font-size: 15px;
-}
-
-.tile:hover {
-  border-color: #c7d7f9;
-  background: #ffffff;
-  box-shadow: 0 2px 10px rgb(37 99 235 / 0.1);
+.start-samples-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin-top: 40px;
+  font-size: 12px;
 }
 
 .start-samples {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: contents;
 }
 
 .start-samples .sample {
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 999px;
+  height: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.start-samples .sample:hover {
+  background: transparent;
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 /* Over an empty score, until it has items. */
@@ -1239,10 +1270,6 @@ button.danger:hover {
     height: 36px;
   }
 
-  .pagebar {
-    height: 44px;
-  }
-
   .page-tab,
   .page-tab .page-name {
     height: 36px;
@@ -1330,7 +1357,7 @@ button.danger:hover {
   }
 
   .start-samples .sample {
-    height: 40px;
+    height: 32px;
   }
 }
 
@@ -1345,6 +1372,26 @@ button.danger:hover {
   .brand,
   .appbar .sep,
   .zoom {
+    display: none;
+  }
+
+  /* No room beside undo and redo: the tabs take a row of their own. */
+  .appbar:has(> .pagebar:not([hidden])) {
+    flex-wrap: wrap;
+    height: auto;
+    padding-top: 6px;
+  }
+
+  .pagebar {
+    order: 1;
+    flex-basis: 100%;
+    height: 44px;
+    margin: 6px -6px 0;
+    padding: 0 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  .pagebar::before {
     display: none;
   }
 

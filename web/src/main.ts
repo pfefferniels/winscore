@@ -210,7 +210,7 @@ const question = createQuestion(ui.stage, {
 /** Where an insertion mode's new item would go, over the page. */
 const preview = createPreview(ui.stage, ui.canvas, () => view.transform());
 view.onPaint(() => preview.repaint());
-/** The tabs of the open pages, above the page while there are several. */
+/** The tabs of the open pages, in the app bar after undo and redo while there are several. */
 const pageBar = createPageBar(ui.pagebar, ui.pageTabs, {
   show: (index) => {
     goToPage(index);
@@ -378,6 +378,7 @@ function refreshStatus() {
   // How many items there are, as `data-items` of the page: for tests and the browser's inspector.
   ui.app.dataset.items = open ? String(state.score!.itemCount()) : '';
   ui.app.dataset.pages = String(state.pages.length);
+  ui.app.dataset.open = String(open);
   ui.app.dataset.page = open ? String(state.current + 1) : '';
 }
 
@@ -1533,7 +1534,7 @@ function bindStart() {
       return button;
     }),
   );
-  ui.startSamples.previousElementSibling!.toggleAttribute('hidden', samples.length === 0);
+  ui.startSamples.parentElement!.toggleAttribute('hidden', samples.length === 0);
 }
 
 /** Shortcuts that act on the whole app: open, save, print, help, the pages. */
@@ -1804,7 +1805,7 @@ async function takeOpened() {
 function bindDesktop(app: NonNullable<typeof desktop>) {
   document.title = 'WinScore';
   ui.start.querySelector('h1')!.textContent = 'WinScore';
-  ui.start.querySelector('h1 + p')!.textContent = "Leland Smith's SCORE: open, engrave and save .mus files.";
+  ui.start.querySelector('h1 + p')!.textContent = "Leland Smith's SCORE";
   const zoom = (step: 1 | -1) => state.score && view.setZoom(stepZoom(view.zoom, step));
   const commands: Record<string, () => void> = {
     new: () => void newScore(),
